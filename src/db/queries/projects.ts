@@ -3,7 +3,7 @@ import "server-only";
 import { and, asc, count, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { namedModels, projects } from "@/db/schema";
-import type { Project } from "@/db/schema";
+import type { NamedModel, Project } from "@/db/schema";
 
 /**
  * Top-level projects (parent_id IS NULL) for a user.
@@ -119,6 +119,30 @@ export async function getProjectById(
     .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/**
+ * Named models belonging to a project, ordered by position then
+ * creation time. Verifies project ownership via an inner join so
+ * a malicious projectId from another owner returns an empty list
+ * rather than leaking rows.
+ */
+export async function listNamedModelsByProject(
+  userId: string,
+  projectId: string,
+): Promise<ReadonlyArray<NamedModel>> {
+  const rows = await db
+    .select({ namedModel: namedModels })
+    .from(namedModels)
+    .innerJoin(projects, eq(projects.id, namedModels.projectId))
+    .where(
+      and(
+        eq(namedModels.projectId, projectId),
+        eq(projects.ownerId, userId),
+      ),
+    )
+    .orderBy(asc(namedModels.position), asc(namedModels.createdAt));
+  return rows.map((r) => r.namedModel);
 }
 
 /**

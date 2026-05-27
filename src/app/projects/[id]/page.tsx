@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { currentUserId } from "@/lib/auth-stub";
-import { getProjectById } from "@/db/queries/projects";
+import {
+  getProjectById,
+  listNamedModelsByProject,
+} from "@/db/queries/projects";
 import { ProgressBar } from "@/components/ProgressBar";
 import { OwnedCounter } from "@/components/OwnedCounter";
 import { StageCounter } from "@/components/StageCounter";
+import { NamedModelsPanel } from "@/components/NamedModelsPanel";
 import { progressPercent, displayStatus } from "@/lib/progress";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +23,10 @@ export default async function ProjectDetailPage({
   const project = await getProjectById(userId, id);
   if (!project) notFound();
 
+  const namedModels = await listNamedModelsByProject(userId, project.id);
+
   const status = displayStatus(project);
-  const percent = progressPercent(project);
+  const percent = progressPercent(project, namedModels);
 
   // Slim, serialisable snapshots passed to the client counter components.
   // Avoids shipping Date instances or any fields the panels don't read.
@@ -81,6 +87,8 @@ export default async function ProjectDetailPage({
         <h2 className="section-title">Stages</h2>
         <StageCounter snapshot={stageSnapshot} />
       </section>
+
+      <NamedModelsPanel projectId={project.id} namedModels={namedModels} />
     </div>
   );
 }

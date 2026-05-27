@@ -93,7 +93,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P1.8 — Named models panel (hidden when empty)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** A unit with one champion who needs a different scheme adds named-model entries inside the unit. Each named model has a name and 5 stage checkboxes (no counters — single mini). Panel is hidden when there are no named models for the project.
 
