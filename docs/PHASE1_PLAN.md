@@ -50,7 +50,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P1.7 — Project workspace with stage counter panel
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The flagship UX of Phase 1. The placeholder at `/projects/[id]` currently shows stage counts but no interactivity. Replace with a counter panel where each of Build/Prime/Paint/Base/Complete has `−` and `+` buttons, constraint-enforced (can't have more primed than built), with keyboard shortcuts `B/P/A/S/C` to advance on desktop.
 
