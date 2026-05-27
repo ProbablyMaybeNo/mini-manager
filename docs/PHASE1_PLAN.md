@@ -125,7 +125,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P1.9 — Sub-project nesting + aggregate counters up the tree
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** When a project is an Army, render its child Units in a left tree. The Army's header counters become the SUM of its children's counters (this is what painters see when they ask "how done is my army?"). Reparenting child Units between Armies is out of scope for v1 — defer.
 

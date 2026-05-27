@@ -102,6 +102,23 @@ export function aggregateCounters(
 }
 
 /**
+ * A project is a "leaf" when it represents actual miniatures on the
+ * desk — rank-and-file via `count > 0` or character entries via
+ * `namedModelCount > 0`. Army / Warband parents at `count === 0` and
+ * no named models are non-leaf containers: they aggregate from below.
+ *
+ * This is the inverse of "is an aggregate container". We use it on
+ * the workspace page to decide whether to render the editable
+ * StageCounter panel or the read-only AggregateCountersDisplay.
+ */
+export function isLeafProject(
+  project: Pick<Project, "count">,
+  namedModelCount = 0,
+): boolean {
+  return project.count > 0 || namedModelCount > 0;
+}
+
+/**
  * Derived display status — used when we don't want to show raw counters.
  * Order matters: most-advanced state wins.
  */

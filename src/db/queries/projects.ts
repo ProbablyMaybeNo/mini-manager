@@ -146,6 +146,29 @@ export async function listNamedModelsByProject(
 }
 
 /**
+ * Direct children of a project (one level deep, no grand-children).
+ * Used by the workspace tree on Army / Warband parents. Verifies
+ * ownership via `ownerId` so a malicious parent id from another
+ * owner returns an empty list rather than leaking rows.
+ */
+export async function listChildProjects(
+  userId: string,
+  parentId: string,
+): Promise<ReadonlyArray<Project>> {
+  return db
+    .select()
+    .from(projects)
+    .where(
+      and(
+        eq(projects.ownerId, userId),
+        eq(projects.parentId, parentId),
+        isNull(projects.archivedAt),
+      ),
+    )
+    .orderBy(asc(projects.createdAt));
+}
+
+/**
  * Parents that can host sub-projects: top-level Army or Warband rows.
  * Returns a slim shape — only fields the parent picker needs.
  */
