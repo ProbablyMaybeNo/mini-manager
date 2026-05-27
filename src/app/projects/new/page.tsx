@@ -6,7 +6,7 @@ import { NewProjectForm } from "@/components/NewProjectForm";
 export const dynamic = "force-dynamic";
 
 export default async function NewProjectPage() {
-  const userId = currentUserId();
+  const userId = await currentUserId();
   const parents = await listParentCandidates(userId);
 
   return (

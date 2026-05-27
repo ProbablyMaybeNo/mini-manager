@@ -12,7 +12,7 @@ import { QuickAddBar } from "@/components/QuickAddBar";
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const userId = currentUserId();
+  const userId = await currentUserId();
   const [topLevel, backlog, active, namedCountByProject] = await Promise.all([
     listTopLevelProjects(userId),
     listBacklogUnits(userId),

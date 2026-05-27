@@ -1,13 +1,20 @@
-/**
- * Phase 1 stub: hardcoded dev user.
- *
- * Real auth (NextAuth magic-link) lands in P1.3. Until then every
- * server action reads the user via this helper. When auth ships,
- * replace the implementation here with `auth()` from NextAuth and
- * the rest of the app keeps working unchanged.
- */
-export const DEV_USER_ID = "dev_user__local";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 
-export function currentUserId(): string {
-  return DEV_USER_ID;
+/**
+ * Resolve the current user id from the session. Throws via `redirect`
+ * to `/sign-in` if nothing is authenticated — server actions and pages
+ * can therefore treat the return value as a guaranteed string.
+ *
+ * Despite the filename, this is the real auth helper now. P1.3 replaced
+ * the stub with the NextAuth session lookup; the filename stays so all
+ * existing call sites only need to add `await`.
+ */
+export async function currentUserId(): Promise<string> {
+  const session = await auth();
+  const id = session?.user?.id;
+  if (!id) {
+    redirect("/sign-in");
+  }
+  return id;
 }

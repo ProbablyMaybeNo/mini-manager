@@ -195,7 +195,7 @@ export async function bumpCounter(
   }
   const { projectId, stage, delta } = parsed.data;
 
-  const userId = currentUserId();
+  const userId = await currentUserId();
 
   const rows = await db
     .select({

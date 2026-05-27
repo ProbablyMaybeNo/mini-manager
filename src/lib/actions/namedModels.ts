@@ -124,7 +124,7 @@ export async function createNamedModel(
   }
   const { projectId, name } = parsed.data;
 
-  const userId = currentUserId();
+  const userId = await currentUserId();
 
   // Verify ownership before writing.
   const owned = await db
@@ -184,7 +184,7 @@ export async function deleteNamedModel(
   }
   const { id } = parsed.data;
 
-  const userId = currentUserId();
+  const userId = await currentUserId();
 
   // Lookup + ownership check in one round-trip via inner join.
   const rows = await db
@@ -237,7 +237,7 @@ export async function toggleNamedModelStage(
   }
   const { id, stage, nextValue } = parsed.data;
 
-  const userId = currentUserId();
+  const userId = await currentUserId();
 
   const rows = await db
     .select({

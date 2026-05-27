@@ -45,7 +45,7 @@ export async function createProject(
   }
   const { name, type, count, parentId } = parsed.data;
 
-  const userId = currentUserId();
+  const userId = await currentUserId();
 
   // Single Model is always 1 mini; don't let the form lie.
   const finalCount = type === "Single Model" ? 1 : count;

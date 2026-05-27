@@ -158,7 +158,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P1.3 — NextAuth (replaces the dev stub)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Replace `currentUserId()` stub with real auth. Magic-link via Resend for dev (or console-log transport if Resend isn't set up), OAuth (Google + GitHub) configured but commented out until Ross provides credentials. Sign-in / sign-out flow. Session-protected routes.
 

@@ -55,7 +55,7 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const userId = currentUserId();
+  const userId = await currentUserId();
   const project = await getProjectById(userId, id);
   if (!project) notFound();
 
