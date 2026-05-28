@@ -313,6 +313,123 @@ export const wishlistItems = sqliteTable(
 );
 
 /* ============================================================
+   Domain — Recipes (P3.1)
+   A recipe is an ordered list of zones; each zone is an ordered
+   list of technique steps; each step pins a paint from the catalog
+   OR holds a custom hex (for mixes). Recipes can attach to a
+   project, attach to a named model, or stand alone. The
+   "at most one attachment" rule is enforced application-side
+   (see src/lib/actions/recipes.ts) — SQLite's CHECK semantics
+   around nullable FKs are awkward.
+   ============================================================ */
+
+export const bodyTypes = ["infantry", "vehicle", "monster", "terrain"] as const;
+export type BodyType = (typeof bodyTypes)[number];
+
+export const techniqueKeys = [
+  "basecoat",
+  "layer",
+  "wash",
+  "drybrush",
+  "edge_highlight",
+  "glaze",
+  "stipple",
+  "wet_blend",
+  "two_thin_coats",
+  "zenithal_prime",
+] as const;
+export type TechniqueKey = (typeof techniqueKeys)[number];
+
+export const recipes = sqliteTable(
+  "recipe",
+  {
+    id: id(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    bodyType: text("body_type", { enum: bodyTypes }).notNull().default("infantry"),
+    attachedProjectId: text("attached_project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    attachedNamedModelId: text("attached_named_model_id").references(
+      () => namedModels.id,
+      { onDelete: "set null" },
+    ),
+    isStandalone: integer("is_standalone", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    publicSlug: text("public_slug").unique(),
+    notesMd: text("notes_md"),
+    ...timestamps,
+  },
+  (t) => ({
+    ownerStandaloneIdx: index("recipe_owner_standalone_idx").on(
+      t.ownerId,
+      t.isStandalone,
+    ),
+    attachedProjectIdx: index("recipe_attached_project_idx").on(t.attachedProjectId),
+    attachedNamedModelIdx: index("recipe_attached_named_model_idx").on(
+      t.attachedNamedModelId,
+    ),
+  }),
+);
+
+export const recipeZones = sqliteTable(
+  "recipe_zone",
+  {
+    id: id(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    name: text("name").notNull(),
+    /** Maps to a silhouette JSON id (e.g. "armor-primary"). Nullable
+     *  because the painter can name a custom zone outside the
+     *  silhouette's preset list. */
+    silhouetteZoneId: text("silhouette_zone_id"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    recipeIdx: index("recipe_zone_recipe_idx").on(t.recipeId),
+    recipePositionUq: uniqueIndex("recipe_zone_recipe_position").on(
+      t.recipeId,
+      t.position,
+    ),
+  }),
+);
+
+export const recipeSteps = sqliteTable(
+  "recipe_step",
+  {
+    id: id(),
+    zoneId: text("zone_id")
+      .notNull()
+      .references(() => recipeZones.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    technique: text("technique", { enum: techniqueKeys }).notNull(),
+    /** References paints.json by id — no SQL FK since the catalog
+     *  is a static asset. Same pattern as `inventory_entry.paint_id`. */
+    paintId: text("paint_id"),
+    /** For "this is a mix": stores the rendered hex of the result. */
+    customColorHex: text("custom_color_hex"),
+    notesMd: text("notes_md"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    zoneIdx: index("recipe_step_zone_idx").on(t.zoneId),
+    zonePositionUq: uniqueIndex("recipe_step_zone_position").on(
+      t.zoneId,
+      t.position,
+    ),
+  }),
+);
+
+/* ============================================================
    Relations
    ============================================================ */
 
@@ -322,6 +439,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   projects: many(projects),
   inventoryEntries: many(inventoryEntries),
   wishlistItems: many(wishlistItems),
+  recipes: many(recipes),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -342,12 +460,44 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   children: many(projects, { relationName: "project_tree" }),
   namedModels: many(namedModels),
   wishlistItems: many(wishlistItems),
+  attachedRecipes: many(recipes, { relationName: "recipe_attached_project" }),
 }));
 
-export const namedModelsRelations = relations(namedModels, ({ one }) => ({
+export const namedModelsRelations = relations(namedModels, ({ one, many }) => ({
   project: one(projects, {
     fields: [namedModels.projectId],
     references: [projects.id],
+  }),
+  attachedRecipes: many(recipes, { relationName: "recipe_attached_named_model" }),
+}));
+
+export const recipesRelations = relations(recipes, ({ one, many }) => ({
+  owner: one(users, { fields: [recipes.ownerId], references: [users.id] }),
+  attachedProject: one(projects, {
+    fields: [recipes.attachedProjectId],
+    references: [projects.id],
+    relationName: "recipe_attached_project",
+  }),
+  attachedNamedModel: one(namedModels, {
+    fields: [recipes.attachedNamedModelId],
+    references: [namedModels.id],
+    relationName: "recipe_attached_named_model",
+  }),
+  zones: many(recipeZones),
+}));
+
+export const recipeZonesRelations = relations(recipeZones, ({ one, many }) => ({
+  recipe: one(recipes, {
+    fields: [recipeZones.recipeId],
+    references: [recipes.id],
+  }),
+  steps: many(recipeSteps),
+}));
+
+export const recipeStepsRelations = relations(recipeSteps, ({ one }) => ({
+  zone: one(recipeZones, {
+    fields: [recipeSteps.zoneId],
+    references: [recipeZones.id],
   }),
 }));
 
@@ -387,3 +537,12 @@ export const wishlistItemsRelations = relations(wishlistItems, ({ one }) => ({
 
 export type WishlistItem = typeof wishlistItems.$inferSelect;
 export type NewWishlistItem = typeof wishlistItems.$inferInsert;
+
+export type Recipe = typeof recipes.$inferSelect;
+export type NewRecipe = typeof recipes.$inferInsert;
+
+export type RecipeZone = typeof recipeZones.$inferSelect;
+export type NewRecipeZone = typeof recipeZones.$inferInsert;
+
+export type RecipeStep = typeof recipeSteps.$inferSelect;
+export type NewRecipeStep = typeof recipeSteps.$inferInsert;

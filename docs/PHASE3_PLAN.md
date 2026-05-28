@@ -14,7 +14,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.1 — Recipe data model + migrations
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Three new tables + relations. Recipes are first-class entities (per V2-BUILD-PLAN §4.3) — they can attach to a project, attach to a named model, or stand alone. Each recipe is an ordered list of zones; each zone is an ordered list of technique steps; each step pins a paint from the catalog OR holds a custom hex (mixes).
 
