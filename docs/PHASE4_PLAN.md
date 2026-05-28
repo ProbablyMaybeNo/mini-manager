@@ -46,7 +46,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.2 — Color Wheel (port from v1)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** HSL canvas with draggable pickers. Eight harmony modes (complementary, analogous, triadic, tetradic, split-complementary, square, monochromatic, accented analogous). Each generated swatch has a `[ Find in library ]` button that opens the PaintSlotPicker filtered by hex proximity. The v1 implementation at `../app-src/src/app/wheel/page.tsx` + `../app-src/src/components/wheel/ColorWheelCanvas.tsx` is the starting point — port the math; rebuild the UI against the new component vocabulary.
 
