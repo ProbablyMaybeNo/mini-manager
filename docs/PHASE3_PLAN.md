@@ -90,7 +90,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.2 — Recipe queries + server actions (CRUD + attach/detach)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** All the server-side plumbing the editor needs. No UI yet — just the data layer + actions.
 
