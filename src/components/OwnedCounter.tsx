@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { clsx } from "clsx";
-import { bumpCounter, validateBump } from "@/lib/actions/counters";
+import { bumpCounter } from "@/lib/actions/counters";
+import { validateBump } from "@/lib/counters/cascade";
 import { CounterButton } from "@/components/StageCounter";
 
 /**

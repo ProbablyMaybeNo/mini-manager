@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { ProgressBar } from "@/components/ProgressBar";
+import { bumpCounter } from "@/lib/actions/counters";
 import {
-  bumpCounter,
   counterStages,
   validateBump,
   type CounterStage,
-} from "@/lib/actions/counters";
+} from "@/lib/counters/cascade";
 
 /**
  * Snapshot of the project columns this panel cares about. We accept
