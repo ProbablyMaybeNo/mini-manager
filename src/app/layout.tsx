@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { NavRail } from "@/components/NavRail";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 import "./globals.css";
 
 const plexMono = IBM_Plex_Mono({
@@ -42,6 +43,7 @@ export default function RootLayout({
           <NavRail />
           <main className="flex-1 min-w-0">{children}</main>
         </div>
+        <GlobalSearch />
       </body>
     </html>
   );

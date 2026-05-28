@@ -9,6 +9,7 @@ import {
 import { ProjectRow } from "@/components/ProjectRow";
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
+import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 
 export const dynamic = "force-dynamic";
 
@@ -97,6 +98,8 @@ export default async function ProjectsPage() {
               ))}
             </div>
           </section>
+
+          <RecentlyBoughtLine />
         </>
       )}
     </div>

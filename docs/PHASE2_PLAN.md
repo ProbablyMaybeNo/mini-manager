@@ -335,7 +335,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.8 — Search anywhere (`/` shortcut) + dashboard polish
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Painters live by speed. The `/` shortcut focuses a global search box that filters Library + Wishlist results in a popover. Plus a small dashboard polish: confirm the Top Wishes panel reads well and add a "recently bought" footer line for spending awareness.
 
