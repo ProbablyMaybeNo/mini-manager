@@ -121,7 +121,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.4 — Palette schema + save-palette action
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Free-floating saved colour sets. Tools emit them; Recipes consume them. A Palette is an array of hexes (optionally pinned to paint ids). Lives separately from Recipes; not project-scoped.
 

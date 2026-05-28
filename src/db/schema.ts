@@ -430,6 +430,49 @@ export const recipeSteps = sqliteTable(
 );
 
 /* ============================================================
+   Domain — Palettes (P4.4)
+   Free-floating saved colour sets. Tools (Wheel / Match /
+   Eyedropper / Gradient) emit them; the Recipe layer consumes
+   them via the send-to-recipe modal. Not project-scoped — a
+   palette lives by ownerId only.
+
+   `colorHexes` + `paintIds` are JSON-encoded text columns rather
+   than separate rows because palettes are always read and written
+   whole; there's no per-row query workload to amortise.
+   ============================================================ */
+
+export const paletteSources = [
+  "manual",
+  "wheel",
+  "eyedropper",
+  "match",
+  "gradient",
+] as const;
+export type PaletteSource = (typeof paletteSources)[number];
+
+export const palettes = sqliteTable(
+  "palette",
+  {
+    id: id(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    source: text("source", { enum: paletteSources }).notNull(),
+    /** JSON-encoded `string[]` of `#RRGGBB` hexes, in display order. */
+    colorHexes: text("color_hexes").notNull(),
+    /** JSON-encoded `(string | null)[]` of paint ids, same length as
+     *  colorHexes. null entries mean "no paint match" (e.g. a custom
+     *  hex with no sub-2-ΔE pin). */
+    paintIds: text("paint_ids").notNull(),
+    ...timestamps,
+  },
+  (t) => ({
+    ownerIdx: index("palette_owner_idx").on(t.ownerId),
+  }),
+);
+
+/* ============================================================
    Relations
    ============================================================ */
 
@@ -440,6 +483,11 @@ export const usersRelations = relations(users, ({ many }) => ({
   inventoryEntries: many(inventoryEntries),
   wishlistItems: many(wishlistItems),
   recipes: many(recipes),
+  palettes: many(palettes),
+}));
+
+export const palettesRelations = relations(palettes, ({ one }) => ({
+  owner: one(users, { fields: [palettes.ownerId], references: [users.id] }),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -546,3 +594,6 @@ export type NewRecipeZone = typeof recipeZones.$inferInsert;
 
 export type RecipeStep = typeof recipeSteps.$inferSelect;
 export type NewRecipeStep = typeof recipeSteps.$inferInsert;
+
+export type Palette = typeof palettes.$inferSelect;
+export type NewPalette = typeof palettes.$inferInsert;
