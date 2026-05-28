@@ -16,7 +16,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.1 — Paint catalog static asset + IndexedDB read-through cache
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The library reads from a static `paints.json` served by Next.js. v1 already produced one at `../app-src/public/data/paints.json` (7,128 paints). We re-export from the canonical Webscraper SQLite DB so v2 owns its own copy and the export script lives in this repo. On the client, a tiny Dexie store keeps a copy in IndexedDB so the table view doesn't re-fetch on every navigation.
 

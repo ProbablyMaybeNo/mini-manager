@@ -12,31 +12,33 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/db/seed.ts"
+    "db:seed": "tsx src/db/seed.ts",
+    "db:export-paints": "tsx scripts/export-paints.ts"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.7.0",
+    "@libsql/client": "^0.14.0",
+    "clsx": "^2.1.0",
+    "dexie": "^4.4.3",
+    "drizzle-orm": "^0.36.0",
+    "nanoid": "^5.0.7",
     "next": "^16.0.0",
+    "next-auth": "^5.0.0-beta.25",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next-auth": "^5.0.0-beta.25",
-    "@auth/drizzle-adapter": "^1.7.0",
-    "drizzle-orm": "^0.36.0",
-    "@libsql/client": "^0.14.0",
-    "nanoid": "^5.0.7",
-    "zod": "^3.23.0",
-    "clsx": "^2.1.0"
+    "zod": "^3.23.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "drizzle-kit": "^0.30.0",
-    "tsx": "^4.19.0",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/postcss": "^4.0.0",
-    "postcss": "^8.4.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^16.0.0"
+    "eslint-config-next": "^16.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
   }
 }
