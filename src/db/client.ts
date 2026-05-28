@@ -1,4 +1,6 @@
-import { createClient } from "@libsql/client";
+// Explicit /node import so Turbopack doesn't pull the web-API variant,
+// which rejects `file:` URLs.
+import { createClient } from "@libsql/client/node";
 import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 

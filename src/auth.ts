@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import Resend from "next-auth/providers/resend";
+import type { EmailConfig } from "next-auth/providers/email";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { db } from "@/db/client";
@@ -54,51 +54,62 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/sign-in",
     verifyRequest: "/sign-in?sent=1",
   },
-  providers: [
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY ?? "dev-no-key",
-      from: process.env.AUTH_EMAIL_FROM ?? "Mini Manager <no-reply@localhost>",
-      async sendVerificationRequest({ identifier, url }) {
-        if (process.env.AUTH_RESEND_KEY) {
-          // Real Resend path. Reach the API directly so we don't add
-          // a new npm dep — the Auth.js Resend provider does this too.
-          const host = new URL(url).host;
-          const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${process.env.AUTH_RESEND_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              from:
-                process.env.AUTH_EMAIL_FROM ??
-                "Mini Manager <no-reply@authjs.dev>",
-              to: identifier,
-              subject: `Sign in to ${host}`,
-              text: `Sign in to ${host}\n\n${url}\n\nIf you didn't request this, ignore this email.`,
-              html: `<p>Sign in to <strong>${host}</strong></p><p><a href="${url}">${url}</a></p><p style="color:#888">If you didn't request this, ignore this email.</p>`,
-            }),
-          });
-          if (!res.ok) {
-            const body = await res.text();
-            throw new Error(`Resend error (${res.status}): ${body}`);
-          }
-          return;
-        }
-
-        // Dev fallback: bracket-framed so it's easy to spot in the
-        // Next.js dev server log. Copy the URL into the browser.
-        console.log(
-          [
-            "",
-            "┌─ MINI MANAGER · MAGIC LINK ─────────────────────────",
-            `│ to:  ${identifier}`,
-            `│ url: ${url}`,
-            "└─────────────────────────────────────────────────────",
-            "",
-          ].join("\n"),
-        );
-      },
-    }),
-  ],
+  providers: [magicLinkProvider()],
 });
+
+/**
+ * Inline email provider — bypasses the Resend factory's apiKey checks.
+ *
+ * When `AUTH_RESEND_KEY` is set we POST directly to the Resend REST API
+ * (no extra npm dep). When it isn't we bracket-frame the verification
+ * URL to the dev server console — copy + paste it into the browser to
+ * finish signing in.
+ */
+function magicLinkProvider(): EmailConfig {
+  return {
+    id: "resend",
+    type: "email",
+    name: "Magic Link",
+    server: "",
+    maxAge: 24 * 60 * 60,
+    from: process.env.AUTH_EMAIL_FROM ?? "Mini Manager <no-reply@localhost>",
+    options: {},
+    async sendVerificationRequest({ identifier, url }) {
+      if (process.env.AUTH_RESEND_KEY) {
+        const host = new URL(url).host;
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.AUTH_RESEND_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from:
+              process.env.AUTH_EMAIL_FROM ??
+              "Mini Manager <no-reply@authjs.dev>",
+            to: identifier,
+            subject: `Sign in to ${host}`,
+            text: `Sign in to ${host}\n\n${url}\n\nIf you didn't request this, ignore this email.`,
+            html: `<p>Sign in to <strong>${host}</strong></p><p><a href="${url}">${url}</a></p><p style="color:#888">If you didn't request this, ignore this email.</p>`,
+          }),
+        });
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error(`Resend error (${res.status}): ${body}`);
+        }
+        return;
+      }
+
+      console.log(
+        [
+          "",
+          "┌─ MINI MANAGER · MAGIC LINK ─────────────────────────",
+          `│ to:  ${identifier}`,
+          `│ url: ${url}`,
+          "└─────────────────────────────────────────────────────",
+          "",
+        ].join("\n"),
+      );
+    },
+  };
+}

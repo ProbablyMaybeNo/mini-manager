@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 /**
- * Session-gated middleware.
+ * Session-gated edge proxy (formerly `middleware.ts` — renamed per
+ * the Next 16 convention).
  *
  * Anything not explicitly allow-listed by the `matcher` below funnels
  * through `auth(...)`. Unauthenticated requests get a 302 to `/sign-in`
@@ -23,7 +24,7 @@ export default auth((req) => {
 });
 
 /**
- * Skip middleware for:
+ * Skip the proxy for:
  *   - `/sign-in`              the sign-in screen itself
  *   - `/api/auth/*`           NextAuth's route handlers
  *   - `/_next/*`              Next.js internals (static, image, RSC payloads)
