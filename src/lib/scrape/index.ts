@@ -8,6 +8,10 @@ import { goblin } from "./parsers/goblin";
 import { gw } from "./parsers/gw";
 import { amazon } from "./parsers/amazon";
 import { ebay } from "./parsers/ebay";
+import { nobleknight } from "./parsers/nobleknight";
+import { miniaturemarket } from "./parsers/miniaturemarket";
+import { gamekastle } from "./parsers/gamekastle";
+import { gamersroll } from "./parsers/gamersroll";
 
 const PARSERS: ReadonlyArray<VendorParser> = [
   elementgames,
@@ -16,6 +20,10 @@ const PARSERS: ReadonlyArray<VendorParser> = [
   gw,
   amazon,
   ebay,
+  nobleknight,
+  miniaturemarket,
+  gamekastle,
+  gamersroll,
 ];
 
 const USER_AGENT = "Mini Manager / wishlist-scrape (https://miniaturemanager.app/bot)";
