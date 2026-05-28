@@ -330,7 +330,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.7 — Standalone recipes index page
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** A grid of the painter's saved recipes at `/recipes`. Quick scan, jump to edit, see attachment status at a glance.
 

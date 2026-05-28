@@ -124,6 +124,55 @@ export async function getRecipeWithZones(
   return { ...recipe, zones };
 }
 
+export interface RecipesGrouped {
+  standalone: ReadonlyArray<Recipe>;
+  byProject: ReadonlyArray<{ projectId: string; recipes: Recipe[] }>;
+  byNamedModel: ReadonlyArray<{ namedModelId: string; recipes: Recipe[] }>;
+}
+
+/**
+ * All recipes for the user, partitioned into the three /recipes
+ * sections in a single round-trip. Groups by project / named model
+ * preserve the per-group ordering (updatedAt DESC).
+ */
+export async function listAllRecipesGrouped(
+  userId: string,
+): Promise<RecipesGrouped> {
+  const rows = await db
+    .select()
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId))
+    .orderBy(desc(recipes.updatedAt));
+
+  const standalone: Recipe[] = [];
+  const projectMap = new Map<string, Recipe[]>();
+  const namedModelMap = new Map<string, Recipe[]>();
+  for (const r of rows) {
+    if (r.attachedProjectId) {
+      const arr = projectMap.get(r.attachedProjectId) ?? [];
+      arr.push(r);
+      projectMap.set(r.attachedProjectId, arr);
+    } else if (r.attachedNamedModelId) {
+      const arr = namedModelMap.get(r.attachedNamedModelId) ?? [];
+      arr.push(r);
+      namedModelMap.set(r.attachedNamedModelId, arr);
+    } else {
+      standalone.push(r);
+    }
+  }
+  return {
+    standalone,
+    byProject: Array.from(projectMap, ([projectId, list]) => ({
+      projectId,
+      recipes: list,
+    })),
+    byNamedModel: Array.from(namedModelMap, ([namedModelId, list]) => ({
+      namedModelId,
+      recipes: list,
+    })),
+  };
+}
+
 /**
  * Map of projectId → recipes attached to it. Used by the dashboard
  * and any "show me recipes in flight" view.
