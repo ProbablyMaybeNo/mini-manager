@@ -13,7 +13,16 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
-    "db:export-paints": "tsx scripts/export-paints.ts"
+    "db:export-paints": "tsx scripts/export-paints.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:watch": "vitest --project unit",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.0",
@@ -29,16 +38,20 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "drizzle-kit": "^0.30.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.0.0",
+    "happy-dom": "^20.9.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.7"
   }
 }

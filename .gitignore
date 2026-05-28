@@ -39,3 +39,9 @@ data/local.db-journal
 
 # drizzle migration metadata
 drizzle/meta/
+
+# test outputs
+coverage/
+playwright-report/
+test-results/
+.vitest-cache/
