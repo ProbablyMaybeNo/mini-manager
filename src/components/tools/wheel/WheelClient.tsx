@@ -9,6 +9,8 @@ import {
 import type { Paint } from "@/lib/paints/types";
 import { loadPaints } from "@/lib/paints/loader";
 import { ToolShell } from "@/components/tools/ToolShell";
+import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
+import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { WheelCanvas, type WheelStop } from "./WheelCanvas";
 import { HarmonyPicker } from "./HarmonyPicker";
 import { SwatchActions } from "./SwatchActions";
@@ -100,6 +102,21 @@ export function WheelClient() {
   const harmonyMeta = getHarmonyMeta(harmony);
   const activeHex = harmonyHexes[indexForStopId(activeStopId)] ?? harmonyHexes[0];
 
+  // The footer ships the full harmony as the palette. Pinned swatches
+  // sort to the front so the painter's curated picks lead.
+  const footerSwatches: ReadonlyArray<ToolPaletteSwatch> = useMemo(() => {
+    const swatches = harmonyHexes.map((hex, i) => ({
+      hex,
+      name: i === 0 ? "Primary" : `Swatch ${i + 1}`,
+    }));
+    if (pinnedHexes.size === 0) return swatches;
+    return [...swatches].sort((a, b) => {
+      const aP = pinnedHexes.has(a.hex) ? 0 : 1;
+      const bP = pinnedHexes.has(b.hex) ? 0 : 1;
+      return aP - bP;
+    });
+  }, [harmonyHexes, pinnedHexes]);
+
   return (
     <ToolShell
       input={
@@ -189,24 +206,11 @@ export function WheelClient() {
         </div>
       }
       footer={
-        <>
-          <button
-            type="button"
-            disabled
-            title="Save palette ships in P4.4"
-            className="px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] opacity-60"
-          >
-            [ Save palette ]
-          </button>
-          <button
-            type="button"
-            disabled
-            title="Send to recipe ships in P4.7"
-            className="px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] opacity-60"
-          >
-            [ Send to recipe ]
-          </button>
-        </>
+        <ToolFooterActions
+          toolId="wheel"
+          swatches={footerSwatches}
+          defaultPaletteName={`${harmonyMeta.label} palette`}
+        />
       }
     />
   );

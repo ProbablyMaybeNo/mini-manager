@@ -237,7 +237,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.7 — Send-to-recipe cross-tool flow
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Every tool can hand its output to a recipe in one click — the V2-BUILD-PLAN ship criterion for Phase 4. A `<SendToRecipeModal />` opens from any tool's footer action and lets the painter pick a target recipe + zone + insert position; OR create a new standalone recipe from the palette.
 

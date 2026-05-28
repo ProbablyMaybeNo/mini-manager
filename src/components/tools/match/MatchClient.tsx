@@ -9,6 +9,9 @@ import {
   type MatchResult,
 } from "@/lib/tools/match/find";
 import { ToolShell } from "@/components/tools/ToolShell";
+import { SendToRecipeModal } from "@/components/tools/SendToRecipeModal";
+import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
+import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { MatchResultsRow } from "./MatchResultsRow";
 
 const PAGE_SIZE = 50;
@@ -45,7 +48,7 @@ export function MatchClient() {
   const [hexError, setHexError] = useState<string | null>(null);
   const [brandFilter, setBrandFilter] = useState<ReadonlySet<string>>(new Set());
   const [page, setPage] = useState(0);
-  const [copyFlash, setCopyFlash] = useState<string | null>(null);
+  const [sendOne, setSendOne] = useState<ToolPaletteSwatch | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -63,12 +66,6 @@ export function MatchClient() {
       mounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!copyFlash) return;
-    const t = setTimeout(() => setCopyFlash(null), 1500);
-    return () => clearTimeout(t);
-  }, [copyFlash]);
 
   // Reset page when the target / brand filter changes — otherwise the
   // user can sit on page 3 of an empty list.
@@ -115,16 +112,25 @@ export function MatchClient() {
   };
 
   const handleUse = (r: MatchResult) => {
-    // P4.7 wires the send-to-recipe modal here. For now: copy the paint's
-    // hex to clipboard + flash a confirmation so the painter can paste it
-    // into a recipe step manually.
-    void navigator?.clipboard?.writeText?.(r.paint.hex).catch(() => {
-      /* no-op */
+    // Per V2-BUILD-PLAN ship criterion: every tool ends in "send to
+    // recipe" in one click. Match emits a 1-element palette.
+    setSendOne({
+      hex: r.paint.hex,
+      name: `${r.paint.brand} ${r.paint.name}`,
+      sourcePaintId: r.paint.id,
     });
-    setCopyFlash(`${r.paint.brand} ${r.paint.name}`);
   };
 
+  // Footer "Send to recipe" / "Save palette" hand off the active target
+  // hex as a single-swatch palette. If the painter wants the top match
+  // instead, they hit [ Use ] on the row.
+  const footerSwatches: ReadonlyArray<ToolPaletteSwatch> = useMemo(() => {
+    if (!HEX6.test(activeHex)) return [];
+    return [{ hex: activeHex }];
+  }, [activeHex]);
+
   return (
+    <>
     <ToolShell
       input={
         <div className="space-y-4">
@@ -209,14 +215,7 @@ export function MatchClient() {
             </div>
           </div>
 
-          {copyFlash ? (
-            <p
-              role="status"
-              className="text-2xs font-mono text-[var(--color-green)]"
-            >
-              ✓ Copied {copyFlash} hex to clipboard.
-            </p>
-          ) : null}
+          {sendOne ? null : null}
         </div>
       }
       output={
@@ -277,25 +276,21 @@ export function MatchClient() {
         </div>
       }
       footer={
-        <>
-          <button
-            type="button"
-            disabled
-            title="Save palette ships in P4.4"
-            className="px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] opacity-60"
-          >
-            [ Save palette ]
-          </button>
-          <button
-            type="button"
-            disabled
-            title="Send to recipe ships in P4.7"
-            className="px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] opacity-60"
-          >
-            [ Send to recipe ]
-          </button>
-        </>
+        <ToolFooterActions
+          toolId="match"
+          swatches={footerSwatches}
+          defaultPaletteName={`Match ${activeHex}`}
+        />
       }
     />
+    {sendOne ? (
+      <SendToRecipeModal
+        open={sendOne !== null}
+        onClose={() => setSendOne(null)}
+        swatches={[sendOne]}
+        toolId="match"
+      />
+    ) : null}
+    </>
   );
 }

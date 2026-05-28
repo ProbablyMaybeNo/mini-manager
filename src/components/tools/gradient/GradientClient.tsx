@@ -14,6 +14,8 @@ import {
 } from "@/lib/tools/match/find";
 import { normaliseHex } from "@/lib/palettes/cascade";
 import { ToolShell } from "@/components/tools/ToolShell";
+import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
+import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { RampDisplay } from "./RampDisplay";
 
 const HEX6 = /^#[0-9A-F]{6}$/;
@@ -111,6 +113,17 @@ export function GradientClient() {
     });
   }, [rampHexes, paints, catalogLoading]);
 
+  // Footer palette = the ramp itself; pin paint ids for sub-2 ΔE matches
+  // so the recipe is attached directly to library entries.
+  const footerSwatches: ReadonlyArray<ToolPaletteSwatch> = useMemo(() => {
+    return stepsWithMatches.map((s) => ({
+      hex: s.hex,
+      sourcePaintId:
+        s.match && s.match.confidence === "high" ? s.match.paint.id : undefined,
+      name: s.match?.paint.name,
+    }));
+  }, [stepsWithMatches]);
+
   return (
     <ToolShell
       input={
@@ -168,24 +181,11 @@ export function GradientClient() {
         </div>
       }
       footer={
-        <>
-          <button
-            type="button"
-            disabled
-            title="Save palette ships in P4.4 wiring"
-            className="px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] opacity-60"
-          >
-            [ Save palette ]
-          </button>
-          <button
-            type="button"
-            disabled
-            title="Send to recipe ships in P4.7"
-            className="px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] opacity-60"
-          >
-            [ Send to recipe ]
-          </button>
-        </>
+        <ToolFooterActions
+          toolId="gradient"
+          swatches={footerSwatches}
+          defaultPaletteName="Gradient ramp"
+        />
       }
     />
   );
