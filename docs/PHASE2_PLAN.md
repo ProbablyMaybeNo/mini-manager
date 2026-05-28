@@ -52,7 +52,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.2 — Library page: table, filters, detail panel
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The library is the painter's catalog. Default view is a dense table (Linear-style); filter rail collapses on mobile. Clicking a row opens a side panel with full detail. Owned/wishlist marks come in P2.3 — this milestone renders read-only catalog data.
 
