@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { clsx } from "clsx";
 import type { Project } from "@/db/schema";
 import { PaletteStrip } from "./PaletteStrip";
+import { RecipePaletteStripStatic } from "./recipes/RecipePaletteStrip";
 import { ProgressBar } from "./ProgressBar";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
@@ -27,10 +28,14 @@ export function ProjectRow({
   project,
   namedModelCount = 0,
   href,
+  recipeSwatches,
 }: {
   project: Project;
   namedModelCount?: number;
   href?: string;
+  /** Pre-resolved swatch hexes from the parent's bulk palette query.
+   *  When non-empty, displaces the placeholder PaletteStrip. */
+  recipeSwatches?: ReadonlyArray<string>;
 }) {
   const totalModels = project.count + namedModelCount;
   const status = displayStatus(project);
@@ -64,7 +69,14 @@ export function ProjectRow({
         {project.type}
       </span>
       <span className="hidden md:inline-block">
-        <PaletteStrip slots={5} />
+        {recipeSwatches && recipeSwatches.length > 0 ? (
+          <RecipePaletteStripStatic
+            swatches={recipeSwatches.slice(0, 5)}
+            ariaLabel={`${project.name} palette`}
+          />
+        ) : (
+          <PaletteStrip slots={5} />
+        )}
       </span>
       <span className="hidden md:inline-block">
         <ProgressBar percent={percent} width={14} />

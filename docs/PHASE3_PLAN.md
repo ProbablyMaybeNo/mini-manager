@@ -366,7 +366,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.8 — Recipe at-a-glance inline in project workspace + dashboard
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Wrap-up milestone — small additions that make recipes feel native across the rest of the app. After P3.6 the recipe is visible in the project workspace, but only as a panel. This adds: palette strip on `ProjectRow`, recipe summary on the dashboard, hover-preview of the recipe in NavRail breadcrumbs.
 

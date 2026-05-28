@@ -271,9 +271,9 @@ export async function paletteForRecipe(
 }
 
 /**
- * Compact palette strip — up to 8 swatch hexes in zone order. Skips
- * zones with no resolved colour. Used by `RecipeCard` + `ProjectRow`
- * to render a tiny strip without loading the full recipe.
+ * Compact palette strip — up to `limit` swatch hexes in zone order.
+ * Skips zones with no resolved colour. Used by `RecipeCard` +
+ * `ProjectRow` to render a tiny strip without loading the full recipe.
  */
 export async function paletteStripForRecipe(
   userId: string,
@@ -284,6 +284,81 @@ export async function paletteStripForRecipe(
   if (!recipe) return [];
   const map = await paletteForRecipe(recipe);
   return Array.from(map.values()).slice(0, limit);
+}
+
+/**
+ * Bulk palette strips for many recipes in 3 SQL queries total — owner
+ * check on the recipes (1 query), zones (1 query keyed by recipe), and
+ * steps (1 query keyed by zone). Avoids the N+1 explosion the per-card
+ * `paletteStripForRecipe` would cause when the projects list renders
+ * a strip per project.
+ *
+ * Returns a Map<recipeId, hex[]>. Recipes not owned by the caller are
+ * silently dropped so a hostile id list can't probe other users.
+ */
+export async function paletteStripsForRecipes(
+  userId: string,
+  recipeIds: ReadonlyArray<string>,
+  limit = 8,
+): Promise<ReadonlyMap<string, ReadonlyArray<string>>> {
+  const out = new Map<string, ReadonlyArray<string>>();
+  if (recipeIds.length === 0) return out;
+
+  const ownedRows = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(
+      and(
+        eq(recipes.ownerId, userId),
+        inArray(recipes.id, [...recipeIds]),
+      ),
+    );
+  const ownedIds = ownedRows.map((r) => r.id);
+  if (ownedIds.length === 0) return out;
+
+  const zoneRows = await db
+    .select()
+    .from(recipeZones)
+    .where(inArray(recipeZones.recipeId, ownedIds))
+    .orderBy(asc(recipeZones.position));
+  if (zoneRows.length === 0) {
+    for (const id of ownedIds) out.set(id, []);
+    return out;
+  }
+
+  const zoneIds = zoneRows.map((z) => z.id);
+  const stepRows = await db
+    .select()
+    .from(recipeSteps)
+    .where(inArray(recipeSteps.zoneId, zoneIds))
+    .orderBy(asc(recipeSteps.position));
+
+  const firstStepByZone = new Map<string, RecipeStep>();
+  for (const s of stepRows) {
+    if (!firstStepByZone.has(s.zoneId)) firstStepByZone.set(s.zoneId, s);
+  }
+
+  const paintHex = await getPaintHexMap();
+  const zonesByRecipe = new Map<string, RecipeZone[]>();
+  for (const z of zoneRows) {
+    const arr = zonesByRecipe.get(z.recipeId) ?? [];
+    arr.push(z);
+    zonesByRecipe.set(z.recipeId, arr);
+  }
+
+  for (const id of ownedIds) {
+    const zones = zonesByRecipe.get(id) ?? [];
+    const swatches: string[] = [];
+    for (const z of zones) {
+      const step = firstStepByZone.get(z.id);
+      if (!step) continue;
+      const hex = step.customColorHex ?? (step.paintId ? paintHex.get(step.paintId) ?? null : null);
+      if (hex) swatches.push(hex);
+      if (swatches.length >= limit) break;
+    }
+    out.set(id, swatches);
+  }
+  return out;
 }
 
 /* ============================================================
