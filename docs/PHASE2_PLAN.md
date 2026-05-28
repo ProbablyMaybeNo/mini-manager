@@ -224,7 +224,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.5 — Wishlist URL paste: vendor scrape pipeline
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The killer affordance. Painter pastes an Element Games / Wayland / Goblin Gaming / GW / Amazon / eBay URL into the quick-add bar — app scrapes title, image, price, vendor, category — row appears in two seconds. For everything else, fall back to OpenGraph metadata.
 

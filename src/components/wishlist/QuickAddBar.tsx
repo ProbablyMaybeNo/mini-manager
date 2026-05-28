@@ -2,14 +2,18 @@
 
 import { useState, useTransition } from "react";
 import { clsx } from "clsx";
-import { createWishlistItem } from "@/lib/actions/wishlist";
+import {
+  createWishlistItem,
+  scrapeAndCreateWishlistItem,
+} from "@/lib/actions/wishlist";
 
 const URL_RE = /^https?:\/\//i;
 
 /**
- * Wishlist quick-add bar. If the input looks like a URL, hand it to the
- * vendor scraper (wired in P2.5 — surfaces a notice for now). Otherwise
- * create a minimal manual row from the title only.
+ * Wishlist quick-add bar. URL input → vendor scraper (P2.5). Otherwise
+ * → minimal manual row from the title only. The scrape can take a few
+ * seconds; we show a "scraping…" placeholder so the user knows
+ * something is happening.
  */
 export function QuickAddBar() {
   const [value, setValue] = useState("");
@@ -27,24 +31,22 @@ export function QuickAddBar() {
       return;
     }
     if (URL_RE.test(trimmed)) {
-      // P2.5 will replace this branch with scrapeAndCreateWishlistItem.
-      setNotice("URL scraping coming in P2.5 — creating a placeholder row.");
+      try {
+        // Validate format before spinning up a server round-trip.
+        new URL(trimmed);
+      } catch {
+        setError("That doesn't look like a valid URL.");
+        return;
+      }
+      setNotice("Scraping vendor page…");
       startTransition(async () => {
-        try {
-          const hostname = new URL(trimmed).hostname.replace(/^www\./, "");
-          const result = await createWishlistItem({
-            title: hostname,
-            sourceUrl: trimmed,
-            vendor: hostname,
-          });
-          if (result.ok === false) {
-            setError(result.error);
-            return;
-          }
-          setValue("");
-        } catch {
-          setError("That doesn't look like a valid URL.");
+        const result = await scrapeAndCreateWishlistItem({ url: trimmed });
+        setNotice(null);
+        if (result.ok === false) {
+          setError(result.error);
+          return;
         }
+        setValue("");
       });
       return;
     }

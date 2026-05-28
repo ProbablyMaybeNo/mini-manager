@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
+import { scrapeUrl } from "@/lib/scrape";
 
 /* ============================================================
    Schemas
@@ -165,6 +166,80 @@ export async function deleteWishlistItem(
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to delete item",
+    };
+  }
+}
+
+/**
+ * Scrape a vendor URL and create a wishlist row populated with whatever
+ * the parser produced. Falls back to a minimal row (title=hostname,
+ * sourceUrl set) so a painter pasting URLs in bulk never gets stuck on
+ * a broken parse.
+ */
+export async function scrapeAndCreateWishlistItem(
+  raw: { url: string },
+): Promise<ActionResult<WishlistItem>> {
+  const urlParse = z
+    .string()
+    .url()
+    .safeParse(raw.url);
+  if (!urlParse.success) return { ok: false, error: "Invalid URL" };
+
+  const userId = await currentUserId();
+  let url: URL;
+  try {
+    url = new URL(urlParse.data);
+  } catch {
+    return { ok: false, error: "Invalid URL" };
+  }
+
+  const hostname = url.hostname.replace(/^www\./, "");
+  const scraped = await scrapeUrl(url);
+
+  const title = scraped?.title?.trim() || hostname;
+  const vendor = scraped?.vendor ?? hostname;
+  const imageUrl = scraped?.imageUrl ?? null;
+  const price =
+    scraped?.price === undefined || scraped.price === null
+      ? null
+      : Math.round(scraped.price * 100);
+  const currency = scraped?.currency ?? "USD";
+  const category =
+    scraped?.category && (wishlistCategories as readonly string[]).includes(scraped.category)
+      ? (scraped.category as (typeof wishlistCategories)[number])
+      : "Other";
+
+  const metadata = JSON.stringify({
+    parser: scraped?.raw?.parser ?? "none",
+    raw: scraped?.raw ?? null,
+    scrapedAt: Date.now(),
+  });
+
+  try {
+    const inserted = await db
+      .insert(wishlistItems)
+      .values({
+        ownerId: userId,
+        title,
+        sourceUrl: url.toString(),
+        vendor,
+        imageUrl,
+        price,
+        currency,
+        category,
+        priority: "Medium",
+        status: "Wanted",
+        scrapedMetadata: metadata,
+      })
+      .returning();
+    const row = inserted[0];
+    if (!row) return { ok: false, error: "Insert returned no row" };
+    revalidatePath("/wishlist");
+    return { ok: true, data: row };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to create item",
     };
   }
 }
