@@ -16,7 +16,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.1 — Tools landing page + shared tool shell
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** A single `/tools` index page that lists the four tools as cards, plus a shared layout that wraps each tool route. Each tool is one-purpose: input on top, output below, one or more "send → " action buttons at the bottom. The shell handles breadcrumbs, "back to tools", and the common action buttons; tools just plug in their middle content.
 
