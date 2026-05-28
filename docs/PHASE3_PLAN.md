@@ -145,7 +145,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.3 — Infantry SVG silhouette with clickable zones
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The recipe editor's left pane: a front-view humanoid infantry figure where each body region is an interactive SVG path. Zones map by `silhouetteZoneId` to the corresponding `recipeZone` row. Drives both "click to add a zone to the recipe" and "highlight existing zones with their swatches."
 
