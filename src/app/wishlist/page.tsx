@@ -6,7 +6,7 @@ import {
   wishlistTotals,
   listWishlistVendors,
 } from "@/db/queries/wishlist";
-import { listTopLevelProjects } from "@/db/queries/projects";
+import { listAllProjects } from "@/db/queries/projects";
 import {
   wishlistCategories,
   wishlistStatuses,
@@ -56,14 +56,21 @@ export default async function WishlistPage({
     listWishlist(userId, { status, category, vendor }),
     wishlistTotals(userId, status),
     listWishlistVendors(userId),
-    listTopLevelProjects(userId),
+    listAllProjects(userId),
   ]);
 
   const selected = selectedItemId
     ? items.find((i) => i.id === selectedItemId) ?? null
     : null;
 
-  const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));
+  const projectOptions = projects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    type: p.type,
+    count: p.count,
+    ownedCount: p.ownedCount,
+    parentId: p.parentId,
+  }));
 
   return (
     <div className="flex flex-col h-screen">

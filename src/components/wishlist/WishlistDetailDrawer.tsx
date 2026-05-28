@@ -13,20 +13,15 @@ import {
 import {
   updateWishlistItem,
   deleteWishlistItem,
-  setWishlistStatus,
 } from "@/lib/actions/wishlist";
-
-interface ProjectOption {
-  id: string;
-  name: string;
-}
+import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal";
 
 export function WishlistDetailDrawer({
   item,
   projects,
 }: {
   item: WishlistItem | null;
-  projects: ReadonlyArray<ProjectOption>;
+  projects: ReadonlyArray<MarkBoughtProjectOption>;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -34,6 +29,7 @@ export function WishlistDetailDrawer({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<WishlistItem | null>(item);
+  const [showBoughtModal, setShowBoughtModal] = useState(false);
 
   // Reset the draft each time a new item is opened.
   useEffect(() => {
@@ -72,11 +68,8 @@ export function WishlistDetailDrawer({
     });
   }
 
-  function markBought() {
-    startTransition(async () => {
-      const result = await setWishlistStatus({ id: item!.id, status: "Bought" });
-      if (result.ok === false) setError(result.error);
-    });
+  function openBoughtModal() {
+    setShowBoughtModal(true);
   }
 
   function remove() {
@@ -261,7 +254,7 @@ export function WishlistDetailDrawer({
           {item.status !== "Bought" ? (
             <button
               type="button"
-              onClick={markBought}
+              onClick={openBoughtModal}
               disabled={isPending}
               className="text-xs font-mono px-3 py-2 frame tap-target hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]"
             >
@@ -278,6 +271,15 @@ export function WishlistDetailDrawer({
           </button>
         </div>
       </footer>
+      {showBoughtModal ? (
+        <MarkBoughtModal
+          open
+          onClose={() => setShowBoughtModal(false)}
+          itemId={item.id}
+          title={item.title}
+          projects={projects}
+        />
+      ) : null}
     </aside>
   );
 }

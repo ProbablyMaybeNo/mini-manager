@@ -1,14 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
-import type { WishlistItem, Priority } from "@/db/schema";
+import type { WishlistItem, Priority, ProjectType } from "@/db/schema";
 import { TagToProjectMenu } from "./TagToProjectMenu";
+import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal";
 
 export interface WishlistTableProjectOption {
   id: string;
   name: string;
+  type: ProjectType;
+  count: number;
+  ownedCount: number;
+  parentId: string | null;
 }
 
 const PRIORITY_DOT: Record<Priority, string> = {
@@ -34,12 +40,22 @@ export function WishlistTable({
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
+  const [boughtFor, setBoughtFor] = useState<WishlistItem | null>(null);
 
   function openItem(id: string) {
     const params = new URLSearchParams(sp?.toString() ?? "");
     params.set("item", id);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
+
+  const modalProjects: MarkBoughtProjectOption[] = projects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    type: p.type,
+    count: p.count,
+    ownedCount: p.ownedCount,
+    parentId: p.parentId,
+  }));
 
   if (items.length === 0) {
     return (
@@ -118,10 +134,33 @@ export function WishlistTable({
               STATUS_BADGE[item.status],
             )}
           >
-            {item.status}
+            {item.status === "Wanted" ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBoughtFor(item);
+                }}
+                className="hover:text-[var(--color-green)] hover:underline underline-offset-2"
+                title="Mark bought"
+              >
+                {item.status} →
+              </button>
+            ) : (
+              item.status
+            )}
           </span>
         </div>
       ))}
+      {boughtFor ? (
+        <MarkBoughtModal
+          open
+          onClose={() => setBoughtFor(null)}
+          itemId={boughtFor.id}
+          title={boughtFor.title}
+          projects={modalProjects}
+        />
+      ) : null}
     </div>
   );
 }

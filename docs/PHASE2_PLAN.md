@@ -300,7 +300,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.7 — Mark-bought flow: bump owned_count or create new project
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Painter buys a kit on their wishlist; the app needs to turn that purchase into either (a) `owned_count` bumped on an existing unit, or (b) a new project pre-filled from the kit. The wishlist item moves to `status="Bought"` and stays for spending review.
 
