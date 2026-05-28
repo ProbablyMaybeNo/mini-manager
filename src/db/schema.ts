@@ -251,6 +251,68 @@ export const inventoryEntries = sqliteTable(
 );
 
 /* ============================================================
+   Domain — Wishlist (P2.4)
+   Vendor URL paste → row populated. Lives separately from the
+   lightweight paint-star (`inventoryEntries.isWishlisted`) since
+   a WishlistItem carries vendor / price / project context that
+   doesn't apply to a generic "I want this paint".
+   ============================================================ */
+
+export const wishlistCategories = [
+  "Box",
+  "Bits",
+  "Paint",
+  "Tool",
+  "Terrain",
+  "Other",
+] as const;
+export type WishlistCategory = (typeof wishlistCategories)[number];
+
+export const wishlistStatuses = ["Wanted", "Bought", "Cancelled"] as const;
+export type WishlistStatus = (typeof wishlistStatuses)[number];
+
+export const wishlistItems = sqliteTable(
+  "wishlist_item",
+  {
+    id: id(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    projectId: text("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    imageUrl: text("image_url"),
+    sourceUrl: text("source_url"),
+    vendor: text("vendor"),
+    price: integer("price_cents"), // store integer cents to avoid float drift
+    currency: text("currency").default("USD"),
+    category: text("category", { enum: wishlistCategories })
+      .notNull()
+      .default("Other"),
+    priority: text("priority", { enum: priorities }).notNull().default("Medium"),
+    status: text("status", { enum: wishlistStatuses })
+      .notNull()
+      .default("Wanted"),
+    notesMd: text("notes_md"),
+    scrapedMetadata: text("scraped_metadata"), // JSON blob from the scraper (P2.5)
+    dateAdded: integer("date_added", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    dateResolved: integer("date_resolved", { mode: "timestamp_ms" }),
+    ...timestamps,
+  },
+  (t) => ({
+    ownerStatusIdx: index("wishlist_owner_status_idx").on(t.ownerId, t.status),
+    ownerProjectIdx: index("wishlist_owner_project_idx").on(
+      t.ownerId,
+      t.projectId,
+    ),
+    ownerVendorIdx: index("wishlist_owner_vendor_idx").on(t.ownerId, t.vendor),
+  }),
+);
+
+/* ============================================================
    Relations
    ============================================================ */
 
@@ -259,6 +321,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   projects: many(projects),
   inventoryEntries: many(inventoryEntries),
+  wishlistItems: many(wishlistItems),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -278,6 +341,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   children: many(projects, { relationName: "project_tree" }),
   namedModels: many(namedModels),
+  wishlistItems: many(wishlistItems),
 }));
 
 export const namedModelsRelations = relations(namedModels, ({ one }) => ({
@@ -309,3 +373,17 @@ export const inventoryEntriesRelations = relations(inventoryEntries, ({ one }) =
 
 export type InventoryEntry = typeof inventoryEntries.$inferSelect;
 export type NewInventoryEntry = typeof inventoryEntries.$inferInsert;
+
+export const wishlistItemsRelations = relations(wishlistItems, ({ one }) => ({
+  owner: one(users, {
+    fields: [wishlistItems.ownerId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [wishlistItems.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export type WishlistItem = typeof wishlistItems.$inferSelect;
+export type NewWishlistItem = typeof wishlistItems.$inferInsert;

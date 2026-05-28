@@ -154,7 +154,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.4 — Wishlist: schema, quick-add bar (manual entry), list view
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The wishlist is a first-class shopping list. This milestone gets the data model + the page + the quick-add bar for MANUAL entries (free-form title, optional fields). The URL-paste scrape is the next milestone (P2.5) — separating them keeps the schema landed before we add scraping complexity.
 
