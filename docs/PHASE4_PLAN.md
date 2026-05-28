@@ -166,7 +166,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.5 — Image Eyedropper
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Drop a reference image (or paste from clipboard); the tool extracts 6 dominant colours via k-means and shows each with the three closest paints across all brands. Future Phase 6 polish adds live camera sampling via `getUserMedia`.
 
