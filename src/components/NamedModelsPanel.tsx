@@ -1,6 +1,7 @@
 import type { NamedModel } from "@/db/schema";
 import { AddNamedModelForm } from "@/components/AddNamedModelForm";
 import { NamedModelRow } from "@/components/NamedModelRow";
+import { AttachedRecipeForNamedModel } from "@/components/recipes/AttachedRecipeForNamedModel";
 
 /**
  * Server component. Renders the named models section of a project
@@ -43,6 +44,7 @@ export function NamedModelsPanel({
               isBased: m.isBased,
               isComplete: m.isComplete,
             }}
+            recipeSlot={<AttachedRecipeForNamedModel namedModelId={m.id} />}
           />
         ))}
       </ul>

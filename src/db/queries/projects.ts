@@ -2,8 +2,8 @@ import "server-only";
 
 import { and, asc, count, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { namedModels, projects } from "@/db/schema";
-import type { NamedModel, Project } from "@/db/schema";
+import { namedModels, projects, recipes } from "@/db/schema";
+import type { NamedModel, Project, Recipe } from "@/db/schema";
 
 /**
  * Top-level projects (parent_id IS NULL) for a user.
@@ -119,6 +119,31 @@ export async function getProjectById(
     .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/**
+ * Project + the recipes attached directly to it (NOT the ones attached
+ * to its named models — the workspace queries those separately via
+ * the per-row slot). Returns `null` if the project doesn't exist or
+ * the caller doesn't own it.
+ */
+export async function getProjectWithRecipe(
+  userId: string,
+  projectId: string,
+): Promise<{ project: Project; recipes: ReadonlyArray<Recipe> } | null> {
+  const project = await getProjectById(userId, projectId);
+  if (!project) return null;
+  const attached = await db
+    .select()
+    .from(recipes)
+    .where(
+      and(
+        eq(recipes.ownerId, userId),
+        eq(recipes.attachedProjectId, project.id),
+      ),
+    )
+    .orderBy(desc(recipes.updatedAt));
+  return { project, recipes: attached };
 }
 
 /**

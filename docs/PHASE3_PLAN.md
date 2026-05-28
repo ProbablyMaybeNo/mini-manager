@@ -291,7 +291,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.6 — Attach recipe to project / named model
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Recipes need to bind to the things being painted. From a project workspace or a named-model row, the painter picks "use this recipe" — or "create new recipe" — and the binding is made.
 

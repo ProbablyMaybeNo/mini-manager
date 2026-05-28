@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { clsx } from "clsx";
 import {
   applyToggle,
@@ -40,9 +40,16 @@ const STAGE_INITIAL: Readonly<Record<NamedModelStage, string>> = {
   isComplete: "C",
 };
 
-export function NamedModelRow({ snapshot }: { snapshot: NamedModelRowSnapshot }) {
+export function NamedModelRow({
+  snapshot,
+  recipeSlot,
+}: {
+  snapshot: NamedModelRowSnapshot;
+  recipeSlot?: ReactNode;
+}) {
   const [snap, setSnap] = useState<NamedModelRowSnapshot>(snapshot);
   const [error, setError] = useState<string | null>(null);
+  const [recipeOpen, setRecipeOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Re-sync on parent re-render (after a revalidatePath round-trip).
@@ -109,15 +116,30 @@ export function NamedModelRow({ snapshot }: { snapshot: NamedModelRowSnapshot })
           "grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto]",
         )}
       >
-        <span
-          className={clsx(
-            "font-mono text-sm",
-            snap.isComplete
-              ? "text-[var(--color-green)]"
-              : "text-[var(--color-fg)]",
-          )}
-        >
-          {snap.name}
+        <span className="flex items-center gap-2 min-w-0">
+          {recipeSlot ? (
+            <button
+              type="button"
+              onClick={() => setRecipeOpen((prev) => !prev)}
+              aria-expanded={recipeOpen}
+              aria-label={
+                recipeOpen ? "Hide recipe override" : "Show recipe override"
+              }
+              className="text-2xs font-mono text-[var(--color-fg-subtle)] hover:text-[var(--color-cyan)] tap-target px-1"
+            >
+              {recipeOpen ? "▾" : "▸"}
+            </button>
+          ) : null}
+          <span
+            className={clsx(
+              "font-mono text-sm truncate",
+              snap.isComplete
+                ? "text-[var(--color-green)]"
+                : "text-[var(--color-fg)]",
+            )}
+          >
+            {snap.name}
+          </span>
         </span>
 
         <span
@@ -155,6 +177,10 @@ export function NamedModelRow({ snapshot }: { snapshot: NamedModelRowSnapshot })
           </button>
         </span>
       </div>
+
+      {recipeSlot && recipeOpen ? (
+        <div className="frame px-3 py-2 ml-6">{recipeSlot}</div>
+      ) : null}
 
       {error ? (
         <p
