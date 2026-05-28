@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { clsx } from "clsx";
+import { deleteNamedModel, toggleNamedModelStage } from "@/lib/actions/namedModels";
 import {
   applyToggle,
-  deleteNamedModel,
   namedModelStages,
-  toggleNamedModelStage,
   type NamedModelStage,
-} from "@/lib/actions/namedModels";
+} from "@/lib/namedModels/cascade";
 
 /**
  * Slim, serialisable snapshot — server pages pass this in. Avoids

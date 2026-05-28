@@ -4,99 +4,14 @@ import { revalidatePath } from "next/cache";
 import { and, eq, max } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { namedModels, projects, type NamedModel } from "@/db/schema";
+import { namedModels, projects } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
-
-/**
- * Boolean stages on a named model, ordered from "lowest" (must be
- * true first) to "highest" (only true if the prior is also true).
- * This mirrors the DB CHECK constraint `named_model_stage_cascade`:
- *
- *   isBuilt ≥ isPrimed ≥ isPainted ≥ isBased ≥ isComplete
- *
- * (where "≥" on booleans means "if upper is true, lower must be true").
- */
-export const namedModelStages = [
-  "isBuilt",
-  "isPrimed",
-  "isPainted",
-  "isBased",
-  "isComplete",
-] as const;
-export type NamedModelStage = (typeof namedModelStages)[number];
-
-type NamedModelStageSnapshot = Pick<
-  NamedModel,
-  "isBuilt" | "isPrimed" | "isPainted" | "isBased" | "isComplete"
->;
-
-function labelFor(stage: NamedModelStage): string {
-  switch (stage) {
-    case "isBuilt":
-      return "Built";
-    case "isPrimed":
-      return "Primed";
-    case "isPainted":
-      return "Painted";
-    case "isBased":
-      return "Based";
-    case "isComplete":
-      return "Complete";
-  }
-}
-
-/**
- * Given a stage and its desired next value, walk the cascade and
- * return either the patch we should write OR a friendly error.
- *
- * Toggling ON a stage forces every prior stage on too (you can't
- * be Painted without being Primed). Toggling OFF a stage forces
- * every later stage off (the DB CHECK would reject otherwise, but
- * we'd rather not error — the user obviously means "untick this
- * and everything after"). This matches the "single mini" mental
- * model: one click should leave the row in a legal state.
- */
-export function applyToggle(
-  snap: NamedModelStageSnapshot,
-  stage: NamedModelStage,
-  nextValue: boolean,
-): { ok: true; patch: NamedModelStageSnapshot } | { ok: false; error: string } {
-  const idx = namedModelStages.indexOf(stage);
-  if (idx === -1) {
-    return { ok: false, error: "Unknown stage" };
-  }
-
-  const patch: NamedModelStageSnapshot = { ...snap, [stage]: nextValue };
-
-  if (nextValue) {
-    // Turning ON: ensure every prior stage is also on. We won't
-    // silently flip them — if the painter unticks Primed they
-    // probably stripped it, so we let them tick Built/Primed back
-    // up explicitly. Surface a friendly error instead.
-    for (let i = 0; i < idx; i += 1) {
-      const earlier = namedModelStages[i];
-      if (earlier === undefined) continue;
-      if (!snap[earlier]) {
-        return {
-          ok: false,
-          error: `Tick ${labelFor(earlier)} first.`,
-        };
-      }
-    }
-  } else {
-    // Turning OFF: any later stage that's currently on would violate
-    // the cascade. Cascade the untick down so one click does the
-    // right thing (e.g. unticking Primed clears Painted/Based/Complete).
-    for (let i = idx + 1; i < namedModelStages.length; i += 1) {
-      const later = namedModelStages[i];
-      if (later === undefined) continue;
-      patch[later] = false;
-    }
-  }
-
-  return { ok: true, patch };
-}
+import {
+  applyToggle,
+  namedModelStages,
+  type NamedModelStageSnapshot,
+} from "@/lib/namedModels/cascade";
 
 /* ============================================================
    createNamedModel

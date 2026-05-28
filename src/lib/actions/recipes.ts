@@ -28,7 +28,9 @@ const createSchema = z.object({
   notesMd: z.string().max(20_000).nullish(),
 });
 
-export type CreateRecipeInput = z.infer<typeof createSchema>;
+// Use z.input so fields with .default() (bodyType) are optional in
+// callers — they only become required after Zod applies the default.
+export type CreateRecipeInput = z.input<typeof createSchema>;
 
 const updateSchema = z.object({
   id: recipeIdSchema,

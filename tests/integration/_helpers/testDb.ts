@@ -38,3 +38,21 @@ export async function makeTestDb(): Promise<{
 
   return { db, userId };
 }
+
+/**
+ * Register an additional user — used by cross-ownership tests that need
+ * to seed a row belonging to a second person (FKs on the projects /
+ * recipes / etc. tables require the user row to exist).
+ */
+export async function seedExtraUser(
+  db: TestDb,
+  hint = "other",
+): Promise<string> {
+  const userId = nanoid(16);
+  await db.insert(schema.users).values({
+    id: userId,
+    email: `${hint}-${userId}@example.com`,
+    name: `${hint} user`,
+  });
+  return userId;
+}
