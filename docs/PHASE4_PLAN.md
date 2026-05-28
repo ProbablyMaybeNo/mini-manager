@@ -85,7 +85,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.3 — Cross-brand Match (ΔE2000)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Paste a hex or pick a paint; see the top N closest paints across every brand with ΔE2000 distance and a traffic-light confidence (green < 2, amber < 5, grey ≥ 5). v1 had a working version at `../app-src/src/app/match/page.tsx` (~465 lines) — port the math; rebuild the UI.
 

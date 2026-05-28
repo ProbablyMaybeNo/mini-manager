@@ -40,3 +40,8 @@ export interface ToolPaletteOutput {
   toolId: ToolId;
   swatches: ReadonlyArray<ToolPaletteSwatch>;
 }
+
+// Re-export the match result shape so consumers can import it from
+// either `lib/tools/types` (lingua franca) or `lib/tools/match/find`
+// (math module). They are the same type.
+export type { MatchResult, MatchConfidence } from "./match/find";
