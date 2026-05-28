@@ -267,7 +267,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.8 — Tool unit tests + smoke E2E
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Lock the colour-science maths down before they rot. The math modules from this phase are pure functions — perfect for unit tests.
 
