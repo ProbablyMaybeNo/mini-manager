@@ -13,6 +13,8 @@ import {
   type ZoneListItem,
 } from "@/components/recipes/ZoneList";
 import { RecipeNotes } from "@/components/recipes/RecipeNotes";
+import { StepList } from "@/components/recipes/StepList";
+import type { StepRowData } from "@/components/recipes/StepRow";
 import { addZone } from "@/lib/actions/recipeZones";
 import { findInfantryZone } from "@/lib/silhouettes/infantry";
 
@@ -26,6 +28,12 @@ interface Props {
   /** Map keyed by silhouette zone id → first-step swatch. */
   paletteBySilhouetteId: ReadonlyMap<string, string>;
   initialSelectedZoneId: string | null;
+  /** Map of zoneId → step rows for that zone, server-resolved labels +
+   *  swatches included. */
+  stepsByZoneId: ReadonlyMap<string, ReadonlyArray<StepRowData>>;
+  /** Optional inventory hint for the paint slot picker's owned-only
+   *  toggle. */
+  ownedPaintIds?: ReadonlySet<string>;
 }
 
 type Pane = "body" | "zones" | "notes";
@@ -41,6 +49,8 @@ export function RecipeEditorClient({
   zones,
   paletteBySilhouetteId,
   initialSelectedZoneId,
+  stepsByZoneId,
+  ownedPaintIds,
 }: Props) {
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(
     initialSelectedZoneId,
@@ -159,7 +169,12 @@ export function RecipeEditorClient({
               setPendingSilhouetteAdd(null);
             }}
           />
-          <StepPaneStub selectedZoneId={selectedZoneId} zones={zones} />
+          <SelectedZoneSteps
+            zones={zones}
+            selectedZoneId={selectedZoneId}
+            stepsByZoneId={stepsByZoneId}
+            ownedPaintIds={ownedPaintIds}
+          />
         </section>
 
         <section
@@ -259,17 +274,16 @@ function PendingZonePrompt({
   );
 }
 
-/**
- * Placeholder shown beneath the zone list when a zone is selected. The
- * actual step builder ships in P3.5 — this is the stub the editor needs
- * so the selection has somewhere to land in the meantime.
- */
-function StepPaneStub({
-  selectedZoneId,
+function SelectedZoneSteps({
   zones,
+  selectedZoneId,
+  stepsByZoneId,
+  ownedPaintIds,
 }: {
-  selectedZoneId: string | null;
   zones: ReadonlyArray<ZoneListItem>;
+  selectedZoneId: string | null;
+  stepsByZoneId: ReadonlyMap<string, ReadonlyArray<StepRowData>>;
+  ownedPaintIds?: ReadonlySet<string>;
 }) {
   if (!selectedZoneId) {
     return (
@@ -280,15 +294,13 @@ function StepPaneStub({
   }
   const zone = zones.find((z) => z.id === selectedZoneId);
   if (!zone) return null;
+  const steps = stepsByZoneId.get(selectedZoneId) ?? [];
   return (
-    <div className="frame px-3 py-3 space-y-1">
-      <p className="text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
-        Steps · {zone.name}
-      </p>
-      <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-        Step builder ships in P3.5. {zone.stepCount} existing step
-        {zone.stepCount === 1 ? "" : "s"}.
-      </p>
-    </div>
+    <StepList
+      zoneId={selectedZoneId}
+      zoneName={zone.name}
+      steps={steps}
+      ownedPaintIds={ownedPaintIds}
+    />
   );
 }

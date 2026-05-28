@@ -151,32 +151,44 @@ export async function getProjectRecipeMap(
    Palette derivation
    ============================================================ */
 
-let paintHexCache: Map<string, string> | null = null;
-let paintHexCacheExportedAt = -1;
+export interface PaintMeta {
+  hex: string;
+  label: string;
+}
+
+let paintMetaCache: Map<string, PaintMeta> | null = null;
+let paintMetaCacheExportedAt = -1;
 
 /**
  * Server-side: read the static paint catalog from disk and build a
- * `paintId -> hex` map. Cached per export timestamp so the read is
- * O(1) after the first call. Mirrors the loader pattern in
+ * `paintId -> { hex, label }` map. Cached per export timestamp so the
+ * read is O(1) after the first call. Mirrors the loader pattern in
  * `app/library/page.tsx`.
  */
-async function getPaintHexMap(): Promise<Map<string, string>> {
+export async function getPaintMetaMap(): Promise<Map<string, PaintMeta>> {
   const file = resolve(process.cwd(), "public", "data", "paints.json");
   const raw = await readFile(file, "utf8");
   const catalog = JSON.parse(raw) as PaintCatalog;
   if (
-    paintHexCache &&
-    paintHexCacheExportedAt === catalog.__exported_at
+    paintMetaCache &&
+    paintMetaCacheExportedAt === catalog.__exported_at
   ) {
-    return paintHexCache;
+    return paintMetaCache;
   }
-  const map = new Map<string, string>();
+  const map = new Map<string, PaintMeta>();
   for (const p of catalog.paints as ReadonlyArray<Paint>) {
-    map.set(p.id, p.hex);
+    map.set(p.id, { hex: p.hex, label: `${p.brand} ${p.name}` });
   }
-  paintHexCache = map;
-  paintHexCacheExportedAt = catalog.__exported_at;
+  paintMetaCache = map;
+  paintMetaCacheExportedAt = catalog.__exported_at;
   return map;
+}
+
+async function getPaintHexMap(): Promise<Map<string, string>> {
+  const meta = await getPaintMetaMap();
+  const out = new Map<string, string>();
+  for (const [id, m] of meta) out.set(id, m.hex);
+  return out;
 }
 
 /**

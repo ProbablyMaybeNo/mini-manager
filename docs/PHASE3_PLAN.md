@@ -246,7 +246,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.5 — Step builder: technique selector + paint slot picker
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The flagship UX of Phase 3. Inside a selected zone, the painter adds technique steps. Each step row has: technique dropdown, paint slot (clickable to open the Library popover), notes, drag handle, delete. Paint slot picker is the moment where the Library finally meets a Recipe.
 

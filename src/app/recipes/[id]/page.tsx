@@ -4,13 +4,16 @@ import { eq } from "drizzle-orm";
 import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
 import {
+  getPaintMetaMap,
   getRecipeWithZones,
   paletteForRecipe,
 } from "@/db/queries/recipes";
+import { listInventoryByUser } from "@/db/queries/inventory";
 import { namedModels, projects } from "@/db/schema";
 import { RecipeHeader } from "@/components/recipes/RecipeHeader";
 import { RecipeEditorClient } from "@/components/recipes/RecipeEditorClient";
 import type { ZoneListItem } from "@/components/recipes/ZoneList";
+import type { StepRowData } from "@/components/recipes/StepRow";
 
 export const dynamic = "force-dynamic";
 
@@ -68,8 +71,12 @@ export default async function RecipeEditorPage({
   const recipe = await getRecipeWithZones(userId, id);
   if (!recipe) notFound();
 
-  const palette = await paletteForRecipe(recipe);
-  const attachment = await resolveAttachment(recipe);
+  const [palette, paintMeta, attachment, inventoryEntries] = await Promise.all([
+    paletteForRecipe(recipe),
+    getPaintMetaMap(),
+    resolveAttachment(recipe),
+    listInventoryByUser(userId),
+  ]);
 
   // Slim the nested shape to what each client component actually needs.
   const zoneItems: ZoneListItem[] = recipe.zones.map((z) => {
@@ -77,7 +84,7 @@ export default async function RecipeEditorPage({
     const swatchHex =
       firstStep?.customColorHex ??
       (firstStep?.paintId
-        ? palette.get(z.silhouetteZoneId ?? z.id) ?? null
+        ? paintMeta.get(firstStep.paintId)?.hex ?? null
         : null);
     return {
       id: z.id,
@@ -88,8 +95,30 @@ export default async function RecipeEditorPage({
     };
   });
 
+  const stepsByZoneId = new Map<string, StepRowData[]>();
+  for (const z of recipe.zones) {
+    const rows: StepRowData[] = z.steps.map((s) => {
+      const meta = s.paintId ? paintMeta.get(s.paintId) : null;
+      return {
+        id: s.id,
+        technique: s.technique,
+        paintId: s.paintId,
+        customColorHex: s.customColorHex,
+        swatchHex: s.customColorHex ?? meta?.hex ?? null,
+        paintLabel: meta?.label ?? null,
+        notesMd: s.notesMd,
+      };
+    });
+    stepsByZoneId.set(z.id, rows);
+  }
+
   const paletteBySilhouetteId = new Map<string, string>();
   for (const [key, hex] of palette) paletteBySilhouetteId.set(key, hex);
+
+  const ownedPaintIds = new Set<string>();
+  inventoryEntries.forEach((entry, paintId) => {
+    if (entry.ownedCount > 0) ownedPaintIds.add(paintId);
+  });
 
   const initialSelectedZoneId = zoneItems[0]?.id ?? null;
 
@@ -110,6 +139,8 @@ export default async function RecipeEditorPage({
         zones={zoneItems}
         paletteBySilhouetteId={paletteBySilhouetteId}
         initialSelectedZoneId={initialSelectedZoneId}
+        stepsByZoneId={stepsByZoneId}
+        ownedPaintIds={ownedPaintIds}
       />
     </div>
   );
