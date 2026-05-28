@@ -202,7 +202,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P4.6 — Gradient Builder
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Painter picks base + shadow + highlight; gets a 3-7 step interpolated gradient and the closest paint per step. Used for transition planning.
 
