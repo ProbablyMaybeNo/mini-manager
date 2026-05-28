@@ -15,6 +15,7 @@ import { StageCounter } from "@/components/StageCounter";
 import { NamedModelsPanel } from "@/components/NamedModelsPanel";
 import { ProjectTree } from "@/components/ProjectTree";
 import { AggregateCountersDisplay } from "@/components/AggregateCountersDisplay";
+import { ShoppingForThisPanel } from "@/components/wishlist/ShoppingForThisPanel";
 import {
   aggregateCounters,
   displayStatus,
@@ -187,6 +188,8 @@ export default async function ProjectDetailPage({
       )}
 
       <NamedModelsPanel projectId={project.id} namedModels={namedModels} />
+
+      <ShoppingForThisPanel projectId={project.id} />
     </div>
   );
 }

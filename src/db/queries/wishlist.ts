@@ -90,6 +90,88 @@ export async function wishlistTotals(
   return { count, totalByCurrency };
 }
 
+/**
+ * Wanted items tagged to a specific project — used by the
+ * "Shopping for this" panel in the project workspace.
+ */
+export async function listWishlistByProject(
+  userId: string,
+  projectId: string,
+): Promise<ReadonlyArray<WishlistItem>> {
+  return db
+    .select()
+    .from(wishlistItems)
+    .where(
+      and(
+        eq(wishlistItems.ownerId, userId),
+        eq(wishlistItems.projectId, projectId),
+        eq(wishlistItems.status, "Wanted"),
+      ),
+    )
+    .orderBy(desc(wishlistItems.dateAdded));
+}
+
+/**
+ * Top N wanted items globally — for the dashboard panel. Sort key:
+ * priority (Urgent > Low) then date_added desc. We can't ORDER BY
+ * priority directly because SQLite doesn't know the enum ordering, so
+ * we do an in-memory rerank on a small slice instead.
+ */
+export async function listTopWishes(
+  userId: string,
+  limit = 5,
+): Promise<ReadonlyArray<WishlistItem>> {
+  const rows = await db
+    .select()
+    .from(wishlistItems)
+    .where(and(eq(wishlistItems.ownerId, userId), eq(wishlistItems.status, "Wanted")))
+    .orderBy(desc(wishlistItems.dateAdded))
+    .limit(limit * 4); // small overscan so rerank still has options
+
+  const ORDER: Record<string, number> = { Urgent: 0, High: 1, Medium: 2, Low: 3 };
+  return rows
+    .slice()
+    .sort((a, b) => {
+      const pa = ORDER[a.priority] ?? 99;
+      const pb = ORDER[b.priority] ?? 99;
+      if (pa !== pb) return pa - pb;
+      return b.dateAdded.getTime() - a.dateAdded.getTime();
+    })
+    .slice(0, limit);
+}
+
+/**
+ * Items bought in the last `windowDays` days — for the "Recently
+ * bought" footer line on /projects (P2.8 uses this).
+ */
+export async function recentlyBought(
+  userId: string,
+  windowDays = 7,
+): Promise<{ count: number; totalByCurrency: Record<string, number> }> {
+  const cutoff = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+  const rows = await db
+    .select({
+      currency: wishlistItems.currency,
+      price: wishlistItems.price,
+    })
+    .from(wishlistItems)
+    .where(
+      and(
+        eq(wishlistItems.ownerId, userId),
+        eq(wishlistItems.status, "Bought"),
+        sql`${wishlistItems.dateResolved} >= ${cutoff.getTime()}`,
+      ),
+    );
+
+  const totalByCurrency: Record<string, number> = {};
+  for (const r of rows) {
+    if (r.price === null) continue;
+    const code = r.currency ?? "USD";
+    totalByCurrency[code] = (totalByCurrency[code] ?? 0) + r.price / 100;
+  }
+  return { count: rows.length, totalByCurrency };
+}
+
 /** Distinct vendors the user has used — for the filter combobox. */
 export async function listWishlistVendors(
   userId: string,

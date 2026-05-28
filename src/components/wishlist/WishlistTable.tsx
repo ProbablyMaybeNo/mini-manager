@@ -4,6 +4,12 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
 import type { WishlistItem, Priority } from "@/db/schema";
+import { TagToProjectMenu } from "./TagToProjectMenu";
+
+export interface WishlistTableProjectOption {
+  id: string;
+  name: string;
+}
 
 const PRIORITY_DOT: Record<Priority, string> = {
   Urgent: "bg-[var(--color-red)]",
@@ -20,8 +26,10 @@ const STATUS_BADGE: Record<WishlistItem["status"], string> = {
 
 export function WishlistTable({
   items,
+  projects,
 }: {
   items: ReadonlyArray<WishlistItem>;
+  projects: ReadonlyArray<WishlistTableProjectOption>;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -54,6 +62,7 @@ export function WishlistTable({
         <span className="hidden md:inline">Vendor</span>
         <span className="text-right">Price</span>
         <span className="hidden md:inline">Category</span>
+        <span className="hidden md:inline">Project</span>
         <span aria-label="Priority">P</span>
         <span>Status</span>
       </div>
@@ -92,6 +101,13 @@ export function WishlistTable({
           <span className="hidden md:inline text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
             {item.category}
           </span>
+          <span className="hidden md:inline">
+            <TagToProjectMenu
+              itemId={item.id}
+              current={item.projectId}
+              projects={projects}
+            />
+          </span>
           <span
             className={clsx("inline-block h-2.5 w-2.5 rounded-full", PRIORITY_DOT[item.priority])}
             title={`Priority ${item.priority}`}
@@ -111,7 +127,7 @@ export function WishlistTable({
 }
 
 const GRID_COLS =
-  "40px minmax(0, 2fr) minmax(0, 1fr) 90px 90px 14px 80px";
+  "40px minmax(0, 2fr) minmax(0, 1fr) 90px 90px 110px 14px 80px";
 
 function Thumbnail({ item }: { item: WishlistItem }) {
   if (item.imageUrl) {

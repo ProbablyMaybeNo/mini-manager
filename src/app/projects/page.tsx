@@ -8,6 +8,7 @@ import {
 } from "@/db/queries/projects";
 import { ProjectRow } from "@/components/ProjectRow";
 import { QuickAddBar } from "@/components/QuickAddBar";
+import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,8 @@ export default async function ProjectsPage() {
         <EmptyState />
       ) : (
         <>
+          <TopWishesPanel />
+
           {backlog.length > 0 ? (
             <section>
               <h2 className="section-title flex items-center gap-3">

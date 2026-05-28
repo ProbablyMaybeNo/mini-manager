@@ -269,7 +269,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.6 — Project ↔ Wishlist linkage + "Shopping for this" panel
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** A wishlist item can be tagged to a project. Inside the project workspace, a "Shopping for this" panel summarises linked items + their total. On the dashboard, a "Top wishes" panel shows the top 3-5 priority wanted items globally.
 
