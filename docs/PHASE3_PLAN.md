@@ -205,7 +205,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P3.4 — Recipe editor page + three-pane layout
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The editor itself. Single page at `/recipes/[id]`. Three panes on desktop (silhouette / zones+steps / notes); tabs on mobile. No step UI yet — that's P3.5. This milestone gets the shell + zone CRUD wired.
 
