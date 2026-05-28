@@ -213,6 +213,44 @@ export const namedModels = sqliteTable(
 );
 
 /* ============================================================
+   Domain — Inventory (P2.3)
+   Lightweight per-user "do I own this paint?" marks. Wishlist
+   here is a single boolean star — a heavier WishlistItem entity
+   for vendor / price / project context lives in its own table
+   (added in P2.4).
+   ============================================================ */
+
+export const inventoryEntries = sqliteTable(
+  "inventory_entry",
+  {
+    id: id(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** References paints.json by id — no SQL foreign key since the
+     *  catalog is a static asset, not a table. */
+    paintId: text("paint_id").notNull(),
+    ownedCount: integer("owned_count").notNull().default(0),
+    isWishlisted: integer("is_wishlisted", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    lastPurchasedAt: integer("last_purchased_at", { mode: "timestamp_ms" }),
+    ...timestamps,
+  },
+  (t) => ({
+    ownerIdx: index("inventory_owner_idx").on(t.ownerId),
+    ownerPaintUq: uniqueIndex("inventory_owner_paint_unique").on(
+      t.ownerId,
+      t.paintId,
+    ),
+    nonNegativeOwned: check(
+      "inventory_owned_nonnegative",
+      sql`${t.ownedCount} >= 0`,
+    ),
+  }),
+);
+
+/* ============================================================
    Relations
    ============================================================ */
 
@@ -220,6 +258,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   projects: many(projects),
+  inventoryEntries: many(inventoryEntries),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -260,3 +299,13 @@ export type NewProject = typeof projects.$inferInsert;
 
 export type NamedModel = typeof namedModels.$inferSelect;
 export type NewNamedModel = typeof namedModels.$inferInsert;
+
+export const inventoryEntriesRelations = relations(inventoryEntries, ({ one }) => ({
+  owner: one(users, {
+    fields: [inventoryEntries.ownerId],
+    references: [users.id],
+  }),
+}));
+
+export type InventoryEntry = typeof inventoryEntries.$inferSelect;
+export type NewInventoryEntry = typeof inventoryEntries.$inferInsert;

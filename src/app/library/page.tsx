@@ -5,7 +5,12 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import type { PaintCatalog } from "@/lib/paints/types";
-import { LibraryPageClient } from "@/components/library/LibraryPageClient";
+import {
+  LibraryPageClient,
+  type InventorySnapshot,
+} from "@/components/library/LibraryPageClient";
+import { listInventoryByUser } from "@/db/queries/inventory";
+import { currentUserId } from "@/lib/auth-stub";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +27,20 @@ async function loadPaintCatalog(): Promise<PaintCatalog> {
 }
 
 export default async function LibraryPage() {
-  const catalog = await loadPaintCatalog();
+  const userId = await currentUserId();
+  const [catalog, inventoryEntries] = await Promise.all([
+    loadPaintCatalog(),
+    listInventoryByUser(userId),
+  ]);
+
+  // Trim the DB row down to what the client actually needs.
+  const inventory = new Map<string, InventorySnapshot>();
+  inventoryEntries.forEach((entry, paintId) => {
+    inventory.set(paintId, {
+      ownedCount: entry.ownedCount,
+      isWishlisted: entry.isWishlisted,
+    });
+  });
 
   return (
     <div className="flex flex-col h-screen">
@@ -40,7 +58,7 @@ export default async function LibraryPage() {
           </div>
         }
       >
-        <LibraryPageClient paints={catalog.paints} />
+        <LibraryPageClient paints={catalog.paints} inventory={inventory} />
       </Suspense>
     </div>
   );

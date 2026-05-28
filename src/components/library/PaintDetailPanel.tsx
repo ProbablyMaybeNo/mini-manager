@@ -7,6 +7,7 @@ import { clsx } from "clsx";
 import type { Paint } from "@/lib/paints/types";
 import { TypeIcon } from "./TypeIcon";
 import { HexConfidenceDot } from "./HexConfidenceDot";
+import { InventoryControls } from "./InventoryControls";
 import { _internal } from "@/lib/paints/filters";
 
 /**
@@ -17,9 +18,11 @@ import { _internal } from "@/lib/paints/filters";
 export function PaintDetailPanel({
   paint,
   similarInOtherBrands,
+  inventory,
 }: {
   paint: Paint | null;
   similarInOtherBrands: ReadonlyArray<Paint>;
+  inventory?: { ownedCount: number; isWishlisted: boolean } | undefined;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -116,6 +119,11 @@ export function PaintDetailPanel({
               {copied ? "✓ copied" : "copy"}
             </button>
           </div>
+        </section>
+
+        <section>
+          <h3 className="section-title">Inventory</h3>
+          <InventoryControls paintId={paint.id} initial={inventory} variant="full" />
         </section>
 
         <section>

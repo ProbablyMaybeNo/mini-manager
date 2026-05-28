@@ -7,6 +7,7 @@ import { clsx } from "clsx";
 import type { Paint } from "@/lib/paints/types";
 import { TypeIcon } from "./TypeIcon";
 import { HexConfidenceDot } from "./HexConfidenceDot";
+import { InventoryControls } from "./InventoryControls";
 
 const ROW_HEIGHT = 40; // px — fixed so the virtualiser can do simple math
 const OVERSCAN = 8;
@@ -130,25 +131,30 @@ function PaintRow({
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
-  const owned = (inventory?.ownedCount ?? 0) > 0;
-  const wished = inventory?.isWishlisted ?? false;
+  function onRowKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openDetail();
+    }
+  }
 
   return (
-    <button
-      type="button"
-      onClick={openDetail}
+    <div
       role="row"
+      tabIndex={0}
+      onClick={openDetail}
+      onKeyDown={onRowKeyDown}
       aria-rowindex={rowIndex + 1}
       aria-current={active ? "true" : undefined}
       className={clsx(
-        "w-full grid items-center gap-3 px-3 text-left font-mono text-xs",
+        "w-full grid items-center gap-3 px-3 text-left font-mono text-xs cursor-pointer",
         "border-b border-[var(--color-border)]",
         "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
+        "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
         active && "bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]",
       )}
       style={{
         height: ROW_HEIGHT,
-        // Desktop grid by default; mobile gets simpler layout via responsive class below.
         gridTemplateColumns: GRID_COLS,
       }}
     >
@@ -179,25 +185,12 @@ function PaintRow({
         <HexConfidenceDot confidence={paint.hexConfidence} source={paint.hexSource} />
         <span className="truncate">{paint.hex.slice(1)}</span>
       </span>
-      <span
-        className={clsx(
-          "inline-flex justify-center",
-          owned ? "text-[var(--color-green)]" : "text-[var(--color-fg-subtle)]",
-        )}
-        aria-label={owned ? `Owned x${inventory?.ownedCount}` : "Not owned"}
-      >
-        {owned ? "✓" : "✗"}
-      </span>
-      <span
-        className={clsx(
-          "inline-flex justify-center",
-          wished ? "text-[var(--color-amber)]" : "text-[var(--color-fg-subtle)]",
-        )}
-        aria-label={wished ? "Wishlisted" : "Not wishlisted"}
-      >
-        {wished ? "★" : "☆"}
-      </span>
-    </button>
+      <InventoryControls
+        paintId={paint.id}
+        initial={inventory}
+        variant="compact"
+      />
+    </div>
   );
 }
 

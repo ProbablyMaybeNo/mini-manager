@@ -15,26 +15,29 @@ import { FilterRail } from "./FilterRail";
 import { LibraryTable } from "./LibraryTable";
 import { PaintDetailPanel } from "./PaintDetailPanel";
 
+export interface InventorySnapshot {
+  ownedCount: number;
+  isWishlisted: boolean;
+}
+
 /**
  * Client wrapper that owns the interactive parts of the library page.
  * Keeps the page component (server) thin — just data fetch + a single
  * client island.
  */
-export function LibraryPageClient({ paints }: { paints: ReadonlyArray<Paint> }) {
+export function LibraryPageClient({
+  paints,
+  inventory,
+}: {
+  paints: ReadonlyArray<Paint>;
+  inventory: ReadonlyMap<string, InventorySnapshot>;
+}) {
   const sp = useSearchParams();
 
-  // The URLSearchParams shape Next provides is read-only but compatible
-  // with the helper functions below.
   const filter = useMemo(() => filterFromSearchParams(sp), [sp]);
   const sortMode = useMemo(() => sortFromSearchParams(sp), [sp]);
   const selectedId = useMemo(() => selectedPaintFromSearchParams(sp), [sp]);
 
-  // Inventory lookups land in P2.3 — pass an empty map for now so the
-  // table renders the placeholder owned/wishlist glyphs.
-  const inventory = useMemo(
-    () => new Map<string, { ownedCount: number; isWishlisted: boolean }>(),
-    [],
-  );
   const ownedCounts = useMemo(() => {
     const out = new Map<string, number>();
     inventory.forEach((v, k) => out.set(k, v.ownedCount));
@@ -56,15 +59,21 @@ export function LibraryPageClient({ paints }: { paints: ReadonlyArray<Paint> }) 
     [selected, paints],
   );
 
+  const selectedInventory = selected ? inventory.get(selected.id) : undefined;
+
   return (
     <div className="flex flex-1 min-h-0">
-      <FilterRail paints={paints} filter={filter} ownedOnlyDisabled />
+      <FilterRail paints={paints} filter={filter} ownedOnlyDisabled={false} />
       <LibraryTable
         paints={filtered}
         selectedPaintId={selectedId}
         inventoryByPaint={inventory}
       />
-      <PaintDetailPanel paint={selected} similarInOtherBrands={similar} />
+      <PaintDetailPanel
+        paint={selected}
+        similarInOtherBrands={similar}
+        inventory={selectedInventory}
+      />
     </div>
   );
 }

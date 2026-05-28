@@ -97,7 +97,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P2.3 — Inventory: owned + wishlist marks on paints
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** A painter marks paints owned (✓), wishlisted (★), or neither. Marks are per-user. The library row and detail panel show the user's current marks; the "Owned only" filter starts working. Wishlist marks here are LIGHTWEIGHT — a star on a paint. The full WishlistItem entity (vendor URLs, prices, projects) is P2.4 and is a different shape. Don't conflate them.
 
