@@ -465,6 +465,42 @@ When a run uncovers an untested scenario, immediately append to `app/docs/MISSIO
 
 ---
 
+## Mobile E2E project (P6.8)
+
+Phase 6 shipped a second Playwright project (`chromium-mobile`) that
+runs the M6 mission spec against an iPhone-12 device descriptor
+(390×844). The desktop `chromium` project ignores
+`qa_mobile_flows.spec.ts` and vice versa, so the two projects don't
+double-run shared specs.
+
+Run just the mobile project:
+
+```bash
+npm run test:e2e -- --project chromium-mobile
+```
+
+Run just the desktop project:
+
+```bash
+npm run test:e2e -- --project chromium
+```
+
+Run both (default — what `npm run test:e2e` does):
+
+```bash
+npm run test:e2e
+```
+
+The mobile spec covers three missions:
+
+- **M6.1** — bottom tab bar visible, each tab navigates, no
+  horizontal scroll on any destination.
+- **M6.2** — create a Unit project on mobile, bump Owned + Build,
+  reload, verify persistence.
+- **M6.3** — library Flow 7 on mobile: open the [ Filters ] drawer,
+  search for "Mephiston Red", open the detail panel, verify the
+  panel's bottom does not exceed the viewport.
+
 ## What's not (yet) wired
 
 - **Component tests** — `@testing-library/react` is not installed. Component logic is currently best covered via E2E. Add if a pure component starts holding non-trivial logic.

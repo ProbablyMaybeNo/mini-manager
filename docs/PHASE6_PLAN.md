@@ -273,7 +273,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.8 — Mobile E2E suite (Playwright mobile viewports)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Lock the mobile flows down with a Playwright project that runs against an iPhone-X viewport. The ship criterion ("every primary flow works on Ross's phone") needs a regression guard.
 

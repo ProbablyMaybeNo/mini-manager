@@ -28,6 +28,23 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      // Desktop project skips the mobile-only smoke spec.
+      testIgnore: /qa_mobile_flows\.spec\.ts/,
+    },
+    {
+      name: "chromium-mobile",
+      // iPhone 12 ships with Mobile Safari (WebKit) by default in
+      // Playwright's device list. We want the viewport / UA / touch
+      // emulation but run on Chromium so the dev box doesn't need a
+      // separate WebKit install. Splat the device first, then force
+      // browserName.
+      use: {
+        ...devices["iPhone 12"],
+        browserName: "chromium",
+      },
+      // Mobile project only runs the mobile smoke spec — the desktop
+      // ones use viewport-specific assertions that don't translate.
+      testMatch: /qa_mobile_flows\.spec\.ts/,
     },
   ],
   webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER

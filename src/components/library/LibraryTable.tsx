@@ -85,8 +85,10 @@ export function LibraryTable({
 function TableHeader() {
   return (
     <div
-      className="grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]"
-      style={{ gridTemplateColumns: GRID_COLS }}
+      className={clsx(
+        "grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
+        GRID_CLASS,
+      )}
       role="row"
     >
       <span aria-hidden />
@@ -106,9 +108,14 @@ function TableHeader() {
   );
 }
 
-const GRID_COLS =
-  "24px 110px minmax(0, 1fr) minmax(0, 2fr) 80px 24px 72px 36px 28px";
-const GRID_COLS_MOBILE = "24px 90px minmax(0, 1fr) 24px 60px 36px 28px";
+/**
+ * Mobile collapses to swatch / brand / name / type / hex / owned /
+ * wishlisted — Line + SKU are visually hidden via `hidden md:inline`
+ * and so don't occupy mobile grid cells. Desktop restores the full
+ * 9-col layout.
+ */
+const GRID_CLASS =
+  "grid-cols-[24px_90px_minmax(0,1fr)_24px_60px_36px_28px] md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]";
 
 function PaintRow({
   paint,
@@ -152,10 +159,10 @@ function PaintRow({
         "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
         "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
         active && "bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]",
+        GRID_CLASS,
       )}
       style={{
         height: ROW_HEIGHT,
-        gridTemplateColumns: GRID_COLS,
       }}
     >
       <span
@@ -202,6 +209,3 @@ function TableFooter({ total }: { total: number }) {
   );
 }
 
-// Silence "GRID_COLS_MOBILE unused" — kept as a documentation hook for the
-// upcoming responsive pass.
-void GRID_COLS_MOBILE;
