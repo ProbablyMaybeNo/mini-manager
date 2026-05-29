@@ -186,7 +186,7 @@ export function PaintSlotPicker({
       ref={containerRef}
       role="dialog"
       aria-label="Pick paint"
-      className="absolute z-20 mt-2 w-[360px] max-w-[90vw] frame-strong bg-[var(--color-bg-panel)] shadow-xl"
+      className="absolute z-50 mt-2 w-[360px] max-w-[calc(100vw-1.5rem)] frame-strong bg-[var(--color-bg-panel)] shadow-xl"
       onMouseDown={(event) => event.stopPropagation()}
     >
       <div className="flex items-center gap-1 px-2 py-2 border-b border-[var(--color-border)]">
@@ -302,7 +302,7 @@ export function PaintSlotPicker({
           <div
             role="listbox"
             aria-label="Paints"
-            className="max-h-[280px] overflow-y-auto frame divide-y divide-[var(--color-border)]"
+            className="max-h-[55vh] sm:max-h-[280px] overflow-y-auto frame divide-y divide-[var(--color-border)]"
           >
             {loading ? (
               <p className="px-3 py-3 text-xs font-mono text-[var(--color-fg-muted)]">

@@ -86,9 +86,9 @@ export function WishlistDetailDrawer({
   return (
     <aside
       className={clsx(
-        "fixed inset-y-0 right-0 z-40 w-full md:w-[440px] bg-[var(--color-bg-panel)]",
+        "fixed inset-y-0 right-0 z-50 w-full md:w-[440px] bg-[var(--color-bg-panel)]",
         "border-l border-[var(--color-border-strong)] shadow-2xl",
-        "flex flex-col",
+        "flex flex-col pb-20 md:pb-0",
       )}
       aria-label={`Wishlist item ${item.title}`}
     >

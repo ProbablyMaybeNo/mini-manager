@@ -128,7 +128,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.4 — Mobile-first layouts: per-flow audit
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Walk the five primary surfaces on a real phone viewport (375px wide). Fix anything that's awkward to use with a thumb. This is a polish milestone, not a re-architecture — most layouts already collapse correctly; this is the "actually try it" pass.
 

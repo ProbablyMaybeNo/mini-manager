@@ -70,8 +70,10 @@ export function WishlistTable({
   return (
     <div className="frame overflow-hidden">
       <div
-        className="grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]"
-        style={{ gridTemplateColumns: GRID_COLS }}
+        className={clsx(
+          "grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
+          GRID_CLASS,
+        )}
       >
         <span aria-hidden />
         <span>Title</span>
@@ -94,8 +96,10 @@ export function WishlistTable({
               openItem(item.id);
             }
           }}
-          className="grid items-center gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]"
-          style={{ gridTemplateColumns: GRID_COLS }}
+          className={clsx(
+            "grid items-center gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
+            GRID_CLASS,
+          )}
         >
           <Thumbnail item={item} />
           <div className="min-w-0">
@@ -165,8 +169,13 @@ export function WishlistTable({
   );
 }
 
-const GRID_COLS =
-  "40px minmax(0, 2fr) minmax(0, 1fr) 90px 90px 110px 14px 80px";
+/**
+ * Mobile collapses the table to thumb / title / price / priority / status —
+ * the hidden md: columns (Vendor, Category, Project) drop to 0 because the
+ * spans above also have `hidden md:inline`. Desktop restores all eight cols.
+ */
+const GRID_CLASS =
+  "grid-cols-[40px_minmax(0,2fr)_70px_14px_56px] md:grid-cols-[40px_minmax(0,2fr)_minmax(0,1fr)_90px_90px_110px_14px_80px]";
 
 function Thumbnail({ item }: { item: WishlistItem }) {
   if (item.imageUrl) {

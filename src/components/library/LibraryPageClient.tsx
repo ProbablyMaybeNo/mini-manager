@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import type { Paint } from "@/lib/paints/types";
@@ -61,9 +61,72 @@ export function LibraryPageClient({
 
   const selectedInventory = selected ? inventory.get(selected.id) : undefined;
 
+  // Mobile-only state: bottom-sheet drawer for the filter rail.
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  // Auto-close the drawer once a filter actually changes (the user has
+  // committed an intent and likely wants to see the result table).
+  useEffect(() => {
+    setMobileFilterOpen(false);
+  }, [filter]);
+
   return (
     <div className="flex flex-1 min-h-0">
-      <FilterRail paints={paints} filter={filter} ownedOnlyDisabled={false} />
+      {/* Desktop rail */}
+      <div className="hidden md:flex">
+        <FilterRail paints={paints} filter={filter} ownedOnlyDisabled={false} />
+      </div>
+
+      {/* Mobile filter trigger */}
+      <button
+        type="button"
+        onClick={() => setMobileFilterOpen(true)}
+        className="md:hidden fixed top-14 right-3 z-30 tap-target px-3 py-1.5 frame-strong bg-[var(--color-bg-panel)] font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-green)]"
+        aria-label="Open filters"
+        aria-expanded={mobileFilterOpen}
+      >
+        [ Filters ]
+      </button>
+
+      {/* Mobile bottom-sheet drawer */}
+      {mobileFilterOpen ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close filters"
+            onClick={() => setMobileFilterOpen(false)}
+            className="md:hidden fixed inset-0 z-40 bg-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
+          />
+          <aside
+            className="md:hidden fixed inset-x-0 bottom-0 z-50 max-h-[80vh] flex flex-col border-t border-[var(--color-border-strong)] bg-[var(--color-bg-panel)] shadow-2xl"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}
+            aria-label="Library filters drawer"
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-panel)] z-10">
+              <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)]">
+                Filters
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileFilterOpen(false)}
+                className="tap-target px-3 font-mono text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]"
+                aria-label="Close filters"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <FilterRail
+                paints={paints}
+                filter={filter}
+                ownedOnlyDisabled={false}
+                className="border-r-0"
+              />
+            </div>
+          </aside>
+        </>
+      ) : null}
+
       <LibraryTable
         paints={filtered}
         selectedPaintId={selectedId}
