@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { publishRecipe, unpublishRecipe } from "@/lib/actions/recipeSharing";
 import { recipeToMarkdown, type MarkdownInput } from "@/lib/recipes/markdown";
 import { QrCode, qrCodeToSvg } from "@/components/recipes/QrCode";
+import { isNativeShareSupported, nativeShare } from "@/lib/share/webShare";
 
 interface Props {
   dialogRef: React.RefObject<HTMLDialogElement | null>;
@@ -166,6 +167,19 @@ export function ShareModal({
     );
   };
 
+  const onNativeShare = async () => {
+    if (!url) return;
+    setError(null);
+    const ok = await nativeShare({
+      title: recipeName,
+      text: `Paint recipe — ${recipeName}`,
+      url,
+    });
+    if (!ok) {
+      setError("Share sheet unavailable. Use the URL or QR sections below.");
+    }
+  };
+
   return (
     <dialog
       ref={dialogRef}
@@ -193,6 +207,22 @@ export function ShareModal({
           >
             {error}
           </p>
+        ) : null}
+
+        {/* Native share sheet — surfaced when the platform supports it
+            AND we have a public URL to share. Falls below to the four
+            sections below regardless. */}
+        {isNativeShareSupported && url ? (
+          <section>
+            <button
+              type="button"
+              onClick={onNativeShare}
+              disabled={isPending}
+              className="w-full tap-target text-sm font-mono uppercase tracking-wider px-4 py-2.5 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] disabled:opacity-60"
+            >
+              [ Share via... ]
+            </button>
+          </section>
         ) : null}
 
         {/* Section 1: URL */}

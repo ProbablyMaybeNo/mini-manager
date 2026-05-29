@@ -164,7 +164,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.5 — Native share sheet + camera eyedropper
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Two mobile-platform integrations that make the app feel native: the Web Share API for "Share recipe" (so it pops the OS share sheet — Messages / WhatsApp / Discord — instead of opening a copy modal), and `getUserMedia` for live camera sampling in the Eyedropper.
 

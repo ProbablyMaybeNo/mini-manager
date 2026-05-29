@@ -18,6 +18,10 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { DropZone } from "./DropZone";
+import {
+  CameraSampler,
+  isCameraSamplerSupported,
+} from "./CameraSampler";
 
 const SWATCH_COUNT = 6;
 
@@ -35,6 +39,7 @@ export function EyedropperClient() {
   const [swatches, setSwatches] = useState<ReadonlyArray<string>>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   // Load the paint catalog once.
   useEffect(() => {
@@ -95,6 +100,14 @@ export function EyedropperClient() {
 
   const removeSwatch = (idx: number) => {
     setSwatches((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleCameraSample = (hex: string) => {
+    setError(null);
+    setSwatches((prev) => {
+      if (prev.length >= SWATCH_COUNT) return prev;
+      return [...prev, hex.toUpperCase()];
+    });
   };
 
   const reset = () => {
@@ -164,12 +177,34 @@ export function EyedropperClient() {
               </div>
             </div>
           ) : (
-            <DropZone
-              onFile={handleFile}
-              onError={handleError}
-              disabled={busy}
-            />
+            <div className="space-y-2">
+              <DropZone
+                onFile={handleFile}
+                onError={handleError}
+                disabled={busy}
+              />
+              {isCameraSamplerSupported ? (
+                <button
+                  type="button"
+                  onClick={() => setCameraOpen(true)}
+                  disabled={busy || swatches.length >= SWATCH_COUNT}
+                  className="block w-full tap-target text-xs font-mono uppercase tracking-wider px-3 py-2 frame-strong hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)] disabled:opacity-60"
+                  aria-label="Open camera sampler"
+                >
+                  {swatches.length >= SWATCH_COUNT
+                    ? "[ Use camera ] palette full"
+                    : "[ Use camera ]"}
+                </button>
+              ) : null}
+            </div>
           )}
+
+          {cameraOpen ? (
+            <CameraSampler
+              onSample={handleCameraSample}
+              onClose={() => setCameraOpen(false)}
+            />
+          ) : null}
 
           {error ? (
             <p
