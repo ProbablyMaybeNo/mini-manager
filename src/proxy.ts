@@ -27,6 +27,9 @@ export default auth((req) => {
  * Skip the proxy for:
  *   - `/sign-in`              the sign-in screen itself
  *   - `/api/auth/*`           NextAuth's route handlers
+ *   - `/api/test/*`           the test reset endpoint
+ *   - `/r/*`                  public recipe view (P5.2 — anyone with the
+ *                              slug URL can read; auth is NOT required)
  *   - `/_next/*`              Next.js internals (static, image, RSC payloads)
  *   - `favicon.ico` + assets  obvious public files
  *
@@ -34,6 +37,6 @@ export default auth((req) => {
  */
 export const config = {
   matcher: [
-    "/((?!sign-in|api/auth|api/test|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)).*)",
+    "/((?!sign-in|api/auth|api/test|r/|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)).*)",
   ],
 };
