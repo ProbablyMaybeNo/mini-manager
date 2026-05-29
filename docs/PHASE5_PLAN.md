@@ -123,7 +123,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.4 — Share modal: URL + QR + Markdown + JSON
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The unified "Share" affordance in the recipe editor. Triggered from the recipe header. Modal with four sections (URL / QR / Markdown / JSON) — painter picks the format that fits where they're sharing.
 
