@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import {
   INFANTRY_ZONES,
   type InfantryZoneId,
 } from "@/lib/silhouettes/infantry";
 import type { RecipeZoneWithSteps } from "@/lib/recipes/types";
-import { addZone, deleteZone } from "@/lib/actions/recipeZones";
+import { addZone, deleteZone, reorderZones } from "@/lib/actions/recipeZones";
 
 export interface ZoneListItem {
   id: string;
@@ -30,10 +30,9 @@ interface Props {
  * either a preset silhouette zone (filtered to ones not already used)
  * OR a custom free-text name.
  *
- * Reorder is intentionally deferred to P3.5's polish pass; the zone list
- * is short enough that "delete + re-add" is fine for now and the drag
- * handle would just be visual debt without the drop logic. The plan's
- * `reorderZones` action is in place ready for whoever ships that polish.
+ * Reorder uses the native HTML5 drag-and-drop API, same idiom as
+ * StepList (P3.5). Drop fires `reorderZones`; local state mirrors the
+ * pending order so the optimistic UI feels instant.
  */
 export function ZoneList({
   recipeId,
@@ -41,21 +40,65 @@ export function ZoneList({
   selectedZoneId,
   onSelectZone,
 }: Props) {
+  const [localZones, setLocalZones] = useState<ReadonlyArray<ZoneListItem>>(
+    zones,
+  );
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  const [, startReorderTransition] = useTransition();
+  const draggedIdRef = useRef<string | null>(null);
+  const [dragTargetId, setDragTargetId] = useState<string | null>(null);
+
+  // Reset local order whenever the server-provided zones change
+  // (parent re-renders after revalidate).
+  useEffect(() => {
+    setLocalZones(zones);
+  }, [zones]);
+
   const usedSilhouetteIds = useMemo(() => {
     const set = new Set<string>();
-    for (const z of zones) {
+    for (const z of localZones) {
       if (z.silhouetteZoneId) set.add(z.silhouetteZoneId);
     }
     return set;
-  }, [zones]);
+  }, [localZones]);
+
+  const handleDrop = (targetId: string) => {
+    const draggedId = draggedIdRef.current;
+    draggedIdRef.current = null;
+    setDragTargetId(null);
+    if (!draggedId || draggedId === targetId) return;
+    const fromIdx = localZones.findIndex((z) => z.id === draggedId);
+    const toIdx = localZones.findIndex((z) => z.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const next = localZones.slice();
+    const [moved] = next.splice(fromIdx, 1);
+    if (!moved) return;
+    next.splice(toIdx, 0, moved);
+    setLocalZones(next);
+    const orderedIds = next.map((z) => z.id);
+    setReorderError(null);
+    startReorderTransition(async () => {
+      const result = await reorderZones({ recipeId, orderedIds });
+      if (!result.ok) {
+        setReorderError(result.error);
+        setLocalZones(zones);
+      }
+    });
+  };
 
   return (
     <div className="space-y-2">
       <h3 className="section-title flex items-center justify-between mb-0 pb-2">
-        <span>Zones · {zones.length}</span>
+        <span>Zones · {localZones.length}</span>
+        {localZones.length > 1 ? (
+          <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider">
+            drag ≡ to reorder
+          </span>
+        ) : null}
       </h3>
 
-      {zones.length === 0 ? (
+      {localZones.length === 0 ? (
         <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
           No zones yet. Click a region on the silhouette or use the
           <span className="font-mono"> [ + ] Add zone </span>
@@ -63,17 +106,44 @@ export function ZoneList({
         </p>
       ) : (
         <ul className="space-y-1" role="list">
-          {zones.map((zone) => (
+          {localZones.map((zone) => (
             <ZoneRow
               key={zone.id}
               zone={zone}
               selected={selectedZoneId === zone.id}
               onSelect={() => onSelectZone(zone.id)}
               recipeId={recipeId}
+              isDragTarget={dragTargetId === zone.id}
+              onDragStart={() => {
+                draggedIdRef.current = zone.id;
+              }}
+              onDragOver={(event) => {
+                if (draggedIdRef.current && draggedIdRef.current !== zone.id) {
+                  event.preventDefault();
+                  setDragTargetId(zone.id);
+                }
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                handleDrop(zone.id);
+              }}
+              onDragEnd={() => {
+                draggedIdRef.current = null;
+                setDragTargetId(null);
+              }}
             />
           ))}
         </ul>
       )}
+
+      {reorderError ? (
+        <p
+          role="alert"
+          className="frame px-3 py-1.5 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
+        >
+          {reorderError}
+        </p>
+      ) : null}
 
       <AddZoneControl recipeId={recipeId} usedSilhouetteIds={usedSilhouetteIds} />
     </div>
@@ -85,11 +155,21 @@ function ZoneRow({
   selected,
   onSelect,
   recipeId,
+  isDragTarget,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   zone: ZoneListItem;
   selected: boolean;
   onSelect: () => void;
   recipeId: string;
+  isDragTarget?: boolean;
+  onDragStart?: () => void;
+  onDragOver?: (event: React.DragEvent<HTMLLIElement>) => void;
+  onDrop?: (event: React.DragEvent<HTMLLIElement>) => void;
+  onDragEnd?: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -108,12 +188,29 @@ function ZoneRow({
   };
 
   return (
-    <li>
+    <li
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={clsx(
+        "flex items-stretch gap-1",
+        isDragTarget && "outline outline-1 outline-[var(--color-cyan)]",
+      )}
+    >
+      <span
+        aria-hidden
+        className="font-mono text-xs text-[var(--color-fg-subtle)] cursor-grab select-none px-1 flex items-center"
+        title="Drag to reorder"
+      >
+        ≡
+      </span>
       <button
         type="button"
         onClick={onSelect}
         className={clsx(
-          "w-full flex items-center gap-3 px-2.5 py-2 frame text-left tap-target",
+          "flex-1 min-w-0 flex items-center gap-3 px-2.5 py-2 frame text-left tap-target",
           "transition-colors",
           selected
             ? "border-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]"

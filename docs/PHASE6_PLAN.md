@@ -199,7 +199,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.6 — Polish concerns from Phases 3-5
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The catch-up milestone for small UX debts flagged across earlier phases:
 

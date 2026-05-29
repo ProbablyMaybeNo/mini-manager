@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { createPalette } from "@/lib/actions/palettes";
 import type { ToolPaletteSwatch, ToolId } from "@/lib/tools/types";
 import { SendToRecipeModal } from "./SendToRecipeModal";
+import { PaletteSaveDialog } from "./PaletteSaveDialog";
 
 interface Props {
   toolId: ToolId;
@@ -34,19 +35,23 @@ export function ToolFooterActions({
   defaultPaletteName,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [savePending, startSave] = useTransition();
   const [saveFlash, setSaveFlash] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const empty = swatches.length === 0;
+  const fallbackName = defaultPaletteName ?? `${toolLabel(toolId)} palette`;
 
-  const handleSave = () => {
+  const openSave = () => {
     if (empty || savePending) return;
     setSaveError(null);
     setSaveFlash(null);
-    const fallback = defaultPaletteName ?? `${toolLabel(toolId)} palette`;
-    const name = (window.prompt("Save palette as", fallback) ?? "").trim();
-    if (!name) return;
+    setSaveDialogOpen(true);
+  };
+
+  const confirmSave = (name: string) => {
+    setSaveDialogOpen(false);
     startSave(async () => {
       const res = await createPalette({
         name,
@@ -81,7 +86,7 @@ export function ToolFooterActions({
       ) : null}
       <button
         type="button"
-        onClick={handleSave}
+        onClick={openSave}
         disabled={empty || savePending}
         title={empty ? "No swatches to save yet" : "Save palette to your library"}
         className={clsx(
@@ -93,6 +98,12 @@ export function ToolFooterActions({
       >
         {savePending ? "…" : "[ Save palette ]"}
       </button>
+      <PaletteSaveDialog
+        open={saveDialogOpen}
+        defaultName={fallbackName}
+        onConfirm={confirmSave}
+        onCancel={() => setSaveDialogOpen(false)}
+      />
       <button
         type="button"
         onClick={() => setModalOpen(true)}

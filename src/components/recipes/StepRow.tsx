@@ -53,6 +53,13 @@ export function StepRow({
   const [savedNotes, setSavedNotes] = useState(step.notesMd ?? "");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Mobile-only: expand-on-tap reveal for the step-notes input. The
+  // input is always visible on lg+ so this only matters below lg.
+  // Default-open when the step already has notes so the painter can
+  // see them at a glance on small screens.
+  const [notesExpanded, setNotesExpanded] = useState(
+    (step.notesMd ?? "").length > 0,
+  );
   const slotRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -102,7 +109,7 @@ export function StepRow({
   return (
     <div
       className={clsx(
-        "frame px-2 py-2 flex items-center gap-2 bg-[var(--color-bg-elevated)]",
+        "frame px-2 py-2 flex flex-col gap-2 bg-[var(--color-bg-elevated)]",
         isDragTarget && "border-[var(--color-cyan)]",
         isPending && "opacity-70",
       )}
@@ -114,6 +121,7 @@ export function StepRow({
       role="listitem"
       aria-label={`Step ${position + 1}`}
     >
+      <div className="flex items-center gap-2">
       <span
         aria-hidden
         className="font-mono text-xs text-[var(--color-fg-subtle)] cursor-grab select-none px-1"
@@ -135,6 +143,22 @@ export function StepRow({
           </option>
         ))}
       </select>
+
+      <button
+        type="button"
+        onClick={() => setNotesExpanded((prev) => !prev)}
+        aria-label={notesExpanded ? "Collapse notes" : "Expand notes"}
+        aria-expanded={notesExpanded}
+        title={notes.length > 0 ? "Has notes" : "Add notes"}
+        className={clsx(
+          "lg:hidden tap-target px-2 font-mono text-xs",
+          notes.length > 0
+            ? "text-[var(--color-cyan)]"
+            : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg-muted)]",
+        )}
+      >
+        {notesExpanded ? "▾" : "▸"}
+      </button>
 
       <div ref={slotRef} className="relative min-w-0 flex-1">
         <button
@@ -211,6 +235,19 @@ export function StepRow({
         <span className="sr-only" role="alert">
           {error}
         </span>
+      ) : null}
+      </div>
+
+      {notesExpanded ? (
+        <input
+          type="text"
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+          placeholder="note…"
+          maxLength={200}
+          aria-label="Step notes"
+          className="lg:hidden w-full px-2 py-1.5 font-mono text-2xs bg-[var(--color-bg)] frame focus:border-[var(--color-cyan)]"
+        />
       ) : null}
     </div>
   );
