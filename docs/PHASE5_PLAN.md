@@ -232,7 +232,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.6 — JSON export of all user data
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** A single button on the User settings page that downloads `mini-manager-export-{date}.json` containing everything the user owns: projects, named models, recipes (with zones + steps), palettes, inventory entries, wishlist items. Versioned schema so future-self can re-import.
 
