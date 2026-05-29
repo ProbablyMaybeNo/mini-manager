@@ -31,7 +31,7 @@ Methodology adopted from the campaign-console project — see *Mission structure
 ## 1. Quick start
 
 ```bash
-# From app/ directory
+# From the repo root
 npm test                  # Run unit + integration (Vitest)
 npm run test:unit         # Pure-function tests only (<1s)
 npm run test:integration  # DB-dependent action tests (~5s)
@@ -45,7 +45,7 @@ npm run test:e2e:headed   # See the browser
 npm run test:e2e:ui       # Playwright UI runner
 ```
 
-All commands run from the `app/` directory.
+All commands run from the repo root (`D:\AI-Workstation\mini-manager\`).
 
 ---
 
@@ -65,7 +65,7 @@ The three layers form a pyramid: **unit tests catch math and parser bugs; integr
 
 ## 3. Commands
 
-### From `app/`
+### From the repo root
 
 ```bash
 # Vitest
@@ -94,9 +94,33 @@ npx playwright test --grep "M2.1"  # one mission run
 # Skip the auto-started dev server (use an already-running one)
 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:e2e
 
-# Point at a non-default base URL
+# Point at a non-default base URL (local dev on a different port)
 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npm run test:e2e
 ```
+
+### Testing against production (`https://miniaturemanager.vercel.app`)
+
+**The Playwright E2E suite does NOT run against production by default — and shouldn't.** Here's why:
+
+The E2E suite uses `tests/e2e/_helpers/auth.ts → signInAs()` which calls `POST /api/test/sign-in`. That route returns **404 in production** because `ALLOW_TEST_AUTH=1` is intentionally unset on Vercel. This is a security feature — no test back-door exists in prod, so a leaked URL can't sign anyone in.
+
+What this means for the test agent:
+
+| Scenario | Approach |
+|---|---|
+| **Regression suite (M1-M6)** | Always run locally via `npm run test:e2e`. The dev server boots with `ALLOW_TEST_AUTH=1`, all 8 missions work. |
+| **Smoke checks against live prod** | Manual / Kapture-style exploratory. Sign in via real magic-link (Resend), then walk Flows 1-9 by hand. |
+| **Public-only routes** | Some flows don't need auth and CAN be tested against prod: `/r/[slug]` (public recipe view), the `/sign-in` page itself (rendering only). For those: `PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=https://miniaturemanager.vercel.app npx playwright test qa_share_recipe` would test the public-view portion (the auth-required clone step would still fail without test-auth). |
+| **Pre-deploy gate** | Run full Vitest + E2E locally before pushing to main. Vercel auto-deploys, so a green local suite is the only gate before something hits production. |
+
+**If a bug shows up in prod that doesn't show up locally:**
+1. Reproduce on the live URL via the browser (don't try to make the E2E suite hit prod)
+2. Capture: screenshot, browser console, Vercel runtime log entry, the exact URL + steps
+3. Add a failing test at the lowest possible layer (unit → integration → E2E, in that priority order) — see `docs/MISSIONS.md` Bug Log format
+4. Fix locally, verify the test now passes
+5. Push — Vercel auto-deploys, then manually re-verify on prod
+
+**Resend sandbox note:** while in beta (no custom domain on Resend yet), magic-link in prod ONLY delivers to the email registered on Ross's Resend account. Any other email = silent reject (403 from Resend). Don't waste time debugging "magic link didn't arrive" for arbitrary emails on prod.
 
 ---
 
@@ -122,7 +146,7 @@ M11, M12 …            New missions discovered during testing (appended)
 
 ### Mission tracker
 
-The project's current mission table lives at `app/docs/MISSIONS.md`. New missions land there with status `Pending`. As an agent runs them, statuses change in place — this is the living record.
+The project's current mission table lives at `docs/MISSIONS.md`. New missions land there with status `Pending`. As an agent runs them, statuses change in place — this is the living record.
 
 ### Status lifecycle
 
@@ -418,7 +442,7 @@ Check these after every meaningful action in an E2E test — a violation is a `F
 
 ### 10.2 New mission discovered during a run
 
-When a run uncovers an untested scenario, immediately append to `app/docs/MISSIONS.md`:
+When a run uncovers an untested scenario, immediately append to `docs/MISSIONS.md`:
 
 ```markdown
 ## M[next] — [Short name] *(discovered during M[source] on YYYY-MM-DD)*
@@ -440,7 +464,7 @@ When a run uncovers an untested scenario, immediately append to `app/docs/MISSIO
 3. npm install (only if package.json changed)
 4. npm test                 ← unit + integration must all pass first
 5. npm run test:e2e         ← run E2E
-6. Open app/docs/MISSIONS.md → find next Pending run
+6. Open docs/MISSIONS.md → find next Pending run
 7. Execute → update status → repeat
 8. On Fail → open Evidence Bundle → run EXPLORER loop
 ```
