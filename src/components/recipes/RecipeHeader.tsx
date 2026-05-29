@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import type { Recipe } from "@/db/schema";
 import { deleteRecipe, updateRecipe } from "@/lib/actions/recipes";
+import { ShareButton } from "@/components/recipes/ShareButton";
+import type { MarkdownInput } from "@/lib/recipes/markdown";
 
 interface AttachmentSummary {
   kind: "project" | "named-model" | "standalone";
@@ -12,9 +14,19 @@ interface AttachmentSummary {
   href?: string;
 }
 
+interface ShareData {
+  /** Pre-built markdown input — the editor page derives this once from
+   *  the nested recipe + paint meta so the modal doesn't have to round-
+   *  trip for paint names. */
+  markdown: MarkdownInput;
+  /** Raw JSON-serialisable nested recipe (for the JSON export tab). */
+  jsonPayload: unknown;
+}
+
 interface Props {
   recipe: Recipe;
   attachment: AttachmentSummary;
+  share: ShareData;
 }
 
 const NAME_DEBOUNCE_MS = 600;
@@ -31,7 +43,7 @@ const NAME_DEBOUNCE_MS = 600;
  * than in the editor shell because the trigger lives in the header
  * row right next to it.
  */
-export function RecipeHeader({ recipe, attachment }: Props) {
+export function RecipeHeader({ recipe, attachment, share }: Props) {
   const router = useRouter();
   const nameRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -133,19 +145,28 @@ export function RecipeHeader({ recipe, attachment }: Props) {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={openDelete}
-          disabled={isPending}
-          className={clsx(
-            "text-2xs font-mono uppercase tracking-wider tap-target",
-            "text-[var(--color-fg-subtle)] hover:text-[var(--color-red)]",
-            isPending && "opacity-50 cursor-progress",
-          )}
-          title="Delete recipe"
-        >
-          [ delete ]
-        </button>
+        <div className="flex items-center gap-3">
+          <ShareButton
+            recipeId={recipe.id}
+            recipeName={recipe.name}
+            initialPublicSlug={recipe.publicSlug}
+            markdownInput={share.markdown}
+            jsonPayload={share.jsonPayload}
+          />
+          <button
+            type="button"
+            onClick={openDelete}
+            disabled={isPending}
+            className={clsx(
+              "text-2xs font-mono uppercase tracking-wider tap-target",
+              "text-[var(--color-fg-subtle)] hover:text-[var(--color-red)]",
+              isPending && "opacity-50 cursor-progress",
+            )}
+            title="Delete recipe"
+          >
+            [ delete ]
+          </button>
+        </div>
       </div>
 
       {error ? (

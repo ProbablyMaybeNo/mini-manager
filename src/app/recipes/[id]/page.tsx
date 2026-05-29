@@ -14,6 +14,7 @@ import { RecipeHeader } from "@/components/recipes/RecipeHeader";
 import { RecipeEditorClient } from "@/components/recipes/RecipeEditorClient";
 import type { ZoneListItem } from "@/components/recipes/ZoneList";
 import type { StepRowData } from "@/components/recipes/StepRow";
+import type { MarkdownInput, MarkdownZone } from "@/lib/recipes/markdown";
 
 export const dynamic = "force-dynamic";
 
@@ -122,6 +123,43 @@ export default async function RecipeEditorPage({
 
   const initialSelectedZoneId = zoneItems[0]?.id ?? null;
 
+  // Build a MarkdownInput for the share modal — resolves paint name + hex
+  // server-side so the client doesn't need the catalog map.
+  const markdownZones: MarkdownZone[] = recipe.zones.map((z) => ({
+    name: z.name,
+    steps: z.steps.map((s) => {
+      const meta = s.paintId ? paintMeta.get(s.paintId) : undefined;
+      let paintBrand: string | null = null;
+      let paintName: string | null = null;
+      if (meta?.label) {
+        // `meta.label` is `"<Brand> <Name>"` (see getPaintMetaMap). Split on
+        // the first space so the markdown can show "Brand Name `#HEX`".
+        const idx = meta.label.indexOf(" ");
+        if (idx > 0) {
+          paintBrand = meta.label.slice(0, idx);
+          paintName = meta.label.slice(idx + 1);
+        } else {
+          paintName = meta.label;
+        }
+      }
+      return {
+        technique: s.technique,
+        paintName,
+        paintBrand,
+        hex: s.customColorHex ?? meta?.hex ?? null,
+        notesMd: s.notesMd,
+      };
+    }),
+  }));
+  const markdownInput: MarkdownInput = {
+    recipe: {
+      name: recipe.name,
+      bodyType: recipe.bodyType,
+      notesMd: recipe.notesMd,
+    },
+    zones: markdownZones,
+  };
+
   return (
     <div className="p-6 md:p-8 max-w-7xl space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
@@ -132,7 +170,32 @@ export default async function RecipeEditorPage({
         <span className="text-[var(--color-fg)]">{recipe.name}</span>
       </nav>
 
-      <RecipeHeader recipe={recipe} attachment={attachment} />
+      <RecipeHeader
+        recipe={recipe}
+        attachment={attachment}
+        share={{
+          markdown: markdownInput,
+          jsonPayload: {
+            __exportVersion: 1,
+            recipe: {
+              id: recipe.id,
+              name: recipe.name,
+              bodyType: recipe.bodyType,
+              notesMd: recipe.notesMd,
+              zones: recipe.zones.map((z) => ({
+                name: z.name,
+                silhouetteZoneId: z.silhouetteZoneId,
+                steps: z.steps.map((s) => ({
+                  technique: s.technique,
+                  paintId: s.paintId,
+                  customColorHex: s.customColorHex,
+                  notesMd: s.notesMd,
+                })),
+              })),
+            },
+          },
+        }}
+      />
 
       <RecipeEditorClient
         recipe={recipe}
