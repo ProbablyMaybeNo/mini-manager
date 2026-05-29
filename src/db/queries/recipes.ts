@@ -80,6 +80,56 @@ export async function getRecipeById(
 }
 
 /**
+ * Public read path — looks up a recipe by its `publicSlug` with no owner
+ * filter. This is the ONLY query that bypasses owner-scope, intentionally:
+ * anyone with a slug URL can view the recipe (P5.2 public view). Returns
+ * the same nested shape as `getRecipeWithZones`, or null if the slug isn't
+ * minted on any recipe.
+ */
+export async function getRecipeBySlug(
+  slug: string,
+): Promise<RecipeWithZones | null> {
+  const recipeRows = await db
+    .select()
+    .from(recipes)
+    .where(eq(recipes.publicSlug, slug))
+    .limit(1);
+  const recipe = recipeRows[0];
+  if (!recipe) return null;
+
+  const zoneRows = await db
+    .select()
+    .from(recipeZones)
+    .where(eq(recipeZones.recipeId, recipe.id))
+    .orderBy(asc(recipeZones.position));
+
+  if (zoneRows.length === 0) {
+    return { ...recipe, zones: [] };
+  }
+
+  const zoneIds = zoneRows.map((z) => z.id);
+  const stepRows = await db
+    .select()
+    .from(recipeSteps)
+    .where(inArray(recipeSteps.zoneId, zoneIds))
+    .orderBy(asc(recipeSteps.position));
+
+  const stepsByZone = new Map<string, RecipeStep[]>();
+  for (const s of stepRows) {
+    const arr = stepsByZone.get(s.zoneId) ?? [];
+    arr.push(s);
+    stepsByZone.set(s.zoneId, arr);
+  }
+
+  const zones: RecipeZoneWithSteps[] = zoneRows.map((z) => ({
+    ...z,
+    steps: stepsByZone.get(z.id) ?? [],
+  }));
+
+  return { ...recipe, zones };
+}
+
+/**
  * Full nested recipe shape — zones ordered by position, steps within
  * each zone ordered by position. Ownership-checked. Returns null when
  * the recipe is missing OR owned by another user (do NOT distinguish
