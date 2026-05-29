@@ -14,7 +14,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.1 — Public slug actions (generate + revoke) + clone helper
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Two small server actions on top of the existing `recipe.publicSlug` column. `publishRecipe` mints a short URL-safe slug; `unpublishRecipe` clears it. A small helper `generatePublicSlug()` produces a 10-char alphanumeric ID using a custom nanoid alphabet (no ambiguous chars: no `0OIl1`).
 
