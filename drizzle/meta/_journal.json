@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1779913967070,
+      "tag": "0000_greedy_thunderbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1779962316811,
+      "tag": "0001_glorious_nehzno",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779962571058,
+      "tag": "0002_thankful_robin_chapel",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1779999851003,
+      "tag": "0003_lying_drax",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1780007196428,
+      "tag": "0004_clear_whistler",
+      "breakpoints": true
+    }
+  ]
+}

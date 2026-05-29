@@ -37,9 +37,6 @@ data/local.db-journal
 *.sqlite
 *.sqlite-journal
 
-# drizzle migration metadata
-drizzle/meta/
-
 # test outputs
 coverage/
 playwright-report/
