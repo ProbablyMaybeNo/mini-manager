@@ -280,7 +280,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.7 — QR code generator (inline, low-dep)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Inline QR rendering for the Share modal. Painters scan from a friend's phone. No external CDN; render SVG directly so it scales crisply.
 
