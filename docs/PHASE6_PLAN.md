@@ -48,14 +48,10 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.2 — Vehicle silhouette + zones
 
-- [ ] Build this milestone
-- [PAUSED] **Do not run this milestone autonomously.** Ross is hand-creating
-  the silhouette SVG artwork — the milestone-builder-generated hand-built path
-  data on the existing infantry silhouette didn't meet the quality bar. We'll
-  resume P6.2 once Ross delivers the Vehicle SVG (with paths cut along zone
-  boundaries per the recipe-mechanic requirement: ≥12 separately-clickable
-  `<path data-zone-id="...">` elements). The zone metadata + body-type picker
-  scaffolding can still land alongside that drop-in.
+- [x] **CANCELLED — superseded by P6.9 (silhouette mechanic dropped).** Ross
+  reviewed the existing Infantry silhouette and decided no version of the
+  per-body-type clickable-silhouette mechanic was worth the maintenance.
+  See P6.9 for what landed instead.
 
 **Context.** Recipe `bodyType = "vehicle"` was reserved in P3.1 but never rendered. Ship the silhouette + zone metadata so a painter can build a Leman Russ / Razorback / Tau Hammerhead recipe.
 
@@ -90,11 +86,8 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.3 — Monster + Terrain silhouettes
 
-- [ ] Build this milestone
-- [PAUSED] **Do not run this milestone autonomously.** Same reason as P6.2 —
-  paused on Ross's hand-created SVG art. The Silhouette wrapper component
-  from P6.2 is the prerequisite; once that lands with real art, P6.3
-  follows the same drop-in pattern for Monster + Terrain.
+- [x] **CANCELLED — superseded by P6.9 (silhouette mechanic dropped).**
+  Same reason as P6.2.
 
 **Context.** The remaining two deferred body types. Ships together because they share the same pattern as Vehicle (P6.2) — by this point the silhouette wrapper from P6.2 is in place and we're just adding two more SVG modules + zone metadata exports.
 
@@ -304,6 +297,45 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ---
 
+## P6.9 — Drop silhouette mechanic, keep zone presets
+
+- [x] Build this milestone
+
+**Context.** Ross opened the editor on a real recipe and decided the per-body-type clickable-silhouette mechanic was a maintenance burden no painter actually needs. Painters know what zones they're painting; they don't need a humanoid figure to point at them. The fix:
+
+- **Zones become pure text rows.** Painter types whatever the kit needs ("Carapace", "Pauldron trim", "Tongues") via the existing `[ + ] Add zone` flow.
+- **Starter presets stay as one-shot populates.** Per-body-type lists (Infantry / Vehicle / Monster / Terrain) still exist as `src/lib/silhouettes/*.ts` constants — `[ Use starter zones ▾ ]` adds the whole list to a recipe, painter edits / deletes any row.
+- **`recipe.bodyType` stays as metadata tag** (drives the `/recipes` filter and the default starter-pack pick) but no longer gates the editor UI.
+- **`recipeZone.silhouetteZoneId` column is preserved** — it now means "which preset id this zone came from" (or null for fully custom). Useful for migration, filtering, and future re-import.
+
+**Files deleted.**
+- `src/components/recipes/InfantrySilhouette.tsx`
+
+**Files created.**
+- `src/lib/silhouettes/vehicle.ts`, `monster.ts`, `terrain.ts` — preset metadata mirroring `infantry.ts`. No `defaultStepCount` field (unused).
+- `src/lib/silhouettes/presets.ts` — `ZONE_PRESETS` lookup + `getZonePreset(key)` helper.
+
+**Files modified.**
+- `src/lib/actions/recipeZones.ts` — adds `addZonesBulk({ recipeId, zones })` server action.
+- `src/components/recipes/ZoneList.tsx` — drops the silhouette/preset radio tab in `AddZoneControl`; `[ + ] Add zone` is now just a text input. Adds `<StarterZonesControl />` with the 4 preset packs.
+- `src/components/recipes/RecipeEditorClient.tsx` — drops the body / silhouette pane. Two-pane layout (zones+steps / notes) instead of three.
+- `src/app/recipes/[id]/page.tsx` — drops the `paletteForRecipe` call + `paletteBySilhouetteId` prop.
+
+**Patterns to follow.**
+- Server action follows the same `"use server"` / Zod / ownership-check / revalidate pattern.
+- Preset files export plain `{ id, name }` records — no `defaultStepCount` since the silhouette never read it.
+
+**Acceptance criteria.**
+- `npm run typecheck` exits 0.
+- `npm test` 369 still green.
+- Opening any recipe shows the two-pane editor, no silhouette.
+- `[ Use starter zones ▾ ]` populates the recipe with the chosen pack's zones.
+- `[ + ] Add zone` accepts any text.
+
+**Commit message:** `P6.9: drop silhouette mechanic; zone-preset packs as one-shot populates`
+
+---
+
 ## Phase 6 ship checklist
 
 After P6.8 lands, before declaring Phase 6 done:
@@ -312,7 +344,6 @@ After P6.8 lands, before declaring Phase 6 done:
 - Lighthouse mobile ≥ 90, desktop ≥ 95 across `/`, `/library`, `/projects`, `/recipes/[id]`, `/tools/eyedropper`.
 - All Phase 6 milestones tick green in this file.
 - No regressions in Phases 1-5 flows (`npm test && npm run test:e2e`).
-- The four body silhouettes (Infantry / Vehicle / Monster / Terrain) all render cleanly when a recipe of that type opens.
 
 **Deferred to later phases (do NOT build in Phase 6):**
 - **Pull-to-refresh** on lists → Phase 7 or polish.

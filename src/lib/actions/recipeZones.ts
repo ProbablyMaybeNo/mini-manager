@@ -40,6 +40,16 @@ const reorderSchema = z.object({
   orderedIds: z.array(zoneIdSchema).min(1).max(64),
 });
 
+const bulkZoneSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().trim().min(1).max(80),
+});
+
+const addBulkSchema = z.object({
+  recipeId: recipeIdSchema,
+  zones: z.array(bulkZoneSchema).min(1).max(32),
+});
+
 function revalidateForRecipe(recipeId: string) {
   revalidatePath(`/recipes/${recipeId}`);
   revalidatePath("/recipes");
@@ -102,6 +112,56 @@ export async function addZone(
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to add zone",
+    };
+  }
+}
+
+/* ============================================================
+   addZonesBulk — one-shot insert of a starter preset list. Appends
+   to the existing zone order; never replaces or deduplicates. Each
+   incoming zone gets its preset id stashed in `silhouetteZoneId` so
+   the row knows which preset it came from (useful for the /recipes
+   filter even though the silhouette mechanic itself is gone).
+   ============================================================ */
+
+export async function addZonesBulk(
+  raw: z.infer<typeof addBulkSchema>,
+): Promise<ActionResult<{ recipeId: string; addedCount: number }>> {
+  const parsed = addBulkSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid bulk input",
+    };
+  }
+  const { recipeId, zones } = parsed.data;
+  const userId = await currentUserId();
+
+  const owned = await verifyRecipeOwnership(userId, recipeId);
+  if (!owned) return { ok: false, error: "Recipe not found" };
+
+  const positionRows = await db
+    .select({ maxPos: max(recipeZones.position) })
+    .from(recipeZones)
+    .where(eq(recipeZones.recipeId, recipeId));
+  const currentMax = positionRows[0]?.maxPos;
+  const startPosition =
+    currentMax === null || currentMax === undefined ? 0 : currentMax + 1;
+
+  try {
+    const values = zones.map((z, i) => ({
+      recipeId,
+      name: z.name,
+      silhouetteZoneId: z.id,
+      position: startPosition + i,
+    }));
+    const inserted = await db.insert(recipeZones).values(values).returning();
+    revalidateForRecipe(recipeId);
+    return { ok: true, data: { recipeId, addedCount: inserted.length } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to add zones",
     };
   }
 }

@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import {
-  INFANTRY_ZONES,
-  type InfantryZoneId,
-} from "@/lib/silhouettes/infantry";
-import type { RecipeZoneWithSteps } from "@/lib/recipes/types";
-import { addZone, deleteZone, reorderZones } from "@/lib/actions/recipeZones";
+  ZONE_PRESET_KEYS,
+  ZONE_PRESET_LABEL,
+  getZonePreset,
+  type ZonePresetKey,
+} from "@/lib/silhouettes/presets";
+import {
+  addZone,
+  addZonesBulk,
+  deleteZone,
+  reorderZones,
+} from "@/lib/actions/recipeZones";
 
 export interface ZoneListItem {
   id: string;
@@ -19,23 +25,25 @@ export interface ZoneListItem {
 
 interface Props {
   recipeId: string;
+  bodyType: string;
   zones: ReadonlyArray<ZoneListItem>;
   selectedZoneId: string | null;
   onSelectZone: (zoneId: string) => void;
 }
 
 /**
- * Middle pane — the painter's zone list. Click selects (which mirrors
- * the silhouette pane's selection); the `[ + ] Add zone` popover offers
- * either a preset silhouette zone (filtered to ones not already used)
- * OR a custom free-text name.
+ * The zone CRUD pane. Two ways in:
+ *   - `[ + Add zone ]` — text input, painter types whatever
+ *     ("Carapace", "Shoulder badge", "Pauldron trim", etc.)
+ *   - `[ Use starter zones ▾ ]` — one-shot populate from a preset
+ *     pack (Infantry / Vehicle / Monster / Terrain). Defaults to
+ *     the recipe's bodyType; painter can pick any pack.
  *
- * Reorder uses the native HTML5 drag-and-drop API, same idiom as
- * StepList (P3.5). Drop fires `reorderZones`; local state mirrors the
- * pending order so the optimistic UI feels instant.
+ * Reorder uses HTML5 drag-and-drop (same idiom as StepList).
  */
 export function ZoneList({
   recipeId,
+  bodyType,
   zones,
   selectedZoneId,
   onSelectZone,
@@ -48,19 +56,9 @@ export function ZoneList({
   const draggedIdRef = useRef<string | null>(null);
   const [dragTargetId, setDragTargetId] = useState<string | null>(null);
 
-  // Reset local order whenever the server-provided zones change
-  // (parent re-renders after revalidate).
   useEffect(() => {
     setLocalZones(zones);
   }, [zones]);
-
-  const usedSilhouetteIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const z of localZones) {
-      if (z.silhouetteZoneId) set.add(z.silhouetteZoneId);
-    }
-    return set;
-  }, [localZones]);
 
   const handleDrop = (targetId: string) => {
     const draggedId = draggedIdRef.current;
@@ -100,9 +98,9 @@ export function ZoneList({
 
       {localZones.length === 0 ? (
         <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-          No zones yet. Click a region on the silhouette or use the
-          <span className="font-mono"> [ + ] Add zone </span>
-          button below to start.
+          No zones yet. Type your own with{" "}
+          <span className="font-mono">[ + ] Add zone</span> or one-click
+          populate a starter pack below.
         </p>
       ) : (
         <ul className="space-y-1" role="list">
@@ -112,7 +110,6 @@ export function ZoneList({
               zone={zone}
               selected={selectedZoneId === zone.id}
               onSelect={() => onSelectZone(zone.id)}
-              recipeId={recipeId}
               isDragTarget={dragTargetId === zone.id}
               onDragStart={() => {
                 draggedIdRef.current = zone.id;
@@ -145,7 +142,10 @@ export function ZoneList({
         </p>
       ) : null}
 
-      <AddZoneControl recipeId={recipeId} usedSilhouetteIds={usedSilhouetteIds} />
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <AddZoneControl recipeId={recipeId} />
+        <StarterZonesControl recipeId={recipeId} defaultBodyType={bodyType} />
+      </div>
     </div>
   );
 }
@@ -154,7 +154,6 @@ function ZoneRow({
   zone,
   selected,
   onSelect,
-  recipeId,
   isDragTarget,
   onDragStart,
   onDragOver,
@@ -164,7 +163,6 @@ function ZoneRow({
   zone: ZoneListItem;
   selected: boolean;
   onSelect: () => void;
-  recipeId: string;
   isDragTarget?: boolean;
   onDragStart?: () => void;
   onDragOver?: (event: React.DragEvent<HTMLLIElement>) => void;
@@ -184,7 +182,6 @@ function ZoneRow({
     startTransition(async () => {
       await deleteZone({ id: zone.id });
     });
-    void recipeId;
   };
 
   return (
@@ -261,67 +258,31 @@ function ZoneRow({
   );
 }
 
-function AddZoneControl({
-  recipeId,
-  usedSilhouetteIds,
-}: {
-  recipeId: string;
-  usedSilhouetteIds: ReadonlySet<string>;
-}) {
+function AddZoneControl({ recipeId }: { recipeId: string }) {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"silhouette" | "custom">("silhouette");
-  const [customName, setCustomName] = useState("");
-  const [silhouettePick, setSilhouettePick] = useState<InfantryZoneId | "">("");
+  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const availableSilhouetteZones = useMemo(
-    () => INFANTRY_ZONES.filter((z) => !usedSilhouetteIds.has(z.id)),
-    [usedSilhouetteIds],
-  );
-
   const reset = () => {
     setOpen(false);
-    setCustomName("");
-    setSilhouettePick("");
+    setName("");
     setError(null);
-    setMode("silhouette");
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
-    if (mode === "silhouette") {
-      if (!silhouettePick) {
-        setError("Pick a zone");
-        return;
-      }
-      const meta = INFANTRY_ZONES.find((z) => z.id === silhouettePick);
-      if (!meta) {
-        setError("Unknown zone");
-        return;
-      }
-      startTransition(async () => {
-        const result = await addZone({
-          recipeId,
-          name: meta.name,
-          silhouetteZoneId: meta.id,
-        });
-        if (result.ok) reset();
-        else setError(result.error);
-      });
-    } else {
-      const trimmed = customName.trim();
-      if (trimmed.length === 0) {
-        setError("Zone name is required");
-        return;
-      }
-      startTransition(async () => {
-        const result = await addZone({ recipeId, name: trimmed });
-        if (result.ok) reset();
-        else setError(result.error);
-      });
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      setError("Zone name is required");
+      return;
     }
+    startTransition(async () => {
+      const result = await addZone({ recipeId, name: trimmed });
+      if (result.ok) reset();
+      else setError(result.error);
+    });
   };
 
   if (!open) {
@@ -339,69 +300,17 @@ function AddZoneControl({
   return (
     <form
       onSubmit={handleSubmit}
-      className="frame p-3 space-y-3 bg-[var(--color-bg-elevated)]"
+      className="frame p-3 space-y-3 bg-[var(--color-bg-elevated)] w-full"
     >
-      <div className="flex items-center gap-2 text-2xs font-mono uppercase tracking-wider">
-        <button
-          type="button"
-          onClick={() => setMode("silhouette")}
-          className={clsx(
-            "px-2 py-1 frame tap-target",
-            mode === "silhouette"
-              ? "border-[var(--color-green)] text-[var(--color-green)]"
-              : "text-[var(--color-fg-muted)]",
-          )}
-        >
-          Preset
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("custom")}
-          className={clsx(
-            "px-2 py-1 frame tap-target",
-            mode === "custom"
-              ? "border-[var(--color-green)] text-[var(--color-green)]"
-              : "text-[var(--color-fg-muted)]",
-          )}
-        >
-          Custom
-        </button>
-      </div>
-
-      {mode === "silhouette" ? (
-        <div>
-          <select
-            value={silhouettePick}
-            onChange={(event) =>
-              setSilhouettePick(event.target.value as InfantryZoneId | "")
-            }
-            className="block w-full px-3 py-2 font-mono text-xs bg-[var(--color-bg)] frame focus:border-[var(--color-green)]"
-          >
-            <option value="">— Pick a body zone —</option>
-            {availableSilhouetteZones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.name}
-              </option>
-            ))}
-          </select>
-          {availableSilhouetteZones.length === 0 ? (
-            <p className="text-2xs font-sans text-[var(--color-fg-muted)] mt-2">
-              All 12 preset zones are already in this recipe. Use Custom for
-              extras.
-            </p>
-          ) : null}
-        </div>
-      ) : (
-        <input
-          type="text"
-          value={customName}
-          onChange={(event) => setCustomName(event.target.value)}
-          placeholder="e.g. Shoulder badge"
-          maxLength={80}
-          autoFocus
-          className="block w-full px-3 py-2 font-mono text-xs bg-[var(--color-bg)] frame focus:border-[var(--color-green)]"
-        />
-      )}
+      <input
+        type="text"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        placeholder="e.g. Carapace, Pauldron trim, Tongues…"
+        maxLength={80}
+        autoFocus
+        className="block w-full px-3 py-2 font-mono text-xs bg-[var(--color-bg)] frame focus:border-[var(--color-green)]"
+      />
 
       {error ? (
         <p
@@ -434,5 +343,112 @@ function AddZoneControl({
         </button>
       </div>
     </form>
+  );
+}
+
+function StarterZonesControl({
+  recipeId,
+  defaultBodyType,
+}: {
+  recipeId: string;
+  defaultBodyType: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const isPresetKey = (k: string): k is ZonePresetKey =>
+    (ZONE_PRESET_KEYS as ReadonlyArray<string>).includes(k);
+  const initialKey: ZonePresetKey = isPresetKey(defaultBodyType)
+    ? defaultBodyType
+    : "infantry";
+  const [picked, setPicked] = useState<ZonePresetKey>(initialKey);
+
+  const applyPreset = () => {
+    const preset = getZonePreset(picked);
+    if (!preset || preset.length === 0) {
+      setError("Empty preset");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await addZonesBulk({
+        recipeId,
+        zones: preset.map((z) => ({ id: z.id, name: z.name })),
+      });
+      if (result.ok) setOpen(false);
+      else setError(result.error);
+    });
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-2 px-3 py-2 frame tap-target text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]"
+      >
+        [ ▾ ] Use starter zones
+      </button>
+    );
+  }
+
+  return (
+    <div className="frame p-3 space-y-3 bg-[var(--color-bg-elevated)] w-full">
+      <div className="flex flex-wrap items-center gap-2">
+        {ZONE_PRESET_KEYS.map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setPicked(key)}
+            className={clsx(
+              "px-2 py-1 frame tap-target text-2xs font-mono uppercase tracking-wider",
+              picked === key
+                ? "border-[var(--color-green)] text-[var(--color-green)]"
+                : "text-[var(--color-fg-muted)]",
+            )}
+          >
+            {ZONE_PRESET_LABEL[key]}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
+        Adds <strong>{getZonePreset(picked)?.length ?? 0}</strong> zones to the
+        recipe. Edit or delete any row after.
+      </p>
+
+      {error ? (
+        <p
+          role="alert"
+          className="text-2xs font-mono text-[var(--color-red)]"
+        >
+          {error}
+        </p>
+      ) : null}
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={applyPreset}
+          disabled={isPending}
+          className={clsx(
+            "inline-flex items-center gap-2 px-3 py-1.5 frame-strong tap-target text-xs font-mono",
+            isPending
+              ? "opacity-60 cursor-progress"
+              : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+          )}
+        >
+          {isPending ? "[ … ] Adding" : "[ + ] Add all"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }

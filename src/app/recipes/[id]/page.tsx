@@ -6,7 +6,6 @@ import { db } from "@/db/client";
 import {
   getPaintMetaMap,
   getRecipeWithZones,
-  paletteForRecipe,
 } from "@/db/queries/recipes";
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { namedModels, projects } from "@/db/schema";
@@ -72,8 +71,7 @@ export default async function RecipeEditorPage({
   const recipe = await getRecipeWithZones(userId, id);
   if (!recipe) notFound();
 
-  const [palette, paintMeta, attachment, inventoryEntries] = await Promise.all([
-    paletteForRecipe(recipe),
+  const [paintMeta, attachment, inventoryEntries] = await Promise.all([
     getPaintMetaMap(),
     resolveAttachment(recipe),
     listInventoryByUser(userId),
@@ -112,9 +110,6 @@ export default async function RecipeEditorPage({
     });
     stepsByZoneId.set(z.id, rows);
   }
-
-  const paletteBySilhouetteId = new Map<string, string>();
-  for (const [key, hex] of palette) paletteBySilhouetteId.set(key, hex);
 
   const ownedPaintIds = new Set<string>();
   inventoryEntries.forEach((entry, paintId) => {
@@ -200,7 +195,6 @@ export default async function RecipeEditorPage({
       <RecipeEditorClient
         recipe={recipe}
         zones={zoneItems}
-        paletteBySilhouetteId={paletteBySilhouetteId}
         initialSelectedZoneId={initialSelectedZoneId}
         stepsByZoneId={stepsByZoneId}
         ownedPaintIds={ownedPaintIds}
