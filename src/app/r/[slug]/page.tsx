@@ -56,8 +56,10 @@ export async function generateMetadata({
 
 export default async function PublicRecipePage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<{ clone?: string }>;
 }) {
   const { slug } = await params;
   const recipe = await loadRecipe(slug);
@@ -68,5 +70,19 @@ export default async function PublicRecipePage({
     session?.user?.id && session.user.id === recipe.ownerId,
   );
 
-  return <PublicRecipeView recipe={recipe} slug={slug} isOwner={isOwner} />;
+  const { clone } = await searchParams;
+  // Auto-clone only when the URL says so AND the visitor is signed in.
+  // If unauth'd + clone=1, the auto-clone flow already kicked them to
+  // sign-in earlier — landing here without a session means they bailed
+  // and we should just render the normal view.
+  const autoClone = clone === "1" && Boolean(session?.user?.id) && !isOwner;
+
+  return (
+    <PublicRecipeView
+      recipe={recipe}
+      slug={slug}
+      isOwner={isOwner}
+      autoClone={autoClone}
+    />
+  );
 }

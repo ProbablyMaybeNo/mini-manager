@@ -15,15 +15,38 @@ export const dynamic = "force-dynamic";
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{
+    sent?: string;
+    error?: string;
+    from?: string;
+    clone?: string;
+  }>;
 }) {
-  // If already signed in, bounce straight back into the app.
-  const session = await auth();
-  if (session?.user) redirect("/projects");
-
   const params = await searchParams;
   const sent = params.sent === "1";
   const error = params.error;
+  const from = params.from;
+  // `clone=1` is a hint for the CloneButton flow — we don't act on it
+  // server-side here. After the magic-link click NextAuth redirects to
+  // the `from` URL, which is `/r/<slug>?clone=1`, and AutoCloneOnMount
+  // there finishes the work.
+
+  // If already signed in, route either to the requested `from` URL (so
+  // the public clone flow auto-completes) or to /projects.
+  const session = await auth();
+  if (session?.user) {
+    const safeFrom =
+      from && from.startsWith("/") && !from.startsWith("//") ? from : null;
+    redirect(safeFrom ?? "/projects");
+  }
+
+  // After the magic-link click NextAuth will redirect the browser to
+  // `redirectTarget`. When the visitor came from `/r/<slug>?clone=1` we
+  // send them back there so the AutoCloneOnMount component finishes the
+  // clone with no extra click; otherwise the default app landing.
+  const safeFromRaw =
+    from && from.startsWith("/") && !from.startsWith("//") ? from : null;
+  const redirectTarget = safeFromRaw ?? "/projects";
 
   async function submit(formData: FormData): Promise<void> {
     "use server";
@@ -31,7 +54,7 @@ export default async function SignInPage({
     if (!email) return;
     await signIn("resend", {
       email,
-      redirectTo: "/sign-in?sent=1",
+      redirectTo: redirectTarget,
     });
   }
 

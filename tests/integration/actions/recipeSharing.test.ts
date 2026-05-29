@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { makeTestDb, type TestDb } from "../_helpers/testDb";
+import { makeTestDb, seedExtraUser, type TestDb } from "../_helpers/testDb";
 import { recipes, recipeSteps, recipeZones } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
@@ -20,7 +20,7 @@ vi.mock("@/lib/auth-stub", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { publishRecipe, unpublishRecipe } = await import(
+const { publishRecipe, unpublishRecipe, cloneRecipeFromSlug } = await import(
   "@/lib/actions/recipeSharing"
 );
 const { getRecipeBySlug } = await import("@/db/queries/recipes");
@@ -163,5 +163,127 @@ describe("getRecipeBySlug", () => {
     await unpublishRecipe({ recipeId });
     const fetched = await getRecipeBySlug(pub.data.slug);
     expect(fetched).toBeNull();
+  });
+});
+
+describe("cloneRecipeFromSlug", () => {
+  test("deep-copies a recipe including zones and steps under the caller", async () => {
+    // Alice owns + publishes the source.
+    const aliceId = state.userId;
+    const sourceId = await seedRecipeWithContent();
+    const pub = await publishRecipe({ recipeId: sourceId });
+    if (!pub.ok) throw new Error("setup failed");
+
+    // Switch to Bob.
+    const bobId = await seedExtraUser(state.db!, "bob");
+    state.userId = bobId;
+
+    const clone = await cloneRecipeFromSlug({ slug: pub.data.slug });
+    expect(clone.ok).toBe(true);
+    if (!clone.ok) return;
+
+    // The clone is a brand-new row with a different id.
+    expect(clone.data.id).not.toBe(sourceId);
+
+    // Source still belongs to Alice and remains intact.
+    const sourceRows = await state
+      .db!.select()
+      .from(recipes)
+      .where(eq(recipes.id, sourceId));
+    expect(sourceRows[0]?.ownerId).toBe(aliceId);
+    expect(sourceRows[0]?.publicSlug).toBe(pub.data.slug);
+
+    // Clone belongs to Bob, has the renamed title, no slug, standalone.
+    const cloneRows = await state
+      .db!.select()
+      .from(recipes)
+      .where(eq(recipes.id, clone.data.id));
+    const cloneRow = cloneRows[0]!;
+    expect(cloneRow.ownerId).toBe(bobId);
+    expect(cloneRow.name).toBe("Loaded Recipe (cloned)");
+    expect(cloneRow.publicSlug).toBeNull();
+    expect(cloneRow.isStandalone).toBe(true);
+    expect(cloneRow.attachedProjectId).toBeNull();
+    expect(cloneRow.attachedNamedModelId).toBeNull();
+
+    // Zones + steps replicated 1:1 under fresh ids.
+    const zones = await state
+      .db!.select()
+      .from(recipeZones)
+      .where(eq(recipeZones.recipeId, clone.data.id));
+    expect(zones).toHaveLength(1);
+    expect(zones[0]?.name).toBe("Power Armor");
+    expect(zones[0]?.silhouetteZoneId).toBe("armor-primary");
+
+    const steps = await state
+      .db!.select()
+      .from(recipeSteps)
+      .where(eq(recipeSteps.zoneId, zones[0]!.id));
+    expect(steps).toHaveLength(1);
+    expect(steps[0]?.technique).toBe("basecoat");
+    expect(steps[0]?.paintId).toBe("citadel-caliban-green");
+  });
+
+  test("rejects cloning a recipe you already own", async () => {
+    const recipeId = await seedRecipeWithContent();
+    const pub = await publishRecipe({ recipeId });
+    if (!pub.ok) throw new Error("setup failed");
+
+    const res = await cloneRecipeFromSlug({ slug: pub.data.slug });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/already your recipe/i);
+  });
+
+  test("renames consecutive clones with (cloned 2), (cloned 3)…", async () => {
+    const sourceId = await seedRecipeWithContent();
+    const pub = await publishRecipe({ recipeId: sourceId });
+    if (!pub.ok) throw new Error("setup failed");
+
+    const bobId = await seedExtraUser(state.db!, "bob");
+    state.userId = bobId;
+
+    const c1 = await cloneRecipeFromSlug({ slug: pub.data.slug });
+    const c2 = await cloneRecipeFromSlug({ slug: pub.data.slug });
+    const c3 = await cloneRecipeFromSlug({ slug: pub.data.slug });
+    expect(c1.ok && c2.ok && c3.ok).toBe(true);
+
+    const names = await state
+      .db!.select({ name: recipes.name })
+      .from(recipes)
+      .where(eq(recipes.ownerId, bobId));
+    const nameSet = new Set(names.map((r) => r.name));
+    expect(nameSet.has("Loaded Recipe (cloned)")).toBe(true);
+    expect(nameSet.has("Loaded Recipe (cloned 2)")).toBe(true);
+    expect(nameSet.has("Loaded Recipe (cloned 3)")).toBe(true);
+  });
+
+  test("rejects an unknown slug", async () => {
+    const res = await cloneRecipeFromSlug({ slug: "nopenope" });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/not found/i);
+  });
+
+  test("editing the clone leaves the source untouched", async () => {
+    const sourceId = await seedRecipeWithContent();
+    const pub = await publishRecipe({ recipeId: sourceId });
+    if (!pub.ok) throw new Error("setup failed");
+
+    const bobId = await seedExtraUser(state.db!, "bob");
+    state.userId = bobId;
+
+    const clone = await cloneRecipeFromSlug({ slug: pub.data.slug });
+    if (!clone.ok) throw new Error("clone failed");
+
+    // Rename the clone directly on the DB to simulate a Bob edit.
+    await state
+      .db!.update(recipes)
+      .set({ name: "Bob's Custom Salamanders" })
+      .where(eq(recipes.id, clone.data.id));
+
+    const source = await state
+      .db!.select()
+      .from(recipes)
+      .where(eq(recipes.id, sourceId));
+    expect(source[0]?.name).toBe("Loaded Recipe");
   });
 });

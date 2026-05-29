@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPaintMetaMap } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
 import { RecipePaletteStripStatic } from "@/components/recipes/RecipePaletteStrip";
+import { AutoCloneOnMount, CloneButton } from "@/components/recipes/CloneButton";
 import type { RecipeWithZones } from "@/lib/recipes/types";
 
 interface Props {
@@ -11,6 +12,10 @@ interface Props {
   /** True when the visitor is also the owner — clone button becomes a
    *  link back to the editor instead. */
   isOwner: boolean;
+  /** When the URL carries `?clone=1` AND the visitor is signed-in, the
+   *  view fires an auto-clone on mount instead of showing the manual
+   *  button. */
+  autoClone?: boolean;
 }
 
 /**
@@ -18,7 +23,12 @@ interface Props {
  * visitors. No client-side state. The clone CTA is delegated to a small
  * client component (P5.3) so this file stays SSR-friendly.
  */
-export async function PublicRecipeView({ recipe, slug, isOwner }: Props) {
+export async function PublicRecipeView({
+  recipe,
+  slug,
+  isOwner,
+  autoClone = false,
+}: Props) {
   const paintMeta = await getPaintMetaMap();
 
   // Palette strip (top of card)
@@ -158,7 +168,7 @@ export async function PublicRecipeView({ recipe, slug, isOwner }: Props) {
             [ Edit in Mini Manager ]
           </Link>
         ) : (
-          <CloneCta slug={slug} />
+          <CloneButton slug={slug} />
         )}
         <Link
           href="/"
@@ -167,23 +177,8 @@ export async function PublicRecipeView({ recipe, slug, isOwner }: Props) {
           [ Open Mini Manager ]
         </Link>
       </footer>
-    </article>
-  );
-}
 
-/**
- * Tiny anchor that wraps the dedicated clone CTA. The real clone button
- * (with client-side fetch + redirect handling) lives in `CloneButton`
- * and is wired up in P5.3 — until then, link to a sign-in flow that
- * carries the slug through.
- */
-function CloneCta({ slug }: { slug: string }) {
-  return (
-    <Link
-      href={`/sign-in?from=${encodeURIComponent(`/r/${slug}?clone=1`)}&clone=1`}
-      className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] text-center"
-    >
-      [ Clone to my recipes ]
-    </Link>
+      {autoClone && !isOwner ? <AutoCloneOnMount slug={slug} /> : null}
+    </article>
   );
 }

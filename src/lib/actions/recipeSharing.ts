@@ -1,18 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, inArray, like } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { recipes, type Recipe } from "@/db/schema";
+import {
+  recipes,
+  recipeSteps,
+  recipeZones,
+  type Recipe,
+} from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { generatePublicSlug } from "@/lib/recipes/slug";
 import type { ActionResult } from "@/lib/actions/projects";
 
 const recipeIdSchema = z.string().min(1).max(64);
+const slugSchema = z.string().min(1).max(64);
 
 const publishSchema = z.object({ recipeId: recipeIdSchema });
 const unpublishSchema = z.object({ recipeId: recipeIdSchema });
+const cloneFromSlugSchema = z.object({ slug: slugSchema });
 
 async function getOwnedRecipe(
   userId: string,
@@ -130,6 +137,160 @@ export async function unpublishRecipe(
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to unpublish recipe",
+    };
+  }
+}
+
+/**
+ * Pick a unique name for the clone — appends " (cloned)" first, then
+ * " (cloned 2)", " (cloned 3)", … until one is free for this owner.
+ *
+ * Done client-side via a single LIKE query rather than a tight loop of
+ * point lookups; recipe-name collisions are O(handful) in practice.
+ */
+async function resolveCloneName(
+  userId: string,
+  baseName: string,
+): Promise<string> {
+  const firstChoice = `${baseName} (cloned)`;
+  const prefix = `${baseName} (cloned`;
+  // Match `name (cloned)` and `name (cloned N)` already owned by this user.
+  const existing = await db
+    .select({ name: recipes.name })
+    .from(recipes)
+    .where(and(eq(recipes.ownerId, userId), like(recipes.name, `${prefix}%`)));
+  const taken = new Set(existing.map((r) => r.name));
+  if (!taken.has(firstChoice)) return firstChoice;
+  for (let n = 2; n < 1000; n++) {
+    const candidate = `${baseName} (cloned ${n})`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  // Fallback — astronomically unlikely; suffix with a fresh slug to be safe.
+  return `${baseName} (cloned ${generatePublicSlug()})`;
+}
+
+/**
+ * Clone a published recipe into the current user's library. Deep-copies
+ * the recipe, zones, and steps inside a single libsql transaction so a
+ * partial clone never lands. The clone is standalone (no project / model
+ * attachment carried) and its `publicSlug` is cleared — the new owner
+ * publishes it independently if they want a public URL.
+ *
+ * Returns `{ ok: false, error: "This is already your recipe" }` when the
+ * source already belongs to the current user — the caller (CloneButton)
+ * surfaces this as a friendly message + a link to the existing recipe.
+ */
+export async function cloneRecipeFromSlug(
+  raw: z.infer<typeof cloneFromSlugSchema>,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = cloneFromSlugSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  const userId = await currentUserId();
+
+  const sourceRows = await db
+    .select()
+    .from(recipes)
+    .where(eq(recipes.publicSlug, parsed.data.slug))
+    .limit(1);
+  const source = sourceRows[0];
+  if (!source) return { ok: false, error: "Recipe not found" };
+
+  if (source.ownerId === userId) {
+    return { ok: false, error: "This is already your recipe" };
+  }
+
+  const sourceZones = await db
+    .select()
+    .from(recipeZones)
+    .where(eq(recipeZones.recipeId, source.id))
+    .orderBy(asc(recipeZones.position));
+
+  const zoneIds = sourceZones.map((z) => z.id);
+  const sourceSteps =
+    zoneIds.length === 0
+      ? []
+      : await db
+          .select()
+          .from(recipeSteps)
+          .where(inArray(recipeSteps.zoneId, zoneIds))
+          .orderBy(asc(recipeSteps.position));
+
+  const cloneName = await resolveCloneName(userId, source.name);
+
+  // libsql's @libsql/client opens a fresh in-memory DB inside
+  // `db.transaction()`, which breaks the per-test connection model used
+  // throughout this project. So we run inserts sequentially and roll
+  // back manually on any error — deleting the parent recipe cascades
+  // to its zones and steps via FK ON DELETE CASCADE.
+  let newRecipeId: string | null = null;
+  try {
+    const insertedRecipe = await db
+      .insert(recipes)
+      .values({
+        ownerId: userId,
+        name: cloneName,
+        bodyType: source.bodyType,
+        attachedProjectId: null,
+        attachedNamedModelId: null,
+        isStandalone: true,
+        publicSlug: null,
+        notesMd: source.notesMd ?? null,
+      })
+      .returning({ id: recipes.id });
+    newRecipeId = insertedRecipe[0]?.id ?? null;
+    if (!newRecipeId) throw new Error("Clone insert returned no row");
+
+    const zoneIdMap = new Map<string, string>();
+    for (const z of sourceZones) {
+      const insertedZone = await db
+        .insert(recipeZones)
+        .values({
+          recipeId: newRecipeId,
+          position: z.position,
+          name: z.name,
+          silhouetteZoneId: z.silhouetteZoneId,
+        })
+        .returning({ id: recipeZones.id });
+      const newZoneId = insertedZone[0]?.id;
+      if (!newZoneId) throw new Error("Clone zone insert returned no row");
+      zoneIdMap.set(z.id, newZoneId);
+    }
+
+    for (const s of sourceSteps) {
+      const targetZoneId = zoneIdMap.get(s.zoneId);
+      if (!targetZoneId) continue;
+      await db.insert(recipeSteps).values({
+        zoneId: targetZoneId,
+        position: s.position,
+        technique: s.technique,
+        paintId: s.paintId,
+        customColorHex: s.customColorHex,
+        notesMd: s.notesMd,
+      });
+    }
+
+    revalidatePath("/recipes");
+    revalidatePath(`/recipes/${newRecipeId}`);
+    return { ok: true, data: { id: newRecipeId } };
+  } catch (err) {
+    // Roll back any partial state — deleting the recipe cascades zones
+    // and steps. Swallow secondary failures during cleanup so the
+    // original error surfaces.
+    if (newRecipeId) {
+      try {
+        await db.delete(recipes).where(eq(recipes.id, newRecipeId));
+      } catch {
+        /* best-effort cleanup */
+      }
+    }
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to clone recipe",
     };
   }
 }
