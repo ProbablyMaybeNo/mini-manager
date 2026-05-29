@@ -50,7 +50,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.2 — Public recipe view at `/r/[slug]`
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Anyone with a slug URL can view a published recipe — no account required. Owner-checked routes (e.g. `/recipes/[id]`) are NOT affected. The view is read-only — no edit, no add-zone, no toggle. Painter who didn't author it sees `[ Clone to my recipes ]` as the primary CTA.
 
