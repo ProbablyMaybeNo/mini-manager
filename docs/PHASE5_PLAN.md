@@ -85,7 +85,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.3 — Clone to my recipes (the cross-account hop)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The friend opens `/r/[slug]`, taps `[ Clone to my recipes ]`. If signed-in: clones immediately and redirects to `/recipes/[newId]`. If signed-out: kicks to `/sign-in?return_to=/r/[slug]?clone=1` and clones automatically after the magic-link sign-in completes.
 
