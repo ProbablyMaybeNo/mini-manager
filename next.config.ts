@@ -14,6 +14,29 @@ const config: NextConfig = {
   turbopack: {
     root: path.resolve(),
   },
+  // Serve WebP / AVIF where the device supports it. Wishlist + paint
+  // detail panels can render reference images supplied by the user;
+  // this halves the bytes for those on modern phones.
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
+  // Long-cache /data/paints.json — it's a 2-3 MB static catalog that
+  // changes only on a scrape rebuild. Next's static-asset cache only
+  // covers /_next/* by default; the public folder gets a more
+  // conservative cache. We override per the P6.7 perf pass.
+  async headers() {
+    return [
+      {
+        source: "/data/paints.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=300, s-maxage=3600",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default config;

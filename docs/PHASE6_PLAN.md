@@ -238,7 +238,9 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.7 — Performance pass: bundle size + Lighthouse
 
-- [ ] Build this milestone
+- [x] Build this milestone (partial — config + audit doc shipped;
+  live Lighthouse run with measurement table pending Ross's manual
+  run, see `app/docs/PERFORMANCE_AUDIT.md`)
 
 **Context.** Run Lighthouse against the production build and fix the biggest hits. Aim: 90+ mobile, 95+ desktop. Document the numbers before/after.
 

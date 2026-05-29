@@ -1,0 +1,111 @@
+# Performance Audit — P6.7
+
+Phase 6 ship criterion (per V2-BUILD-PLAN §11.6): Lighthouse 90+ mobile,
+95+ desktop on the primary routes.
+
+## Status
+
+**Partial-ship.** The static / configurable wins below have landed.
+The live Lighthouse run with before/after numbers requires a real
+production build on a machine that can host the app + run Lighthouse
+against it. That step is **pending Ross's manual run** — the
+milestone-builder agent that executes Phase 6 milestones does not
+have a sandboxed Chrome to point at `npm run start`. This file is the
+audit log; Ross fills in the measurement rows.
+
+## Configurable wins shipped
+
+### `next.config.ts`
+
+- `images.formats: ["image/avif", "image/webp"]` — modern devices get
+  AVIF or WebP automatically when the painter loads a wishlist
+  reference image or a paint thumbnail. Roughly halves the bytes vs
+  JPEG/PNG.
+- Long-cache header on `/data/paints.json`:
+  `public, max-age=300, s-maxage=3600`. The catalog is ~2-3 MB
+  uncompressed and changes only on a scrape rebuild; a short
+  client cache + longer edge cache shaves the second-visit cost
+  toward zero without trapping painters on a stale catalog after a
+  re-scrape.
+
+### Already-in-place performance posture (verified, no change needed)
+
+- **Per-route code splitting.** Each tool route
+  (`/tools/{wheel,match,eyedropper,gradient}`) imports its own client
+  component. Next 16's App Router already splits these per page — no
+  manual `dynamic()` wrappers needed.
+- **Dexie IndexedDB cache.** `src/lib/paints/loader.ts` wraps the
+  catalog fetch with a read-through Dexie cache. Second-view cost on
+  any client is effectively zero (no 2-3 MB fetch).
+- **In-memory module cache.** `loadPaints()` also dedupes concurrent
+  callers in the same page render so multiple components asking for
+  the catalog share one promise.
+- **Library table windowing.** `LibraryTable` renders only the
+  visible row slice + overscan; 7k paints scroll on a phone without
+  the hand-rolled virtualizer ballooning the DOM.
+
+## What Ross needs to run
+
+```powershell
+cd D:\AI-Workstation\Antigravity\apps\Paint-planner\app
+npm run build
+npm run start  # serves at http://localhost:3000
+
+# Mobile audit (in another shell)
+npx lighthouse http://localhost:3000/             --form-factor=mobile  --output=html --output-path=./lighthouse-home-mobile.html
+npx lighthouse http://localhost:3000/library      --form-factor=mobile  --output=html --output-path=./lighthouse-library-mobile.html
+npx lighthouse http://localhost:3000/projects     --form-factor=mobile  --output=html --output-path=./lighthouse-projects-mobile.html
+# /recipes/[id] needs a real recipe id from the seeded DB.
+
+# Desktop audit
+npx lighthouse http://localhost:3000/             --preset=desktop --output=html --output-path=./lighthouse-home-desktop.html
+# etc.
+```
+
+Per the plan, acceptable targets are TBT < 200ms, CLS < 0.1, LCP <
+2.5s on simulated 4G.
+
+## Measurement table — fill in after the live run
+
+| Route               | Form factor | Before LCP | After LCP | Before TBT | After TBT | Before CLS | After CLS | Before Perf | After Perf |
+|---------------------|-------------|-----------:|----------:|-----------:|----------:|-----------:|----------:|------------:|-----------:|
+| `/`                 | mobile      |            |           |            |           |            |           |             |            |
+| `/library`          | mobile      |            |           |            |           |            |           |             |            |
+| `/projects`         | mobile      |            |           |            |           |            |           |             |            |
+| `/recipes/[id]`     | mobile      |            |           |            |           |            |           |             |            |
+| `/tools/eyedropper` | mobile      |            |           |            |           |            |           |             |            |
+| `/`                 | desktop     |            |           |            |           |            |           |             |            |
+| `/library`          | desktop     |            |           |            |           |            |           |             |            |
+| `/projects`         | desktop     |            |           |            |           |            |           |             |            |
+| `/recipes/[id]`     | desktop     |            |           |            |           |            |           |             |            |
+| `/tools/eyedropper` | desktop     |            |           |            |           |            |           |             |            |
+
+## Likely fixes Ross may need (predicted, not validated)
+
+These are the top candidates if a route breaches the targets. They're
+documented here so the next person sees the playbook even if Ross
+never has to apply them.
+
+1. **Eyedropper TBT spike.** K-means + canvas image decode runs on
+   the main thread. If TBT exceeds 200ms on mobile, hoist the k-means
+   pass into a Web Worker. The split is clean: `kmeans.ts` is pure.
+2. **Library FCP / LCP spike.** The 7,128-row catalog fetch fires
+   on every cold visit until Dexie warms. If LCP exceeds 2.5s,
+   confirm Next is gzip-encoding the static JSON (the new header
+   block doesn't enable compression — only the framework's static
+   middleware does). If it isn't, write a tiny pre-compressed
+   `paints.json.gz` to `public/data/` and serve via a route handler.
+3. **Recipe editor render cost.** The InfantrySilhouette SVG is hand-
+   built and small; if CLS regresses it's likely on the silhouette's
+   `paintedZones` map churn. Memoize `selectedSilhouetteZoneId` /
+   `paintedZones` more aggressively in RecipeEditorClient if so.
+
+## Acceptance state
+
+- `npm run typecheck` — 0 errors.
+- `npm test` — 369 passing.
+- Live Lighthouse run — **PENDING ROSS.**
+
+Once Ross fills in the measurement table and at least the three
+primary mobile routes hit 90+, this milestone can be considered
+shipped per the Phase 6 ship criterion.
