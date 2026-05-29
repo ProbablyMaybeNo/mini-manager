@@ -159,7 +159,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.5 — Markdown export formatter
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Reddit-friendly recipe Markdown. Painters paste this into r/minipainting, Discord, or a notes app. The format is **headings per zone**, **ordered list per step**, **paint name + hex inline**, plus a small "Made with Mini Manager" footer with the public URL.
 
