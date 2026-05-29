@@ -49,6 +49,13 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 ## P6.2 — Vehicle silhouette + zones
 
 - [ ] Build this milestone
+- [PAUSED] **Do not run this milestone autonomously.** Ross is hand-creating
+  the silhouette SVG artwork — the milestone-builder-generated hand-built path
+  data on the existing infantry silhouette didn't meet the quality bar. We'll
+  resume P6.2 once Ross delivers the Vehicle SVG (with paths cut along zone
+  boundaries per the recipe-mechanic requirement: ≥12 separately-clickable
+  `<path data-zone-id="...">` elements). The zone metadata + body-type picker
+  scaffolding can still land alongside that drop-in.
 
 **Context.** Recipe `bodyType = "vehicle"` was reserved in P3.1 but never rendered. Ship the silhouette + zone metadata so a painter can build a Leman Russ / Razorback / Tau Hammerhead recipe.
 
@@ -84,6 +91,10 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 ## P6.3 — Monster + Terrain silhouettes
 
 - [ ] Build this milestone
+- [PAUSED] **Do not run this milestone autonomously.** Same reason as P6.2 —
+  paused on Ross's hand-created SVG art. The Silhouette wrapper component
+  from P6.2 is the prerequisite; once that lands with real art, P6.3
+  follows the same drop-in pattern for Monster + Terrain.
 
 **Context.** The remaining two deferred body types. Ships together because they share the same pattern as Vehicle (P6.2) — by this point the silhouette wrapper from P6.2 is in place and we're just adding two more SVG modules + zone metadata exports.
 
