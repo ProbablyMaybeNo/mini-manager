@@ -311,7 +311,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P5.8 — Tests + smoke E2E
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Lock down the share + clone flow with unit + integration + E2E tests.
 
