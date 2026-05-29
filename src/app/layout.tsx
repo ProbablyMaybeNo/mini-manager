@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { NavRail } from "@/components/NavRail";
+import { BottomTabBar } from "@/components/BottomTabBar";
+import { MobileHeader } from "@/components/MobileHeader";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import "./globals.css";
 
@@ -39,10 +41,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plexMono.variable} ${plexSans.variable}`}>
       <body>
+        <MobileHeader />
         <div className="flex min-h-screen">
           <NavRail />
-          <main className="flex-1 min-w-0">{children}</main>
+          <main className="flex-1 min-w-0 pt-12 pb-20 md:pt-0 md:pb-0">{children}</main>
         </div>
+        <BottomTabBar />
         <GlobalSearch />
       </body>
     </html>

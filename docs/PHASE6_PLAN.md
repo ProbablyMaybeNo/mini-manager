@@ -14,7 +14,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P6.1 — Mobile bottom tab bar
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Desktop has a NavRail on the left; mobile (< md breakpoint) currently hides it and offers no replacement. Add a fixed bottom tab bar with the same five primary destinations. User remains accessible via a small avatar in the top-right of every page.
 
