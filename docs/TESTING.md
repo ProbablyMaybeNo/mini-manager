@@ -299,6 +299,30 @@ test("M2.1 — manual entry from quick-add", async ({ page }) => {
 - **Refresh to verify persistence.** After every save, `page.reload()` and re-assert.
 - **Serial describes** (`test.describe.configure({ mode: "serial" })`) only when later tests genuinely depend on earlier state. Default to parallel-safe.
 
+### Cross-account flows
+
+For missions that simulate a second person on a different device (M5.1 share+clone is the canonical case), spawn a fresh `browser.newContext()`:
+
+```ts
+test("cross-account clone", async ({ browser }) => {
+  const aliceCtx = await browser.newContext();
+  const alicePage = await aliceCtx.newPage();
+  await signInAs(alicePage, freshTestEmail("alice"));
+  // ... publish a recipe in Alice's context
+
+  const bobCtx = await browser.newContext(); // isolated cookies + storage
+  const bobPage = await bobCtx.newPage();
+  await bobPage.goto(publicUrl); // anonymous public visit
+  await signInAs(bobPage, freshTestEmail("bob")); // Bob, not Alice
+  // ... Bob clones
+
+  await aliceCtx.close();
+  await bobCtx.close();
+});
+```
+
+The default `{ page }` fixture is enough for single-account tests; reach for `{ browser }` + manual contexts only when you need two distinct sessions inside one mission.
+
 ---
 
 ## 8. Bug workflow — EXPLORER → REPRODUCER → FIXER
