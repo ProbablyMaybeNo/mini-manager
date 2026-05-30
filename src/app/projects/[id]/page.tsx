@@ -129,7 +129,7 @@ export default async function ProjectDetailPage({
 
       <header className="space-y-2">
         <div className="flex items-start gap-4">
-          <h1 className="text-2xl">┌─ {project.name.toUpperCase()} ─</h1>
+          <h1 className="text-3xl tracking-wide">{project.name.toUpperCase()}</h1>
         </div>
         <div className="flex items-center gap-4 text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
           <span>{project.type}</span>

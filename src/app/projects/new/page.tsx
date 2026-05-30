@@ -20,7 +20,7 @@ export default async function NewProjectPage() {
       </nav>
 
       <header className="space-y-2">
-        <h1 className="text-2xl">┌─ NEW PROJECT ─</h1>
+        <h1 className="text-3xl tracking-wide">NEW PROJECT</h1>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-xl">
           Pick the kind of thing you&apos;re tracking. Armies and warbands are
           containers; units and single models do the actual painting. Nest a unit

@@ -113,8 +113,17 @@ h1, h2, h3 {
 }
 
 h1 {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: var(--color-cyan);
   text-shadow: 0 0 8px color-mix(in srgb, var(--color-cyan) 30%, transparent);
+}
+
+h2 {
+  font-size: var(--text-xl);
+  letter-spacing: 0.06em;
+  color: var(--color-fg-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

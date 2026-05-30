@@ -45,7 +45,7 @@ export default async function LibraryPage() {
   return (
     <div className="flex flex-col h-[calc(100dvh-3rem-5rem)] md:h-screen">
       <header className="px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-[var(--color-border)]">
-        <h1 className="text-2xl">┌─ LIBRARY ─</h1>
+        <h1 className="text-3xl tracking-wide">LIBRARY</h1>
         <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans pr-24 md:pr-0">
           {catalog.__row_count.toLocaleString()} paints across the cross-brand catalog.
           Filter by brand, line, type, or hue. Tap a row for swatch detail.

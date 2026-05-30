@@ -122,7 +122,7 @@ export function WheelClient() {
       input={
         <div className="space-y-4">
           <header className="space-y-1">
-            <h1 className="text-xl glow-green">┌─ COLOUR WHEEL ─</h1>
+            <h1 className="text-3xl tracking-wide">COLOUR WHEEL</h1>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
               Drag the primary pick. Switch harmony with the bar below.
               Click [ Find in library ] on any swatch to pull the closest

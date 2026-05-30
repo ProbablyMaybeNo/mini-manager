@@ -15,7 +15,7 @@ export default function ImportArmyPage() {
       </nav>
 
       <header className="space-y-2">
-        <h1 className="text-2xl">┌─ IMPORT ARMY LIST ─</h1>
+        <h1 className="text-3xl tracking-wide">IMPORT ARMY LIST</h1>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-2xl">
           Drop a BattleScribe <code className="font-mono">.ros</code> /{" "}
           <code className="font-mono">.rosz</code> file, a Warhammer App PDF, or

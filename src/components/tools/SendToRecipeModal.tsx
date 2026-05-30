@@ -152,8 +152,8 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
     >
       <div className="frame-strong bg-[var(--color-bg-panel)] w-full max-w-md shadow-xl">
         <header className="flex items-center gap-2 px-4 py-2 border-b border-[var(--color-border)]">
-          <h2 id={headingId} className="font-mono text-sm glow-green">
-            ┌─ SEND TO RECIPE ─
+          <h2 id={headingId} className="font-mono text-sm uppercase tracking-wider text-[var(--color-cyan)]">
+            SEND TO RECIPE
           </h2>
           <span className="flex-1" />
           <button

@@ -47,7 +47,7 @@ test.describe("M7 — Imports", () => {
       /\/projects\/import\/[a-zA-Z0-9_-]{16}\/preview$/,
     );
     await expect(
-      page.getByRole("heading", { name: /^┌─ PREVIEW ─$/ }),
+      page.getByRole("heading", { name: /^PREVIEW$/ }),
     ).toBeVisible();
 
     // Army header pre-populated.

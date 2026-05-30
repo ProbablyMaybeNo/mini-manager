@@ -132,7 +132,7 @@ export function GradientClient() {
       input={
         <div className="space-y-4">
           <header className="space-y-1">
-            <h1 className="text-xl glow-green">┌─ GRADIENT ─</h1>
+            <h1 className="text-3xl tracking-wide">GRADIENT</h1>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
               Pick base, shadow, and highlight. The ramp is interpolated
               in Lab so transitions feel even across the eye, not just

@@ -111,7 +111,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.3 — Heading hierarchy refresh (drop ASCII boxes)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Mini Manager currently decorates `<h1>` elements with ASCII box-drawing: `┌─ PROJECTS ─`, `┌─ LIBRARY ─`, `┌─ NEW PROJECT ─`. This was personality earlier; now it reads as decoration noise. Drop the boxes — let the bold mono caps + cyan colour + letter-spacing carry the brand.
 

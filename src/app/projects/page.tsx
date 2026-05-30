@@ -56,7 +56,7 @@ export default async function ProjectsPage() {
     <div className="p-6 md:p-8 max-w-6xl space-y-8">
       <header className="flex items-end justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl">┌─ PROJECTS ─</h1>
+          <h1 className="text-3xl tracking-wide">PROJECTS</h1>
           <p className="text-sm text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans">
             Your wargaming workbench. Track armies, units, and individual models
             from wishlist to completed.

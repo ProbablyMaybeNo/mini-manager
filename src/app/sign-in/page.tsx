@@ -62,7 +62,7 @@ export default async function SignInPage({
     <div className="min-h-screen flex items-start md:items-center justify-center p-6 md:p-8">
       <div className="w-full max-w-md space-y-6">
         <header className="space-y-2">
-          <h1 className="text-2xl">┌─ MINI MANAGER ─</h1>
+          <h1 className="text-3xl tracking-wide">MINI MANAGER</h1>
           <p className="text-sm text-[var(--color-fg-muted)] font-sans">
             Wargaming + painting companion. Sign in with a magic link — no
             password to remember.

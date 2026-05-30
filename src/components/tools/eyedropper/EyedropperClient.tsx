@@ -145,7 +145,7 @@ export function EyedropperClient() {
       input={
         <div className="space-y-4">
           <header className="space-y-1">
-            <h1 className="text-xl glow-green">┌─ EYEDROPPER ─</h1>
+            <h1 className="text-3xl tracking-wide">EYEDROPPER</h1>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
               Drop a reference. K-means extracts six dominant colours —
               click any swatch to drop it from the palette.

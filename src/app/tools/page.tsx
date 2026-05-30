@@ -49,7 +49,7 @@ export default function ToolsPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl">┌─ TOOLS ─</h1>
+        <h1 className="text-3xl tracking-wide">TOOLS</h1>
         <p className="text-sm text-[var(--color-fg-muted)] max-w-2xl font-sans">
           Single-purpose colour utilities. Open one mid-recipe, pull a
           swatch, hand it back into a scheme. Every tool ends in one

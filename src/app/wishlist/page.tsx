@@ -80,7 +80,7 @@ export default async function WishlistPage({
       <header className="px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)] space-y-4">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
           <div>
-            <h1 className="text-2xl">┌─ WISHLIST ─</h1>
+            <h1 className="text-3xl tracking-wide">WISHLIST</h1>
             <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans">
               Your shopping list. Manual entries land instantly; vendor URLs
               get scraped in P2.5.

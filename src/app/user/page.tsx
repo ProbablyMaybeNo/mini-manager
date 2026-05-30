@@ -6,7 +6,7 @@ export default function UserPage() {
   return (
     <div className="p-6 md:p-8 max-w-3xl space-y-8">
       <header className="space-y-2">
-        <h1 className="text-2xl">┌─ USER ─</h1>
+        <h1 className="text-3xl tracking-wide">USER</h1>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans">
           Profile · Sync · Inventory · Export · Preferences.
         </p>
