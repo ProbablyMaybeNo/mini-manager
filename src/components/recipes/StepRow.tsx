@@ -171,6 +171,7 @@ export function StepRow({
           )}
           aria-haspopup="dialog"
           aria-expanded={pickerOpen}
+          aria-label="Change paint for step"
         >
           <span
             aria-hidden

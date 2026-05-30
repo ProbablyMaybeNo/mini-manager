@@ -72,6 +72,9 @@ export default async function WishlistPage({
     parentId: p.parentId,
   }));
 
+  const hasActiveFilters =
+    status !== "Wanted" || category !== null || vendor !== null;
+
   return (
     <div className="flex flex-col h-screen">
       <header className="px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)] space-y-4">
@@ -94,7 +97,7 @@ export default async function WishlistPage({
       </header>
 
       <main className="flex-1 min-h-0 overflow-y-auto p-6 md:p-8">
-        <WishlistTable items={items} projects={projectOptions} />
+        <WishlistTable items={items} projects={projectOptions} hasActiveFilters={hasActiveFilters} />
       </main>
 
       <PriceFooter count={totals.count} totalByCurrency={totals.totalByCurrency} />

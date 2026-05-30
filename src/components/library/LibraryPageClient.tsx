@@ -74,7 +74,7 @@ export function LibraryPageClient({
     <div className="flex flex-1 min-h-0">
       {/* Desktop rail */}
       <div className="hidden md:flex">
-        <FilterRail paints={paints} filter={filter} ownedOnlyDisabled={false} />
+        <FilterRail paints={paints} filter={filter} />
       </div>
 
       {/* Mobile filter trigger */}
@@ -119,7 +119,6 @@ export function LibraryPageClient({
               <FilterRail
                 paints={paints}
                 filter={filter}
-                ownedOnlyDisabled={false}
                 className="border-r-0"
               />
             </div>

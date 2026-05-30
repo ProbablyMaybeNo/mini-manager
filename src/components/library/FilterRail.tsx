@@ -23,12 +23,10 @@ import { TypeIcon } from "./TypeIcon";
 export function FilterRail({
   paints,
   filter,
-  ownedOnlyDisabled = true,
   className,
 }: {
   paints: ReadonlyArray<Paint>;
   filter: PaintFilter;
-  ownedOnlyDisabled?: boolean;
   className?: string;
 }) {
   const router = useRouter();
@@ -225,16 +223,9 @@ export function FilterRail({
       ) : null}
 
       <Section title="Inventory">
-        <label
-          className={clsx(
-            "flex items-center gap-2 text-xs font-mono",
-            ownedOnlyDisabled && "opacity-50 cursor-not-allowed",
-          )}
-          title={ownedOnlyDisabled ? "Enables with P2.3" : undefined}
-        >
+        <label className="flex items-center gap-2 text-xs font-mono">
           <input
             type="checkbox"
-            disabled={ownedOnlyDisabled}
             checked={filter.ownedOnly}
             onChange={(e) => commit({ ownedOnly: e.target.checked })}
             className="accent-[var(--color-green)]"
@@ -375,7 +366,7 @@ function CollapsibleBrandList({
               type="button"
               onClick={() => toggleLetter(letter)}
               className={clsx(
-                "w-full flex items-center justify-between px-1 py-0.5 text-2xs font-mono uppercase tracking-wider",
+                "w-full flex items-center justify-between px-1 py-1 min-h-[24px] text-2xs font-mono uppercase tracking-wider",
                 selectedInGroup
                   ? "text-[var(--color-green)]"
                   : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",

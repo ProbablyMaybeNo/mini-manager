@@ -35,9 +35,10 @@ interface ColorInputProps {
 
 function ColorInput({ label, value, onChange }: ColorInputProps) {
   const preview = HEX6.test(value) ? value : "var(--color-bg-elevated)";
+  const inputId = `gradient-${label.toLowerCase()}-hex`;
   return (
     <div className="space-y-1">
-      <label className="block section-title mb-0 pb-0 border-0">
+      <label htmlFor={inputId} className="block section-title mb-0 pb-0 border-0">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -50,8 +51,10 @@ function ColorInput({ label, value, onChange }: ColorInputProps) {
           }}
         />
         <input
+          id={inputId}
           type="text"
           value={value}
+          aria-label={`${label} hex`}
           onChange={(e) => {
             const next = e.target.value.trim();
             const normalised = normaliseHex(next);

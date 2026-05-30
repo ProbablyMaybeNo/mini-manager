@@ -78,6 +78,7 @@ export function QuickAddBar() {
         <button
           type="submit"
           disabled={isPending || value.trim().length === 0}
+          aria-label="Add wishlist item"
           className={clsx(
             "inline-flex items-center px-3 py-2 frame-strong tap-target text-sm font-mono",
             isPending || value.trim().length === 0

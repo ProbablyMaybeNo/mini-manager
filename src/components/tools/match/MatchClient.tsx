@@ -229,12 +229,19 @@ export function MatchClient() {
               Page {page + 1} / {pageCount}
             </p>
           </header>
-          <div className="frame">
-            <div className="grid grid-cols-[24px_1fr_72px_56px] items-center gap-2 px-2 py-1 border-b border-[var(--color-border-strong)] text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-              <span />
-              <span>Paint</span>
-              <span className="text-right">ΔE</span>
-              <span />
+          <div
+            className="frame"
+            role="table"
+            aria-label="Match results"
+          >
+            <div
+              className="grid grid-cols-[24px_1fr_72px_56px] items-center gap-2 px-2 py-1 border-b border-[var(--color-border-strong)] text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]"
+              role="row"
+            >
+              <span role="columnheader" aria-label="Swatch" />
+              <span role="columnheader">Paint</span>
+              <span role="columnheader" className="text-right">ΔE</span>
+              <span role="columnheader" aria-label="Actions" />
             </div>
             {catalogLoading ? (
               <p className="px-3 py-3 text-xs font-mono text-[var(--color-fg-muted)]">

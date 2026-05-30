@@ -95,7 +95,7 @@ export function InventoryControls({
           aria-pressed={state.ownedCount > 0}
           aria-label={state.ownedCount > 0 ? "Mark as not owned" : "Mark as owned"}
           className={clsx(
-            "inline-flex justify-center font-mono text-xs",
+            "inline-flex justify-center items-center font-mono text-xs min-h-[24px] py-1",
             state.ownedCount > 0
               ? "text-[var(--color-green)]"
               : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg-muted)]",
@@ -113,7 +113,7 @@ export function InventoryControls({
           aria-pressed={state.isWishlisted}
           aria-label={state.isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           className={clsx(
-            "inline-flex justify-center font-mono text-xs",
+            "inline-flex justify-center items-center font-mono text-xs min-h-[24px] py-1",
             state.isWishlisted
               ? "text-[var(--color-amber)]"
               : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg-muted)]",

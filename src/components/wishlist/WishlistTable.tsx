@@ -33,9 +33,11 @@ const STATUS_BADGE: Record<WishlistItem["status"], string> = {
 export function WishlistTable({
   items,
   projects,
+  hasActiveFilters = false,
 }: {
   items: ReadonlyArray<WishlistItem>;
   projects: ReadonlyArray<WishlistTableProjectOption>;
+  hasActiveFilters?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -61,7 +63,9 @@ export function WishlistTable({
     return (
       <div className="frame p-8 text-center">
         <p className="text-sm font-mono text-[var(--color-fg-muted)]">
-          No wishlist items match the current filters.
+          {hasActiveFilters
+            ? "No wishlist items match the current filters."
+            : "Nothing on your shopping list yet. Paste a vendor URL above, or type a title to add manually."}
         </p>
       </div>
     );
@@ -81,7 +85,7 @@ export function WishlistTable({
         <span className="text-right">Price</span>
         <span className="hidden md:inline">Category</span>
         <span className="hidden md:inline">Project</span>
-        <span aria-label="Priority">P</span>
+        <span aria-label="Priority" title="Priority">P</span>
         <span>Status</span>
       </div>
       {items.map((item) => (
