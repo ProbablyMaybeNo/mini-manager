@@ -291,7 +291,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.6 — Import UI — upload + paste + preview
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The painter-facing surface. Drop a file or paste text → see the parsed tree → edit before applying. The preview lets the painter fix anything the parser got wrong without re-uploading.
 
