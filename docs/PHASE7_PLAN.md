@@ -77,7 +77,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.2 — Plain-text / Markdown parser (heuristics + confidence)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Most painters' lists live as plain text — copy-pasted from BattleScribe's text export, NewRecruit's display, forum posts, or hand-typed in Notes. This parser handles all of that with regex heuristics and emits an `ImportedTree` plus a confidence score. Confidence drives the P7.5 LLM fallback decision.
 

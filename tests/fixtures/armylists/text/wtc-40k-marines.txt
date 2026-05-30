@@ -1,0 +1,17 @@
+## Ultramarines Strike Force
+Faction: Adeptus Astartes
+Detachment: Gladius Task Force
+Points Limit: 2000
+
+Captain in Terminator Armour - 105pts
+Lieutenant - 65pts
+10x Intercessors - 200pts
+10x Assault Intercessors - 200pts
+5x Terminators - 185pts
+10x Tactical Marines - 135pts
+Redemptor Dreadnought - 210pts
+Repulsor Executioner - 220pts
+3x Eradicators - 100pts
+5x Sternguard Veterans - 130pts
+
+Total: 1550pts
