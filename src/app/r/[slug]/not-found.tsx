@@ -11,7 +11,7 @@ export default function PublicRecipeNotFound() {
       </p>
       <Link
         href="/"
-        className="inline-block font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]"
+        className="inline-block font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
       >
         [ Back to Mini Manager ]
       </Link>

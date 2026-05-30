@@ -290,7 +290,7 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]"
+        className="inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
       >
         [ + ] Add zone
       </button>
@@ -309,7 +309,7 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
         placeholder="e.g. Carapace, Pauldron trim, Tongues…"
         maxLength={80}
         autoFocus
-        className="block w-full px-3 py-2 font-mono text-xs bg-[var(--color-bg)] frame focus:border-[var(--color-green)]"
+        className="block w-full px-3 py-2 font-mono text-xs bg-[var(--color-bg)] frame focus:border-[var(--color-accent)]"
       />
 
       {error ? (
@@ -329,7 +329,7 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
             "inline-flex items-center gap-2 px-3 py-1.5 frame-strong tap-target text-xs font-mono",
             isPending
               ? "opacity-60 cursor-progress"
-              : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
           )}
         >
           {isPending ? "[ … ] Adding" : "[ + ] Add"}
@@ -404,7 +404,7 @@ function StarterZonesControl({
             className={clsx(
               "px-2 py-1 frame tap-target text-2xs font-mono uppercase tracking-wider",
               picked === key
-                ? "border-[var(--color-green)] text-[var(--color-green)]"
+                ? "border-[var(--color-accent)] text-[var(--color-accent)]"
                 : "text-[var(--color-fg-muted)]",
             )}
           >
@@ -436,7 +436,7 @@ function StarterZonesControl({
             "inline-flex items-center gap-2 px-3 py-1.5 frame-strong tap-target text-xs font-mono",
             isPending
               ? "opacity-60 cursor-progress"
-              : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
           )}
         >
           {isPending ? "[ … ] Adding" : "[ + ] Add all"}

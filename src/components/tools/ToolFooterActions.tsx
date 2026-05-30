@@ -113,7 +113,7 @@ export function ToolFooterActions({
           "px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider tap-target",
           empty
             ? "opacity-60 cursor-not-allowed text-[var(--color-fg-muted)]"
-            : "hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]",
+            : "hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]",
         )}
       >
         [ Send to recipe ]

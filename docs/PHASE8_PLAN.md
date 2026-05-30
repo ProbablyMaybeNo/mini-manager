@@ -18,7 +18,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.1 — Design token refresh + direct-color audit sweep
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The foundation. Update `src/app/globals.css` tokens to the new palette and rhythm, then sweep the codebase for direct `var(--color-green)` references used for "action / interactive / active" semantics — those need to flip to `var(--color-cyan)` or `var(--color-accent)`. References used for "success / positive / complete" semantics stay green.
 

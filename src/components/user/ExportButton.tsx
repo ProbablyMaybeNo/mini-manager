@@ -50,7 +50,7 @@ export function ExportButton() {
         type="button"
         onClick={handleClick}
         disabled={isPending}
-        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isPending ? "[ exporting… ]" : "[ Export all my data ]"}
       </button>

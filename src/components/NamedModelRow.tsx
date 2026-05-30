@@ -219,12 +219,12 @@ function StageCheckbox({
         "tap-target inline-flex flex-col items-center justify-center gap-0.5 px-2 py-1",
         "frame font-mono text-xs leading-none select-none",
         checked
-          ? "text-[var(--color-green)] border-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]"
+          ? "text-[var(--color-green)] border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
           : "text-[var(--color-fg-muted)]",
         disabled
           ? "opacity-50 cursor-not-allowed"
           : !checked &&
-              "hover:bg-[color-mix(in_srgb,var(--color-green)_4%,transparent)] hover:text-[var(--color-fg)]",
+              "hover:bg-[color-mix(in_srgb,var(--color-accent)_4%,transparent)] hover:text-[var(--color-fg)]",
       )}
     >
       <span aria-hidden>{checked ? "[x]" : "[ ]"}</span>

@@ -73,7 +73,7 @@ export function PaletteSaveDialog({
     >
       <form onSubmit={submit} className="p-5 space-y-4">
         <header>
-          <h2 className="text-base font-mono uppercase tracking-wider text-[var(--color-green)]">
+          <h2 className="text-base font-mono uppercase tracking-wider text-[var(--color-cyan)]">
             Save palette
           </h2>
           <p className="text-2xs font-sans text-[var(--color-fg-muted)] mt-1">
@@ -92,7 +92,7 @@ export function PaletteSaveDialog({
             onChange={(event) => setName(event.target.value)}
             maxLength={120}
             placeholder="e.g. Aetheric blue"
-            className="block w-full px-3 py-2 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-green)]"
+            className="block w-full px-3 py-2 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-accent)]"
             autoComplete="off"
           />
         </label>
@@ -108,7 +108,7 @@ export function PaletteSaveDialog({
           <button
             type="submit"
             disabled={name.trim().length === 0}
-            className="tap-target text-xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] disabled:opacity-60"
+            className="tap-target text-xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60"
           >
             [ Save ]
           </button>

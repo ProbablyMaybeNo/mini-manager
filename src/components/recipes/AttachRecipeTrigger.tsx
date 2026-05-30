@@ -42,7 +42,7 @@ export function AttachRecipeTrigger(props: Props) {
         className={clsx(
           "inline-flex items-center gap-2 px-3 py-1.5 tap-target text-xs font-mono",
           variant === "primary"
-            ? "frame-strong hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]"
+            ? "frame-strong hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
             : "text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] normal-case tracking-normal",
         )}
       >

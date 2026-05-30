@@ -153,7 +153,7 @@ export function InventoryControls({
           type="button"
           onClick={() => bumpOwned(1)}
           disabled={isPending}
-          className="tap-target frame px-2 font-mono text-sm hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+          className="tap-target frame px-2 font-mono text-sm hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
           aria-label="Increase owned count"
         >
           +
@@ -162,7 +162,7 @@ export function InventoryControls({
           type="button"
           onClick={justBought}
           disabled={isPending}
-          className="ml-2 text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]"
+          className="ml-2 text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
         >
           [ Just bought +1 ]
         </button>

@@ -219,7 +219,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                         const r = recipes.find((x) => x.id === e.target.value);
                         setSelectedZoneId(r?.zones[0]?.id ?? "__new__");
                       }}
-                      className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+                      className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
                     >
                       {recipes.map((r) => (
                         <option key={r.id} value={r.id}>
@@ -235,7 +235,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                     <select
                       value={selectedZoneId}
                       onChange={(e) => setSelectedZoneId(e.target.value)}
-                      className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+                      className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
                     >
                       <option value="__new__">+ Add new zone…</option>
                       {selectedRecipe?.zones.map((z) => (
@@ -255,7 +255,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                         value={newZoneName}
                         onChange={(e) => setNewZoneName(e.target.value)}
                         maxLength={80}
-                        className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+                        className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
                       />
                     </div>
                   ) : null}
@@ -272,7 +272,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                     value={newRecipeName}
                     onChange={(e) => setNewRecipeName(e.target.value)}
                     maxLength={120}
-                    className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+                    className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
                   />
                 </div>
                 <div className="space-y-1">
@@ -284,7 +284,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                     value={newZoneName}
                     onChange={(e) => setNewZoneName(e.target.value)}
                     maxLength={80}
-                    className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+                    className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
                   />
                 </div>
               </>
@@ -327,7 +327,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                   className={clsx(
                     "px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider tap-target",
                     canSubmit
-                      ? "hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]"
+                      ? "hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
                       : "opacity-60 cursor-not-allowed",
                   )}
                 >
@@ -370,7 +370,7 @@ function TabButton({
       className={clsx(
         "px-2 py-1 text-2xs font-mono uppercase tracking-wider tap-target rounded-sm",
         active
-          ? "text-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+          ? "text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
           : "text-[var(--color-fg-muted)]",
       )}
     >

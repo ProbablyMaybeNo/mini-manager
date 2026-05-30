@@ -256,7 +256,7 @@ export function WishlistDetailDrawer({
               type="button"
               onClick={openBoughtModal}
               disabled={isPending}
-              className="text-xs font-mono px-3 py-2 frame tap-target hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]"
+              className="text-xs font-mono px-3 py-2 frame tap-target hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
             >
               [ ✓ Mark bought ]
             </button>
@@ -265,7 +265,7 @@ export function WishlistDetailDrawer({
             type="button"
             onClick={save}
             disabled={isPending}
-            className="text-xs font-mono px-3 py-2 frame-strong tap-target hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]"
+            className="text-xs font-mono px-3 py-2 frame-strong tap-target hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
           >
             {isPending ? "…" : "[ Save ]"}
           </button>
@@ -285,7 +285,7 @@ export function WishlistDetailDrawer({
 }
 
 const inputClass =
-  "w-full px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-green)]";
+  "w-full px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-accent)]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

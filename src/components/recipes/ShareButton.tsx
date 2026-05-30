@@ -30,7 +30,7 @@ export function ShareButton({
       <button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        className="text-2xs font-mono uppercase tracking-wider tap-target text-[var(--color-fg-subtle)] hover:text-[var(--color-green)]"
+        className="text-2xs font-mono uppercase tracking-wider tap-target text-[var(--color-fg-subtle)] hover:text-[var(--color-accent)]"
         title="Share recipe"
         aria-label="Share recipe"
       >

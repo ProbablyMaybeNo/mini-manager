@@ -73,7 +73,7 @@ export default async function ProjectsPage() {
             </Link>
             <Link
               href="/projects/new"
-              className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]"
+              className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
             >
               [ + ] New project
             </Link>
@@ -165,7 +165,7 @@ function EmptyState() {
         </Link>
         <Link
           href="/projects/new"
-          className="inline-flex items-center gap-2 px-4 py-3 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]"
+          className="inline-flex items-center gap-2 px-4 py-3 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
         >
           [ + ] Create first project
         </Link>

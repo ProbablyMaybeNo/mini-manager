@@ -62,7 +62,7 @@ function ColorInput({ label, value, onChange }: ColorInputProps) {
           }}
           maxLength={7}
           placeholder="#0E4A8A"
-          className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+          className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
         />
       </div>
     </div>

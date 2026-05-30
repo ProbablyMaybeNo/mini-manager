@@ -115,7 +115,7 @@ export function PaintDetailPanel({
               type="button"
               onClick={copyHex}
               aria-label={`Copy hex code ${paint.hex}`}
-              className="text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+              className="text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
             >
               {copied ? "✓ copied" : "copy"}
             </button>

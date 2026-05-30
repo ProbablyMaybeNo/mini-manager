@@ -67,12 +67,12 @@ function ProjectTreeRow({
       >
         <span
           aria-hidden
-          className="font-mono text-xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-green)] flex-shrink-0"
+          className="font-mono text-xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-accent)] flex-shrink-0"
         >
           ▸
         </span>
         <span className="min-w-0 flex-1" title={project.name}>
-          <span className="block text-sm font-mono truncate group-hover:text-[var(--color-green)]">
+          <span className="block text-sm font-mono truncate group-hover:text-[var(--color-accent)]">
             {project.name}
           </span>
           <span className="block text-2xs font-mono text-[var(--color-fg-subtle)] uppercase tracking-wider">

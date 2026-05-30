@@ -7,7 +7,7 @@ export default function ImportArmyPage() {
   return (
     <div className="p-6 md:p-8 max-w-3xl space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
-        <Link href="/projects" className="hover:text-[var(--color-green)]">
+        <Link href="/projects" className="hover:text-[var(--color-accent)]">
           ← Projects
         </Link>
         {" > "}

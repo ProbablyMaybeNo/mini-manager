@@ -116,13 +116,13 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
             }}
             className={clsx(
               "text-2xl font-mono outline-none min-w-0",
-              "text-[var(--color-green)]",
+              "text-[var(--color-cyan)]",
               "focus:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
               "px-2 -mx-2 rounded-sm",
             )}
             style={{
               textShadow:
-                "0 0 8px color-mix(in srgb, var(--color-green) 35%, transparent)",
+                "0 0 8px color-mix(in srgb, var(--color-cyan) 35%, transparent)",
             }}
           >
             {recipe.name}

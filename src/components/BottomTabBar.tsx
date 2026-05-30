@@ -53,14 +53,14 @@ export function BottomTabBar() {
               "flex-1 min-h-[56px] px-1 py-2",
               "border-t-2 transition-colors",
               active
-                ? "border-t-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]"
+                ? "border-t-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
                 : "border-t-transparent"
             )}
           >
             <span
               className={clsx(
                 "font-mono text-xs",
-                active ? "glow-green" : "text-[var(--color-fg-muted)]"
+                active ? "glow-cyan" : "text-[var(--color-fg-muted)]"
               )}
               aria-hidden
             >
@@ -69,7 +69,7 @@ export function BottomTabBar() {
             <span
               className={clsx(
                 "font-mono text-2xs",
-                active ? "glow-green" : "text-[var(--color-fg-muted)]"
+                active ? "glow-cyan" : "text-[var(--color-fg-muted)]"
               )}
             >
               {item.label}

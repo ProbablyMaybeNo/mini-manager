@@ -188,7 +188,7 @@ export function EyedropperClient() {
                   type="button"
                   onClick={() => setCameraOpen(true)}
                   disabled={busy || swatches.length >= SWATCH_COUNT}
-                  className="block w-full tap-target text-xs font-mono uppercase tracking-wider px-3 py-2 frame-strong hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)] disabled:opacity-60"
+                  className="block w-full tap-target text-xs font-mono uppercase tracking-wider px-3 py-2 frame-strong hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-60"
                   aria-label="Open camera sampler"
                 >
                   {swatches.length >= SWATCH_COUNT

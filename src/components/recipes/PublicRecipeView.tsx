@@ -67,7 +67,7 @@ export async function PublicRecipeView({
               key={zone.id}
               className="frame bg-[var(--color-bg-elevated)] p-4 md:p-5 space-y-3"
             >
-              <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-[var(--color-green)]">
+              <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-[var(--color-cyan)]">
                 {zone.name}
               </h2>
               {zone.steps.length === 0 ? (
@@ -144,7 +144,7 @@ export async function PublicRecipeView({
         {isOwner ? (
           <Link
             href={`/recipes/${recipe.id}`}
-            className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] text-center"
+            className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] text-center"
           >
             [ Edit in Mini Manager ]
           </Link>

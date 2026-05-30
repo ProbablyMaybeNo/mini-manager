@@ -175,7 +175,7 @@ export function ImportClient() {
           }}
           className={clsx(
             "px-4 py-2 frame tap-target",
-            mode === "drop" && "text-[var(--color-green)] glow-green",
+            mode === "drop" && "text-[var(--color-accent)] glow-cyan",
           )}
         >
           [ Drop file ]
@@ -190,7 +190,7 @@ export function ImportClient() {
           }}
           className={clsx(
             "px-4 py-2 frame tap-target",
-            mode === "paste" && "text-[var(--color-green)] glow-green",
+            mode === "paste" && "text-[var(--color-accent)] glow-cyan",
           )}
         >
           [ Paste text ]
@@ -202,7 +202,7 @@ export function ImportClient() {
           role="tabpanel"
           className={clsx(
             "frame-strong p-8 text-center transition-colors",
-            dragging && "bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]",
+            dragging && "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]",
           )}
           onDragOver={(e) => {
             e.preventDefault();
@@ -235,7 +235,7 @@ export function ImportClient() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isPending}
-            className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)] disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-50"
           >
             {isPending ? "Parsing…" : "[ Choose file ]"}
           </button>
@@ -259,7 +259,7 @@ export function ImportClient() {
             placeholder={`## My Army\n10x Intercessors - 200pts\n5x Terminators - 185pts\nCaptain - 105pts`}
             rows={14}
             maxLength={MAX_PASTE_CHARS}
-            className="w-full p-3 frame font-mono text-xs bg-transparent text-[var(--color-fg)] focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+            className="w-full p-3 frame font-mono text-xs bg-transparent text-[var(--color-fg)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           />
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono text-[var(--color-fg-muted)]">
@@ -268,7 +268,7 @@ export function ImportClient() {
             <button
               type="submit"
               disabled={isPending || pasted.trim().length === 0}
-              className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)] disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-50"
             >
               {isPending ? "Parsing…" : "[ Parse list ]"}
             </button>

@@ -76,7 +76,7 @@ export function TagToProjectMenu({
             disabled={isPending}
             className={clsx(
               "w-full text-left text-xs font-mono px-2 py-1 hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)]",
-              current === null && "text-[var(--color-green)]",
+              current === null && "text-[var(--color-accent)]",
             )}
           >
             (none)
@@ -90,7 +90,7 @@ export function TagToProjectMenu({
                 disabled={isPending}
                 className={clsx(
                   "w-full text-left text-xs font-mono px-2 py-1 truncate hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)]",
-                  current === p.id && "text-[var(--color-green)]",
+                  current === p.id && "text-[var(--color-accent)]",
                 )}
               >
                 {p.name}

@@ -74,7 +74,7 @@ export function AddNamedModelForm({
         className={clsx(
           "tap-target inline-flex items-center gap-2 px-3 py-2 frame font-mono text-xs",
           "text-[var(--color-fg-muted)] uppercase tracking-wider",
-          "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)] hover:border-[var(--color-green)]",
+          "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]",
         )}
       >
         [ + ] Add named model
@@ -103,7 +103,7 @@ export function AddNamedModelForm({
           required
           className={clsx(
             "min-w-0 flex-1 px-3 py-2.5 font-mono text-sm",
-            "bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]",
+            "bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]",
           )}
         />
         <button
@@ -113,7 +113,7 @@ export function AddNamedModelForm({
             "tap-target inline-flex items-center gap-2 px-4 py-2 frame-strong font-mono text-sm",
             isPending
               ? "opacity-60 cursor-progress"
-              : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
           )}
         >
           {isPending ? "[ … ]" : "[ + ] Add"}

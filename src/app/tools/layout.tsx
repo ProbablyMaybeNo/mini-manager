@@ -12,7 +12,7 @@ export default function ToolsLayout({ children }: { children: ReactNode }) {
       <div className="border-b border-[var(--color-border)] px-4 md:px-6 py-2 flex items-center gap-2">
         <Link
           href="/tools"
-          className="font-mono text-xs text-[var(--color-fg-muted)] hover:text-[var(--color-green)] tap-target inline-flex items-center gap-1"
+          className="font-mono text-xs text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] tap-target inline-flex items-center gap-1"
         >
           [ ← Tools ]
         </Link>

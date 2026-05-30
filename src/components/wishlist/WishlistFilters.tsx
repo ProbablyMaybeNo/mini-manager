@@ -124,7 +124,7 @@ function Chip({
       className={clsx(
         "inline-flex items-center px-2 py-1 text-2xs font-mono rounded-sm border transition-colors",
         active
-          ? "border-[var(--color-green)] text-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+          ? "border-[var(--color-accent)] text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
           : "border-[var(--color-border)] text-[var(--color-fg-muted)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-fg)]",
       )}
       aria-pressed={active}

@@ -243,7 +243,7 @@ export function AttachRecipeModal(props: Props) {
               placeholder="e.g. Salamanders Tactical"
               maxLength={120}
               autoFocus
-              className="block w-full px-3 py-2 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+              className="block w-full px-3 py-2 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
             />
             <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
               Creates an empty recipe attached here and opens the editor.
@@ -256,7 +256,7 @@ export function AttachRecipeModal(props: Props) {
                   "inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono",
                   isPending
                     ? "opacity-60 cursor-progress"
-                    : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+                    : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
                 )}
               >
                 {isPending ? "[ … ] Creating" : "[ + ] Create & attach"}

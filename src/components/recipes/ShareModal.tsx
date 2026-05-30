@@ -191,7 +191,7 @@ export function ShareModal({
     >
       <div className="p-5 space-y-5">
         <header className="flex items-start justify-between gap-3">
-          <h2 className="text-base font-mono uppercase tracking-wider text-[var(--color-green)]">
+          <h2 className="text-base font-mono uppercase tracking-wider text-[var(--color-cyan)]">
             Share recipe
           </h2>
           <button
@@ -222,7 +222,7 @@ export function ShareModal({
               type="button"
               onClick={onNativeShare}
               disabled={isPending}
-              className="w-full tap-target text-sm font-mono uppercase tracking-wider px-4 py-2.5 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] disabled:opacity-60"
+              className="w-full tap-target text-sm font-mono uppercase tracking-wider px-4 py-2.5 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60"
             >
               [ Share via... ]
             </button>
@@ -249,7 +249,7 @@ export function ShareModal({
                   disabled={isPending}
                   onClick={() => onCopy("url", url)}
                   className={clsx(
-                    "text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-green)] hover:text-[var(--color-green)]",
+                    "text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
                     isPending && "opacity-60",
                   )}
                 >
@@ -296,7 +296,7 @@ export function ShareModal({
                   type="button"
                   disabled={isPending || isUnnamed}
                   onClick={handlePublish}
-                  className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isPending ? "[ … ]" : "[ publish ]"}
                 </button>
@@ -318,7 +318,7 @@ export function ShareModal({
               <button
                 type="button"
                 onClick={onDownloadQr}
-                className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-border-strong)] hover:border-[var(--color-green)] hover:text-[var(--color-green)]"
+                className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
               >
                 [ download SVG ]
               </button>
@@ -335,7 +335,7 @@ export function ShareModal({
             <button
               type="button"
               onClick={() => onCopy("md", markdown)}
-              className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-green)] hover:text-[var(--color-green)]"
+              className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
             >
               {copiedKey === "md" ? "[ copied! ]" : "[ copy ]"}
             </button>
@@ -367,14 +367,14 @@ export function ShareModal({
                 <button
                   type="button"
                   onClick={() => onCopy("json", jsonString)}
-                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-green)] hover:text-[var(--color-green)]"
+                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
                 >
                   {copiedKey === "json" ? "[ copied! ]" : "[ copy ]"}
                 </button>
                 <button
                   type="button"
                   onClick={onDownloadJson}
-                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-green)] hover:text-[var(--color-green)]"
+                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
                 >
                   [ download .json ]
                 </button>

@@ -110,7 +110,7 @@ export function FilterRail({
           value={textLocal}
           onChange={(e) => setTextLocal(e.target.value)}
           placeholder="Name, brand, sku…"
-          className="w-full px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-green)]"
+          className="w-full px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-accent)]"
           aria-label="Free-text search"
         />
       </Section>
@@ -129,7 +129,7 @@ export function FilterRail({
             placeholder="#5a9dd8"
             maxLength={7}
             spellCheck={false}
-            className="flex-1 min-w-0 px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-xs focus:border-[var(--color-green)]"
+            className="flex-1 min-w-0 px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-xs focus:border-[var(--color-accent)]"
             aria-label="Hex colour proximity"
           />
         </div>
@@ -147,7 +147,7 @@ export function FilterRail({
                 className={chipClass(active)}
                 aria-pressed={active}
               >
-                <TypeIcon type={t} className={active ? "text-[var(--color-green)]" : undefined} />
+                <TypeIcon type={t} className={active ? "text-[var(--color-accent)]" : undefined} />
                 <span className="ml-1">{t}</span>
               </button>
             );
@@ -205,14 +205,14 @@ export function FilterRail({
                   key={line}
                   className={clsx(
                     "flex items-center gap-2 px-1 py-0.5 text-xs font-mono cursor-pointer",
-                    active && "text-[var(--color-green)]",
+                    active && "text-[var(--color-accent)]",
                   )}
                 >
                   <input
                     type="checkbox"
                     checked={active}
                     onChange={() => commit({ lines: toggle(filter.lines, line) })}
-                    className="accent-[var(--color-green)]"
+                    className="accent-[var(--color-accent)]"
                   />
                   <span className="truncate">{line}</span>
                 </label>
@@ -228,7 +228,7 @@ export function FilterRail({
             type="checkbox"
             checked={filter.ownedOnly}
             onChange={(e) => commit({ ownedOnly: e.target.checked })}
-            className="accent-[var(--color-green)]"
+            className="accent-[var(--color-accent)]"
           />
           <span>Owned only</span>
         </label>
@@ -262,7 +262,7 @@ function chipClass(active: boolean): string {
     "inline-flex items-center px-2 py-1 text-2xs font-mono rounded-sm border",
     "transition-colors",
     active
-      ? "border-[var(--color-green)] text-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+      ? "border-[var(--color-accent)] text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
       : "border-[var(--color-border)] text-[var(--color-fg-muted)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-fg)]",
   );
 }
@@ -368,7 +368,7 @@ function CollapsibleBrandList({
               className={clsx(
                 "w-full flex items-center justify-between px-1 py-1 min-h-[24px] text-2xs font-mono uppercase tracking-wider",
                 selectedInGroup
-                  ? "text-[var(--color-green)]"
+                  ? "text-[var(--color-accent)]"
                   : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
               )}
               aria-expanded={isOpen}
@@ -408,14 +408,14 @@ function BrandRow({
     <label
       className={clsx(
         "flex items-center gap-2 px-1 py-0.5 text-xs font-mono cursor-pointer",
-        selected && "text-[var(--color-green)]",
+        selected && "text-[var(--color-accent)]",
       )}
     >
       <input
         type="checkbox"
         checked={selected}
         onChange={() => onToggle(brand)}
-        className="accent-[var(--color-green)]"
+        className="accent-[var(--color-accent)]"
       />
       <span className="truncate">{brand}</span>
     </label>

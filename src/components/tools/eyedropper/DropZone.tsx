@@ -62,7 +62,7 @@ export function DropZone({ onFile, onError, disabled }: Props) {
       className={clsx(
         "frame-strong p-6 text-center cursor-pointer transition-colors",
         hovering
-          ? "border-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_6%,transparent)]"
+          ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]"
           : "hover:border-[var(--color-cyan)]",
         disabled && "opacity-60 cursor-progress",
       )}

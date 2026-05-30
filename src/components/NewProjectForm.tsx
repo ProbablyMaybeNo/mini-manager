@@ -124,7 +124,7 @@ export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOptio
                   "flex items-start gap-3 px-3 py-2.5 frame cursor-pointer tap-target",
                   "hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)]",
                   checked &&
-                    "border-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_5%,transparent)]",
+                    "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]",
                 )}
               >
                 <input
@@ -148,7 +148,7 @@ export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOptio
                   <span
                     className={clsx(
                       "block font-mono text-sm uppercase tracking-wide",
-                      checked ? "text-[var(--color-green)]" : "text-[var(--color-fg)]",
+                      checked ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]",
                     )}
                   >
                     {opt.type}
@@ -185,7 +185,7 @@ export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOptio
                 ? "e.g. Sergeant Vraks"
                 : "e.g. Tactical Squad Alpha"
           }
-          className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+          className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
         />
       </div>
 
@@ -210,7 +210,7 @@ export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOptio
           }}
           className={clsx(
             "block w-32 px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame",
-            "focus:border-[var(--color-green)]",
+            "focus:border-[var(--color-accent)]",
             meta.countLocked && "opacity-60 cursor-not-allowed",
           )}
         />
@@ -250,7 +250,7 @@ export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOptio
             "inline-flex items-center gap-2 px-4 py-2.5 frame-strong tap-target text-sm font-mono",
             isPending
               ? "opacity-60 cursor-progress"
-              : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
           )}
         >
           {isPending ? "[ … ] Creating" : "[ + ] Create project"}
@@ -295,7 +295,7 @@ function ParentPicker({
         id={`${formId}-parent`}
         value={parentId}
         onChange={(e) => onChange(e.target.value)}
-        className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+        className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
       >
         <option value="">— None (top-level project) —</option>
         {options.map((opt) => (

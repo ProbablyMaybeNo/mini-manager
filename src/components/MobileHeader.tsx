@@ -27,7 +27,7 @@ export function MobileHeader() {
     >
       <Link
         href="/projects"
-        className="font-mono text-sm glow-green tracking-wide"
+        className="font-mono text-sm glow-cyan tracking-wide"
       >
         MINI MANAGER
       </Link>
@@ -38,7 +38,7 @@ export function MobileHeader() {
         className={clsx(
           "tap-target inline-flex items-center justify-center",
           "font-mono text-xs",
-          userActive ? "glow-green" : "text-[var(--color-fg-muted)]"
+          userActive ? "glow-cyan" : "text-[var(--color-fg-muted)]"
         )}
       >
         [U]

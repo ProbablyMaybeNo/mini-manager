@@ -94,7 +94,7 @@ export default async function SignInPage({
                 autoFocus
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-green)]"
+                className="w-full px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
               />
             </label>
 
@@ -109,7 +109,7 @@ export default async function SignInPage({
 
             <button
               type="submit"
-              className="w-full px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]"
+              className="w-full px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
             >
               [ send magic link ]
             </button>

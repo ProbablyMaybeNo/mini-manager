@@ -149,7 +149,7 @@ export function WishlistTable({
                   e.stopPropagation();
                   setBoughtFor(item);
                 }}
-                className="hover:text-[var(--color-green)] hover:underline underline-offset-2"
+                className="hover:text-[var(--color-accent)] hover:underline underline-offset-2"
                 title="Mark bought"
               >
                 {item.status} →

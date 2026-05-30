@@ -268,7 +268,7 @@ export function MarkBoughtModal({
             type="button"
             onClick={tab === "existing" ? submitExisting : submitNew}
             disabled={isPending}
-            className="text-xs font-mono px-3 py-2 frame-strong tap-target hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]"
+            className="text-xs font-mono px-3 py-2 frame-strong tap-target hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
           >
             {isPending ? "Working…" : "[ ✓ Mark bought ]"}
           </button>
@@ -294,7 +294,7 @@ function TabButton({
       className={clsx(
         "flex-1 px-4 py-2 text-xs font-mono uppercase tracking-wider",
         active
-          ? "text-[var(--color-green)] border-b-2 border-[var(--color-green)] -mb-px bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]"
+          ? "text-[var(--color-accent)] border-b-2 border-[var(--color-accent)] -mb-px bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
           : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
       )}
     >
@@ -304,7 +304,7 @@ function TabButton({
 }
 
 const inputClass =
-  "w-full px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-green)]";
+  "w-full px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-accent)]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

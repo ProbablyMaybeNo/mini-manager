@@ -196,7 +196,7 @@ export function PaintSlotPicker({
           className={clsx(
             "px-2 py-1 text-2xs font-mono uppercase tracking-wider tap-target rounded-sm",
             mode === "library"
-              ? "text-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+              ? "text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
               : "text-[var(--color-fg-muted)]",
           )}
           aria-pressed={mode === "library"}
@@ -235,13 +235,13 @@ export function PaintSlotPicker({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             autoFocus
-            className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+            className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
           />
           <div className="flex items-center gap-2">
             <select
               value={brand}
               onChange={(event) => setBrand(event.target.value)}
-              className="flex-1 min-w-0 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+              className="flex-1 min-w-0 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
             >
               <option value="">All brands</option>
               {brands.map((b) => (
@@ -421,7 +421,7 @@ function PaintRow({
       className={clsx(
         "w-full flex items-center gap-2 px-3 py-1.5 text-left tap-target",
         selected
-          ? "bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+          ? "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
           : "hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)]",
         isPending && "opacity-60 cursor-progress",
       )}

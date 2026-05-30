@@ -61,7 +61,7 @@ export function SwatchActions({
     <div
       className={clsx(
         "frame px-2 py-1.5",
-        isPrimary && "border-[var(--color-green)]",
+        isPrimary && "border-[var(--color-accent)]",
       )}
     >
       <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export function SwatchActions({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-green)] tap-target px-2"
+          className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] tap-target px-2"
           aria-expanded={open}
         >
           {open ? "[ × ]" : "[ Find in library ]"}

@@ -108,7 +108,7 @@ function MobilePaneTabs({
           className={clsx(
             "flex-1 px-3 py-2 text-xs font-mono uppercase tracking-wider tap-target rounded-sm",
             active === t.key
-              ? "text-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+              ? "text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
               : "text-[var(--color-fg-muted)]",
           )}
           aria-pressed={active === t.key}

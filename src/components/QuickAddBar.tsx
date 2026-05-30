@@ -81,7 +81,7 @@ export function QuickAddBar() {
           placeholder="e.g. Necron Warriors x20"
           className={clsx(
             "flex-1 min-w-0 px-3 py-2 font-mono text-sm bg-[var(--color-bg-elevated)] frame",
-            "focus:border-[var(--color-green)]",
+            "focus:border-[var(--color-accent)]",
           )}
         />
         <button
@@ -92,7 +92,7 @@ export function QuickAddBar() {
             "inline-flex items-center px-3 py-2 frame-strong tap-target text-sm font-mono",
             isPending || value.trim().length === 0
               ? "opacity-60 cursor-not-allowed"
-              : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
           )}
         >
           {isPending ? "…" : "+"}

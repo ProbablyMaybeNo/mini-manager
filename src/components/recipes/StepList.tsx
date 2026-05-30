@@ -161,7 +161,7 @@ export function StepList({
           "inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono",
           isAddPending
             ? "opacity-60 cursor-progress"
-            : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)]",
+            : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
         )}
       >
         {isAddPending ? "[ … ] Adding" : "[ + ] Add step"}

@@ -58,10 +58,10 @@ export function AttachedRecipeSummary({ recipe, zones, editHref }: Props) {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Link
           href={editHref}
-          className="font-mono text-sm text-[var(--color-green)] hover:underline"
+          className="font-mono text-sm text-[var(--color-cyan)] hover:underline"
           style={{
             textShadow:
-              "0 0 6px color-mix(in srgb, var(--color-green) 30%, transparent)",
+              "0 0 6px color-mix(in srgb, var(--color-cyan) 30%, transparent)",
           }}
         >
           {recipe.name}

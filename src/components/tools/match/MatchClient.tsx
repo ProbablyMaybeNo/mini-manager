@@ -166,11 +166,11 @@ export function MatchClient() {
                 onChange={(e) => setHexInput(e.target.value)}
                 placeholder="#0E4A8A"
                 maxLength={7}
-                className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-green)]"
+                className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
               />
               <button
                 type="submit"
-                className="px-3 py-1.5 frame-strong tap-target text-xs font-mono uppercase tracking-wider hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)] hover:text-[var(--color-green)]"
+                className="px-3 py-1.5 frame-strong tap-target text-xs font-mono uppercase tracking-wider hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
               >
                 [ Match ]
               </button>

@@ -16,9 +16,9 @@
 
 @theme {
   /* ----- Color tokens ----- */
-  --color-bg: #050607;
-  --color-bg-elevated: #0c0f12;
-  --color-bg-panel: #11161b;
+  --color-bg: #0a0e14;
+  --color-bg-elevated: #11161b;
+  --color-bg-panel: #1a212b;
 
   --color-fg: #f5f7f8;
   --color-fg-muted: #98a2ad;
@@ -29,8 +29,9 @@
 
   --color-green: #33ff66;
   --color-green-dim: #1ea845;
-  --color-cyan: #00e5ff;
+  --color-cyan: #7dd3fc;
   --color-cyan-dim: #008fa0;
+  --color-cyan-bright: #00e5ff;
   --color-amber: #ffb020;
   --color-amber-dim: #c47a00;
   --color-red: #ff4757;
@@ -38,12 +39,21 @@
   --color-magenta: #ff66cc;
   --color-blue: #4a9eff;
 
-  /* Semantic aliases */
-  --color-accent: var(--color-green);
-  --color-active: var(--color-green);
+  /* Semantic aliases — cyan-primary: action/interactive flips to cyan,
+     green stays for success/complete/owned only. */
+  --color-accent: var(--color-cyan);
+  --color-active: var(--color-cyan);
   --color-warning: var(--color-amber);
   --color-danger: var(--color-red);
   --color-info: var(--color-cyan);
+  --color-success: var(--color-green);
+
+  /* Status semantic tokens — drives StatusPill (P8.5) */
+  --status-ok: var(--color-green);
+  --status-warning: var(--color-amber);
+  --status-danger: var(--color-red);
+  --status-info: var(--color-cyan);
+  --status-neutral: var(--color-fg-muted);
 
   /* ----- Typography ----- */
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
@@ -103,12 +113,17 @@ h1, h2, h3 {
 }
 
 h1 {
-  color: var(--color-green);
-  text-shadow: 0 0 8px color-mix(in srgb, var(--color-green) 35%, transparent);
+  color: var(--color-cyan);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--color-cyan) 30%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
   h1 { text-shadow: none; }
+}
+
+/* Focus ring var (used by primitives) */
+:root {
+  --focus-ring: 0 0 0 2px var(--color-cyan);
 }
 
 /* Sensible defaults */

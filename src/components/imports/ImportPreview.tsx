@@ -188,7 +188,7 @@ export function ImportPreview({
               value={armyName}
               onChange={(e) => setArmyName(e.target.value)}
               maxLength={120}
-              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
             />
           </label>
           <label className="block">
@@ -199,7 +199,7 @@ export function ImportPreview({
               value={faction}
               onChange={(e) => setFaction(e.target.value)}
               maxLength={120}
-              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
             />
           </label>
           <label className="block">
@@ -212,7 +212,7 @@ export function ImportPreview({
               onChange={(e) => setTotalPoints(e.target.value)}
               min={0}
               max={99999}
-              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
             />
           </label>
         </div>
@@ -237,7 +237,7 @@ export function ImportPreview({
                 onChange={(e) => onUnitChange(u.key, { name: e.target.value })}
                 placeholder="Unit name"
                 maxLength={120}
-                className="col-span-12 md:col-span-5 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+                className="col-span-12 md:col-span-5 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
               />
               <input
                 aria-label={`Unit ${u.key} count`}
@@ -246,7 +246,7 @@ export function ImportPreview({
                 onChange={(e) => onUnitChange(u.key, { count: e.target.value })}
                 min={1}
                 max={999}
-                className="col-span-4 md:col-span-2 p-2 frame font-mono text-sm bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+                className="col-span-4 md:col-span-2 p-2 frame font-mono text-sm bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
               />
               <input
                 aria-label={`Unit ${u.key} points`}
@@ -256,7 +256,7 @@ export function ImportPreview({
                 placeholder="pts"
                 min={0}
                 max={99999}
-                className="col-span-4 md:col-span-2 p-2 frame font-mono text-sm bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+                className="col-span-4 md:col-span-2 p-2 frame font-mono text-sm bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
               />
               <input
                 aria-label={`Unit ${u.key} notes`}
@@ -264,7 +264,7 @@ export function ImportPreview({
                 onChange={(e) => onUnitChange(u.key, { notes: e.target.value })}
                 placeholder="Notes"
                 maxLength={500}
-                className="col-span-12 md:col-span-2 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-green)]"
+                className="col-span-12 md:col-span-2 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
               />
               <button
                 type="button"
@@ -279,7 +279,7 @@ export function ImportPreview({
           <button
             type="button"
             onClick={onAddUnit}
-            className="w-full p-3 frame tap-target text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-green)]"
+            className="w-full p-3 frame tap-target text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
           >
             [ + ] Add unit
           </button>
@@ -298,7 +298,7 @@ export function ImportPreview({
           type="button"
           onClick={onApply}
           disabled={busy || units.length === 0}
-          className="inline-flex items-center gap-2 px-5 py-3 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)] disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-5 py-3 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-50"
         >
           {busy ? "Applying…" : "[ Apply → create projects ]"}
         </button>

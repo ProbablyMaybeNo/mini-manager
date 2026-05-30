@@ -18,7 +18,7 @@ export default async function ImportPreviewPage({ params }: PreviewPageProps) {
     return (
       <div className="p-6 md:p-8 max-w-3xl space-y-4">
         <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
-          <Link href="/projects/import" className="hover:text-[var(--color-green)]">
+          <Link href="/projects/import" className="hover:text-[var(--color-accent)]">
             ← Import another list
           </Link>
         </nav>
@@ -38,13 +38,13 @@ export default async function ImportPreviewPage({ params }: PreviewPageProps) {
   return (
     <div className="p-6 md:p-8 max-w-4xl space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
-        <Link href="/projects" className="hover:text-[var(--color-green)]">
+        <Link href="/projects" className="hover:text-[var(--color-accent)]">
           ← Projects
         </Link>
         {" > "}
         <Link
           href="/projects/import"
-          className="hover:text-[var(--color-green)]"
+          className="hover:text-[var(--color-accent)]"
         >
           Import
         </Link>

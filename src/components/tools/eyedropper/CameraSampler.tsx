@@ -165,15 +165,15 @@ export function CameraSampler({ onSample, onClose }: Props) {
           {/* Crosshair overlay */}
           <span
             aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 border border-[var(--color-green)] rounded-full"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 border border-[var(--color-cyan)] rounded-full"
           />
           <span
             aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-12 bg-[var(--color-green)]"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-12 bg-[var(--color-cyan)]"
           />
           <span
             aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-px w-12 bg-[var(--color-green)]"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-px w-12 bg-[var(--color-cyan)]"
           />
         </button>
 

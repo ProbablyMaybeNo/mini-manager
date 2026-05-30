@@ -159,7 +159,7 @@ function PaintRow({
         "border-b border-[var(--color-border)]",
         "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
         "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
-        active && "bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]",
+        active && "bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]",
         GRID_CLASS,
       )}
       style={{
@@ -184,7 +184,7 @@ function PaintRow({
         aria-colindex={4}
         className={clsx(
           "truncate",
-          active ? "text-[var(--color-green)]" : "text-[var(--color-fg)]",
+          active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]",
         )}
       >
         {paint.name}

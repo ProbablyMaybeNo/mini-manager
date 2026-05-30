@@ -36,8 +36,8 @@ export function HarmonyPicker({ active, onChange }: Props) {
             className={clsx(
               "px-2 py-1 text-2xs font-mono uppercase tracking-wider frame tap-target",
               isActive
-                ? "border-[var(--color-green)] text-[var(--color-green)] glow-green"
-                : "text-[var(--color-fg-muted)] hover:text-[var(--color-green)]",
+                ? "border-[var(--color-accent)] text-[var(--color-accent)] glow-cyan"
+                : "text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]",
             )}
           >
             {h.label}

@@ -135,7 +135,7 @@ export function StepRow({
         onChange={(event) =>
           handleTechniqueChange(event.target.value as TechniqueKey)
         }
-        className="px-2 py-1 font-mono text-2xs uppercase tracking-wider bg-[var(--color-bg)] frame focus:border-[var(--color-green)] min-w-[130px]"
+        className="px-2 py-1 font-mono text-2xs uppercase tracking-wider bg-[var(--color-bg)] frame focus:border-[var(--color-accent)] min-w-[130px]"
       >
         {techniqueKeys.map((key) => (
           <option key={key} value={key}>

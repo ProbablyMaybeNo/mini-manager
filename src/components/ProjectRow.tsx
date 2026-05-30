@@ -56,7 +56,7 @@ export function ProjectRow({
         aria-label={project.priority ? `${project.priority} priority` : undefined}
       />
       <span className="min-w-0 flex-1" title={project.name}>
-        <span className="block text-sm font-mono truncate group-hover:text-[var(--color-green)]">
+        <span className="block text-sm font-mono truncate group-hover:text-[var(--color-accent)]">
           {project.name}
         </span>
         {project.faction ? (

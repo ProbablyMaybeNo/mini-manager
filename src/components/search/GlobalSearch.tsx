@@ -256,7 +256,7 @@ function ResultRow({
         "w-full text-left flex items-center justify-between gap-3 px-3 py-1.5",
         "font-mono text-xs",
         active
-          ? "bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)] text-[var(--color-green)]"
+          ? "bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]"
           : "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)] text-[var(--color-fg)]",
       )}
     >

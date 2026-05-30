@@ -295,7 +295,7 @@ export function CounterButton({
         "frame-strong font-mono text-sm leading-none select-none",
         disabled
           ? "opacity-40 cursor-not-allowed"
-          : "hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] hover:text-[var(--color-green)] active:bg-[color-mix(in_srgb,var(--color-green)_14%,transparent)]",
+          : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] active:bg-[color-mix(in_srgb,var(--color-green)_14%,transparent)]",
       )}
     >
       {glyph}

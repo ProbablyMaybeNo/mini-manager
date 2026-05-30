@@ -81,7 +81,7 @@ export function LibraryPageClient({
       <button
         type="button"
         onClick={() => setMobileFilterOpen(true)}
-        className="md:hidden fixed top-14 right-3 z-30 tap-target px-3 py-1.5 frame-strong bg-[var(--color-bg-panel)] font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-green)]"
+        className="md:hidden fixed top-14 right-3 z-30 tap-target px-3 py-1.5 frame-strong bg-[var(--color-bg-panel)] font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
         aria-label="Open filters"
         aria-expanded={mobileFilterOpen}
       >

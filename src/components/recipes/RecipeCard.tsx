@@ -60,14 +60,14 @@ export async function RecipeCard({ recipe, attachment }: Props) {
   return (
     <Link
       href={`/recipes/${recipe.id}`}
-      className="frame p-4 space-y-3 hover:border-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] transition-colors flex flex-col h-full"
+      className="frame p-4 space-y-3 hover:border-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] transition-colors flex flex-col h-full"
     >
       <div className="space-y-1">
         <h3
-          className="font-mono text-base text-[var(--color-green)] truncate"
+          className="font-mono text-base text-[var(--color-cyan)] truncate"
           style={{
             textShadow:
-              "0 0 6px color-mix(in srgb, var(--color-green) 30%, transparent)",
+              "0 0 6px color-mix(in srgb, var(--color-cyan) 30%, transparent)",
           }}
         >
           {recipe.name}

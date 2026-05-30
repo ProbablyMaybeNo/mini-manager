@@ -39,7 +39,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         "group flex items-center gap-3 px-3 py-2 rounded-sm text-sm tap-target",
         "border-l-2 border-transparent transition-colors",
         active
-          ? "border-l-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)]"
+          ? "border-l-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
           : "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
       )}
       aria-current={active ? "page" : undefined}
@@ -47,7 +47,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       <span
         className={clsx(
           "inline-flex w-6 justify-center font-mono text-xs",
-          active ? "glow-green" : "text-[var(--color-fg-muted)]"
+          active ? "glow-cyan" : "text-[var(--color-fg-muted)]"
         )}
         aria-hidden
       >
@@ -56,7 +56,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       <span
         className={clsx(
           "font-mono",
-          active ? "glow-green" : "text-[var(--color-fg)]"
+          active ? "glow-cyan" : "text-[var(--color-fg)]"
         )}
       >
         {item.label}
@@ -74,7 +74,7 @@ export function NavRail() {
       aria-label="Primary"
     >
       <div className="px-3 pb-4">
-        <Link href="/projects" className="font-mono text-sm glow-green tracking-wide">
+        <Link href="/projects" className="font-mono text-sm glow-cyan tracking-wide">
           MINI MANAGER
         </Link>
       </div>
