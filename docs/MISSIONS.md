@@ -14,12 +14,12 @@ Integration / Unit) and tagged to the build phase they cover.
 - **Bug workflow** — EXPLORER → REPRODUCER → FIXER. If a bug surfaces, the
   failing test is written/confirmed first, then fixed, then re-verified.
 
-**Headline result (last full run — 2026-05-29, standalone repo `D:\AI-Workstation\mini-manager`):**
+**Headline result (last full run — 2026-05-30, standalone repo `D:\AI-Workstation\mini-manager`, post-Phase 7):**
 
 | Layer | Files | Tests | Result |
 |---|---|---|---|
-| Unit + Integration (Vitest) | 35 | 369 pass · 1 skipped | ✅ green |
-| E2E (Playwright — chromium desktop + chromium-mobile) | 6 | 8 pass | ✅ green |
+| Unit + Integration (Vitest) | 40 | 438 pass · 1 skipped | ✅ green |
+| E2E (Playwright — chromium desktop + chromium-mobile) | 7 | 9 pass | ✅ green |
 | `tsc --noEmit` | — | — | ✅ 0 errors |
 
 > **Repo migration note (2026-05-29):** the project was split out of the
@@ -27,6 +27,10 @@ Integration / Unit) and tagged to the build phase they cover.
 > The doc was rescued, but the 2026-05-28 *code* fixes (B1, B2, and the markdown
 > branch tests) did **not** survive the migration — they were re-applied and
 > re-verified here. See Bug Log **B3**.
+>
+> **Phase 7 (2026-05-30):** Power Imports landed (M7.1). One additional
+> migration regression surfaced + fixed during the P7.8 sweep — see Bug Log
+> **B4**.
 
 ---
 
@@ -45,14 +49,20 @@ in-browser runs. Each mints its own session via `signInAs(freshTestEmail())`.
 | M6.1 | Mobile — bottom tab bar visible and navigates (iPhone 12 viewport / chromium-mobile) | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
 | M6.2 | Mobile — create Unit project → bump stage → reload persists | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
 | M6.3 | Mobile — library lookup → detail panel renders without clipping | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
+| M7.1 | Imports — paste plain-text list → preview tree → apply → land on new Army workspace | `qa_imports.spec.ts` | P7 | ✅ Pass |
 
 **Mutation coverage applied in M5.1:** isolated browser contexts (Alice vs Bob),
 unauthenticated public read, cross-account hop, clone-independence assertion
 (new id, source `publicSlug` not carried).
 
-**Project matrix (`playwright.config.ts`):** `chromium` (desktop) runs M1–M5;
-`chromium-mobile` (iPhone 12 viewport) runs M6.1–M6.3. Both auto-boot the dev
-server with `ALLOW_TEST_AUTH=1` via the `webServer` block.
+**Mutation coverage applied in M7.1:** session-bound import scope (each Run
+mints a fresh user), parser metadata visible in preview (parser used +
+confidence band), editable-form round-trip (form pre-populated from parsed
+tree + applied tree lands as projects).
+
+**Project matrix (`playwright.config.ts`):** `chromium` (desktop) runs M1–M5
++ M7; `chromium-mobile` (iPhone 12 viewport) runs M6.1–M6.3. Both auto-boot
+the dev server with `ALLOW_TEST_AUTH=1` via the `webServer` block.
 
 ---
 
@@ -76,6 +86,7 @@ scoping, and input validation against a fresh per-test DB.
 | IM11 | Send palette → recipe (P4 ship criterion) — new recipe + append + validation | `sendToRecipe.test.ts` | P4 | ✅ Pass |
 | IM12 | Recipe sharing — publish (idempotent) / unpublish / getRecipeBySlug / clone (deep-copy, "already yours", rename collisions, source-untouched) | `recipeSharing.test.ts` | P5 | ✅ Pass |
 | IM13 | Export all user data — top-level keys present, owner-scoped (no cross-user bleed) | `exportData.test.ts` | P5 | ✅ Pass |
+| IM14 | Imports — schema round-trip (P7.1) + createTextImport + fetchImportForPreview + applyImport (P7.6, P7.7) | `imports.test.ts` | P7 | ✅ Pass |
 
 ---
 
@@ -105,6 +116,10 @@ scoping, and input validation against a fresh per-test DB.
 | UM20 | Recipe → Markdown formatter (brand/custom-mix/no-paint/notes/footer/empty-zone/whitespace-hex) | `lib/recipes/markdown.test.ts` | P5 | ✅ Pass |
 | UM21 | Public slug generator (alphabet, length 10, uniqueness) | `lib/recipes/slug.test.ts` | P5 | ✅ Pass |
 | UM22 | Native Web Share helper (capability detect / payload shape) | `lib/share/webShare.test.ts` | P6 | ✅ Pass |
+| UM23 | Plain-text army-list parser + confidence + 5 format fixtures (WTC, NewRecruit, Goonhammer, hand-typed, messy) | `lib/imports/textParser.test.ts` | P7 | ✅ Pass |
+| UM24 | PDF text extraction (5 MB / 50-page caps, scanned-PDF rejection, corrupt-buffer rejection) | `lib/imports/pdfExtractor.test.ts` | P7 | ✅ Pass |
+| UM25 | BattleScribe `.ros` + `.rosz` parser (model-count summation, costs, faction, malformed-XML guard) | `lib/imports/battleScribeParser.test.ts` | P7 | ✅ Pass |
+| UM26 | LLM-fallback parser (mocked client; fence stripping, prose salvage, malformed-unit filter, oversized-input gate, missing-key fallback) | `lib/imports/llmFallbackParser.test.ts` | P7 | ✅ Pass |
 
 ---
 
@@ -143,6 +158,25 @@ Bugs surfaced during this test campaign, with evidence and resolution.
 - **Fixer:** Re-applied all three: the M5.1 selector, the `ShareButton` `aria-label`,
   and the markdown brand-less / whitespace-hex branch tests.
 - **Verified:** 8/8 E2E pass; Vitest 369 pass · 1 skip; `tsc` 0 errors.
+
+### B4 — M5.1 publish disabled by `isUnnamed` guard on a brand-new recipe
+- **Mission:** M5.1 (`qa_share_recipe.spec.ts`)
+- **Symptom (2026-05-30, mid-Phase 7 verification):** Alice creates a recipe,
+  opens the share modal, but `[ publish ]` is permanently disabled — the
+  `getByRole("button", { name: /^\[ publish \]$/i }).click()` step exhausts the
+  30s retry window. Suite was claimed green at the start of Phase 7 but B3's
+  recovery sweep didn't touch this path.
+- **Explorer:** Page snapshot shows the recipe lands as "Untitled recipe" with
+  an empty `<input>`. `ShareModal` (P5) gates publish behind `!isUnnamed`,
+  defined as `recipeName.trim() === "" || recipeName.trim() === "Untitled
+  recipe"` — a deliberate UX guard so painters can't ship anonymous recipes.
+  The test predates that guard: it skipped naming the recipe and relied on a
+  pre-guard ShareModal version, hence the failing click.
+- **Fixer:** Test-side. Filled the "Recipe name" textbox between landing on
+  `/recipes/<id>` and opening the share modal, then blurred to trigger the
+  autosave (the recipe name auto-saves on blur per P3.2 `renameRecipe`).
+- **Verified:** Full E2E suite 9/9 green (M1.1, M2.1, M3.1, M4.1, M5.1,
+  M6.1–3, M7.1).
 
 ---
 

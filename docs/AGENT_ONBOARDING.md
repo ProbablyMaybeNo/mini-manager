@@ -120,10 +120,11 @@ Three layers:
 | 1 — Project spine | ✅ done | Auth, projects, stage counters, named models, sub-project nesting |
 | 2 — Library + Inventory + Wishlist | ✅ done | Paint catalog table, inventory marks, wishlist with 12-vendor URL paste scraper, global `/` search |
 | 3 — Recipes | ✅ done | Recipe editor, infantry silhouette, step builder, paint slot picker, attach to project/named model |
-| 4 — Tools | next | Color wheel, cross-brand match, image eyedropper, gradient builder |
-| 5 — Sharing | future | Short URLs, QR, Markdown export, JSON export |
-| 6 — Mobile polish | future | Vehicle/monster/terrain silhouettes, bottom tab bar, native share |
-| 7 — Community | deferred | Public browse, influencer technique guides |
+| 4 — Tools | ✅ done | Colour wheel, cross-brand match, image eyedropper, gradient builder |
+| 5 — Sharing | ✅ done | Short URLs, QR, Markdown export, JSON export, clone-to-my-recipes |
+| 6 — Mobile polish | ✅ done | Vehicle/monster/terrain silhouettes, bottom tab bar, native share, zone palette presets |
+| 7 — Power Imports | ✅ done | Paste / PDF / BattleScribe `.ros` + `.rosz` import → preview tree → apply → new Army workspace. Heuristic text parser + LLM-fallback (Anthropic Haiku 4.5) for messy lists. |
+| 8 — Community | deferred | Public browse, influencer technique guides |
 
 ## Critical gotchas (from real bugs we've hit)
 

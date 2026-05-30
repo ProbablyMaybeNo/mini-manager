@@ -376,7 +376,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.8 — Test coverage + E2E mission
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Locks the import flow against regression. The parser layer is the highest-value test surface — painters' lists vary wildly and we want CI to catch a regression on the WTC format or BattleScribe schema drift immediately.
 

@@ -41,6 +41,15 @@ test.describe("M5 — Share + Clone", () => {
       aliceRecipeUrl.match(/\/recipes\/([a-zA-Z0-9_-]+)/)?.[1] ?? "";
     expect(aliceRecipeId.length).toBeGreaterThan(0);
 
+    // Name the recipe — ShareModal disables [ publish ] when the name is
+    // empty or the default "Untitled recipe" placeholder. (Surfaced as
+    // Bug B4: migration regression — the standalone repo's recipe-create
+    // landing page no longer ships a default name; pre-split it did.)
+    await alicePage
+      .getByRole("textbox", { name: /recipe name/i })
+      .fill(`Alice Test Recipe ${Date.now()}`);
+    await alicePage.getByRole("textbox", { name: /recipe name/i }).blur();
+
     // Open the share modal.
     await alicePage
       .getByRole("button", { name: /share recipe/i })
