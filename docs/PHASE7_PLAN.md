@@ -226,7 +226,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.5 — LLM-assisted fallback parser
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** When the text parser confidence falls below 0.6 (a "messy" list), call the Anthropic API to convert raw text → structured `ImportedTree`. This is the safety net that makes the import feature work for the long tail of weird formats.
 

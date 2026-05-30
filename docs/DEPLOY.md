@@ -41,7 +41,7 @@ This runbook is the canonical deploy guide. Update it when the production setup 
 
 ## 3. Environment variables (Vercel dashboard)
 
-Set all six in **Settings → Environment Variables**. See `.env.production.example` for the canonical list with comments.
+Set all seven in **Settings → Environment Variables**. See `.env.production.example` for the canonical list with comments.
 
 | Variable | Source | Notes |
 |---|---|---|
@@ -51,6 +51,7 @@ Set all six in **Settings → Environment Variables**. See `.env.production.exam
 | `AUTH_URL` | This repo | `https://paint-planner-pro.vercel.app` (update if project renamed or custom domain added) |
 | `AUTH_RESEND_KEY` | Resend dashboard | API key |
 | `AUTH_EMAIL_FROM` | Manually set | Default: `Mini Manager <onboarding@resend.dev>` (Resend dev domain, only delivers to account email). Replace once custom domain is verified. |
+| `ANTHROPIC_API_KEY` | Anthropic console | Required for P7.5 messy-list LLM fallback. Without it the fallback errors but clean text/PDF/.ros/.rosz imports still work. Get it at https://console.anthropic.com/settings/keys |
 
 **Do NOT set** `ALLOW_TEST_AUTH` in production — the test-only sign-in route returns 404 unless this is `1`. Keep it unset.
 
