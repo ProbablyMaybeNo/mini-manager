@@ -25,7 +25,6 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "groq-sdk": "^0.13.0",
     "@auth/drizzle-adapter": "^1.7.0",
     "@libsql/client": "^0.14.0",
     "clsx": "^2.1.0",
@@ -33,13 +32,14 @@
     "drizzle-orm": "^0.36.0",
     "fast-xml-parser": "^5.8.0",
     "fflate": "^0.8.3",
+    "groq-sdk": "^0.13.0",
     "nanoid": "^5.0.7",
     "next": "^16.0.0",
     "next-auth": "^5.0.0-beta.25",
-    "pdf-parse": "^2.4.5",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "unpdf": "^1.6.2",
     "zod": "^3.23.0"
   },
   "devDependencies": {

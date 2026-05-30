@@ -1,6 +1,6 @@
 import "server-only";
 
-import { PDFParse } from "pdf-parse";
+import { extractText } from "unpdf";
 
 export interface PdfExtractResult {
   text: string;
@@ -40,11 +40,13 @@ export async function extractPdfText(
   }
 
   const warnings: string[] = [];
-  let parser: PDFParse | null = null;
   try {
-    parser = new PDFParse({ data: new Uint8Array(buffer) });
-    const result = await parser.getText();
-    const pageCount = result.total ?? result.pages?.length ?? 0;
+    const { text: rawText, totalPages } = await extractText(
+      new Uint8Array(buffer),
+      { mergePages: true },
+    );
+
+    const pageCount = totalPages;
 
     if (pageCount === 0) {
       throw new Error("PDF has no readable pages.");
@@ -55,7 +57,7 @@ export async function extractPdfText(
       );
     }
 
-    const text = (result.text ?? "").trim();
+    const text = (rawText ?? "").trim();
     if (text.length < MIN_TEXT_CHARS) {
       throw new Error(
         "This PDF has no embedded text. Paste the list as text instead, or use a re-typed copy.",
@@ -78,14 +80,6 @@ export async function extractPdfText(
     throw new Error(
       `Could not read this PDF. ${err instanceof Error ? err.message : "Unknown error"}`,
     );
-  } finally {
-    if (parser) {
-      try {
-        await parser.destroy();
-      } catch {
-        // best-effort cleanup; safe to ignore.
-      }
-    }
   }
 }
 
