@@ -184,6 +184,137 @@ hr { border: 0; border-top: 1px solid var(--color-border); }
   .glow-green, .glow-cyan, .glow-amber { text-shadow: none; }
 }
 
+/* ============================================================
+   Primitives (P8.2) — Card, Button, StatusPill
+   ============================================================ */
+
+/* Card — bordered surface with header bar + body. Replaces ad-hoc
+   `frame p-N space-y-N` widget combos. Header carries a short label and
+   optional actions, body holds the content. */
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+.card-header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.card-header-accent {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.card-body {
+  padding: 14px;
+}
+@media (max-width: 767px) {
+  .card-header { padding: 10px 12px; }
+  .card-body { padding: 12px; }
+}
+
+/* Button primitives — variants: primary / secondary / ghost / danger.
+   Sizes: sm / md / lg. Always tap-target compliant. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 120ms, border-color 120ms, color 120ms;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-sm { padding: 4px 10px; min-height: 28px; font-size: var(--text-xs); }
+.btn-md { padding: 8px 16px; min-height: 36px; }
+.btn-lg { padding: 10px 20px; min-height: 44px; font-size: var(--text-base); }
+
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 85%, white);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-fg);
+  border-color: var(--color-border-strong);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-fg) 6%, transparent);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+
+/* StatusPill — bordered, mono, all-caps, 1px border, semantic colour.
+   Drives status indicators across project rows, paint types, wishlist. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.pill-ok       { color: var(--status-ok); }
+.pill-warning  { color: var(--status-warning); }
+.pill-danger   { color: var(--status-danger); }
+.pill-info     { color: var(--status-info); }
+.pill-neutral  { color: var(--status-neutral); }
+
 /* Minimum touch target helpers (mobile defaults, narrowed on desktop) */
 .tap-target {
   min-width: 44px;

@@ -82,7 +82,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.2 — Card primitive, button primitives, pill primitive
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Replace the ad-hoc `frame p-N space-y-N` combos scattered across components with proper named primitives. This is what Terminal UI does — every widget is a "card" with a "card header" and a "card body." Mini Manager currently does this implicitly; making it explicit cleans up component code and ensures visual consistency.
 
