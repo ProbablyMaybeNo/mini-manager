@@ -4,6 +4,7 @@ import { NavRail } from "@/components/NavRail";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { MobileHeader } from "@/components/MobileHeader";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { auth } from "@/auth";
 import "./globals.css";
 
 const plexMono = IBM_Plex_Mono({
@@ -33,21 +34,26 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  const isAuthed = Boolean(session?.user?.id);
+
   return (
     <html lang="en" className={`${plexMono.variable} ${plexSans.variable}`}>
       <body>
-        <MobileHeader />
+        {isAuthed ? <MobileHeader /> : null}
         <div className="flex min-h-screen">
-          <NavRail />
-          <main className="flex-1 min-w-0 pt-12 pb-20 md:pt-0 md:pb-0">{children}</main>
+          {isAuthed ? <NavRail /> : null}
+          <main className={isAuthed ? "flex-1 min-w-0 pt-12 pb-20 md:pt-0 md:pb-0" : "flex-1 min-w-0"}>
+            {children}
+          </main>
         </div>
-        <BottomTabBar />
-        <GlobalSearch />
+        {isAuthed ? <BottomTabBar /> : null}
+        {isAuthed ? <GlobalSearch /> : null}
       </body>
     </html>
   );

@@ -99,7 +99,7 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
     <header className="space-y-3 pb-4 border-b border-[var(--color-border)]">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex-1 min-w-0">
-          <div
+          <h1
             ref={nameRef}
             role="textbox"
             aria-label="Recipe name"
@@ -126,7 +126,7 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
             }}
           >
             {recipe.name}
-          </div>
+          </h1>
           <div className="flex items-center gap-3 mt-2 text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
             <span className="frame px-2 py-0.5">{recipe.bodyType}</span>
             {attachment.kind === "standalone" ? (
@@ -180,7 +180,7 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
 
       <dialog
         ref={dialogRef}
-        className="frame-strong p-0 bg-[var(--color-bg-panel)] text-[var(--color-fg)] backdrop:bg-black/70 max-w-md"
+        className="frame-strong p-0 bg-[var(--color-bg-panel)] text-[var(--color-fg)] [&::backdrop]:bg-black/70 m-auto inset-0 max-h-[90vh] max-w-md"
       >
         <div className="p-5 space-y-4">
           <h2 className="text-base font-mono text-[var(--color-red)] uppercase tracking-wider">

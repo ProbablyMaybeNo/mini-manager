@@ -192,11 +192,12 @@ export function MatchClient() {
                     key={b}
                     type="button"
                     onClick={() => toggleBrand(b)}
+                    aria-pressed={active}
                     className={clsx(
                       "px-1.5 py-0.5 text-2xs font-mono uppercase tracking-wider frame tap-target",
                       active
-                        ? "border-[var(--color-cyan)] text-[var(--color-cyan)]"
-                        : "text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]",
+                        ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
+                        : "text-[var(--color-fg-muted)] hover:border-[var(--color-cyan)] hover:text-[var(--color-cyan)]",
                     )}
                   >
                     {b}

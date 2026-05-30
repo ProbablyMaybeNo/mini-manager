@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import {
@@ -98,6 +99,9 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
     [recipes, selectedRecipeId],
   );
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   if (!open) return null;
 
   const swatchCount = swatches.length;
@@ -136,12 +140,12 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
     });
   };
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby={headingId}
-      className="fixed inset-0 z-30 flex items-center justify-center p-4 bg-black/60"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -343,6 +347,9 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
 }
 
 function TabButton({

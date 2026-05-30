@@ -100,6 +100,10 @@ export function ShareModal({
     copyTimerRef.current = setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  const DEFAULT_RECIPE_NAME = "Untitled recipe";
+  const isUnnamed =
+    !recipeName.trim() || recipeName.trim() === DEFAULT_RECIPE_NAME;
+
   const handlePublish = () => {
     setError(null);
     startTransition(async () => {
@@ -183,7 +187,7 @@ export function ShareModal({
   return (
     <dialog
       ref={dialogRef}
-      className="frame-strong p-0 bg-[var(--color-bg-panel)] text-[var(--color-fg)] backdrop:bg-black/70 max-w-2xl w-[95vw]"
+      className="frame-strong p-0 bg-[var(--color-bg-panel)] text-[var(--color-fg)] [&::backdrop]:bg-black/70 m-auto inset-0 max-h-[90vh] max-w-2xl w-[95vw]"
     >
       <div className="p-5 space-y-5">
         <header className="flex items-start justify-between gap-3">
@@ -270,18 +274,33 @@ export function ShareModal({
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <p className="font-mono text-xs text-[var(--color-fg-muted)]">
-                Not published yet.
-              </p>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handlePublish}
-                className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] disabled:opacity-60"
-              >
-                {isPending ? "[ … ]" : "[ publish ]"}
-              </button>
+            <div className="flex flex-col gap-2">
+              {isUnnamed ? (
+                <p className="font-mono text-xs text-[var(--color-amber)]">
+                  Name your recipe before sharing — currently &ldquo;Untitled
+                  recipe&rdquo;.{" "}
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="underline underline-offset-2 hover:text-[var(--color-fg)]"
+                  >
+                    Edit the name above.
+                  </button>
+                </p>
+              ) : null}
+              <div className="flex items-center gap-3">
+                <p className="font-mono text-xs text-[var(--color-fg-muted)]">
+                  Not published yet.
+                </p>
+                <button
+                  type="button"
+                  disabled={isPending || isUnnamed}
+                  onClick={handlePublish}
+                  className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isPending ? "[ … ]" : "[ publish ]"}
+                </button>
+              </div>
             </div>
           )}
         </section>

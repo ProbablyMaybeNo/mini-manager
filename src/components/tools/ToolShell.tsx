@@ -45,7 +45,7 @@ export function ToolShell({ input, output, footer, className }: Props) {
       </div>
       {footer ? (
         <footer
-          className="sticky bottom-0 z-10 border-t border-[var(--color-border)] bg-[var(--color-bg)]/95 backdrop-blur px-4 py-3"
+          className="sticky bottom-0 z-10 border-t border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 py-3"
           aria-label="Tool actions"
         >
           <div className="flex flex-wrap items-center gap-2 justify-end">

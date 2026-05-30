@@ -279,7 +279,7 @@ function chipClass(active: boolean): string {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="section-title m-0">{title}</h3>
+      <h2 className="section-title m-0">{title}</h2>
       {children}
     </section>
   );

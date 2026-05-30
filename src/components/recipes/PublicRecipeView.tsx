@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getPaintMetaMap } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
-import { RecipePaletteStripStatic } from "@/components/recipes/RecipePaletteStrip";
 import { AutoCloneOnMount, CloneButton } from "@/components/recipes/CloneButton";
 import type { RecipeWithZones } from "@/lib/recipes/types";
 
@@ -31,17 +30,6 @@ export async function PublicRecipeView({
 }: Props) {
   const paintMeta = await getPaintMetaMap();
 
-  // Palette strip (top of card)
-  const swatches: string[] = [];
-  for (const zone of recipe.zones) {
-    const first = zone.steps[0];
-    if (!first) continue;
-    const hex =
-      first.customColorHex ??
-      (first.paintId ? paintMeta.get(first.paintId)?.hex ?? null : null);
-    if (hex) swatches.push(hex);
-  }
-
   return (
     <article className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-8">
       <header className="space-y-3">
@@ -58,14 +46,7 @@ export async function PublicRecipeView({
             {recipe.zones.length === 1 ? "" : "s"}
           </span>
         </div>
-        {swatches.length > 0 ? (
-          <div className="pt-2">
-            <RecipePaletteStripStatic
-              swatches={swatches}
-              ariaLabel="Recipe palette"
-            />
-          </div>
-        ) : null}
+        {/* palette strip removed — same hex shown in each step row (UX-028) */}
       </header>
 
       {recipe.bodyType !== "infantry" ? (
@@ -170,12 +151,18 @@ export async function PublicRecipeView({
         ) : (
           <CloneButton slug={slug} />
         )}
-        <Link
-          href="/"
-          className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-green)] text-center"
-        >
-          [ Open Mini Manager ]
-        </Link>
+        <div className="frame bg-[var(--color-bg-elevated)] px-4 py-3 space-y-2 text-center sm:text-left sm:max-w-xs">
+          <p className="font-mono text-xs text-[var(--color-fg-muted)]">
+            Mini Manager tracks every model from wishlist to complete and builds
+            paint recipes from a 7k+ cross-brand library.
+          </p>
+          <Link
+            href="/sign-in"
+            className="inline-block font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]"
+          >
+            [ Sign up free ]
+          </Link>
+        </div>
       </footer>
 
       {autoClone && !isOwner ? <AutoCloneOnMount slug={slug} /> : null}

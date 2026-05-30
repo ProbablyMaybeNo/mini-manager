@@ -56,6 +56,7 @@ export function LibraryTable({
         className="flex-1 min-h-0 overflow-y-auto"
         role="grid"
         aria-rowcount={paints.length}
+        aria-colcount={9}
       >
         {paints.length === 0 ? (
           <div className="p-8 text-center text-sm font-mono text-[var(--color-fg-muted)]">
@@ -91,17 +92,17 @@ function TableHeader() {
       )}
       role="row"
     >
-      <span aria-hidden />
-      <span>Brand</span>
-      <span className="hidden md:inline">Line</span>
-      <span>Name</span>
-      <span className="hidden md:inline">SKU</span>
-      <span aria-label="Type">T</span>
-      <span>Hex</span>
-      <span className="text-center" aria-label="Owned">
+      <span role="columnheader" aria-colindex={1} aria-hidden />
+      <span role="columnheader" aria-colindex={2}>Brand</span>
+      <span role="columnheader" aria-colindex={3} className="hidden md:inline">Line</span>
+      <span role="columnheader" aria-colindex={4}>Name</span>
+      <span role="columnheader" aria-colindex={5} className="hidden md:inline">SKU</span>
+      <span role="columnheader" aria-colindex={6} aria-label="Type">T</span>
+      <span role="columnheader" aria-colindex={7}>Hex</span>
+      <span role="columnheader" aria-colindex={8} className="text-center" aria-label="Owned">
         Own
       </span>
-      <span className="text-center" aria-label="Wishlisted">
+      <span role="columnheader" aria-colindex={9} className="text-center" aria-label="Wishlisted">
         ★
       </span>
     </div>
@@ -166,17 +167,21 @@ function PaintRow({
       }}
     >
       <span
+        role="gridcell"
+        aria-colindex={1}
         aria-hidden
         className={clsx(
           "h-5 w-5 rounded-sm border border-[var(--color-border)]",
         )}
         style={{ background: paint.hex }}
       />
-      <span className="truncate text-[var(--color-fg-muted)]">{paint.brand}</span>
-      <span className="hidden md:inline truncate text-[var(--color-fg-subtle)]">
+      <span role="gridcell" aria-colindex={2} className="truncate text-[var(--color-fg-muted)]">{paint.brand}</span>
+      <span role="gridcell" aria-colindex={3} className="hidden md:inline truncate text-[var(--color-fg-subtle)]">
         {paint.line ?? "—"}
       </span>
       <span
+        role="gridcell"
+        aria-colindex={4}
         className={clsx(
           "truncate",
           active ? "text-[var(--color-green)]" : "text-[var(--color-fg)]",
@@ -184,11 +189,13 @@ function PaintRow({
       >
         {paint.name}
       </span>
-      <span className="hidden md:inline truncate text-[var(--color-fg-subtle)] text-2xs">
+      <span role="gridcell" aria-colindex={5} className="hidden md:inline truncate text-[var(--color-fg-subtle)] text-2xs">
         {paint.sku ?? ""}
       </span>
-      <TypeIcon type={paint.type} className="text-[var(--color-fg-muted)]" />
-      <span className="inline-flex items-center gap-1 uppercase text-[var(--color-fg-muted)]">
+      <span role="gridcell" aria-colindex={6}>
+        <TypeIcon type={paint.type} className="text-[var(--color-fg-muted)]" />
+      </span>
+      <span role="gridcell" aria-colindex={7} className="inline-flex items-center gap-1 uppercase text-[var(--color-fg-muted)]">
         <HexConfidenceDot confidence={paint.hexConfidence} source={paint.hexSource} />
         <span className="truncate">{paint.hex.slice(1)}</span>
       </span>
