@@ -78,7 +78,7 @@ export function QuickAddBar() {
           onChange={(e) => setValue(e.target.value)}
           maxLength={140}
           aria-label="Quick add project"
-          placeholder='e.g. "Necron Warriors x20" or "Sergeant Vraks"'
+          placeholder="e.g. Necron Warriors x20"
           className={clsx(
             "flex-1 min-w-0 px-3 py-2 font-mono text-sm bg-[var(--color-bg-elevated)] frame",
             "focus:border-[var(--color-green)]",
@@ -87,6 +87,7 @@ export function QuickAddBar() {
         <button
           type="submit"
           disabled={isPending || value.trim().length === 0}
+          aria-label="Add project"
           className={clsx(
             "inline-flex items-center px-3 py-2 frame-strong tap-target text-sm font-mono",
             isPending || value.trim().length === 0

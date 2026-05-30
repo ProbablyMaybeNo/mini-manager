@@ -151,12 +151,13 @@ export function AttachRecipeModal(props: Props) {
     <dialog
       ref={dialogRef}
       onClose={onClose}
+      aria-label="Attach recipe"
       className="frame-strong p-0 bg-[var(--color-bg-panel)] text-[var(--color-fg)] backdrop:bg-black/70 w-[480px] max-w-[92vw]"
     >
       <div className="border-b border-[var(--color-border)] px-4 py-3 flex items-center justify-between">
-        <h2 className="text-sm font-mono uppercase tracking-wider text-[var(--color-cyan)]">
+        <p className="text-sm font-mono uppercase tracking-wider text-[var(--color-cyan)]">
           Attach recipe
-        </h2>
+        </p>
         <button
           type="button"
           onClick={onClose}
