@@ -18,7 +18,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.1 — Import data model + actions + migration
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Imports are first-class entities — every upload attempt gets persisted (input + parsed result + status) so a painter can re-open a half-failed import without re-uploading, and so we have telemetry on parser quality.
 

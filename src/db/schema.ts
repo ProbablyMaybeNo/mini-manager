@@ -5,6 +5,7 @@ import {
   index,
   integer,
   primaryKey,
+  real,
   sqliteTable,
   text,
   uniqueIndex,
@@ -473,6 +474,60 @@ export const palettes = sqliteTable(
 );
 
 /* ============================================================
+   Domain — Imports (P7.1)
+   First-class import records. Every upload (paste / PDF / .ros /
+   .rosz) gets persisted with input preview + parsed tree + status,
+   so a painter can re-open a half-failed import and so we have
+   telemetry on parser quality. `parsedTree` is a JSON-encoded
+   ImportedTree (small payloads, never queried by inner shape).
+   ============================================================ */
+
+export const importSourceFormats = [
+  "plain-text",
+  "pdf",
+  "battlescribe-ros",
+  "battlescribe-rosz",
+] as const;
+export type ImportSourceFormat = (typeof importSourceFormats)[number];
+
+export const importStatuses = ["pending", "parsed", "applied", "failed"] as const;
+export type ImportStatus = (typeof importStatuses)[number];
+
+export const importParsers = ["text", "pdf", "battlescribe", "llm-fallback"] as const;
+export type ImportParser = (typeof importParsers)[number];
+
+export const imports = sqliteTable(
+  "import",
+  {
+    id: id(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sourceFormat: text("source_format", { enum: importSourceFormats }).notNull(),
+    /** First 500 chars of the input — drives the "what did I upload?" sidebar
+     *  without forcing us to retain the full original blob. */
+    sourceTextPreview: text("source_text_preview"),
+    sourceFileSize: integer("source_file_size"),
+    status: text("status", { enum: importStatuses }).notNull().default("pending"),
+    /** JSON-encoded ImportedTree (see src/lib/imports/types.ts). Nullable
+     *  until the parse step completes. */
+    parsedTree: text("parsed_tree"),
+    parserConfidence: real("parser_confidence"),
+    parserUsed: text("parser_used", { enum: importParsers }),
+    errorMessage: text("error_message"),
+    appliedProjectId: text("applied_project_id").references(
+      (): AnySQLiteColumn => projects.id,
+      { onDelete: "set null" },
+    ),
+    ...timestamps,
+  },
+  (t) => ({
+    ownerStatusIdx: index("import_owner_status_idx").on(t.ownerId, t.status),
+    ownerCreatedIdx: index("import_owner_created_idx").on(t.ownerId, t.createdAt),
+  }),
+);
+
+/* ============================================================
    Relations
    ============================================================ */
 
@@ -484,6 +539,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   wishlistItems: many(wishlistItems),
   recipes: many(recipes),
   palettes: many(palettes),
+  imports: many(imports),
 }));
 
 export const palettesRelations = relations(palettes, ({ one }) => ({
@@ -597,3 +653,14 @@ export type NewRecipeStep = typeof recipeSteps.$inferInsert;
 
 export type Palette = typeof palettes.$inferSelect;
 export type NewPalette = typeof palettes.$inferInsert;
+
+export const importsRelations = relations(imports, ({ one }) => ({
+  owner: one(users, { fields: [imports.ownerId], references: [users.id] }),
+  appliedProject: one(projects, {
+    fields: [imports.appliedProjectId],
+    references: [projects.id],
+  }),
+}));
+
+export type Import = typeof imports.$inferSelect;
+export type NewImport = typeof imports.$inferInsert;
