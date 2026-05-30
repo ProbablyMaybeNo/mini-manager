@@ -270,7 +270,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.8 — Visual regression sweep + mobile polish
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Catch-up milestone. Walk every primary route at 375px / 768px / 1440px and fix any layout breaks or token-drift from the cumulative P8.1-P8.7 changes. Focus on:
 - Anything that visually broke during the palette swap

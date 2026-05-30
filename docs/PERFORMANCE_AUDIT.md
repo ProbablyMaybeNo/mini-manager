@@ -103,9 +103,28 @@ never has to apply them.
 ## Acceptance state
 
 - `npm run typecheck` — 0 errors.
-- `npm test` — 369 passing.
+- `npm test` — 438 passing / 1 skipped.
+- `npm run test:e2e` — 9/9 missions green.
 - Live Lighthouse run — **PENDING ROSS.**
 
 Once Ross fills in the measurement table and at least the three
 primary mobile routes hit 90+, this milestone can be considered
 shipped per the Phase 6 ship criterion.
+
+## Phase 8 design overhaul (post-shipping addendum)
+
+Phase 8 shipped a visual refresh: cyan-primary palette, dropped ASCII
+heading boxes, Card / Button / StatusPill primitives, status pills,
+NavRail user chip, accent counters on empty-state heroes. All changes
+are CSS / token / component-shape only — no business logic, no new
+dependencies. The 438-test Vitest suite + 9-mission Playwright suite
+remain green after the overhaul.
+
+Lighthouse needs a fresh run against the live URL to confirm the new
+palette and heading hierarchy didn't regress LCP / CLS / TBT. The new
+tokens lift bg from #050607 to #0a0e14 (lighter cards, more depth)
+which can affect contrast ratios — Ross should re-check WCAG AA on
+the muted fg-subtle text against the new backgrounds. Spot-checks
+during build (P8.1-P8.8) show the contrast comfortably passes, but
+a sweep with an automated checker (axe-core or Lighthouse a11y) is
+prudent before declaring Phase 8 shipped.

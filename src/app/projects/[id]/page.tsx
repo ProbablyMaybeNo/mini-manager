@@ -24,6 +24,17 @@ import {
   progressPercent,
 } from "@/lib/progress";
 import { Card } from "@/components/ui/Card";
+import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
+
+const HEADER_STATUS_PILL: Record<string, StatusPillKind> = {
+  Empty: "neutral",
+  Pile: "neutral",
+  Assembling: "info",
+  Priming: "info",
+  Painting: "warning",
+  Completed: "ok",
+  Shelved: "neutral",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -132,13 +143,15 @@ export default async function ProjectDetailPage({
         <div className="flex items-start gap-4">
           <h1 className="text-3xl tracking-wide">{project.name.toUpperCase()}</h1>
         </div>
-        <div className="flex items-center gap-4 text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
+        <div className="flex items-center gap-3 flex-wrap text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
           <span>{project.type}</span>
           {project.faction ? <span>· {project.faction}</span> : null}
           <span>
             · {headerTotalModels} model{headerTotalModels === 1 ? "" : "s"}
           </span>
-          <span className="text-[var(--color-green)]">· {status} {percent}%</span>
+          <StatusPill status={HEADER_STATUS_PILL[status] ?? "neutral"}>
+            {status} · {percent}%
+          </StatusPill>
         </div>
         <ProgressBar percent={percent} width={32} className="block pt-1" />
       </header>
