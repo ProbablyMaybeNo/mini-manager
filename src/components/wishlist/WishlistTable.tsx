@@ -8,6 +8,7 @@ import type { WishlistItem, Priority, ProjectType } from "@/db/schema";
 import { TagToProjectMenu } from "./TagToProjectMenu";
 import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
+import { AccentCounter } from "@/components/ui/AccentCounter";
 
 export interface WishlistTableProjectOption {
   id: string;
@@ -62,7 +63,8 @@ export function WishlistTable({
 
   if (items.length === 0) {
     return (
-      <div className="frame p-8 text-center">
+      <div className="relative frame p-8 text-center overflow-hidden">
+        {!hasActiveFilters ? <AccentCounter value="04" /> : null}
         <p className="text-sm font-mono text-[var(--color-fg-muted)]">
           {hasActiveFilters
             ? "No wishlist items match the current filters."

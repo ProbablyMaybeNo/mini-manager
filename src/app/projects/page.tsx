@@ -15,6 +15,7 @@ import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { Card } from "@/components/ui/Card";
+import { AccentCounter } from "@/components/ui/AccentCounter";
 
 export const dynamic = "force-dynamic";
 
@@ -143,7 +144,8 @@ export default async function ProjectsPage() {
 
 function EmptyState() {
   return (
-    <div className="frame p-8 text-center space-y-6">
+    <div className="relative frame p-8 text-center space-y-6 overflow-hidden">
+      <AccentCounter value="01" />
       <div>
         <h2 className="text-lg glow-cyan mb-3">No projects yet</h2>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto">

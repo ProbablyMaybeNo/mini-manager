@@ -5,6 +5,7 @@ import { listAllRecipesGrouped } from "@/db/queries/recipes";
 import { namedModels, projects } from "@/db/schema";
 import { NewRecipeButton } from "@/components/recipes/NewRecipeButton";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
+import { AccentCounter } from "@/components/ui/AccentCounter";
 
 export const dynamic = "force-dynamic";
 
@@ -161,11 +162,12 @@ function NamedModelSection({
 
 function EmptyState() {
   return (
-    <div className="frame p-8 text-center space-y-4">
+    <div className="relative frame p-8 text-center space-y-4 overflow-hidden">
+      <AccentCounter value="03" />
       <h2 className="text-lg glow-cyan">No recipes yet</h2>
       <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto">
         Build your first scheme: pick an infantry zone, stack techniques,
-        pin paints from the library. Attach it to an army when you're
+        pin paints from the library. Attach it to an army when you&apos;re
         ready, or keep it as a saved palette.
       </p>
       <NewRecipeButton label="[ + ] Create your first recipe" />

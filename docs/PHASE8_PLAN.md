@@ -241,7 +241,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.7 — Dashboard accent counter + section signature polish
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Terminal UI's reference image shows a faded "01" numeral in the corner of the welcome hero — a decorative accent that signals "section 1" without being functional. Mini Manager can adopt the same on its primary dashboard surfaces — `/projects` empty state, `/library` header, `/recipes` empty state — to add polish without distraction.
 
