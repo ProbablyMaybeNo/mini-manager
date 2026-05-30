@@ -8,6 +8,21 @@ import type { Paint } from "@/lib/paints/types";
 import { TypeIcon } from "./TypeIcon";
 import { HexConfidenceDot } from "./HexConfidenceDot";
 import { InventoryControls } from "./InventoryControls";
+import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
+
+const PAINT_TYPE_PILL: Record<string, StatusPillKind> = {
+  Paint: "info",
+  Wash: "warning",
+  Contrast: "info",
+  Metallic: "info",
+  Air: "info",
+  Primer: "neutral",
+  Varnish: "neutral",
+  Pigment: "neutral",
+  Effect: "info",
+  Ink: "info",
+  Lacquer: "neutral",
+};
 import { _internal } from "@/lib/paints/filters";
 
 /**
@@ -99,7 +114,9 @@ export function PaintDetailPanel({
 
         <section className="flex items-center gap-3">
           <TypeIcon type={paint.type} className="text-[var(--color-fg)] text-base" />
-          <span className="text-sm font-mono">{paint.type}</span>
+          <StatusPill status={PAINT_TYPE_PILL[paint.type] ?? "neutral"}>
+            {paint.type}
+          </StatusPill>
           <span className="grow" />
           <HexConfidenceDot confidence={paint.hexConfidence} source={paint.hexSource} />
           <span className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase">

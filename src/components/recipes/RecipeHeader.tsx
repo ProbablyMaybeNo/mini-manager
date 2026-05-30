@@ -7,6 +7,7 @@ import type { Recipe } from "@/db/schema";
 import { deleteRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { ShareButton } from "@/components/recipes/ShareButton";
 import type { MarkdownInput } from "@/lib/recipes/markdown";
+import { StatusPill } from "@/components/ui/StatusPill";
 
 interface AttachmentSummary {
   kind: "project" | "named-model" | "standalone";
@@ -128,18 +129,19 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
             {recipe.name}
           </h1>
           <div className="flex items-center gap-3 mt-2 text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
-            <span className="frame px-2 py-0.5">{recipe.bodyType}</span>
+            <StatusPill status="neutral">{recipe.bodyType}</StatusPill>
             {attachment.kind === "standalone" ? (
-              <span>[ standalone ]</span>
+              <StatusPill status="neutral">Standalone</StatusPill>
             ) : attachment.href ? (
-              <a
-                href={attachment.href}
-                className="hover:text-[var(--color-cyan)]"
-              >
-                [ attached: {attachment.label} ]
+              <a href={attachment.href} className="inline-flex">
+                <StatusPill status="info">
+                  Attached · {attachment.label}
+                </StatusPill>
               </a>
             ) : (
-              <span>[ attached: {attachment.label} ]</span>
+              <StatusPill status="info">
+                Attached · {attachment.label}
+              </StatusPill>
             )}
             {isPending ? <span>· saving…</span> : null}
           </div>

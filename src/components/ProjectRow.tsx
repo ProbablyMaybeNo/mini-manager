@@ -6,15 +6,19 @@ import { PaletteStrip } from "./PaletteStrip";
 import { RecipePaletteStripStatic } from "./recipes/RecipePaletteStrip";
 import { ProgressBar } from "./ProgressBar";
 import { displayStatus, progressPercent } from "@/lib/progress";
+import { StatusPill, type StatusPillKind } from "./ui/StatusPill";
 
-const STATUS_TONE: Record<ReturnType<typeof displayStatus>, string> = {
-  Empty: "text-[var(--color-fg-subtle)]",
-  Pile: "text-[var(--color-amber)]",
-  Assembling: "text-[var(--color-cyan)]",
-  Priming: "text-[var(--color-cyan)]",
-  Painting: "text-[var(--color-green)]",
-  Completed: "text-[var(--color-green)] glow-green",
-  Shelved: "text-[var(--color-fg-subtle)]",
+const STATUS_PILL: Record<
+  ReturnType<typeof displayStatus>,
+  StatusPillKind
+> = {
+  Empty: "neutral",
+  Pile: "neutral",
+  Assembling: "info",
+  Priming: "info",
+  Painting: "warning",
+  Completed: "ok",
+  Shelved: "neutral",
 };
 
 const PRIORITY_TONE: Record<NonNullable<Project["priority"]>, string> = {
@@ -81,13 +85,17 @@ export function ProjectRow({
       <span className="hidden lg:inline-block">
         <ProgressBar percent={percent} width={14} />
       </span>
-      <span
-        className={clsx(
-          "text-xs font-mono uppercase tracking-wide whitespace-nowrap",
-          STATUS_TONE[status],
+      <span className="inline-flex items-center gap-2 whitespace-nowrap">
+        {status === "Empty" ? (
+          <span className="text-xs font-mono text-[var(--color-fg-subtle)]">—</span>
+        ) : (
+          <StatusPill status={STATUS_PILL[status]}>{status}</StatusPill>
         )}
-      >
-        {status === "Empty" ? "—" : status} {totalModels > 0 ? `· ${percent}%` : ""}
+        {totalModels > 0 ? (
+          <span className="text-2xs font-mono text-[var(--color-fg-muted)]">
+            {percent}%
+          </span>
+        ) : null}
       </span>
     </Link>
   );

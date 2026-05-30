@@ -180,7 +180,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.5 — Status pills replace plain-text labels
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Mini Manager renders project status, paint type, paint owned/wishlist, recipe attachment status, and wishlist item status as plain coloured text. Terminal UI uses pill chips for ALL of these — bordered, mono, all-caps, semantic colour. The pill component from P8.2 already exists; this milestone is its rollout.
 

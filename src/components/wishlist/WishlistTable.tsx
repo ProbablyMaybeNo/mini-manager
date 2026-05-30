@@ -7,6 +7,7 @@ import { clsx } from "clsx";
 import type { WishlistItem, Priority, ProjectType } from "@/db/schema";
 import { TagToProjectMenu } from "./TagToProjectMenu";
 import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal";
+import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 
 export interface WishlistTableProjectOption {
   id: string;
@@ -24,10 +25,10 @@ const PRIORITY_DOT: Record<Priority, string> = {
   Low: "bg-[var(--color-fg-subtle)]",
 };
 
-const STATUS_BADGE: Record<WishlistItem["status"], string> = {
-  Wanted: "text-[var(--color-cyan)]",
-  Bought: "text-[var(--color-green-dim)]",
-  Cancelled: "text-[var(--color-fg-muted)] line-through",
+const STATUS_PILL: Record<WishlistItem["status"], StatusPillKind> = {
+  Wanted: "info",
+  Bought: "ok",
+  Cancelled: "neutral",
 };
 
 export function WishlistTable({
@@ -136,12 +137,7 @@ export function WishlistTable({
             className={clsx("inline-block h-2.5 w-2.5 rounded-full", PRIORITY_DOT[item.priority])}
             title={`Priority ${item.priority}`}
           />
-          <span
-            className={clsx(
-              "text-2xs font-mono uppercase tracking-wider",
-              STATUS_BADGE[item.status],
-            )}
-          >
+          <span>
             {item.status === "Wanted" ? (
               <button
                 type="button"
@@ -149,13 +145,20 @@ export function WishlistTable({
                   e.stopPropagation();
                   setBoughtFor(item);
                 }}
-                className="hover:text-[var(--color-accent)] hover:underline underline-offset-2"
                 title="Mark bought"
+                className="inline-flex items-center"
               >
-                {item.status} →
+                <StatusPill status={STATUS_PILL[item.status]}>
+                  {item.status} →
+                </StatusPill>
               </button>
             ) : (
-              item.status
+              <StatusPill
+                status={STATUS_PILL[item.status]}
+                className={item.status === "Cancelled" ? "line-through" : undefined}
+              >
+                {item.status}
+              </StatusPill>
             )}
           </span>
         </div>
