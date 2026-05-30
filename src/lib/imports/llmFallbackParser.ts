@@ -1,24 +1,23 @@
 import "server-only";
 
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import type { ImportedTree, ImportedUnit, TextParseResult } from "./types";
 
 /**
  * Last-resort army-list parser. Called when the text heuristics return
  * confidence below 0.6 — i.e. the input is messy enough that regex
- * pattern-matching skipped most lines. Claude Haiku 4.5 (fast + cheap,
- * well-suited for structured extraction) converts the raw text into our
- * ImportedTree shape.
+ * pattern-matching skipped most lines. llama-3.3-70b-versatile (fast,
+ * free-tier Groq) converts the raw text into our ImportedTree shape.
  *
  * Cost containment:
  *   - 15-second hard timeout
  *   - 8000-char input cap (real lists are 1-3k chars)
- *   - response_format pinned via prompt; we re-parse + validate JSON
+ *   - response_format: json_object enforces JSON output
  *   - no caching layer in v1; defer per-content-hash cache to a future
  *     polish pass
  */
 
-const MODEL_ID = "claude-haiku-4-5";
+const MODEL_ID = "llama-3.3-70b-versatile";
 const MAX_INPUT_CHARS = 8000;
 const TIMEOUT_MS = 15_000;
 const LLM_CONFIDENCE = 0.7;
@@ -61,23 +60,27 @@ interface RawLlmTree {
 }
 
 /**
- * Inject an Anthropic client (lets tests pass a mocked instance without
+ * Inject a Groq-compatible client (lets tests pass a mocked instance without
  * touching the network). Production callers pass nothing.
  */
 export interface LlmFallbackDeps {
-  client?: AnthropicLike;
+  client?: GroqLike;
   apiKey?: string;
 }
 
-export interface AnthropicLike {
-  messages: {
-    create: (params: {
-      model: string;
-      max_tokens: number;
-      messages: Array<{ role: "user"; content: string }>;
-    }) => Promise<{
-      content: Array<{ type: string; text?: string }>;
-    }>;
+export interface GroqLike {
+  chat: {
+    completions: {
+      create: (params: {
+        model: string;
+        max_tokens: number;
+        temperature: number;
+        response_format: { type: "json_object" };
+        messages: Array<{ role: "user"; content: string }>;
+      }) => Promise<{
+        choices: Array<{ message: { content: string | null } }>;
+      }>;
+    };
   };
 }
 
@@ -94,24 +97,26 @@ export async function parseWithLlm(
     ]);
   }
 
-  const apiKey = deps.apiKey ?? process.env["ANTHROPIC_API_KEY"];
+  const apiKey = deps.apiKey ?? process.env["GROQ_API_KEY"];
   if (!deps.client && !apiKey) {
     return failureResult([
-      "Messy list detected and ANTHROPIC_API_KEY is not configured. Clean up the list manually or paste a clearer format.",
+      "Messy list detected and GROQ_API_KEY is not configured. Clean up the list manually or paste a clearer format.",
     ]);
   }
 
-  const client: AnthropicLike =
-    deps.client ?? (new Anthropic({ apiKey }) as unknown as AnthropicLike);
+  const client: GroqLike =
+    deps.client ?? (new Groq({ apiKey }) as unknown as GroqLike);
 
   const prompt = PROMPT_TEMPLATE.replace("{{RAW_LIST}}", rawText);
 
-  let response: Awaited<ReturnType<AnthropicLike["messages"]["create"]>>;
+  let rawContent: string | null | undefined;
   try {
-    response = await Promise.race([
-      client.messages.create({
+    const response = await Promise.race([
+      client.chat.completions.create({
         model: MODEL_ID,
-        max_tokens: 2048,
+        max_tokens: 2000,
+        temperature: 0.1,
+        response_format: { type: "json_object" },
         messages: [{ role: "user", content: prompt }],
       }),
       new Promise<never>((_, reject) =>
@@ -121,16 +126,14 @@ export async function parseWithLlm(
         ),
       ),
     ]);
+    rawContent = response.choices[0]?.message?.content;
   } catch (err) {
     return failureResult([
       `LLM call failed: ${err instanceof Error ? err.message : "unknown error"}`,
     ]);
   }
 
-  const textBlock = response.content.find(
-    (c) => c.type === "text" && typeof c.text === "string",
-  );
-  const replyText = textBlock?.text ?? "";
+  const replyText = rawContent ?? "";
   if (!replyText) {
     return failureResult(["LLM returned no text content"]);
   }
@@ -167,8 +170,8 @@ function failureResult(warnings: string[]): TextParseResult {
 }
 
 function extractJsonObject(text: string): RawLlmTree | null {
-  // Claude sometimes wraps JSON in a fenced block despite the "no prose"
-  // instruction. Strip the fences if present.
+  // Llama models occasionally wrap JSON in markdown fences despite the
+  // "no prose" instruction. Strip the fences if present.
   const stripped = text
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```\s*$/i, "")

@@ -25,7 +25,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "groq-sdk": "^0.13.0",
     "@auth/drizzle-adapter": "^1.7.0",
     "@libsql/client": "^0.14.0",
     "clsx": "^2.1.0",

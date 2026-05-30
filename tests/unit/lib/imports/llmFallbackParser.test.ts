@@ -1,15 +1,17 @@
 import { describe, expect, test, vi } from "vitest";
 import {
   parseWithLlm,
-  type AnthropicLike,
+  type GroqLike,
 } from "@/lib/imports/llmFallbackParser";
 
-function makeMockClient(reply: string): AnthropicLike {
+function makeMockClient(reply: string): GroqLike {
   return {
-    messages: {
-      create: vi.fn().mockResolvedValue({
-        content: [{ type: "text", text: reply }],
-      }),
+    chat: {
+      completions: {
+        create: vi.fn().mockResolvedValue({
+          choices: [{ message: { content: reply } }],
+        }),
+      },
     },
   };
 }
@@ -66,7 +68,7 @@ describe("parseWithLlm", () => {
   test("rejects empty input before any API call", async () => {
     const create = vi.fn();
     const result = await parseWithLlm("", {
-      client: { messages: { create } } as AnthropicLike,
+      client: { chat: { completions: { create } } } as GroqLike,
     });
     expect(create).not.toHaveBeenCalled();
     expect(result.confidence).toBe(0);
@@ -77,7 +79,7 @@ describe("parseWithLlm", () => {
     const create = vi.fn();
     const huge = "x".repeat(8001);
     const result = await parseWithLlm(huge, {
-      client: { messages: { create } } as AnthropicLike,
+      client: { chat: { completions: { create } } } as GroqLike,
     });
     expect(create).not.toHaveBeenCalled();
     expect(result.confidence).toBe(0);
@@ -124,21 +126,23 @@ describe("parseWithLlm", () => {
   });
 
   test("returns failure when no client and no API key configured", async () => {
-    const prev = process.env["ANTHROPIC_API_KEY"];
-    delete process.env["ANTHROPIC_API_KEY"];
+    const prev = process.env["GROQ_API_KEY"];
+    delete process.env["GROQ_API_KEY"];
     try {
       const result = await parseWithLlm("messy");
       expect(result.confidence).toBe(0);
-      expect(result.warnings[0]).toMatch(/ANTHROPIC_API_KEY is not configured/);
+      expect(result.warnings[0]).toMatch(/GROQ_API_KEY is not configured/);
     } finally {
-      if (prev !== undefined) process.env["ANTHROPIC_API_KEY"] = prev;
+      if (prev !== undefined) process.env["GROQ_API_KEY"] = prev;
     }
   });
 
   test("surfaces SDK errors as warnings rather than throwing", async () => {
-    const client: AnthropicLike = {
-      messages: {
-        create: vi.fn().mockRejectedValue(new Error("rate-limited")),
+    const client: GroqLike = {
+      chat: {
+        completions: {
+          create: vi.fn().mockRejectedValue(new Error("rate-limited")),
+        },
       },
     };
     const result = await parseWithLlm("messy", { client });

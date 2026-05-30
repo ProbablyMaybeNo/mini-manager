@@ -51,7 +51,7 @@ Set all seven in **Settings → Environment Variables**. See `.env.production.ex
 | `AUTH_URL` | This repo | `https://paint-planner-pro.vercel.app` (update if project renamed or custom domain added) |
 | `AUTH_RESEND_KEY` | Resend dashboard | API key |
 | `AUTH_EMAIL_FROM` | Manually set | Default: `Mini Manager <onboarding@resend.dev>` (Resend dev domain, only delivers to account email). Replace once custom domain is verified. |
-| `ANTHROPIC_API_KEY` | Anthropic console | Required for P7.5 messy-list LLM fallback. Without it the fallback errors but clean text/PDF/.ros/.rosz imports still work. Get it at https://console.anthropic.com/settings/keys |
+| `GROQ_API_KEY` | Groq console | Required for P7.5 messy-list LLM fallback. Without it the fallback errors but clean text/PDF/.ros/.rosz imports still work. Free tier (no billing), get it at https://console.groq.com/keys |
 
 **Do NOT set** `ALLOW_TEST_AUTH` in production — the test-only sign-in route returns 404 unless this is `1`. Keep it unset.
 
