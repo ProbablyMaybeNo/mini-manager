@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { imports } from "@/db/schema";
+import { imports, projects } from "@/db/schema";
 import type { Import, ImportSourceFormat } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
@@ -42,8 +42,28 @@ const createFileSchema = z.object({
   size: z.number().int().nonnegative().max(20 * 1024 * 1024),
 });
 
+const applySchema = z.object({
+  importId: z.string().min(1).max(32),
+  editedTree: z.object({
+    armyName: z.string().trim().min(1).max(120),
+    totalPoints: z.number().int().nonnegative().max(99_999).nullable().optional(),
+    faction: z.string().trim().max(120).nullable().optional(),
+    units: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1).max(120),
+          count: z.number().int().min(1).max(999),
+          points: z.number().int().nonnegative().max(99_999).nullable().optional(),
+          notes: z.string().max(500).nullable().optional(),
+        }),
+      )
+      .min(1, "Add at least one unit before applying"),
+  }),
+});
+
 export type CreateTextImportInput = z.infer<typeof createTextSchema>;
 export type CreateFileImportInput = z.infer<typeof createFileSchema>;
+export type ApplyImportInput = z.infer<typeof applySchema>;
 
 /**
  * Persist a pasted plain-text army list, run the text parser (or LLM
@@ -166,6 +186,119 @@ export async function createFileImport(
     parserUsed,
     result,
   });
+}
+
+/**
+ * Land an edited preview tree as a real project hierarchy. Creates one
+ * Army container project, then one Unit child per `editedTree.units`
+ * row. Counts are clamped to the schema's 1-9999 range. On any per-unit
+ * insert error, partial inserts are rolled back manually — libsql
+ * in-memory has no real transactions (same trade-off accepted in P5.3).
+ *
+ * Returns `{ ok: true, armyProjectId }` on success; the UI navigates
+ * to `/projects/<armyProjectId>` to land on the new workspace.
+ */
+export async function applyImport(
+  raw: ApplyImportInput,
+): Promise<ActionResult<{ armyProjectId: string }>> {
+  const parsed = applySchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+  const userId = await currentUserId();
+  const { importId, editedTree } = parsed.data;
+
+  const importRows = await db
+    .select()
+    .from(imports)
+    .where(and(eq(imports.id, importId), eq(imports.ownerId, userId)))
+    .limit(1);
+  const importRow = importRows[0];
+  if (!importRow) {
+    return { ok: false, error: "Import not found." };
+  }
+  if (importRow.status === "applied") {
+    return { ok: false, error: "This import has already been applied." };
+  }
+
+  const created: string[] = [];
+  try {
+    const armyInserted = await db
+      .insert(projects)
+      .values({
+        ownerId: userId,
+        type: "Army",
+        name: editedTree.armyName.trim(),
+        count: 0,
+        faction: editedTree.faction?.trim() ?? null,
+        pointsValue: editedTree.totalPoints ?? null,
+      })
+      .returning({ id: projects.id });
+    const armyId = armyInserted[0]?.id;
+    if (!armyId) {
+      return { ok: false, error: "Failed to create the Army container." };
+    }
+    created.push(armyId);
+
+    for (const unit of editedTree.units) {
+      const trimmedName = unit.name.trim();
+      const clampedCount = Math.min(Math.max(unit.count, 1), 9999);
+      const unitInserted = await db
+        .insert(projects)
+        .values({
+          ownerId: userId,
+          parentId: armyId,
+          type: "Unit",
+          name: trimmedName,
+          count: clampedCount,
+          pointsValue: unit.points ?? null,
+          notesMd: unit.notes?.trim() ?? null,
+        })
+        .returning({ id: projects.id });
+      const unitId = unitInserted[0]?.id;
+      if (!unitId) {
+        throw new Error(`Failed to create unit "${trimmedName}".`);
+      }
+      created.push(unitId);
+    }
+
+    await db
+      .update(imports)
+      .set({
+        status: "applied",
+        appliedProjectId: armyId,
+        updatedAt: new Date(),
+      })
+      .where(eq(imports.id, importId));
+
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${armyId}`);
+    return { ok: true, data: { armyProjectId: armyId } };
+  } catch (err) {
+    // Manual rollback: delete anything we created so far. Best-effort —
+    // if a delete fails the painter sees an orphan project they can
+    // clean up manually, but the apply path itself still surfaces the
+    // root error.
+    for (const id of created) {
+      try {
+        await db.delete(projects).where(eq(projects.id, id));
+      } catch {
+        // ignored
+      }
+    }
+    await db
+      .update(imports)
+      .set({
+        status: "failed",
+        errorMessage: err instanceof Error ? err.message : "Unknown error",
+        updatedAt: new Date(),
+      })
+      .where(eq(imports.id, importId));
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to apply import.",
+    };
+  }
 }
 
 /* -----------------------------------------------------------------

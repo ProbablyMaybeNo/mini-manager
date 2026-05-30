@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { clsx } from "clsx";
+import { applyImport } from "@/lib/actions/imports";
 import type { ImportedTree } from "@/lib/imports/types";
 
 interface ImportPreviewProps {
@@ -10,11 +12,6 @@ interface ImportPreviewProps {
   parserUsed: string | null;
   confidence: number | null;
   warnings: ReadonlyArray<string>;
-  /** P7.7 wires this in. Until then the button surfaces a hint. */
-  applyAction?: (input: {
-    importId: string;
-    editedTree: ImportedTree;
-  }) => Promise<{ ok: true; armyProjectId: string } | { ok: false; error: string }>;
 }
 
 interface UnitRow {
@@ -34,8 +31,8 @@ export function ImportPreview({
   parserUsed,
   confidence,
   warnings,
-  applyAction,
 }: ImportPreviewProps) {
+  const router = useRouter();
   const [armyName, setArmyName] = useState(initialTree.armyName);
   const [faction, setFaction] = useState(initialTree.faction ?? "");
   const [totalPoints, setTotalPoints] = useState(
@@ -127,20 +124,14 @@ export function ImportPreview({
       })),
     };
 
-    if (!applyAction) {
-      setError(
-        "Apply is not yet wired — coming in the next milestone. Edits are ready.",
-      );
-      return;
-    }
     setBusy(true);
     try {
-      const result = await applyAction({ importId, editedTree });
+      const result = await applyImport({ importId, editedTree });
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      // Caller side-effects (router push) happen in the wrapper.
+      router.push(`/projects/${result.data.armyProjectId}`);
     } finally {
       setBusy(false);
     }

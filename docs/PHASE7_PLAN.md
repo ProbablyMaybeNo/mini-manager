@@ -338,7 +338,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.7 — Apply import → create projects + child units
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** The "land everything" moment. Takes the preview tree + the painter's edits and creates the project hierarchy. Then redirects to the new Army project workspace.
 
