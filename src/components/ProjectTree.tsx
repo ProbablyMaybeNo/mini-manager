@@ -61,17 +61,17 @@ function ProjectTreeRow({
       <Link
         href={href}
         className={clsx(
-          "group flex items-center gap-3 px-3 py-2 min-h-[36px]",
+          "group flex items-center gap-3 px-3 py-2 min-h-[36px] w-full",
           "hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)]",
         )}
       >
         <span
           aria-hidden
-          className="font-mono text-xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-green)]"
+          className="font-mono text-xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-green)] flex-shrink-0"
         >
           ▸
         </span>
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 flex-1" title={project.name}>
           <span className="block text-sm font-mono truncate group-hover:text-[var(--color-green)]">
             {project.name}
           </span>
@@ -80,8 +80,8 @@ function ProjectTreeRow({
             {total > 0 ? ` · ${total} model${total === 1 ? "" : "s"}` : ""}
           </span>
         </span>
-        <ProgressBar percent={percent} width={12} className="hidden sm:inline" />
-        <span className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider whitespace-nowrap">
+        <ProgressBar percent={percent} width={11} className="hidden md:inline" />
+        <span className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider whitespace-nowrap flex-shrink-0">
           {status === "Empty" ? "—" : status} · {percent}%
         </span>
       </Link>

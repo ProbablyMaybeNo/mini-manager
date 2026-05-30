@@ -49,13 +49,13 @@ export function ProjectRow({
   return (
     <Link
       href={linkHref}
-      className="group grid grid-cols-[4px_1fr_auto_auto_auto] md:grid-cols-[4px_2fr_auto_auto_120px_auto] items-center gap-3 px-3 py-2.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] min-h-[44px] md:min-h-[36px]"
+      className="group grid grid-cols-[4px_1fr_auto_auto] lg:grid-cols-[4px_1fr_auto_auto_auto_auto] items-center gap-3 px-3 py-2.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] min-h-[44px] md:min-h-[36px]"
     >
       <span
-        className={clsx("h-6 w-1 rounded-sm", priorityClass)}
+        className={clsx("h-6 w-1 rounded-sm flex-shrink-0", priorityClass)}
         aria-label={project.priority ? `${project.priority} priority` : undefined}
       />
-      <span className="min-w-0">
+      <span className="min-w-0 flex-1" title={project.name}>
         <span className="block text-sm font-mono truncate group-hover:text-[var(--color-green)]">
           {project.name}
         </span>
@@ -65,10 +65,10 @@ export function ProjectRow({
           </span>
         ) : null}
       </span>
-      <span className="hidden md:inline-block text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
+      <span className="hidden lg:inline-block text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
         {project.type}
       </span>
-      <span className="hidden md:inline-block">
+      <span className="hidden lg:inline-block">
         {recipeSwatches && recipeSwatches.length > 0 ? (
           <RecipePaletteStripStatic
             swatches={recipeSwatches.slice(0, 5)}
@@ -78,7 +78,7 @@ export function ProjectRow({
           <PaletteStrip slots={5} />
         )}
       </span>
-      <span className="hidden md:inline-block">
+      <span className="hidden lg:inline-block">
         <ProgressBar percent={percent} width={14} />
       </span>
       <span

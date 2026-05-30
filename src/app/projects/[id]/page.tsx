@@ -128,15 +128,8 @@ export default async function ProjectDetailPage({
       </nav>
 
       <header className="space-y-2">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
           <h1 className="text-2xl">┌─ {project.name.toUpperCase()} ─</h1>
-          <span
-            aria-disabled
-            className="text-2xs font-mono text-[var(--color-fg-subtle)] uppercase tracking-wider cursor-not-allowed select-none"
-            title="Edit project — coming soon"
-          >
-            [ edit ]
-          </span>
         </div>
         <div className="flex items-center gap-4 text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
           <span>{project.type}</span>
