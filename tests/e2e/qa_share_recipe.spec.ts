@@ -25,10 +25,12 @@ test.describe("M5 — Share + Clone", () => {
     const alicePage = await aliceContext.newPage();
     await signInAs(alicePage, freshTestEmail("alice"));
 
-    // Create a recipe and grab its id from the URL.
+    // Create a recipe and grab its id from the URL. A fresh account lands
+    // on the empty state, where the create affordance reads "Create your
+    // first recipe"; a populated account shows "New recipe". Match either.
     await alicePage.goto("/recipes");
     await alicePage
-      .getByRole("button", { name: /New recipe/i })
+      .getByRole("button", { name: /New recipe|Create your first recipe/i })
       .first()
       .click();
     await alicePage.waitForURL(/\/recipes\/[a-zA-Z0-9_-]+/, {

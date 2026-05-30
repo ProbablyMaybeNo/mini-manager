@@ -110,6 +110,49 @@ describe("recipeToMarkdown", () => {
     expect(out).toContain("_(no steps recorded)_");
   });
 
+  test("paint with a name but no brand renders without a brand prefix", () => {
+    const out = recipeToMarkdown({
+      recipe: { name: "Brandless", bodyType: "infantry", notesMd: null },
+      zones: [
+        {
+          name: "Zone",
+          steps: [
+            {
+              technique: "basecoat",
+              paintName: "My Custom Green",
+              paintBrand: null,
+              hex: "#1f8044",
+              notesMd: null,
+            },
+          ],
+        },
+      ],
+    });
+    expect(out).toContain("**Basecoat** — My Custom Green `#1F8044`");
+    expect(out).not.toContain("null My Custom Green");
+  });
+
+  test("whitespace-only hex is treated as no hex", () => {
+    const out = recipeToMarkdown({
+      recipe: { name: "Blank hex", bodyType: "infantry", notesMd: null },
+      zones: [
+        {
+          name: "Zone",
+          steps: [
+            {
+              technique: "glaze",
+              paintName: null,
+              paintBrand: null,
+              hex: "   ",
+              notesMd: null,
+            },
+          ],
+        },
+      ],
+    });
+    expect(out).toContain("**Glaze** — _(no paint chosen)_");
+  });
+
   test("step with no paint and no hex renders a placeholder", () => {
     const out = recipeToMarkdown({
       recipe: { name: "WIP", bodyType: "infantry", notesMd: null },

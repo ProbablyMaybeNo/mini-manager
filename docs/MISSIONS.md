@@ -14,13 +14,19 @@ Integration / Unit) and tagged to the build phase they cover.
 - **Bug workflow** — EXPLORER → REPRODUCER → FIXER. If a bug surfaces, the
   failing test is written/confirmed first, then fixed, then re-verified.
 
-**Headline result (last full run — 2026-05-28):**
+**Headline result (last full run — 2026-05-29, standalone repo `D:\AI-Workstation\mini-manager`):**
 
 | Layer | Files | Tests | Result |
 |---|---|---|---|
-| Unit + Integration (Vitest) | 34 | 365 pass · 1 skipped | ✅ green |
-| E2E (Playwright, chromium) | 5 | 5 pass | ✅ green |
+| Unit + Integration (Vitest) | 35 | 369 pass · 1 skipped | ✅ green |
+| E2E (Playwright — chromium desktop + chromium-mobile) | 6 | 8 pass | ✅ green |
 | `tsc --noEmit` | — | — | ✅ 0 errors |
+
+> **Repo migration note (2026-05-29):** the project was split out of the
+> `Antigravity/apps/Paint-planner/app` monorepo into a flat standalone repo.
+> The doc was rescued, but the 2026-05-28 *code* fixes (B1, B2, and the markdown
+> branch tests) did **not** survive the migration — they were re-applied and
+> re-verified here. See Bug Log **B3**.
 
 ---
 
@@ -35,11 +41,18 @@ in-browser runs. Each mints its own session via `signInAs(freshTestEmail())`.
 | M2.1 | Wishlist quick-add — manual entry → row appears | `qa_wishlist.spec.ts` | P2 | ✅ Pass |
 | M3.1 | Project workspace lifecycle — create Unit → bump Build stage → persists across refresh | `qa_project_workspace.spec.ts` | P1 | ✅ Pass |
 | M4.1 | Tools — landing → colour wheel → "send to recipe" modal opens | `qa_tools.spec.ts` | P4 | ✅ Pass |
-| M5.1 | Share + Clone — Alice publishes a recipe → Bob (fresh context) opens the public URL unauthenticated → signs in → clones → lands on his own copy | `qa_share_recipe.spec.ts` | P5 | ✅ Pass (2 bugs found + fixed — see Bug Log B1, B2) |
+| M5.1 | Share + Clone — Alice publishes a recipe → Bob (fresh context) opens the public URL unauthenticated → signs in → clones → lands on his own copy | `qa_share_recipe.spec.ts` | P5 | ✅ Pass (bugs B1, B2 — re-applied after migration, see B3) |
+| M6.1 | Mobile — bottom tab bar visible and navigates (iPhone 12 viewport / chromium-mobile) | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
+| M6.2 | Mobile — create Unit project → bump stage → reload persists | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
+| M6.3 | Mobile — library lookup → detail panel renders without clipping | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
 
 **Mutation coverage applied in M5.1:** isolated browser contexts (Alice vs Bob),
 unauthenticated public read, cross-account hop, clone-independence assertion
 (new id, source `publicSlug` not carried).
+
+**Project matrix (`playwright.config.ts`):** `chromium` (desktop) runs M1–M5;
+`chromium-mobile` (iPhone 12 viewport) runs M6.1–M6.3. Both auto-boot the dev
+server with `ALLOW_TEST_AUTH=1` via the `webServer` block.
 
 ---
 
@@ -91,6 +104,7 @@ scoping, and input validation against a fresh per-test DB.
 | UM19 | Palette validation (normaliseHex / validatePaletteColors) | `lib/palettes/cascade.test.ts` | P4 | ✅ Pass |
 | UM20 | Recipe → Markdown formatter (brand/custom-mix/no-paint/notes/footer/empty-zone/whitespace-hex) | `lib/recipes/markdown.test.ts` | P5 | ✅ Pass |
 | UM21 | Public slug generator (alphabet, length 10, uniqueness) | `lib/recipes/slug.test.ts` | P5 | ✅ Pass |
+| UM22 | Native Web Share helper (capability detect / payload shape) | `lib/share/webShare.test.ts` | P6 | ✅ Pass |
 
 ---
 
@@ -116,7 +130,19 @@ Bugs surfaced during this test campaign, with evidence and resolution.
   defect, and the reason the role+name query failed.
 - **Fixer:** Added `aria-label="Share recipe"` to the trigger (app fix,
   `src/components/recipes/ShareButton.tsx`).
-- **Verified:** M5.1 passes end-to-end (3.2s); accessible name now "Share recipe".
+- **Verified:** M5.1 passes end-to-end; accessible name now "Share recipe".
+
+### B3 — Migration regression: B1/B2 + markdown tests dropped in the standalone split
+- **Mission:** M5.1 + UM20 (`qa_share_recipe.spec.ts`, `lib/recipes/markdown.test.ts`)
+- **Symptom (2026-05-29):** First full run in the new standalone repo failed M5.1
+  at the exact B1 point (`/New recipe/i` timeout); `markdown.test.ts` was back to
+  4 tests. The repo split carried `MISSIONS.md` but not the 2026-05-28 code fixes.
+- **Explorer:** Confirmed the M5 surface itself is unchanged post-P6.9 (empty-state
+  label `[ + ] Create your first recipe` and `ShareButton` still mounted in
+  `RecipeHeader`) — so it was a lost-diff regression, not new drift.
+- **Fixer:** Re-applied all three: the M5.1 selector, the `ShareButton` `aria-label`,
+  and the markdown brand-less / whitespace-hex branch tests.
+- **Verified:** 8/8 E2E pass; Vitest 369 pass · 1 skip; `tsc` 0 errors.
 
 ---
 
@@ -141,11 +167,12 @@ New tests written to fill phase gaps the build left behind:
 
 | Mission group | Runs | Pass | Skip | Fail |
 |---|---|---|---|---|
-| E2E (M1–M5) | 5 | 5 | 0 | 0 |
+| E2E desktop (M1–M5) | 5 | 5 | 0 | 0 |
+| E2E mobile (M6.1–M6.3) | 3 | 3 | 0 | 0 |
 | Integration (IM1–IM13) | 13 modules | 13 | 0 (1 test skip in IM7) | 0 |
-| Unit (UM1–UM21) | 21 modules | 21 | 0 | 0 |
-| **Vitest total** | **34 files** | **365 tests** | **1 test** | **0** |
-| Bugs found / fixed | 2 | — | — | 0 open |
+| Unit (UM1–UM22) | 22 modules | 22 | 0 | 0 |
+| **Vitest total** | **35 files** | **369 tests** | **1 test** | **0** |
+| Bugs found / fixed | 3 | — | — | 0 open |
 
 ---
 
