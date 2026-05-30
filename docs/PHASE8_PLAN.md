@@ -211,7 +211,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.6 — Top utility cluster + bottom user chip (chrome polish)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Terminal UI's top bar carries `SYS: OK | NET: LAG | Default ▾ | NOTIFICATIONS [3]` — a compact utility cluster that surfaces system state at a glance. Bottom-left carries a user chip with avatar + "USER_ADMIN | ONLINE" status. Adopt the spirit of both for Mini Manager's NavRail / MobileHeader.
 

@@ -34,6 +34,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/**
+ * Read package version at module-evaluation time (server-only). Used by
+ * the NavRail footer build-label.
+ */
+import packageJson from "../../package.json" with { type: "json" };
+
+const APP_VERSION: string = (packageJson as { version: string }).version;
+
 export default async function RootLayout({
   children,
 }: {
@@ -42,12 +50,19 @@ export default async function RootLayout({
   const session = await auth();
   const isAuthed = Boolean(session?.user?.id);
 
+  const user = session?.user
+    ? {
+        name: session.user.name ?? null,
+        email: session.user.email ?? null,
+      }
+    : null;
+
   return (
     <html lang="en" className={`${plexMono.variable} ${plexSans.variable}`}>
       <body>
-        {isAuthed ? <MobileHeader /> : null}
+        {isAuthed ? <MobileHeader user={user} /> : null}
         <div className="flex min-h-screen">
-          {isAuthed ? <NavRail /> : null}
+          {isAuthed ? <NavRail user={user} appVersion={APP_VERSION} /> : null}
           <main className={isAuthed ? "flex-1 min-w-0 pt-12 pb-20 md:pt-0 md:pb-0" : "flex-1 min-w-0"}>
             {children}
           </main>
