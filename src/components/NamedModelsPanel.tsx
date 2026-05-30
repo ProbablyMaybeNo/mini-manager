@@ -2,6 +2,7 @@ import type { NamedModel } from "@/db/schema";
 import { AddNamedModelForm } from "@/components/AddNamedModelForm";
 import { NamedModelRow } from "@/components/NamedModelRow";
 import { AttachedRecipeForNamedModel } from "@/components/recipes/AttachedRecipeForNamedModel";
+import { Card } from "@/components/ui/Card";
 
 /**
  * Server component. Renders the named models section of a project
@@ -26,11 +27,7 @@ export function NamedModelsPanel({
   }
 
   return (
-    <section className="space-y-3">
-      <h2 className="section-title flex items-center justify-between gap-3 mb-0 pb-2">
-        <span>Named Models · {namedModels.length}</span>
-      </h2>
-
+    <Card title={`Named Models · ${namedModels.length}`}>
       <ul className="space-y-2" role="list">
         {namedModels.map((m) => (
           <NamedModelRow
@@ -49,7 +46,9 @@ export function NamedModelsPanel({
         ))}
       </ul>
 
-      <AddNamedModelForm projectId={projectId} mode="inline" />
-    </section>
+      <div className="mt-3">
+        <AddNamedModelForm projectId={projectId} mode="inline" />
+      </div>
+    </Card>
   );
 }

@@ -11,6 +11,7 @@ import type { Recipe } from "@/db/schema";
 import { AttachRecipeTrigger } from "@/components/recipes/AttachRecipeTrigger";
 import { AttachedRecipeSummary } from "@/components/recipes/AttachedRecipeSummary";
 import type { RecipeOption } from "@/components/recipes/AttachRecipeModal";
+import { Card } from "@/components/ui/Card";
 
 /**
  * Build the candidate list shown in AttachRecipeModal — every recipe
@@ -69,26 +70,27 @@ export async function AttachedRecipePanel({
 
   if (attached.length === 0) {
     return (
-      <section className="space-y-3">
-        <h2 className="section-title mb-0 pb-2">Recipe</h2>
-        <div className="frame px-3 py-3 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-            No recipe attached. Build one to drive your painting plan.
-          </p>
+      <Card
+        title="Recipe"
+        headerActions={
           <AttachRecipeTrigger
             mode="project"
             projectId={projectId}
             candidates={candidates}
           />
-        </div>
-      </section>
+        }
+      >
+        <p className="text-xs font-sans text-[var(--color-fg-muted)]">
+          No recipe attached. Build one to drive your painting plan.
+        </p>
+      </Card>
     );
   }
 
   return (
-    <section className="space-y-3">
-      <h2 className="section-title flex items-center justify-between mb-0 pb-2">
-        <span>Recipe{attached.length > 1 ? "s" : ""} · {attached.length}</span>
+    <Card
+      title={`Recipe${attached.length > 1 ? "s" : ""} · ${attached.length}`}
+      headerActions={
         <AttachRecipeTrigger
           mode="project"
           projectId={projectId}
@@ -96,13 +98,14 @@ export async function AttachedRecipePanel({
           label="[ + ] Attach another"
           variant="subtle"
         />
-      </h2>
+      }
+    >
       <div className="space-y-3">
         {attached.map((recipe) => (
           <AttachedRecipeBlock key={recipe.id} recipe={recipe} />
         ))}
       </div>
-    </section>
+    </Card>
   );
 }
 

@@ -23,6 +23,7 @@ import {
   isLeafProject,
   progressPercent,
 } from "@/lib/progress";
+import { Card } from "@/components/ui/Card";
 
 export const dynamic = "force-dynamic";
 
@@ -144,41 +145,38 @@ export default async function ProjectDetailPage({
 
       {isContainer && aggregate ? (
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6">
-          <section className="space-y-3 order-2 md:order-1">
-            <h2 className="section-title flex items-center justify-between gap-3 mb-0 pb-2">
-              <span>Sub-projects · {children.length}</span>
-            </h2>
-            <ProjectTree
-              projects={children}
-              namedModelCountByProjectId={namedCountByProject}
-            />
-          </section>
+          <div className="order-2 md:order-1">
+            <Card title={`Sub-projects · ${children.length}`}>
+              <ProjectTree
+                projects={children}
+                namedModelCountByProjectId={namedCountByProject}
+              />
+            </Card>
+          </div>
 
-          <section className="space-y-3 order-1 md:order-2">
-            <h2 className="section-title mb-0 pb-2">Aggregated stages</h2>
-            <AggregateCountersDisplay
-              aggregate={aggregate}
-              childCount={descendants.length}
-            />
-          </section>
+          <div className="order-1 md:order-2">
+            <Card title="Aggregated stages" accentColor="cyan">
+              <AggregateCountersDisplay
+                aggregate={aggregate}
+                childCount={descendants.length}
+              />
+            </Card>
+          </div>
         </div>
       ) : showInteractiveCounters ? (
         <>
-          <section className="space-y-3">
-            <h2 className="section-title">Roster</h2>
+          <Card title="Roster">
             <OwnedCounter snapshot={ownedSnapshot} />
-          </section>
+          </Card>
 
-          <section className="space-y-3">
-            <h2 className="section-title">Stages</h2>
+          <Card title="Stages" accentColor="cyan">
             <StageCounter snapshot={stageSnapshot} />
-          </section>
+          </Card>
         </>
       ) : (
-        <section className="space-y-3">
-          <h2 className="section-title">Stages</h2>
+        <Card title="Stages" accentColor="cyan">
           <StageCounter snapshot={stageSnapshot} />
-        </section>
+        </Card>
       )}
 
       <NamedModelsPanel projectId={project.id} namedModels={namedModels} />

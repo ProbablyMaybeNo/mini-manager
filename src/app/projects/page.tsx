@@ -14,6 +14,7 @@ import { ProjectRow } from "@/components/ProjectRow";
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
+import { Card } from "@/components/ui/Card";
 
 export const dynamic = "force-dynamic";
 
@@ -88,55 +89,50 @@ export default async function ProjectsPage() {
           <TopWishesPanel />
 
           {backlog.length > 0 ? (
-            <section>
-              <h2 className="section-title flex items-center gap-3">
-                <span>Backlog</span>
-                <span className="text-[var(--color-amber)] normal-case tracking-normal">
-                  · {backlog.length} unit{backlog.length === 1 ? "" : "s"} waiting
+            <Card
+              title="Backlog"
+              accentColor="amber"
+              headerActions={
+                <span className="font-mono text-2xs text-[var(--color-amber)] normal-case tracking-wider">
+                  {backlog.length} unit{backlog.length === 1 ? "" : "s"} waiting
                 </span>
-              </h2>
-              <div className="frame">
-                {backlog.map((p) => (
-                  <ProjectRow
-                    key={p.id}
-                    project={p}
-                    namedModelCount={namedCountByProject[p.id] ?? 0}
-                    recipeSwatches={swatchesForProject(p.id)}
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {active.length > 0 ? (
-            <section>
-              <h2 className="section-title">Active</h2>
-              <div className="frame">
-                {active.map((p) => (
-                  <ProjectRow
-                    key={p.id}
-                    project={p}
-                    namedModelCount={namedCountByProject[p.id] ?? 0}
-                    recipeSwatches={swatchesForProject(p.id)}
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          <section>
-            <h2 className="section-title">All projects</h2>
-            <div className="frame">
-              {topLevel.map((p) => (
+              }
+              bodyClassName="p-0"
+            >
+              {backlog.map((p) => (
                 <ProjectRow
                   key={p.id}
                   project={p}
-                  namedModelCount={p.namedModelCount}
+                  namedModelCount={namedCountByProject[p.id] ?? 0}
                   recipeSwatches={swatchesForProject(p.id)}
                 />
               ))}
-            </div>
-          </section>
+            </Card>
+          ) : null}
+
+          {active.length > 0 ? (
+            <Card title="Active" accentColor="cyan" bodyClassName="p-0">
+              {active.map((p) => (
+                <ProjectRow
+                  key={p.id}
+                  project={p}
+                  namedModelCount={namedCountByProject[p.id] ?? 0}
+                  recipeSwatches={swatchesForProject(p.id)}
+                />
+              ))}
+            </Card>
+          ) : null}
+
+          <Card title="All projects" bodyClassName="p-0">
+            {topLevel.map((p) => (
+              <ProjectRow
+                key={p.id}
+                project={p}
+                namedModelCount={p.namedModelCount}
+                recipeSwatches={swatchesForProject(p.id)}
+              />
+            ))}
+          </Card>
 
           <RecentlyBoughtLine />
         </>

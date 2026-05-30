@@ -14,6 +14,7 @@ import {
   deleteZone,
   reorderZones,
 } from "@/lib/actions/recipeZones";
+import { Card } from "@/components/ui/Card";
 
 export interface ZoneListItem {
   id: string;
@@ -86,16 +87,17 @@ export function ZoneList({
   };
 
   return (
-    <div className="space-y-2">
-      <h3 className="section-title flex items-center justify-between mb-0 pb-2">
-        <span>Zones · {localZones.length}</span>
-        {localZones.length > 1 ? (
-          <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider">
+    <Card
+      title={`Zones · ${localZones.length}`}
+      headerActions={
+        localZones.length > 1 ? (
+          <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider normal-case">
             drag ≡ to reorder
           </span>
-        ) : null}
-      </h3>
-
+        ) : null
+      }
+    >
+      <div className="space-y-2">
       {localZones.length === 0 ? (
         <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
           No zones yet. Type your own with{" "}
@@ -146,7 +148,8 @@ export function ZoneList({
         <AddZoneControl recipeId={recipeId} />
         <StarterZonesControl recipeId={recipeId} defaultBodyType={bodyType} />
       </div>
-    </div>
+      </div>
+    </Card>
   );
 }
 

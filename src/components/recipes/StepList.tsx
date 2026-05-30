@@ -6,6 +6,7 @@ import type { TechniqueKey } from "@/db/schema";
 import { addStep, reorderSteps } from "@/lib/actions/recipeSteps";
 import { StepRow, type StepRowData } from "@/components/recipes/StepRow";
 import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
+import { Card } from "@/components/ui/Card";
 
 interface Props {
   zoneId: string;
@@ -98,14 +99,17 @@ export function StepList({
   );
 
   return (
-    <div className="space-y-2">
-      <h3 className="section-title flex items-center justify-between mb-0 pb-2">
-        <span>{headerLabel}</span>
-        <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider">
-          drag ≡ to reorder
-        </span>
-      </h3>
-
+    <Card
+      title={headerLabel}
+      headerActions={
+        localSteps.length > 1 ? (
+          <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider normal-case">
+            drag ≡ to reorder
+          </span>
+        ) : null
+      }
+    >
+      <div className="space-y-2">
       {localSteps.length === 0 ? (
         <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
           No steps yet. The first step is usually a{" "}
@@ -166,6 +170,7 @@ export function StepList({
       >
         {isAddPending ? "[ … ] Adding" : "[ + ] Add step"}
       </button>
-    </div>
+      </div>
+    </Card>
   );
 }

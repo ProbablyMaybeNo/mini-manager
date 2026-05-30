@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { updateRecipe } from "@/lib/actions/recipes";
+import { Card } from "@/components/ui/Card";
 
 interface Props {
   recipeId: string;
@@ -46,12 +47,12 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
   const dirty = value !== saved;
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-baseline justify-between">
-        <h3 className="section-title mb-0 pb-0 border-0">Notes</h3>
+    <Card
+      title="Notes"
+      headerActions={
         <span
           className={clsx(
-            "text-2xs font-mono uppercase tracking-wider",
+            "text-2xs font-mono normal-case tracking-wider",
             isPending
               ? "text-[var(--color-amber)]"
               : dirty
@@ -62,7 +63,8 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
         >
           {isPending ? "saving…" : dirty ? "unsaved" : "saved"}
         </span>
-      </div>
+      }
+    >
       <textarea
         value={value}
         onChange={(event) => setValue(event.target.value)}
@@ -71,10 +73,10 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
         placeholder="Markdown notes — paint ratios, mix recipes, brush tips…"
         className={clsx(
           "block w-full px-3 py-2.5 font-mono text-xs",
-          "bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-cyan)]",
+          "bg-[var(--color-bg)] frame focus:border-[var(--color-cyan)]",
           "resize-y min-h-[200px]",
         )}
       />
-    </div>
+    </Card>
   );
 }

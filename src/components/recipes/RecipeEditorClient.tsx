@@ -10,6 +10,7 @@ import {
 import { RecipeNotes } from "@/components/recipes/RecipeNotes";
 import { StepList } from "@/components/recipes/StepList";
 import type { StepRowData } from "@/components/recipes/StepRow";
+import { Card } from "@/components/ui/Card";
 
 interface Props {
   recipe: Recipe;

@@ -96,7 +96,7 @@ export function FilterRail({
   return (
     <aside
       className={clsx(
-        "flex flex-col gap-5 px-3 py-4 border-r border-[var(--color-border)]",
+        "flex flex-col border-r border-[var(--color-border)]",
         "md:w-[240px] md:shrink-0",
         "overflow-y-auto",
         className,
@@ -104,6 +104,13 @@ export function FilterRail({
       aria-label="Library filters"
       data-pending={isPending ? "true" : undefined}
     >
+      <header className="card-header sticky top-0 z-10 bg-[var(--color-bg-elevated)]">
+        <span className="card-header-title">
+          <span aria-hidden className="card-header-accent bg-[var(--color-cyan)]" />
+          <span>FILTERS</span>
+        </span>
+      </header>
+      <div className="flex flex-col gap-5 px-3 py-4">
       <Section title="Search">
         <input
           type="search"
@@ -253,6 +260,7 @@ export function FilterRail({
           [ Clear all filters ]
         </button>
       ) : null}
+      </div>
     </aside>
   );
 }

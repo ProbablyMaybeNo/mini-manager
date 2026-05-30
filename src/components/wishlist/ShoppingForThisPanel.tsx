@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { listWishlistByProject } from "@/db/queries/wishlist";
 import { currentUserId } from "@/lib/auth-stub";
 import type { WishlistItem, Priority } from "@/db/schema";
+import { Card } from "@/components/ui/Card";
 
 const PRIORITY_DOT: Record<Priority, string> = {
   Urgent: "bg-[var(--color-red)]",
@@ -23,29 +24,25 @@ export async function ShoppingForThisPanel({ projectId }: { projectId: string })
   const items = await listWishlistByProject(userId, projectId);
 
   return (
-    <section className="space-y-3">
-      <h2 className="section-title flex items-center justify-between gap-2">
-        <span>Shopping for this · {items.length}</span>
-        {items.length > 0 ? (
-          <span className="normal-case tracking-normal text-[var(--color-fg-muted)]">
+    <Card
+      title={`Shopping for this · ${items.length}`}
+      headerActions={
+        items.length > 0 ? (
+          <span className="font-mono text-2xs normal-case tracking-wider text-[var(--color-fg-muted)]">
             {summariseTotal(items)}
           </span>
-        ) : null}
-      </h2>
+        ) : null
+      }
+      bodyClassName={items.length === 0 ? undefined : "p-0"}
+    >
       {items.length === 0 ? (
-        <div className="frame px-3 py-2">
-          <p className="text-xs font-mono text-[var(--color-fg-muted)]">
-            [ Nothing on the wishlist for this project ]
-          </p>
-        </div>
+        <p className="text-xs font-mono text-[var(--color-fg-muted)]">
+          [ Nothing on the wishlist for this project ]
+        </p>
       ) : (
-        <div className="frame">
-          {items.map((item) => (
-            <WishlistRow key={item.id} item={item} />
-          ))}
-        </div>
+        items.map((item) => <WishlistRow key={item.id} item={item} />)
       )}
-    </section>
+    </Card>
   );
 }
 

@@ -151,7 +151,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P8.4 — Card-based layout adoption on primary surfaces
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Adopt the `<Card>` primitive across the primary widget surfaces. Currently most pages stack inline sections separated by `.section-title` divider lines. Cards group related content visually and create a clear z-axis. Reference: the Terminal UI dashboard's RESOURCE_MONITOR / ACTIVE_PROCESSES / QUICK_ACTIONS / KERNEL_LOG layout.
 
