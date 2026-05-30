@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roster id="abc123" name="Ultramarines Strike Force" battleScribeVersion="2.03"
+        xmlns="http://www.battlescribe.net/schema/rosterSchema">
+  <costs>
+    <cost name="pts" value="1990"/>
+    <cost name="PL" value="100"/>
+  </costs>
+  <forces>
+    <force id="f1" name="Patrol Detachment" catalogueName="Adeptus Astartes - Ultramarines">
+      <selections>
+        <selection id="s1" name="Captain in Terminator Armour" type="unit" number="1">
+          <costs><cost name="pts" value="105"/></costs>
+          <selections>
+            <selection id="s1m1" name="Captain in Terminator Armour" type="model" number="1"/>
+          </selections>
+        </selection>
+        <selection id="s2" name="Intercessor Squad" type="unit" number="1">
+          <costs><cost name="pts" value="200"/></costs>
+          <selections>
+            <selection id="s2m1" name="Intercessor Sergeant" type="model" number="1"/>
+            <selection id="s2m2" name="Intercessor" type="model" number="9"/>
+          </selections>
+        </selection>
+        <selection id="s3" name="Tactical Squad" type="unit" number="1">
+          <costs><cost name="pts" value="135"/></costs>
+          <selections>
+            <selection id="s3m1" name="Sergeant" type="model" number="1"/>
+            <selection id="s3m2" name="Tactical Marine" type="model" number="9"/>
+          </selections>
+        </selection>
+        <selection id="s4" name="Terminator Squad" type="unit" number="1">
+          <costs><cost name="pts" value="185"/></costs>
+          <selections>
+            <selection id="s4m1" name="Terminator Sergeant" type="model" number="1"/>
+            <selection id="s4m2" name="Terminator" type="model" number="4"/>
+          </selections>
+        </selection>
+        <selection id="s5" name="Redemptor Dreadnought" type="unit" number="1">
+          <costs><cost name="pts" value="210"/></costs>
+          <selections>
+            <selection id="s5m1" name="Redemptor Dreadnought" type="model" number="1"/>
+          </selections>
+        </selection>
+        <selection id="s6" name="Eradicator Squad" type="unit" number="1">
+          <costs><cost name="pts" value="100"/></costs>
+          <selections>
+            <selection id="s6m1" name="Eradicator Sergeant" type="model" number="1"/>
+            <selection id="s6m2" name="Eradicator" type="model" number="2"/>
+          </selections>
+        </selection>
+        <selection id="s7" name="Repulsor Executioner" type="unit" number="1">
+          <costs><cost name="pts" value="220"/></costs>
+          <selections>
+            <selection id="s7m1" name="Repulsor Executioner" type="model" number="1"/>
+          </selections>
+        </selection>
+      </selections>
+    </force>
+  </forces>
+</roster>

@@ -173,7 +173,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.4 — BattleScribe XML parser (`.ros` + `.rosz`)
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** BattleScribe is the de facto roster builder for 40k / AoS / WHFB / Necromunda / many other systems. Painters who use it export `.ros` (XML) or `.rosz` (zipped XML). The schema is well-defined and consistent across games. This is the **highest-quality input source** — confidence should be ~1.0 every time.
 
