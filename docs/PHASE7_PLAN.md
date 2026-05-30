@@ -135,7 +135,7 @@ Source of truth for the milestone-builder agent. Each unchecked item is a self-c
 
 ## P7.3 — PDF text extraction
 
-- [ ] Build this milestone
+- [x] Build this milestone
 
 **Context.** Painters print their lists via Warhammer App or NewRecruit and end up with PDFs. Goal: extract the text from the PDF, hand it to the text parser from P7.2. No fancy PDF-shape understanding — text extraction is enough for 95% of list PDFs.
 
