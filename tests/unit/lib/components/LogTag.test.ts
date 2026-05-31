@@ -52,8 +52,8 @@ describe("LOG_TAG_COLOR", () => {
     expect(LOG_TAG_COLOR.err).toContain("--status-danger");
   });
 
-  test("debg maps to status-magenta", () => {
-    expect(LOG_TAG_COLOR.debg).toContain("--status-magenta");
+  test("debg maps to status-purple (P11.10 — pastel purple palette)", () => {
+    expect(LOG_TAG_COLOR.debg).toContain("--status-purple");
   });
 
   test("all five variants have colour classes", () => {

@@ -51,7 +51,15 @@
   --color-amber-dim: #c47a00;
   --color-red: #ff4757;
   --color-red-dim: #b8232f;
-  --color-magenta: #ff66cc;
+  /* Pastel purple — 5th seat in the locked palette
+     (cyan / pastel yellow / pastel red / neon green / pastel purple).
+     Used for "special / accent / featured / unusual" semantic intent.
+     `--color-magenta` retained as a deprecated alias pointing at the
+     same value so existing consumers keep working through P11.x sweep.
+     P11.10 — Phase 11 UX overhaul. */
+  --color-purple-pastel: #b794f6;
+  --color-purple-dim: #8157d4;
+  --color-magenta: var(--color-purple-pastel);
   --color-blue: #4a9eff;
 
   /* Semantic aliases — cyan-primary: action/interactive flips to cyan,
@@ -73,7 +81,10 @@
   --status-danger: var(--color-red);
   --status-info: var(--color-cyan);
   --status-neutral: var(--color-fg-muted);
-  --status-magenta: var(--color-magenta);
+  --status-purple: var(--color-purple-pastel);
+  /* Deprecated alias — P11.10 retires `magenta` semantic; consumers
+     should use `purple`. Kept for incremental migration. */
+  --status-magenta: var(--status-purple);
 
   /* ----- Typography ----- */
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
@@ -468,7 +479,10 @@ input, textarea, select {
 .pill-danger   { color: var(--status-danger); }
 .pill-info     { color: var(--status-info); }
 .pill-neutral  { color: var(--status-neutral); }
-.pill-magenta  { color: var(--status-magenta); }
+.pill-purple   { color: var(--status-purple); }
+/* Deprecated alias — `magenta` kind retired in P11.10; new code should
+   use `purple`. Class retained so existing markup keeps rendering. */
+.pill-magenta  { color: var(--status-purple); }
 
 /* Minimum touch target helpers (mobile defaults, narrowed on desktop) */
 .tap-target {

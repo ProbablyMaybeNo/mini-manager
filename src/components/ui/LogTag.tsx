@@ -17,7 +17,7 @@ export const LOG_TAG_COLOR: Record<LogTagVariant, string> = {
   okay: "text-[var(--status-ok)]",
   warn: "text-[var(--status-warning)]",
   err:  "text-[var(--status-danger)]",
-  debg: "text-[var(--status-magenta)]",
+  debg: "text-[var(--status-purple)]",
 };
 
 export interface LogTagProps {

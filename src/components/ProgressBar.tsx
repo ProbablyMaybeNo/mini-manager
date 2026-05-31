@@ -7,6 +7,9 @@ export type ProgressTone =
   | "warning"
   | "wishlist"
   | "danger"
+  | "purple"
+  /** @deprecated P11.10 — use `purple`. Mapped to the same pastel-purple
+   *  fill for back-compat through the Phase 11 sweep. */
   | "magenta"
   | "neutral";
 
@@ -16,7 +19,8 @@ const TONE_FILL: Record<Exclude<ProgressTone, "auto">, string> = {
   warning:  "bg-[var(--status-warning)]",
   wishlist: "bg-[var(--status-wishlist)]",
   danger:   "bg-[var(--status-danger)]",
-  magenta:  "bg-[var(--status-magenta)]",
+  purple:   "bg-[var(--status-purple)]",
+  magenta:  "bg-[var(--status-purple)]",
   neutral:  "bg-[var(--color-fg-muted)]",
 };
 

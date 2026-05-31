@@ -8,6 +8,9 @@ export type StatusPillKind =
   | "danger"
   | "info"
   | "neutral"
+  | "purple"
+  /** @deprecated P11.10 — use `purple`. Kept for back-compat through the
+   *  Phase 11 sweep, mapped to the same pastel-purple class. */
   | "magenta";
 
 const KIND_CLASS: Record<StatusPillKind, string> = {
@@ -17,7 +20,8 @@ const KIND_CLASS: Record<StatusPillKind, string> = {
   danger: "pill-danger",
   info: "pill-info",
   neutral: "pill-neutral",
-  magenta: "pill-magenta",
+  purple: "pill-purple",
+  magenta: "pill-purple",
 };
 
 export interface StatusPillProps {
