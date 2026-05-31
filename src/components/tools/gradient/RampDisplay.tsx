@@ -31,7 +31,7 @@ export function RampDisplay({ steps }: Props) {
         {steps.map((s, i) => (
           <div
             key={i}
-            className="flex-1"
+            className="flex-1 border border-[var(--color-border)]"
             style={{ background: s.hex }}
             aria-hidden
           />
