@@ -179,11 +179,22 @@ export function SignUpForm() {
         </div>
       ) : null}
 
+      {/* Disable the submit until every field is plausibly valid AND
+          the uniqueness probe has cleared. Previously enabled at page
+          load — a click before typing fired a pointless server call
+          and a 'Wrong username' error trained users to ignore the
+          form. UX-V3-008. */}
       <Button
         type="submit"
         variant="primary"
         size="md"
-        disabled={isPending || check.kind === "taken"}
+        disabled={
+          isPending ||
+          !username.trim() ||
+          password.length < PASSWORD_MIN_LENGTH ||
+          password !== confirm ||
+          check.kind !== "ok"
+        }
         className="w-full"
       >
         {isPending ? "Creating…" : "Create account"}

@@ -19,8 +19,11 @@ test.describe("M9.3 — Credentials sign-up", () => {
     await page.goto("/sign-up");
     await expect(page.getByRole("region", { name: "Create account" })).toBeVisible();
 
-    // Logo present + has the screen-reader fallback wordmark
-    await expect(page.getByAltText("Mini Manager")).toBeVisible();
+    // Page-level h1 names the action (UX-V3-005). Logo is decorative
+    // (alt='', aria-hidden) per UX-V3-007.
+    await expect(
+      page.getByRole("heading", { level: 1, name: /create your mini manager account/i }),
+    ).toBeAttached();
 
     await page.getByLabel(/username/i).fill(username);
     await page.getByLabel(/^password$/i).fill("longenoughpw");

@@ -84,11 +84,14 @@ export function SignInForm({ redirectTarget, initialError }: SignInFormProps) {
         </div>
       ) : null}
 
+      {/* Disable the submit until both fields have content — stops the
+          empty-form round-trip + the auto-submit-on-load case from
+          tools like 1Password. UX-V3-008. */}
       <Button
         type="submit"
         variant="primary"
         size="md"
-        disabled={isPending}
+        disabled={isPending || !username.trim() || password.length === 0}
         className="w-full"
       >
         {isPending ? "Signing in…" : "Sign in"}

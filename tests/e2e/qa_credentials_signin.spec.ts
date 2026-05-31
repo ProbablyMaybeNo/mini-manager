@@ -32,7 +32,11 @@ test.describe("M9.4 — Credentials sign-in", () => {
     // 3. Sign in
     await page.goto("/sign-in");
     await expect(page.getByRole("region", { name: "Sign in" })).toBeVisible();
-    await expect(page.getByAltText("Mini Manager")).toBeVisible();
+    // Page-level h1 names the action (UX-V3-005). Logo is decorative
+    // (alt='', aria-hidden) per UX-V3-007.
+    await expect(
+      page.getByRole("heading", { level: 1, name: /sign in to mini manager/i }),
+    ).toBeAttached();
 
     await page.getByLabel(/username/i).fill(username);
     await page.getByLabel(/^password$/i).fill(password);
