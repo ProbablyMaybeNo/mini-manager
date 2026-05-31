@@ -6,6 +6,7 @@ import {
   createWishlistItem,
   scrapeAndCreateWishlistItem,
 } from "@/lib/actions/wishlist";
+import { Button } from "@/components/ui/Button";
 
 const URL_RE = /^https?:\/\//i;
 
@@ -75,19 +76,15 @@ export function QuickAddBar() {
             "focus:border-[var(--color-accent)]",
           )}
         />
-        <button
+        <Button
           type="submit"
           disabled={isPending || value.trim().length === 0}
           aria-label="Add wishlist item"
-          className={clsx(
-            "inline-flex items-center px-3 py-2 frame-strong tap-target text-sm font-mono",
-            isPending || value.trim().length === 0
-              ? "opacity-60 cursor-not-allowed"
-              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
-          )}
+          variant="primary"
+          size="md"
         >
-          {isPending ? "…" : "+"}
-        </button>
+          {isPending ? "…" : "Add"}
+        </Button>
       </div>
       {notice ? (
         <p className="text-xs font-mono text-[var(--color-amber)]">{notice}</p>

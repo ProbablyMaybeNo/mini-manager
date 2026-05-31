@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { parseQuickAdd } from "@/lib/quickAdd";
 import { createProject } from "@/lib/actions/projects";
+import { Button } from "@/components/ui/Button";
 
 /**
  * Single-line quick-add bar. Parses the input via parseQuickAdd
@@ -84,19 +85,15 @@ export function QuickAddBar() {
             "focus:border-[var(--color-accent)]",
           )}
         />
-        <button
+        <Button
           type="submit"
           disabled={isPending || value.trim().length === 0}
           aria-label="Add project"
-          className={clsx(
-            "inline-flex items-center px-3 py-2 frame-strong tap-target text-sm font-mono",
-            isPending || value.trim().length === 0
-              ? "opacity-60 cursor-not-allowed"
-              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
-          )}
+          variant="primary"
+          size="md"
         >
-          {isPending ? "…" : "+"}
-        </button>
+          {isPending ? "…" : "Add"}
+        </Button>
       </div>
       {error ? (
         <p

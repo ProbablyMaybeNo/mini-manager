@@ -36,8 +36,8 @@ export async function ShoppingForThisPanel({ projectId }: { projectId: string })
       bodyClassName={items.length === 0 ? undefined : "p-0"}
     >
       {items.length === 0 ? (
-        <p className="text-xs font-mono text-[var(--color-fg-muted)]">
-          [ Nothing on the wishlist for this project ]
+        <p className="text-xs font-sans text-[var(--color-fg-muted)]">
+          Nothing on the wishlist for this project yet.
         </p>
       ) : (
         items.map((item) => <WishlistRow key={item.id} item={item} />)

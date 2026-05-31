@@ -10,6 +10,7 @@ import {
   markBoughtAsExistingUnit,
 } from "@/lib/actions/markBought";
 import { inferKitContents } from "@/lib/wishlist/kitInference";
+import { Button } from "@/components/ui/Button";
 
 export interface MarkBoughtProjectOption {
   id: string;
@@ -140,10 +141,10 @@ export function MarkBoughtModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-sm font-mono px-2 py-1 hover:text-[var(--color-amber)] tap-target"
+            className="text-base font-mono px-2 py-1 text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target"
             aria-label="Cancel"
           >
-            [ × ]
+            ×
           </button>
         </header>
 
@@ -257,21 +258,23 @@ export function MarkBoughtModal({
         </div>
 
         <footer className="flex items-center justify-end gap-2 p-4 border-t border-[var(--color-border)]">
-          <button
+          <Button
             type="button"
             onClick={onClose}
-            className="text-xs font-mono px-3 py-2 frame tap-target"
+            variant="ghost"
+            size="sm"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={tab === "existing" ? submitExisting : submitNew}
             disabled={isPending}
-            className="text-xs font-mono px-3 py-2 frame-strong tap-target hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
+            variant="primary"
+            size="sm"
           >
-            {isPending ? "Working…" : "[ ✓ Mark bought ]"}
-          </button>
+            {isPending ? "Working…" : "✓ Mark bought"}
+          </Button>
         </footer>
       </div>
     </div>

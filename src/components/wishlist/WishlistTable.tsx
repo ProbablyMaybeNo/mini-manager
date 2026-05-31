@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
@@ -9,6 +9,7 @@ import { TagToProjectMenu } from "./TagToProjectMenu";
 import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { AccentCounter } from "@/components/ui/AccentCounter";
+import { setWishlistStatus } from "@/lib/actions/wishlist";
 
 export interface WishlistTableProjectOption {
   id: string;
@@ -140,29 +141,14 @@ export function WishlistTable({
             className={clsx("inline-block h-2.5 w-2.5 rounded-full", PRIORITY_DOT[item.priority])}
             title={`Priority ${item.priority}`}
           />
-          <span>
-            {item.status === "Wanted" ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setBoughtFor(item);
-                }}
-                title="Mark bought"
-                className="inline-flex items-center"
-              >
-                <StatusPill status={STATUS_PILL[item.status]}>
-                  {item.status} →
-                </StatusPill>
-              </button>
-            ) : (
-              <StatusPill
-                status={STATUS_PILL[item.status]}
-                className={item.status === "Cancelled" ? "line-through" : undefined}
-              >
-                {item.status}
-              </StatusPill>
-            )}
+          <span
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <StatusChangePopover
+              item={item}
+              onMarkBought={() => setBoughtFor(item)}
+            />
           </span>
         </div>
       ))}
@@ -207,6 +193,139 @@ function Thumbnail({ item }: { item: WishlistItem }) {
     >
       {initial}
     </span>
+  );
+}
+
+/**
+ * Inline status pill that doubles as a popover trigger. NB-8 — was a
+ * single forward arrow that only worked for Wanted → Bought (via the
+ * MarkBoughtModal). Now any row can transition between statuses without
+ * opening the side drawer: click the pill → small menu lists the valid
+ * destinations for the current state.
+ *
+ * - From Wanted: → Mark bought (full modal flow), → Cancel
+ * - From Cancelled: → Restore (back to Wanted)
+ * - From Bought: pill is a static badge (terminal state from the table;
+ *   un-bought is a destructive op that lives in the detail drawer's
+ *   Save → status select to discourage accidental fires).
+ */
+function StatusChangePopover({
+  item,
+  onMarkBought,
+}: {
+  item: WishlistItem;
+  onMarkBought: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const wrapperRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const setStatus = (next: WishlistItem["status"]) => {
+    setOpen(false);
+    startTransition(async () => {
+      await setWishlistStatus({ id: item.id, status: next });
+    });
+  };
+
+  // Bought is terminal from the table — no menu, just the static pill.
+  if (item.status === "Bought") {
+    return <StatusPill status={STATUS_PILL[item.status]}>{item.status}</StatusPill>;
+  }
+
+  return (
+    <span ref={wrapperRef} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        disabled={isPending}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Change status"
+        className="inline-flex items-center"
+      >
+        <StatusPill
+          status={STATUS_PILL[item.status]}
+          className={item.status === "Cancelled" ? "line-through" : undefined}
+        >
+          {item.status} ▾
+        </StatusPill>
+      </button>
+      {open ? (
+        <div
+          role="menu"
+          aria-label="Change status"
+          className="absolute right-0 top-full mt-1 z-30 min-w-[140px] frame-strong bg-[var(--color-bg-panel)] shadow-xl py-1"
+        >
+          {item.status === "Wanted" ? (
+            <>
+              <MenuItem
+                onSelect={() => {
+                  setOpen(false);
+                  onMarkBought();
+                }}
+                tone="ok"
+              >
+                ✓ Mark bought
+              </MenuItem>
+              <MenuItem onSelect={() => setStatus("Cancelled")} tone="muted">
+                × Cancel
+              </MenuItem>
+            </>
+          ) : null}
+          {item.status === "Cancelled" ? (
+            <MenuItem onSelect={() => setStatus("Wanted")} tone="wishlist">
+              ↻ Restore to wanted
+            </MenuItem>
+          ) : null}
+        </div>
+      ) : null}
+    </span>
+  );
+}
+
+function MenuItem({
+  onSelect,
+  tone,
+  children,
+}: {
+  onSelect: () => void;
+  tone: "ok" | "muted" | "wishlist";
+  children: React.ReactNode;
+}) {
+  const toneClass =
+    tone === "ok"
+      ? "text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+      : tone === "wishlist"
+        ? "text-[var(--color-yellow)] hover:bg-[color-mix(in_srgb,var(--color-yellow)_10%,transparent)]"
+        : "text-[var(--color-fg-muted)] hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)] hover:text-[var(--color-fg)]";
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onSelect}
+      className={clsx(
+        "w-full text-left px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors",
+        toneClass,
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
