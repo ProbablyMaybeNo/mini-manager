@@ -21,9 +21,12 @@ export default function PublicRecipeLayout({ children }: { children: ReactNode }
             <span aria-hidden className="text-[var(--color-cyan)]">▍</span>{" "}
             Mini Manager
           </Link>
+          {/* tap-target enforces 44px on mobile / 32px on desktop per
+              WCAG 2.2 §2.5.8. Previously rendered at ~31px tall —
+              below the desktop minimum and well below mobile. UX-V3-006. */}
           <Link
             href="/sign-in"
-            className="font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+            className="font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] tap-target inline-flex items-center justify-center"
           >
             Sign in
           </Link>
