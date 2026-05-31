@@ -1,10 +1,12 @@
 import Link from "next/link";
-import type { Recipe } from "@/db/schema";
+import { clsx } from "clsx";
+import type { BodyType, Recipe } from "@/db/schema";
 import {
   getRecipeWithZones,
   paletteForRecipe,
 } from "@/db/queries/recipes";
 import { currentUserId } from "@/lib/auth-stub";
+import { StatusPill } from "@/components/ui/StatusPill";
 
 interface AttachmentLabel {
   kind: "project" | "named-model" | "standalone";
@@ -15,6 +17,20 @@ interface Props {
   recipe: Recipe;
   attachment: AttachmentLabel;
 }
+
+/**
+ * Per-body-type chip palette (P11.7). Mirrors the project-row type
+ * chip mapping so the same colour means the same concept across both
+ * surfaces. Infantry on cyan ("primary scope"), vehicle on amber
+ * ("heavy / mechanical"), monster on pastel-purple ("unusual /
+ * special"), terrain on green ("environment / complete").
+ */
+const BODY_TYPE_CHIP: Readonly<Record<BodyType, string>> = {
+  infantry: "type-chip-cyan",
+  vehicle:  "type-chip-amber",
+  monster:  "type-chip-purple",
+  terrain:  "type-chip-green",
+};
 
 const MAX_SWATCHES = 8;
 
@@ -52,10 +68,7 @@ export async function RecipeCard({ recipe, attachment }: Props) {
     ? full.zones.reduce((acc, z) => acc + z.steps.length, 0)
     : 0;
 
-  const attachmentTone =
-    attachment.kind === "standalone"
-      ? "text-[var(--color-fg-muted)]"
-      : "text-[var(--color-cyan)]";
+  const bodyChipClass = BODY_TYPE_CHIP[recipe.bodyType as BodyType];
 
   return (
     <Link
@@ -72,15 +85,19 @@ export async function RecipeCard({ recipe, attachment }: Props) {
         >
           {recipe.name}
         </h3>
-        <div className="flex items-center gap-3 text-2xs font-mono uppercase tracking-wider">
-          <span className="frame px-2 py-0.5 text-[var(--color-fg-muted)]">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={clsx("type-chip", bodyChipClass)}>
             {recipe.bodyType}
           </span>
-          <span className={attachmentTone}>
-            {attachment.kind === "standalone"
-              ? "[ standalone ]"
-              : `[ ${attachment.label} ]`}
-          </span>
+          {attachment.kind === "standalone" ? (
+            <StatusPill status="neutral">Standalone</StatusPill>
+          ) : (
+            <StatusPill
+              status={attachment.kind === "project" ? "info" : "purple"}
+            >
+              {attachment.label}
+            </StatusPill>
+          )}
         </div>
       </div>
 

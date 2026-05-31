@@ -51,9 +51,9 @@ export default async function RecipesPage() {
       <div className="p-6 md:p-8 max-w-6xl space-y-6">
         <header className="space-y-2">
           <h1 className="text-3xl tracking-wide">RECIPES</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] max-w-xl font-sans">
-            Paint schemes the way you mix them — ordered zones × technique
-            stacks × pinned paints.
+          <p className="text-sm text-[var(--color-fg-muted)] max-w-xl font-sans leading-snug">
+            Paint schemes the way you mix them — each recipe is a stack of
+            colour slots, each slot a paint plus the technique you use on it.
           </p>
         </header>
         <EmptyState />
@@ -66,10 +66,10 @@ export default async function RecipesPage() {
       <header className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl tracking-wide">RECIPES</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans">
-            Paint schemes the way you mix them — ordered zones × technique
-            stacks × pinned paints. Attach to a project, attach to a named
-            model, or stand alone.
+          <p className="text-sm text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans leading-snug">
+            Paint schemes the way you mix them — each recipe is a stack of
+            colour slots. Attach a recipe to a project, override it per
+            named model, or save it standalone.
           </p>
         </div>
         <NewRecipeButton />
@@ -165,9 +165,9 @@ function EmptyState() {
     <div className="relative frame p-8 text-center space-y-4 overflow-hidden">
       <AccentCounter value="03" />
       <h2 className="text-lg glow-cyan">No recipes yet</h2>
-      <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto">
-        Build your first scheme: pick an infantry zone, stack techniques,
-        pin paints from the library. Attach it to an army when you&apos;re
+      <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto leading-snug">
+        Build your first scheme: add a colour slot, pin a paint from the
+        library, pick a technique. Attach it to an army when you&apos;re
         ready, or keep it as a saved palette.
       </p>
       <NewRecipeButton label="Create your first recipe" />
