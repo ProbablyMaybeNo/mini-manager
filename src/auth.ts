@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
-import type { EmailConfig } from "next-auth/providers/email";
+import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   users,
@@ -9,6 +10,8 @@ import {
   sessions,
   verificationTokens,
 } from "@/db/schema";
+import { verifyPassword } from "@/lib/auth/password";
+import { validateUsername } from "@/lib/auth/validation";
 
 // The adapter is generic over SQL flavour but TS can't narrow the
 // LibSQLDatabase type through the union, so we explicitly bind the
@@ -19,19 +22,23 @@ type SqliteDb = BaseSQLiteDatabase<"sync" | "async", unknown, Record<string, nev
 /**
  * Auth config for Mini Manager.
  *
- * Phase 1.3: magic-link email only. OAuth (Google / GitHub) is plumbed
- * via Auth.js env-var inference (`AUTH_GOOGLE_ID` etc.) but no provider
- * is registered yet — we add the imports once Ross supplies credentials.
+ * Phase 9 — Credentials (username + password) is the sole sign-in path.
+ * The Resend transport survives as a one-shot mailer for recovery-email
+ * verification and password reset (see `src/lib/auth/sendVerificationEmail.ts`
+ * landing in P9.5 / P9.6) but is no longer wired into NextAuth.
  *
- * Magic-link transport:
- *   - If `AUTH_RESEND_KEY` is set, Resend sends the email.
- *   - Otherwise the verification URL is printed to the dev console via
- *     a custom `sendVerificationRequest`. That's the v1 dev experience;
- *     copy-paste the URL into the browser to sign in.
+ * Session strategy stays `database` — the adapter session tables back
+ * `auth()` lookups. The sign-up + sign-in server actions create session
+ * rows directly via `createSession()` in `src/lib/auth/session.ts`
+ * (mirroring the long-standing test-auth route in
+ * `src/app/api/test/sign-in/route.ts`); this side-steps Auth.js v5's
+ * Credentials-prefers-JWT default and keeps every session lookup going
+ * through one DB-backed code path.
  *
- * The Drizzle adapter is wired explicitly to our schema's NextAuth
- * tables (defined in `src/db/schema.ts` from P1.2) so it doesn't try
- * to auto-define its own.
+ * The Credentials provider is still registered so that the bundled
+ * `/api/auth/...` routes + `signIn("credentials", ...)` helpers from
+ * future server code have a working `authorize` to delegate to. Today's
+ * first-party UI does not call `signIn` directly.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // The adapter's generic schema typing is stricter than ours (it
@@ -52,64 +59,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "database" },
   pages: {
     signIn: "/sign-in",
-    verifyRequest: "/sign-in?sent=1",
   },
-  providers: [magicLinkProvider()],
+  providers: [
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(creds) {
+        const username =
+          typeof creds?.username === "string" ? creds.username : "";
+        const password =
+          typeof creds?.password === "string" ? creds.password : "";
+        const u = validateUsername(username);
+        if (!u.ok || !password) return null;
+
+        const row = await db
+          .select({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            passwordHash: users.passwordHash,
+          })
+          .from(users)
+          .where(eq(users.username, u.normalized))
+          .limit(1);
+
+        const user = row[0];
+        if (!user?.passwordHash) return null;
+        if (!(await verifyPassword(password, user.passwordHash))) return null;
+
+        return {
+          id: user.id,
+          name: user.username ?? null,
+          email: user.email ?? null,
+        };
+      },
+    }),
+  ],
 });
-
-/**
- * Inline email provider — bypasses the Resend factory's apiKey checks.
- *
- * When `AUTH_RESEND_KEY` is set we POST directly to the Resend REST API
- * (no extra npm dep). When it isn't we bracket-frame the verification
- * URL to the dev server console — copy + paste it into the browser to
- * finish signing in.
- */
-function magicLinkProvider(): EmailConfig {
-  return {
-    id: "resend",
-    type: "email",
-    name: "Magic Link",
-    server: "",
-    maxAge: 24 * 60 * 60,
-    from: process.env.AUTH_EMAIL_FROM ?? "Mini Manager <no-reply@localhost>",
-    options: {},
-    async sendVerificationRequest({ identifier, url }) {
-      if (process.env.AUTH_RESEND_KEY) {
-        const host = new URL(url).host;
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.AUTH_RESEND_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from:
-              process.env.AUTH_EMAIL_FROM ??
-              "Mini Manager <no-reply@authjs.dev>",
-            to: identifier,
-            subject: `Sign in to ${host}`,
-            text: `Sign in to ${host}\n\n${url}\n\nIf you didn't request this, ignore this email.`,
-            html: `<p>Sign in to <strong>${host}</strong></p><p><a href="${url}">${url}</a></p><p style="color:#888">If you didn't request this, ignore this email.</p>`,
-          }),
-        });
-        if (!res.ok) {
-          const body = await res.text();
-          throw new Error(`Resend error (${res.status}): ${body}`);
-        }
-        return;
-      }
-
-      console.log(
-        [
-          "",
-          "┌─ MINI MANAGER · MAGIC LINK ─────────────────────────",
-          `│ to:  ${identifier}`,
-          `│ url: ${url}`,
-          "└─────────────────────────────────────────────────────",
-          "",
-        ].join("\n"),
-      );
-    },
-  };
-}

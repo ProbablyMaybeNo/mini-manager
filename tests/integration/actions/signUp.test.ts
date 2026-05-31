@@ -1,0 +1,219 @@
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
+import { makeTestDb, type TestDb } from "../_helpers/testDb";
+import { users } from "@/db/schema";
+
+const state = vi.hoisted(() => ({
+  db: null as TestDb | null,
+}));
+
+vi.mock("@/db/client", () => ({
+  get db() {
+    if (!state.db) throw new Error("Test DB not initialised in beforeEach");
+    return state.db;
+  },
+}));
+
+// Stub next/headers cookies() — createSession() writes a cookie, which
+// throws outside a request scope in real Next runtime. We capture the
+// set calls so a couple of assertions can verify the cookie name without
+// needing a full request.
+const cookieStore = vi.hoisted(() => {
+  const store = new Map<string, { value: string; options?: unknown }>();
+  return {
+    store,
+    get: (name: string) => {
+      const entry = store.get(name);
+      return entry ? { value: entry.value } : undefined;
+    },
+    set: (name: string, value: string, options?: unknown) => {
+      store.set(name, { value, options });
+    },
+    delete: (name: string) => {
+      store.delete(name);
+    },
+  };
+});
+vi.mock("next/headers", () => ({
+  cookies: async () => cookieStore,
+}));
+
+const { signUpWithCredentials, signInWithCredentials } = await import(
+  "@/lib/auth/signUp"
+);
+const { SESSION_COOKIE } = await import("@/lib/auth/session");
+
+beforeEach(async () => {
+  const { db } = await makeTestDb();
+  state.db = db;
+  cookieStore.store.clear();
+});
+
+afterEach(() => {
+  state.db = null;
+});
+
+describe("signUpWithCredentials", () => {
+  test("creates a user row + writes the session cookie", async () => {
+    const res = await signUpWithCredentials({
+      username: "alice42",
+      password: "hunter222",
+    });
+
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const rows = await state
+      .db!.select()
+      .from(users)
+      .where(eq(users.id, res.userId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.username).toBe("alice42");
+    expect(rows[0]!.passwordHash).toMatch(/^\$2[aby]\$/);
+    expect(rows[0]!.plan).toBe("free");
+    expect(rows[0]!.email).toBeNull();
+
+    // Cookie has been set under the NextAuth name.
+    expect(cookieStore.get(SESSION_COOKIE)?.value).toBeTruthy();
+  });
+
+  test("normalises username to lowercase before insert", async () => {
+    const res = await signUpWithCredentials({
+      username: "  ALICE42  ",
+      password: "hunter222",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.username).toBe("alice42");
+
+    const rows = await state
+      .db!.select()
+      .from(users)
+      .where(eq(users.id, res.userId));
+    expect(rows[0]!.username).toBe("alice42");
+  });
+
+  test("rejects a duplicate username (case-insensitive)", async () => {
+    await signUpWithCredentials({
+      username: "alice42",
+      password: "hunter222",
+    });
+    cookieStore.store.clear();
+
+    const dup = await signUpWithCredentials({
+      username: "Alice42",
+      password: "different-pw",
+    });
+    expect(dup.ok).toBe(false);
+    if (dup.ok) return;
+    expect(dup.field).toBe("username");
+    expect(dup.message).toMatch(/already taken/i);
+  });
+
+  test("rejects a weak password", async () => {
+    const res = await signUpWithCredentials({
+      username: "bob",
+      password: "short",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.field).toBe("password");
+  });
+
+  test("rejects a reserved username", async () => {
+    const res = await signUpWithCredentials({
+      username: "admin",
+      password: "longenoughpw",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.field).toBe("username");
+    expect(res.message).toMatch(/reserved/i);
+  });
+
+  test("rejects invalid characters in username", async () => {
+    const res = await signUpWithCredentials({
+      username: "alice.42",
+      password: "longenoughpw",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.field).toBe("username");
+  });
+});
+
+describe("signInWithCredentials", () => {
+  test("verifies correct password + mints a session", async () => {
+    await signUpWithCredentials({
+      username: "alice42",
+      password: "hunter222",
+    });
+    cookieStore.store.clear();
+
+    const res = await signInWithCredentials({
+      username: "alice42",
+      password: "hunter222",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.username).toBe("alice42");
+    expect(cookieStore.get(SESSION_COOKIE)?.value).toBeTruthy();
+  });
+
+  test("accepts username casing variations", async () => {
+    await signUpWithCredentials({
+      username: "alice42",
+      password: "hunter222",
+    });
+
+    const res = await signInWithCredentials({
+      username: "  ALICE42  ",
+      password: "hunter222",
+    });
+    expect(res.ok).toBe(true);
+  });
+
+  test("rejects wrong password with a generic message", async () => {
+    await signUpWithCredentials({
+      username: "alice42",
+      password: "hunter222",
+    });
+
+    const res = await signInWithCredentials({
+      username: "alice42",
+      password: "wrong-password",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.message).toMatch(/wrong username or password/i);
+  });
+
+  test("rejects unknown username with the same generic message", async () => {
+    const res = await signInWithCredentials({
+      username: "nosuchuser",
+      password: "anythinglong",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.message).toMatch(/wrong username or password/i);
+  });
+
+  test("rejects sign-in for accounts with no passwordHash (legacy magic-link)", async () => {
+    // Seed a legacy magic-link user (email + no passwordHash) — these
+    // accounts must NOT be sign-inable via credentials until they
+    // complete the P9.7 migration shim.
+    const userId = nanoid(16);
+    await state.db!.insert(users).values({
+      id: userId,
+      username: "legacy",
+      email: "legacy@example.com",
+    });
+
+    const res = await signInWithCredentials({
+      username: "legacy",
+      password: "anythinglong",
+    });
+    expect(res.ok).toBe(false);
+  });
+});
