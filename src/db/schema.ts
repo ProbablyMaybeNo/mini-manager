@@ -39,10 +39,19 @@ const timestamps = {
 export const users = sqliteTable("user", {
   id: text("id").primaryKey().$defaultFn(() => nanoid(16)),
   name: text("name"),
-  email: text("email").notNull().unique(),
+  // Email is nullable as of P9.1 — free tier sign-up is username + password
+  // only. The NextAuth adapter writes here when an OAuth provider returns
+  // an address; the recoveryEmail column is the user-facing reset address.
+  email: text("email").unique(),
   emailVerified: integer("emailVerified", { mode: "timestamp_ms" }),
   image: text("image"),
   username: text("username").unique(),
+  passwordHash: text("password_hash"),
+  plan: text("plan").notNull().default("free"),
+  recoveryEmail: text("recovery_email"),
+  recoveryEmailVerified: integer("recovery_email_verified", {
+    mode: "timestamp_ms",
+  }),
 });
 
 export const accounts = sqliteTable(

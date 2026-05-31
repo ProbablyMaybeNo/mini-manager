@@ -43,6 +43,13 @@
       "when": 1780128244009,
       "tag": "0005_clever_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1780192074310,
+      "tag": "0006_make_email_nullable_add_password",
+      "breakpoints": true
     }
   ]
 }
