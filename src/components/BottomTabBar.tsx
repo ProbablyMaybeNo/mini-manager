@@ -4,19 +4,27 @@ import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import {
+  Folder,
+  Palette,
+  FlaskConical,
+  Wrench,
+  Heart,
+  type LucideIcon,
+} from "lucide-react";
 
 type TabItem = {
   href: Route;
-  key: string;
+  Icon: LucideIcon;
   label: string;
 };
 
 const TABS: readonly TabItem[] = [
-  { href: "/projects", key: "P", label: "Projects" },
-  { href: "/library",  key: "L", label: "Library" },
-  { href: "/recipes",  key: "R", label: "Recipes" },
-  { href: "/tools",    key: "T", label: "Tools" },
-  { href: "/wishlist", key: "W", label: "Wishlist" },
+  { href: "/projects", Icon: Folder,       label: "Projects" },
+  { href: "/library",  Icon: Palette,      label: "Library"  },
+  { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
+  { href: "/tools",    Icon: Wrench,       label: "Tools"    },
+  { href: "/wishlist", Icon: Heart,        label: "Wishlist" },
 ] as const;
 
 function isActive(pathname: string | null, href: string): boolean {
@@ -42,6 +50,7 @@ export function BottomTabBar() {
     >
       {TABS.map((item) => {
         const active = isActive(pathname, item.href);
+        const { Icon } = item;
         return (
           <Link
             key={item.href}
@@ -49,27 +58,26 @@ export function BottomTabBar() {
             aria-current={active ? "page" : undefined}
             aria-label={item.label}
             className={clsx(
-              "flex flex-col items-center justify-center gap-0.5",
+              "flex flex-col items-center justify-center gap-1",
               "flex-1 min-h-[56px] px-1 py-2",
-              "border-t-2 transition-colors",
+              "border-t-2 transition-colors duration-150",
               active
                 ? "border-t-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
                 : "border-t-transparent"
             )}
           >
-            <span
+            <Icon
+              size={22}
+              strokeWidth={1.75}
               className={clsx(
-                "font-mono text-xs",
-                active ? "glow-cyan" : "text-[var(--color-fg-muted)]"
+                active ? "text-[var(--color-accent)]" : "text-[var(--color-fg-muted)]"
               )}
               aria-hidden
-            >
-              [{item.key}]
-            </span>
+            />
             <span
               className={clsx(
-                "font-mono text-2xs",
-                active ? "glow-cyan" : "text-[var(--color-fg-muted)]"
+                "font-mono text-2xs tracking-wide",
+                active ? "text-[var(--color-accent)]" : "text-[var(--color-fg-muted)]"
               )}
             >
               {item.label}

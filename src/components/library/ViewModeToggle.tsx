@@ -1,6 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
+import { List, LayoutGrid } from "lucide-react";
 import type { LibraryViewMode } from "@/lib/hooks/useLibraryViewMode";
 
 export function ViewModeToggle({
@@ -21,7 +22,7 @@ export function ViewModeToggle({
         onClick={() => onChange("list")}
         ariaLabel="List view"
       >
-        <span aria-hidden className="text-base leading-none">≡</span>
+        <List size={14} strokeWidth={1.75} aria-hidden />
         <span>LIST</span>
       </ToggleButton>
       <span aria-hidden className="w-px bg-[var(--color-border-strong)]" />
@@ -30,7 +31,7 @@ export function ViewModeToggle({
         onClick={() => onChange("grid")}
         ariaLabel="Grid view"
       >
-        <span aria-hidden className="text-base leading-none">▦</span>
+        <LayoutGrid size={14} strokeWidth={1.75} aria-hidden />
         <span>GRID</span>
       </ToggleButton>
     </div>

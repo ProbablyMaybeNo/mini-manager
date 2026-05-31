@@ -105,7 +105,9 @@ table, th, td, code, kbd, pre, samp {
   font-family: var(--font-mono);
 }
 
-/* Headings — mono, restrained glow on the largest ones only */
+/* Headings — mono, distinct hierarchy. h1 carries the cyan accent +
+   restrained glow (lifted from the page background, not flashy). h2
+   is a confident white section header. h3 a quieter sibling. */
 h1, h2, h3 {
   font-family: var(--font-mono);
   font-weight: 500;
@@ -115,19 +117,38 @@ h1, h2, h3 {
 h1 {
   font-size: var(--text-3xl);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
   color: var(--color-cyan);
-  text-shadow: 0 0 8px color-mix(in srgb, var(--color-cyan) 30%, transparent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--color-cyan) 22%, transparent);
 }
 
 h2 {
   font-size: var(--text-xl);
-  letter-spacing: 0.06em;
-  color: var(--color-fg-muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--color-fg);
+}
+
+h3 {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: var(--color-fg);
 }
 
 @media (prefers-reduced-motion: reduce) {
   h1 { text-shadow: none; }
+}
+
+/* Tabular numerals on every mono surface — paint counts, stage
+   counters, hex codes, and stat rows stay visually anchored as
+   numbers change. Tiny detail, huge "this is a real app" lift. */
+.font-mono, [class*="font-mono"], pre, code, kbd, samp,
+table, th, td {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Focus ring var (used by primitives) */

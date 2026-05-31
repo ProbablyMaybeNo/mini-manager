@@ -4,23 +4,32 @@ import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import {
+  Folder,
+  Palette,
+  FlaskConical,
+  Wrench,
+  Heart,
+  User as UserIcon,
+  type LucideIcon,
+} from "lucide-react";
 
 type NavItem = {
   href: Route;
-  key: string;
+  Icon: LucideIcon;
   label: string;
 };
 
 const PRIMARY: readonly NavItem[] = [
-  { href: "/projects", key: "P", label: "Projects" },
-  { href: "/library",  key: "L", label: "Library" },
-  { href: "/recipes",  key: "R", label: "Recipes" },
-  { href: "/tools",    key: "T", label: "Tools" },
-  { href: "/wishlist", key: "W", label: "Wishlist" },
+  { href: "/projects", Icon: Folder,       label: "Projects" },
+  { href: "/library",  Icon: Palette,      label: "Library"  },
+  { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
+  { href: "/tools",    Icon: Wrench,       label: "Tools"    },
+  { href: "/wishlist", Icon: Heart,        label: "Wishlist" },
 ] as const;
 
 const SECONDARY: readonly NavItem[] = [
-  { href: "/user", key: "U", label: "User" },
+  { href: "/user", Icon: UserIcon, label: "User" },
 ] as const;
 
 function isActive(pathname: string | null, href: string): boolean {
@@ -32,12 +41,13 @@ function isActive(pathname: string | null, href: string): boolean {
 }
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
+  const { Icon } = item;
   return (
     <Link
       href={item.href}
       className={clsx(
         "group flex items-center gap-3 px-3 py-2 rounded-sm text-sm tap-target",
-        "border-l-2 border-transparent transition-colors",
+        "border-l-2 border-transparent transition-colors duration-150",
         active
           ? "border-l-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
           : "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
@@ -46,17 +56,17 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     >
       <span
         className={clsx(
-          "inline-flex w-6 justify-center font-mono text-xs",
-          active ? "glow-cyan" : "text-[var(--color-fg-muted)]"
+          "inline-flex w-6 justify-center",
+          active ? "text-[var(--color-accent)]" : "text-[var(--color-fg-muted)] group-hover:text-[var(--color-fg)]"
         )}
         aria-hidden
       >
-        [{item.key}]
+        <Icon size={20} strokeWidth={1.75} />
       </span>
       <span
         className={clsx(
           "font-mono",
-          active ? "glow-cyan" : "text-[var(--color-fg)]"
+          active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]"
         )}
       >
         {item.label}
