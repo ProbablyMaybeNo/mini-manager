@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
 import { sessions, users } from "@/db/schema";
+import { hashPassword } from "@/lib/auth/password";
 
 /**
  * Test-only sign-in shortcut. Bypasses the magic-link flow so Playwright
@@ -12,6 +13,13 @@ import { sessions, users } from "@/db/schema";
  *
  * Body: { email: string }
  * Response: { ok: true, userId } + Set-Cookie: authjs.session-token=...
+ *
+ * **P9.7** — accounts created via this route are now "complete" (username +
+ * passwordHash set) so the migration shim in `currentUserId()` does not
+ * bounce them to `/finish-account`. The synthesised credentials are
+ * never used; the test path mints a session directly. The username is
+ * derived from the email local-part with a random suffix to keep it
+ * unique across parallel test runs.
  *
  * Used by tests/e2e/_helpers/auth.ts. See app/docs/TESTING.md §3.
  */
@@ -40,9 +48,29 @@ export async function POST(req: Request) {
   let userId: string;
   if (existing[0]) {
     userId = existing[0].id;
+    // Ensure existing legacy rows are also "complete" so the migration
+    // shim doesn't bounce parallel test runs to /finish-account.
+    if (!existing[0].passwordHash || !existing[0].username) {
+      const placeholder = await hashPassword(nanoid(32));
+      const usernameFromEmail = synthUsername(email);
+      await db
+        .update(users)
+        .set({
+          passwordHash: existing[0].passwordHash ?? placeholder,
+          username: existing[0].username ?? usernameFromEmail,
+        })
+        .where(eq(users.id, userId));
+    }
   } else {
     userId = nanoid(16);
-    await db.insert(users).values({ id: userId, email, name: email });
+    const placeholder = await hashPassword(nanoid(32));
+    await db.insert(users).values({
+      id: userId,
+      email,
+      name: email,
+      username: synthUsername(email),
+      passwordHash: placeholder,
+    });
   }
 
   const sessionToken = nanoid(32);
@@ -57,4 +85,18 @@ export async function POST(req: Request) {
     expires,
   });
   return res;
+}
+
+/**
+ * Derive a username from an email's local-part. We strip everything
+ * outside `[a-z0-9_-]`, force a `t` prefix when the local-part starts
+ * with a non-alphanumeric character, and append 6 random alnum chars
+ * to keep it unique across parallel runs.
+ */
+function synthUsername(email: string): string {
+  const local = email.split("@")[0] ?? "user";
+  const sanitised = local.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  const head = /^[a-z0-9]/.test(sanitised) ? sanitised : `t${sanitised}`;
+  const suffix = nanoid(6).toLowerCase().replace(/[^a-z0-9]/g, "x");
+  return `${head.slice(0, 13)}${suffix}`;
 }

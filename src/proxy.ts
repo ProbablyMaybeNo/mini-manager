@@ -25,18 +25,26 @@ export default auth((req) => {
 
 /**
  * Skip the proxy for:
- *   - `/sign-in`              the sign-in screen itself
- *   - `/api/auth/*`           NextAuth's route handlers
+ *   - `/sign-in`              the sign-in screen itself (includes
+ *                              `/sign-in/forgot` and `/sign-in/reset`
+ *                              under it — matcher excludes the whole
+ *                              prefix)
+ *   - `/sign-up`              the credentials sign-up page (P9.3)
+ *   - `/api/auth/*`           NextAuth's route handlers + the auth-
+ *                              ancillary `check-username`,
+ *                              `has-recovery-email` probes (P9.3 / P9.4)
  *   - `/api/test/*`           the test reset endpoint
  *   - `/r/*`                  public recipe view (P5.2 — anyone with the
  *                              slug URL can read; auth is NOT required)
  *   - `/_next/*`              Next.js internals (static, image, RSC payloads)
  *   - `favicon.ico` + assets  obvious public files
+ *   - `/brand/*`              brand artwork served from /public/brand/
+ *                              (the logo on the auth pages)
  *
  * Everything else hits `auth(...)` and gets redirected if unauthenticated.
  */
 export const config = {
   matcher: [
-    "/((?!sign-in|api/auth|api/test|r/|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)).*)",
+    "/((?!sign-in|sign-up|api/auth|api/test|r/|brand/|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)).*)",
   ],
 };
