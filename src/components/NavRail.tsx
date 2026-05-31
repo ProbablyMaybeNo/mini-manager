@@ -11,8 +11,11 @@ import {
   Wrench,
   Heart,
   User as UserIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
   type LucideIcon,
 } from "lucide-react";
+import { useNavRailCollapsed } from "@/lib/hooks/useNavRailCollapsed";
 
 type NavItem = {
   href: Route;
@@ -40,37 +43,52 @@ function isActive(pathname: string | null, href: string): boolean {
   return pathname.startsWith(href);
 }
 
-function NavLink({ item, active }: { item: NavItem; active: boolean }) {
+function NavLink({
+  item,
+  active,
+  collapsed,
+}: {
+  item: NavItem;
+  active: boolean;
+  collapsed: boolean;
+}) {
   const { Icon } = item;
   return (
     <Link
       href={item.href}
+      title={collapsed ? item.label : undefined}
       className={clsx(
-        "group flex items-center gap-3 px-3 py-2 rounded-sm text-sm tap-target",
+        "group flex items-center gap-3 rounded-sm text-sm tap-target",
         "border-l-2 border-transparent transition-colors duration-150",
+        collapsed ? "px-2 py-2 justify-center" : "px-3 py-2",
         active
           ? "border-l-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
           : "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
       )}
       aria-current={active ? "page" : undefined}
+      aria-label={collapsed ? item.label : undefined}
     >
       <span
         className={clsx(
           "inline-flex w-6 justify-center",
-          active ? "text-[var(--color-accent)]" : "text-[var(--color-fg-muted)] group-hover:text-[var(--color-fg)]"
+          active
+            ? "text-[var(--color-accent)]"
+            : "text-[var(--color-fg-muted)] group-hover:text-[var(--color-fg)]"
         )}
         aria-hidden
       >
         <Icon size={20} strokeWidth={1.75} />
       </span>
-      <span
-        className={clsx(
-          "font-mono",
-          active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]"
-        )}
-      >
-        {item.label}
-      </span>
+      {collapsed ? null : (
+        <span
+          className={clsx(
+            "font-mono",
+            active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]"
+          )}
+        >
+          {item.label}
+        </span>
+      )}
     </Link>
   );
 }
@@ -106,16 +124,45 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
   const pathname = usePathname();
   const initial = userInitial(user);
   const label = userLabel(user);
+  const [collapsed, setCollapsed] = useNavRailCollapsed();
 
   return (
     <aside
-      className="hidden md:flex md:flex-col w-[200px] shrink-0 border-r border-[var(--color-border)] py-4 px-2 gap-1"
+      className={clsx(
+        "hidden md:flex md:flex-col shrink-0 border-r border-[var(--color-border)] py-4 px-2 gap-1",
+        "transition-[width] duration-200 ease-out",
+        collapsed ? "w-[64px]" : "w-[200px]",
+      )}
       aria-label="Primary"
     >
-      <div className="px-3 pb-4">
-        <Link href="/projects" className="font-mono text-sm glow-cyan tracking-wide">
-          MINI MANAGER
-        </Link>
+      <div
+        className={clsx(
+          "flex items-center pb-4",
+          collapsed ? "justify-center" : "justify-between px-3",
+        )}
+      >
+        {collapsed ? null : (
+          <Link
+            href="/projects"
+            className="font-mono text-sm glow-cyan tracking-wide"
+          >
+            MINI MANAGER
+          </Link>
+        )}
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-pressed={collapsed}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="inline-flex items-center justify-center h-8 w-8 rounded-sm text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] transition-colors"
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={16} strokeWidth={1.75} />
+          ) : (
+            <PanelLeftClose size={16} strokeWidth={1.75} />
+          )}
+        </button>
       </div>
 
       <nav className="flex flex-col gap-0.5">
@@ -124,6 +171,7 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
             key={item.href}
             item={item}
             active={isActive(pathname, item.href)}
+            collapsed={collapsed}
           />
         ))}
       </nav>
@@ -136,20 +184,30 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
             key={item.href}
             item={item}
             active={isActive(pathname, item.href)}
+            collapsed={collapsed}
           />
         ))}
       </nav>
 
-      <div className="mt-auto pt-3 px-2 border-t border-[var(--color-border)] flex flex-col gap-2">
-        {appVersion ? (
+      <div
+        className={clsx(
+          "mt-auto pt-3 border-t border-[var(--color-border)] flex flex-col gap-2",
+          collapsed ? "px-1 items-center" : "px-2",
+        )}
+      >
+        {appVersion && !collapsed ? (
           <span className="font-mono text-2xs text-[var(--color-fg-subtle)] tracking-wider uppercase px-1">
             v{appVersion} <span className="text-[var(--color-fg-muted)]">// STABLE</span>
           </span>
         ) : null}
         <Link
           href="/user"
-          className="group flex items-center gap-2 px-1.5 py-1 rounded-sm hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
+          className={clsx(
+            "group flex items-center rounded-sm hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
+            collapsed ? "justify-center p-1" : "gap-2 px-1.5 py-1",
+          )}
           aria-label={`Signed in as ${label}`}
+          title={collapsed ? `Signed in as ${label} · ONLINE` : undefined}
         >
           <span
             aria-hidden
@@ -157,22 +215,24 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
           >
             {initial}
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-2xs font-mono text-[var(--color-fg)] truncate">
-              {label}
+          {collapsed ? null : (
+            <span className="min-w-0 flex-1">
+              <span className="block text-2xs font-mono text-[var(--color-fg)] truncate">
+                {label}
+              </span>
+              <span className="block text-2xs font-mono text-[var(--color-fg-subtle)] inline-flex items-center gap-1">
+                <span
+                  aria-hidden
+                  className="inline-block h-2 w-2 rounded-full bg-[var(--color-green)]"
+                  style={{
+                    boxShadow:
+                      "0 0 6px color-mix(in srgb, var(--color-green) 60%, transparent)",
+                  }}
+                />
+                ONLINE
+              </span>
             </span>
-            <span className="block text-2xs font-mono text-[var(--color-fg-subtle)] inline-flex items-center gap-1">
-              <span
-                aria-hidden
-                className="inline-block h-2 w-2 rounded-full bg-[var(--color-green)]"
-                style={{
-                  boxShadow:
-                    "0 0 6px color-mix(in srgb, var(--color-green) 60%, transparent)",
-                }}
-              />
-              ONLINE
-            </span>
-          </span>
+          )}
         </Link>
       </div>
     </aside>
