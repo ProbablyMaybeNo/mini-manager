@@ -1,47 +1,50 @@
 import type { Route } from "next";
-import { ToolCard } from "@/components/tools/ToolCard";
+import { ToolCard, type ToolTone } from "@/components/tools/ToolCard";
 
 interface ToolEntry {
   href: Route;
   glyph: string;
   title: string;
   blurb: string;
+  tone: ToolTone;
 }
 
 /**
  * The four colour tools a painter opens mid-recipe and hands back into a
- * scheme. Wheel and Match are ports from v1; Eyedropper and Gradient are
- * new. Each tool's page handles its own input → output → "send to recipe"
- * action loop.
+ * scheme. Each tool gets one slot in the locked 5-color palette so the
+ * index reads as a coloured launcher: wheel = pastel purple ("special"),
+ * match = cyan ("primary action"), eyedropper = neon green ("complete
+ * / capture"), gradient = pastel yellow ("wanted / planning"). One
+ * line of plain prose per tool, ≤ ~80 chars. P11.8 + P11.12.
  */
 const TOOLS: ReadonlyArray<ToolEntry> = [
   {
     href: "/tools/wheel" as Route,
     glyph: "◍",
     title: "Colour Wheel",
-    blurb:
-      "Pick a hue + harmony — complementary, triadic, analogous, eight modes total — and find the closest paint in your library for each swatch.",
+    blurb: "Pick a hue + harmony, see the closest paint in your library.",
+    tone: "purple",
   },
   {
     href: "/tools/match" as Route,
     glyph: "≈",
     title: "Cross-brand Match",
-    blurb:
-      "Paste a hex (or pick a paint) and see the top matches across every brand, ranked by ΔE2000 with a traffic-light confidence dot.",
+    blurb: "Paste a hex, get the closest paints ranked across every brand.",
+    tone: "cyan",
   },
   {
     href: "/tools/eyedropper" as Route,
     glyph: "◎",
     title: "Image Eyedropper",
-    blurb:
-      "Drop a reference image. K-means extracts six dominant colours and surfaces the three closest paints for each.",
+    blurb: "Drop a reference image, extract the dominant colours and paints.",
+    tone: "green",
   },
   {
     href: "/tools/gradient" as Route,
     glyph: "▤",
     title: "Gradient Builder",
-    blurb:
-      "Pick base + shadow + highlight; get a 3–7 step Lab-space ramp with the closest paint per step. Plan transitions before you mix.",
+    blurb: "Plan a base → highlight ramp with the closest paint per step.",
+    tone: "yellow",
   },
 ];
 
@@ -50,7 +53,7 @@ export default function ToolsPage() {
     <div className="p-6 md:p-8 max-w-6xl space-y-6">
       <header className="space-y-2">
         <h1 className="text-3xl tracking-wide">TOOLS</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] max-w-2xl font-sans">
+        <p className="text-sm text-[var(--color-fg-muted)] max-w-2xl font-sans leading-snug">
           Single-purpose colour utilities. Open one mid-recipe, pull a
           swatch, hand it back into a scheme. Every tool ends in one
           click → recipe.
@@ -65,6 +68,7 @@ export default function ToolsPage() {
             glyph={t.glyph}
             title={t.title}
             blurb={t.blurb}
+            tone={t.tone}
           />
         ))}
       </div>
