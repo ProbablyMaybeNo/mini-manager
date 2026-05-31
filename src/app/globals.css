@@ -34,7 +34,11 @@
   --color-fg-subtle: #d4d4d4;
 
   --color-border: #262626;
-  --color-border-strong: #363636;
+  /* Bumped from #363636 (1.68:1 on bg) to #5a5a5a (4.05:1 on bg) so the
+     border passes WCAG 2.2 §1.4.11 Non-text Contrast (3:1) and reads as a
+     real boundary on auth-form inputs + every other .frame-strong surface.
+     UX-V3-003 — auditor round 3. */
+  --color-border-strong: #5a5a5a;
 
   --color-green: #33ff66;
   --color-green-dim: #1ea845;
