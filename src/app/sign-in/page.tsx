@@ -41,8 +41,7 @@ export default async function SignInPage({
       <div className="w-full max-w-md space-y-6">
         <h1 className="sr-only">Sign in to Mini Manager</h1>
         <div className="flex justify-center pt-2 md:pt-0">
-          <Logo />
-          <span className="sr-only">Mini Manager</span>
+          <Logo decorative />
         </div>
 
         <Card title="Sign in" ariaLabel="Sign in">

@@ -22,8 +22,7 @@ export default async function SignUpPage() {
       <div className="w-full max-w-md space-y-6">
         <h1 className="sr-only">Create your Mini Manager account</h1>
         <div className="flex justify-center pt-2 md:pt-0">
-          <Logo />
-          <span className="sr-only">Mini Manager</span>
+          <Logo decorative />
         </div>
 
         <Card title="Create account" ariaLabel="Create account">

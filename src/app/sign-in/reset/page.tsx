@@ -18,8 +18,7 @@ export default async function ResetPasswordPage({
       <div className="w-full max-w-md space-y-6">
         <h1 className="sr-only">Set a new password</h1>
         <div className="flex justify-center pt-2 md:pt-0">
-          <Logo />
-          <span className="sr-only">Mini Manager</span>
+          <Logo decorative />
         </div>
 
         <Card title="Set a new password" ariaLabel="Set a new password">
