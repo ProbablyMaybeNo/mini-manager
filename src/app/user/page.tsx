@@ -27,7 +27,7 @@ export default async function UserPage() {
       <header className="space-y-2">
         <h1 className="text-3xl tracking-wide">USER</h1>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans">
-          Profile · Sync · Inventory · Export · Preferences.
+          Manage your recovery email and download a full backup of your data.
         </p>
       </header>
 
