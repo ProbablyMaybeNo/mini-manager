@@ -119,7 +119,7 @@ export function InventoryControls({
             isPending && "opacity-60",
           )}
         >
-          {state.ownedCount > 0 ? "✓" : "✗"}
+          {state.ownedCount > 0 ? "✓" : "○"}
         </button>
         <button
           type="button"
