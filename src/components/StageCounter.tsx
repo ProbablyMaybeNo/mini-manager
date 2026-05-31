@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { ProgressBar } from "@/components/ProgressBar";
-import { bumpCounter } from "@/lib/actions/counters";
 import {
-  counterStages,
-  validateBump,
-  type CounterStage,
-} from "@/lib/counters/cascade";
+  PANEL_STAGES,
+  STAGE_BAR_TONE,
+  STAGE_LABEL,
+  STAGE_SHORTCUT,
+  STAGE_TONE,
+  type PanelStage,
+} from "@/components/stageCounterLabels";
+import { bumpCounter } from "@/lib/actions/counters";
+import { validateBump } from "@/lib/counters/cascade";
 
 /**
  * Snapshot of the project columns this panel cares about. We accept
@@ -24,23 +28,6 @@ export type StagePanelSnapshot = {
   paintCount: number;
   baseCount: number;
   completeCount: number;
-};
-
-/**
- * Stages rendered in the main 5-row panel. Owned is broken out
- * separately above (it represents "minis on the desk" rather than
- * a hobby stage).
- */
-const PANEL_STAGES = ["build", "prime", "paint", "base", "complete"] as const;
-type PanelStage = (typeof PANEL_STAGES)[number];
-
-const STAGE_LABEL: Readonly<Record<CounterStage, string>> = {
-  owned: "OWNED",
-  build: "BUILD",
-  prime: "PRIME",
-  paint: "PAINT",
-  base: "BASE",
-  complete: "COMPLETE",
 };
 
 /**
@@ -178,6 +165,8 @@ export function StageCounter({ snapshot }: { snapshot: StagePanelSnapshot }) {
 
   return (
     <div className="space-y-3">
+      <CascadeExplainer />
+
       <ul className="space-y-1.5" role="list">
         {PANEL_STAGES.map((stage) => (
           <StageRow
@@ -228,28 +217,37 @@ function StageRow({
   onBump: (delta: 1 | -1) => void;
 }) {
   const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-  const labelTone = isLead
-    ? "text-[var(--color-green)]"
-    : "text-[var(--color-fg-muted)]";
+  // The lead stage gets the full per-stage colour treatment; other rows
+  // sit on muted-foreground so the eye lands on "what's active right
+  // now" without needing to read every label. P11.1.
+  const labelTone = isLead ? STAGE_TONE[stage] : "text-[var(--color-fg-muted)]";
 
   return (
     <li
       className={clsx(
         "frame px-3 py-2 grid items-center gap-x-3 gap-y-2",
-        "grid-cols-[5rem_1fr_auto] sm:grid-cols-[5rem_1fr_auto_auto]",
+        "grid-cols-[6.5rem_1fr_auto] sm:grid-cols-[6.5rem_1fr_auto_auto]",
       )}
     >
-      <span
-        className={clsx(
-          "font-mono text-xs uppercase tracking-wider",
-          labelTone,
-        )}
-      >
-        {STAGE_LABEL[stage]}
+      <span className="flex items-baseline gap-1.5 min-w-0">
+        <span
+          className={clsx(
+            "font-mono text-xs uppercase tracking-wider",
+            labelTone,
+          )}
+        >
+          {STAGE_LABEL[stage]}
+        </span>
+        <kbd
+          aria-label={`Keyboard shortcut: ${STAGE_SHORTCUT[stage]}`}
+          className="font-mono text-2xs text-[var(--color-fg-subtle)] uppercase tracking-wider"
+        >
+          {STAGE_SHORTCUT[stage]}
+        </kbd>
       </span>
 
       <span className="min-w-0 flex items-center gap-2">
-        <ProgressBar percent={percent} width={20} />
+        <ProgressBar percent={percent} width={20} tone={STAGE_BAR_TONE[stage]} />
         <span className="font-mono text-xs text-[var(--color-fg-muted)] whitespace-nowrap">
           {value} / {total}
         </span>
@@ -303,13 +301,34 @@ export function CounterButton({
   );
 }
 
+/**
+ * Cascade explainer microcopy — sits above the rows on first encounter
+ * so the painter understands what tapping +1 actually does. The cascade
+ * rule (count ≥ owned ≥ build ≥ prime ≥ paint ≥ base ≥ done) is the
+ * model's whole behaviour; a one-line explainer beats a help icon.
+ * P11.1 — Phase 11 microcopy pass.
+ */
+function CascadeExplainer() {
+  return (
+    <p className="font-sans text-xs text-[var(--color-fg-subtle)] leading-snug">
+      Each stage flows into the next. Bumping a later stage promotes models
+      forward — earlier stages can&apos;t drop below where later ones sit.
+    </p>
+  );
+}
+
+/**
+ * Keyboard hint — single dim line of plain prose explaining the
+ * Shift-to-decrement modifier. Per-key annotations live inline on the
+ * stage rows themselves now (small `kbd` chip next to each label), so
+ * this string no longer repeats every letter in bracket-chrome.
+ * P11.1 — Phase 11 bracket retirement.
+ */
 function KeyboardHint() {
   return (
     <p className="font-mono text-2xs text-[var(--color-fg-subtle)] uppercase tracking-wider hidden sm:block">
-      [ B ] build · [ P ] prime · [ A ] paint · [ S ] base · [ C ] complete
-      <span className="ml-2 text-[var(--color-fg-subtle)]">
-        — hold Shift to decrement
-      </span>
+      Press the letter to bump &nbsp;·&nbsp; hold&nbsp;
+      <kbd className="font-mono">Shift</kbd>&nbsp;to decrement
     </p>
   );
 }
