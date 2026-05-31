@@ -3,11 +3,13 @@
 import { useMemo, useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import { PanelLeftClose, Filter } from "lucide-react";
 
 import type { Paint, PaintFilter, PaintType } from "@/lib/paints/types";
 import { paintTypes } from "@/lib/paints/types";
 import { HUE_BANDS } from "@/lib/paints/filters";
 import { writeFilterToParams } from "@/lib/paints/filterUrl";
+import { useFilterRailCollapsed } from "@/lib/hooks/useFilterRailCollapsed";
 import { TypeIcon } from "./TypeIcon";
 
 /**
@@ -24,15 +26,22 @@ export function FilterRail({
   paints,
   filter,
   className,
+  disableCollapse = false,
 }: {
   paints: ReadonlyArray<Paint>;
   filter: PaintFilter;
   className?: string;
+  /** When true (mobile drawer), the collapse toggle is hidden and the
+   *  rail always renders fully expanded — the drawer has its own close
+   *  affordance. Default false (desktop rail with collapse toggle). */
+  disableCollapse?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [collapsed, setCollapsed] = useFilterRailCollapsed();
+  const isCollapsed = !disableCollapse && collapsed;
 
   // Derive brand and line lists from the catalog. Memoised so we don't
   // walk 7k rows on every keystroke.
@@ -92,12 +101,51 @@ export function FilterRail({
   }, [hexLocal]);
 
   const brandCollapse = allBrands.length > 12;
+  const activeFilterCount = countActiveFilters(filter);
+
+  if (isCollapsed) {
+    return (
+      <aside
+        className={clsx(
+          "flex flex-col border-r border-[var(--color-border)] shrink-0",
+          "w-[48px] transition-[width] duration-200 ease-out",
+          className,
+        )}
+        aria-label="Library filters (collapsed)"
+      >
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          aria-label="Expand filters"
+          aria-expanded={false}
+          title="Expand filters"
+          className="relative inline-flex items-center justify-center h-12 w-full text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] transition-colors"
+        >
+          <Filter size={18} strokeWidth={1.75} aria-hidden />
+          {activeFilterCount > 0 ? (
+            <span
+              aria-hidden
+              className="absolute top-1.5 right-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-sm bg-[var(--color-accent)] text-[var(--color-bg)] font-mono text-2xs leading-none"
+            >
+              {activeFilterCount}
+            </span>
+          ) : null}
+          <span className="sr-only">
+            {activeFilterCount > 0
+              ? `${activeFilterCount} active filter${activeFilterCount === 1 ? "" : "s"}`
+              : "No active filters"}
+          </span>
+        </button>
+      </aside>
+    );
+  }
 
   return (
     <aside
       className={clsx(
         "flex flex-col border-r border-[var(--color-border)]",
         "md:w-[240px] md:shrink-0",
+        "transition-[width] duration-200 ease-out",
         "overflow-y-auto",
         className,
       )}
@@ -109,6 +157,18 @@ export function FilterRail({
           <span aria-hidden className="card-header-accent bg-[var(--color-cyan)]" />
           <span>FILTERS</span>
         </span>
+        {disableCollapse ? null : (
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            aria-label="Collapse filters"
+            aria-expanded={true}
+            title="Collapse filters"
+            className="inline-flex items-center justify-center h-7 w-7 rounded-sm text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] transition-colors"
+          >
+            <PanelLeftClose size={14} strokeWidth={1.75} aria-hidden />
+          </button>
+        )}
       </header>
       <div className="flex flex-col gap-5 px-3 py-4">
       <Section title="Search">
@@ -285,14 +345,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function hasActiveFilter(f: PaintFilter): boolean {
+  return countActiveFilters(f) > 0;
+}
+
+function countActiveFilters(f: PaintFilter): number {
   return (
-    f.brands.length > 0 ||
-    f.lines.length > 0 ||
-    f.types.length > 0 ||
-    f.hueBands.length > 0 ||
-    f.hexQuery.length > 0 ||
-    f.textQuery.length > 0 ||
-    f.ownedOnly
+    f.brands.length +
+    f.lines.length +
+    f.types.length +
+    f.hueBands.length +
+    (f.hexQuery.length > 0 ? 1 : 0) +
+    (f.textQuery.length > 0 ? 1 : 0) +
+    (f.ownedOnly ? 1 : 0)
   );
 }
 

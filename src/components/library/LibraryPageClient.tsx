@@ -125,6 +125,7 @@ export function LibraryPageClient({
                 paints={paints}
                 filter={filter}
                 className="border-r-0"
+                disableCollapse
               />
             </div>
           </aside>
