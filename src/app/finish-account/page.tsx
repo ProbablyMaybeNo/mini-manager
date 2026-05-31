@@ -41,6 +41,7 @@ export default async function FinishAccountPage() {
   return (
     <div className="min-h-screen flex items-start md:items-center justify-center p-6 md:p-8">
       <div className="w-full max-w-md space-y-6">
+        <h1 className="sr-only">Finish setting up your Mini Manager account</h1>
         <div className="flex justify-center pt-2 md:pt-0">
           <Logo />
           <span className="sr-only">Mini Manager</span>

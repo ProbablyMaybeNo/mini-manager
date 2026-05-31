@@ -346,6 +346,18 @@ input, textarea, select {
   min-width: 0;
   flex: 1;
 }
+/* The card title is a real <h2>/<h3> for the document outline, but
+   visually it lives inside the chrome label strip — so reset the
+   global heading styles (size, weight, colour, glow) and inherit
+   the card-header treatment instead. UX-V3-005. */
+.card-header-heading {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  line-height: inherit;
+  text-shadow: none;
+  margin: 0;
+}
 .card-header-accent {
   width: 8px;
   height: 8px;

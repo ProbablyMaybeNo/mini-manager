@@ -3,6 +3,12 @@ import { clsx } from "clsx";
 
 export type CardAccent = "cyan" | "green" | "amber" | "red" | "neutral";
 
+/** Heading level for the title element. Defaults to `h2`; sub-cards
+ *  nested inside a larger section should pass `h3`. The card-header
+ *  visual treatment is identical at every level — only the semantic
+ *  outline shifts. */
+export type CardTitleAs = "h2" | "h3";
+
 const ACCENT_BG: Record<CardAccent, string> = {
   cyan: "bg-[var(--color-cyan)]",
   green: "bg-[var(--color-green)]",
@@ -13,6 +19,8 @@ const ACCENT_BG: Record<CardAccent, string> = {
 
 export interface CardProps {
   title?: string;
+  /** Heading level for the title. Defaults to `h2`. */
+  titleAs?: CardTitleAs;
   headerActions?: ReactNode;
   accentColor?: CardAccent;
   className?: string;
@@ -24,9 +32,16 @@ export interface CardProps {
 
 /** Card — bordered surface with header bar + body. Replaces ad-hoc
  *  `frame p-N space-y-N` widget combos. Header is optional — omit `title`
- *  to render a headerless card (still bordered, body padding only). */
+ *  to render a headerless card (still bordered, body padding only).
+ *
+ *  The title renders as a real heading (`<h2>` by default, `<h3>` if
+ *  nested) so screen-reader heading navigation can find every section
+ *  on the page. Previously a `<span>`, which left `/sign-in`,
+ *  `/sign-up`, etc. with zero headings in the document outline.
+ *  UX-V3-005 — auditor round 3. */
 export function Card({
   title,
+  titleAs = "h2",
   headerActions,
   accentColor,
   className,
@@ -35,6 +50,7 @@ export function Card({
   ariaLabel,
 }: CardProps) {
   const hasHeader = Boolean(title || headerActions);
+  const TitleTag = titleAs;
   return (
     <section
       className={clsx("card", className)}
@@ -49,7 +65,11 @@ export function Card({
                 className={clsx("card-header-accent", ACCENT_BG[accentColor])}
               />
             ) : null}
-            {title ? <span className="truncate">{title}</span> : null}
+            {title ? (
+              <TitleTag className="card-header-heading truncate">
+                {title}
+              </TitleTag>
+            ) : null}
           </span>
           {headerActions ? (
             <span className="inline-flex items-center gap-2">
