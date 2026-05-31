@@ -335,3 +335,12 @@ hr { border: 0; border-top: 1px solid var(--color-border); }
     min-height: 32px;
   }
 }
+
+/* Brand logo — engraved cyan-on-black artwork that spells "Mini-Manager".
+   `mix-blend-mode: screen` drops the PNG's solid black background onto
+   our near-black surfaces, leaving only the cyan engraving visible. The
+   blend pairs cleanly with --color-bg (#050607). */
+.logo-screen {
+  mix-blend-mode: screen;
+  display: block;
+}
