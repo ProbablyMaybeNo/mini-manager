@@ -26,19 +26,35 @@ export async function ShoppingForThisPanel({ projectId }: { projectId: string })
 
   const wishlistHref = (`/wishlist?project=${projectId}` as unknown) as Route;
 
+  // Yellow CTA — wishlist intent is mapped to pastel yellow across the
+  // app (one-color-per-intent rule from the locked palette). Even when
+  // the panel has items we keep the CTA visible so adding more is
+  // always one click away. P11.4 — Phase 11 wishlist sweep.
+  const addCta = (
+    <Button
+      as="a"
+      href={wishlistHref}
+      variant="secondary"
+      size="sm"
+      className="btn-wishlist-cta"
+    >
+      + Add to wishlist
+    </Button>
+  );
+
   return (
     <Card
-      title={`Shopping for this · ${items.length}`}
+      title={`Wishlist · ${items.length}`}
+      accentColor="yellow"
       headerActions={
-        items.length > 0 ? (
-          <span className="font-mono text-2xs normal-case tracking-wider text-[var(--color-fg-muted)]">
-            {summariseTotal(items)}
-          </span>
-        ) : (
-          <Button as="a" href={wishlistHref} variant="secondary" size="sm">
-            + Add to wishlist
-          </Button>
-        )
+        <span className="inline-flex items-center gap-3">
+          {items.length > 0 ? (
+            <span className="font-mono text-2xs normal-case tracking-wider text-[var(--color-fg-muted)]">
+              {summariseTotal(items)}
+            </span>
+          ) : null}
+          {addCta}
+        </span>
       }
       bodyClassName={items.length === 0 ? undefined : "p-0"}
     >

@@ -81,9 +81,9 @@ export default async function WishlistPage({
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
           <div>
             <h1 className="text-3xl tracking-wide">WISHLIST</h1>
-            <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans">
-              Your shopping list. Manual entries land instantly; vendor URLs
-              get scraped in P2.5.
+            <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans leading-snug">
+              Paints, kits, and tools you want to buy. Paste a vendor URL
+              to auto-fill the row, or type a name for a manual entry.
             </p>
           </div>
           <QuickAddBar />

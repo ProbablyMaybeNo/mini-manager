@@ -69,7 +69,7 @@ export function WishlistTable({
         <p className="text-sm font-mono text-[var(--color-fg-muted)]">
           {hasActiveFilters
             ? "No wishlist items match the current filters."
-            : "Nothing on your shopping list yet. Paste a vendor URL above, or type a title to add manually."}
+            : "Nothing on your wishlist yet. Paste a vendor URL above, or type a title to add manually."}
         </p>
       </div>
     );

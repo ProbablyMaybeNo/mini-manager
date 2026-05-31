@@ -457,6 +457,19 @@ input, textarea, select {
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
 }
 
+/* Wishlist tint — modifier class applied alongside `.btn-secondary` to
+   flip the cyan accent to pastel yellow for "wishlist" intent (one
+   color per intent across the app, per the locked 5-color palette).
+   Used by + Add to wishlist CTAs in the project workspace panel + the
+   wishlist page header. P11.4. */
+.btn-wishlist-cta {
+  color: var(--color-yellow);
+  border-color: var(--color-yellow);
+}
+.btn-wishlist-cta:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-yellow) 10%, transparent);
+}
+
 /* StatusPill — bordered, mono, all-caps, 1px border, semantic colour.
    Drives status indicators across project rows, paint types, wishlist. */
 .pill {
