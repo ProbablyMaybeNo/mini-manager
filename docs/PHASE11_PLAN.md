@@ -25,24 +25,24 @@ Reference image: Terminal_UI dashboard — 5-color palette (**cyan / pastel yell
 
 ## Milestones — Phase 11a (project + recipe + StageCounter)
 
-- [ ] **P11.1 — StageCounter readable labels + cascade explainer.** Drop B/P/A/S/C single-letter headers in favour of `BUILD · PRIME · PAINT · BASE · DONE` with kbd shortcut annotation. One-line cascade explainer microcopy. Per-stage color tone (build/prime = cyan, paint/base = yellow, done = green).
+- [x] **P11.1 — StageCounter readable labels + cascade explainer.** _(c5de9f2)_ Drop B/P/A/S/C single-letter headers in favour of `BUILD · PRIME · PAINT · BASE · DONE` with kbd shortcut annotation. One-line cascade explainer microcopy. Per-stage color tone (build/prime = cyan, paint/base = yellow, done = green).
 
-- [ ] **P11.2 — Project detail page layout + visible primary CTAs.** Restructure `/projects/[id]` to: header → StageCounter left + Recipe slots right → NamedModels + Wishlist below. Each section gets `+ ADD ...` cyan/yellow CTA button + one-line inline help. Fill the empty middle.
+- [x] **P11.2 — Project detail page layout + visible primary CTAs.** _(4417b1a)_ Restructure `/projects/[id]` to: header → StageCounter left + Recipe slots right → NamedModels + Wishlist below. Each section gets `+ ADD ...` cyan/yellow CTA button + one-line inline help. Fill the empty middle.
 
-- [ ] **P11.3 — Recipe editor: slots-first redesign.** Rename UI strings "Zone" → "Color slot" (schema unchanged). Replace linear "Add zone" form with horizontal row of empty colored squares. Click empty → paint picker. Click filled → technique editor. `+` button at row end. Inline help on first-load.
+- [x] **P11.3 — Recipe editor: slots-first redesign.** _(9c77645)_ Rename UI strings "Zone" → "Color slot" (schema unchanged). Replace linear "Add zone" form with horizontal row of empty colored squares. Click empty → paint picker. Click filled → technique editor. `+` button at row end. Inline help on first-load.
 
-- [ ] **P11.4 — Wishlist rename + project-side panel polish.** "Shopping for this · N" → "WISHLIST · N" everywhere. `+ ADD TO WISHLIST` yellow CTA at panel top. Empty-state copy + same CTA, no big empty middle.
+- [x] **P11.4 — Wishlist rename + project-side panel polish.** _(3f56be1)_ "Shopping for this · N" → "WISHLIST · N" everywhere. `+ ADD TO WISHLIST` yellow CTA at panel top. Empty-state copy + same CTA, no big empty middle.
 
 ## Milestones — Phase 11b (app-wide table + chrome polish)
 
-- [ ] **P11.5 — Projects list row redesign.** Per Ross's screenshot:
+- [x] **P11.5 — Projects list row redesign.** _(f104164)_ Per Ross's screenshot:
   - Replace text dashes `─ ─ ─ ─ ─` for empty stage cells with **5 small colored squares** sized to row height, filled proportionally to stage count. Empty stages = dim colored square. Visual at-a-glance.
   - Type label ("UNIT", "ARMY") → small colored chip (subtle bg tint per type — e.g. ARMY cyan-tinted, UNIT amber-tinted, SINGLE MODEL purple-tinted, TERRAIN PIECE green-tinted, DIORAMA magenta-tinted).
   - Status pill ("PILE") → use `<StatusPill>` primitive with proper bordered chrome (it's currently rendering as plain text).
   - Progress bar → use the solid-bar `<ProgressBar>` primitive (already done elsewhere; verify on ProjectRow).
   - Faction sub-label gets its own colored chip (subtle muted-purple tint) instead of plain gray text.
 
-- [ ] **P11.6 — Inline editing affordance sweep.** Walk every "click to change" cell across the app:
+- [x] **P11.6 — Inline editing affordance sweep.** _(6f6a4ed)_ Walk every "click to change" cell across the app:
   - **Wishlist Project column** (already fixed in `709fdda`) — verify still works.
   - **Wishlist Status column** (already shipped in `c352fe4` as `StatusChangePopover`) — verify keyboard navigation, dismiss-on-outside-click, visible chevron affordance.
   - **Project detail status pill** — clicking should open a status changer? Or rely on stage counter for status transitions? Decision: status pill is **read-only** (derived from stage counts). No click.
@@ -51,25 +51,25 @@ Reference image: Terminal_UI dashboard — 5-color palette (**cyan / pastel yell
   - **NamedModel rows** in project detail — clicking a model row should open an inline edit drawer (currently? Check).
   - Anywhere "click to change" exists, ensure: visible chevron / pencil / edit icon, clear hover state, accessible aria-label.
 
-- [ ] **P11.7 — Recipes list polish.** Same treatment as P11.5: per-row chrome, color-coded body-type chip, recipe-slot mini-preview (3-5 swatches inline), proper status pills for "draft / published / cloned" semantic if relevant.
+- [x] **P11.7 — Recipes list polish.** _(b837c8e)_ Same treatment as P11.5: per-row chrome, color-coded body-type chip, recipe-slot mini-preview (3-5 swatches inline), proper status pills for "draft / published / cloned" semantic if relevant.
 
-- [ ] **P11.8 — Tools page polish.** `/tools` index — currently a grid of cards. Apply 5-color palette to each tool card (wheel = magenta, eyedropper = green, gradient = yellow, match = cyan, …). Add brief one-line description under each tool name.
+- [x] **P11.8 — Tools page polish.** _(100498a)_ `/tools` index — currently a grid of cards. Apply 5-color palette to each tool card (wheel = magenta, eyedropper = green, gradient = yellow, match = cyan, …). Add brief one-line description under each tool name.
 
-- [ ] **P11.9 — Settings / user page polish.** `/user` — section consistency, real CTAs not text links, status pills on plan tier ("FREE" neutral, "PRO" cyan, "FOUNDER" purple).
+- [x] **P11.9 — Settings / user page polish.** _(cb132a8)_ `/user` — section consistency, real CTAs not text links, status pills on plan tier ("FREE" neutral, "PRO" cyan, "FOUNDER" purple).
 
 ## Milestones — Phase 11c (color palette + bracket retirement)
 
-- [ ] **P11.10 — Pastel-purple token + magenta retirement.** Add `--color-purple-pastel: #b794f6` (or rename `--color-magenta` if the existing #ff66cc is close enough — verify against the reference). Update `StatusPill` `magenta` kind + Button `magenta` variant if added. Audit any surface using `--color-magenta` and decide: does it read as pastel purple, or should it shift?
+- [x] **P11.10 — Pastel-purple token + magenta retirement.** _(5f4a0b7)_ Add `--color-purple-pastel: #b794f6` (or rename `--color-magenta` if the existing #ff66cc is close enough — verify against the reference). Update `StatusPill` `magenta` kind + Button `magenta` variant if added. Audit any surface using `--color-magenta` and decide: does it read as pastel purple, or should it shift?
 
-- [ ] **P11.11 — App-wide bracket-as-chrome audit + sweep.** Grep `\[ ` and `\]` patterns inside JSX text. Each match: keep (data) or replace (decoration). Decoration goes. Audit subtitles + section headings, flip remaining `[ X · N ]` formats.
+- [x] **P11.11 — App-wide bracket-as-chrome audit + sweep.** _(e6461c5)_ Grep `\[ ` and `\]` patterns inside JSX text. Each match: keep (data) or replace (decoration). Decoration goes. Audit subtitles + section headings, flip remaining `[ X · N ]` formats.
 
-- [ ] **P11.12 — Microcopy pass.** Add 1-line inline help under primary section headings on: `/projects/[id]`, `/projects/new`, `/recipes/[id]`, `/recipes/new`, `/wishlist`, `/tools/wheel/eyedropper/gradient/match`, `/user`. Sentence case, ≤80 chars, plain prose.
+- [x] **P11.12 — Microcopy pass.** _(121b46b)_ Add 1-line inline help under primary section headings on: `/projects/[id]`, `/projects/new`, `/recipes/[id]`, `/recipes/new`, `/wishlist`, `/tools/wheel/eyedropper/gradient/match`, `/user`. Sentence case, ≤80 chars, plain prose.
 
 ## Milestones — Phase 11d (verification)
 
-- [ ] **P11.13 — Round-5 UX auditor pass.** Run ux-auditor against the live URL post-deploy. Compare to findings_v4 — close any P0/P1 items the agent missed. Bank as `ux-audit/findings_v5.json`.
+- [x] **P11.13 — Round-5 UX auditor pass.** _(SKIPPED — running in parallel via the ux-auditor agent; coordinator note in milestone-builder run)_
 
-- [ ] **P11.14 — Regression sweep + Playwright update.** Update Playwright selectors for any renamed labels (`Add zone` → `Add color`, `Shopping for this` → `Wishlist`, `BUILD` instead of single letters in stage tests, etc.). Full vitest + Playwright sweep on chromium + chromium-mobile. Lighthouse re-check on `/projects`, `/recipes/[id]`, `/wishlist`.
+- [x] **P11.14 — Regression sweep + Playwright update.** _(e045774)_ Update Playwright selectors for any renamed labels (`Add zone` → `Add color`, `Shopping for this` → `Wishlist`, `BUILD` instead of single letters in stage tests, etc.). Full vitest + Playwright sweep on chromium + chromium-mobile. Lighthouse re-check on `/projects`, `/recipes/[id]`, `/wishlist`.
 
 ## Out of scope (deferred)
 
