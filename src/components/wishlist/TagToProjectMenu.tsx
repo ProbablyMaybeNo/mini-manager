@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
+import { ChevronDown } from "lucide-react";
 
 import { updateWishlistItem } from "@/lib/actions/wishlist";
 
@@ -27,6 +28,27 @@ export function TagToProjectMenu({
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [isPending, startTransition] = useTransition();
+  const rootRef = useRef<HTMLSpanElement | null>(null);
+
+  // Outside-click to close. Mounted only while the menu is open.
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   const currentName = current
     ? projects.find((p) => p.id === current)?.name ?? "(unknown)"
@@ -44,22 +66,32 @@ export function TagToProjectMenu({
   }
 
   return (
-    <span className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+    <span
+      ref={rootRef}
+      className="relative inline-block"
+      onClick={(e) => e.stopPropagation()}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={clsx(
-          "text-xs font-mono px-2 py-0.5 frame hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)]",
+          "inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-fg)_8%,transparent)] hover:border-[var(--color-accent)] transition-colors",
           current ? "text-[var(--color-cyan)]" : "text-[var(--color-fg-muted)]",
         )}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        {currentName}
+        <span className="truncate max-w-[120px]">{currentName}</span>
+        <ChevronDown
+          size={12}
+          strokeWidth={1.75}
+          aria-hidden
+          className={clsx("transition-transform", open && "rotate-180")}
+        />
       </button>
       {open ? (
         <div
-          className="absolute right-0 z-30 mt-1 w-56 bg-[var(--color-bg-panel)] frame-strong shadow-2xl p-2 space-y-1"
+          className="absolute right-0 z-[60] mt-1 w-64 bg-[var(--color-bg-panel)] border border-[var(--color-border-strong)] rounded-sm shadow-2xl p-2 space-y-1"
           role="listbox"
         >
           <input
@@ -68,39 +100,51 @@ export function TagToProjectMenu({
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search projects…"
-            className="w-full px-2 py-1 font-mono text-xs frame bg-[var(--color-bg-elevated)]"
+            className="w-full px-2 py-1.5 font-mono text-xs frame bg-[var(--color-bg-elevated)]"
           />
           <button
             type="button"
             onClick={() => pick(null)}
             disabled={isPending}
             className={clsx(
-              "w-full text-left text-xs font-mono px-2 py-1 hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)]",
+              "w-full text-left text-xs font-mono px-2 py-1.5 rounded-sm hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)]",
               current === null && "text-[var(--color-accent)]",
             )}
           >
             (none)
           </button>
           <div className="max-h-48 overflow-y-auto">
-            {filtered.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => pick(p.id)}
-                disabled={isPending}
-                className={clsx(
-                  "w-full text-left text-xs font-mono px-2 py-1 truncate hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)]",
-                  current === p.id && "text-[var(--color-accent)]",
-                )}
-              >
-                {p.name}
-              </button>
-            ))}
-            {filtered.length === 0 ? (
+            {projects.length === 0 ? (
+              <p className="px-2 py-2 text-2xs font-mono text-[var(--color-fg-muted)] leading-relaxed">
+                No projects yet. Create one on the{" "}
+                <a
+                  href="/projects/new"
+                  className="text-[var(--color-cyan)] underline-offset-2 hover:underline"
+                >
+                  Projects page
+                </a>{" "}
+                first.
+              </p>
+            ) : filtered.length === 0 ? (
               <p className="px-2 py-1 text-2xs font-mono text-[var(--color-fg-muted)]">
                 No matches.
               </p>
-            ) : null}
+            ) : (
+              filtered.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => pick(p.id)}
+                  disabled={isPending}
+                  className={clsx(
+                    "w-full text-left text-xs font-mono px-2 py-1.5 rounded-sm truncate hover:bg-[color-mix(in_srgb,var(--color-fg)_6%,transparent)]",
+                    current === p.id && "text-[var(--color-accent)]",
+                  )}
+                >
+                  {p.name}
+                </button>
+              ))
+            )}
           </div>
         </div>
       ) : null}
