@@ -400,6 +400,27 @@ input, textarea, select {
   }
 }
 
+/* Toast notifications — slide in from the right with a soft fade,
+   land at full opacity. Auto-dismiss is handled in JS via setTimeout. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate3d(20px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.toast-item {
+  animation: toast-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item { animation: none; }
+}
+
 /* Brand logo — engraved cyan-on-black artwork that spells "Mini-Manager".
    `mix-blend-mode: screen` drops the PNG's solid black background onto
    our near-black neutral surfaces, leaving only the cyan engraving

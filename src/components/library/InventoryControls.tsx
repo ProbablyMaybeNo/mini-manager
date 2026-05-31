@@ -8,6 +8,7 @@ import {
   toggleWishlistedPaint,
   markPurchased,
 } from "@/lib/actions/inventory";
+import { useToast } from "@/components/ui/Toast";
 
 interface InventoryState {
   ownedCount: number;
@@ -37,6 +38,7 @@ export function InventoryControls({
   const [state, setState] = useState<InventoryState>(initial ?? ZERO);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const toast = useToast();
 
   function bumpOwned(delta: 1 | -1) {
     const next = Math.max(0, state.ownedCount + delta);
@@ -51,17 +53,29 @@ export function InventoryControls({
 
   function toggleWish() {
     const next = !state.isWishlisted;
-    optimistic({ isWishlisted: next }, () => toggleWishlistedPaint({ paintId }));
+    optimistic(
+      { isWishlisted: next },
+      () => toggleWishlistedPaint({ paintId }),
+      () =>
+        next
+          ? toast.success("Added to wishlist")
+          : toast.info("Removed from wishlist"),
+    );
   }
 
   function justBought() {
     const next = state.ownedCount + 1;
-    optimistic({ ownedCount: next }, () => markPurchased({ paintId, deltaCount: 1 }));
+    optimistic(
+      { ownedCount: next },
+      () => markPurchased({ paintId, deltaCount: 1 }),
+      () => toast.success("Marked as purchased"),
+    );
   }
 
   function optimistic(
     patch: Partial<InventoryState>,
     call: () => Promise<{ ok: true; data: unknown } | { ok: false; error: string }>,
+    onSuccess?: () => void,
   ) {
     setError(null);
     const prev = state;
@@ -71,6 +85,9 @@ export function InventoryControls({
       if (result.ok === false) {
         setError(result.error);
         setState(prev);
+        toast.error(result.error);
+      } else {
+        onSuccess?.();
       }
     });
   }
