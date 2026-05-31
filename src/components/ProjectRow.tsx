@@ -53,7 +53,7 @@ export function ProjectRow({
   return (
     <Link
       href={linkHref}
-      className="group grid grid-cols-[4px_1fr_auto_auto] lg:grid-cols-[4px_1fr_auto_auto_auto_auto] items-center gap-3 px-3 py-2.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] min-h-[44px] md:min-h-[36px]"
+      className="caret-row group grid grid-cols-[4px_1fr_auto_auto] lg:grid-cols-[4px_1fr_auto_auto_auto_auto] items-center gap-3 px-3 py-2.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] min-h-[44px] md:min-h-[36px]"
     >
       <span
         className={clsx("h-6 w-1 rounded-sm flex-shrink-0", priorityClass)}

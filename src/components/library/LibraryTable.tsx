@@ -155,6 +155,7 @@ function PaintRow({
       aria-rowindex={rowIndex + 1}
       aria-current={active ? "true" : undefined}
       className={clsx(
+        "caret-row",
         "w-full grid items-center gap-3 px-3 text-left font-mono text-xs cursor-pointer",
         "border-b border-[var(--color-border)]",
         "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",

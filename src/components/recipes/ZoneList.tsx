@@ -210,6 +210,7 @@ function ZoneRow({
         type="button"
         onClick={onSelect}
         className={clsx(
+          "caret-row",
           "flex-1 min-w-0 flex items-center gap-3 px-2.5 py-2 frame text-left tap-target",
           "transition-colors",
           selected

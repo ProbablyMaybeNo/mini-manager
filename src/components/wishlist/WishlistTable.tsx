@@ -104,6 +104,7 @@ export function WishlistTable({
             }
           }}
           className={clsx(
+            "caret-row",
             "grid items-center gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
             GRID_CLASS,
           )}

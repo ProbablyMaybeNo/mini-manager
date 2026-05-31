@@ -478,6 +478,39 @@ input, textarea, select {
   .toast-item { animation: none; }
 }
 
+/* Selection caret — CLI prompt `> ` that appears on focused / active list rows.
+   Uses ::before at -1ch (left of content box, within standard px-3 padding).
+   No layout shift: absolute positioning keeps the `>` out of flow entirely.
+   Triggers on :focus-visible (keyboard nav), aria-current="true" (active paint /
+   project), and aria-pressed="true" (selected zone). */
+.caret-row {
+  position: relative;
+}
+.caret-row::before {
+  content: ">";
+  position: absolute;
+  left: 4px;          /* sits in the px-3 (12px) left-padding gap */
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.75rem; /* 12px — small enough to never crowd content */
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  /* Fade in/out with a snappy 120ms ease-out. Gated on reduced-motion. */
+  transition: opacity 120ms ease-out;
+}
+.caret-row:focus-visible::before,
+.caret-row[aria-current="true"]::before,
+.caret-row[aria-pressed="true"]::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret-row::before { transition: none; }
+}
+
 /* Brand logo — engraved cyan-on-black artwork that spells "Mini-Manager".
    `mix-blend-mode: screen` drops the PNG's solid black background onto
    our near-black neutral surfaces, leaving only the cyan engraving
