@@ -15,6 +15,7 @@ import {
   attachRecipeToProject,
   createRecipe,
 } from "@/lib/actions/recipes";
+import { Button } from "@/components/ui/Button";
 
 export interface RecipeOption {
   id: string;
@@ -249,25 +250,22 @@ export function AttachRecipeModal(props: Props) {
               Creates an empty recipe attached here and opens the editor.
             </p>
             <div className="flex items-center gap-3">
-              <button
+              <Button
                 type="submit"
                 disabled={isPending}
-                className={clsx(
-                  "inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono",
-                  isPending
-                    ? "opacity-60 cursor-progress"
-                    : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
-                )}
+                variant="primary"
+                size="sm"
               >
-                {isPending ? "[ … ] Creating" : "[ + ] Create & attach"}
-              </button>
-              <button
+                {isPending ? "Creating…" : "Create & attach"}
+              </Button>
+              <Button
                 type="button"
                 onClick={onClose}
-                className="text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+                variant="ghost"
+                size="sm"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -293,26 +291,23 @@ export function AttachRecipeModal(props: Props) {
             will clear that link. Continue?
           </p>
           <div className="flex items-center gap-3">
-            <button
+            <Button
               type="button"
               onClick={() => runAttach(confirmMove.id)}
               disabled={isPending}
-              className={clsx(
-                "inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono",
-                isPending
-                  ? "opacity-60 cursor-progress"
-                  : "hover:bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)] hover:text-[var(--color-amber)]",
-              )}
+              variant="primary"
+              size="sm"
             >
-              {isPending ? "[ … ] Moving" : "[ ↪ ] Move attachment"}
-            </button>
-            <button
+              {isPending ? "Moving…" : "Move attachment"}
+            </Button>
+            <Button
               type="button"
               onClick={() => setConfirmMove(null)}
-              className="text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+              variant="ghost"
+              size="sm"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}

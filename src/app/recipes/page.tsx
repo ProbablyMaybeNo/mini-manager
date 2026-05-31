@@ -170,7 +170,7 @@ function EmptyState() {
         pin paints from the library. Attach it to an army when you&apos;re
         ready, or keep it as a saved palette.
       </p>
-      <NewRecipeButton label="[ + ] Create your first recipe" />
+      <NewRecipeButton label="Create your first recipe" />
     </div>
   );
 }

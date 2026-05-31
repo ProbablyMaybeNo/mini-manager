@@ -3,6 +3,7 @@ import { getPaintMetaMap } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
 import { AutoCloneOnMount, CloneButton } from "@/components/recipes/CloneButton";
 import type { RecipeWithZones } from "@/lib/recipes/types";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   recipe: RecipeWithZones;
@@ -142,12 +143,9 @@ export async function PublicRecipeView({
 
       <footer className="border-t border-[var(--color-border)] pt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between">
         {isOwner ? (
-          <Link
-            href={`/recipes/${recipe.id}`}
-            className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] text-center"
-          >
-            [ Edit in Mini Manager ]
-          </Link>
+          <Button as="a" href={`/recipes/${recipe.id}`} variant="primary" size="md">
+            Edit in Mini Manager
+          </Button>
         ) : (
           <CloneButton slug={slug} />
         )}
@@ -156,12 +154,9 @@ export async function PublicRecipeView({
             Mini Manager tracks every model from wishlist to complete and builds
             paint recipes from a 7k+ cross-brand library.
           </p>
-          <Link
-            href="/sign-in"
-            className="inline-block font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[var(--color-cyan)] text-[var(--color-cyan)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]"
-          >
-            [ Sign up free ]
-          </Link>
+          <Button as="a" href="/sign-in" variant="secondary" size="sm">
+            Sign up free
+          </Button>
         </div>
       </footer>
 

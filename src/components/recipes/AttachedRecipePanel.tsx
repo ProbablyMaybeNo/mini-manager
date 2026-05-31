@@ -95,7 +95,7 @@ export async function AttachedRecipePanel({
           mode="project"
           projectId={projectId}
           candidates={candidates}
-          label="[ + ] Attach another"
+          label="Attach another"
           variant="subtle"
         />
       }

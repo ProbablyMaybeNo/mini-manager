@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   slug: string;
@@ -55,14 +56,16 @@ export function CloneButton({ slug }: Props) {
 
   return (
     <div className="space-y-2">
-      <button
+      <Button
         type="button"
         onClick={handleClick}
         disabled={isPending}
-        className="w-full sm:w-auto font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed text-center"
+        variant="primary"
+        size="md"
+        className="w-full sm:w-auto"
       >
-        {isPending ? "[ cloning… ]" : "[ Clone to my recipes ]"}
-      </button>
+        {isPending ? "Cloning…" : "Clone to my recipes"}
+      </Button>
       {error ? (
         <p
           role="alert"

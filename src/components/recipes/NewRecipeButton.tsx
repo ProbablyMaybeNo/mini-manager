@@ -2,8 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { clsx } from "clsx";
 import { createRecipe } from "@/lib/actions/recipes";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   defaultName?: string;
@@ -23,7 +23,7 @@ export function NewRecipeButton({
   attachedProjectId,
   attachedNamedModelId,
   variant = "primary",
-  label = "[ + ] New recipe",
+  label = "New recipe",
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -43,19 +43,14 @@ export function NewRecipeButton({
   };
 
   return (
-    <button
+    <Button
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className={clsx(
-        "inline-flex items-center gap-2 px-4 py-2 tap-target text-sm font-mono",
-        variant === "primary"
-          ? "frame-strong hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
-          : "text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]",
-        isPending && "opacity-60 cursor-progress",
-      )}
+      variant={variant === "primary" ? "primary" : "ghost"}
+      size="md"
     >
-      {isPending ? "[ … ] Creating" : label}
-    </button>
+      {isPending ? "Creating…" : label}
+    </Button>
   );
 }

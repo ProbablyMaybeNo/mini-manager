@@ -6,6 +6,7 @@ import { publishRecipe, unpublishRecipe } from "@/lib/actions/recipeSharing";
 import { recipeToMarkdown, type MarkdownInput } from "@/lib/recipes/markdown";
 import { QrCode, qrCodeToSvg } from "@/components/recipes/QrCode";
 import { isNativeShareSupported, nativeShare } from "@/lib/share/webShare";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   dialogRef: React.RefObject<HTMLDialogElement | null>;
@@ -51,9 +52,9 @@ function downloadBlob(filename: string, contents: string, mime: string) {
  * lives in <ShareButton>; this component owns the section state.
  *
  * State transitions:
- *   - unpublished + [ Publish ] → mints slug → URL + QR appear inline
- *   - published   + [ Regenerate ] → unpublish then publish → new slug
- *   - published   + [ Unpublish ]  → clears slug → URL + QR removed
+ *   - unpublished + Publish → mints slug → URL + QR appear inline
+ *   - published   + Regenerate → unpublish then publish → new slug
+ *   - published   + Unpublish  → clears slug → URL + QR removed
  */
 export function ShareModal({
   dialogRef,
@@ -197,10 +198,10 @@ export function ShareModal({
           <button
             type="button"
             onClick={handleClose}
-            className="text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-2"
+            className="text-base font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-2"
             aria-label="Close share modal"
           >
-            [ × ]
+            ×
           </button>
         </header>
 
@@ -218,14 +219,16 @@ export function ShareModal({
             sections below regardless. */}
         {isNativeShareSupported && url ? (
           <section>
-            <button
+            <Button
               type="button"
               onClick={onNativeShare}
               disabled={isPending}
-              className="w-full tap-target text-sm font-mono uppercase tracking-wider px-4 py-2.5 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60"
+              variant="primary"
+              size="md"
+              className="w-full"
             >
-              [ Share via... ]
-            </button>
+              Share via…
+            </Button>
           </section>
         ) : null}
 
@@ -244,33 +247,33 @@ export function ShareModal({
                 className="flex-1 px-2 py-1.5 frame font-mono text-xs bg-[var(--color-bg)] text-[var(--color-fg)] min-w-0"
               />
               <div className="flex gap-2 flex-wrap">
-                <button
+                <Button
                   type="button"
                   disabled={isPending}
                   onClick={() => onCopy("url", url)}
-                  className={clsx(
-                    "text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
-                    isPending && "opacity-60",
-                  )}
+                  variant="ghost"
+                  size="sm"
                 >
-                  {copiedKey === "url" ? "[ copied! ]" : "[ copy ]"}
-                </button>
-                <button
+                  {copiedKey === "url" ? "Copied!" : "Copy"}
+                </Button>
+                <Button
                   type="button"
                   disabled={isPending}
                   onClick={handleRegenerate}
-                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-amber)] hover:text-[var(--color-amber)] disabled:opacity-60"
+                  variant="ghost"
+                  size="sm"
                 >
-                  [ regen ]
-                </button>
-                <button
+                  Regen
+                </Button>
+                <Button
                   type="button"
                   disabled={isPending}
                   onClick={handleUnpublish}
-                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-red)] hover:text-[var(--color-red)] disabled:opacity-60"
+                  variant="danger"
+                  size="sm"
                 >
-                  [ unpublish ]
-                </button>
+                  Unpublish
+                </Button>
               </div>
             </div>
           ) : (
@@ -292,14 +295,15 @@ export function ShareModal({
                 <p className="font-mono text-xs text-[var(--color-fg-muted)]">
                   Not published yet.
                 </p>
-                <button
+                <Button
                   type="button"
                   disabled={isPending || isUnnamed}
                   onClick={handlePublish}
-                  className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed"
+                  variant="primary"
+                  size="sm"
                 >
-                  {isPending ? "[ … ]" : "[ publish ]"}
-                </button>
+                  {isPending ? "Publishing…" : "Publish"}
+                </Button>
               </div>
             </div>
           )}
@@ -315,13 +319,14 @@ export function ShareModal({
               <div className="frame p-2 bg-[var(--color-bg-elevated)]">
                 <QrCode text={url} size={196} ariaLabel={`QR for ${url}`} />
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={onDownloadQr}
-                className="text-2xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+                variant="ghost"
+                size="sm"
               >
-                [ download SVG ]
-              </button>
+                Download SVG
+              </Button>
             </div>
           </section>
         ) : null}
@@ -332,13 +337,14 @@ export function ShareModal({
             <h3 className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
               Markdown (Reddit / Discord)
             </h3>
-            <button
+            <Button
               type="button"
               onClick={() => onCopy("md", markdown)}
-              className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+              variant="ghost"
+              size="sm"
             >
-              {copiedKey === "md" ? "[ copied! ]" : "[ copy ]"}
-            </button>
+              {copiedKey === "md" ? "Copied!" : "Copy"}
+            </Button>
           </div>
           <textarea
             readOnly
@@ -364,20 +370,22 @@ export function ShareModal({
                 className="w-full px-2 py-2 frame font-mono text-2xs bg-[var(--color-bg)] text-[var(--color-fg)] resize-y min-h-[6rem]"
               />
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => onCopy("json", jsonString)}
-                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+                  variant="ghost"
+                  size="sm"
                 >
-                  {copiedKey === "json" ? "[ copied! ]" : "[ copy ]"}
-                </button>
-                <button
+                  {copiedKey === "json" ? "Copied!" : "Copy"}
+                </Button>
+                <Button
                   type="button"
                   onClick={onDownloadJson}
-                  className="text-2xs font-mono uppercase tracking-wider px-2 py-1 border border-[var(--color-border-strong)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+                  variant="ghost"
+                  size="sm"
                 >
-                  [ download .json ]
-                </button>
+                  Download .json
+                </Button>
               </div>
             </div>
           </details>

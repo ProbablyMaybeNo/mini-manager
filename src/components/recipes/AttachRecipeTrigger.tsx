@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { clsx } from "clsx";
 import {
   AttachRecipeModal,
   type RecipeOption,
 } from "@/components/recipes/AttachRecipeModal";
+import { Button } from "@/components/ui/Button";
 
 interface BaseProps {
   candidates: ReadonlyArray<RecipeOption>;
@@ -31,23 +31,19 @@ type Props = ProjectProps | NamedModelProps;
  * client themselves.
  */
 export function AttachRecipeTrigger(props: Props) {
-  const { label = "[ + ] Attach recipe", variant = "primary" } = props;
+  const { label = "Attach recipe", variant = "primary" } = props;
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => setOpen(true)}
-        className={clsx(
-          "inline-flex items-center gap-2 px-3 py-1.5 tap-target text-xs font-mono",
-          variant === "primary"
-            ? "frame-strong hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
-            : "text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] normal-case tracking-normal",
-        )}
+        variant={variant === "primary" ? "primary" : "ghost"}
+        size="sm"
       >
         {label}
-      </button>
+      </Button>
       {props.mode === "project" ? (
         <AttachRecipeModal
           mode="project"

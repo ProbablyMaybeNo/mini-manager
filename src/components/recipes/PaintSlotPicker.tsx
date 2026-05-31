@@ -19,6 +19,7 @@ import {
   filterByType,
 } from "@/lib/paints/filters";
 import { updateStep } from "@/lib/actions/recipeSteps";
+import { Button } from "@/components/ui/Button";
 
 interface OwnedSet {
   /** Paint ids the painter currently owns (ownedCount > 0). */
@@ -373,26 +374,23 @@ export function PaintSlotPicker({
             the library. Accepts #RGB, #RRGGBB, or #RRGGBBAA.
           </p>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
               onClick={handleConfirmHex}
               disabled={isPending}
-              className={clsx(
-                "px-3 py-1.5 frame-strong tap-target text-xs font-mono uppercase tracking-wider",
-                isPending
-                  ? "opacity-60 cursor-progress"
-                  : "hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] hover:text-[var(--color-cyan)]",
-              )}
+              variant="primary"
+              size="sm"
             >
-              {isPending ? "…" : "[ ✓ ] Use hex"}
-            </button>
-            <button
+              {isPending ? "Saving…" : "Use hex"}
+            </Button>
+            <Button
               type="button"
               onClick={() => setMode("library")}
-              className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+              variant="ghost"
+              size="sm"
             >
               ← Library
-            </button>
+            </Button>
           </div>
         </div>
       )}

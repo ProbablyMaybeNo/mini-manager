@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { clsx } from "clsx";
 import type { TechniqueKey } from "@/db/schema";
 import { addStep, reorderSteps } from "@/lib/actions/recipeSteps";
 import { StepRow, type StepRowData } from "@/components/recipes/StepRow";
 import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   zoneId: string;
@@ -157,19 +157,15 @@ export function StepList({
         </p>
       ) : null}
 
-      <button
+      <Button
         type="button"
         onClick={handleAdd}
         disabled={isAddPending}
-        className={clsx(
-          "inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono",
-          isAddPending
-            ? "opacity-60 cursor-progress"
-            : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
-        )}
+        variant="primary"
+        size="sm"
       >
-        {isAddPending ? "[ … ] Adding" : "[ + ] Add step"}
-      </button>
+        {isAddPending ? "Adding…" : "Add step"}
+      </Button>
       </div>
     </Card>
   );

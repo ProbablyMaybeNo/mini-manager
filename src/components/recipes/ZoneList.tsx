@@ -16,6 +16,7 @@ import {
 } from "@/lib/actions/recipeZones";
 import { Card } from "@/components/ui/Card";
 import { LogTag } from "@/components/ui/LogTag";
+import { Button } from "@/components/ui/Button";
 
 export interface ZoneListItem {
   id: string;
@@ -102,8 +103,8 @@ export function ZoneList({
       {localZones.length === 0 ? (
         <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
           No zones yet. Type your own with{" "}
-          <span className="font-mono">[ + ] Add zone</span> or one-click
-          populate a starter pack below.
+          <span className="font-mono uppercase tracking-wider">Add zone</span>{" "}
+          or one-click populate a starter pack below.
         </p>
       ) : (
         <ul className="space-y-1" role="list">
@@ -293,13 +294,14 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
 
   if (!open) {
     return (
-      <button
+      <Button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
+        variant="primary"
+        size="sm"
       >
-        [ + ] Add zone
-      </button>
+        Add zone
+      </Button>
     );
   }
 
@@ -329,25 +331,22 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
       ) : null}
 
       <div className="flex items-center gap-2">
-        <button
+        <Button
           type="submit"
           disabled={isPending}
-          className={clsx(
-            "inline-flex items-center gap-2 px-3 py-1.5 frame-strong tap-target text-xs font-mono",
-            isPending
-              ? "opacity-60 cursor-progress"
-              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
-          )}
+          variant="primary"
+          size="sm"
         >
-          {isPending ? "[ … ] Adding" : "[ + ] Add"}
-        </button>
-        <button
+          {isPending ? "Adding…" : "Add"}
+        </Button>
+        <Button
           type="button"
           onClick={reset}
-          className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+          variant="ghost"
+          size="sm"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -390,13 +389,14 @@ function StarterZonesControl({
 
   if (!open) {
     return (
-      <button
+      <Button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-2 frame tap-target text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]"
+        variant="ghost"
+        size="sm"
       >
-        [ ▾ ] Use starter zones
-      </button>
+        Use starter zones ▾
+      </Button>
     );
   }
 
@@ -436,26 +436,23 @@ function StarterZonesControl({
       ) : null}
 
       <div className="flex items-center gap-2">
-        <button
+        <Button
           type="button"
           onClick={applyPreset}
           disabled={isPending}
-          className={clsx(
-            "inline-flex items-center gap-2 px-3 py-1.5 frame-strong tap-target text-xs font-mono",
-            isPending
-              ? "opacity-60 cursor-progress"
-              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
-          )}
+          variant="primary"
+          size="sm"
         >
-          {isPending ? "[ … ] Adding" : "[ + ] Add all"}
-        </button>
-        <button
+          {isPending ? "Adding…" : "Add all"}
+        </Button>
+        <Button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+          variant="ghost"
+          size="sm"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );

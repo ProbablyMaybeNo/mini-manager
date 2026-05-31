@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { currentUserId } from "@/lib/auth-stub";
 import {
   countNamedModelsByProject,
@@ -16,6 +15,7 @@ import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { Card } from "@/components/ui/Card";
 import { AccentCounter } from "@/components/ui/AccentCounter";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -67,18 +67,12 @@ export default async function ProjectsPage() {
         <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
           <QuickAddBar />
           <div className="flex gap-2 self-start md:self-end">
-            <Link
-              href="/projects/import"
-              className="inline-flex items-center gap-2 px-4 py-2 frame tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)] hover:text-[var(--color-cyan)]"
-            >
-              [ ↥ ] Import army list
-            </Link>
-            <Link
-              href="/projects/new"
-              className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
-            >
-              [ + ] New project
-            </Link>
+            <Button as="a" href="/projects/import" variant="ghost" size="md">
+              Import army list
+            </Button>
+            <Button as="a" href="/projects/new" variant="primary" size="md">
+              New project
+            </Button>
           </div>
         </div>
       </header>
@@ -155,18 +149,12 @@ function EmptyState() {
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
-        <Link
-          href="/projects/import"
-          className="inline-flex items-center gap-2 px-4 py-3 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)] hover:text-[var(--color-cyan)]"
-        >
-          [ ↥ ] Import army list
-        </Link>
-        <Link
-          href="/projects/new"
-          className="inline-flex items-center gap-2 px-4 py-3 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]"
-        >
-          [ + ] Create first project
-        </Link>
+        <Button as="a" href="/projects/import" variant="secondary" size="lg">
+          Import army list
+        </Button>
+        <Button as="a" href="/projects/new" variant="primary" size="lg">
+          Create first project
+        </Button>
       </div>
       <p className="text-xs font-mono text-[var(--color-fg-muted)]">
         Got a BattleScribe roster or a Warhammer App PDF? Drop it in and we&apos;ll

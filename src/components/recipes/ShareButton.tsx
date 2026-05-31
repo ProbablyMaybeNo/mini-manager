@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ShareModal } from "@/components/recipes/ShareModal";
 import type { MarkdownInput } from "@/lib/recipes/markdown";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   recipeId: string;
@@ -13,7 +14,7 @@ interface Props {
 }
 
 /**
- * Small `[ share ]` trigger in the recipe header. Owns the ref to the
+ * Share trigger in the recipe header. Owns the ref to the
  * <ShareModal>'s dialog so the modal itself stays state-driven.
  */
 export function ShareButton({
@@ -27,15 +28,16 @@ export function ShareButton({
 
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        className="text-2xs font-mono uppercase tracking-wider tap-target text-[var(--color-fg-subtle)] hover:text-[var(--color-accent)]"
+        variant="secondary"
+        size="sm"
         title="Share recipe"
         aria-label="Share recipe"
       >
-        [ share ]
-      </button>
+        Share recipe
+      </Button>
       <ShareModal
         dialogRef={dialogRef}
         recipeId={recipeId}

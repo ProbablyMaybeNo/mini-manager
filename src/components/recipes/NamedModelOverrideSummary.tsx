@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import type { Recipe } from "@/db/schema";
 import { detachRecipe } from "@/lib/actions/recipes";
+import { Button } from "@/components/ui/Button";
 
 interface ZoneSlim {
   id: string;
@@ -23,7 +24,7 @@ interface Props {
 /**
  * Compact override summary shown inside a NamedModelRow expand area.
  * Renders the override recipe's name + a tight palette strip + a
- * `[ Reset to unit recipe ]` link that detaches.
+ * Reset button that detaches the override.
  */
 export function NamedModelOverrideSummary({ recipe, zones }: Props) {
   const router = useRouter();
@@ -78,17 +79,16 @@ export function NamedModelOverrideSummary({ recipe, zones }: Props) {
           </span>
         ) : null}
       </Link>
-      <button
+      <Button
         type="button"
         onClick={handleReset}
         disabled={isPending}
-        className={clsx(
-          "text-[var(--color-fg-subtle)] hover:text-[var(--color-amber)] tap-target px-2 shrink-0",
-          isPending && "cursor-progress",
-        )}
+        variant="ghost"
+        size="sm"
+        className="shrink-0"
       >
-        [ reset ]
-      </button>
+        Reset
+      </Button>
     </div>
   );
 }

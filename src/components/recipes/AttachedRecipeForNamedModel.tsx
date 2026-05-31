@@ -72,7 +72,7 @@ export async function AttachedRecipeForNamedModel({
           namedModelId={namedModelId}
           candidates={candidates}
           variant="subtle"
-          label="[ + ] Override"
+          label="Override"
         />
       </div>
     );

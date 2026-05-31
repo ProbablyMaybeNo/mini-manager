@@ -61,7 +61,7 @@ test.describe("M5 — Share + Clone", () => {
 
     // Hit Publish.
     await alicePage
-      .getByRole("button", { name: /^\[ publish \]$/i })
+      .getByRole("button", { name: /^Publish$/i })
       .click();
 
     // The URL input appears with the public slug once the action settles.

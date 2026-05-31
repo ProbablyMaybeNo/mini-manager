@@ -7,6 +7,7 @@ import type { Route } from "next";
 import { clsx } from "clsx";
 import type { Recipe } from "@/db/schema";
 import { detachRecipe } from "@/lib/actions/recipes";
+import { Button } from "@/components/ui/Button";
 
 interface ZoneSlim {
   id: string;
@@ -24,10 +25,9 @@ interface Props {
 
 /**
  * Read-only inline summary of an attached recipe. Lives in the project
- * workspace beneath the named-models panel. Includes a `[ Detach ]`
- * action that clears the attachment (the recipe itself survives —
- * goes back to standalone) and `[ Edit recipe ]` that links to the
- * editor.
+ * workspace beneath the named-models panel. Includes a Detach action
+ * that clears the attachment (the recipe itself survives — goes back to
+ * standalone) and Edit that links to the editor.
  */
 export function AttachedRecipeSummary({ recipe, zones, editHref }: Props) {
   const router = useRouter();
@@ -66,24 +66,19 @@ export function AttachedRecipeSummary({ recipe, zones, editHref }: Props) {
         >
           {recipe.name}
         </Link>
-        <span className="flex items-center gap-3 text-2xs font-mono uppercase tracking-wider">
-          <Link
-            href={editHref}
-            className="text-[var(--color-cyan)] hover:underline tap-target px-2"
-          >
-            [ edit ]
-          </Link>
-          <button
+        <span className="flex items-center gap-2">
+          <Button as="a" href={editHref} variant="secondary" size="sm">
+            Edit
+          </Button>
+          <Button
             type="button"
             onClick={handleDetach}
             disabled={isPending}
-            className={clsx(
-              "text-[var(--color-fg-subtle)] hover:text-[var(--color-amber)] tap-target px-2",
-              isPending && "cursor-progress",
-            )}
+            variant="ghost"
+            size="sm"
           >
-            [ detach ]
-          </button>
+            Detach
+          </Button>
         </span>
       </div>
 

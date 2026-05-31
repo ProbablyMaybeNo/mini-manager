@@ -8,6 +8,7 @@ import { deleteRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { ShareButton } from "@/components/recipes/ShareButton";
 import type { MarkdownInput } from "@/lib/recipes/markdown";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { Button } from "@/components/ui/Button";
 
 interface AttachmentSummary {
   kind: "project" | "named-model" | "standalone";
@@ -155,19 +156,16 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
             markdownInput={share.markdown}
             jsonPayload={share.jsonPayload}
           />
-          <button
+          <Button
             type="button"
             onClick={openDelete}
             disabled={isPending}
-            className={clsx(
-              "text-2xs font-mono uppercase tracking-wider tap-target",
-              "text-[var(--color-fg-subtle)] hover:text-[var(--color-red)]",
-              isPending && "opacity-50 cursor-progress",
-            )}
+            variant="danger"
+            size="sm"
             title="Delete recipe"
           >
-            [ delete ]
-          </button>
+            Delete
+          </Button>
         </div>
       </div>
 
@@ -194,26 +192,23 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
             the attachment will be cleared. This can't be undone.
           </p>
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
               onClick={closeDelete}
-              className="text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+              variant="ghost"
+              size="sm"
             >
-              [ cancel ]
-            </button>
-            <button
+              Cancel
+            </Button>
+            <Button
               type="button"
               onClick={confirmDelete}
               disabled={isPending}
-              className={clsx(
-                "inline-flex items-center gap-2 px-3 py-2 frame-strong tap-target text-xs font-mono uppercase tracking-wider",
-                isPending
-                  ? "opacity-60 cursor-progress"
-                  : "text-[var(--color-red)] hover:bg-[color-mix(in_srgb,var(--color-red)_10%,transparent)]",
-              )}
+              variant="danger"
+              size="sm"
             >
-              {isPending ? "[ … ] Deleting" : "[ × ] Delete"}
-            </button>
+              {isPending ? "Deleting…" : "Delete"}
+            </Button>
           </div>
         </div>
       </dialog>
