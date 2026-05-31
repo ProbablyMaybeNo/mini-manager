@@ -400,12 +400,12 @@ input, textarea, select {
   }
 }
 
-/* Toast notifications — slide in from the right with a soft fade,
-   land at full opacity. Auto-dismiss is handled in JS via setTimeout. */
+/* Toast notifications — drop in from above the final position with a
+   soft fade. Auto-dismiss is handled in JS via setTimeout. */
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translate3d(20px, 0, 0);
+    transform: translate3d(0, -12px, 0);
   }
   to {
     opacity: 1;

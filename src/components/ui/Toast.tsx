@@ -160,13 +160,20 @@ function ToastViewport({
       aria-label="Notifications"
       aria-live="polite"
       className={clsx(
-        "pointer-events-none fixed z-50",
-        "right-3 bottom-3 md:right-4 md:bottom-4",
-        "flex flex-col gap-2 items-end",
-        "max-w-[min(96vw,420px)]",
+        // z-[60] keeps the stack above side panels (PaintDetailPanel,
+        // WishlistDetailDrawer, MarkBoughtModal — all z-50) and the
+        // global mobile chrome. Modals that need to outrank a toast
+        // must use z-[70]+ themselves.
+        "pointer-events-none fixed z-[60]",
+        // Top-center on every viewport. Avoids occlusion from the
+        // right-side detail panels + the bottom tab bar entirely, and
+        // arrives in the user's natural reading scan path.
+        "top-3 left-1/2 -translate-x-1/2",
+        "flex flex-col gap-2 items-stretch",
+        "w-[min(96vw,420px)]",
       )}
       style={{
-        bottom: "max(0.75rem, calc(env(safe-area-inset-bottom,0px) + 4.5rem))",
+        top: "max(0.75rem, calc(env(safe-area-inset-top,0px) + 3.5rem))",
       }}
     >
       {toasts.map((t) => (
