@@ -134,9 +134,13 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
             {attachment.kind === "standalone" ? (
               <StatusPill status="neutral">Standalone</StatusPill>
             ) : attachment.href ? (
-              <a href={attachment.href} className="inline-flex">
-                <StatusPill status="info">
-                  Attached · {attachment.label}
+              <a
+                href={attachment.href}
+                className="inline-flex rounded-sm hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_12%,transparent)] transition-colors"
+                aria-label={`Open ${attachment.label} workspace`}
+              >
+                <StatusPill status="info" className="cursor-pointer">
+                  Attached · {attachment.label} →
                 </StatusPill>
               </a>
             ) : (
