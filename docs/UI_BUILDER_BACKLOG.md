@@ -16,7 +16,7 @@ move should reinforce "this is a working terminal, not a webapp."
 
 ## P0 — high impact, finish-the-look moves
 
-- [ ] **Top status bar.** Thin row pinned to viewport top showing
+- [x] **Top status bar.** Thin row pinned to viewport top showing → 0630e4d
       `SYS · NET · SAVED · TIME`. Mono, all-caps, colored status pills
       like the Terminal_UI reference. `SYS: OK` (green), `NET: OK/LAG`
       (green/amber based on `navigator.onLine` + a periodic ping),
@@ -27,7 +27,7 @@ move should reinforce "this is a working terminal, not a webapp."
       the existing MobileHeader. Don't break the existing MobileHeader
       layout — sit *above* it on mobile or merge into it.
 
-- [ ] **`> ` selection caret on focused list items.** When a row in
+- [x] **`> ` selection caret on focused list items.** → e3785e8 When a row in
       LibraryTable, ProjectRow, recipe ZoneList/StepList, or the
       WishlistTable is focused (keyboard) or active (`aria-current=true`),
       render a cyan `>` glyph as a `::before` prefix. Pure CSS, no
@@ -35,7 +35,7 @@ move should reinforce "this is a working terminal, not a webapp."
       `left: -1ch`). Affirms keyboard navigation visually + reads as
       a CLI prompt.
 
-- [ ] **`<LogTag>` primitive + sweep.** New primitive at
+- [x] **`<LogTag>` primitive + sweep.** → 81f452f New primitive at
       `src/components/ui/LogTag.tsx`. Renders `[INFO]` / `[OKAY]` /
       `[WARN]` / `[ERR]` / `[DEBG]` in mono, bracket-wrapped, colored
       to status tokens (info=cyan, okay=green, warn=amber, err=red,
