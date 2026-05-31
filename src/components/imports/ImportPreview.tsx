@@ -5,6 +5,7 @@ import { useState } from "react";
 import { clsx } from "clsx";
 import { applyImport } from "@/lib/actions/imports";
 import type { ImportedTree } from "@/lib/imports/types";
+import { LogTag } from "@/components/ui/LogTag";
 
 interface ImportPreviewProps {
   importId: string;
@@ -143,22 +144,33 @@ export function ImportPreview({
   return (
     <div className="space-y-6">
       <div className="frame p-4 space-y-1 text-xs font-mono">
-        <p>
-          Parsed via{" "}
-          <span className="text-[var(--color-cyan)]">{parserUsed ?? "unknown"}</span>
-          {confidencePct !== null ? (
-            <>
-              , confidence{" "}
-              <span
-                className={clsx(
-                  confidencePct >= 80 && "text-[var(--color-green)]",
-                  confidencePct < 60 && "text-[var(--color-amber)]",
-                )}
-              >
-                {confidencePct}%
-              </span>
-            </>
-          ) : null}
+        <p className="flex items-center gap-2 flex-wrap">
+          <LogTag
+            variant={
+              confidencePct === null
+                ? "info"
+                : confidencePct >= 80
+                  ? "okay"
+                  : "warn"
+            }
+          />
+          <span>
+            Parsed via{" "}
+            <span className="text-[var(--color-cyan)]">{parserUsed ?? "unknown"}</span>
+            {confidencePct !== null ? (
+              <>
+                , confidence{" "}
+                <span
+                  className={clsx(
+                    confidencePct >= 80 && "text-[var(--color-green)]",
+                    confidencePct < 60 && "text-[var(--color-amber)]",
+                  )}
+                >
+                  {confidencePct}%
+                </span>
+              </>
+            ) : null}
+          </span>
         </p>
         {warnings.length > 0 ? (
           <details
@@ -168,9 +180,12 @@ export function ImportPreview({
             <summary className="cursor-pointer text-[var(--color-amber)]">
               {warnings.length} warning{warnings.length === 1 ? "" : "s"}
             </summary>
-            <ul className="mt-2 ml-4 list-disc text-[var(--color-fg-muted)] space-y-1">
+            <ul className="mt-2 ml-4 list-none text-[var(--color-fg-muted)] space-y-1">
               {warnings.map((w, i) => (
-                <li key={i}>{w}</li>
+                <li key={i} className="flex items-start gap-2">
+                  <LogTag variant="warn" className="mt-0.5" />
+                  <span>{w}</span>
+                </li>
               ))}
             </ul>
           </details>
@@ -288,8 +303,9 @@ export function ImportPreview({
 
       <div className="flex items-center justify-between gap-4">
         {error ? (
-          <p role="alert" className="text-sm font-mono text-[var(--color-amber)]">
-            {error}
+          <p role="alert" className="flex items-start gap-2 text-sm font-mono text-[var(--color-amber)]">
+            <LogTag variant="err" className="mt-0.5" />
+            <span>{error}</span>
           </p>
         ) : (
           <span />

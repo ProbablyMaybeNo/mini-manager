@@ -15,6 +15,7 @@ import {
   reorderZones,
 } from "@/lib/actions/recipeZones";
 import { Card } from "@/components/ui/Card";
+import { LogTag } from "@/components/ui/LogTag";
 
 export interface ZoneListItem {
   id: string;
@@ -138,9 +139,10 @@ export function ZoneList({
       {reorderError ? (
         <p
           role="alert"
-          className="frame px-3 py-1.5 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
+          className="flex items-start gap-2 frame px-3 py-1.5 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
         >
-          {reorderError}
+          <LogTag variant="err" />
+          <span>{reorderError}</span>
         </p>
       ) : null}
 
@@ -319,9 +321,10 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
       {error ? (
         <p
           role="alert"
-          className="text-2xs font-mono text-[var(--color-red)]"
+          className="flex items-start gap-2 text-2xs font-mono text-[var(--color-red)]"
         >
-          {error}
+          <LogTag variant="err" />
+          <span>{error}</span>
         </p>
       ) : null}
 
@@ -425,9 +428,10 @@ function StarterZonesControl({
       {error ? (
         <p
           role="alert"
-          className="text-2xs font-mono text-[var(--color-red)]"
+          className="flex items-start gap-2 text-2xs font-mono text-[var(--color-red)]"
         >
-          {error}
+          <LogTag variant="err" />
+          <span>{error}</span>
         </p>
       ) : null}
 
