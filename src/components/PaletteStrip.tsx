@@ -1,24 +1,21 @@
 /**
- * A row of small color swatches showing the paints used in a project.
- * Phase 1 placeholder: paints aren't wired up yet, so it renders empty
- * slots (dimmed dashes) as a layout reservation. Real paint refs land
- * with Recipe in Phase 3.
+ * Small inline placeholder for a project's paint palette. When the
+ * project has no recipe attached we render a single dim text marker
+ * — the previous N-dash boxes (UX-V5-003) read like stage cells to
+ * users and Ross himself confused them with the StageBarsStrip on
+ * /projects rows. One label is honest about the empty state.
+ *
+ * Once recipe palette ref data lands, this component is bypassed by
+ * `RecipePaletteStripStatic` rendering the actual hex swatches.
  */
-export function PaletteStrip({ slots = 6 }: { slots?: number }) {
+export function PaletteStrip({ slots: _slots }: { slots?: number } = {}) {
   return (
-    <div
-      className="inline-flex items-center gap-0.5"
-      aria-label="Paint palette (empty)"
+    <span
+      className="inline-flex items-center text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-subtle)]"
+      title="No palette yet — attach a recipe to populate"
+      aria-label="No palette attached"
     >
-      {Array.from({ length: slots }).map((_, i) => (
-        <span
-          key={i}
-          className="inline-block w-4 h-4 border border-[var(--color-border)] text-[var(--color-fg-subtle)] text-2xs leading-none flex items-center justify-center"
-          aria-hidden
-        >
-          —
-        </span>
-      ))}
-    </div>
+      — No palette
+    </span>
   );
 }

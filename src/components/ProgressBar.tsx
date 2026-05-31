@@ -76,7 +76,9 @@ export function ProgressBar({
       aria-valuemax={100}
       aria-label={`${clamped} percent complete`}
       className={clsx(
-        "relative inline-block h-1.5 rounded-sm overflow-hidden align-middle",
+        // UX-V5-012/014: bumped from h-1.5 (6px) to h-2 (8px) so the
+        // track + fill read as a real bar at 0%, not a hairline scratch.
+        "relative inline-block h-2 rounded-sm overflow-hidden align-middle",
         trackBg,
         trackBorder,
         className,

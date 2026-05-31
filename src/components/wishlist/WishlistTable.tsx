@@ -284,7 +284,7 @@ function StatusChangePopover({
                 ✓ Mark bought
               </MenuItem>
               <MenuItem onSelect={() => setStatus("Cancelled")} tone="muted">
-                × Cancel
+                × Mark cancelled
               </MenuItem>
             </>
           ) : null}

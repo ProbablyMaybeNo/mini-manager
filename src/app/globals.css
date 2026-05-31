@@ -30,7 +30,11 @@
      names, metadata pop instead of fading into the dark backdrop.
      Some hierarchy preserved (subtle slightly dimmer than muted) but
      both clear AAA contrast on #0a0a0a (-muted 16.1:1, -subtle 12.6:1). */
-  --color-fg-muted: #f0f0f0;
+  /* Ross + R5 audit compromise: was #f0f0f0 (indistinguishable from
+     #f5f5f5 fg). Lifted to #cfcfcf — bright enough to keep the
+     "labels pop" intent from the earlier grey→white pass, but
+     distinct from fg so hierarchy reads. Still 12.6:1 on bg = AAA. */
+  --color-fg-muted: #cfcfcf;
   --color-fg-subtle: #d4d4d4;
 
   --color-border: #262626;
