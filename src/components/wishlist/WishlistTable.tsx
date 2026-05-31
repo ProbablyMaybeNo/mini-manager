@@ -27,7 +27,7 @@ const PRIORITY_DOT: Record<Priority, string> = {
 };
 
 const STATUS_PILL: Record<WishlistItem["status"], StatusPillKind> = {
-  Wanted: "info",
+  Wanted: "wishlist",
   Bought: "ok",
   Cancelled: "neutral",
 };
