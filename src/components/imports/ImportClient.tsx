@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { createFileImport, createTextImport } from "@/lib/actions/imports";
+import { Button } from "@/components/ui/Button";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_PASTE_CHARS = 20_000;
@@ -174,11 +175,13 @@ export function ImportClient() {
             setError(null);
           }}
           className={clsx(
-            "px-4 py-2 frame tap-target",
-            mode === "drop" && "text-[var(--color-accent)] glow-cyan",
+            "px-4 py-2 min-h-[36px] font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
+            mode === "drop"
+              ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
+              : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]",
           )}
         >
-          [ Drop file ]
+          Drop file
         </button>
         <button
           type="button"
@@ -189,11 +192,13 @@ export function ImportClient() {
             setError(null);
           }}
           className={clsx(
-            "px-4 py-2 frame tap-target",
-            mode === "paste" && "text-[var(--color-accent)] glow-cyan",
+            "px-4 py-2 min-h-[36px] font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
+            mode === "paste"
+              ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
+              : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]",
           )}
         >
-          [ Paste text ]
+          Paste text
         </button>
       </div>
 
@@ -231,14 +236,15 @@ export function ImportClient() {
               e.target.value = "";
             }}
           />
-          <button
+          <Button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isPending}
-            className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-50"
+            variant="primary"
+            size="md"
           >
-            {isPending ? "Parsing…" : "[ Choose file ]"}
-          </button>
+            {isPending ? "Parsing…" : "Choose file"}
+          </Button>
         </div>
       ) : (
         <form
@@ -265,13 +271,14 @@ export function ImportClient() {
             <span className="text-xs font-mono text-[var(--color-fg-muted)]">
               {pasted.length.toLocaleString()} / {MAX_PASTE_CHARS.toLocaleString()} chars
             </span>
-            <button
+            <Button
               type="submit"
               disabled={isPending || pasted.trim().length === 0}
-              className="inline-flex items-center gap-2 px-4 py-2 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-50"
+              variant="primary"
+              size="md"
             >
-              {isPending ? "Parsing…" : "[ Parse list ]"}
-            </button>
+              {isPending ? "Parsing…" : "Parse list"}
+            </Button>
           </div>
         </form>
       )}

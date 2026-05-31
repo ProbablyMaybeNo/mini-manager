@@ -7,9 +7,9 @@ import { Card } from "@/components/ui/Card";
 /**
  * Server component. Renders the named models section of a project
  * workspace. Hidden when the project has none — only the compact
- * `[ + Add named model ]` button materialises. As soon as the
- * first model is added the full panel (header, rows, inline add)
- * replaces the bare button.
+ * "Add named model" button materialises. As soon as the first model
+ * is added the full panel (header, rows, inline add) replaces the
+ * bare button.
  *
  * The page fetches and passes the rows; this component owns the
  * empty-state branch and the slim snapshot projection so the

@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import { applyImport } from "@/lib/actions/imports";
 import type { ImportedTree } from "@/lib/imports/types";
 import { LogTag } from "@/components/ui/LogTag";
+import { Button } from "@/components/ui/Button";
 
 interface ImportPreviewProps {
   importId: string;
@@ -281,23 +282,28 @@ export function ImportPreview({
                 maxLength={500}
                 className="col-span-12 md:col-span-2 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
               />
-              <button
-                type="button"
-                onClick={() => onRemoveUnit(u.key)}
-                aria-label={`Remove ${u.name || "unit"}`}
-                className="col-span-12 md:col-span-1 p-2 frame tap-target text-xs font-mono hover:text-[var(--color-amber)]"
-              >
-                [ x ]
-              </button>
+              <div className="col-span-12 md:col-span-1 flex items-center justify-center">
+                <Button
+                  type="button"
+                  onClick={() => onRemoveUnit(u.key)}
+                  aria-label={`Remove ${u.name || "unit"}`}
+                  variant="danger"
+                  size="sm"
+                >
+                  ×
+                </Button>
+              </div>
             </div>
           ))}
-          <button
+          <Button
             type="button"
             onClick={onAddUnit}
-            className="w-full p-3 frame tap-target text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
+            variant="ghost"
+            size="md"
+            className="w-full"
           >
-            [ + ] Add unit
-          </button>
+            Add unit
+          </Button>
         </div>
       </section>
 
@@ -310,14 +316,15 @@ export function ImportPreview({
         ) : (
           <span />
         )}
-        <button
+        <Button
           type="button"
           onClick={onApply}
           disabled={busy || units.length === 0}
-          className="inline-flex items-center gap-2 px-5 py-3 frame-strong tap-target text-sm font-mono hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-50"
+          variant="primary"
+          size="lg"
         >
-          {busy ? "Applying…" : "[ Apply → create projects ]"}
-        </button>
+          {busy ? "Applying…" : "Apply → create projects"}
+        </Button>
       </div>
     </div>
   );

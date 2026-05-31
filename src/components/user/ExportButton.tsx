@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { exportAllUserData } from "@/lib/actions/exportData";
+import { Button } from "@/components/ui/Button";
 
 function todayStamp(): string {
   const d = new Date();
@@ -46,14 +47,15 @@ export function ExportButton() {
 
   return (
     <div className="space-y-2">
-      <button
+      <Button
         type="button"
         onClick={handleClick}
         disabled={isPending}
-        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60 disabled:cursor-not-allowed"
+        variant="secondary"
+        size="md"
       >
-        {isPending ? "[ exporting… ]" : "[ Export all my data ]"}
-      </button>
+        {isPending ? "Exporting…" : "Export all my data"}
+      </Button>
       {done ? (
         <p className="font-mono text-xs text-[var(--color-fg-muted)]">
           Download started.

@@ -4,6 +4,7 @@ import { useId, useMemo, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { projectTypes, type Project, type ProjectType } from "@/db/schema";
 import { createProject } from "@/lib/actions/projects";
+import { Button } from "@/components/ui/Button";
 
 type ParentOption = Pick<Project, "id" | "name" | "type" | "faction">;
 
@@ -243,24 +244,17 @@ export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOptio
       ) : null}
 
       <div className="flex items-center gap-3">
-        <button
+        <Button
           type="submit"
           disabled={isPending}
-          className={clsx(
-            "inline-flex items-center gap-2 px-4 py-2.5 frame-strong tap-target text-sm font-mono",
-            isPending
-              ? "opacity-60 cursor-progress"
-              : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)]",
-          )}
+          variant="primary"
+          size="md"
         >
-          {isPending ? "[ … ] Creating" : "[ + ] Create project"}
-        </button>
-        <a
-          href="/projects"
-          className="text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]"
-        >
+          {isPending ? "Creating…" : "Create project"}
+        </Button>
+        <Button as="a" href="/projects" variant="ghost" size="md">
           Cancel
-        </a>
+        </Button>
       </div>
     </form>
   );
