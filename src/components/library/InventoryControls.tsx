@@ -7,6 +7,7 @@ import {
   setOwnedCount,
   toggleWishlistedPaint,
 } from "@/lib/actions/inventory";
+import { LogTag } from "@/components/ui/LogTag";
 import { useToast } from "@/components/ui/Toast";
 
 interface InventoryState {
@@ -190,8 +191,9 @@ export function InventoryControls({
         </button>
       </div>
       {error ? (
-        <p role="alert" className="text-xs font-mono text-[var(--color-red)]">
-          [ ! ] {error}
+        <p role="alert" className="flex items-start gap-2 text-xs font-mono text-[var(--color-red)]">
+          <LogTag variant="err" />
+          <span>{error}</span>
         </p>
       ) : null}
     </div>

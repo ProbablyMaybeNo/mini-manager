@@ -16,6 +16,7 @@ import {
 } from "@/lib/actions/wishlist";
 import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal";
 import { Button } from "@/components/ui/Button";
+import { LogTag } from "@/components/ui/LogTag";
 
 export function WishlistDetailDrawer({
   item,
@@ -236,8 +237,9 @@ export function WishlistDetailDrawer({
         </Field>
 
         {error ? (
-          <p role="alert" className="text-xs font-mono text-[var(--color-red)]">
-            [ ! ] {error}
+          <p role="alert" className="flex items-start gap-2 text-xs font-mono text-[var(--color-red)]">
+            <LogTag variant="err" />
+            <span>{error}</span>
           </p>
         ) : null}
       </div>

@@ -267,7 +267,18 @@ export function PaintSlotPicker({
                 onChange={(event) => setOwnedOnly(event.target.checked)}
                 className="sr-only"
               />
-              {ownedOnly ? "[x]" : "[ ]"} Owned
+              <span
+                aria-hidden
+                className={clsx(
+                  "inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm border font-mono text-2xs leading-none",
+                  ownedOnly
+                    ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_24%,transparent)] text-[var(--color-accent)]"
+                    : "border-[var(--color-border-strong)]",
+                )}
+              >
+                {ownedOnly ? "✓" : ""}
+              </span>
+              Owned
             </label>
           </div>
           <div className="flex flex-wrap gap-1.5">

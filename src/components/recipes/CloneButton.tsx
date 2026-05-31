@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { LogTag } from "@/components/ui/LogTag";
 
 interface Props {
   slug: string;
@@ -69,9 +70,10 @@ export function CloneButton({ slug }: Props) {
       {error ? (
         <p
           role="alert"
-          className="font-mono text-xs text-[var(--color-amber)]"
+          className="flex items-start gap-2 font-mono text-xs text-[var(--color-amber)]"
         >
-          [ ! ] {error}
+          <LogTag variant="warn" />
+          <span>{error}</span>
         </p>
       ) : null}
     </div>
@@ -124,9 +126,10 @@ export function AutoCloneOnMount({ slug }: Props) {
   return error ? (
     <p
       role="alert"
-      className="max-w-md mx-auto mt-4 font-mono text-xs text-[var(--color-amber)] text-center"
+      className="max-w-md mx-auto mt-4 inline-flex items-start gap-2 font-mono text-xs text-[var(--color-amber)]"
     >
-      [ ! ] {error}
+      <LogTag variant="warn" />
+      <span>{error}</span>
     </p>
   ) : (
     <p

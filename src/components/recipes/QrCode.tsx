@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { LogTag } from "@/components/ui/LogTag";
 
 interface Props {
   text: string;
@@ -59,8 +60,9 @@ export function QrCode({
 
   if (error) {
     return (
-      <p className="font-mono text-xs text-[var(--color-amber)]" role="alert">
-        [ ! ] {error}
+      <p className="inline-flex items-start gap-2 font-mono text-xs text-[var(--color-amber)]" role="alert">
+        <LogTag variant="warn" />
+        <span>{error}</span>
       </p>
     );
   }

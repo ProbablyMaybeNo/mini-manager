@@ -77,7 +77,9 @@ export function DropZone({ onFile, onError, disabled }: Props) {
       }}
     >
       <div className="space-y-2">
-        <p className="font-mono text-sm glow-cyan">[ Drop image here ]</p>
+        <p className="font-mono text-sm glow-cyan uppercase tracking-wider">
+          Drop image here
+        </p>
         <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
           Click to pick a file · or paste from clipboard ( Ctrl/⌘ + V )
         </p>

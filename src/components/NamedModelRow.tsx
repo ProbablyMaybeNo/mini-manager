@@ -227,7 +227,17 @@ function StageCheckbox({
               "hover:bg-[color-mix(in_srgb,var(--color-accent)_4%,transparent)] hover:text-[var(--color-fg)]",
       )}
     >
-      <span aria-hidden>{checked ? "[x]" : "[ ]"}</span>
+      <span
+        aria-hidden
+        className={clsx(
+          "inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm border",
+          checked
+            ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_24%,transparent)]"
+            : "border-[var(--color-border-strong)]",
+        )}
+      >
+        {checked ? "✓" : ""}
+      </span>
       <span
         aria-hidden
         className="text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"

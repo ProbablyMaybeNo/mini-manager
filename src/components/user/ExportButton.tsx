@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { exportAllUserData } from "@/lib/actions/exportData";
 import { Button } from "@/components/ui/Button";
+import { LogTag } from "@/components/ui/LogTag";
 
 function todayStamp(): string {
   const d = new Date();
@@ -64,9 +65,10 @@ export function ExportButton() {
       {error ? (
         <p
           role="alert"
-          className="font-mono text-xs text-[var(--color-amber)]"
+          className="inline-flex items-start gap-2 font-mono text-xs text-[var(--color-amber)]"
         >
-          [ ! ] {error}
+          <LogTag variant="warn" />
+          <span>{error}</span>
         </p>
       ) : null}
     </div>

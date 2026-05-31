@@ -7,6 +7,7 @@ import {
   scrapeAndCreateWishlistItem,
 } from "@/lib/actions/wishlist";
 import { Button } from "@/components/ui/Button";
+import { LogTag } from "@/components/ui/LogTag";
 
 const URL_RE = /^https?:\/\//i;
 
@@ -90,8 +91,9 @@ export function QuickAddBar() {
         <p className="text-xs font-mono text-[var(--color-amber)]">{notice}</p>
       ) : null}
       {error ? (
-        <p role="alert" className="text-xs font-mono text-[var(--color-red)]">
-          [ ! ] {error}
+        <p role="alert" className="flex items-start gap-2 text-xs font-mono text-[var(--color-red)]">
+          <LogTag variant="err" />
+          <span>{error}</span>
         </p>
       ) : null}
     </form>

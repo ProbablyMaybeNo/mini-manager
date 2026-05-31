@@ -138,12 +138,14 @@ export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOptio
                 />
                 <span
                   className={clsx(
-                    "font-mono text-xs mt-0.5",
-                    checked ? "glow-green" : "text-[var(--color-fg-muted)]",
+                    "inline-flex items-center justify-center w-3.5 h-3.5 mt-0.5 rounded-full border font-mono text-2xs leading-none",
+                    checked
+                      ? "border-[var(--color-green)] bg-[color-mix(in_srgb,var(--color-green)_28%,transparent)] text-[var(--color-green)]"
+                      : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)]",
                   )}
                   aria-hidden
                 >
-                  {checked ? "[x]" : "[ ]"}
+                  {checked ? "●" : ""}
                 </span>
                 <span className="min-w-0">
                   <span
