@@ -76,7 +76,7 @@ export function WishlistTable({
   }
 
   return (
-    <div className="frame overflow-hidden">
+    <div className="frame">
       <div
         className={clsx(
           "grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
