@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   /** Open / close controlled by the parent. */
@@ -98,20 +99,22 @@ export function PaletteSaveDialog({
         </label>
 
         <div className="flex items-center justify-end gap-2">
-          <button
+          <Button
             type="button"
             onClick={onCancel}
-            className="tap-target text-xs font-mono uppercase tracking-wider px-3 py-1.5 text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]"
+            variant="ghost"
+            size="sm"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             disabled={name.trim().length === 0}
-            className="tap-target text-xs font-mono uppercase tracking-wider px-3 py-1.5 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] disabled:opacity-60"
+            variant="primary"
+            size="sm"
           >
-            [ Save ]
-          </button>
+            Save
+          </Button>
         </div>
       </form>
     </dialog>

@@ -17,6 +17,7 @@ import { LibraryGrid } from "./LibraryGrid";
 import { PaintDetailPanel } from "./PaintDetailPanel";
 import { ViewModeToggle } from "./ViewModeToggle";
 import { useLibraryViewMode } from "@/lib/hooks/useLibraryViewMode";
+import { Button } from "@/components/ui/Button";
 
 export interface InventorySnapshot {
   ownedCount: number;
@@ -83,15 +84,17 @@ export function LibraryPageClient({
       </div>
 
       {/* Mobile filter trigger */}
-      <button
+      <Button
         type="button"
         onClick={() => setMobileFilterOpen(true)}
-        className="md:hidden fixed top-14 right-3 z-30 tap-target px-3 py-1.5 frame-strong bg-[var(--color-bg-panel)] font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
+        variant="secondary"
+        size="sm"
+        className="md:hidden fixed top-14 right-3 z-30"
         aria-label="Open filters"
         aria-expanded={mobileFilterOpen}
       >
-        [ Filters ]
-      </button>
+        Filters
+      </Button>
 
       {/* Mobile bottom-sheet drawer */}
       {mobileFilterOpen ? (
@@ -133,8 +136,8 @@ export function LibraryPageClient({
       ) : null}
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex items-center justify-between gap-3 px-3 py-1.5 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
-          <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]">
+        <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
+          <span className="font-mono text-2xs uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
             View
           </span>
           <ViewModeToggle mode={viewMode} onChange={setViewMode} />

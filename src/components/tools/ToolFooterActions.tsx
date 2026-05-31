@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { clsx } from "clsx";
 import { createPalette } from "@/lib/actions/palettes";
 import type { ToolPaletteSwatch, ToolId } from "@/lib/tools/types";
 import { SendToRecipeModal } from "./SendToRecipeModal";
 import { PaletteSaveDialog } from "./PaletteSaveDialog";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   toolId: ToolId;
@@ -84,40 +84,32 @@ export function ToolFooterActions({
           ✓ {saveFlash}
         </span>
       ) : null}
-      <button
+      <Button
         type="button"
         onClick={openSave}
         disabled={empty || savePending}
         title={empty ? "No swatches to save yet" : "Save palette to your library"}
-        className={clsx(
-          "px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider tap-target",
-          empty || savePending
-            ? "opacity-60 cursor-not-allowed text-[var(--color-fg-muted)]"
-            : "hover:bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)] hover:text-[var(--color-amber)]",
-        )}
+        variant="secondary"
+        size="sm"
       >
-        {savePending ? "…" : "[ Save palette ]"}
-      </button>
+        {savePending ? "Saving…" : "Save palette"}
+      </Button>
       <PaletteSaveDialog
         open={saveDialogOpen}
         defaultName={fallbackName}
         onConfirm={confirmSave}
         onCancel={() => setSaveDialogOpen(false)}
       />
-      <button
+      <Button
         type="button"
         onClick={() => setModalOpen(true)}
         disabled={empty}
         title={empty ? "No swatches to send yet" : "Send palette to a recipe"}
-        className={clsx(
-          "px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider tap-target",
-          empty
-            ? "opacity-60 cursor-not-allowed text-[var(--color-fg-muted)]"
-            : "hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]",
-        )}
+        variant="primary"
+        size="sm"
       >
-        [ Send to recipe ]
-      </button>
+        Send to recipe
+      </Button>
       <SendToRecipeModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

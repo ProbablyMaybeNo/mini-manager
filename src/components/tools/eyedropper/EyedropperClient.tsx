@@ -22,6 +22,7 @@ import {
   CameraSampler,
   isCameraSamplerSupported,
 } from "./CameraSampler";
+import { Button } from "@/components/ui/Button";
 
 const SWATCH_COUNT = 6;
 
@@ -167,13 +168,14 @@ export function EyedropperClient() {
                     ? `${sampled.width} × ${sampled.height} px sampled`
                     : "Decoding…"}
                 </p>
-                <button
+                <Button
                   type="button"
                   onClick={reset}
-                  className="text-2xs font-mono text-[var(--color-red)] hover:glow-amber tap-target px-2 frame"
+                  variant="danger"
+                  size="sm"
                 >
-                  [ × Clear ]
-                </button>
+                  Clear
+                </Button>
               </div>
             </div>
           ) : (
@@ -184,17 +186,19 @@ export function EyedropperClient() {
                 disabled={busy}
               />
               {isCameraSamplerSupported ? (
-                <button
+                <Button
                   type="button"
                   onClick={() => setCameraOpen(true)}
                   disabled={busy || swatches.length >= SWATCH_COUNT}
-                  className="block w-full tap-target text-xs font-mono uppercase tracking-wider px-3 py-2 frame-strong hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] disabled:opacity-60"
+                  variant="primary"
+                  size="md"
+                  className="w-full"
                   aria-label="Open camera sampler"
                 >
                   {swatches.length >= SWATCH_COUNT
-                    ? "[ Use camera ] palette full"
-                    : "[ Use camera ]"}
-                </button>
+                    ? "Use camera — palette full"
+                    : "Use camera"}
+                </Button>
               ) : null}
             </div>
           )}

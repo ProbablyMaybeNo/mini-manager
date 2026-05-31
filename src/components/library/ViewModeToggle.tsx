@@ -49,6 +49,10 @@ function ToggleButton({
   ariaLabel: string;
   children: React.ReactNode;
 }) {
+  /* NB-4 spacing: bumped horizontal padding (px-4) and gap (gap-2) so the
+     icon and label don't crowd, and added min-height to meet the 32px
+     desktop tap-target floor. Tracking widened to 0.08em to match other
+     mono chrome chips. */
   return (
     <button
       type="button"
@@ -56,7 +60,7 @@ function ToggleButton({
       aria-label={ariaLabel}
       aria-pressed={active}
       className={clsx(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wider",
+        "inline-flex items-center gap-2 px-4 py-1.5 min-h-[32px] font-mono text-xs uppercase tracking-[0.08em]",
         "transition-colors",
         active
           ? "bg-[var(--color-accent)] text-[var(--color-bg)]"

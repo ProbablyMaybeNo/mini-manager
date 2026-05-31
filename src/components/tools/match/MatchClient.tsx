@@ -13,6 +13,7 @@ import { SendToRecipeModal } from "@/components/tools/SendToRecipeModal";
 import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { MatchResultsRow } from "./MatchResultsRow";
+import { Button } from "@/components/ui/Button";
 
 const PAGE_SIZE = 50;
 const HEX6 = /^#?[0-9a-fA-F]{6}$/;
@@ -168,12 +169,13 @@ export function MatchClient() {
                 maxLength={7}
                 className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
               />
-              <button
+              <Button
                 type="submit"
-                className="px-3 py-1.5 frame-strong tap-target text-xs font-mono uppercase tracking-wider hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
+                variant="primary"
+                size="sm"
               >
-                [ Match ]
-              </button>
+                Match
+              </Button>
             </div>
             {hexError ? (
               <p role="alert" className="text-2xs font-mono text-[var(--color-red)]">
@@ -182,9 +184,14 @@ export function MatchClient() {
             ) : null}
           </form>
 
+          {/* NB-11: Brand filter chips — vintage solid-button styling.
+              Active state is filled cyan + dark fg (high contrast, reads
+              from across the room); inactive is bordered chrome with full
+              fg colour (was muted, too pale to read). Min-height 28px
+              meets tap-target floor without going full button-md. */}
           <div className="space-y-2">
             <p className="section-title">Brand filter · {brandFilter.size || "all"}</p>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {brands.map((b) => {
                 const active = brandFilter.has(b);
                 return (
@@ -194,10 +201,10 @@ export function MatchClient() {
                     onClick={() => toggleBrand(b)}
                     aria-pressed={active}
                     className={clsx(
-                      "px-1.5 py-0.5 text-2xs font-mono uppercase tracking-wider frame tap-target",
+                      "px-2.5 py-1 min-h-[28px] text-2xs font-mono uppercase tracking-[0.08em] rounded-sm border transition-colors",
                       active
-                        ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
-                        : "text-[var(--color-fg-muted)] hover:border-[var(--color-cyan)] hover:text-[var(--color-cyan)]",
+                        ? "bg-[var(--color-cyan)] text-[var(--color-bg)] border-[var(--color-cyan)]"
+                        : "bg-transparent text-[var(--color-fg)] border-[var(--color-border-strong)] hover:border-[var(--color-cyan)] hover:text-[var(--color-cyan)]",
                     )}
                   >
                     {b}
@@ -205,13 +212,14 @@ export function MatchClient() {
                 );
               })}
               {brandFilter.size > 0 ? (
-                <button
+                <Button
                   type="button"
                   onClick={() => setBrandFilter(new Set())}
-                  className="px-1.5 py-0.5 text-2xs font-mono uppercase tracking-wider text-[var(--color-red)] tap-target"
+                  variant="danger"
+                  size="sm"
                 >
-                  [ × Clear ]
-                </button>
+                  Clear
+                </Button>
               ) : null}
             </div>
           </div>
@@ -240,7 +248,20 @@ export function MatchClient() {
             >
               <span role="columnheader" aria-label="Swatch" />
               <span role="columnheader">Paint</span>
-              <span role="columnheader" className="text-right">ΔE</span>
+              <span
+                role="columnheader"
+                className="text-right inline-flex items-center justify-end gap-1 cursor-help"
+                title="ΔE = colour difference (CIE Delta-E 2000). Lower is closer: under 1 is imperceptible, 1–3 is a close match, 5+ is noticeably different."
+                aria-label="ΔE colour difference"
+              >
+                <span>ΔE</span>
+                <span
+                  aria-hidden
+                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-[var(--color-border-strong)] text-[10px] leading-none font-mono normal-case tracking-normal text-[var(--color-fg-subtle)]"
+                >
+                  ?
+                </span>
+              </span>
               <span role="columnheader" aria-label="Actions" />
             </div>
             {catalogLoading ? (

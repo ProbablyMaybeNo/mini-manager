@@ -6,7 +6,6 @@ import { clsx } from "clsx";
 import {
   setOwnedCount,
   toggleWishlistedPaint,
-  markPurchased,
 } from "@/lib/actions/inventory";
 import { useToast } from "@/components/ui/Toast";
 
@@ -20,8 +19,9 @@ const ZERO: InventoryState = { ownedCount: 0, isWishlisted: false };
 /**
  * Inventory controls. The `compact` mode renders two icon toggles for
  * the library table row (✓ for owned, ★ for wishlisted). The full mode
- * renders a bottle stepper + the same toggles + a "mark just bought"
- * quick action — used in the detail panel.
+ * renders a bottle stepper + the wishlist toggle — used in the detail
+ * panel. NB-3: the redundant "Just bought +1" quick action was removed
+ * in favour of the +/- stepper which already increments and revalidates.
  *
  * Uses optimistic local state during the server-action round-trip;
  * reverts if the action returns `{ ok: false }`.
@@ -60,15 +60,6 @@ export function InventoryControls({
         next
           ? toast.success("Added to wishlist")
           : toast.info("Removed from wishlist"),
-    );
-  }
-
-  function justBought() {
-    const next = state.ownedCount + 1;
-    optimistic(
-      { ownedCount: next },
-      () => markPurchased({ paintId, deltaCount: 1 }),
-      () => toast.success("Marked as purchased"),
     );
   }
 
@@ -145,6 +136,11 @@ export function InventoryControls({
 
   return (
     <div className="flex flex-col gap-2">
+      {/* Owned stepper — NB-3 simplified: the +/− stepper covers every
+          in-place adjustment. The separate "Just bought +1" button was
+          redundant (the + already increments + revalidates) so it was
+          removed. markPurchased keeps its server-action surface for the
+          MarkBoughtModal wishlist flow. */}
       <div className="flex items-center gap-2">
         <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-green)] w-16">
           Owned
@@ -170,18 +166,10 @@ export function InventoryControls({
           type="button"
           onClick={() => bumpOwned(1)}
           disabled={isPending}
-          className="tap-target frame px-2 font-mono text-sm text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+          className="tap-target frame px-2 font-mono text-sm text-[var(--color-green)] border-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
           aria-label="Increase owned count"
         >
           +
-        </button>
-        <button
-          type="button"
-          onClick={justBought}
-          disabled={isPending}
-          className="ml-2 text-xs font-mono px-2 py-1 frame text-[var(--color-green)] border-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)]"
-        >
-          [ Just bought +1 ]
         </button>
       </div>
       <div>

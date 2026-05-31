@@ -125,8 +125,8 @@ export function WheelClient() {
             <h1 className="text-3xl tracking-wide">COLOUR WHEEL</h1>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
               Drag the primary pick. Switch harmony with the bar below.
-              Click [ Find in library ] on any swatch to pull the closest
-              paints across every brand.
+              Click <span className="font-mono uppercase tracking-wider">Find in library</span>{" "}
+              on any swatch to pull the closest paints across every brand.
             </p>
           </header>
 

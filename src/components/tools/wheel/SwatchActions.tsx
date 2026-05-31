@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { clsx } from "clsx";
 import type { Paint } from "@/lib/paints/types";
 import { findClosestPaints, type MatchResult } from "@/lib/tools/match/find";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   hex: string;
@@ -96,7 +97,7 @@ export function SwatchActions({
             type="button"
             onClick={onPin}
             className={clsx(
-              "text-2xs font-mono tap-target px-1.5",
+              "text-base font-mono tap-target px-1.5",
               isPinned
                 ? "text-[var(--color-amber)] glow-amber"
                 : "text-[var(--color-fg-muted)] hover:text-[var(--color-amber)]",
@@ -104,17 +105,18 @@ export function SwatchActions({
             aria-pressed={isPinned}
             aria-label={isPinned ? "Unpin swatch" : "Pin swatch"}
           >
-            {isPinned ? "[★]" : "[☆]"}
+            {isPinned ? "★" : "☆"}
           </button>
         ) : null}
-        <button
+        <Button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] tap-target px-2"
+          variant="ghost"
+          size="sm"
           aria-expanded={open}
         >
-          {open ? "[ × ]" : "[ Find in library ]"}
-        </button>
+          {open ? "Close" : "Find in library"}
+        </Button>
       </div>
 
       {open ? (

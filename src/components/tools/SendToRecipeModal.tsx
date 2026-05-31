@@ -10,6 +10,7 @@ import {
   type SendToRecipeOption,
 } from "@/lib/actions/sendToRecipe";
 import type { ToolPaletteSwatch, ToolId } from "@/lib/tools/types";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   open: boolean;
@@ -308,38 +309,36 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                   ✓ Palette sent. {swatchCount} step
                   {swatchCount === 1 ? "" : "s"} added.
                 </p>
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     router.push(`/recipes/${success.recipeId}`);
                     onClose();
                   }}
-                  className="px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] hover:text-[var(--color-cyan)]"
+                  variant="primary"
+                  size="sm"
                 >
-                  [ Open recipe → ]
-                </button>
+                  Open recipe →
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   type="submit"
                   disabled={!canSubmit}
-                  className={clsx(
-                    "px-3 py-1.5 frame-strong text-xs font-mono uppercase tracking-wider tap-target",
-                    canSubmit
-                      ? "hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
-                      : "opacity-60 cursor-not-allowed",
-                  )}
+                  variant="primary"
+                  size="sm"
                 >
-                  {isPending ? "Sending…" : "[ Send → ]"}
-                </button>
-                <button
+                  {isPending ? "Sending…" : "Send →"}
+                </Button>
+                <Button
                   type="button"
                   onClick={onClose}
-                  className="text-2xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target px-3"
+                  variant="ghost"
+                  size="sm"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             )}
           </form>

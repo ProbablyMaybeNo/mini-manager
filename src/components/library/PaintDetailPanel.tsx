@@ -98,10 +98,10 @@ export function PaintDetailPanel({
         <button
           type="button"
           onClick={close}
-          className="text-sm font-mono px-2 py-1 hover:text-[var(--color-amber)] tap-target"
+          className="text-base font-mono px-2 py-1 text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target"
           aria-label="Close detail panel"
         >
-          [ × ]
+          ×
         </button>
       </header>
 

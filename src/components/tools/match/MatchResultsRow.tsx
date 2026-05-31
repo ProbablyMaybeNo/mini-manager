@@ -2,6 +2,7 @@
 
 import { clsx } from "clsx";
 import type { MatchResult } from "@/lib/tools/match/find";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   result: MatchResult;
@@ -62,13 +63,14 @@ export function MatchResultsRow({ result, onUse }: Props) {
       </div>
       <div role="cell">
         {onUse ? (
-          <button
+          <Button
             type="button"
             onClick={() => onUse(result)}
-            className="text-2xs font-mono uppercase tracking-wider text-[var(--color-cyan)] hover:glow-cyan tap-target px-2 frame"
+            variant="secondary"
+            size="sm"
           >
-            [ Use ]
-          </button>
+            Use
+          </Button>
         ) : null}
       </div>
     </div>

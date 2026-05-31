@@ -11,6 +11,7 @@ import { HUE_BANDS } from "@/lib/paints/filters";
 import { writeFilterToParams } from "@/lib/paints/filterUrl";
 import { useFilterRailCollapsed } from "@/lib/hooks/useFilterRailCollapsed";
 import { TypeIcon } from "./TypeIcon";
+import { Button } from "@/components/ui/Button";
 
 /**
  * Left-rail filter set. Brand multi-select (collapses by A-Z when > 12
@@ -302,7 +303,7 @@ export function FilterRail({
       </Section>
 
       {hasActiveFilter(filter) ? (
-        <button
+        <Button
           type="button"
           onClick={() =>
             commit({
@@ -315,10 +316,12 @@ export function FilterRail({
               ownedOnly: false,
             })
           }
-          className="text-xs font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-amber)] underline-offset-2 hover:underline"
+          variant="ghost"
+          size="sm"
+          className="self-start"
         >
-          [ Clear all filters ]
-        </button>
+          Clear all filters
+        </Button>
       ) : null}
       </div>
     </aside>
