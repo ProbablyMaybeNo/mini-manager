@@ -337,7 +337,12 @@ input, textarea, select {
   font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-fg-muted);
+  /* Card title is a real heading scoping the whole panel — lift colour
+     and weight so it visually outranks the USERNAME / PASSWORD field
+     labels below it (which are the same 13px mono small-caps).
+     UX-V3-014 — auditor round 3. */
+  color: var(--color-fg);
+  font-weight: 500;
 }
 .card-header-title {
   display: inline-flex;
