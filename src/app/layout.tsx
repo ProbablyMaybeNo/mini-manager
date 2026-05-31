@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { clsx } from "clsx";
 import { NavRail } from "@/components/NavRail";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { MobileHeader } from "@/components/MobileHeader";
+import { StatusBar } from "@/components/StatusBar";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { ToastProvider } from "@/components/ui/Toast";
 import { auth } from "@/auth";
@@ -62,8 +64,10 @@ export default async function RootLayout({
     <html lang="en" className={`${plexMono.variable} ${plexSans.variable}`}>
       <body>
         <ToastProvider>
+          {isAuthed ? <StatusBar /> : null}
           {isAuthed ? <MobileHeader user={user} /> : null}
-          <div className="flex min-h-screen">
+          {/* md:pt-6 offsets the 24px fixed StatusBar on desktop. */}
+          <div className={clsx("flex min-h-screen", isAuthed && "md:pt-6")}>
             {isAuthed ? <NavRail user={user} appVersion={APP_VERSION} /> : null}
             <main className={isAuthed ? "flex-1 min-w-0 pt-12 pb-20 md:pt-0 md:pb-0" : "flex-1 min-w-0"}>
               {children}
