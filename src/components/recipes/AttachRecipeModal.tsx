@@ -334,10 +334,10 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={clsx(
-        "px-3 py-1.5 text-2xs font-mono uppercase tracking-wider tap-target rounded-sm",
+        "px-3 py-1.5 text-2xs font-mono uppercase tracking-wider tap-target rounded-sm border-b-2",
         active
-          ? "text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
-          : "text-[var(--color-fg-muted)]",
+          ? "text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] border-[var(--color-accent)]"
+          : "text-[var(--color-fg-muted)] border-transparent",
       )}
       aria-pressed={active}
     >
