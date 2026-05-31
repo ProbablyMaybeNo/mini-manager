@@ -137,10 +137,10 @@ export function MatchClient() {
         <div className="space-y-4">
           <header className="space-y-1">
             <h1 className="text-3xl tracking-wide">MATCH</h1>
-            <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
-              Paste a hex; see the top matches across every brand. Green
-              dot = ΔE &lt; 2 (perceptually identical), amber &lt; 5, grey
-              ≥ 5.
+            <p className="text-2xs font-sans text-[var(--color-fg-muted)] leading-snug">
+              Paste a hex; see the top matches across every brand. The dot
+              shows how close: green = identical to the eye, amber = close,
+              grey = nearest available.
             </p>
           </header>
 
