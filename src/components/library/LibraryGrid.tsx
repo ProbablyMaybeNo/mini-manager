@@ -116,14 +116,20 @@ function SwatchCell({
         <span
           aria-hidden
           className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full border border-[var(--color-bg)]"
-          style={{ background: "var(--status-ok)" }}
+          style={{
+            background: "var(--status-ok)",
+            boxShadow: "0 0 0 1.5px var(--color-bg)",
+          }}
         />
       ) : null}
       {wishlisted ? (
         <span
           aria-hidden
           className="absolute bottom-0.5 right-0.5 h-2 w-2 rounded-full border border-[var(--color-bg)]"
-          style={{ background: "var(--status-wishlist)" }}
+          style={{
+            background: "var(--status-wishlist)",
+            boxShadow: "0 0 0 1.5px var(--color-bg)",
+          }}
         />
       ) : null}
     </button>
