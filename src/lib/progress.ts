@@ -134,13 +134,13 @@ export function displayStatus(
     | "completeCount"
     | "isShelved"
   >,
-): "Shelved" | "Completed" | "Painting" | "Priming" | "Assembling" | "Pile" | "Empty" {
+): "Shelved" | "Completed" | "Painting" | "Priming" | "Assembling" | "Pile" | "New" {
   if (project.isShelved) return "Shelved";
-  if (project.count === 0) return "Empty";
+  if (project.count === 0) return "New";
   if (project.completeCount === project.count) return "Completed";
   if (project.paintCount > 0) return "Painting";
   if (project.primeCount > 0) return "Priming";
   if (project.buildCount > 0) return "Assembling";
   if (project.ownedCount > 0) return "Pile";
-  return "Empty";
+  return "New";
 }

@@ -173,7 +173,7 @@ describe("displayStatus", () => {
       }),
     ).toBe("Shelved");
   });
-  test("count === 0 → Empty", () => {
+  test("count === 0 → New", () => {
     expect(
       displayStatus({
         count: 0,
@@ -185,7 +185,7 @@ describe("displayStatus", () => {
         completeCount: 0,
         isShelved: false,
       }),
-    ).toBe("Empty");
+    ).toBe("New");
   });
   test("Pile = owned but nothing built", () => {
     expect(

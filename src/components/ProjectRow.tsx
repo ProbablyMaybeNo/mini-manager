@@ -12,7 +12,7 @@ const STATUS_PILL: Record<
   ReturnType<typeof displayStatus>,
   StatusPillKind
 > = {
-  Empty: "neutral",
+  New: "info",
   Pile: "neutral",
   Assembling: "info",
   Priming: "info",
@@ -86,7 +86,7 @@ export function ProjectRow({
         <ProgressBar percent={percent} width={14} />
       </span>
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
-        {status === "Empty" ? (
+        {status === "New" ? (
           <span className="text-xs font-mono text-[var(--color-fg-subtle)]">—</span>
         ) : (
           <StatusPill status={STATUS_PILL[status]}>{status}</StatusPill>

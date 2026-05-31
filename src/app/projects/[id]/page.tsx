@@ -27,7 +27,7 @@ import { Card } from "@/components/ui/Card";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 
 const HEADER_STATUS_PILL: Record<string, StatusPillKind> = {
-  Empty: "neutral",
+  New: "info",
   Pile: "neutral",
   Assembling: "info",
   Priming: "info",
