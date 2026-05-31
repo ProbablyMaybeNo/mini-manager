@@ -13,7 +13,10 @@ import {
 } from "@/lib/paints/filterUrl";
 import { FilterRail } from "./FilterRail";
 import { LibraryTable } from "./LibraryTable";
+import { LibraryGrid } from "./LibraryGrid";
 import { PaintDetailPanel } from "./PaintDetailPanel";
+import { ViewModeToggle } from "./ViewModeToggle";
+import { useLibraryViewMode } from "@/lib/hooks/useLibraryViewMode";
 
 export interface InventorySnapshot {
   ownedCount: number;
@@ -60,6 +63,8 @@ export function LibraryPageClient({
   );
 
   const selectedInventory = selected ? inventory.get(selected.id) : undefined;
+
+  const [viewMode, setViewMode] = useLibraryViewMode();
 
   // Mobile-only state: bottom-sheet drawer for the filter rail.
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -126,11 +131,27 @@ export function LibraryPageClient({
         </>
       ) : null}
 
-      <LibraryTable
-        paints={filtered}
-        selectedPaintId={selectedId}
-        inventoryByPaint={inventory}
-      />
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex items-center justify-between gap-3 px-3 py-1.5 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
+          <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]">
+            View
+          </span>
+          <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+        </div>
+        {viewMode === "list" ? (
+          <LibraryTable
+            paints={filtered}
+            selectedPaintId={selectedId}
+            inventoryByPaint={inventory}
+          />
+        ) : (
+          <LibraryGrid
+            paints={filtered}
+            selectedPaintId={selectedId}
+            inventoryByPaint={inventory}
+          />
+        )}
+      </div>
       <PaintDetailPanel
         paint={selected}
         similarInOtherBrands={similar}
