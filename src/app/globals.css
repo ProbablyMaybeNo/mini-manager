@@ -158,15 +158,39 @@ table, th, td {
 
 /* Sensible defaults */
 *, *::before, *::after { box-sizing: border-box; }
-a { color: var(--color-cyan); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--color-cyan);
+  text-decoration: none;
+  transition: color 150ms ease-out;
+}
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
 button { cursor: pointer; background: transparent; color: inherit; border: 0; padding: 0; }
 hr { border: 0; border-top: 1px solid var(--color-border); }
 
-/* Focus rings — visible always, never default browser blue */
+/* Text selection — cyan-tinged so highlighted prose feels intentional */
+::selection {
+  background: color-mix(in srgb, var(--color-cyan) 32%, transparent);
+  color: var(--color-fg);
+}
+
+/* Focus rings — visible always, never default browser blue.
+   Form fields get the cyan ring as a coordinated box-shadow so the
+   border-radius is respected (outline draws square corners). */
 :focus-visible {
   outline: 2px solid var(--color-cyan);
   outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-cyan) 35%, transparent);
+}
+
+input, textarea, select {
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 /* ============================================================
@@ -227,6 +251,12 @@ hr { border: 0; border-top: 1px solid var(--color-border); }
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
+  /* Subtle elevation: outer shadow lifts off the page, inset top
+     highlight suggests light from above (the CRT-screen-edge gleam). */
+  box-shadow:
+    0 4px 12px -4px rgba(0, 0, 0, 0.55),
+    0 1px 2px -1px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 color-mix(in srgb, var(--color-fg) 4%, transparent);
 }
 .card-header {
   display: flex;
@@ -276,10 +306,18 @@ hr { border: 0; border-top: 1px solid var(--color-border); }
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 120ms, border-color 120ms, color 120ms;
+  /* All-property transition picks up the press translate below. */
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    color 150ms ease-out,
+    transform 80ms ease-out,
+    box-shadow 150ms ease-out;
   white-space: nowrap;
+  user-select: none;
 }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
 
 .btn-sm { padding: 4px 10px; min-height: 28px; font-size: var(--text-xs); }
 .btn-md { padding: 8px 16px; min-height: 36px; }
