@@ -30,7 +30,7 @@ From the Notion **Testing Task Tracker** database (page `370c5770777180f3a847db6
 
 ### Big sweep — solid-button replacement
 
-- [ ] **Item 14 — App-wide bracket → Button sweep.** Severity: Medium (but huge visual impact). Tags: ui, design, button.
+- [x] **Item 14 — App-wide bracket → Button sweep.** Severity: Medium (but huge visual impact). Tags: ui, design, button. → 010d9e1 + 01d01f2 + c352fe4 + 5e4c4c8
   - Grep for `\[ .* \]` patterns inside JSX text content. Audit every match.
   - Replace ad-hoc `<button className="frame ...">[ + ] Some Action</button>` with `<Button variant="primary"|"secondary"|"ghost"|"danger">Some Action</Button>` from `src/components/ui/Button.tsx`.
   - Decision rule:
@@ -42,35 +42,35 @@ From the Notion **Testing Task Tracker** database (page `370c5770777180f3a847db6
   - Likely surfaces (non-exhaustive): NewProjectForm "[ + ] Create project", NewRecipeButton, AttachRecipeTrigger, ShareModal "[ Share via... ]", ToolFooterActions, InventoryControls full "[ Just bought +1 ]", FilterRail "[ Clear all filters ]", MobileHeader/LibraryPageClient "[ Filters ]" mobile trigger, RecipeNotes, ExportButton, CloneButton.
   - **Halt + check before shipping** if the sweep balloons into more than ~15 files; we may want to land it in multiple commits by surface area.
 
-- [ ] **Item 2 — Replace recipe button with solid color and black text.** Tags: recipe, button, ui.
+- [x] **Item 2 — Replace recipe button with solid color and black text.** Tags: recipe, button, ui. → 010d9e1
   - Subsumed by item 14, but flagging the recipe-create CTA + the `NewRecipeButton` component as a specific target.
 
-- [ ] **Item 5 — Replace attach recipe button with a colored button.** Tags: projects page, recipe box, button design.
+- [x] **Item 5 — Replace attach recipe button with a colored button.** Tags: projects page, recipe box, button design. → 010d9e1
   - Subsumed by item 14, but `AttachRecipeTrigger.tsx` + `AttachRecipeModal.tsx` are specific targets. The trigger is currently `[ Attach recipe ]` text — make it `<Button variant="primary">Attach recipe</Button>`.
 
 ### Surface polish
 
-- [ ] **Item 1 — UI for creating a new recipe looks unstyled and inconsistent.** Tags: ui, recipe, font, buttons.
+- [x] **Item 1 — UI for creating a new recipe looks unstyled and inconsistent.** Tags: ui, recipe, font, buttons. → 010d9e1 (subsumed by item 14 — NewRecipeButton, Zone/Step Add controls, RecipeHeader Delete, ShareModal all now use Button primitive)
   - Recipe creation flow (`NewRecipeButton` → the new recipe page or modal → `RecipeEditorClient`) needs typography + button consistency with rest of app.
   - Specifically: the NewRecipeButton + any form labels + the editor's `[ + Add zone ]` / `[ + Add step ]` controls.
 
-- [ ] **Item 3 — Update star and wishlist color and simplify owned adjustment options.** Tags: paint, slide out panel, star, whistles.
+- [x] **Item 3 — Update star and wishlist color and simplify owned adjustment options.** Tags: paint, slide out panel, star, whistles. → 01d01f2 (dropped redundant "Just bought +1" — +/- stepper covers it; star/wishlist colour already on `--color-yellow`)
   - Already shipped yellow wishlist semantic (V3, V4). This item asks for further tightening on the PaintDetailPanel slide-out (the `full` variant of InventoryControls).
   - "Simplify owned adjustment" — the current `[− 0 + Just bought +1]` cluster is busy. Consider a single combined stepper or drop the "Just bought +1" button (the `+` already does the same job).
 
-- [ ] **Item 4 — Improve spacing and appearance of list and grid buttons on library page.** Tags: library, buttons, ui, spacing.
+- [x] **Item 4 — Improve spacing and appearance of list and grid buttons on library page.** Tags: library, buttons, ui, spacing. → 01d01f2
   - The `ViewModeToggle` (list/grid pair at the top of library) needs a polish pass — likely just spacing inside each button, alignment with adjacent chrome, hover treatment.
 
-- [ ] **Item 8 — Improve status change experience on Wishlist page from table view.** Tags: wishlist, table view, status change.
+- [x] **Item 8 — Improve status change experience on Wishlist page from table view.** Tags: wishlist, table view, status change. → c352fe4 (StatusChangePopover: Wanted → Mark-bought / Cancel; Cancelled → Restore; Bought stays terminal)
   - When you click a wishlist row's status (Wanted / Bought / Cancelled) in the table view, the UX is currently clunky. Look at WishlistTable.tsx status column + any dropdown/popover and tighten — likely an inline pill toggle or a hover dropdown.
 
-- [ ] **Item 9 — Improve design of right hand slide-out panel on wishlist.** Tags: wishlist, panel, design, ui.
+- [x] **Item 9 — Improve design of right hand slide-out panel on wishlist.** Tags: wishlist, panel, design, ui. → c352fe4 (close × matches PaintDetailPanel, footer buttons gain primary/secondary/danger variants for action hierarchy)
   - WishlistDetailDrawer.tsx — apply the same polish that landed on PaintDetailPanel.tsx (card-elevation, status-pill alignment, button-variant consistency).
 
-- [ ] **Item 11 — Match page brand filters look terrible, hard to read.** Tags: ui, design.
+- [x] **Item 11 — Match page brand filters look terrible, hard to read.** Tags: ui, design. → 01d01f2
   - `/tools/match` brand filter UI needs a vintage-style rework. Likely currently a checkbox list or chip grid; needs solid-button chips with clearer state.
 
-- [ ] **Item 12 — Add tooltip explaining ΔE notation.** Tags: ui, design.
+- [x] **Item 12 — Add tooltip explaining ΔE notation.** Tags: ui, design. → 01d01f2
   - The `△E 0.5` figure on Match results is industry standard (CIE Delta-E 2000 color-difference) but unfamiliar to most painters.
   - Add a tooltip / inline `(?)` icon next to the ΔE column header explaining: "ΔE = color difference. Lower is closer. <1 is imperceptible to the eye, 1-3 is a close match, 5+ is noticeably different."
 
