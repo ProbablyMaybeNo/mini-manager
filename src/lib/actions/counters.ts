@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { projects } from "@/db/schema";
@@ -69,9 +69,15 @@ export async function bumpCounter(
   const patch: Partial<CounterSnapshot> = { [col]: check.nextValue };
 
   try {
+    // Atomic increment — `SET col = col + delta` instead of `SET col = N`.
+    // Under concurrent + clicks (the UI no longer disables the button on
+    // isPending so users can hold-tap +), two writes both reading the
+    // same old snapshot would lose-update if we wrote literal values.
+    // The DB CHECK cascade catches any over-increment that slips past
+    // the pre-validation read.
     await db
       .update(projects)
-      .set(patch)
+      .set({ [col]: sql`${projects[col]} + ${delta}` } as Partial<CounterSnapshot>)
       .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)));
   } catch (err) {
     const message =

@@ -222,6 +222,14 @@ function StageRow({
   // now" without needing to read every label. P11.1.
   const labelTone = isLead ? STAGE_TONE[stage] : "text-[var(--color-fg-muted)]";
 
+  // Cascade-aware tooltip on disabled +. When you can't bump higher
+  // it's because the next-up stage is the ceiling — explain it.
+  // (BUILD ceiling is OWNED, PRIME is BUILD, etc.) The pre-validation
+  // error message already includes the limit; we steal the same string.
+  const incBlockerHint = canIncrement
+    ? undefined
+    : nextUpHintFor(stage);
+
   return (
     <li
       className={clsx(
@@ -257,18 +265,41 @@ function StageRow({
         <CounterButton
           label={`Decrement ${STAGE_LABEL[stage]}`}
           glyph="−"
-          disabled={!canDecrement || isPending}
+          disabled={!canDecrement}
           onClick={() => onBump(-1)}
         />
         <CounterButton
           label={`Increment ${STAGE_LABEL[stage]}`}
           glyph="+"
-          disabled={!canIncrement || isPending}
+          disabled={!canIncrement}
           onClick={() => onBump(1)}
+          title={incBlockerHint}
         />
       </span>
     </li>
   );
+}
+
+/**
+ * Why is + disabled on this stage? Each stage's ceiling is the
+ * count of the next-up stage in the cascade (OWNED for BUILD,
+ * BUILD for PRIME, etc.). Surfaces as a native `title` tooltip
+ * so a hover/long-press tells the user "bump the prior stage
+ * first" without firing the error block.
+ */
+function nextUpHintFor(stage: PanelStage): string {
+  switch (stage) {
+    case "build":
+      return "BUILD can't exceed OWNED — bump Owned first.";
+    case "prime":
+      return "PRIME can't exceed BUILD — bump Build first.";
+    case "paint":
+      return "PAINT can't exceed PRIME — bump Prime first.";
+    case "base":
+      return "BASE can't exceed PAINT — bump Paint first.";
+    case "complete":
+      return "DONE can't exceed BASE — bump Base first.";
+  }
 }
 
 export function CounterButton({
@@ -276,11 +307,13 @@ export function CounterButton({
   glyph,
   disabled,
   onClick,
+  title,
 }: {
   label: string;
   glyph: string;
   disabled: boolean;
   onClick: () => void;
+  title?: string;
 }) {
   return (
     <button
@@ -288,6 +321,7 @@ export function CounterButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
+      title={title}
       className={clsx(
         "tap-target inline-flex items-center justify-center px-3 py-1.5",
         "frame-strong font-mono text-sm leading-none select-none",
