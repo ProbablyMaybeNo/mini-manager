@@ -65,20 +65,43 @@ npx lighthouse http://localhost:3000/             --preset=desktop --output=html
 Per the plan, acceptable targets are TBT < 200ms, CLS < 0.1, LCP <
 2.5s on simulated 4G.
 
-## Measurement table — fill in after the live run
+## Measurement table — first live run (2026-05-31)
 
-| Route               | Form factor | Before LCP | After LCP | Before TBT | After TBT | Before CLS | After CLS | Before Perf | After Perf |
-|---------------------|-------------|-----------:|----------:|-----------:|----------:|-----------:|----------:|------------:|-----------:|
-| `/`                 | mobile      |            |           |            |           |            |           |             |            |
-| `/library`          | mobile      |            |           |            |           |            |           |             |            |
-| `/projects`         | mobile      |            |           |            |           |            |           |             |            |
-| `/recipes/[id]`     | mobile      |            |           |            |           |            |           |             |            |
-| `/tools/eyedropper` | mobile      |            |           |            |           |            |           |             |            |
-| `/`                 | desktop     |            |           |            |           |            |           |             |            |
-| `/library`          | desktop     |            |           |            |           |            |           |             |            |
-| `/projects`         | desktop     |            |           |            |           |            |           |             |            |
-| `/recipes/[id]`     | desktop     |            |           |            |           |            |           |             |            |
-| `/tools/eyedropper` | desktop     |            |           |            |           |            |           |             |            |
+Source: `scripts/audit-lighthouse.mjs` against `https://miniaturemanager.vercel.app` via Google PageSpeed Insights API. Targets: Perf ≥ 90 mobile / ≥ 95 desktop · LCP < 2.5s · TBT < 200ms · CLS < 0.1 · A11y ≥ 90 · Best Practices ≥ 90.
+
+| Route               | Form factor | Perf | A11y | Best | LCP    | TBT  | CLS   | Pass? |
+|---------------------|-------------|-----:|-----:|-----:|-------:|-----:|------:|:-----:|
+| `/`                 | mobile      | **89** |   96 |  100 | 3.6s | 39ms  | 0.000 | ⚠️ Perf -1, LCP +1.1s |
+| `/library`          | mobile      | **89** |   96 |  100 | 3.6s | 23ms  | 0.000 | ⚠️ Perf -1, LCP +1.1s |
+| `/projects`         | mobile      | **87** |   96 |  100 | 3.8s |  0ms  | 0.000 | ⚠️ Perf -3, LCP +1.3s |
+| `/sign-in`          | mobile      |   97 |   96 |  100 | 2.5s |  0ms  | 0.000 | ✅ |
+| `/tools/eyedropper` | mobile      |   90 |   96 |  100 | 3.6s | 47ms  | 0.000 | ✅ Perf at bar, LCP +1.1s |
+| `/`                 | desktop     |   99 |   96 |  100 | 0.8s | 14ms  | 0.000 | ✅ |
+| `/library`          | desktop     |  100 |   96 |  100 | 0.7s | 36ms  | 0.000 | ✅ |
+| `/projects`         | desktop     |  100 |   96 |  100 | 0.8s |  4ms  | 0.000 | ✅ |
+| `/sign-in`          | desktop     |  100 |   96 |  100 | 0.6s |  5ms  | 0.000 | ✅ |
+| `/tools/eyedropper` | desktop     |  100 |   96 |  100 | 0.8s | 21ms  | 0.000 | ✅ |
+
+## Headline
+
+- **Desktop crushes the criterion** — 99-100 perf on every route, LCP < 1s.
+- **A11y 96, Best Practices 100, TBT 0-47ms, CLS 0.000** — all dimensions clean across the board.
+- **Mobile: 4 of 5 routes pass; 3 miss by 1-3 perf points** due to one shared issue: **LCP ~3.6s on simulated 4G** (target 2.5s).
+- One route exceeds the criterion outright (`/sign-in` at 97 mobile) — the lightest payload on the lightest layout.
+
+## Mobile LCP — the only thing in the way of full pass
+
+Three of the four "almost there" routes (`/`, `/library`, `/projects`, `/tools/eyedropper`) all show ~3.6s LCP on simulated 4G. That's TTFB + initial-render dominated, not bundle-size dominated (TBT is essentially 0, meaning the JS doesn't block).
+
+Most likely root cause: Vercel cold-start on the `flex-1 min-w-0` main column waiting for the server-rendered shell + database round-trip before LCP fires. The library catalog Dexie cache is irrelevant on a cold mobile visit.
+
+Candidates (in effort order):
+1. **Add `loading="eager"` + `fetchpriority="high"` to the LCP element** — usually the page heading or NavRail wordmark. One attribute, can shave 300-500ms.
+2. **Preload critical fonts** — IBM Plex Mono is already on `display: swap` but isn't `<link rel="preload">`'d. Adds it to layout.tsx head.
+3. **Edge runtime for the auth-shell page** — pushes the server-render closer to the user, halves TTFB. Larger change.
+4. **Server-side render skeleton for `/projects` instead of awaiting the DB query** — biggest gain, biggest change.
+
+None are blocking. Mobile 87-90 perf is well above "actually unusable" territory; this is a refinement, not a launch gate. Defer until the launch dust settles, then chase one of the four for a perf push.
 
 ## Likely fixes Ross may need (predicted, not validated)
 

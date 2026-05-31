@@ -26,6 +26,14 @@ const ROUTES = ["/", "/library", "/projects", "/sign-in", "/tools/eyedropper"];
 const STRATEGIES = ["mobile", "desktop"];
 
 const PSI = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
+const API_KEY = process.env.PSI_API_KEY ?? "";
+const REQUEST_DELAY_MS = 6000;       // pause between requests to avoid 429
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 30000;        // 30s backoff before each retry
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function pct(n) {
   if (n == null) return "—";
@@ -42,15 +50,21 @@ function fmtCls(n) {
   return n.toFixed(3);
 }
 
-async function audit(url, strategy) {
-  const target = `${PSI}?url=${encodeURIComponent(url)}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices`;
+async function auditOnce(url, strategy) {
+  const target =
+    `${PSI}?url=${encodeURIComponent(url)}&strategy=${strategy}` +
+    `&category=performance&category=accessibility&category=best-practices` +
+    (API_KEY ? `&key=${API_KEY}` : "");
   const res = await fetch(target);
+  if (res.status === 429) {
+    return { error: "HTTP 429", retryable: true };
+  }
   if (!res.ok) {
-    return { error: `HTTP ${res.status}` };
+    return { error: `HTTP ${res.status}`, retryable: false };
   }
   const data = await res.json();
   const lh = data.lighthouseResult;
-  if (!lh) return { error: "no lighthouseResult" };
+  if (!lh) return { error: "no lighthouseResult", retryable: false };
   const cats = lh.categories ?? {};
   const audits = lh.audits ?? {};
   return {
@@ -63,12 +77,27 @@ async function audit(url, strategy) {
   };
 }
 
+async function audit(url, strategy) {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      process.stderr.write(`retry ${attempt}/${MAX_RETRIES}... `);
+      await sleep(RETRY_DELAY_MS);
+    }
+    const result = await auditOnce(url, strategy);
+    if (!result.error || !result.retryable) return result;
+  }
+  return { error: "HTTP 429 after retries" };
+}
+
 async function main() {
   console.error(`Auditing ${BASE} — ${ROUTES.length} routes × ${STRATEGIES.length} strategies (this takes ~60-90s)\n`);
 
   const rows = [];
+  let firstRequest = true;
   for (const route of ROUTES) {
     for (const strategy of STRATEGIES) {
+      if (!firstRequest) await sleep(REQUEST_DELAY_MS);
+      firstRequest = false;
       const url = `${BASE}${route}`;
       process.stderr.write(`  · ${strategy.padEnd(8)} ${url} ... `);
       const r = await audit(url, strategy);
