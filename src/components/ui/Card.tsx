@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import { clsx } from "clsx";
 
-export type CardAccent = "cyan" | "green" | "amber" | "red" | "neutral";
+export type CardAccent =
+  | "cyan"
+  | "green"
+  | "amber"
+  | "yellow"
+  | "red"
+  | "purple"
+  | "neutral";
 
 /** Heading level for the title element. Defaults to `h2`; sub-cards
  *  nested inside a larger section should pass `h3`. The card-header
@@ -13,7 +20,9 @@ const ACCENT_BG: Record<CardAccent, string> = {
   cyan: "bg-[var(--color-cyan)]",
   green: "bg-[var(--color-green)]",
   amber: "bg-[var(--color-amber)]",
+  yellow: "bg-[var(--color-yellow)]",
   red: "bg-[var(--color-red)]",
+  purple: "bg-[var(--color-purple-pastel)]",
   neutral: "bg-[var(--color-fg-muted)]",
 };
 

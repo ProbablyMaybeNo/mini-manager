@@ -80,8 +80,9 @@ export async function AttachedRecipePanel({
           />
         }
       >
-        <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-          No recipe attached. Build one to drive your painting plan.
+        <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+          Attach a paint recipe to drive your scheme. Each colour slot
+          maps to a paint and the technique you&apos;ll use on it.
         </p>
       </Card>
     );

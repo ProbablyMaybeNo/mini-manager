@@ -176,27 +176,37 @@ export default async function ProjectDetailPage({
             </Card>
           </div>
         </div>
-      ) : showInteractiveCounters ? (
-        <>
-          <Card title="Roster">
-            <OwnedCounter snapshot={ownedSnapshot} />
-          </Card>
-
-          <Card title="Stages" accentColor="cyan">
-            <StageCounter snapshot={stageSnapshot} />
-          </Card>
-        </>
       ) : (
-        <Card title="Stages" accentColor="cyan">
-          <StageCounter snapshot={stageSnapshot} />
-        </Card>
+        <>
+          {/*
+            Leaf-project layout — StageCounter (or Stages-only fallback)
+            sits left, the attached-recipe panel sits right. On mobile
+            they stack; on md+ the recipe panel fills the middle of the
+            workspace so the page doesn't have a dead-zone after the
+            header. P11.2 — Phase 11 layout sweep.
+          */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div className="space-y-6">
+              {showInteractiveCounters ? (
+                <Card title="Roster">
+                  <OwnedCounter snapshot={ownedSnapshot} />
+                </Card>
+              ) : null}
+
+              <Card title="Stages" accentColor="cyan">
+                <StageCounter snapshot={stageSnapshot} />
+              </Card>
+            </div>
+
+            <AttachedRecipePanel projectId={project.id} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <NamedModelsPanel projectId={project.id} namedModels={namedModels} />
+            <ShoppingForThisPanel projectId={project.id} />
+          </div>
+        </>
       )}
-
-      <NamedModelsPanel projectId={project.id} namedModels={namedModels} />
-
-      <AttachedRecipePanel projectId={project.id} />
-
-      <ShoppingForThisPanel projectId={project.id} />
     </div>
   );
 }

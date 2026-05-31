@@ -77,3 +77,52 @@ describe("Card primitive — heading semantics (UX-V3-005)", () => {
     );
   });
 });
+
+describe("Card accent palette — 5-color slot coverage (P11.10)", () => {
+  test("purple accent dot renders the pastel-purple background", () => {
+    const tree = render({
+      title: "Special",
+      accentColor: "purple",
+      children: "body",
+    });
+    const dot = findFirst(tree, (n) =>
+      String((n.props.className as string | undefined) ?? "").includes(
+        "card-header-accent",
+      ),
+    );
+    expect(dot).not.toBeNull();
+    expect(String(dot?.props.className ?? "")).toContain("--color-purple-pastel");
+  });
+
+  test("yellow accent dot renders the pastel-yellow background", () => {
+    const tree = render({
+      title: "Wishlist",
+      accentColor: "yellow",
+      children: "body",
+    });
+    const dot = findFirst(tree, (n) =>
+      String((n.props.className as string | undefined) ?? "").includes(
+        "card-header-accent",
+      ),
+    );
+    expect(dot).not.toBeNull();
+    expect(String(dot?.props.className ?? "")).toContain("--color-yellow");
+  });
+
+  test("cyan / green / amber / red accents remain wired", () => {
+    for (const accent of ["cyan", "green", "amber", "red"] as const) {
+      const tree = render({
+        title: "X",
+        accentColor: accent,
+        children: "body",
+      });
+      const dot = findFirst(tree, (n) =>
+        String((n.props.className as string | undefined) ?? "").includes(
+          "card-header-accent",
+        ),
+      );
+      expect(dot).not.toBeNull();
+      expect(String(dot?.props.className ?? "")).toContain(`--color-${accent}`);
+    }
+  });
+});

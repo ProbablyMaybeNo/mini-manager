@@ -22,12 +22,24 @@ export function NamedModelsPanel({
   projectId: string;
   namedModels: ReadonlyArray<NamedModel>;
 }) {
+  // Empty state — wrap in the same Card chrome as the populated state
+  // so the project workspace layout doesn't reflow when the first
+  // named model is added. One-line inline help explains what a named
+  // model is, then the CTA. P11.2 — Phase 11 layout + microcopy pass.
   if (namedModels.length === 0) {
-    return <AddNamedModelForm projectId={projectId} mode="compact" />;
+    return (
+      <Card title="Named models · 0">
+        <p className="text-xs font-sans text-[var(--color-fg-muted)] mb-3 leading-snug">
+          Track one-off characters, sergeants, or hero models separately
+          from the rank-and-file count.
+        </p>
+        <AddNamedModelForm projectId={projectId} mode="compact" />
+      </Card>
+    );
   }
 
   return (
-    <Card title={`Named Models · ${namedModels.length}`}>
+    <Card title={`Named models · ${namedModels.length}`}>
       <ul className="space-y-2" role="list">
         {namedModels.map((m) => (
           <NamedModelRow

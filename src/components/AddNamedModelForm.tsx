@@ -68,14 +68,17 @@ export function AddNamedModelForm({
   };
 
   if (!expanded) {
+    // Compact mode renders a primary cyan CTA so the path to add the
+    // first named model is the visual centre of an otherwise-empty
+    // panel. P11.2 — Phase 11 CTA pass.
     return (
       <Button
         type="button"
         onClick={expand}
-        variant="ghost"
+        variant={mode === "compact" ? "primary" : "ghost"}
         size="sm"
       >
-        Add named model
+        + Add named model
       </Button>
     );
   }

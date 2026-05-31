@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { listWishlistByProject } from "@/db/queries/wishlist";
 import { currentUserId } from "@/lib/auth-stub";
 import type { WishlistItem, Priority } from "@/db/schema";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
 const PRIORITY_DOT: Record<Priority, string> = {
@@ -23,6 +24,8 @@ export async function ShoppingForThisPanel({ projectId }: { projectId: string })
   const userId = await currentUserId();
   const items = await listWishlistByProject(userId, projectId);
 
+  const wishlistHref = (`/wishlist?project=${projectId}` as unknown) as Route;
+
   return (
     <Card
       title={`Shopping for this · ${items.length}`}
@@ -31,13 +34,18 @@ export async function ShoppingForThisPanel({ projectId }: { projectId: string })
           <span className="font-mono text-2xs normal-case tracking-wider text-[var(--color-fg-muted)]">
             {summariseTotal(items)}
           </span>
-        ) : null
+        ) : (
+          <Button as="a" href={wishlistHref} variant="secondary" size="sm">
+            + Add to wishlist
+          </Button>
+        )
       }
       bodyClassName={items.length === 0 ? undefined : "p-0"}
     >
       {items.length === 0 ? (
-        <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-          Nothing on the wishlist for this project yet.
+        <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+          Paints, kits, or tools you want for this project. Tag items
+          from the wishlist page so they show up here.
         </p>
       ) : (
         items.map((item) => <WishlistRow key={item.id} item={item} />)
