@@ -1,10 +1,9 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { clsx } from "clsx";
-import type { Project } from "@/db/schema";
-import { PaletteStrip } from "./PaletteStrip";
-import { RecipePaletteStripStatic } from "./recipes/RecipePaletteStrip";
+import type { Project, ProjectType } from "@/db/schema";
 import { ProgressBar } from "./ProgressBar";
+import { StageBarsStrip } from "./ui/StageBarsStrip";
 import { displayStatus, progressPercent } from "@/lib/progress";
 import { StatusPill, type StatusPillKind } from "./ui/StatusPill";
 
@@ -28,18 +27,32 @@ const PRIORITY_TONE: Record<NonNullable<Project["priority"]>, string> = {
   Low: "bg-[var(--color-fg-subtle)]",
 };
 
+/**
+ * Per-type chip palette. Maps the 6 project types to a colour from
+ * the locked 5-color set so the kind of project reads at a glance
+ * without needing to scan the text label. Army-shaped containers
+ * (Army / Warband) sit on cyan ("primary scope"); per-model work
+ * (Unit) on amber/yellow; standalone-one-offs (Single Model /
+ * Diorama) on pastel purple ("special / featured"); environmental
+ * (Terrain Piece) on neon green. P11.5.
+ */
+const TYPE_CHIP: Readonly<Record<ProjectType, string>> = {
+  "Army":          "type-chip-cyan",
+  "Warband":       "type-chip-cyan",
+  "Unit":          "type-chip-amber",
+  "Single Model":  "type-chip-purple",
+  "Terrain Piece": "type-chip-green",
+  "Diorama":       "type-chip-purple",
+};
+
 export function ProjectRow({
   project,
   namedModelCount = 0,
   href,
-  recipeSwatches,
 }: {
   project: Project;
   namedModelCount?: number;
   href?: string;
-  /** Pre-resolved swatch hexes from the parent's bulk palette query.
-   *  When non-empty, displaces the placeholder PaletteStrip. */
-  recipeSwatches?: ReadonlyArray<string>;
 }) {
   const totalModels = project.count + namedModelCount;
   const status = displayStatus(project);
@@ -49,6 +62,7 @@ export function ProjectRow({
     : "bg-transparent";
 
   const linkHref = (href ?? `/projects/${project.id}`) as Route;
+  const typeChipClass = TYPE_CHIP[project.type as ProjectType];
 
   return (
     <Link
@@ -64,30 +78,40 @@ export function ProjectRow({
           {project.name}
         </span>
         {project.faction ? (
-          <span className="block text-2xs font-mono text-[var(--color-fg-subtle)] truncate">
+          <span
+            className={clsx(
+              "type-chip type-chip-purple-muted mt-0.5",
+              "max-w-full truncate",
+            )}
+            title={project.faction}
+          >
             {project.faction}
           </span>
         ) : null}
       </span>
-      <span className="hidden lg:inline-block text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
-        {project.type}
+      <span className="hidden lg:inline-block">
+        <span className={clsx("type-chip", typeChipClass)}>
+          {project.type}
+        </span>
       </span>
       <span className="hidden lg:inline-block">
-        {recipeSwatches && recipeSwatches.length > 0 ? (
-          <RecipePaletteStripStatic
-            swatches={recipeSwatches.slice(0, 5)}
-            ariaLabel={`${project.name} palette`}
-          />
-        ) : (
-          <PaletteStrip slots={5} />
-        )}
+        <StageBarsStrip
+          counts={{
+            buildCount: project.buildCount,
+            primeCount: project.primeCount,
+            paintCount: project.paintCount,
+            baseCount: project.baseCount,
+            completeCount: project.completeCount,
+            total: project.count,
+          }}
+        />
       </span>
       <span className="hidden lg:inline-block">
         <ProgressBar percent={percent} width={14} />
       </span>
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
         {status === "New" ? (
-          <span className="text-xs font-mono text-[var(--color-fg-subtle)]">—</span>
+          <StatusPill status="neutral">NEW</StatusPill>
         ) : (
           <StatusPill status={STATUS_PILL[status]}>{status}</StatusPill>
         )}

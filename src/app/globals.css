@@ -470,6 +470,50 @@ input, textarea, select {
   background: color-mix(in srgb, var(--color-yellow) 10%, transparent);
 }
 
+/* Type chips — used on project list rows to colour-code the project
+   kind at a glance (P11.5). Subtle ~12% tinted background + matched
+   foreground colour. Smaller and softer than a StatusPill (which
+   carries a full 1px border); these are "metadata flags" rather than
+   "state pills". */
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.type-chip-cyan {
+  color: var(--color-cyan);
+  background: color-mix(in srgb, var(--color-cyan) 12%, transparent);
+}
+.type-chip-amber {
+  color: var(--color-amber);
+  background: color-mix(in srgb, var(--color-amber) 12%, transparent);
+}
+.type-chip-green {
+  color: var(--color-green);
+  background: color-mix(in srgb, var(--color-green) 12%, transparent);
+}
+.type-chip-purple {
+  color: var(--color-purple-pastel);
+  background: color-mix(in srgb, var(--color-purple-pastel) 12%, transparent);
+}
+.type-chip-yellow {
+  color: var(--color-yellow);
+  background: color-mix(in srgb, var(--color-yellow) 12%, transparent);
+}
+/* Muted variant — used for faction sub-labels under project names.
+   Reads as a "noun" tag rather than a "category" callout. */
+.type-chip-purple-muted {
+  color: color-mix(in srgb, var(--color-purple-pastel) 80%, var(--color-fg-muted));
+  background: color-mix(in srgb, var(--color-purple-pastel) 8%, transparent);
+}
+
 /* StatusPill — bordered, mono, all-caps, 1px border, semantic colour.
    Drives status indicators across project rows, paint types, wishlist. */
 .pill {

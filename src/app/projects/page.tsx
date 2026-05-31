@@ -5,10 +5,6 @@ import {
   listBacklogUnits,
   listTopLevelProjects,
 } from "@/db/queries/projects";
-import {
-  getProjectRecipeMap,
-  paletteStripsForRecipes,
-} from "@/db/queries/recipes";
 import { ProjectRow } from "@/components/ProjectRow";
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
@@ -21,36 +17,12 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
   const userId = await currentUserId();
-  const [topLevel, backlog, active, namedCountByProject, projectRecipeMap] =
-    await Promise.all([
-      listTopLevelProjects(userId),
-      listBacklogUnits(userId),
-      listActiveProjects(userId),
-      countNamedModelsByProject(userId),
-      getProjectRecipeMap(userId),
-    ]);
-
-  // Pick a primary recipe per project (newest first per the map's order)
-  // and bulk-load palettes for all of them in one pass — avoids N+1
-  // queries from rendering many palette strips.
-  const primaryRecipeByProject = new Map<string, string>();
-  for (const [projectId, list] of projectRecipeMap) {
-    const first = list[0];
-    if (first) primaryRecipeByProject.set(projectId, first.id);
-  }
-  const recipeIdsToLoad = Array.from(
-    new Set(primaryRecipeByProject.values()),
-  );
-  const paletteByRecipe = await paletteStripsForRecipes(
-    userId,
-    recipeIdsToLoad,
-  );
-
-  const swatchesForProject = (projectId: string): ReadonlyArray<string> => {
-    const recipeId = primaryRecipeByProject.get(projectId);
-    if (!recipeId) return [];
-    return paletteByRecipe.get(recipeId) ?? [];
-  };
+  const [topLevel, backlog, active, namedCountByProject] = await Promise.all([
+    listTopLevelProjects(userId),
+    listBacklogUnits(userId),
+    listActiveProjects(userId),
+    countNamedModelsByProject(userId),
+  ]);
 
   const isEmpty = topLevel.length === 0;
 
@@ -99,7 +71,6 @@ export default async function ProjectsPage() {
                   key={p.id}
                   project={p}
                   namedModelCount={namedCountByProject[p.id] ?? 0}
-                  recipeSwatches={swatchesForProject(p.id)}
                 />
               ))}
             </Card>
@@ -112,7 +83,6 @@ export default async function ProjectsPage() {
                   key={p.id}
                   project={p}
                   namedModelCount={namedCountByProject[p.id] ?? 0}
-                  recipeSwatches={swatchesForProject(p.id)}
                 />
               ))}
             </Card>
@@ -124,7 +94,6 @@ export default async function ProjectsPage() {
                 key={p.id}
                 project={p}
                 namedModelCount={p.namedModelCount}
-                recipeSwatches={swatchesForProject(p.id)}
               />
             ))}
           </Card>
