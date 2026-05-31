@@ -35,14 +35,18 @@ interface Props {
 }
 
 /**
- * The zone CRUD pane. Two ways in:
- *   - `[ + Add zone ]` — text input, painter types whatever
+ * The colour-slot CRUD pane. Two ways in:
+ *   - `+ Add color` — text input, painter types whatever
  *     ("Carapace", "Shoulder badge", "Pauldron trim", etc.)
- *   - `[ Use starter zones ▾ ]` — one-shot populate from a preset
+ *   - `Use a starter set ▾` — one-shot populate from a preset
  *     pack (Infantry / Vehicle / Monster / Terrain). Defaults to
  *     the recipe's bodyType; painter can pick any pack.
  *
  * Reorder uses HTML5 drag-and-drop (same idiom as StepList).
+ *
+ * UI strings flipped from "Zone" → "Color slot" in P11.3 — schema
+ * columns (`recipe_zone`, `silhouetteZoneId`) + server actions
+ * (`addZone`, `reorderZones`) intentionally stay named as-is.
  */
 export function ZoneList({
   recipeId,
@@ -90,7 +94,7 @@ export function ZoneList({
 
   return (
     <Card
-      title={`Zones · ${localZones.length}`}
+      title={`Color slots · ${localZones.length}`}
       headerActions={
         localZones.length > 1 ? (
           <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider normal-case">
@@ -100,11 +104,15 @@ export function ZoneList({
       }
     >
       <div className="space-y-2">
+      <p className="text-xs font-sans text-[var(--color-fg-subtle)] leading-snug">
+        Each colour slot is one part of the model — carapace, pauldron,
+        eye lens. Add a slot, then pick a paint and a technique for it.
+      </p>
       {localZones.length === 0 ? (
         <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-          No zones yet. Type your own with{" "}
-          <span className="font-mono uppercase tracking-wider">Add zone</span>{" "}
-          or one-click populate a starter pack below.
+          No colour slots yet. Type your own with{" "}
+          <span className="font-mono uppercase tracking-wider">Add color</span>{" "}
+          or one-click populate a starter set below.
         </p>
       ) : (
         <ul className="space-y-1" role="list">
@@ -181,7 +189,9 @@ function ZoneRow({
     event.stopPropagation();
     if (
       typeof window !== "undefined" &&
-      !window.confirm(`Delete zone "${zone.name}"? Its steps will be removed too.`)
+      !window.confirm(
+        `Delete colour slot "${zone.name}"? Its steps will be removed too.`,
+      )
     ) {
       return;
     }
@@ -248,7 +258,7 @@ function ZoneRow({
         <span
           role="button"
           tabIndex={0}
-          aria-label={`Delete zone ${zone.name}`}
+          aria-label={`Delete colour slot ${zone.name}`}
           onClick={handleDelete}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
@@ -282,7 +292,7 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
     setError(null);
     const trimmed = name.trim();
     if (trimmed.length === 0) {
-      setError("Zone name is required");
+      setError("Slot name is required");
       return;
     }
     startTransition(async () => {
@@ -300,7 +310,7 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
         variant="primary"
         size="sm"
       >
-        Add zone
+        + Add color
       </Button>
     );
   }
@@ -395,7 +405,7 @@ function StarterZonesControl({
         variant="ghost"
         size="sm"
       >
-        Use starter zones ▾
+        Use a starter set ▾
       </Button>
     );
   }
@@ -421,8 +431,8 @@ function StarterZonesControl({
       </div>
 
       <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
-        Adds <strong>{getZonePreset(picked)?.length ?? 0}</strong> zones to the
-        recipe. Edit or delete any row after.
+        Adds <strong>{getZonePreset(picked)?.length ?? 0}</strong> colour
+        slots to the recipe. Edit or delete any row after.
       </p>
 
       {error ? (

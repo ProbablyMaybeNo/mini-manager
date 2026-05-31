@@ -188,8 +188,8 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
           </h2>
           <p className="text-sm font-sans text-[var(--color-fg-muted)]">
             This permanently removes <strong>{recipe.name}</strong> and every
-            zone + step it contains. If it's attached to a project or unit
-            the attachment will be cleared. This can't be undone.
+            colour slot + step it contains. If it&apos;s attached to a project or
+            unit the attachment will be cleared. This can&apos;t be undone.
           </p>
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button

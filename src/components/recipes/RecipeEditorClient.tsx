@@ -93,7 +93,7 @@ function MobilePaneTabs({
   onChange: (p: Pane) => void;
 }) {
   const tabs: ReadonlyArray<{ key: Pane; label: string }> = [
-    { key: "zones", label: "Zones" },
+    { key: "zones", label: "Slots" },
     { key: "notes", label: "Notes" },
   ];
   return (
@@ -135,7 +135,7 @@ function SelectedZoneSteps({
   if (!selectedZoneId) {
     return (
       <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-        Select a zone to view its steps.
+        Select a colour slot to view its steps.
       </p>
     );
   }

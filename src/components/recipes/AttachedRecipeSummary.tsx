@@ -84,7 +84,7 @@ export function AttachedRecipeSummary({ recipe, zones, editHref }: Props) {
 
       {zones.length === 0 ? (
         <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
-          No zones yet. <Link href={editHref} className="hover:underline text-[var(--color-cyan)]">Open the editor</Link> to start building.
+          No colour slots yet. <Link href={editHref} className="hover:underline text-[var(--color-cyan)]">Open the editor</Link> to start building.
         </p>
       ) : (
         <ul role="list" className="grid grid-cols-2 gap-x-3 gap-y-1.5">

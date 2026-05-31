@@ -106,13 +106,13 @@ export async function RecipeCard({ recipe, attachment }: Props) {
         </div>
       ) : (
         <p className="text-2xs font-mono text-[var(--color-fg-subtle)] uppercase tracking-wider">
-          empty — no zones yet
+          empty — no colour slots yet
         </p>
       )}
 
       <p className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider mt-auto">
         {stepCount} step{stepCount === 1 ? "" : "s"} ·{" "}
-        {zoneCount} zone{zoneCount === 1 ? "" : "s"}
+        {zoneCount} slot{zoneCount === 1 ? "" : "s"}
       </p>
     </Link>
   );

@@ -231,14 +231,14 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                   </div>
                   <div className="space-y-1">
                     <label className="block section-title mb-0 pb-0 border-0">
-                      Zone
+                      Colour slot
                     </label>
                     <select
                       value={selectedZoneId}
                       onChange={(e) => setSelectedZoneId(e.target.value)}
                       className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
                     >
-                      <option value="__new__">+ Add new zone…</option>
+                      <option value="__new__">+ Add new slot…</option>
                       {selectedRecipe?.zones.map((z) => (
                         <option key={z.id} value={z.id}>
                           {z.name}
@@ -249,7 +249,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                   {selectedZoneId === "__new__" ? (
                     <div className="space-y-1">
                       <label className="block section-title mb-0 pb-0 border-0">
-                        New zone name
+                        New slot name
                       </label>
                       <input
                         type="text"

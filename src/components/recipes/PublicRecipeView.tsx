@@ -43,7 +43,7 @@ export async function PublicRecipeView({
           </span>
           <span aria-hidden>·</span>
           <span>
-            {recipe.zones.length} zone
+            {recipe.zones.length} colour slot
             {recipe.zones.length === 1 ? "" : "s"}
           </span>
         </div>
@@ -59,7 +59,7 @@ export async function PublicRecipeView({
 
       {recipe.zones.length === 0 ? (
         <p className="font-mono text-sm text-[var(--color-fg-muted)] italic">
-          This recipe has no zones yet.
+          This recipe has no colour slots yet.
         </p>
       ) : (
         <section className="space-y-6">
