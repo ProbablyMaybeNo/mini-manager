@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/db/client";
 import { sessions, users } from "@/db/schema";
 import { hashPassword } from "@/lib/auth/password";
+import { SESSION_COOKIE } from "@/lib/auth/session";
 
 /**
  * Test-only sign-in shortcut. Bypasses the magic-link flow so Playwright
@@ -78,10 +79,11 @@ export async function POST(req: Request) {
   await db.insert(sessions).values({ sessionToken, userId, expires });
 
   const res = NextResponse.json({ ok: true, userId });
-  res.cookies.set("authjs.session-token", sessionToken, {
+  res.cookies.set(SESSION_COOKIE, sessionToken, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
+    secure: process.env.NODE_ENV === "production",
     expires,
   });
   return res;

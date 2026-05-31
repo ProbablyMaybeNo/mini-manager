@@ -5,9 +5,22 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { sessions } from "@/db/schema";
 
-/** Cookie name matches the NextAuth v5 default for the adapter's
- *  database-session strategy. Keep in sync with `src/auth.ts`. */
-export const SESSION_COOKIE = "authjs.session-token";
+/**
+ * Cookie name matches the NextAuth v5 default for the adapter's
+ * database-session strategy. NextAuth prefixes the cookie name with
+ * `__Secure-` whenever `useSecureCookies` is on (which is the default
+ * in production) — and `auth()` reads from THAT prefixed name. Our
+ * manual session minting has to write to the same name or the read
+ * misses and we silently bounce the user back to sign-in.
+ *
+ * Known Auth.js v5 gotcha — root cause of UX-V3-001 (sign-up sets
+ * cookie, redirect to /projects, auth() sees null, bounce to /sign-in).
+ *
+ * Keep in sync with `src/auth.ts` if you ever override the cookies
+ * config there.
+ */
+const useSecureCookies = process.env.NODE_ENV === "production";
+export const SESSION_COOKIE = `${useSecureCookies ? "__Secure-" : ""}authjs.session-token`;
 
 /** 30-day session lifetime — same as NextAuth's default. */
 const SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;

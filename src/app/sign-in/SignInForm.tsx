@@ -20,28 +20,7 @@ export function SignInForm({ redirectTarget, initialError }: SignInFormProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState<string | null>(initialError);
-  // null = unknown (haven't probed yet); true/false = known answer.
-  const [hasRecovery, setHasRecovery] = useState<boolean | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  async function probeRecovery(value: string): Promise<void> {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      setHasRecovery(null);
-      return;
-    }
-    try {
-      const res = await fetch(
-        `/api/auth/has-recovery-email?u=${encodeURIComponent(trimmed)}`,
-      );
-      const data = (await res.json()) as { hasVerifiedRecoveryEmail: boolean };
-      setHasRecovery(data.hasVerifiedRecoveryEmail);
-    } catch {
-      // Network blip — leave as null so the link stays hidden with the
-      // helper tooltip.
-      setHasRecovery(null);
-    }
-  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -79,7 +58,6 @@ export function SignInForm({ redirectTarget, initialError }: SignInFormProps) {
           placeholder="alice42"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          onBlur={(e) => void probeRecovery(e.target.value)}
           className="w-full px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
         />
       </label>
@@ -117,21 +95,22 @@ export function SignInForm({ redirectTarget, initialError }: SignInFormProps) {
       </Button>
 
       <div className="pt-1 text-xs font-mono text-center">
-        {hasRecovery === true ? (
-          <Link
-            href={`/sign-in/forgot?u=${encodeURIComponent(username.trim())}`}
-            className="text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
-          >
-            Forgot password?
-          </Link>
-        ) : (
-          <span
-            className="text-[var(--color-fg-subtle)] cursor-help"
-            title="Add a recovery email in Settings to enable password reset."
-          >
-            Forgot password?
-          </span>
-        )}
+        {/* Always a real link. The /sign-in/forgot route itself handles
+            the no-recovery-email case (enumeration-safe: same response
+            shape regardless of whether the account has a recovery
+            address). Previously this was a disabled tooltip for fresh
+            accounts — a hard lockout if a user forgot their password.
+            UX-V3-002 — auditor round 3. */}
+        <Link
+          href={
+            username.trim()
+              ? `/sign-in/forgot?u=${encodeURIComponent(username.trim())}`
+              : "/sign-in/forgot"
+          }
+          className="text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
+        >
+          Forgot password?
+        </Link>
       </div>
     </form>
   );
