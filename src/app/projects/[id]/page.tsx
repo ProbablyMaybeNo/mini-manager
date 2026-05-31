@@ -159,11 +159,28 @@ export default async function ProjectDetailPage({
       {isContainer && aggregate ? (
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6">
           <div className="order-2 md:order-1">
-            <Card title={`Sub-projects · ${children.length}`}>
-              <ProjectTree
-                projects={children}
-                namedModelCountByProjectId={namedCountByProject}
-              />
+            <Card
+              title={`Sub-projects · ${children.length}`}
+              headerActions={
+                <Link
+                  href={{ pathname: "/projects/new", query: { parent: project.id } }}
+                  className="inline-flex items-center gap-1 px-3 py-1 text-2xs font-mono uppercase tracking-wider rounded-sm bg-[var(--color-cyan)] text-[var(--color-bg)] hover:brightness-110 transition-all"
+                >
+                  + Add unit
+                </Link>
+              }
+            >
+              {children.length === 0 ? (
+                <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-relaxed">
+                  Add Units, Single Models, or Terrain Pieces under this {project.type.toLowerCase()} to track them.
+                  Each child's stage counters roll up into the aggregated view on the right.
+                </p>
+              ) : (
+                <ProjectTree
+                  projects={children}
+                  namedModelCountByProjectId={namedCountByProject}
+                />
+              )}
             </Card>
           </div>
 

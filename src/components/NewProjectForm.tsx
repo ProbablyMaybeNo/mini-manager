@@ -67,12 +67,18 @@ const TYPE_META_BY_TYPE: Readonly<Record<ProjectType, TypeMeta>> = Object.freeze
 const _allTypesCovered: ReadonlyArray<ProjectType> = projectTypes.map((t) => t);
 void _allTypesCovered;
 
-export function NewProjectForm({ parents }: { parents: ReadonlyArray<ParentOption> }) {
+export function NewProjectForm({
+  parents,
+  initialParentId,
+}: {
+  parents: ReadonlyArray<ParentOption>;
+  initialParentId?: string;
+}) {
   const [type, setType] = useState<ProjectType>("Unit");
   const initialMeta = TYPE_META_BY_TYPE[type];
   const [name, setName] = useState("");
   const [count, setCount] = useState<number>(initialMeta.defaultCount);
-  const [parentId, setParentId] = useState<string>("");
+  const [parentId, setParentId] = useState<string>(initialParentId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 

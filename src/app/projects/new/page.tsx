@@ -5,9 +5,21 @@ import { NewProjectForm } from "@/components/NewProjectForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewProjectPage() {
+export default async function NewProjectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ parent?: string }>;
+}) {
   const userId = await currentUserId();
   const parents = await listParentCandidates(userId);
+  const { parent: initialParentId } = await searchParams;
+
+  // Only honour the query param if the project ID is one the user
+  // actually owns + can parent. Silently drop otherwise (don't leak
+  // existence of other users' IDs).
+  const safeInitialParent = initialParentId && parents.some((p) => p.id === initialParentId)
+    ? initialParentId
+    : undefined;
 
   return (
     <div className="p-6 md:p-8 max-w-3xl space-y-6">
@@ -28,7 +40,7 @@ export default async function NewProjectPage() {
         </p>
       </header>
 
-      <NewProjectForm parents={parents} />
+      <NewProjectForm parents={parents} initialParentId={safeInitialParent} />
     </div>
   );
 }
