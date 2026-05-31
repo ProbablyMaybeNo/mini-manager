@@ -7,11 +7,13 @@ import { clsx } from "clsx";
    StatusBar — phosphor terminal chrome bar.
 
    Pinned to the viewport top on desktop (hidden on mobile where
-   MobileHeader already shows the online dot). Four segments:
+   MobileHeader already shows the online dot). Three segments:
      SYS: OK / ERR        — always green on a working browser
      NET: ON / LAG / OFF  — navigator.onLine + periodic ping
-     SAVED: idle or n s ago (stub — no unsaved state yet, always idle)
      TIME: HH:MM:SS live clock
+
+   SAVED was previously stubbed to IDLE — removed until a global
+   dirty-state store exists. Re-add once that ships.
 
    Each segment is a StatusPill-style token span, coloured via
    semantic status tokens. All text mono all-caps to match the
@@ -167,9 +169,6 @@ export function StatusBar() {
       <Segment label="SYS" value="OK" tone="ok" />
       <Divider />
       <Segment label="NET" value={net} tone={netTone} />
-      <Divider />
-      {/* SAVED is stubbed to IDLE — future: wire to a global dirty-state store */}
-      <Segment label="SAVED" value="IDLE" tone="neutral" />
       <Divider />
       <Segment label="TIME" value={time} tone="neutral" />
     </div>
