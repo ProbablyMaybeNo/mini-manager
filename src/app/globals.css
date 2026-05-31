@@ -37,6 +37,8 @@
   --color-cyan: #7dd3fc;
   --color-cyan-dim: #008fa0;
   --color-cyan-bright: #00e5ff;
+  --color-yellow: #ffe066;
+  --color-yellow-dim: #cca400;
   --color-amber: #ffb020;
   --color-amber-dim: #c47a00;
   --color-red: #ff4757;
@@ -53,12 +55,17 @@
   --color-info: var(--color-cyan);
   --color-success: var(--color-green);
 
-  /* Status semantic tokens — drives StatusPill (P8.5) */
+  /* Status semantic tokens — drives StatusPill (P8.5) + ProgressBar tones.
+     Amber = warning/pending (in-progress, attention). Yellow = wishlist
+     (wanted, hopeful, pre-purchase). Different semantic, different hue,
+     used consistently across the app. */
   --status-ok: var(--color-green);
   --status-warning: var(--color-amber);
+  --status-wishlist: var(--color-yellow);
   --status-danger: var(--color-red);
   --status-info: var(--color-cyan);
   --status-neutral: var(--color-fg-muted);
+  --status-magenta: var(--color-magenta);
 
   /* ----- Typography ----- */
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
@@ -100,6 +107,54 @@ html {
 body {
   min-height: 100vh;
   background: var(--color-bg);
+  /* Anchor for the CRT overlay pseudo-elements below. */
+  position: relative;
+  isolation: isolate;
+}
+
+/* ============================================================
+   CRT phosphor overlay — scanlines + corner vignette.
+
+   Two layers, both pointer-events: none, anchored to the viewport
+   so they survive scroll. Subtle enough to read as ambience rather
+   than fighting any content. Respects prefers-reduced-motion + can
+   be globally disabled via the .crt-off opt-out class on <html>.
+   ============================================================ */
+
+/* Scanlines: 2px-period horizontal lines at ~4% opacity. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1px,
+    rgba(255, 255, 255, 0.04) 1px,
+    rgba(255, 255, 255, 0.04) 2px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* Corner vignette: radial darkening for the CRT "tube edge" feel. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+}
+
+html.crt-off body::before,
+html.crt-off body::after {
+  display: none;
 }
 
 /* Chrome elements use mono. Prose uses sans (set on body). */
@@ -384,9 +439,11 @@ input, textarea, select {
 }
 .pill-ok       { color: var(--status-ok); }
 .pill-warning  { color: var(--status-warning); }
+.pill-wishlist { color: var(--status-wishlist); }
 .pill-danger   { color: var(--status-danger); }
 .pill-info     { color: var(--status-info); }
 .pill-neutral  { color: var(--status-neutral); }
+.pill-magenta  { color: var(--status-magenta); }
 
 /* Minimum touch target helpers (mobile defaults, narrowed on desktop) */
 .tap-target {

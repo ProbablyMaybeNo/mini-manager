@@ -115,7 +115,7 @@ export function InventoryControls({
             "inline-flex justify-center items-center font-mono text-xs min-h-[24px] py-1",
             state.ownedCount > 0
               ? "text-[var(--color-green)]"
-              : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg-muted)]",
+              : "text-[var(--color-fg-subtle)] hover:text-[var(--color-green)]",
             isPending && "opacity-60",
           )}
         >
@@ -132,8 +132,8 @@ export function InventoryControls({
           className={clsx(
             "inline-flex justify-center items-center font-mono text-xs min-h-[24px] py-1",
             state.isWishlisted
-              ? "text-[var(--color-amber)]"
-              : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg-muted)]",
+              ? "text-[var(--color-yellow)]"
+              : "text-[var(--color-fg-subtle)] hover:text-[var(--color-yellow)]",
             isPending && "opacity-60",
           )}
         >
@@ -146,7 +146,7 @@ export function InventoryControls({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] w-16">
+        <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-green)] w-16">
           Owned
         </span>
         <button
@@ -163,14 +163,14 @@ export function InventoryControls({
         >
           −
         </button>
-        <span className="font-mono text-base text-[var(--color-fg)] w-8 text-center">
+        <span className="font-mono text-base text-[var(--color-green)] w-8 text-center">
           {state.ownedCount}
         </span>
         <button
           type="button"
           onClick={() => bumpOwned(1)}
           disabled={isPending}
-          className="tap-target frame px-2 font-mono text-sm hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
+          className="tap-target frame px-2 font-mono text-sm text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
           aria-label="Increase owned count"
         >
           +
@@ -179,7 +179,7 @@ export function InventoryControls({
           type="button"
           onClick={justBought}
           disabled={isPending}
-          className="ml-2 text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-[var(--color-accent)]"
+          className="ml-2 text-xs font-mono px-2 py-1 frame text-[var(--color-green)] border-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)]"
         >
           [ Just bought +1 ]
         </button>
@@ -190,10 +190,10 @@ export function InventoryControls({
           onClick={toggleWish}
           disabled={isPending}
           className={clsx(
-            "inline-flex items-center gap-2 px-2 py-1 text-xs font-mono frame tap-target",
+            "inline-flex items-center gap-2 px-2 py-1 text-xs font-mono frame tap-target text-[var(--color-yellow)] border-[var(--color-yellow)]",
             state.isWishlisted
-              ? "text-[var(--color-amber)] border-[var(--color-amber)]"
-              : "text-[var(--color-fg-muted)] hover:text-[var(--color-amber)]",
+              ? "bg-[color-mix(in_srgb,var(--color-yellow)_12%,transparent)]"
+              : "hover:bg-[color-mix(in_srgb,var(--color-yellow)_10%,transparent)]",
           )}
           aria-pressed={state.isWishlisted}
         >

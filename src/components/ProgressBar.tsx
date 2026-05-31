@@ -1,40 +1,98 @@
 import { clsx } from "clsx";
 
+export type ProgressTone =
+  | "auto"
+  | "ok"
+  | "info"
+  | "warning"
+  | "wishlist"
+  | "danger"
+  | "magenta"
+  | "neutral";
+
+const TONE_FILL: Record<Exclude<ProgressTone, "auto">, string> = {
+  ok:       "bg-[var(--status-ok)]",
+  info:     "bg-[var(--status-info)]",
+  warning:  "bg-[var(--status-warning)]",
+  wishlist: "bg-[var(--status-wishlist)]",
+  danger:   "bg-[var(--status-danger)]",
+  magenta:  "bg-[var(--status-magenta)]",
+  neutral:  "bg-[var(--color-fg-muted)]",
+};
+
 /**
- * Bracketed terminal-style progress bar. Always 20 cells.
+ * Solid horizontal progress bar — the terminal-UI "loading bar" idiom.
+ * Tone defaults to "auto": neutral when empty, cyan in early progress,
+ * amber mid-build, neon green when complete. Pass an explicit tone to
+ * lock the colour (e.g. tone="wishlist" for yellow on shopping
+ * progress, tone="info" for read-only stats like CPU%).
  *
- * The bar tone follows progress: dim until visible, green once paint
- * starts, brighter when most of the way through. Glow only fires when
- * the bar is full to celebrate completion.
+ * The `width` prop is the legacy ASCII-cell width count from the
+ * earlier bracket-bar version — kept so call-sites don't change. It's
+ * now translated to a pixel min-width so the bar still feels the same
+ * size in dense rows.
  */
 export function ProgressBar({
   percent,
   width = 20,
+  tone = "auto",
   className,
 }: {
   percent: number;
+  /** Cells of the original ASCII bar — mapped to ~6px per cell so the
+   *  visual footprint matches the old bracket version. */
   width?: number;
+  tone?: ProgressTone;
   className?: string;
 }) {
   const clamped = Math.max(0, Math.min(100, percent));
-  const filled = Math.round((clamped / 100) * width);
-  const empty = width - filled;
-  const tone =
-    clamped >= 100
-      ? "glow-green"
-      : clamped >= 50
-        ? "text-[var(--color-green)]"
-        : "text-[var(--color-green-dim)]";
+  const resolvedTone: Exclude<ProgressTone, "auto"> =
+    tone !== "auto"
+      ? tone
+      : clamped === 0
+        ? "neutral"
+        : clamped >= 100
+          ? "ok"
+          : clamped >= 50
+            ? "warning"
+            : "info";
+
+  const fillClass = TONE_FILL[resolvedTone];
+  const trackBg = "bg-[var(--color-bg-panel)]";
+  const trackBorder = "border border-[var(--color-border)]";
+
+  // ~6px per cell preserves the visual footprint vs the old bracket bar.
+  const minPx = Math.max(40, width * 6);
+
   return (
     <span
-      className={clsx("font-mono text-xs whitespace-pre", tone, className)}
+      role="progressbar"
+      aria-valuenow={clamped}
+      aria-valuemin={0}
+      aria-valuemax={100}
       aria-label={`${clamped} percent complete`}
+      className={clsx(
+        "relative inline-block h-1.5 rounded-sm overflow-hidden align-middle",
+        trackBg,
+        trackBorder,
+        className,
+      )}
+      style={{ width: `${minPx}px` }}
     >
-      [{"█".repeat(filled)}
-      <span className="text-[var(--color-border-strong)]">
-        {"░".repeat(empty)}
-      </span>
-      ]
+      <span
+        aria-hidden
+        className={clsx(
+          "absolute inset-y-0 left-0 transition-[width] duration-300 ease-out",
+          fillClass,
+        )}
+        style={{
+          width: `${clamped}%`,
+          boxShadow:
+            clamped > 0
+              ? `0 0 6px color-mix(in srgb, var(--status-${resolvedTone === "neutral" ? "info" : resolvedTone}) 35%, transparent)`
+              : undefined,
+        }}
+      />
     </span>
   );
 }

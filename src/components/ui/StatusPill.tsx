@@ -1,14 +1,23 @@
 import type { ReactNode } from "react";
 import { clsx } from "clsx";
 
-export type StatusPillKind = "ok" | "warning" | "danger" | "info" | "neutral";
+export type StatusPillKind =
+  | "ok"
+  | "warning"
+  | "wishlist"
+  | "danger"
+  | "info"
+  | "neutral"
+  | "magenta";
 
 const KIND_CLASS: Record<StatusPillKind, string> = {
   ok: "pill-ok",
   warning: "pill-warning",
+  wishlist: "pill-wishlist",
   danger: "pill-danger",
   info: "pill-info",
   neutral: "pill-neutral",
+  magenta: "pill-magenta",
 };
 
 export interface StatusPillProps {

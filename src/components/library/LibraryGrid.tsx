@@ -123,7 +123,7 @@ function SwatchCell({
         <span
           aria-hidden
           className="absolute bottom-0.5 right-0.5 h-2 w-2 rounded-full border border-[var(--color-bg)]"
-          style={{ background: "var(--status-warning)" }}
+          style={{ background: "var(--status-wishlist)" }}
         />
       ) : null}
     </button>
