@@ -65,10 +65,14 @@ describe("Phase 11 — concrete vocabulary survives (P11.1 / P11.3 / P11.4)", ()
 });
 
 describe("Phase 11 — primitives wired (P11.5 / P11.7 / P11.8 / P11.9)", () => {
-  test("StageBarsStrip primitive exists and is consumed by ProjectRow", () => {
+  test("StageBarsStrip primitive still exists (project detail may consume it)", () => {
+    // P11-followup: Ross removed the per-row stage squares from ProjectRow
+    // on /projects — they read as visual noise on 0% rows. The primitive
+    // stays in the codebase in case the project detail wants the visual
+    // breakdown later.
     expect(() => read("src/components/ui/StageBarsStrip.tsx")).not.toThrow();
     const projectRow = read("src/components/ProjectRow.tsx");
-    expect(projectRow).toContain("StageBarsStrip");
+    expect(projectRow).not.toContain("StageBarsStrip");
   });
 
   test("RecipeCard maps bodyType → type-chip palette", () => {

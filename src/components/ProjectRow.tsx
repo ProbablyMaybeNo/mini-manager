@@ -3,7 +3,6 @@ import type { Route } from "next";
 import { clsx } from "clsx";
 import type { Project, ProjectType } from "@/db/schema";
 import { ProgressBar } from "./ProgressBar";
-import { StageBarsStrip } from "./ui/StageBarsStrip";
 import { displayStatus, progressPercent } from "@/lib/progress";
 import { StatusPill, type StatusPillKind } from "./ui/StatusPill";
 
@@ -67,7 +66,7 @@ export function ProjectRow({
   return (
     <Link
       href={linkHref}
-      className="caret-row group grid grid-cols-[4px_1fr_auto_auto] lg:grid-cols-[4px_1fr_auto_auto_auto_auto] items-center gap-3 px-3 py-2.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] min-h-[44px] md:min-h-[36px]"
+      className="caret-row group grid grid-cols-[4px_1fr_auto_auto] lg:grid-cols-[4px_1fr_auto_auto_auto] items-center gap-3 px-3 py-2.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] min-h-[44px] md:min-h-[36px]"
     >
       <span
         className={clsx("h-6 w-1 rounded-sm flex-shrink-0", priorityClass)}
@@ -95,19 +94,7 @@ export function ProjectRow({
         </span>
       </span>
       <span className="hidden lg:inline-block">
-        <StageBarsStrip
-          counts={{
-            buildCount: project.buildCount,
-            primeCount: project.primeCount,
-            paintCount: project.paintCount,
-            baseCount: project.baseCount,
-            completeCount: project.completeCount,
-            total: project.count,
-          }}
-        />
-      </span>
-      <span className="hidden lg:inline-block">
-        <ProgressBar percent={percent} width={14} />
+        <ProgressBar percent={percent} width={22} />
       </span>
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
         {status === "New" ? (
