@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { formatTime, TONE_COLOR } from "@/components/StatusBar";
+import {
+  CLOCK_PLACEHOLDER,
+  formatTime,
+  SSR_NET_STATUS,
+  TONE_COLOR,
+} from "@/components/StatusBar";
 
 describe("formatTime", () => {
   test("formats midnight correctly", () => {
@@ -53,5 +58,19 @@ describe("TONE_COLOR", () => {
     expect(keys).toContain("danger");
     expect(keys).toContain("info");
     expect(keys).toContain("neutral");
+  });
+});
+
+describe("SSR determinism contract", () => {
+  // These first-render values must be constants — never derived from
+  // `navigator`, `Date`, or anything that differs server vs client — or
+  // StatusBar reintroduces the NET-status hydration mismatch.
+  test("net status defaults to the optimistic ON", () => {
+    expect(SSR_NET_STATUS).toBe("ON");
+  });
+
+  test("clock placeholder is a static HH:MM:SS-shaped string", () => {
+    expect(CLOCK_PLACEHOLDER).toBe("--:--:--");
+    expect(CLOCK_PLACEHOLDER).toHaveLength(8);
   });
 });

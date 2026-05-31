@@ -23,10 +23,21 @@ type NetStatus = "ON" | "LAG" | "OFF";
 /** Ping interval in ms. Keep it low-cost — just HEAD the origin. */
 const PING_INTERVAL = 15_000;
 
+/**
+ * Deterministic first-render values. Server and client MUST agree on the
+ * very first render or React throws a hydration mismatch. Real connectivity
+ * and the live clock are only knowable on the client, so we render these
+ * stable placeholders during SSR + hydration, then correct in `useEffect`
+ * after mount.
+ *
+ * (Modern Node exposes a global `navigator` whose `onLine` is `undefined`,
+ * so a naive `typeof navigator !== "undefined"` guard is NOT SSR-safe.)
+ */
+export const SSR_NET_STATUS: NetStatus = "ON";
+export const CLOCK_PLACEHOLDER = "--:--:--";
+
 function useNetStatus(): NetStatus {
-  const [status, setStatus] = useState<NetStatus>(() =>
-    typeof navigator !== "undefined" && !navigator.onLine ? "OFF" : "ON",
-  );
+  const [status, setStatus] = useState<NetStatus>(SSR_NET_STATUS);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -36,6 +47,9 @@ function useNetStatus(): NetStatus {
     function handleOffline() {
       setStatus("OFF");
     }
+
+    // Correct the optimistic SSR default to the real client value on mount.
+    setStatus(navigator.onLine ? "ON" : "OFF");
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -68,9 +82,12 @@ function useNetStatus(): NetStatus {
 }
 
 function useClock(): string {
-  const [time, setTime] = useState<string>(() => formatTime(new Date()));
+  // Placeholder on first render so SSR + hydration agree; real time is set
+  // on mount (the server clock would never match the client to the second).
+  const [time, setTime] = useState<string>(CLOCK_PLACEHOLDER);
 
   useEffect(() => {
+    setTime(formatTime(new Date()));
     const id = setInterval(() => setTime(formatTime(new Date())), 1_000);
     return () => clearInterval(id);
   }, []);

@@ -14,12 +14,12 @@ Integration / Unit) and tagged to the build phase they cover.
 - **Bug workflow** — EXPLORER → REPRODUCER → FIXER. If a bug surfaces, the
   failing test is written/confirmed first, then fixed, then re-verified.
 
-**Headline result (last full run — 2026-05-30, standalone repo `D:\AI-Workstation\mini-manager`, post-Phase 9):**
+**Headline result (last full run — 2026-05-31, standalone repo `D:\AI-Workstation\mini-manager`):**
 
 | Layer | Files | Tests | Result |
 |---|---|---|---|
-| Unit + Integration (Vitest) | 48 | 499 pass · 1 skipped | ✅ green |
-| E2E (Playwright — chromium desktop + chromium-mobile) | 9 | 11 pass | ✅ green |
+| Unit + Integration (Vitest) | 52 | 544 pass · 1 skipped | ✅ green |
+| E2E (Playwright — chromium desktop + chromium-mobile) | 11 | 15 pass | ✅ green |
 | `tsc --noEmit` | — | — | ✅ 0 errors |
 
 > **Repo migration note (2026-05-29):** the project was split out of the
@@ -31,6 +31,12 @@ Integration / Unit) and tagged to the build phase they cover.
 > **Phase 7 (2026-05-30):** Power Imports landed (M7.1). One additional
 > migration regression surfaced + fixed during the P7.8 sweep — see Bug Log
 > **B4**.
+>
+> **2026-05-31 session:** full regression after the design-polish + library
+> grid-view churn — all green. One real bug found + fixed: a **StatusBar
+> hydration mismatch** (server `NET · OFF` vs client `NET · ON`) — see Bug Log
+> **B5** — plus a new regression-guard mission **M10** that fails on any
+> hydration console error.
 
 ---
 
@@ -52,6 +58,8 @@ in-browser runs. Each mints its own session via `signInAs(freshTestEmail())`.
 | M7.1 | Imports — paste plain-text list → preview tree → apply → land on new Army workspace | `qa_imports.spec.ts` | P7 | ✅ Pass |
 | M9.3 | Credentials sign-up — create account → land on /projects, plus reserved-username rejection | `qa_credentials_signup.spec.ts` | P9 | ✅ Pass |
 | M9.4 | Credentials sign-in — sign up → sign out → sign back in lands on /projects, plus wrong-password rejection | `qa_credentials_signin.spec.ts` | P9 | ✅ Pass |
+| M8.1 | Library view-mode toggle — list → grid, open detail panel from a swatch, persists across reload | `qa_library_view_toggle.spec.ts` | P2/P8 | ✅ Pass |
+| M10.1 | Hydration / SSR integrity — load /projects, /library, /recipes, /tools; fail on any hydration console error | `qa_hydration.spec.ts` | cross-cutting | ✅ Pass (guards B5) |
 
 **Mutation coverage applied in M5.1:** isolated browser contexts (Alice vs Bob),
 unauthenticated public read, cross-account hop, clone-independence assertion
@@ -129,6 +137,7 @@ scoping, and input validation against a fresh per-test DB.
 | UM27 | bcryptjs password helper — hash round-trip, hash mismatch, empty / malformed inputs, salting | `lib/auth/password.test.ts` | P9 | ✅ Pass |
 | UM28 | Username + password validators — character rules, length floors, reserved words, normalisation | `lib/auth/validation.test.ts` | P9 | ✅ Pass |
 | UM29 | Logo primitive — alt text, src, blend-mode class, responsive default, decorative variant, width override | `lib/components/Logo.test.ts` | P9 | ✅ Pass |
+| UM30 | StatusBar — formatTime shape, TONE_COLOR token map, SSR determinism contract (`SSR_NET_STATUS` / `CLOCK_PLACEHOLDER` constants) | `lib/components/StatusBar.test.ts` | P8 | ✅ Pass |
 
 ---
 
@@ -187,6 +196,28 @@ Bugs surfaced during this test campaign, with evidence and resolution.
 - **Verified:** Full E2E suite 9/9 green (M1.1, M2.1, M3.1, M4.1, M5.1,
   M6.1–3, M7.1).
 
+### B5 — StatusBar hydration mismatch: server `NET · OFF` vs client `NET · ON`
+- **Mission:** M10.1 (`qa_hydration.spec.ts`) — new regression guard.
+- **Symptom (2026-05-31):** Full E2E run stayed green, but the dev-server log
+  emitted a React hydration error at `StatusBar.tsx:114` — server rendered the
+  NET segment as `OFF` (`--status-danger`), the browser hydrated it to `ON`
+  (`--status-ok`). Hydration mismatches silently discard the server HTML and
+  re-render on the client (flicker + perf cost) and never fail an assertion, so
+  the rest of the suite never noticed.
+- **Explorer:** `useNetStatus` initialised state from
+  `typeof navigator !== "undefined" && !navigator.onLine`. Modern Node (the
+  Next 16 server runtime) exposes a **global `navigator` whose `onLine` is
+  `undefined`**, so the guard passes and `!undefined` is `true` → server renders
+  `OFF`. The browser's real `navigator.onLine` is `true` → `ON`. Same latent
+  class in `useClock` (server clock ≠ client clock to the second).
+- **Fixer:** App fix in `src/components/StatusBar.tsx`. Render deterministic
+  first-paint values that server + client agree on (`SSR_NET_STATUS = "ON"`,
+  `CLOCK_PLACEHOLDER = "--:--:--"`), then correct to the real connectivity /
+  time inside `useEffect` after mount. Locked with a unit "SSR determinism
+  contract" (UM30) + the M10.1 console-error guard.
+- **Verified:** 15/15 E2E green, no hydration line in the server log; Vitest
+  544 pass · 1 skip; `tsc` 0 errors.
+
 ---
 
 ## Coverage gaps closed this campaign
@@ -210,12 +241,12 @@ New tests written to fill phase gaps the build left behind:
 
 | Mission group | Runs | Pass | Skip | Fail |
 |---|---|---|---|---|
-| E2E desktop (M1–M5) | 5 | 5 | 0 | 0 |
+| E2E desktop (M1–M5, M7, M8.1, M9.3–9.4, M10.1) | 12 | 12 | 0 | 0 |
 | E2E mobile (M6.1–M6.3) | 3 | 3 | 0 | 0 |
-| Integration (IM1–IM13) | 13 modules | 13 | 0 (1 test skip in IM7) | 0 |
-| Unit (UM1–UM22) | 22 modules | 22 | 0 | 0 |
-| **Vitest total** | **35 files** | **369 tests** | **1 test** | **0** |
-| Bugs found / fixed | 3 | — | — | 0 open |
+| Integration (IM1–IM18) | 18 modules | 18 | 0 (1 test skip in IM7) | 0 |
+| Unit (UM1–UM30) | 30 modules | 30 | 0 | 0 |
+| **Vitest total** | **52 files** | **544 tests** | **1 test** | **0** |
+| Bugs found / fixed | 5 | — | — | 0 open |
 
 ---
 
