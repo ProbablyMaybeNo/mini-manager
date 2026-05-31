@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
 import {
@@ -16,7 +15,6 @@ interface Props {
 }
 
 export function ResetPasswordForm({ token }: Props) {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,12 +36,9 @@ export function ResetPasswordForm({ token }: Props) {
 
     startTransition(async () => {
       const res = await applyPasswordResetAction({ token, password });
-      if (res.ok) {
-        router.push("/projects");
-        router.refresh();
-        return;
+      if (res && !res.ok) {
+        setError(res.message);
       }
-      setError(res.message);
     });
   }
 

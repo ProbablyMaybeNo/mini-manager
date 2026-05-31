@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -18,7 +17,6 @@ interface SignInFormProps {
 }
 
 export function SignInForm({ redirectTarget, initialError }: SignInFormProps) {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState<string | null>(initialError);
@@ -56,13 +54,11 @@ export function SignInForm({ redirectTarget, initialError }: SignInFormProps) {
       const res = await signInAction({
         username: username.trim(),
         password,
+        redirectTo: redirectTarget,
       });
-      if (res.ok) {
-        router.push(redirectTarget);
-        router.refresh();
-        return;
+      if (res && !res.ok) {
+        setFormError(res.message);
       }
-      setFormError(res.message);
     });
   }
 

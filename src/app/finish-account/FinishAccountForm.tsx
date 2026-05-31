@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
 import {
@@ -16,7 +15,6 @@ import {
 import { finishAccountAction } from "./actions";
 
 export function FinishAccountForm() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +40,9 @@ export function FinishAccountForm() {
         username: u.normalized,
         password,
       });
-      if (res.ok) {
-        router.push("/projects");
-        router.refresh();
-        return;
+      if (res && !res.ok) {
+        setError(res.message);
       }
-      setError(res.message);
     });
   }
 

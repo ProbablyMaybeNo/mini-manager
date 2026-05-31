@@ -1,14 +1,19 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { signInWithCredentials } from "@/lib/auth/signUp";
 
 export async function signInAction(input: {
   username: string;
   password: string;
-}): Promise<{ ok: true } | { ok: false; message: string }> {
-  const res = await signInWithCredentials(input);
-  if (res.ok) {
-    return { ok: true };
+  redirectTo?: string;
+}): Promise<{ ok: false; message: string } | never> {
+  const res = await signInWithCredentials({
+    username: input.username,
+    password: input.password,
+  });
+  if (!res.ok) {
+    return { ok: false, message: res.message };
   }
-  return { ok: false, message: res.message };
+  redirect(input.redirectTo ?? "/projects");
 }

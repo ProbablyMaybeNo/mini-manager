@@ -31,7 +31,7 @@ test.describe("M9.4 — Credentials sign-in", () => {
 
     // 3. Sign in
     await page.goto("/sign-in");
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Sign in" })).toBeVisible();
     await expect(page.getByAltText("Mini Manager")).toBeVisible();
 
     await page.getByLabel(/username/i).fill(username);

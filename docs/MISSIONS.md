@@ -14,12 +14,12 @@ Integration / Unit) and tagged to the build phase they cover.
 - **Bug workflow** — EXPLORER → REPRODUCER → FIXER. If a bug surfaces, the
   failing test is written/confirmed first, then fixed, then re-verified.
 
-**Headline result (last full run — 2026-05-30, standalone repo `D:\AI-Workstation\mini-manager`, post-Phase 7):**
+**Headline result (last full run — 2026-05-30, standalone repo `D:\AI-Workstation\mini-manager`, post-Phase 9):**
 
 | Layer | Files | Tests | Result |
 |---|---|---|---|
-| Unit + Integration (Vitest) | 40 | 438 pass · 1 skipped | ✅ green |
-| E2E (Playwright — chromium desktop + chromium-mobile) | 7 | 9 pass | ✅ green |
+| Unit + Integration (Vitest) | 48 | 499 pass · 1 skipped | ✅ green |
+| E2E (Playwright — chromium desktop + chromium-mobile) | 9 | 11 pass | ✅ green |
 | `tsc --noEmit` | — | — | ✅ 0 errors |
 
 > **Repo migration note (2026-05-29):** the project was split out of the
@@ -50,6 +50,8 @@ in-browser runs. Each mints its own session via `signInAs(freshTestEmail())`.
 | M6.2 | Mobile — create Unit project → bump stage → reload persists | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
 | M6.3 | Mobile — library lookup → detail panel renders without clipping | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
 | M7.1 | Imports — paste plain-text list → preview tree → apply → land on new Army workspace | `qa_imports.spec.ts` | P7 | ✅ Pass |
+| M9.3 | Credentials sign-up — create account → land on /projects, plus reserved-username rejection | `qa_credentials_signup.spec.ts` | P9 | ✅ Pass |
+| M9.4 | Credentials sign-in — sign up → sign out → sign back in lands on /projects, plus wrong-password rejection | `qa_credentials_signin.spec.ts` | P9 | ✅ Pass |
 
 **Mutation coverage applied in M5.1:** isolated browser contexts (Alice vs Bob),
 unauthenticated public read, cross-account hop, clone-independence assertion
@@ -87,6 +89,10 @@ scoping, and input validation against a fresh per-test DB.
 | IM12 | Recipe sharing — publish (idempotent) / unpublish / getRecipeBySlug / clone (deep-copy, "already yours", rename collisions, source-untouched) | `recipeSharing.test.ts` | P5 | ✅ Pass |
 | IM13 | Export all user data — top-level keys present, owner-scoped (no cross-user bleed) | `exportData.test.ts` | P5 | ✅ Pass |
 | IM14 | Imports — schema round-trip (P7.1) + createTextImport + fetchImportForPreview + applyImport (P7.6, P7.7) | `imports.test.ts` | P7 | ✅ Pass |
+| IM15 | Credentials sign-up + sign-in (P9.2) — happy path, duplicate username, weak password, reserved word, casing, no-password legacy guard | `signUp.test.ts` | P9 | ✅ Pass |
+| IM16 | Recovery email (P9.5) — add, pending, verify-token round-trip, expired-token cleanup, resend, remove | `recoveryEmail.test.ts` | P9 | ✅ Pass |
+| IM17 | Password reset (P9.6) — happy path + enumeration safety (unknown user / no recovery email / unverified email all silently ok) + token consumption + expired + weak-password rejection | `passwordReset.test.ts` | P9 | ✅ Pass |
+| IM18 | Finish account migration shim (P9.7) — legacy magic-link account → completes setup, idempotent, preserves pre-existing recoveryEmail | `finishAccount.test.ts` | P9 | ✅ Pass |
 
 ---
 
@@ -120,6 +126,9 @@ scoping, and input validation against a fresh per-test DB.
 | UM24 | PDF text extraction (5 MB / 50-page caps, scanned-PDF rejection, corrupt-buffer rejection) | `lib/imports/pdfExtractor.test.ts` | P7 | ✅ Pass |
 | UM25 | BattleScribe `.ros` + `.rosz` parser (model-count summation, costs, faction, malformed-XML guard) | `lib/imports/battleScribeParser.test.ts` | P7 | ✅ Pass |
 | UM26 | LLM-fallback parser (mocked client; fence stripping, prose salvage, malformed-unit filter, oversized-input gate, missing-key fallback) | `lib/imports/llmFallbackParser.test.ts` | P7 | ✅ Pass |
+| UM27 | bcryptjs password helper — hash round-trip, hash mismatch, empty / malformed inputs, salting | `lib/auth/password.test.ts` | P9 | ✅ Pass |
+| UM28 | Username + password validators — character rules, length floors, reserved words, normalisation | `lib/auth/validation.test.ts` | P9 | ✅ Pass |
+| UM29 | Logo primitive — alt text, src, blend-mode class, responsive default, decorative variant, width override | `lib/components/Logo.test.ts` | P9 | ✅ Pass |
 
 ---
 

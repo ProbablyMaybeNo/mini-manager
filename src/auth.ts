@@ -1,8 +1,6 @@
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
-import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   users,
@@ -10,8 +8,6 @@ import {
   sessions,
   verificationTokens,
 } from "@/db/schema";
-import { verifyPassword } from "@/lib/auth/password";
-import { validateUsername } from "@/lib/auth/validation";
 
 // The adapter is generic over SQL flavour but TS can't narrow the
 // LibSQLDatabase type through the union, so we explicitly bind the
@@ -22,31 +18,30 @@ type SqliteDb = BaseSQLiteDatabase<"sync" | "async", unknown, Record<string, nev
 /**
  * Auth config for Mini Manager.
  *
- * Phase 9 — Credentials (username + password) is the sole sign-in path.
- * The Resend transport survives as a one-shot mailer for recovery-email
- * verification and password reset (see `src/lib/auth/sendVerificationEmail.ts`
- * landing in P9.5 / P9.6) but is no longer wired into NextAuth.
+ * Phase 9 — Credentials (username + password) is the sole sign-in path,
+ * but it does NOT flow through NextAuth's Credentials provider. The
+ * sign-up + sign-in server actions in `src/lib/auth/signUp.ts` mint
+ * session rows directly via `createSession()` in
+ * `src/lib/auth/session.ts`. This:
  *
- * Session strategy stays `database` — the adapter session tables back
- * `auth()` lookups. The sign-up + sign-in server actions create session
- * rows directly via `createSession()` in `src/lib/auth/session.ts`
- * (mirroring the long-standing test-auth route in
- * `src/app/api/test/sign-in/route.ts`); this side-steps Auth.js v5's
- * Credentials-prefers-JWT default and keeps every session lookup going
- * through one DB-backed code path.
+ *   1. Keeps the database session strategy + Drizzle adapter intact,
+ *      so `auth()` lookups continue to work via the `session` table.
+ *   2. Side-steps Auth.js v5's "Credentials provider requires JWT
+ *      session strategy" assertion. We can't register the Credentials
+ *      provider AND keep database sessions in the same config —
+ *      `assertConfig` rejects that combo. Since the first-party UI
+ *      doesn't route through `signIn()` anyway, dropping the provider
+ *      registration is lossless.
  *
- * The Credentials provider is still registered so that the bundled
- * `/api/auth/...` routes + `signIn("credentials", ...)` helpers from
- * future server code have a working `authorize` to delegate to. Today's
- * first-party UI does not call `signIn` directly.
+ * The Resend transport survives only as a one-shot mailer for recovery-
+ * email verification and password reset (see
+ * `src/lib/auth/sendVerificationEmail.ts`); both flows live entirely
+ * outside NextAuth and just borrow the `verificationTokens` table.
+ *
+ * `providers: []` is intentional. If OAuth lands later, register the
+ * provider here and the existing adapter wiring picks it up.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // The adapter's generic schema typing is stricter than ours (it
-  // doesn't know about our extra `username` column on users, etc.),
-  // but the runtime contract is identical — same table + column names.
-  // We bind the SQL flavour explicitly so the SQLite schema overload
-  // is picked, then cast the schema object through `unknown` for the
-  // remaining structural-shape mismatch.
   adapter: DrizzleAdapter<SqliteDb>(
     db as unknown as SqliteDb,
     {
@@ -60,42 +55,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/sign-in",
   },
-  providers: [
-    Credentials({
-      name: "Credentials",
-      credentials: {
-        username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(creds) {
-        const username =
-          typeof creds?.username === "string" ? creds.username : "";
-        const password =
-          typeof creds?.password === "string" ? creds.password : "";
-        const u = validateUsername(username);
-        if (!u.ok || !password) return null;
-
-        const row = await db
-          .select({
-            id: users.id,
-            username: users.username,
-            email: users.email,
-            passwordHash: users.passwordHash,
-          })
-          .from(users)
-          .where(eq(users.username, u.normalized))
-          .limit(1);
-
-        const user = row[0];
-        if (!user?.passwordHash) return null;
-        if (!(await verifyPassword(password, user.passwordHash))) return null;
-
-        return {
-          id: user.id,
-          name: user.username ?? null,
-          email: user.email ?? null,
-        };
-      },
-    }),
-  ],
+  providers: [],
 });

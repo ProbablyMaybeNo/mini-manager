@@ -17,7 +17,7 @@ test.describe("M9.3 — Credentials sign-up", () => {
     const username = freshUsername();
 
     await page.goto("/sign-up");
-    await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Create account" })).toBeVisible();
 
     // Logo present + has the screen-reader fallback wordmark
     await expect(page.getByAltText("Mini Manager")).toBeVisible();

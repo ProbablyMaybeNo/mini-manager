@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { hashPassword } from "./password";
+import { hashPassword, verifyPassword } from "./password";
 import { createSession } from "./session";
 import {
   PASSWORD_ERROR_COPY,
@@ -69,6 +69,11 @@ export async function signUpWithCredentials(input: {
 
   await db.insert(users).values({
     id: userId,
+    // `name` mirrors the username so the NavRail / MobileHeader pick
+    // up a friendly display label without an extra query. Users can
+    // never change it (immutable v1); when they do, both fields move
+    // together.
+    name: u.normalized,
     username: u.normalized,
     passwordHash: hash,
     plan: "free",
@@ -116,7 +121,6 @@ export async function signInWithCredentials(input: {
     return { ok: false, message: "Wrong username or password" };
   }
 
-  const { verifyPassword } = await import("./password");
   const ok = await verifyPassword(input.password, user.passwordHash);
   if (!ok) {
     return { ok: false, message: "Wrong username or password" };

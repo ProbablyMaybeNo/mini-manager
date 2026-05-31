@@ -17,19 +17,19 @@ This decouples sign-up funnel from email deliverability (Resend free-tier was a 
 
 ## Milestones
 
-- [ ] **P9.1 — Schema migration + bcrypt utility.**
+- [x] **P9.1 — Schema migration + bcrypt utility.**
   - Drizzle migration: make `user.email` nullable, add `user.passwordHash TEXT`, `user.plan TEXT NOT NULL DEFAULT 'free'`, `user.recoveryEmail TEXT`, `user.recoveryEmailVerified INTEGER` (timestamp). Backfill `username` from existing local-part for any dogfood account (one row currently).
   - Install `bcryptjs` + `@types/bcryptjs`. Create `src/lib/auth/password.ts` with `hashPassword` / `verifyPassword`.
   - Username + password validators in `src/lib/auth/validation.ts`. Reserved word list constant.
   - Unit tests: hash round-trip, hash mismatch, password length floor, username rules, reserved words.
 
-- [ ] **P9.2 — NextAuth Credentials provider + sign-up server action.**
+- [x] **P9.2 — NextAuth Credentials provider + sign-up server action.**
   - Rewrite `src/auth.ts`: replace `magicLinkProvider()` with `Credentials({ ... })`. `authorize()` looks up by username, calls `verifyPassword`, returns user.
   - New `src/lib/auth/signUp.ts` server action: validates username + password, checks uniqueness (case-insensitive), hashes password, inserts user row, signs them in.
   - JWT session strategy stays at `database` so the adapter session tables keep working.
   - Tests: signUp creates user, duplicate username rejected, weak password rejected, reserved word rejected.
 
-- [ ] **P9.3 — Sign-up page `/sign-up`.**
+- [x] **P9.3 — Sign-up page `/sign-up`.**
   - New page using Card + Button + StatusPill primitives (P8 design language).
   - **Logo at top of card.** Reuse `<Logo />` primitive from P9.4 (`public/brand/logo.png`, `mix-blend-mode: screen`, sized ~140px wide on desktop / ~110px on mobile, centered above form). Card heading "Create account" sits below the logo.
   - Three fields: username, password, confirm password. Real-time uniqueness check (debounced, returns ok/taken pill).
@@ -38,7 +38,7 @@ This decouples sign-up funnel from email deliverability (Resend free-tier was a 
   - Footer link "Already have an account? Sign in" → `/sign-in`.
   - E2E: signup-happy-path mission.
 
-- [ ] **P9.4 — Sign-in page redesign + username/password auth.**
+- [x] **P9.4 — Sign-in page redesign + username/password auth.**
   - Replace existing magic-link form at `src/app/sign-in/page.tsx` with username + password form.
   - P8 design language (Card, cyan primary, no ASCII box).
   - **Logo at top of card.** New primitive `src/components/ui/Logo.tsx` rendering `<Image>` from `public/brand/logo.png` with `mix-blend-mode: screen` to drop the black background onto our dark bg. Sized ~140px wide on desktop / ~110px on mobile, centered above the form. Replace the existing `<h1>MINI MANAGER</h1>` heading with the logo + `<span class="sr-only">Mini Manager</span>` for screen readers. The card's own h1 then reads "Sign in" — pulling auth-page visual hierarchy back to logo > action > form.
@@ -47,24 +47,24 @@ This decouples sign-up funnel from email deliverability (Resend free-tier was a 
   - Update `qa_signin.spec.ts` E2E + auth bypass for tests (`ALLOW_TEST_AUTH` still works).
   - Vitest: Logo primitive renders alt text + screen-reader-only fallback.
 
-- [ ] **P9.5 — Settings: add + verify recovery email.**
+- [x] **P9.5 — Settings: add + verify recovery email.**
   - New section in `/settings`: "Recovery Email" card. Empty state → "Add" button + inline input. Filled+unverified state → status pill `PENDING` + "Resend verification" + "Remove". Filled+verified state → status pill `VERIFIED` + "Change".
   - "Add" flow: validate email format, store as `recoveryEmail` (nullable + unverified), send Resend mail with one-time token (existing `verificationTokens` table). Click → `/settings/verify-recovery?token=...` → sets `recoveryEmailVerified = now`.
   - Server actions guard: only the logged-in user can mutate their own recovery email.
   - Tests: add → pending → click link → verified.
 
-- [ ] **P9.6 — Forgot password flow.**
+- [x] **P9.6 — Forgot password flow.**
   - `/sign-in/forgot` page — input field: username. If the user has a verified recoveryEmail, generate a token (verificationTokens table), email a link → `/sign-in/reset?token=...`. **Always show the same "If an account exists, we sent a link" response** regardless of hit/miss (prevent username enumeration).
   - `/sign-in/reset?token=...` — token lookup, expire after 1h, two password fields, submit → updates `passwordHash`, deletes token, signs the user in.
   - Tests: happy path, expired token, missing recoveryEmail short-circuits silently.
 
-- [ ] **P9.7 — Existing-user migration shim.**
+- [x] **P9.7 — Existing-user migration shim.**
   - Middleware/server check: if a signed-in user has `email IS NOT NULL` **and** `passwordHash IS NULL` → redirect to `/finish-account`.
   - `/finish-account` page: "Pick a username and password to finish setting up your account." Two fields. On submit: move existing `email` → `recoveryEmail` (with `recoveryEmailVerified` set, since the magic-link confirmed it), set username + passwordHash, clear `email`.
   - Make this idempotent: page short-circuits to `/projects` if account is already complete.
   - Tests: legacy magic-link account hits the page, completes, can sign in via new flow.
 
-- [ ] **P9.8 — Cleanup, E2E sweep, regression.**
+- [x] **P9.8 — Cleanup, E2E sweep, regression.**
   - Remove `magicLinkProvider()` and `AUTH_EMAIL_FROM` checks at sign-in. (Resend transport stays for verify/reset flows only — abstracted to `src/lib/auth/sendVerificationEmail.ts`.)
   - Delete old `/sign-in?sent=1` "check your email" page (no longer used at sign-in).
   - Update `MISSIONS.md`: drop "magic-link" mission, add "credentials-signup" + "credentials-signin" + "recovery-email-verify" + "forgot-password" missions.

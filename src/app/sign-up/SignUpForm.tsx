@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
 import {
@@ -24,7 +23,6 @@ type CheckState =
 const DEBOUNCE_MS = 350;
 
 export function SignUpForm() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -103,12 +101,11 @@ export function SignUpForm() {
         username: u.normalized,
         password,
       });
-      if (res.ok) {
-        router.push("/projects");
-        router.refresh();
-        return;
+      // On success the server action throws a NEXT_REDIRECT; control
+      // never reaches here. Anything we DO see is a {ok:false} payload.
+      if (res && !res.ok) {
+        setFormError(res.message);
       }
-      setFormError(res.message);
     });
   }
 

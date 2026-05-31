@@ -23,7 +23,7 @@ npm run dev
 - Next.js 16 (App Router) · React 19 · TypeScript strict
 - Tailwind v4 (CSS-first @theme tokens)
 - Drizzle ORM · better-sqlite3 (local dev) · Postgres (prod, deferred)
-- NextAuth.js v5 (magic-link in dev; OAuth deferred)
+- NextAuth.js v5 (username + password via Credentials — Phase 9; OAuth deferred)
 - IBM Plex Mono (chrome) · IBM Plex Sans (prose)
 
 ## Layout
@@ -43,6 +43,22 @@ app/
 │   └── lib/                   # Utilities, server actions
 └── data/local.db              # Dev SQLite (gitignored)
 ```
+
+## Environment variables
+
+The required core (see `.env.example` for full list):
+
+| Var | Required | Purpose |
+|---|---|---|
+| `AUTH_SECRET` | yes | NextAuth signing key. Generate with `openssl rand -base64 32`. |
+| `DATABASE_URL` | yes | libsql URL — `file:./data/local.db` in dev, `libsql://...` in prod (Turso). |
+| `DATABASE_AUTH_TOKEN` | prod only | Turso auth token. |
+| `AUTH_RESEND_KEY` | **optional** | Resend API key. Only used for recovery-email verification (P9.5) and password reset (P9.6). When unset, both flows log the link to the dev console — same DX as the old magic-link transport. **Not required for sign-up.** |
+| `AUTH_EMAIL_FROM` | optional | `From:` header on verify / reset emails. Falls back to `Mini Manager <no-reply@localhost>`. |
+| `GROQ_API_KEY` | optional | Powers the LLM import-parser fallback (P7.5). |
+| `ALLOW_TEST_AUTH` | dev / E2E | Set to `1` to expose the `/api/test/sign-in` shortcut Playwright uses. **Never set in production.** |
+
+Sign-up is **frictionless** for free tier: username + password only, no email field. Adding a recovery email — and verifying it — happens in `/user` as the upgrade gate.
 
 ## Phase 1 roadmap
 

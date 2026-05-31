@@ -94,6 +94,7 @@ export async function finishAccount(input: {
   await db
     .update(users)
     .set({
+      name: u.normalized,
       username: u.normalized,
       passwordHash: hash,
       email: null,
