@@ -40,11 +40,11 @@ describe("Logo primitive", () => {
     expect(cls).toMatch(/logo-screen/);
   });
 
-  test("default sizing yields responsive ~110/140px width", () => {
+  test("default sizing fills the parent so it caps at the panel width", () => {
     const tree = unwrap(Logo({}));
     const cls = (tree.props as { className: string }).className;
-    expect(cls).toMatch(/w-\[110px\]/);
-    expect(cls).toMatch(/md:w-\[140px\]/);
+    expect(cls).toMatch(/w-full/);
+    expect(cls).toMatch(/h-auto/);
   });
 
   test("decorative variant suppresses the alt text + sets aria-hidden", () => {

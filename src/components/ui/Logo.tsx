@@ -2,8 +2,9 @@ import Image from "next/image";
 import { clsx } from "clsx";
 
 export interface LogoProps {
-  /** Force a fixed pixel width — handy on auth-page hero placement.
-   *  Defaults to a responsive sizing pair (~110px mobile / ~140px md+). */
+  /** Force a fixed pixel width — useful for compact lockups (e.g. a
+   *  future header bar). Without it the logo fills its parent (auth
+   *  cards are wrapped in a `max-w-md` panel, so it caps at panel width). */
   width?: number;
   className?: string;
   /** Provide hidden-text-only flag if rendering as a redundant decoration
@@ -19,9 +20,10 @@ export interface LogoProps {
  * — the cyan engraving reads as glyphs on the page, not as a card on a
  * card.
  *
- * Default sizing follows the auth-page hero spec from PHASE9_PLAN.md:
- * ~140px wide on md+, ~110px on mobile. Override `width` for inline
- * lockups elsewhere.
+ * Default sizing fills the parent — auth pages wrap the logo in a
+ * `max-w-md` panel so it lands at ~448px square on desktop and shrinks
+ * with the viewport on mobile. Pass an explicit `width` for compact
+ * lockups (e.g. navbars).
  *
  * The wordmark itself spells "Mini-Manager", so the alt text restates
  * it for screen readers. Pass `decorative` when pairing the logo with
@@ -41,7 +43,7 @@ export function Logo({ width, className, decorative = false }: LogoProps) {
       aria-hidden={decorative || undefined}
       className={clsx(
         "logo-screen",
-        width ? "" : "w-[110px] md:w-[140px] h-auto",
+        width ? "" : "w-full h-auto",
         className,
       )}
     />
