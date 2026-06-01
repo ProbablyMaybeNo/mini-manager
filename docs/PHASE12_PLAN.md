@@ -101,7 +101,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 ### Pillar 6 — User page
 
-- [ ] **P12.17 — Plan tier section + pricing.** Replace the current static "Plan: FREE" card with a richer block: tier badge + price + feature bullets. Subscription vs lifetime distinction. Founder slot for early supporters. Placeholder until P10 Stripe ships — copy + structure can be in place.
+- [x] **P12.17 — Plan tier section + pricing.** Replace the current static "Plan: FREE" card with a richer block: tier badge + price + feature bullets. Subscription vs lifetime distinction. Founder slot for early supporters. Placeholder until P10 Stripe ships — copy + structure can be in place.
 
 - [ ] **P12.18 — Password change.** Form with current password + new password + confirm. Server action uses bcryptjs `verifyPassword` for the current + `hashPassword` for the new. Updates `passwordHash` column.
 

@@ -16,17 +16,33 @@ function read(rel: string): string {
   );
 }
 
-describe("User page — plan-tier pill (P11.9)", () => {
+describe("User page — plan-tier pill (P11.9 + P12.17)", () => {
   const src = read("src/app/user/page.tsx");
 
-  test("PLAN_PILL maps FREE → neutral, PRO → info (cyan), FOUNDER → purple", () => {
+  test("PLAN_PILL maps FREE → neutral, PRO_* → info (cyan), FOUNDER → purple", () => {
+    // P12.17 split PRO into PRO_MONTHLY + PRO_LIFETIME; both keep the
+    // cyan info pill (they're the same product, different billing).
     expect(src).toMatch(/FREE:\s*"neutral"/);
-    expect(src).toMatch(/PRO:\s*"info"/);
+    expect(src).toMatch(/PRO_MONTHLY:\s*"info"/);
+    expect(src).toMatch(/PRO_LIFETIME:\s*"info"/);
     expect(src).toMatch(/FOUNDER:\s*"purple"/);
   });
 
-  test("PlanTier type covers all three tiers", () => {
-    expect(src).toContain('type PlanTier = "FREE" | "PRO" | "FOUNDER"');
+  test("PlanTier type covers all four tiers (P12.17 split Pro into monthly + lifetime)", () => {
+    expect(src).toContain(
+      'type PlanTier = "FREE" | "PRO_MONTHLY" | "PRO_LIFETIME" | "FOUNDER"',
+    );
+  });
+
+  test("Plan card surfaces the locked pricing", () => {
+    expect(src).toContain("$0");
+    expect(src).toContain("$4 / month");
+    expect(src).toContain("$29 one-time");
+    expect(src).toContain("$19 one-time");
+  });
+
+  test("Founder tier renders in pastel-purple (locked special slot)", () => {
+    expect(src).toContain("text-[var(--color-purple-pastel)]");
   });
 
   test("page renders a Plan card section above Recovery email", () => {

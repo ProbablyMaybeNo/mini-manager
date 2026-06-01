@@ -92,8 +92,13 @@ describe("Phase 11 — primitives wired (P11.5 / P11.7 / P11.8 / P11.9)", () => 
   });
 
   test("User page renders the Plan section with PlanTier type", () => {
+    // P12.17 split PRO into PRO_MONTHLY + PRO_LIFETIME so the locked
+    // pricing rows (monthly $4 vs lifetime $29) can render distinct
+    // cards.
     const src = read("src/app/user/page.tsx");
-    expect(src).toContain('type PlanTier = "FREE" | "PRO" | "FOUNDER"');
+    expect(src).toContain(
+      'type PlanTier = "FREE" | "PRO_MONTHLY" | "PRO_LIFETIME" | "FOUNDER"',
+    );
   });
 });
 

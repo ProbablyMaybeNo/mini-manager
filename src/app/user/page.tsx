@@ -11,23 +11,70 @@ import { currentUserId } from "@/lib/auth-stub";
 export const dynamic = "force-dynamic";
 
 /**
- * Plan-tier metadata (P11.9). The tiers themselves are not yet a
- * schema-backed feature; this is a read-only display + colour-coded
- * StatusPill mapping so the section is wired correctly the day the
- * paid-tier flag lands. Free is neutral grey, Pro picks up the cyan
- * "primary action" tone, Founder claims the pastel-purple "special /
- * featured" slot.
+ * Plan-tier metadata.
+ *
+ * P11.9 introduced the StatusPill mapping. P12.17 expands the section
+ * into a richer block with the locked pricing Ross resolved from
+ * PHASE10_PLAN.md:
+ *
+ *   FREE         $0       — everything works, no caps
+ *   PRO_MONTHLY  $4/mo    — subscription
+ *   PRO_LIFETIME $29      — one-time, full Pro forever
+ *   FOUNDER      $19      — early supporter slot (locked-in lifetime)
+ *
+ * Tiers are not yet schema-backed (`users.plan` defaults to "free" +
+ * nothing writes the paid values). The mappings below are the
+ * canonical display layer so the day Stripe ships (P10), this becomes
+ * a single field bump.
  */
-type PlanTier = "FREE" | "PRO" | "FOUNDER";
+type PlanTier = "FREE" | "PRO_MONTHLY" | "PRO_LIFETIME" | "FOUNDER";
 const PLAN_PILL: Readonly<Record<PlanTier, StatusPillKind>> = {
   FREE: "neutral",
-  PRO: "info",
+  PRO_MONTHLY: "info",
+  PRO_LIFETIME: "info",
   FOUNDER: "purple",
 };
+const PLAN_LABEL: Readonly<Record<PlanTier, string>> = {
+  FREE: "FREE",
+  PRO_MONTHLY: "PRO · MONTHLY",
+  PRO_LIFETIME: "PRO · LIFETIME",
+  FOUNDER: "FOUNDER",
+};
+const PLAN_PRICE: Readonly<Record<PlanTier, string>> = {
+  FREE: "$0",
+  PRO_MONTHLY: "$4 / month",
+  PRO_LIFETIME: "$29 one-time",
+  FOUNDER: "$19 one-time",
+};
 const PLAN_BLURB: Readonly<Record<PlanTier, string>> = {
-  FREE: "Free tier — everything works, no caps.",
-  PRO: "Pro tier — unlocks sync + multi-device.",
-  FOUNDER: "Founder tier — early supporter pricing locked in.",
+  FREE: "Every feature, no caps. The default seat.",
+  PRO_MONTHLY: "Sync + multi-device, billed monthly. Cancel anytime.",
+  PRO_LIFETIME: "Sync + multi-device, paid once. Full Pro forever.",
+  FOUNDER: "Early supporter slot — locked-in lifetime access at $19.",
+};
+const PLAN_FEATURES: Readonly<Record<PlanTier, ReadonlyArray<string>>> = {
+  FREE: [
+    "Unlimited projects, units, models",
+    "Cross-brand paint library",
+    "Recipes + palettes",
+    "Local export to JSON",
+  ],
+  PRO_MONTHLY: [
+    "Everything in Free",
+    "Cloud sync across devices",
+    "Priority feature votes",
+    "Cancel any time",
+  ],
+  PRO_LIFETIME: [
+    "Everything in Pro Monthly",
+    "Pay once — full Pro forever",
+    "Locked-in price across upgrades",
+  ],
+  FOUNDER: [
+    "Everything in Pro Lifetime",
+    "Founder badge across the app",
+    "Reserved seat — limited supply",
+  ],
 };
 
 export default async function UserPage() {
@@ -61,14 +108,62 @@ export default async function UserPage() {
 
       <Card title="Plan" ariaLabel="Plan tier">
         <p className="text-xs font-sans text-[var(--color-fg-subtle)] mb-3 leading-snug">
-          Your account tier. Free covers every feature; Pro and Founder are
-          coming soon.
+          Your account tier. Free covers every feature; Pro and Founder
+          unlock cloud sync + early-supporter benefits when Stripe
+          ships.
         </p>
-        <div className="flex items-center gap-3 flex-wrap">
-          <StatusPill status={PLAN_PILL[planTier]}>{planTier}</StatusPill>
+        <div className="flex items-center gap-3 flex-wrap mb-4">
+          <StatusPill status={PLAN_PILL[planTier]}>
+            {PLAN_LABEL[planTier]}
+          </StatusPill>
+          <span className="font-mono text-sm text-[var(--color-fg)] tabular-nums">
+            {PLAN_PRICE[planTier]}
+          </span>
           <span className="text-xs font-sans text-[var(--color-fg-muted)]">
             {PLAN_BLURB[planTier]}
           </span>
+        </div>
+        <ul className="space-y-1 text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+          {PLAN_FEATURES[planTier].map((feat) => (
+            <li key={feat} className="flex items-start gap-2">
+              <span aria-hidden className="text-[var(--color-green)]">
+                ✓
+              </span>
+              <span>{feat}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 pt-3 border-t border-[var(--color-border)] space-y-2">
+          <p className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+            Coming soon
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-2xs font-mono">
+            {(["PRO_MONTHLY", "PRO_LIFETIME", "FOUNDER"] as const).map(
+              (tier) => (
+                <li
+                  key={tier}
+                  className="frame px-2 py-2"
+                  aria-label={`${PLAN_LABEL[tier]} tier — ${PLAN_PRICE[tier]}`}
+                >
+                  <span
+                    className={
+                      tier === "FOUNDER"
+                        ? "text-[var(--color-purple-pastel)]"
+                        : "text-[var(--color-cyan)]"
+                    }
+                  >
+                    {PLAN_LABEL[tier]}
+                  </span>
+                  <span className="block text-[var(--color-fg)] tabular-nums">
+                    {PLAN_PRICE[tier]}
+                  </span>
+                  <span className="block text-[var(--color-fg-muted)] mt-1 normal-case font-sans text-2xs leading-snug">
+                    {PLAN_BLURB[tier]}
+                  </span>
+                </li>
+              ),
+            )}
+          </ul>
         </div>
       </Card>
 
