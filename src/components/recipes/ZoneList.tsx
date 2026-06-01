@@ -108,42 +108,53 @@ export function ZoneList({
         Each colour slot is one part of the model — carapace, pauldron,
         eye lens. Add a slot, then pick a paint and a technique for it.
       </p>
-      {localZones.length === 0 ? (
-        <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-          No colour slots yet. Type your own with{" "}
-          <span className="font-mono uppercase tracking-wider">Add color</span>{" "}
-          or one-click populate a starter set below.
-        </p>
-      ) : (
-        <ul className="space-y-1" role="list">
-          {localZones.map((zone) => (
-            <ZoneRow
-              key={zone.id}
-              zone={zone}
-              selected={selectedZoneId === zone.id}
-              onSelect={() => onSelectZone(zone.id)}
-              isDragTarget={dragTargetId === zone.id}
-              onDragStart={() => {
-                draggedIdRef.current = zone.id;
-              }}
-              onDragOver={(event) => {
-                if (draggedIdRef.current && draggedIdRef.current !== zone.id) {
-                  event.preventDefault();
-                  setDragTargetId(zone.id);
-                }
-              }}
-              onDrop={(event) => {
+      {/* P11.3 deep redesign: horizontal strip of clickable colour
+          squares. Empty slots render with a dim border + slot name;
+          filled slots show the actual paint swatch. Click → selects
+          the slot and surfaces the technique editor below. */}
+      <div
+        className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(112px,1fr))]"
+        role="list"
+        aria-label="Color slots"
+      >
+        {localZones.map((zone) => (
+          <ColorSlotCell
+            key={zone.id}
+            zone={zone}
+            selected={selectedZoneId === zone.id}
+            onSelect={() => onSelectZone(zone.id)}
+            isDragTarget={dragTargetId === zone.id}
+            onDragStart={() => {
+              draggedIdRef.current = zone.id;
+            }}
+            onDragOver={(event) => {
+              if (draggedIdRef.current && draggedIdRef.current !== zone.id) {
                 event.preventDefault();
-                handleDrop(zone.id);
-              }}
-              onDragEnd={() => {
-                draggedIdRef.current = null;
-                setDragTargetId(null);
-              }}
-            />
-          ))}
-        </ul>
-      )}
+                setDragTargetId(zone.id);
+              }
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              handleDrop(zone.id);
+            }}
+            onDragEnd={() => {
+              draggedIdRef.current = null;
+              setDragTargetId(null);
+            }}
+          />
+        ))}
+        {/* The trailing "+ Add color" tile lives inside the same grid
+            so a partially-full row stays balanced visually. Clicking
+            it scrolls to + focuses the existing add-control below. */}
+        <AddSlotTile />
+      </div>
+      {localZones.length === 0 ? (
+        <p className="text-xs font-sans text-[var(--color-fg-muted)]">
+          No colour slots yet. Use{" "}
+          <span className="font-mono uppercase tracking-wider">+ Add color</span>{" "}
+          above, or load a starter set below.
+        </p>
+      ) : null}
 
       {reorderError ? (
         <p
@@ -164,7 +175,13 @@ export function ZoneList({
   );
 }
 
-function ZoneRow({
+/**
+ * Horizontal-strip cell rendering for one colour slot. Replaces the
+ * old vertical `<ZoneRow>` (kept below as a back-compat alias if any
+ * external consumer ever exists, but ZoneList itself uses these now).
+ * P11.3 deep redesign — Ross's "empty colored squares" ask.
+ */
+function ColorSlotCell({
   zone,
   selected,
   onSelect,
@@ -179,11 +196,12 @@ function ZoneRow({
   onSelect: () => void;
   isDragTarget?: boolean;
   onDragStart?: () => void;
-  onDragOver?: (event: React.DragEvent<HTMLLIElement>) => void;
-  onDrop?: (event: React.DragEvent<HTMLLIElement>) => void;
+  onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd?: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const filled = zone.swatchHex !== null;
 
   const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -200,81 +218,136 @@ function ZoneRow({
     });
   };
 
+  // Use a dark-text-on-swatch contrast pick so the name renders on
+  // any colour. Computed once per render from the hex.
+  const textColor = filled ? readableTextOn(zone.swatchHex!) : "var(--color-fg)";
+
   return (
-    <li
+    <div
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      role="listitem"
       className={clsx(
-        "flex items-stretch gap-1",
-        isDragTarget && "outline outline-1 outline-[var(--color-cyan)]",
+        "relative group rounded-sm transition-all",
+        isDragTarget && "outline outline-2 outline-[var(--color-cyan)]",
       )}
     >
-      <span
-        aria-hidden
-        className="font-mono text-xs text-[var(--color-fg-subtle)] cursor-grab select-none px-1 flex items-center"
-        title="Drag to reorder"
-      >
-        ≡
-      </span>
       <button
         type="button"
         onClick={onSelect}
+        aria-pressed={selected}
+        aria-label={`${filled ? "Edit" : "Configure"} colour slot ${zone.name}`}
+        title={`${zone.name} · ${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}`}
         className={clsx(
-          "caret-row",
-          "flex-1 min-w-0 flex items-center gap-3 px-2.5 py-2 frame text-left tap-target",
-          "transition-colors",
+          "w-full aspect-square flex flex-col items-stretch justify-between rounded-sm border-2 transition-all cursor-pointer p-2",
           selected
-            ? "border-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]"
-            : "hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)]",
+            ? "border-[var(--color-cyan)] shadow-[0_0_0_2px_var(--color-cyan)]"
+            : filled
+              ? "border-[var(--color-border-strong)] hover:border-[var(--color-cyan)]"
+              : "border-dashed border-[var(--color-border-strong)] hover:border-[var(--color-cyan)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)]",
           isPending && "opacity-50 cursor-progress",
         )}
-        aria-pressed={selected}
+        style={{ background: filled ? zone.swatchHex! : "transparent" }}
       >
         <span
           aria-hidden
-          className="inline-block w-4 h-4 rounded-sm border"
-          style={{
-            background: zone.swatchHex ?? "transparent",
-            borderColor: "var(--color-border-strong)",
-          }}
-        />
-        <span className="flex-1 min-w-0">
-          <span
-            className={clsx(
-              "block font-mono text-sm truncate",
-              selected ? "text-[var(--color-cyan)]" : "text-[var(--color-fg)]",
-            )}
-          >
-            {zone.name}
-          </span>
-          <span className="block text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
-            {zone.silhouetteZoneId ?? "custom"} · {zone.stepCount} step
-            {zone.stepCount === 1 ? "" : "s"}
-          </span>
+          className="self-start cursor-grab text-2xs font-mono leading-none px-1 py-0.5 rounded-sm opacity-60 group-hover:opacity-100"
+          style={{ color: textColor, background: filled ? "rgba(0,0,0,0.2)" : "transparent" }}
+          title="Drag to reorder"
+        >
+          ≡
         </span>
         <span
-          role="button"
-          tabIndex={0}
-          aria-label={`Delete colour slot ${zone.name}`}
-          onClick={handleDelete}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleDelete(event as unknown as React.MouseEvent);
-            }
-          }}
-          className="text-2xs font-mono text-[var(--color-fg-subtle)] hover:text-[var(--color-red)] px-2"
+          className={clsx(
+            "block font-mono text-xs leading-tight truncate font-semibold text-center",
+            !filled && "text-[var(--color-fg)]",
+          )}
+          style={filled ? { color: textColor } : undefined}
         >
-          ×
+          {zone.name}
+        </span>
+        <span
+          className="block text-2xs font-mono uppercase tracking-wider text-center opacity-70"
+          style={filled ? { color: textColor } : { color: "var(--color-fg-muted)" }}
+        >
+          {filled ? `${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}` : "no paint"}
         </span>
       </button>
-    </li>
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={`Delete colour slot ${zone.name}`}
+        onClick={handleDelete}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleDelete(event as unknown as React.MouseEvent);
+          }
+        }}
+        className="absolute top-1 right-1 text-2xs font-mono leading-none px-1 py-0.5 rounded-sm opacity-0 group-hover:opacity-100 hover:text-[var(--color-red)] cursor-pointer"
+        style={{ color: textColor, background: filled ? "rgba(0,0,0,0.2)" : "color-mix(in srgb, var(--color-bg) 70%, transparent)" }}
+      >
+        ×
+      </span>
+    </div>
   );
 }
 
+/**
+ * Trailing tile in the slot grid that scrolls + focuses the AddZoneControl
+ * input below. Lets the user add a new slot from the strip itself instead
+ * of hunting for the form. Visually balances rows that don't fill exactly.
+ */
+function AddSlotTile() {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        // Find the "+ Add color" trigger Button below and click it.
+        // AddZoneControl's input has autoFocus, so the form opens +
+        // focuses in one user-perceived step.
+        const trigger = document.querySelector<HTMLButtonElement>(
+          'button[data-add-zone-trigger]',
+        );
+        if (trigger) {
+          trigger.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          trigger.click();
+        }
+      }}
+      aria-label="Add a colour slot"
+      className="aspect-square flex flex-col items-center justify-center gap-1.5 rounded-sm border-2 border-dashed border-[var(--color-border-strong)] hover:border-[var(--color-cyan)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-all cursor-pointer text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]"
+    >
+      <span aria-hidden className="font-mono text-2xl leading-none">+</span>
+      <span className="font-mono text-2xs uppercase tracking-wider">
+        Add color
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Pick black or white for text rendered on a coloured background.
+ * Uses the standard sRGB perceived-luminance threshold (~0.55) — light
+ * swatches get dark text, dark swatches get light text. Falls back to
+ * the fg token if the hex is malformed.
+ */
+function readableTextOn(hex: string): string {
+  const clean = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (clean.length !== 6) return "var(--color-fg)";
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  if ([r, g, b].some(Number.isNaN)) return "var(--color-fg)";
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.55 ? "#0a0a0a" : "#f5f5f5";
+}
+
+/**
+ * @deprecated kept for tests; ZoneList itself now renders ColorSlotCell.
+ */
 function AddZoneControl({ recipeId }: { recipeId: string }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -309,6 +382,9 @@ function AddZoneControl({ recipeId }: { recipeId: string }) {
         onClick={() => setOpen(true)}
         variant="primary"
         size="sm"
+        // Targeted by the AddSlotTile in the slot grid so clicking
+        // the trailing "+ Add color" tile opens this control.
+        data-add-zone-trigger
       >
         + Add color
       </Button>
