@@ -32,4 +32,27 @@ test.describe("M1 — Library quick-lookup", () => {
       page.locator('[aria-label*="Mephiston Red detail" i]'),
     ).toBeVisible({ timeout: 10_000 });
   });
+
+  /* R7-5 — verify no stray "Filters" button leaks to the top-right
+   * at desktop viewport. The mobile filter trigger should ONLY appear
+   * below the md breakpoint; everything else lives inside the
+   * FilterRail's collapsible header. */
+  test("R7-5 no top-right Filters button at desktop viewport", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await signInAs(page, freshTestEmail("r75"));
+    await page.goto("/library");
+    await expect(page.getByRole("heading", { name: /LIBRARY/i })).toBeVisible();
+
+    // The mobile filter trigger lives at fixed top-14 right-3 with
+    // `md:hidden xl:hidden`. At 1440px (xl) no Filters button should be
+    // visible — neither the mobile-only fixed trigger nor any other
+    // accidental floating affordance.
+    const filtersButtons = page.getByRole("button", { name: /^Filters?$/i });
+    const total = await filtersButtons.count();
+    for (let i = 0; i < total; i++) {
+      await expect(filtersButtons.nth(i)).toBeHidden();
+    }
+  });
 });

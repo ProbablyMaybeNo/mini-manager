@@ -52,8 +52,10 @@ describe("Library mobile filter trigger", () => {
 
   test("the mobile-only Filters button exists and is hidden on desktop", () => {
     // md:hidden + aria-label="Open filters" + setMobileFilterOpen(true).
+    // R7-5 added xl:hidden as a defensive belt-and-braces against
+    // breakpoint drift, so both must appear on the trigger element.
     expect(src).toContain('aria-label="Open filters"');
-    expect(src).toContain("md:hidden fixed top-14 right-3");
+    expect(src).toContain("md:hidden xl:hidden fixed top-14 right-3");
     expect(src).toContain("setMobileFilterOpen(true)");
   });
 

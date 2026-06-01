@@ -98,13 +98,18 @@ export function LibraryPageClient({
         <FilterRail paints={paints} filter={filter} />
       </div>
 
-      {/* Mobile filter trigger */}
+      {/* Mobile filter trigger. R7-5 — defensive sweep: also hidden at
+          xl+ in case Ross's viewport sits at md/lg boundary widths where
+          the desktop rail is visible AND this button leaks into the top
+          right corner. Now hidden anywhere ≥ md (the rail's breakpoint)
+          AND anywhere ≥ xl (defence-in-depth against future breakpoint
+          drift). */}
       <Button
         type="button"
         onClick={() => setMobileFilterOpen(true)}
         variant="secondary"
         size="sm"
-        className="md:hidden fixed top-14 right-3 z-30"
+        className="md:hidden xl:hidden fixed top-14 right-3 z-30"
         aria-label="Open filters"
         aria-expanded={mobileFilterOpen}
       >
