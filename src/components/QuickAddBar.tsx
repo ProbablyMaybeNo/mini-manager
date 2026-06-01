@@ -18,6 +18,8 @@ export function QuickAddBar() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // P10.2 — soft inline upgrade affordance when a free-tier cap fires.
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export function QuickAddBar() {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setUpgradeUrl(null);
     const parsed = parseQuickAdd(value);
     if (parsed.name.length === 0) {
       setError("Type something — e.g. 'Necron Warriors x20'");
@@ -57,6 +60,7 @@ export function QuickAddBar() {
       // Success redirects (throws); only failure paths surface here.
       if (result && result.ok === false) {
         setError(result.error);
+        setUpgradeUrl(result.upgradeUrl ?? null);
         return;
       }
       setValue("");
@@ -100,9 +104,17 @@ export function QuickAddBar() {
       {error ? (
         <p
           role="alert"
-          className="text-xs font-mono text-[var(--color-red)] pl-7"
+          className="text-xs font-mono text-[var(--color-red)] pl-7 flex items-center gap-3 flex-wrap"
         >
-          {error}
+          <span>{error}</span>
+          {upgradeUrl ? (
+            <a
+              href={upgradeUrl}
+              className="font-mono text-2xs uppercase tracking-wider text-[var(--color-green)] underline-offset-2 hover:underline whitespace-nowrap"
+            >
+              Upgrade →
+            </a>
+          ) : null}
         </p>
       ) : null}
     </form>

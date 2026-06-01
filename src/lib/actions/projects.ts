@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, count as countFn, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { priorities, projects, projectTypes } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { logActivity } from "@/lib/activityLog";
+import { enforceCreateLimit } from "@/lib/billing/enforce";
 import type { DisplayStatus } from "@/lib/progress";
 
 /**
@@ -18,7 +19,19 @@ import type { DisplayStatus } from "@/lib/progress";
  */
 export type ActionResult<T = unknown> =
   | { ok: true; data: T }
-  | { ok: false; error: string };
+  | {
+      ok: false;
+      error: string;
+      /**
+       * P10.2 — optional CTA for free-tier limit rejections. When set,
+       * UI surfaces render a soft "Upgrade →" link inline with the
+       * error so the painter can move from "this is blocked" to
+       * "okay, where do I pay" in one click. Any other rejection
+       * (validation, ownership, db error) leaves this unset and
+       * the link doesn't render.
+       */
+      upgradeUrl?: string;
+    };
 
 const createProjectSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120, "Name is too long"),
@@ -51,6 +64,22 @@ export async function createProject(
   const { name, type, count, parentId } = parsed.data;
 
   const userId = await currentUserId();
+
+  // P10.2 — Free-tier project cap (1 project). Count the user's current
+  // owned projects then ask the billing enforcer if one more fits. Paid
+  // tiers are unlimited so the COUNT is wasted but cheap. Cap is on the
+  // OWNER's rows, including nested sub-projects — a free user can park
+  // one Army with no sub-units OR one standalone Unit.
+  const ownedRows = await db
+    .select({ n: countFn() })
+    .from(projects)
+    .where(eq(projects.ownerId, userId));
+  const projectGate = await enforceCreateLimit(
+    userId,
+    "projects",
+    ownedRows[0]?.n ?? 0,
+  );
+  if (projectGate) return projectGate;
 
   // If a parent is supplied, validate ownership + nesting cap.
   let finalParentId: string | null = null;

@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { bodyTypes, projects, recipes, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { logActivity } from "@/lib/activityLog";
+import { enforceCreateLimit } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 
 const recipeIdSchema = z.string().min(1).max(64);
@@ -104,6 +105,18 @@ export async function createRecipe(
   }
   const d = parsed.data;
   const userId = await currentUserId();
+
+  // P10.2 — Free-tier recipe cap (1 recipe).
+  const ownedRows = await db
+    .select({ n: count() })
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId));
+  const recipeGate = await enforceCreateLimit(
+    userId,
+    "recipes",
+    ownedRows[0]?.n ?? 0,
+  );
+  if (recipeGate) return recipeGate;
 
   if (d.attachedProjectId) {
     const owned = await verifyProjectOwnership(userId, d.attachedProjectId);

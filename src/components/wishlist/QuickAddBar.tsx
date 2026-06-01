@@ -21,11 +21,14 @@ export function QuickAddBar() {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // P10.2 — soft inline upgrade affordance when a free-tier cap fires.
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setUpgradeUrl(null);
     setNotice(null);
     const trimmed = value.trim();
     if (!trimmed) {
@@ -46,6 +49,7 @@ export function QuickAddBar() {
         setNotice(null);
         if (result.ok === false) {
           setError(result.error);
+          setUpgradeUrl(result.upgradeUrl ?? null);
           return;
         }
         setValue("");
@@ -56,6 +60,7 @@ export function QuickAddBar() {
       const result = await createWishlistItem({ title: trimmed });
       if (result.ok === false) {
         setError(result.error);
+        setUpgradeUrl(result.upgradeUrl ?? null);
         return;
       }
       setValue("");
@@ -91,9 +96,17 @@ export function QuickAddBar() {
         <p className="text-xs font-mono text-[var(--color-amber)]">{notice}</p>
       ) : null}
       {error ? (
-        <p role="alert" className="flex items-start gap-2 text-xs font-mono text-[var(--color-red)]">
+        <p role="alert" className="flex items-start gap-2 text-xs font-mono text-[var(--color-red)] flex-wrap">
           <LogTag variant="err" />
           <span>{error}</span>
+          {upgradeUrl ? (
+            <a
+              href={upgradeUrl}
+              className="font-mono text-2xs uppercase tracking-wider text-[var(--color-green)] underline-offset-2 hover:underline whitespace-nowrap"
+            >
+              Upgrade →
+            </a>
+          ) : null}
         </p>
       ) : null}
     </form>

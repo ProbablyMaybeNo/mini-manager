@@ -33,6 +33,8 @@ export function NewRecipeButton({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(defaultName);
   const [error, setError] = useState<string | null>(null);
+  // P10.2 — soft inline upgrade affordance when a free-tier cap fires.
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,6 +60,7 @@ export function NewRecipeButton({
       return;
     }
     setError(null);
+    setUpgradeUrl(null);
     startTransition(async () => {
       const result = await createRecipe({
         name: trimmed,
@@ -70,6 +73,7 @@ export function NewRecipeButton({
         router.push(`/recipes/${result.data.id}`);
       } else {
         setError(result.error);
+        setUpgradeUrl(result.upgradeUrl ?? null);
       }
     });
   };
@@ -131,9 +135,17 @@ export function NewRecipeButton({
           {error ? (
             <p
               role="alert"
-              className="frame px-3 py-2 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
+              className="frame px-3 py-2 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)] flex items-center justify-between gap-3 flex-wrap"
             >
-              {error}
+              <span>{error}</span>
+              {upgradeUrl ? (
+                <a
+                  href={upgradeUrl}
+                  className="font-mono text-2xs uppercase tracking-wider text-[var(--color-green)] underline-offset-2 hover:underline whitespace-nowrap"
+                >
+                  Upgrade →
+                </a>
+              ) : null}
             </p>
           ) : null}
           <p className="text-2xs font-sans text-[var(--color-fg-subtle)] leading-snug">

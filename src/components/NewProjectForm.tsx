@@ -90,6 +90,10 @@ export function NewProjectForm({
   const [count, setCount] = useState<number>(initialMeta.defaultCount);
   const [parentId, setParentId] = useState<string>(initialParentId ?? "");
   const [error, setError] = useState<string | null>(null);
+  // P10.2 — when a server action rejects with a free-tier cap message,
+  // it returns an upgradeUrl alongside the error string. Stash it so
+  // the inline error block can render an "Upgrade →" link.
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const meta = TYPE_META_BY_TYPE[type];
@@ -110,6 +114,7 @@ export function NewProjectForm({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setUpgradeUrl(null);
 
     const trimmed = name.trim();
     if (trimmed.length === 0) {
@@ -127,6 +132,7 @@ export function NewProjectForm({
       // Success path throws via redirect; only reachable on failure.
       if (result && result.ok === false) {
         setError(result.error);
+        setUpgradeUrl(result.upgradeUrl ?? null);
       }
     });
   };
@@ -260,9 +266,17 @@ export function NewProjectForm({
         <p
           id={`${formId}-err`}
           role="alert"
-          className="frame px-3 py-2 text-sm font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
+          className="frame px-3 py-2 text-sm font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)] flex items-center justify-between gap-3 flex-wrap"
         >
-          {error}
+          <span>{error}</span>
+          {upgradeUrl ? (
+            <a
+              href={upgradeUrl}
+              className="font-mono text-2xs uppercase tracking-wider text-[var(--color-green)] underline-offset-2 hover:underline whitespace-nowrap"
+            >
+              Upgrade →
+            </a>
+          ) : null}
         </p>
       ) : null}
 

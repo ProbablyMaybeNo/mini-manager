@@ -34,6 +34,12 @@ export async function makeTestDb(): Promise<{
     id: userId,
     email: `test-${userId}@example.com`,
     name: "Test User",
+    // P10.2 — default test user gets unlimited plan caps so the bulk of
+    // the integration suite (which freely creates multiple projects /
+    // recipes / wishlist rows per test) is not blocked by the free-tier
+    // gates. Tests that specifically need the free-tier behaviour set
+    // plan="free" explicitly inside their own setup.
+    plan: "pro_lifetime",
   });
 
   return { db, userId };
@@ -53,6 +59,9 @@ export async function seedExtraUser(
     id: userId,
     email: `${hint}-${userId}@example.com`,
     name: `${hint} user`,
+    // Match the default seeded user (see makeTestDb) — unlimited so
+    // cross-ownership tests don't trip the free-tier gates.
+    plan: "pro_lifetime",
   });
   return userId;
 }

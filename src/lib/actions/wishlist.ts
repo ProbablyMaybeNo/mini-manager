@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
+import { enforceCreateLimit } from "@/lib/billing/enforce";
 import { scrapeUrl } from "@/lib/scrape";
 import { inferWishlistKind } from "@/lib/wishlist/kindInference";
 
@@ -80,6 +81,21 @@ export async function createWishlistItem(
   }
   const userId = await currentUserId();
   const d = parsed.data;
+
+  // P10.2 — Free-tier wishlist cap (3 items). Counts the whole wishlist
+  // regardless of `kind` (paint vs model) or `status` (the row exists
+  // either way — moving to PURCHASED doesn't free a slot).
+  const ownedRows = await db
+    .select({ n: count() })
+    .from(wishlistItems)
+    .where(eq(wishlistItems.ownerId, userId));
+  const wishlistGate = await enforceCreateLimit(
+    userId,
+    "wishlist",
+    ownedRows[0]?.n ?? 0,
+  );
+  if (wishlistGate) return wishlistGate;
+
   try {
     const inserted = await db
       .insert(wishlistItems)
@@ -204,6 +220,20 @@ export async function scrapeAndCreateWishlistItem(
   } catch {
     return { ok: false, error: "Invalid URL" };
   }
+
+  // P10.2 — Same free-tier wishlist cap as the manual createWishlistItem
+  // path. Gate BEFORE the scrape so a capped free user doesn't pay the
+  // 2-5 second scrape latency just to be rejected at the insert step.
+  const ownedRows = await db
+    .select({ n: count() })
+    .from(wishlistItems)
+    .where(eq(wishlistItems.ownerId, userId));
+  const wishlistGate = await enforceCreateLimit(
+    userId,
+    "wishlist",
+    ownedRows[0]?.n ?? 0,
+  );
+  if (wishlistGate) return wishlistGate;
 
   const hostname = url.hostname.replace(/^www\./, "");
   const scraped = await scrapeUrl(url);
