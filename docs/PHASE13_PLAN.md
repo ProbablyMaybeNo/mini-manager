@@ -95,7 +95,7 @@ After P13.1 cascades + harmony + brand + tool surfaces are done.
 - Check each fits the new solid-fill aesthetic.
 - Fix any straggler `[ ]`-style remnants.
 
-### P13.11 — Focus recipe widget on /projects
+### P13.11 — Focus recipe widget on /projects ✅ → schema `ccd12dd` · UI `6f357a7`
 Pulled forward from Phase 14 per Ross 2026-06-01: "the major thing a user will need if they want to use the dashboard while they paint."
 
 - Schema migration:
