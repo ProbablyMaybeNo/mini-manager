@@ -54,7 +54,15 @@ export async function PlannerCalendarCell({ calYear, calMonth }: Props) {
   const events = await listEventsInMonth(userId, year, monthIndex);
 
   return (
-    <Card title="CALENDAR" titleAs="h3" accentColor="amber">
+    // P14.8 — tighter inner padding on mobile so the 7-col day grid
+    // can clear the ~40px tap-target floor at 375px viewport. The
+    // !-overrides beat the global .card-body media-query padding.
+    <Card
+      title="CALENDAR"
+      titleAs="h3"
+      accentColor="amber"
+      bodyClassName="!p-2 sm:!p-3.5"
+    >
       <div className="space-y-3">
         <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
           Your painting calendar — tournaments, deadlines, battles.

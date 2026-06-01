@@ -68,6 +68,50 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       expect(section).toContain("md:col-span-3");
       expect(section).toContain("md:col-span-2");
     });
+
+    test("P14.8 — mobile reorder: Streak > Activity > Calendar > Heatmap > Inspo", () => {
+      // Each cell wrapper carries an explicit `order-N` class that
+      // controls the mobile (<md) stacking order. The brief locks
+      // Streak first (smallest + most reward-loaded), Activity second
+      // (freshest action), Calendar third (tall + interactive),
+      // Heatmap + Inspo close the scroll.
+      const streakIdx = section.indexOf("order-1");
+      const activityIdx = section.indexOf("order-2");
+      const calendarIdx = section.indexOf("order-3");
+      const heatmapIdx = section.indexOf("order-4");
+      const inspoIdx = section.indexOf("order-5");
+      expect(streakIdx).toBeGreaterThan(-1);
+      expect(activityIdx).toBeGreaterThan(-1);
+      expect(calendarIdx).toBeGreaterThan(-1);
+      expect(heatmapIdx).toBeGreaterThan(-1);
+      expect(inspoIdx).toBeGreaterThan(-1);
+
+      // Tie each order-N class to the right cell by checking the
+      // component name follows on the same wrapper div.
+      const orderMatch = (cell: string, n: number) => {
+        const re = new RegExp(
+          `order-${n}[^"]*"[\\s\\S]{0,300}?<${cell}`,
+        );
+        expect(section, `${cell} should be order-${n}`).toMatch(re);
+      };
+      orderMatch("PlannerStreakCell", 1);
+      orderMatch("PlannerActivityCell", 2);
+      orderMatch("PlannerCalendarCell", 3);
+      orderMatch("PlannerHeatmapCell", 4);
+      orderMatch("PlannerInspoCell", 5);
+    });
+
+    test("P14.8 — desktop order preserved via md:row-start", () => {
+      // On md+ each right-column cell pins its grid row so the mobile
+      // reorder doesn't bleed into the desktop visual. Activity =
+      // row 1 (top of right stack), Streak = row 2, Heatmap = row 3,
+      // Inspo = row 4. Calendar spans all four rows on the left.
+      expect(section).toContain("md:row-start-1");
+      expect(section).toContain("md:row-start-2");
+      expect(section).toContain("md:row-start-3");
+      expect(section).toContain("md:row-start-4");
+      expect(section).toContain("md:row-span-4");
+    });
   });
 
   describe("PLANNER cell empty-state copy", () => {

@@ -117,6 +117,20 @@ describe("ManageInspoModal structure (P14.7)", () => {
     expect(src).toMatch(/role=["']dialog["']/);
     expect(src).toMatch(/aria-modal=["']true["']/);
   });
+
+  test("P14.8 — modal goes full-screen on mobile, constrained at sm+", () => {
+    // Mobile: panel takes w-full + h-full (no max bounds).
+    expect(src).toContain("w-full h-full");
+    // sm+ restores the constrained dialog (max-width + max-height +
+    // float-with-backdrop padding).
+    expect(src).toContain("sm:max-w-2xl");
+    expect(src).toContain("sm:max-h-[90vh]");
+    expect(src).toContain("sm:p-4");
+    // Backdrop centers vertically on sm+, stretches edge-to-edge
+    // (items-stretch) on mobile so the modal fills the viewport.
+    expect(src).toContain("items-stretch");
+    expect(src).toContain("sm:items-center");
+  });
 });
 
 describe("Inspo widget discipline (P14.7)", () => {

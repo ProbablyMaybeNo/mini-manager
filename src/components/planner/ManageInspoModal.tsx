@@ -150,8 +150,11 @@ export function ManageInspoModal({ rows, onClose }: Props) {
       aria-modal="true"
       aria-label="Manage inspo gallery"
       className={clsx(
-        "fixed inset-0 z-50 flex items-center justify-center",
-        "bg-black/70 p-4",
+        "fixed inset-0 z-50 flex items-stretch justify-center",
+        // P14.8 — drop the backdrop padding on mobile so the modal
+        // panel takes the full viewport; restore desktop padding at
+        // `sm:` so the panel still floats with a backdrop margin.
+        "bg-black/70 sm:items-center sm:p-4",
       )}
       onClick={(e) => {
         // Click-outside closes; clicks inside the panel bubble up to
@@ -162,7 +165,9 @@ export function ManageInspoModal({ rows, onClose }: Props) {
       <div
         className={clsx(
           "frame bg-[var(--color-bg-panel)]",
-          "w-full max-w-2xl max-h-[90vh] flex flex-col",
+          // P14.8 — full-screen on mobile (no max width / height
+          // bound), constrained dialog at `sm:` and up.
+          "w-full h-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] flex flex-col",
         )}
       >
         <header className="flex items-center justify-between gap-2 p-4 border-b border-[var(--color-border-strong)]">

@@ -264,16 +264,18 @@ export function CalendarMonthGrid({ events, year, monthIndex }: Props) {
       <div
         role="grid"
         aria-label={`${MONTH_NAMES[focusedMonth]} ${focusedYear} calendar`}
-        className="frame p-2"
+        // P14.8 — tighter inner padding on mobile so each day cell
+        // clears the 40px tap-target floor at iPhone-mini viewports.
+        className="frame p-1 sm:p-2"
       >
-        <div className="grid grid-cols-7 gap-1 text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] mb-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1 text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] mb-1">
           {WEEKDAY_LABELS.map((w) => (
             <div key={w} className="text-center py-1">
               {w}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {cells.map((cell) => {
             const dayEvents = eventsByDay.get(cell.key) ?? [];
             const isToday = cell.key === today;

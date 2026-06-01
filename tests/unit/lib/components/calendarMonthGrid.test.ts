@@ -128,6 +128,33 @@ describe("Calendar widget discipline (P14.3)", () => {
   });
 });
 
+describe("Calendar mobile responsiveness (P14.8)", () => {
+  const gridSrc = read("src/components/planner/CalendarMonthGrid.tsx");
+  const cellSrc = read("src/components/planner/PlannerCalendarCell.tsx");
+
+  test("month grid uses tighter padding + gap on mobile to clear tap-target floor", () => {
+    // Frame wrapper inside the grid: p-1 on mobile, p-2 on sm+. The
+    // 1px reduction reclaims ~8px of horizontal width — enough at
+    // 375px to keep 7 day-cells > 35px wide.
+    expect(gridSrc).toContain("p-1 sm:p-2");
+    // Day-row gaps tighten too: 0.5 on mobile, 1 on sm+.
+    expect(gridSrc).toMatch(/gap-0\.5 sm:gap-1/);
+  });
+
+  test("day cells keep a tap-friendly min-height on every viewport", () => {
+    // 48px on mobile (>= 40px tap floor), 60px on sm+ for breathing room.
+    expect(gridSrc).toContain("min-h-[48px]");
+    expect(gridSrc).toContain("sm:min-h-[60px]");
+  });
+
+  test("CALENDAR card body shrinks its padding on mobile", () => {
+    // Card-in-Card chrome eats grid width; the !-overrides beat the
+    // global .card-body media-query padding.
+    expect(cellSrc).toContain("bodyClassName");
+    expect(cellSrc).toMatch(/!p-2\s+sm:!p-3\.5/);
+  });
+});
+
 describe("PlannerCalendarCell wiring (P14.3)", () => {
   const src = read("src/components/planner/PlannerCalendarCell.tsx");
 

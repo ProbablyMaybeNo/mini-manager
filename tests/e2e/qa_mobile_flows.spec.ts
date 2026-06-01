@@ -149,3 +149,93 @@ test.describe("M6 — Mobile primary flows", () => {
     await expectNoHorizontalScroll(page);
   });
 });
+
+/**
+ * P14.8 — PLANNER section mobile responsiveness.
+ *
+ * Explicit 375px viewport (iPhone SE / iPhone 12 mini class) — the
+ * tightest viewport the brief locks. Asserts the PLANNER section
+ * renders without horizontal scroll, every widget cell mounts, and
+ * the mobile reorder lands Streak above Activity above Calendar (per
+ * P14.8 spec).
+ *
+ * Tests sign in, create one project so /projects is past the empty
+ * state, then read the rendered cell positions.
+ */
+test.describe("P14.8 — PLANNER mobile responsiveness", () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test("PLANNER renders without horizontal scroll at 375px viewport", async ({
+    page,
+  }) => {
+    await signInAs(page, freshTestEmail("planner-mobile"));
+
+    // Create one project so /projects renders past EmptyState.
+    await page.goto("/projects/new");
+    const unique = `QA Planner Mobile ${Date.now()}`;
+    await page
+      .getByPlaceholder(/Tactical Squad Alpha/)
+      .scrollIntoViewIfNeeded();
+    await page.getByPlaceholder(/Tactical Squad Alpha/).fill(unique);
+    await page.locator('input[type="number"]').first().fill("1");
+    await page.getByRole("button", { name: /create project/i }).click();
+    await expect(page).toHaveURL(/\/projects\/[a-zA-Z0-9_-]{16}$/);
+
+    // Now /projects renders PLANNER section.
+    await page.goto("/projects");
+    await expect(
+      page.getByRole("heading", { name: /^PLANNER$/ }),
+    ).toBeVisible();
+
+    // Every PLANNER widget heading should mount.
+    for (const cell of [
+      /^CALENDAR$/,
+      /^ACTIVITY$/,
+      /^STREAK$/,
+      /^HEATMAP$/,
+      /^INSPO$/,
+    ]) {
+      await expect(page.getByRole("heading", { name: cell })).toBeVisible();
+    }
+
+    await expectNoHorizontalScroll(page);
+  });
+
+  test("PLANNER widgets reorder on mobile: Streak above Activity above Calendar", async ({
+    page,
+  }) => {
+    await signInAs(page, freshTestEmail("planner-order"));
+
+    // Need a project for the dashboard to render past EmptyState.
+    await page.goto("/projects/new");
+    const unique = `QA Order Mobile ${Date.now()}`;
+    await page
+      .getByPlaceholder(/Tactical Squad Alpha/)
+      .scrollIntoViewIfNeeded();
+    await page.getByPlaceholder(/Tactical Squad Alpha/).fill(unique);
+    await page.locator('input[type="number"]').first().fill("1");
+    await page.getByRole("button", { name: /create project/i }).click();
+    await expect(page).toHaveURL(/\/projects\/[a-zA-Z0-9_-]{16}$/);
+
+    await page.goto("/projects");
+    const streak = page.getByRole("heading", { name: /^STREAK$/ });
+    const activity = page.getByRole("heading", { name: /^ACTIVITY$/ });
+    const calendar = page.getByRole("heading", { name: /^CALENDAR$/ });
+    await expect(streak).toBeVisible();
+    await expect(activity).toBeVisible();
+    await expect(calendar).toBeVisible();
+
+    const streakBox = await streak.boundingBox();
+    const activityBox = await activity.boundingBox();
+    const calendarBox = await calendar.boundingBox();
+    expect(streakBox).not.toBeNull();
+    expect(activityBox).not.toBeNull();
+    expect(calendarBox).not.toBeNull();
+    if (streakBox && activityBox && calendarBox) {
+      // Mobile order spec (P14.8):
+      //   Streak (1) → Activity (2) → Calendar (3) → Heatmap → Inspo.
+      expect(streakBox.y).toBeLessThan(activityBox.y);
+      expect(activityBox.y).toBeLessThan(calendarBox.y);
+    }
+  });
+});
