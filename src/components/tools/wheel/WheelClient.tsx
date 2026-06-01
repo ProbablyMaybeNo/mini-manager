@@ -210,10 +210,15 @@ export function WheelClient() {
 
           <div>
             <p className="section-title">Harmony</p>
-            <HarmonyPicker active={harmony} onChange={setHarmony} />
-            <p className="mt-2 text-2xs font-sans text-[var(--color-fg-muted)]">
-              {harmonyMeta.description}.
-            </p>
+            <HarmonyPicker
+              active={harmony}
+              onChange={setHarmony}
+              primary={{
+                hue: primary.hue,
+                saturation: primary.saturation,
+                lightness,
+              }}
+            />
           </div>
         </div>
       }
