@@ -213,13 +213,34 @@ export function MatchClient() {
             </Button>
           </form>
 
-          {/* R7-6 — Brand filter chips. Cyan is banned from button
-              fills app-wide; the active state now uses the FilterRail
-              library-chip pattern: cyan-tinted bg + cyan border + cyan
-              fg. Same visual hierarchy, no cyan-fill CTA confusion. */}
+          {/* P13.7 — Brand filter redesign. Pre-P13.7 was a flat
+              wrap of 31 outlined chips that wrap-jumbled and were hard
+              to scan. New layout: 2-3 column responsive grid (1 col on
+              mobile, 2 on sm, 3 on md+), alphabetized, with solid-fill
+              ATTACH-green for the active state per P13.1 button
+              discipline (no cyan, no `[ ]` brackets). Header carries
+              count + a paired "All" / "Clear" action row. */}
           <div className="space-y-2">
-            <p className="section-title">Brand filter · {brandFilter.size || "all"}</p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="section-title mb-0 pb-0 border-0">
+                Brand filter · {brandFilter.size > 0 ? `${brandFilter.size} of ${brands.length}` : `all ${brands.length}`}
+              </p>
+              {brandFilter.size > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setBrandFilter(new Set())}
+                  className="text-2xs font-mono uppercase tracking-wider text-[var(--color-red)] hover:underline tap-target px-1"
+                  aria-label="Clear all brand filters"
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+            <div
+              role="group"
+              aria-label="Brand filter"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5"
+            >
               {brands.map((b) => {
                 const active = brandFilter.has(b);
                 return (
@@ -229,26 +250,16 @@ export function MatchClient() {
                     onClick={() => toggleBrand(b)}
                     aria-pressed={active}
                     className={clsx(
-                      "px-2.5 py-1 min-h-[28px] text-2xs font-mono uppercase tracking-[0.08em] rounded-sm border transition-colors",
+                      "px-2.5 py-1.5 min-h-[32px] text-2xs font-mono uppercase tracking-[0.06em] rounded-sm border transition-colors text-left truncate",
                       active
-                        ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
-                        : "bg-transparent text-[var(--color-fg)] border-[var(--color-border-strong)] hover:border-[var(--color-cyan)] hover:text-[var(--color-cyan)]",
+                        ? "bg-[var(--color-green)] text-black border-[var(--color-green)] font-semibold"
+                        : "bg-[var(--color-bg-elevated)] text-[var(--color-fg)] border-[var(--color-border-strong)] hover:border-[var(--color-green)] hover:text-[var(--color-green)]",
                     )}
                   >
                     {b}
                   </button>
                 );
               })}
-              {brandFilter.size > 0 ? (
-                <Button
-                  type="button"
-                  onClick={() => setBrandFilter(new Set())}
-                  variant="danger"
-                  size="sm"
-                >
-                  Clear
-                </Button>
-              ) : null}
             </div>
           </div>
 
