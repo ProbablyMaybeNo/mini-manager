@@ -97,7 +97,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.15 — Eyedropper movable pins.** Overlay pin circles on the uploaded image. Each pin = one of the k-means-extracted paints. Drag any pin to reassign which region of the image that paint represents. Add / remove pins (max 8). Each pin clickable to assign that paint to a project or recipe.
 
-- [ ] **P12.16 — Universal "Assign to ▾" on every tool result.** Wheel harmony swatches, Match results, Layering steps, Eyedropper paints — every paint surface in `/tools/*` gets an Assign button that opens a project/recipe picker and auto-attaches.
+- [x] **P12.16 — Universal "Assign to ▾" on every tool result.** Wheel harmony swatches, Match results, Layering steps, Eyedropper paints — every paint surface in `/tools/*` gets an Assign button that opens a project/recipe picker and auto-attaches.
 
 ### Pillar 6 — User page
 

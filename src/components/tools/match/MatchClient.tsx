@@ -278,6 +278,7 @@ export function MatchClient() {
                   key={r.paint.id}
                   result={r}
                   onUse={handleUse}
+                  showAssign
                 />
               ))
             )}
