@@ -51,22 +51,6 @@ export async function listRecipesForProject(
     .orderBy(desc(recipes.updatedAt));
 }
 
-export async function listRecipesForNamedModel(
-  userId: string,
-  namedModelId: string,
-): Promise<ReadonlyArray<Recipe>> {
-  return db
-    .select()
-    .from(recipes)
-    .where(
-      and(
-        eq(recipes.ownerId, userId),
-        eq(recipes.attachedNamedModelId, namedModelId),
-      ),
-    )
-    .orderBy(desc(recipes.updatedAt));
-}
-
 export async function getRecipeById(
   userId: string,
   id: string,
@@ -177,13 +161,16 @@ export async function getRecipeWithZones(
 export interface RecipesGrouped {
   standalone: ReadonlyArray<Recipe>;
   byProject: ReadonlyArray<{ projectId: string; recipes: Recipe[] }>;
-  byNamedModel: ReadonlyArray<{ namedModelId: string; recipes: Recipe[] }>;
 }
 
 /**
- * All recipes for the user, partitioned into the three /recipes
- * sections in a single round-trip. Groups by project / named model
- * preserve the per-group ordering (updatedAt DESC).
+ * All recipes for the user, partitioned into the /recipes sections in
+ * a single round-trip. Groups by project preserve the per-group
+ * ordering (updatedAt DESC).
+ *
+ * P13.4 — the prior `byNamedModel` partition is gone since named
+ * models were folded into Unit projects; recipes that were attached
+ * to a named model are now attached to its promoted project row.
  */
 export async function listAllRecipesGrouped(
   userId: string,
@@ -196,16 +183,11 @@ export async function listAllRecipesGrouped(
 
   const standalone: Recipe[] = [];
   const projectMap = new Map<string, Recipe[]>();
-  const namedModelMap = new Map<string, Recipe[]>();
   for (const r of rows) {
     if (r.attachedProjectId) {
       const arr = projectMap.get(r.attachedProjectId) ?? [];
       arr.push(r);
       projectMap.set(r.attachedProjectId, arr);
-    } else if (r.attachedNamedModelId) {
-      const arr = namedModelMap.get(r.attachedNamedModelId) ?? [];
-      arr.push(r);
-      namedModelMap.set(r.attachedNamedModelId, arr);
     } else {
       standalone.push(r);
     }
@@ -214,10 +196,6 @@ export async function listAllRecipesGrouped(
     standalone,
     byProject: Array.from(projectMap, ([projectId, list]) => ({
       projectId,
-      recipes: list,
-    })),
-    byNamedModel: Array.from(namedModelMap, ([namedModelId, list]) => ({
-      namedModelId,
       recipes: list,
     })),
   };
@@ -236,11 +214,10 @@ export interface RecipeTableRow {
   id: string;
   name: string;
   bodyType: Recipe["bodyType"];
-  attachmentKind: "standalone" | "project" | "named-model";
-  /** Optional attachment label (project name, or "<Project> · <Model>")
-   *  resolved by the caller — left null here so this stays pure-data. */
+  attachmentKind: "standalone" | "project";
+  /** Optional attachment label (project name) resolved by the caller —
+   *  left null here so this stays pure-data. */
   attachedProjectId: string | null;
-  attachedNamedModelId: string | null;
   /** Up to 8 hexes in zone-position order — the palette strip. */
   paletteHexes: string[];
   /** Total step count across every zone. */
@@ -314,19 +291,15 @@ export async function listRecipesForTable(
       }
       if (paletteHexes.length >= 8) break;
     }
-    const attachmentKind: RecipeTableRow["attachmentKind"] =
-      r.attachedProjectId
-        ? "project"
-        : r.attachedNamedModelId
-          ? "named-model"
-          : "standalone";
+    const attachmentKind: RecipeTableRow["attachmentKind"] = r.attachedProjectId
+      ? "project"
+      : "standalone";
     out.push({
       id: r.id,
       name: r.name,
       bodyType: r.bodyType,
       attachmentKind,
       attachedProjectId: r.attachedProjectId,
-      attachedNamedModelId: r.attachedNamedModelId,
       paletteHexes,
       stepCount,
       slotCount: zones.length,
@@ -350,10 +323,9 @@ export async function listRecipesForTable(
  */
 /**
  * R7-1 — Every recipe owned by the user, lean shape for the projects
- * dashboard's inline AttachRecipe modal. Includes attachedProjectId +
- * attachedNamedModelId so the table client can resolve human-readable
- * "attached to X" labels for the picker. createdAt order so the first
- * one is stable.
+ * dashboard's inline AttachRecipe modal. Includes attachedProjectId
+ * so the table client can resolve human-readable "attached to X"
+ * labels for the picker. createdAt order so the first one is stable.
  */
 export async function listOwnedRecipesLean(
   userId: string,
@@ -362,7 +334,6 @@ export async function listOwnedRecipesLean(
     id: string;
     name: string;
     attachedProjectId: string | null;
-    attachedNamedModelId: string | null;
   }>
 > {
   return db
@@ -370,7 +341,6 @@ export async function listOwnedRecipesLean(
       id: recipes.id,
       name: recipes.name,
       attachedProjectId: recipes.attachedProjectId,
-      attachedNamedModelId: recipes.attachedNamedModelId,
     })
     .from(recipes)
     .where(eq(recipes.ownerId, userId))

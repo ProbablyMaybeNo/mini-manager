@@ -236,7 +236,6 @@ export async function cloneRecipeFromSlug(
         name: cloneName,
         bodyType: source.bodyType,
         attachedProjectId: null,
-        attachedNamedModelId: null,
         isStandalone: true,
         publicSlug: null,
         notesMd: source.notesMd ?? null,

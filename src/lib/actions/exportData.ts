@@ -4,7 +4,6 @@ import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   inventoryEntries,
-  namedModels,
   palettes,
   projects,
   recipes,
@@ -16,10 +15,9 @@ import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
 
 interface ExportPayload {
-  __exportVersion: 1;
+  __exportVersion: 2;
   __exportedAt: string;
   projects: Array<Record<string, unknown>>;
-  namedModels: Array<Record<string, unknown>>;
   recipes: Array<Record<string, unknown>>;
   recipeZones: Array<Record<string, unknown>>;
   recipeSteps: Array<Record<string, unknown>>;
@@ -54,14 +52,17 @@ function normaliseAll(
 
 /**
  * One-shot JSON export of everything the current user owns. Includes
- * projects, named models, recipes (+ zones + steps), palettes, inventory
- * entries, and wishlist items. NextAuth tables (user / session /
- * account / verificationToken) are deliberately excluded — they're
- * auth internals, not user data.
+ * projects, recipes (+ zones + steps), palettes, inventory entries,
+ * and wishlist items. NextAuth tables (user / session / account /
+ * verificationToken) are deliberately excluded — they're auth
+ * internals, not user data.
+ *
+ * P13.4 bumped the schema version to 2 (named_model dropped; previous
+ * export v1 records can still be parsed but the `namedModels` key
+ * is no longer emitted).
  *
  * Returns the payload to the caller; the client component handles the
- * actual `Blob` + download trigger. Schema versioning via
- * `__exportVersion: 1` so future-self can re-import.
+ * actual `Blob` + download trigger.
  */
 export async function exportAllUserData(): Promise<
   ActionResult<ExportPayload>
@@ -85,18 +86,10 @@ export async function exportAllUserData(): Promise<
       db.select().from(wishlistItems).where(eq(wishlistItems.ownerId, userId)),
     ]);
 
-    // Named models, zones, and steps are owner-scoped via their parent
-    // tables — pull them after the parents resolve so we can scope the
-    // queries by project/recipe id and avoid cross-user bleed.
-    const projectIds = projectRows.map((p) => p.id);
+    // Zones, and steps are owner-scoped via their parent recipes —
+    // pull them after the parents resolve so we can scope the queries
+    // by recipe id and avoid cross-user bleed.
     const recipeIds = recipeRows.map((r) => r.id);
-
-    const namedModelRows = projectIds.length
-      ? await db
-          .select()
-          .from(namedModels)
-          .where(inArray(namedModels.projectId, projectIds))
-      : [];
 
     const zoneRows = recipeIds.length
       ? await db
@@ -114,10 +107,9 @@ export async function exportAllUserData(): Promise<
       : [];
 
     const payload: ExportPayload = {
-      __exportVersion: 1,
+      __exportVersion: 2,
       __exportedAt: new Date().toISOString(),
       projects: normaliseAll(projectRows),
-      namedModels: normaliseAll(namedModelRows),
       recipes: normaliseAll(recipeRows),
       recipeZones: normaliseAll(zoneRows),
       recipeSteps: normaliseAll(stepRows),

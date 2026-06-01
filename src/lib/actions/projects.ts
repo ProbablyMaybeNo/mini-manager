@@ -30,11 +30,14 @@ export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 
 /**
  * Create a top-level or nested project. Validates the input, enforces
- * the 3-level nesting cap (Army → Unit → NamedModel), and redirects to
- * the new project's workspace. Throws via `redirect` on success.
+ * the 3-level nesting cap (Army → Unit → Unit), and redirects to the
+ * new project's workspace. Throws via `redirect` on success.
  *
  * Returns `{ ok: false, error }` for any validation or constraint
  * failure so a client component can surface the message.
+ *
+ * P13.4 sub-project type rule: Army/Warband/Unit parents host ONLY
+ * Unit children. Terrain Piece + Diorama are top-level only.
  */
 export async function createProject(
   raw: CreateProjectInput,
@@ -47,9 +50,6 @@ export async function createProject(
   const { name, type, count, parentId } = parsed.data;
 
   const userId = await currentUserId();
-
-  // Single Model is always 1 mini; don't let the form lie.
-  const finalCount = type === "Single Model" ? 1 : count;
 
   // If a parent is supplied, validate ownership + nesting cap.
   let finalParentId: string | null = null;
@@ -67,16 +67,31 @@ export async function createProject(
       return {
         ok: false,
         error:
-          "Maximum 3 levels of nesting: Army → Unit → Model. Pick a top-level Army or Warband.",
+          "Maximum 3 levels of nesting: Army → Unit → Unit. Pick a top-level Army or Warband.",
       };
     }
-    if (parent.type !== "Army" && parent.type !== "Warband") {
+    if (
+      parent.type !== "Army" &&
+      parent.type !== "Warband" &&
+      parent.type !== "Unit"
+    ) {
       return {
         ok: false,
-        error: "Only Army or Warband parents can contain sub-projects.",
+        error:
+          "Only Army, Warband, or Unit parents can contain sub-projects.",
+      };
+    }
+    if (type !== "Unit") {
+      return {
+        ok: false,
+        error: "Sub-projects must be of type Unit.",
       };
     }
     finalParentId = parent.id;
+  } else {
+    // Top-level types only — Terrain Piece + Diorama stay leaf-only
+    // (they're allowed top-level), but Unit at the top-level is also
+    // fine (standalone squad with no parent army).
   }
 
   const inserted = await db
@@ -86,7 +101,7 @@ export async function createProject(
       parentId: finalParentId,
       type,
       name,
-      count: finalCount,
+      count,
     })
     .returning({ id: projects.id });
 

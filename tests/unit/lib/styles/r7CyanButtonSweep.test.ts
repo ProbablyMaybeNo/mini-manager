@@ -50,12 +50,7 @@ describe("R7-006 — ADD / SAVE / ATTACH buttons flipped to success (green)", ()
     expect(before).not.toMatch(/variant="primary"\s*$/m);
   });
 
-  test("AddNamedModelForm compact + Add named model uses success", () => {
-    const src = read("src/components/AddNamedModelForm.tsx");
-    expect(src).toContain(
-      'variant={mode === "compact" ? "success" : "ghost"}',
-    );
-  });
+  // P13.4 — AddNamedModelForm removed (named_model entity dropped).
 
   test("ChangePasswordCard 'Change password' uses success", () => {
     const src = read("src/components/user/ChangePasswordCard.tsx");

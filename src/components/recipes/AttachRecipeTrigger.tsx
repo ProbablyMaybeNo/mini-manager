@@ -7,28 +7,20 @@ import {
 } from "@/components/recipes/AttachRecipeModal";
 import { Button } from "@/components/ui/Button";
 
-interface BaseProps {
+interface Props {
   candidates: ReadonlyArray<RecipeOption>;
   label?: string;
   variant?: "primary" | "subtle";
-}
-
-interface ProjectProps extends BaseProps {
-  mode: "project";
   projectId: string;
 }
-
-interface NamedModelProps extends BaseProps {
-  mode: "named-model";
-  namedModelId: string;
-}
-
-type Props = ProjectProps | NamedModelProps;
 
 /**
  * Client button that opens the AttachRecipeModal. Lives in its own
  * file so server components can render the modal panel without going
  * client themselves.
+ *
+ * P13.4 — `mode` collapsed to project-only after named models were
+ * folded into Unit projects.
  */
 export function AttachRecipeTrigger(props: Props) {
   // R7-006 — ATTACH RECIPE flipped from primary (cyan) to success
@@ -49,23 +41,13 @@ export function AttachRecipeTrigger(props: Props) {
       >
         {label}
       </Button>
-      {props.mode === "project" ? (
-        <AttachRecipeModal
-          mode="project"
-          projectId={props.projectId}
-          open={open}
-          onClose={() => setOpen(false)}
-          candidates={props.candidates}
-        />
-      ) : (
-        <AttachRecipeModal
-          mode="named-model"
-          namedModelId={props.namedModelId}
-          open={open}
-          onClose={() => setOpen(false)}
-          candidates={props.candidates}
-        />
-      )}
+      <AttachRecipeModal
+        mode="project"
+        projectId={props.projectId}
+        open={open}
+        onClose={() => setOpen(false)}
+        candidates={props.candidates}
+      />
     </>
   );
 }

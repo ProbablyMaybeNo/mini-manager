@@ -5,7 +5,7 @@ import {
   isLeafProject,
   progressPercent,
 } from "@/lib/progress";
-import type { NamedModel, Project } from "@/db/schema";
+import type { Project } from "@/db/schema";
 
 const projectStub = (overrides: Partial<Project> = {}): Project =>
   ({
@@ -33,25 +33,6 @@ const projectStub = (overrides: Partial<Project> = {}): Project =>
     archivedAt: null,
     ...overrides,
   }) as Project;
-
-const namedModel = (overrides: Partial<NamedModel> = {}): NamedModel =>
-  ({
-    id: "n1",
-    projectId: "proj1",
-    position: 0,
-    name: "Sergeant",
-    isBuilt: false,
-    isPrimed: false,
-    isPainted: false,
-    isBased: false,
-    isComplete: false,
-    recipeOverrideId: null,
-    notesMd: null,
-    referenceImageUrl: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }) as NamedModel;
 
 describe("progressPercent", () => {
   test("untouched unit is 0%", () => {
@@ -88,19 +69,7 @@ describe("progressPercent", () => {
     ).toBe(100);
   });
 
-  test("named-model contributions add to the score", () => {
-    const fullyPaintedNamed = namedModel({
-      isBuilt: true,
-      isPrimed: true,
-      isPainted: true,
-      isBased: true,
-      isComplete: true,
-    });
-    // count=0, 1 named model fully done = 5 booleans × 20 / 1 model = 100%
-    expect(progressPercent(projectStub({ count: 0 }), [fullyPaintedNamed])).toBe(100);
-  });
-
-  test("count=0 with no named models is 0%, not NaN", () => {
+  test("count=0 is 0%, not NaN (P13.4 — named models no longer contribute)", () => {
     expect(progressPercent(projectStub({ count: 0 }))).toBe(0);
   });
 });
@@ -138,23 +107,14 @@ describe("aggregateCounters — Army roll-up", () => {
     expect(agg.completeCount).toBe(0);
   });
 
-  test("named-model totals roll up via the optional map", () => {
-    const root = projectStub({ id: "army", count: 0 });
-    const child = projectStub({ id: "u1", count: 10 });
-    const agg = aggregateCounters(root, [child], { army: 1, u1: 3 });
-    expect(agg.namedModelCount).toBe(4);
-  });
 });
 
 describe("isLeafProject", () => {
   test("count > 0 → leaf", () => {
     expect(isLeafProject({ count: 10 })).toBe(true);
   });
-  test("count === 0 and no named models → not a leaf (Army container)", () => {
+  test("count === 0 → not a leaf (Army container)", () => {
     expect(isLeafProject({ count: 0 })).toBe(false);
-  });
-  test("count === 0 but with named models → still a leaf", () => {
-    expect(isLeafProject({ count: 0 }, 2)).toBe(true);
   });
 });
 

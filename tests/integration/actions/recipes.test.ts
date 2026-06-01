@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { makeTestDb, seedExtraUser, type TestDb } from "../_helpers/testDb";
-import { namedModels, projects, recipes } from "@/db/schema";
+import { projects, recipes } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -23,7 +22,6 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 const {
   createRecipe,
   attachRecipeToProject,
-  attachRecipeToNamedModel,
   detachRecipe,
   deleteRecipe,
 } = await import("@/lib/actions/recipes");
@@ -36,17 +34,6 @@ async function seedProject(): Promise<string> {
     type: "Unit",
     name: "Squad",
     count: 10,
-  });
-  return id;
-}
-
-async function seedNamedModel(projectId: string): Promise<string> {
-  const id = nanoid(16);
-  await state.db!.insert(namedModels).values({
-    id,
-    projectId,
-    position: 0,
-    name: "Sergeant",
   });
   return id;
 }
@@ -87,19 +74,6 @@ describe("createRecipe", () => {
     expect(row!.isStandalone).toBe(false);
   });
 
-  test("rejects an attempt to attach to both a project AND a named model", async () => {
-    const projectId = await seedProject();
-    const nmId = await seedNamedModel(projectId);
-    const res = await createRecipe({
-      name: "Conflict",
-      bodyType: "infantry",
-      attachedProjectId: projectId,
-      attachedNamedModelId: nmId,
-    });
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/project OR a named model/);
-  });
-
   test("rejects a project that doesn't exist", async () => {
     const res = await createRecipe({
       name: "Phantom",
@@ -127,27 +101,25 @@ describe("attach + detach lifecycle", () => {
     await detachRecipe({ recipeId });
     [row] = await state.db!.select().from(recipes);
     expect(row!.attachedProjectId).toBeNull();
-    expect(row!.attachedNamedModelId).toBeNull();
     expect(row!.isStandalone).toBe(true);
   });
 
-  test("attaching to a named model clears the project attachment", async () => {
-    const projectId = await seedProject();
-    const nmId = await seedNamedModel(projectId);
+  test("attaching to a different project moves the link", async () => {
+    const projectA = await seedProject();
+    const projectB = await seedProject();
     const created = await createRecipe({
       name: "R2",
       bodyType: "infantry",
-      attachedProjectId: projectId,
+      attachedProjectId: projectA,
     });
     if (!created.ok) throw new Error("setup failed");
 
-    await attachRecipeToNamedModel({
+    await attachRecipeToProject({
       recipeId: created.data.id,
-      namedModelId: nmId,
+      projectId: projectB,
     });
     const [row] = await state.db!.select().from(recipes);
-    expect(row!.attachedProjectId).toBeNull();
-    expect(row!.attachedNamedModelId).toBe(nmId);
+    expect(row!.attachedProjectId).toBe(projectB);
     expect(row!.isStandalone).toBe(false);
   });
 
@@ -208,9 +180,7 @@ describe("test isolation", () => {
   test("no rows leak between tests", async () => {
     const rs = await state.db!.select().from(recipes);
     const ps = await state.db!.select().from(projects);
-    const ns = await state.db!.select().from(namedModels);
     expect(rs).toHaveLength(0);
     expect(ps).toHaveLength(0);
-    expect(ns).toHaveLength(0);
   });
 });

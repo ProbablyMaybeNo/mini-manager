@@ -38,7 +38,7 @@ export function inferKitContents(title: string): KitInference {
     if (kit.pattern.test(trimmed)) {
       return {
         modelCount: kit.count,
-        suggestedType: kit.count === 1 ? "Single Model" : "Unit",
+        suggestedType: "Unit",
       };
     }
   }
@@ -48,10 +48,10 @@ export function inferKitContents(title: string): KitInference {
     if (m && m[1]) {
       const n = Number(m[1]);
       if (Number.isFinite(n) && n > 0 && n < 1000) {
-        return { modelCount: n, suggestedType: n === 1 ? "Single Model" : "Unit" };
+        return { modelCount: n, suggestedType: "Unit" };
       }
     }
   }
 
-  return { modelCount: 1, suggestedType: "Single Model" };
+  return { modelCount: 1, suggestedType: "Unit" };
 }

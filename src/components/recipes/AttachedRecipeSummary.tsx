@@ -25,8 +25,8 @@ interface Props {
 
 /**
  * Read-only inline summary of an attached recipe. Lives in the project
- * workspace beneath the named-models panel. Includes a Detach action
- * that clears the attachment (the recipe itself survives — goes back to
+ * workspace beneath the progress table. Includes a Detach action that
+ * clears the attachment (the recipe itself survives — goes back to
  * standalone) and Edit that links to the editor.
  */
 export function AttachedRecipeSummary({ recipe, zones, editHref }: Props) {

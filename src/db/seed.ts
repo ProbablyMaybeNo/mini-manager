@@ -26,8 +26,8 @@ async function main(): Promise<void> {
     })
     .onConflictDoNothing();
 
-  // A small project tree: an Army with two child Units, one with a
-  // named-model exception. Enough variety to render the UI properly.
+  // A small project tree: an Army with two child Units. Enough
+  // variety to render the UI properly.
   const armyId = nanoid(16);
   const tacSquadId = nanoid(16);
   const orkBoyzId = nanoid(16);
@@ -74,22 +74,6 @@ async function main(): Promise<void> {
         completeCount: 0,
         faction: "Orks",
         priority: "Medium",
-      },
-    ])
-    .onConflictDoNothing();
-
-  await db
-    .insert(schema.namedModels)
-    .values([
-      {
-        projectId: tacSquadId,
-        position: 0,
-        name: "Sergeant Vraks",
-        isBuilt: true,
-        isPrimed: true,
-        isPainted: true,
-        isBased: false,
-        isComplete: false,
       },
     ])
     .onConflictDoNothing();

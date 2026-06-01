@@ -9,7 +9,7 @@ import { currentUserId } from "@/lib/auth-stub";
 import { StatusPill } from "@/components/ui/StatusPill";
 
 interface AttachmentLabel {
-  kind: "project" | "named-model" | "standalone";
+  kind: "project" | "standalone";
   label: string;
 }
 
@@ -36,7 +36,7 @@ const MAX_SWATCHES = 8;
 
 /**
  * Server component card — one per recipe, used in the standalone +
- * attached-to-project + attached-to-named-model sections of /recipes.
+ * attached-to-project sections of /recipes.
  *
  * Loads the recipe's zones + palette internally so the parent page
  * can stay slim. Recipe lists in the user's catalog are short (tens,

@@ -6,7 +6,7 @@ import {
   listRecipesForProject,
   paletteForRecipe,
 } from "@/db/queries/recipes";
-import { namedModels, projects, recipes } from "@/db/schema";
+import { projects, recipes } from "@/db/schema";
 import type { Recipe } from "@/db/schema";
 import { AttachRecipeTrigger } from "@/components/recipes/AttachRecipeTrigger";
 import { AttachedRecipeSummary } from "@/components/recipes/AttachedRecipeSummary";
@@ -19,6 +19,9 @@ import { Card } from "@/components/ui/Card";
  * them again would be confusing — they're already in the workspace).
  * Already-attached-elsewhere recipes are included with a heads-up so
  * picking them MOVES the attachment.
+ *
+ * P13.4 — the named-model attachment branch is gone since recipes can
+ * only attach to projects now.
  */
 async function buildCandidatesForProject(
   userId: string,
@@ -29,28 +32,21 @@ async function buildCandidatesForProject(
     .from(recipes)
     .where(eq(recipes.ownerId, userId));
 
-  const projectRows = await db.select().from(projects).where(eq(projects.ownerId, userId));
+  const projectRows = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.ownerId, userId));
   const projectNameById = new Map(projectRows.map((p) => [p.id, p.name]));
-  const namedModelRows = await db.select().from(namedModels);
-  const namedModelNameById = new Map(
-    namedModelRows.map((m) => [m.id, m.name]),
-  );
 
   return rows
     .filter((r) => r.attachedProjectId !== projectId)
-    .map<RecipeOption>((r) => {
-      let label: string | null = null;
-      if (r.attachedProjectId) {
-        label = projectNameById.get(r.attachedProjectId) ?? "(project)";
-      } else if (r.attachedNamedModelId) {
-        label = namedModelNameById.get(r.attachedNamedModelId) ?? "(unit)";
-      }
-      return {
-        id: r.id,
-        name: r.name,
-        attachmentLabel: label,
-      };
-    });
+    .map<RecipeOption>((r) => ({
+      id: r.id,
+      name: r.name,
+      attachmentLabel: r.attachedProjectId
+        ? projectNameById.get(r.attachedProjectId) ?? "(project)"
+        : null,
+    }));
 }
 
 /**
@@ -74,7 +70,6 @@ export async function AttachedRecipePanel({
         title="Recipe"
         headerActions={
           <AttachRecipeTrigger
-            mode="project"
             projectId={projectId}
             candidates={candidates}
           />
@@ -93,7 +88,6 @@ export async function AttachedRecipePanel({
       title={`Recipe${attached.length > 1 ? "s" : ""} · ${attached.length}`}
       headerActions={
         <AttachRecipeTrigger
-          mode="project"
           projectId={projectId}
           candidates={candidates}
           label="Attach another"
@@ -133,4 +127,3 @@ async function AttachedRecipeBlock({ recipe }: { recipe: Recipe }) {
     />
   );
 }
-

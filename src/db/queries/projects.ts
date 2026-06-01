@@ -1,26 +1,23 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { namedModels, projects, recipes } from "@/db/schema";
-import type { NamedModel, Project, Recipe } from "@/db/schema";
+import { projects, recipes } from "@/db/schema";
+import type { Project, Recipe } from "@/db/schema";
 
 /**
  * Top-level projects (parent_id IS NULL) for a user.
- * Returns the rows + a per-row named-model count so the UI can
- * cheaply render aggregate counters without N+1 queries.
+ *
+ * P13.4 — the named-model count column was removed when the
+ * named_model table was dropped. The previous aggregator that
+ * returned `namedModelCount` is no longer needed because every
+ * former named model is now a first-class child Unit project.
  */
 export async function listTopLevelProjects(
   userId: string,
-): Promise<ReadonlyArray<Project & { namedModelCount: number }>> {
-  const rows = await db
-    .select({
-      project: projects,
-      namedModelCount: sql<number>`(
-        SELECT COUNT(*) FROM ${namedModels}
-        WHERE ${namedModels.projectId} = ${projects.id}
-      )`,
-    })
+): Promise<ReadonlyArray<Project>> {
+  return db
+    .select()
     .from(projects)
     .where(
       and(
@@ -30,8 +27,6 @@ export async function listTopLevelProjects(
       ),
     )
     .orderBy(desc(projects.updatedAt));
-
-  return rows.map((r) => ({ ...r.project, namedModelCount: r.namedModelCount }));
 }
 
 /**
@@ -44,26 +39,6 @@ export async function listAllProjects(userId: string): Promise<ReadonlyArray<Pro
     .from(projects)
     .where(and(eq(projects.ownerId, userId), isNull(projects.archivedAt)))
     .orderBy(asc(projects.parentId), asc(projects.createdAt));
-}
-
-/**
- * Named-model count per project, returned as a record keyed by project id.
- */
-export async function countNamedModelsByProject(
-  userId: string,
-): Promise<Record<string, number>> {
-  const rows = await db
-    .select({
-      projectId: namedModels.projectId,
-      n: count(),
-    })
-    .from(namedModels)
-    .innerJoin(projects, eq(projects.id, namedModels.projectId))
-    .where(eq(projects.ownerId, userId))
-    .groupBy(namedModels.projectId);
-  const out: Record<string, number> = {};
-  for (const row of rows) out[row.projectId] = row.n;
-  return out;
 }
 
 /**
@@ -122,10 +97,8 @@ export async function getProjectById(
 }
 
 /**
- * Project + the recipes attached directly to it (NOT the ones attached
- * to its named models — the workspace queries those separately via
- * the per-row slot). Returns `null` if the project doesn't exist or
- * the caller doesn't own it.
+ * Project + the recipes attached directly to it. Returns `null` if
+ * the project doesn't exist or the caller doesn't own it.
  */
 export async function getProjectWithRecipe(
   userId: string,
@@ -147,34 +120,10 @@ export async function getProjectWithRecipe(
 }
 
 /**
- * Named models belonging to a project, ordered by position then
- * creation time. Verifies project ownership via an inner join so
- * a malicious projectId from another owner returns an empty list
- * rather than leaking rows.
- */
-export async function listNamedModelsByProject(
-  userId: string,
-  projectId: string,
-): Promise<ReadonlyArray<NamedModel>> {
-  const rows = await db
-    .select({ namedModel: namedModels })
-    .from(namedModels)
-    .innerJoin(projects, eq(projects.id, namedModels.projectId))
-    .where(
-      and(
-        eq(namedModels.projectId, projectId),
-        eq(projects.ownerId, userId),
-      ),
-    )
-    .orderBy(asc(namedModels.position), asc(namedModels.createdAt));
-  return rows.map((r) => r.namedModel);
-}
-
-/**
  * Direct children of a project (one level deep, no grand-children).
- * Used by the workspace tree on Army / Warband parents. Verifies
- * ownership via `ownerId` so a malicious parent id from another
- * owner returns an empty list rather than leaking rows.
+ * Used by the workspace tree on Army / Warband / Unit parents.
+ * Verifies ownership via `ownerId` so a malicious parent id from
+ * another owner returns an empty list rather than leaking rows.
  */
 export async function listChildProjects(
   userId: string,
@@ -194,8 +143,9 @@ export async function listChildProjects(
 }
 
 /**
- * Parents that can host sub-projects: top-level Army or Warband rows.
- * Returns a slim shape — only fields the parent picker needs.
+ * Parents that can host sub-projects. P13.4 widens the set to include
+ * Unit (every sub-project must be a Unit per the new type rule;
+ * Army/Warband/Unit can all be parents).
  */
 export async function listParentCandidates(
   userId: string,
@@ -216,5 +166,7 @@ export async function listParentCandidates(
       ),
     )
     .orderBy(asc(projects.name));
-  return rows.filter((r) => r.type === "Army" || r.type === "Warband");
+  return rows.filter(
+    (r) => r.type === "Army" || r.type === "Warband" || r.type === "Unit",
+  );
 }

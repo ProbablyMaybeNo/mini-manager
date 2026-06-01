@@ -28,33 +28,30 @@ const PRIORITY_TONE: Record<NonNullable<Project["priority"]>, string> = {
 };
 
 /**
- * Per-type chip palette. Maps the 6 project types to a colour from
+ * Per-type chip palette. Maps the 5 project types to a colour from
  * the locked 5-color set so the kind of project reads at a glance
  * without needing to scan the text label. Army-shaped containers
  * (Army / Warband) sit on cyan ("primary scope"); per-model work
- * (Unit) on amber/yellow; standalone-one-offs (Single Model /
- * Diorama) on pastel purple ("special / featured"); environmental
- * (Terrain Piece) on neon green. P11.5.
+ * (Unit) on amber/yellow; environmental (Terrain Piece) on neon
+ * green; Diorama on pastel purple ("special / featured"). P11.5,
+ * with P13.4's Single Model removal.
  */
 const TYPE_CHIP: Readonly<Record<ProjectType, string>> = {
   "Army":          "type-chip-cyan",
   "Warband":       "type-chip-cyan",
   "Unit":          "type-chip-amber",
-  "Single Model":  "type-chip-purple",
   "Terrain Piece": "type-chip-green",
   "Diorama":       "type-chip-purple",
 };
 
 export function ProjectRow({
   project,
-  namedModelCount = 0,
   href,
 }: {
   project: Project;
-  namedModelCount?: number;
   href?: string;
 }) {
-  const totalModels = project.count + namedModelCount;
+  const totalModels = project.count;
   const status = displayStatus(project);
   const percent = progressPercent(project);
   const priorityClass = project.priority

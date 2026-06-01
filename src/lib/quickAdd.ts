@@ -5,15 +5,15 @@ import type { ProjectType } from "@/db/schema";
  * a project name, count, and type. Used by the QuickAddBar
  * on the projects dashboard.
  *
- * Heuristics:
+ * Heuristics (P13.4 — "Single Model" folded into "Unit"):
  *   - Trailing `x10`, `x 20`, `× 20` (any case) → count.
  *   - "army"      → type=Army, count defaults to 0 (parent).
  *   - "warband"   → type=Warband, count defaults to 0 (parent).
  *   - "terrain"   → type=Terrain Piece, count=1.
  *   - "diorama"   → type=Diorama, count=1.
  *   - Has count > 1                          → Unit.
- *   - Single-mini hints ("sergeant", etc.)   → Single Model, count=1.
- *   - Default                                → Single Model, count=1.
+ *   - Single-mini hints ("sergeant", etc.)   → Unit, count=1.
+ *   - Default                                → Unit, count=1.
  *
  * The matched type/count tokens are stripped from the name. The
  * result is always trimmed and collapsed-whitespace.
@@ -53,12 +53,14 @@ export function parseQuickAdd(
   } else if (/\barmy\b/.test(lower)) {
     type = "Army";
     stripPattern = /\barmy\b/i;
-  } else if (/\b(unit|squad|mob|pack)\b/.test(lower)) {
+  } else if (
+    /\b(unit|squad|mob|pack|single|sergeant|captain|lord|hero|character)\b/.test(
+      lower,
+    )
+  ) {
     type = "Unit";
-    // Don't strip these — "Tactical Squad Alpha" should keep "Squad".
-  } else if (/\b(single|sergeant|captain|lord|hero|character)\b/.test(lower)) {
-    type = "Single Model";
-    // Don't strip — "Sergeant Vraks" keeps "Sergeant".
+    // Don't strip these — "Tactical Squad Alpha" should keep "Squad",
+    // and "Sergeant Vraks" should keep "Sergeant".
   }
 
   if (stripPattern) {
@@ -76,9 +78,6 @@ export function parseQuickAdd(
   } else if (type === "Terrain Piece" || type === "Diorama") {
     finalType = type;
     count = explicitCount ?? 1;
-  } else if (type === "Single Model") {
-    finalType = "Single Model";
-    count = 1; // single mini is always 1
   } else if (type === "Unit") {
     finalType = "Unit";
     count = explicitCount ?? 1;
@@ -87,7 +86,7 @@ export function parseQuickAdd(
     finalType = "Unit";
     count = explicitCount;
   } else {
-    finalType = "Single Model";
+    finalType = "Unit";
     count = 1;
   }
 

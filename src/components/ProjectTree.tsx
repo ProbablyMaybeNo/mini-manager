@@ -7,26 +7,23 @@ import { displayStatus, progressPercent } from "@/lib/progress";
 
 /**
  * Compact server-rendered tree of direct child projects for an
- * Army / Warband workspace. One row per child — name, type, status,
- * and a small bar. Clicking navigates into the child's own workspace
- * (which renders its own tree at the next level, capped at 3 by the
- * application-layer nesting rule).
+ * Army / Warband / Unit workspace. One row per child — name, type,
+ * status, and a small bar. Clicking navigates into the child's own
+ * workspace.
  *
- * Empty state is handled inline so the Army workspace can always
- * render the panel and surface "no children yet" guidance.
+ * P13.4 — child projects are always Unit-typed (sub-project type
+ * rule). The empty-state copy reflects the new restriction.
  */
 export function ProjectTree({
   projects,
-  namedModelCountByProjectId = {},
 }: {
   projects: ReadonlyArray<Project>;
-  namedModelCountByProjectId?: Record<string, number>;
 }) {
   if (projects.length === 0) {
     return (
       <div className="frame p-4 text-xs font-mono text-[var(--color-fg-muted)]">
-        No sub-projects yet. Add a Unit or Single Model and pick this
-        project as its parent to see it here.
+        No sub-projects yet. Add a Unit and pick this project as its
+        parent to see it here.
       </div>
     );
   }
@@ -34,27 +31,17 @@ export function ProjectTree({
   return (
     <ul className="frame divide-y divide-[var(--color-border)]" role="list">
       {projects.map((child) => (
-        <ProjectTreeRow
-          key={child.id}
-          project={child}
-          namedModelCount={namedModelCountByProjectId[child.id] ?? 0}
-        />
+        <ProjectTreeRow key={child.id} project={child} />
       ))}
     </ul>
   );
 }
 
-function ProjectTreeRow({
-  project,
-  namedModelCount,
-}: {
-  project: Project;
-  namedModelCount: number;
-}) {
+function ProjectTreeRow({ project }: { project: Project }) {
   const status = displayStatus(project);
   const percent = progressPercent(project);
   const href = `/projects/${project.id}` as Route;
-  const total = project.count + namedModelCount;
+  const total = project.count;
 
   return (
     <li>

@@ -18,11 +18,11 @@ describe("parseQuickAdd", () => {
     });
   });
 
-  test("single-model hint → Single Model with count=1", () => {
+  test("P13.4 — single-model hint folds into Unit with count=1", () => {
     expect(parseQuickAdd("Sergeant Vraks")).toEqual({
       name: "Sergeant Vraks",
       count: 1,
-      type: "Single Model",
+      type: "Unit",
     });
   });
 
@@ -58,11 +58,11 @@ describe("parseQuickAdd", () => {
     });
   });
 
-  test("count of 1 with no type hint → Single Model", () => {
+  test("P13.4 — count of 1 with no type hint defaults to Unit", () => {
     expect(parseQuickAdd("Imperial Knight")).toEqual({
       name: "Imperial Knight",
       count: 1,
-      type: "Single Model",
+      type: "Unit",
     });
   });
 

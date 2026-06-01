@@ -1,13 +1,13 @@
 /**
  * P12.10 — Project detail Progress table.
  *
- * Single table replacing the prior NamedModels panel + sub-projects
- * card + aggregated stages. Ross's Q2 column set:
+ * Single table replacing the prior sub-projects card + aggregated
+ * stages. Ross's Q2 column set:
  *   Name · Type · Count (± steppers) · Color scheme · Status · Progress
  *
- * Inline-edit count via ± steppers on sub-project rows (named models
- * always carry count = 1). + ADD UNIT / + ADD MODEL / + ADD TERRAIN
- * CTAs above the table use the success-green variant.
+ * P13.4 — every row is a project row (named-model "kind" is gone
+ * after the entity folded into Unit projects). The ± steppers apply
+ * to every row.
  */
 import { describe, expect, test } from "vitest";
 import * as fs from "node:fs";
@@ -38,20 +38,12 @@ describe("ProjectProgressTable component surface", () => {
     expect(greenCount).toBeGreaterThanOrEqual(2);
   });
 
-  test("CTA label is + ADD UNIT for Army/Warband, + ADD MODEL for Unit", () => {
+  test("CTA label is + ADD UNIT for all parent types (P13.4 sub-project rule)", () => {
     expect(src).toContain("+ ADD UNIT");
-    expect(src).toContain("+ ADD MODEL");
     expect(src).toContain("+ ADD TERRAIN");
   });
 
-  test("named-model rows always render with count = 1", () => {
-    // The page synthesises a count=1 for named-model rows; the table
-    // reads it directly.
-    expect(src).toContain("named models always have count=1");
-  });
-
-  test("only sub-project rows get the ± steppers", () => {
-    expect(src).toMatch(/row\.kind === "project"/);
+  test("every row carries ± steppers (P13.4 — named-model rows removed)", () => {
     expect(src).toContain("handleStep");
   });
 
@@ -126,15 +118,9 @@ describe("Project detail page wires the Progress table in", () => {
     expect(src).toContain("ProgressRow");
   });
 
-  test("builds progressRows from children + namedModels", () => {
+  test("P13.4 — builds progressRows from sub-project children only", () => {
     expect(src).toContain("progressRows");
     expect(src).toContain("children.map");
-    expect(src).toContain("namedModels.map");
-  });
-
-  test("named-model rows synthesise count=1 + kind='named-model'", () => {
-    expect(src).toContain('kind: "named-model"');
-    expect(src).toContain("count: 1");
   });
 
   test("fetches the project-palettes map for the recipe column", () => {

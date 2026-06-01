@@ -71,7 +71,7 @@ export function AggregateCountersDisplay({
 
   // Nothing meaningful to render — the page surfaces its own empty
   // state via the tree component.
-  if (total === 0 && aggregate.namedModelCount === 0) {
+  if (total === 0) {
     return (
       <div className="frame p-4 text-xs font-mono text-[var(--color-fg-muted)]">
         No models registered across this Army yet. Add a child Unit with

@@ -4,13 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import {
-  bodyTypes,
-  namedModels,
-  projects,
-  recipes,
-  type Recipe,
-} from "@/db/schema";
+import { bodyTypes, projects, recipes, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
 
@@ -24,7 +18,6 @@ const createSchema = z.object({
     .max(120, "Name is too long"),
   bodyType: z.enum(bodyTypes).default("infantry"),
   attachedProjectId: z.string().min(1).max(64).nullish(),
-  attachedNamedModelId: z.string().min(1).max(64).nullish(),
   notesMd: z.string().max(20_000).nullish(),
 });
 
@@ -49,11 +42,6 @@ const attachToProjectSchema = z.object({
   projectId: z.string().min(1).max(64),
 });
 
-const attachToNamedModelSchema = z.object({
-  recipeId: recipeIdSchema,
-  namedModelId: z.string().min(1).max(64),
-});
-
 const detachSchema = z.object({
   recipeId: recipeIdSchema,
 });
@@ -76,21 +64,6 @@ async function verifyProjectOwnership(
     .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)))
     .limit(1);
   return rows.length === 1;
-}
-
-async function verifyNamedModelOwnership(
-  userId: string,
-  namedModelId: string,
-): Promise<{ projectId: string } | null> {
-  const rows = await db
-    .select({ projectId: namedModels.projectId })
-    .from(namedModels)
-    .innerJoin(projects, eq(projects.id, namedModels.projectId))
-    .where(
-      and(eq(namedModels.id, namedModelId), eq(projects.ownerId, userId)),
-    )
-    .limit(1);
-  return rows[0] ?? null;
 }
 
 async function getOwnedRecipe(
@@ -131,26 +104,12 @@ export async function createRecipe(
   const d = parsed.data;
   const userId = await currentUserId();
 
-  if (d.attachedProjectId && d.attachedNamedModelId) {
-    return {
-      ok: false,
-      error: "A recipe can attach to a project OR a named model, not both.",
-    };
-  }
-
   if (d.attachedProjectId) {
     const owned = await verifyProjectOwnership(userId, d.attachedProjectId);
     if (!owned) return { ok: false, error: "Project not found" };
   }
-  if (d.attachedNamedModelId) {
-    const owned = await verifyNamedModelOwnership(
-      userId,
-      d.attachedNamedModelId,
-    );
-    if (!owned) return { ok: false, error: "Named model not found" };
-  }
 
-  const isStandalone = !d.attachedProjectId && !d.attachedNamedModelId;
+  const isStandalone = !d.attachedProjectId;
 
   try {
     const inserted = await db
@@ -160,7 +119,6 @@ export async function createRecipe(
         name: d.name,
         bodyType: d.bodyType,
         attachedProjectId: d.attachedProjectId ?? null,
-        attachedNamedModelId: d.attachedNamedModelId ?? null,
         isStandalone,
         notesMd: d.notesMd ?? null,
       })
@@ -263,7 +221,7 @@ export async function deleteRecipe(
 }
 
 /* ============================================================
-   attachRecipeToProject / NamedModel / detachRecipe
+   attachRecipeToProject / detachRecipe
    ============================================================ */
 
 export async function attachRecipeToProject(
@@ -285,14 +243,12 @@ export async function attachRecipeToProject(
   if (!ownsProject) return { ok: false, error: "Project not found" };
 
   const previousProjectId = recipe.attachedProjectId;
-  const previousNamedModelId = recipe.attachedNamedModelId;
 
   try {
     const updated = await db
       .update(recipes)
       .set({
         attachedProjectId: projectId,
-        attachedNamedModelId: null,
         isStandalone: false,
       })
       .where(eq(recipes.id, recipeId))
@@ -306,74 +262,6 @@ export async function attachRecipeToProject(
     revalidatePath("/projects");
     if (previousProjectId && previousProjectId !== projectId) {
       revalidatePath(`/projects/${previousProjectId}`);
-    }
-    if (previousNamedModelId) {
-      // The named model row lives inside its project workspace.
-      const owner = await verifyNamedModelOwnership(
-        userId,
-        previousNamedModelId,
-      );
-      if (owner) revalidatePath(`/projects/${owner.projectId}`);
-    }
-    return { ok: true, data: row };
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "Failed to attach recipe",
-    };
-  }
-}
-
-export async function attachRecipeToNamedModel(
-  raw: z.infer<typeof attachToNamedModelSchema>,
-): Promise<ActionResult<Recipe>> {
-  const parsed = attachToNamedModelSchema.safeParse(raw);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: parsed.error.issues[0]?.message ?? "Invalid input",
-    };
-  }
-  const { recipeId, namedModelId } = parsed.data;
-  const userId = await currentUserId();
-
-  const recipe = await getOwnedRecipe(userId, recipeId);
-  if (!recipe) return { ok: false, error: "Recipe not found" };
-  const owner = await verifyNamedModelOwnership(userId, namedModelId);
-  if (!owner) return { ok: false, error: "Named model not found" };
-
-  const previousProjectId = recipe.attachedProjectId;
-  const previousNamedModelId = recipe.attachedNamedModelId;
-
-  try {
-    const updated = await db
-      .update(recipes)
-      .set({
-        attachedProjectId: null,
-        attachedNamedModelId: namedModelId,
-        isStandalone: false,
-      })
-      .where(eq(recipes.id, recipeId))
-      .returning();
-    const row = updated[0];
-    if (!row) return { ok: false, error: "Update returned no row" };
-
-    revalidatePath("/recipes");
-    revalidatePath(`/recipes/${row.id}`);
-    revalidatePath(`/projects/${owner.projectId}`);
-    revalidatePath("/projects");
-    if (previousProjectId && previousProjectId !== owner.projectId) {
-      revalidatePath(`/projects/${previousProjectId}`);
-    }
-    if (
-      previousNamedModelId &&
-      previousNamedModelId !== namedModelId
-    ) {
-      const prevOwner = await verifyNamedModelOwnership(
-        userId,
-        previousNamedModelId,
-      );
-      if (prevOwner) revalidatePath(`/projects/${prevOwner.projectId}`);
     }
     return { ok: true, data: row };
   } catch (err) {
@@ -399,14 +287,12 @@ export async function detachRecipe(
   if (!recipe) return { ok: false, error: "Recipe not found" };
 
   const previousProjectId = recipe.attachedProjectId;
-  const previousNamedModelId = recipe.attachedNamedModelId;
 
   try {
     const updated = await db
       .update(recipes)
       .set({
         attachedProjectId: null,
-        attachedNamedModelId: null,
         isStandalone: true,
       })
       .where(eq(recipes.id, recipe.id))
@@ -419,13 +305,6 @@ export async function detachRecipe(
     if (previousProjectId) {
       revalidatePath(`/projects/${previousProjectId}`);
       revalidatePath("/projects");
-    }
-    if (previousNamedModelId) {
-      const prevOwner = await verifyNamedModelOwnership(
-        userId,
-        previousNamedModelId,
-      );
-      if (prevOwner) revalidatePath(`/projects/${prevOwner.projectId}`);
     }
     return { ok: true, data: row };
   } catch (err) {

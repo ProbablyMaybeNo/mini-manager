@@ -43,12 +43,7 @@ const ADD_CREATE_NEW_SUCCESS: ReadonlyArray<VariantExpectation> = [
     expected: "success",
     signature: 'aria-label="Add wishlist item"',
   },
-  {
-    label: "AddNamedModelForm",
-    file: "src/components/AddNamedModelForm.tsx",
-    expected: "success",
-    signature: '"Adding…" : "Add"',
-  },
+  // P13.4 — AddNamedModelForm removed (named_model entity dropped).
   {
     label: "NewProjectForm",
     file: "src/components/NewProjectForm.tsx",

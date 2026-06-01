@@ -106,14 +106,13 @@ export const verificationTokens = sqliteTable(
 );
 
 /* ============================================================
-   Domain — Project + NamedModel
+   Domain — Project
    ============================================================ */
 
 export const projectTypes = [
   "Army",
   "Warband",
   "Unit",
-  "Single Model",
   "Terrain Piece",
   "Diorama",
 ] as const;
@@ -125,8 +124,11 @@ export type Priority = (typeof priorities)[number];
 /**
  * Projects are the spine of the app. A Project can contain other
  * Projects (hard 3-level cap enforced at the application layer:
- * Army → Unit → NamedModel). Stage counters cascade in strict order
- * — enforced by check constraints below.
+ * Army → Unit → Unit). Stage counters cascade in strict order
+ * — enforced by check constraints below. P13.4 folded the prior
+ * NamedModel entity into Unit-typed project rows; legacy stage
+ * booleans on each named_model row migrated to stage counters on
+ * the new Unit rows (built→buildCount=1, etc.).
  */
 export const projects = sqliteTable(
   "project",
@@ -177,54 +179,6 @@ export const projects = sqliteTable(
         AND ${t.paintCount} >= 0 AND ${t.paintCount} <= ${t.primeCount}
         AND ${t.baseCount} >= 0 AND ${t.baseCount} <= ${t.paintCount}
         AND ${t.completeCount} >= 0 AND ${t.completeCount} <= ${t.baseCount}
-      `,
-    ),
-  }),
-);
-
-/**
- * NamedModel — created only when a unit has an individual that
- * needs a different scheme. Tracks five booleans (one per stage)
- * since each is a single mini.
- *
- * recipeOverrideId is nullable text for now; the Recipe table
- * arrives in Phase 3. Once added we'll wire up the foreign key.
- */
-export const namedModels = sqliteTable(
-  "named_model",
-  {
-    id: id(),
-    projectId: text("project_id")
-      .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
-    position: integer("position").notNull().default(0),
-    name: text("name").notNull(),
-
-    isBuilt: integer("is_built", { mode: "boolean" }).notNull().default(false),
-    isPrimed: integer("is_primed", { mode: "boolean" }).notNull().default(false),
-    isPainted: integer("is_painted", { mode: "boolean" }).notNull().default(false),
-    isBased: integer("is_based", { mode: "boolean" }).notNull().default(false),
-    isComplete: integer("is_complete", { mode: "boolean" }).notNull().default(false),
-
-    recipeOverrideId: text("recipe_override_id"),
-    notesMd: text("notes_md"),
-    referenceImageUrl: text("reference_image_url"),
-
-    ...timestamps,
-  },
-  (t) => ({
-    projectIdx: index("named_model_project_idx").on(t.projectId),
-    projectPositionUq: uniqueIndex("named_model_project_position").on(
-      t.projectId,
-      t.position,
-    ),
-    stageCascade: check(
-      "named_model_stage_cascade",
-      sql`
-        (${t.isBuilt} = 1 OR ${t.isPrimed} = 0)
-        AND (${t.isPrimed} = 1 OR ${t.isPainted} = 0)
-        AND (${t.isPainted} = 1 OR ${t.isBased} = 0)
-        AND (${t.isBased} = 1 OR ${t.isComplete} = 0)
       `,
     ),
   }),
@@ -453,10 +407,6 @@ export const recipes = sqliteTable(
     attachedProjectId: text("attached_project_id").references(() => projects.id, {
       onDelete: "set null",
     }),
-    attachedNamedModelId: text("attached_named_model_id").references(
-      () => namedModels.id,
-      { onDelete: "set null" },
-    ),
     isStandalone: integer("is_standalone", { mode: "boolean" })
       .notNull()
       .default(false),
@@ -470,9 +420,6 @@ export const recipes = sqliteTable(
       t.isStandalone,
     ),
     attachedProjectIdx: index("recipe_attached_project_idx").on(t.attachedProjectId),
-    attachedNamedModelIdx: index("recipe_attached_named_model_idx").on(
-      t.attachedNamedModelId,
-    ),
   }),
 );
 
@@ -642,6 +589,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   imports: many(imports),
 }));
 
+
+
 export const palettesRelations = relations(palettes, ({ one }) => ({
   owner: one(users, { fields: [palettes.ownerId], references: [users.id] }),
 }));
@@ -662,17 +611,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     relationName: "project_tree",
   }),
   children: many(projects, { relationName: "project_tree" }),
-  namedModels: many(namedModels),
   wishlistItems: many(wishlistItems),
   attachedRecipes: many(recipes, { relationName: "recipe_attached_project" }),
-}));
-
-export const namedModelsRelations = relations(namedModels, ({ one, many }) => ({
-  project: one(projects, {
-    fields: [namedModels.projectId],
-    references: [projects.id],
-  }),
-  attachedRecipes: many(recipes, { relationName: "recipe_attached_named_model" }),
 }));
 
 export const recipesRelations = relations(recipes, ({ one, many }) => ({
@@ -681,11 +621,6 @@ export const recipesRelations = relations(recipes, ({ one, many }) => ({
     fields: [recipes.attachedProjectId],
     references: [projects.id],
     relationName: "recipe_attached_project",
-  }),
-  attachedNamedModel: one(namedModels, {
-    fields: [recipes.attachedNamedModelId],
-    references: [namedModels.id],
-    relationName: "recipe_attached_named_model",
   }),
   zones: many(recipeZones),
 }));
@@ -714,9 +649,6 @@ export type NewUser = typeof users.$inferInsert;
 
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
-
-export type NamedModel = typeof namedModels.$inferSelect;
-export type NewNamedModel = typeof namedModels.$inferInsert;
 
 export const inventoryEntriesRelations = relations(inventoryEntries, ({ one }) => ({
   owner: one(users, {

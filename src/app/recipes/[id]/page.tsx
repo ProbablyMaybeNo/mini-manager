@@ -8,7 +8,7 @@ import {
   getRecipeWithZones,
 } from "@/db/queries/recipes";
 import { listInventoryByUser } from "@/db/queries/inventory";
-import { namedModels, projects } from "@/db/schema";
+import { projects } from "@/db/schema";
 import { RecipeHeader } from "@/components/recipes/RecipeHeader";
 import { RecipeEditorClient } from "@/components/recipes/RecipeEditorClient";
 import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
@@ -19,13 +19,13 @@ import type { MarkdownInput, MarkdownZone } from "@/lib/recipes/markdown";
 export const dynamic = "force-dynamic";
 
 interface AttachmentSummary {
-  kind: "project" | "named-model" | "standalone";
+  kind: "project" | "standalone";
   label: string;
   href?: string;
 }
 
 async function resolveAttachment(
-  recipe: { attachedProjectId: string | null; attachedNamedModelId: string | null },
+  recipe: { attachedProjectId: string | null },
 ): Promise<AttachmentSummary> {
   if (recipe.attachedProjectId) {
     const rows = await db
@@ -39,25 +39,6 @@ async function resolveAttachment(
       label: name,
       href: `/projects/${recipe.attachedProjectId}`,
     };
-  }
-  if (recipe.attachedNamedModelId) {
-    const rows = await db
-      .select({
-        name: namedModels.name,
-        projectId: namedModels.projectId,
-      })
-      .from(namedModels)
-      .where(eq(namedModels.id, recipe.attachedNamedModelId))
-      .limit(1);
-    const row = rows[0];
-    if (row) {
-      return {
-        kind: "named-model",
-        label: row.name,
-        href: `/projects/${row.projectId}`,
-      };
-    }
-    return { kind: "named-model", label: "(unknown model)" };
   }
   return { kind: "standalone", label: "Standalone" };
 }

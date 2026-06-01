@@ -88,13 +88,13 @@ describe("markBoughtAsNewProject", () => {
     expect(item!.dateResolved).not.toBeNull();
   });
 
-  test("forces count to 1 for a Single Model regardless of input", async () => {
+  test("preserves the caller's count for a Unit (P13.4 — Single Model gone)", async () => {
     const wishlistItemId = await seedWishlistItem();
     const res = await markBoughtAsNewProject({
       wishlistItemId,
       name: "Captain",
-      type: "Single Model",
-      count: 12,
+      type: "Unit",
+      count: 1,
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
@@ -125,7 +125,7 @@ describe("markBoughtAsNewProject", () => {
     expect(project!.parentId).toBe(armyId);
   });
 
-  test("rejects a Unit parent (only Army/Warband can contain)", async () => {
+  test("P13.4 — Unit parent is allowed (Army/Warband/Unit can host sub-Units)", async () => {
     const wishlistItemId = await seedWishlistItem();
     const unitId = await seedProject({ type: "Unit" });
     const res = await markBoughtAsNewProject({
@@ -135,8 +135,21 @@ describe("markBoughtAsNewProject", () => {
       count: 10,
       parentId: unitId,
     });
+    expect(res.ok).toBe(true);
+  });
+
+  test("P13.4 — non-Unit sub-project type is rejected", async () => {
+    const wishlistItemId = await seedWishlistItem();
+    const armyId = await seedProject({ type: "Army", name: "My Army" });
+    const res = await markBoughtAsNewProject({
+      wishlistItemId,
+      name: "Bad child",
+      type: "Terrain Piece",
+      count: 1,
+      parentId: armyId,
+    });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/Army or Warband/);
+    if (!res.ok) expect(res.error).toMatch(/Sub-projects must be of type Unit/);
   });
 
   test("rejects nesting beyond 3 levels", async () => {
@@ -149,8 +162,8 @@ describe("markBoughtAsNewProject", () => {
     });
     const res = await markBoughtAsNewProject({
       wishlistItemId,
-      name: "Model",
-      type: "Single Model",
+      name: "Grandchild",
+      type: "Unit",
       count: 1,
       parentId: unitId,
     });

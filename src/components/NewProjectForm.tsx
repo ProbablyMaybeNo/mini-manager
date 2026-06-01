@@ -12,10 +12,18 @@ type TypeMeta = {
   type: ProjectType;
   blurb: string;
   defaultCount: number;
-  countLocked?: boolean;
   acceptsParent: boolean;
 };
 
+/**
+ * P13.4 — Project type metadata.
+ *
+ * Sub-project type rule (locked): Army / Warband / Unit parents host
+ * only Unit children. Terrain Piece + Diorama stay top-level only.
+ * `acceptsParent` is the "can this type sit under an Army/Warband/Unit"
+ * flag; when a parent is provided the picker hides anything that can't
+ * legally nest.
+ */
 const TYPE_META: ReadonlyArray<TypeMeta> = [
   {
     type: "Army",
@@ -31,26 +39,19 @@ const TYPE_META: ReadonlyArray<TypeMeta> = [
   },
   {
     type: "Unit",
-    blurb: "Squad of identical-scheme miniatures. The rank-and-file workhorse.",
+    blurb: "Squad of identical-scheme miniatures — or a single character. The painting workhorse.",
     defaultCount: 10,
     acceptsParent: true,
   },
   {
-    type: "Single Model",
-    blurb: "One distinct miniature — character, hero, or one-off project.",
-    defaultCount: 1,
-    countLocked: true,
-    acceptsParent: true,
-  },
-  {
     type: "Terrain Piece",
-    blurb: "Scenery — buildings, ruins, hills. Tracks the same five stages.",
+    blurb: "Scenery — buildings, ruins, hills. Tracks the same five stages. Top-level only.",
     defaultCount: 1,
-    acceptsParent: true,
+    acceptsParent: false,
   },
   {
     type: "Diorama",
-    blurb: "Display project. Counts as one composite piece by default.",
+    blurb: "Display project. Counts as one composite piece by default. Top-level only.",
     defaultCount: 1,
     acceptsParent: false,
   },
@@ -74,7 +75,16 @@ export function NewProjectForm({
   parents: ReadonlyArray<ParentOption>;
   initialParentId?: string;
 }) {
-  const [type, setType] = useState<ProjectType>("Unit");
+  // P13.4 — when a parent is pre-selected, the only legal child is Unit.
+  const hasInitialParent = Boolean(initialParentId);
+  const availableTypes = useMemo<ReadonlyArray<TypeMeta>>(
+    () => (hasInitialParent ? TYPE_META.filter((m) => m.acceptsParent) : TYPE_META),
+    [hasInitialParent],
+  );
+
+  const [type, setType] = useState<ProjectType>(
+    hasInitialParent ? "Unit" : "Unit",
+  );
   const initialMeta = TYPE_META_BY_TYPE[type];
   const [name, setName] = useState("");
   const [count, setCount] = useState<number>(initialMeta.defaultCount);
@@ -83,7 +93,11 @@ export function NewProjectForm({
   const [isPending, startTransition] = useTransition();
 
   const meta = TYPE_META_BY_TYPE[type];
-  const showParentPicker = meta.acceptsParent && parents.length > 0;
+  // Parent picker only renders for types that accept a parent AND when
+  // we actually have parents to pick from. Hidden entirely when a
+  // parent was pre-supplied (the route param locks the parent).
+  const showParentPicker =
+    !hasInitialParent && meta.acceptsParent && parents.length > 0;
   const formId = useId();
 
   const onTypeChange = (next: ProjectType) => {
@@ -107,7 +121,7 @@ export function NewProjectForm({
       const result = await createProject({
         name: trimmed,
         type,
-        count: meta.countLocked ? 1 : count,
+        count,
         parentId: parentId === "" ? null : parentId,
       });
       // Success path throws via redirect; only reachable on failure.
@@ -122,7 +136,7 @@ export function NewProjectForm({
       <fieldset className="space-y-2">
         <legend className="section-title">Type</legend>
         <div className="space-y-1.5">
-          {TYPE_META.map((opt) => {
+          {availableTypes.map((opt) => {
             const checked = opt.type === type;
             return (
               <label
@@ -170,6 +184,11 @@ export function NewProjectForm({
             );
           })}
         </div>
+        {hasInitialParent ? (
+          <p className="text-2xs font-mono text-[var(--color-fg-muted)] mt-1">
+            Sub-projects can only be Unit.
+          </p>
+        ) : null}
       </fieldset>
 
       <div className="space-y-2">
@@ -190,9 +209,9 @@ export function NewProjectForm({
           placeholder={
             type === "Army"
               ? "e.g. Salamanders 2k"
-              : type === "Single Model"
-                ? "e.g. Sergeant Vraks"
-                : "e.g. Tactical Squad Alpha"
+              : type === "Unit"
+                ? "e.g. Tactical Squad Alpha"
+                : "e.g. Ruined Hab Block"
           }
           className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
         />
@@ -211,8 +230,7 @@ export function NewProjectForm({
           min={0}
           max={9999}
           step={1}
-          value={meta.countLocked ? 1 : count}
-          disabled={meta.countLocked}
+          value={count}
           onChange={(e) => {
             const next = Number.parseInt(e.target.value, 10);
             setCount(Number.isFinite(next) && next >= 0 ? next : 0);
@@ -220,15 +238,12 @@ export function NewProjectForm({
           className={clsx(
             "block w-32 px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame",
             "focus:border-[var(--color-accent)]",
-            meta.countLocked && "opacity-60 cursor-not-allowed",
           )}
         />
         <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-          {meta.countLocked
-            ? "Single Model is always 1."
-            : meta.type === "Army" || meta.type === "Warband"
-              ? "0 means the parent has no rank-and-file of its own; counters come from child units."
-              : "How many identical-scheme miniatures this project contains."}
+          {meta.type === "Army" || meta.type === "Warband"
+            ? "0 means the parent has no rank-and-file of its own; counters come from child units."
+            : "How many identical-scheme miniatures this project contains. Use 1 for a single character."}
         </p>
       </div>
 
@@ -307,7 +322,7 @@ function ParentPicker({
         ))}
       </select>
       <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-        Nest this project under an Army or Warband to aggregate its counters.
+        Nest this Unit under an Army, Warband, or another Unit to aggregate its counters.
       </p>
     </div>
   );

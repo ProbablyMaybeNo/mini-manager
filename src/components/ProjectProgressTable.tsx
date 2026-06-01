@@ -13,13 +13,15 @@ import type { DisplayStatus } from "@/lib/progress";
 
 export interface ProgressRow {
   id: string;
-  kind: "project" | "named-model";
+  /** P13.4 — only "project" rows exist now; the prior "named-model"
+   *  kind was removed when named models folded into Unit projects.
+   *  Kept as a discriminant to make future expansion (e.g. group rows)
+   *  cheap and to keep the row VM future-proof. */
+  kind: "project";
   name: string;
-  /** Project-type label for sub-projects; "Model" for named models. */
+  /** Project-type label for the row. */
   type: string;
-  /** Q2 locked: count = total models for that row. For named models
-   *  it's always 1; for projects it's the row's project.count or
-   *  derived total. */
+  /** Q2 locked: count = total models for that row. */
   count: number;
   /** Up to 8 hexes of the row's color scheme. */
   paletteHexes: string[];
@@ -69,12 +71,8 @@ export function ProjectProgressTable({
   parentId,
   rows,
 }: Props) {
-  const addLabel =
-    parentType === "Army" || parentType === "Warband"
-      ? "+ ADD UNIT"
-      : parentType === "Unit"
-        ? "+ ADD MODEL"
-        : "+ ADD";
+  // P13.4 — Army / Warband / Unit parents host Units only.
+  const addLabel = "+ ADD UNIT";
   const showTerrainCta = parentType === "Army" || parentType === "Warband";
 
   if (rows.length === 0) {
@@ -153,7 +151,7 @@ export function ProjectProgressTable({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <ProgressTableRow key={`${row.kind}-${row.id}`} row={row} />
+              <ProgressTableRow key={row.id} row={row} />
             ))}
           </tbody>
         </table>
@@ -169,7 +167,6 @@ function ProgressTableRow({ row }: { row: ProgressRow }) {
   const [error, setError] = useState<string | null>(null);
 
   const handleStep = (delta: 1 | -1) => {
-    if (row.kind !== "project") return; // named models always have count=1
     const next = Math.max(0, Math.min(9999, localCount + delta));
     if (next === localCount) return;
     setLocalCount(next);
@@ -191,50 +188,42 @@ function ProgressTableRow({ row }: { row: ProgressRow }) {
       style={{ borderBottom: "1px solid var(--color-border)" }}
     >
       <td className="px-3 py-2">
-        {row.kind === "project" ? (
-          <Link
-            href={`/projects/${row.id}`}
-            className="text-[var(--color-cyan)] hover:underline"
-          >
-            {row.name}
-          </Link>
-        ) : (
-          <span className="text-[var(--color-fg)]">{row.name}</span>
-        )}
+        <Link
+          href={`/projects/${row.id}`}
+          className="text-[var(--color-cyan)] hover:underline"
+        >
+          {row.name}
+        </Link>
       </td>
       <td className="px-3 py-2 text-[var(--color-fg-muted)]">{row.type}</td>
       <td className="px-3 py-2 text-right tabular-nums">
-        {row.kind === "project" ? (
-          <span className="inline-flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleStep(-1)}
-              disabled={isPending || localCount === 0}
-              aria-label={`Decrement count for ${row.name}`}
-              className={clsx(
-                "w-5 h-5 inline-flex items-center justify-center rounded-sm text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] disabled:opacity-40",
-              )}
-              style={{ border: "1px solid var(--color-border-strong)" }}
-            >
-              −
-            </button>
-            <span className="w-6 text-center">{localCount}</span>
-            <button
-              type="button"
-              onClick={() => handleStep(1)}
-              disabled={isPending}
-              aria-label={`Increment count for ${row.name}`}
-              className={clsx(
-                "w-5 h-5 inline-flex items-center justify-center rounded-sm text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] disabled:opacity-40",
-              )}
-              style={{ border: "1px solid var(--color-border-strong)" }}
-            >
-              +
-            </button>
-          </span>
-        ) : (
-          <span>{row.count}</span>
-        )}
+        <span className="inline-flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => handleStep(-1)}
+            disabled={isPending || localCount === 0}
+            aria-label={`Decrement count for ${row.name}`}
+            className={clsx(
+              "w-5 h-5 inline-flex items-center justify-center rounded-sm text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] disabled:opacity-40",
+            )}
+            style={{ border: "1px solid var(--color-border-strong)" }}
+          >
+            −
+          </button>
+          <span className="w-6 text-center">{localCount}</span>
+          <button
+            type="button"
+            onClick={() => handleStep(1)}
+            disabled={isPending}
+            aria-label={`Increment count for ${row.name}`}
+            className={clsx(
+              "w-5 h-5 inline-flex items-center justify-center rounded-sm text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] disabled:opacity-40",
+            )}
+            style={{ border: "1px solid var(--color-border-strong)" }}
+          >
+            +
+          </button>
+        </span>
         {error ? (
           <span
             role="alert"

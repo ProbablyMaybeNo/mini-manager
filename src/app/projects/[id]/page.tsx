@@ -2,16 +2,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { currentUserId } from "@/lib/auth-stub";
 import {
-  countNamedModelsByProject,
   getProjectById,
   listAllProjects,
   listChildProjects,
-  listNamedModelsByProject,
 } from "@/db/queries/projects";
 import type { Project } from "@/db/schema";
 import { OwnedCounter } from "@/components/OwnedCounter";
 import { StageCounter } from "@/components/StageCounter";
-import { NamedModelsPanel } from "@/components/NamedModelsPanel";
 import { ProjectTree } from "@/components/ProjectTree";
 import { AggregateCountersDisplay } from "@/components/AggregateCountersDisplay";
 import { ShoppingForThisPanel } from "@/components/wishlist/ShoppingForThisPanel";
@@ -77,30 +74,36 @@ export default async function ProjectDetailPage({
   const project = await getProjectById(userId, id);
   if (!project) notFound();
 
-  const namedModels = await listNamedModelsByProject(userId, project.id);
-
-  const isContainer = project.type === "Army" || project.type === "Warband";
+  // P13.4 — Army, Warband AND Unit can host sub-projects (which are
+  // always Unit-typed per the new sub-project rule). The container
+  // workspace surface (sub-project table, aggregated counters) shows
+  // for any project that's allowed to nest children.
+  const canHaveChildren =
+    project.type === "Army" ||
+    project.type === "Warband" ||
+    project.type === "Unit";
 
   // Containers fetch the wider context they need for aggregation; leaf
   // projects skip these queries entirely so the workspace stays cheap.
-  const [children, allProjects, namedCountByProject] = isContainer
+  const [children, allProjects] = canHaveChildren
     ? await Promise.all([
         listChildProjects(userId, project.id),
         listAllProjects(userId),
-        countNamedModelsByProject(userId),
       ])
-    : [
-        [] as ReadonlyArray<Project>,
-        [] as ReadonlyArray<Project>,
-        {} as Record<string, number>,
-      ];
+    : [[] as ReadonlyArray<Project>, [] as ReadonlyArray<Project>];
+
+  // A project is a "container view" only when it both can host children
+  // AND has a count of 0 (no rank-and-file of its own). A Unit with
+  // count=10 stays a leaf-style workspace even if it gains a sub-Unit
+  // later — the rank-and-file counters belong to this row, the child
+  // counters roll up via the Progress table.
+  const hasChildren = children.length > 0;
+  const isContainer = canHaveChildren && hasChildren && project.count === 0;
 
   const descendants = isContainer
     ? collectDescendants(project, allProjects)
     : [];
-  const aggregate = isContainer
-    ? aggregateCounters(project, descendants, namedCountByProject)
-    : null;
+  const aggregate = isContainer ? aggregateCounters(project, descendants) : null;
 
   // Header progress / status: derive from aggregate for containers so
   // a top-level Army with `count=0` still reflects its child work.
@@ -108,8 +111,8 @@ export default async function ProjectDetailPage({
     ? { ...project, ...aggregate, isShelved: project.isShelved }
     : project;
   const status = displayStatus(headerProject);
-  const percent = progressPercent(headerProject, namedModels);
-  const headerTotalModels = headerProject.count + namedModels.length;
+  const percent = progressPercent(headerProject);
+  const headerTotalModels = headerProject.count;
 
   // Slim, serialisable snapshots passed to the client counter components.
   // Avoids shipping Date instances or any fields the panels don't read.
@@ -131,7 +134,7 @@ export default async function ProjectDetailPage({
     buildCount: project.buildCount,
   };
 
-  const showInteractiveCounters = isLeafProject(project, namedModels.length);
+  const showInteractiveCounters = isLeafProject(project);
 
   // P12.9 — Color Scheme box. If a recipe is attached, surface its
   // slot palette so the box can pre-fill. We pick the first attached
@@ -145,49 +148,20 @@ export default async function ProjectDetailPage({
     getProjectPalettesMap(userId),
   ]);
 
-  // P12.10 — Build the Progress table's row VM. Sub-project rows
-  // come first (in createdAt order from listChildProjects), then
-  // named-model rows for any individuals on the parent itself. Each
-  // row carries the palette swatches, status, percent, and count.
-  const progressRows: ProgressRow[] = [
-    ...children.map((c) => ({
-      id: c.id,
-      kind: "project" as const,
-      name: c.name,
-      type: c.type as string,
-      count: c.count,
-      paletteHexes: projectPalettes.get(c.id) ?? [],
-      status: displayStatus(c),
-      percent: progressPercent(c),
-      priority: c.priority,
-    })),
-    ...namedModels.map((m) => ({
-      id: m.id,
-      kind: "named-model" as const,
-      name: m.name,
-      type: "Model",
-      count: 1,
-      paletteHexes: [] as string[],
-      // Named-model "status" derives from its booleans the same way
-      // displayStatus does for projects — we synthesise a Project-
-      // shaped object so the helper still works.
-      status: displayStatus({
-        count: 1,
-        ownedCount: 1,
-        buildCount: m.isBuilt ? 1 : 0,
-        primeCount: m.isPrimed ? 1 : 0,
-        paintCount: m.isPainted ? 1 : 0,
-        baseCount: m.isBased ? 1 : 0,
-        completeCount: m.isComplete ? 1 : 0,
-        isShelved: false,
-      }),
-      percent: progressPercent(
-        { count: 0, buildCount: 0, primeCount: 0, paintCount: 0, baseCount: 0, completeCount: 0 },
-        [m],
-      ),
-      priority: null,
-    })),
-  ];
+  // P12.10 — Build the Progress table's row VM from sub-projects in
+  // createdAt order from listChildProjects. Each row carries the
+  // palette swatches, status, percent, and count.
+  const progressRows: ProgressRow[] = children.map((c) => ({
+    id: c.id,
+    kind: "project" as const,
+    name: c.name,
+    type: c.type as string,
+    count: c.count,
+    paletteHexes: projectPalettes.get(c.id) ?? [],
+    status: displayStatus(c),
+    percent: progressPercent(c),
+    priority: c.priority,
+  }));
 
   const attachedRecipe = attachedRecipes[0] ?? null;
   let colorSchemeSlots: ColorSchemeSlot[] = [];
@@ -230,13 +204,9 @@ export default async function ProjectDetailPage({
         status={status}
         percent={percent}
         totalModels={headerTotalModels}
-        // Single Model / Terrain Piece / Diorama are leaf-only — no
-        // children allowed. Army / Warband / Unit can hold a sub-tree.
-        showAddChild={
-          project.type === "Army" ||
-          project.type === "Warband" ||
-          project.type === "Unit"
-        }
+        // Army / Warband / Unit can nest child Units. Terrain Piece /
+        // Diorama stay leaf-only.
+        showAddChild={canHaveChildren}
       />
 
       <ProjectColorSchemeBox
@@ -271,14 +241,11 @@ export default async function ProjectDetailPage({
             >
               {children.length === 0 ? (
                 <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-relaxed">
-                  Add Units, Single Models, or Terrain Pieces under this {project.type.toLowerCase()} to track them.
+                  Add Units under this {project.type.toLowerCase()} to track them.
                   Each child's stage counters roll up into the aggregated view on the right.
                 </p>
               ) : (
-                <ProjectTree
-                  projects={children}
-                  namedModelCountByProjectId={namedCountByProject}
-                />
+                <ProjectTree projects={children} />
               )}
             </Card>
           </div>
@@ -318,7 +285,6 @@ export default async function ProjectDetailPage({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            <NamedModelsPanel projectId={project.id} namedModels={namedModels} />
             <ShoppingForThisPanel projectId={project.id} />
           </div>
         </>

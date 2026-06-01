@@ -49,8 +49,8 @@ describe("Error markers — `[ ! ] {error}` retired (P11.11)", () => {
 });
 
 describe("Checkbox markers — `[x]` / `[ ]` retired (P11.11)", () => {
+  // P13.4 — NamedModelRow.tsx removed (named-models entity dropped).
   const checkboxFiles = [
-    "src/components/NamedModelRow.tsx",
     "src/components/NewProjectForm.tsx",
     "src/components/recipes/PaintSlotPicker.tsx",
   ];

@@ -35,15 +35,16 @@ const STATUS_ORDER: ReadonlyArray<DisplayStatus> = [
 ];
 
 /** Per-row VM. Page builds these server-side from listAllProjects
- *  + getProjectPalettesMap + countNamedModelsByProject + the existing
- *  displayStatus / progressPercent helpers.
+ *  + getProjectPalettesMap + the existing displayStatus /
+ *  progressPercent helpers.
  *
- * `parentId` is null for top-level projects (Army / Single Model /
- * Terrain / Diorama / Warband). When set, the row is rendered as a
- * child INSIDE its parent's expanded section.
+ * `parentId` is null for top-level projects (Army / Unit / Terrain /
+ * Diorama / Warband). When set, the row is rendered as a child INSIDE
+ * its parent's expanded section. P13.4 — sub-projects are always
+ * Unit-typed; the inline Type cell on those rows is read-only.
  *
  * `depth` is computed by the page (0 = top-level, 1 = unit under
- * army, 2 = model under unit). Used to indent + draw the
+ * army, 2 = unit under unit). Used to indent + draw the
  * tree-connector pseudo-element. */
 export interface ProjectDashboardRow {
   id: string;
@@ -124,7 +125,6 @@ const TYPE_CHIP: Readonly<Record<ProjectType, string>> = {
   Army: "type-chip-cyan",
   Warband: "type-chip-cyan",
   Unit: "type-chip-amber",
-  "Single Model": "type-chip-purple",
   "Terrain Piece": "type-chip-green",
   Diorama: "type-chip-purple",
 };
@@ -147,13 +147,10 @@ interface Props {
     id: string;
     name: string;
     attachedProjectId: string | null;
-    attachedNamedModelId: string | null;
   }>;
   /** R7-1 — projectId → human name lookup so the AttachRecipeModal can
    *  show "currently attached to <X>" labels. */
   projectNameById: Readonly<Record<string, string>>;
-  /** R7-1 — namedModelId → human name lookup, same purpose. */
-  namedModelNameById: Readonly<Record<string, string>>;
 }
 
 /**
@@ -173,7 +170,6 @@ export function ProjectsDashboardTable({
   rows,
   ownedRecipes,
   projectNameById,
-  namedModelNameById,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -327,7 +323,6 @@ export function ProjectsDashboardTable({
                 onToggleExpand={() => toggleExpanded(row.id)}
                 ownedRecipes={ownedRecipes}
                 projectNameById={projectNameById}
-                namedModelNameById={namedModelNameById}
               />
             );
           })}
@@ -381,7 +376,6 @@ function DashboardRow({
   onToggleExpand,
   ownedRecipes,
   projectNameById,
-  namedModelNameById,
 }: {
   row: ProjectDashboardRow;
   hasChildren: boolean;
@@ -391,10 +385,8 @@ function DashboardRow({
     id: string;
     name: string;
     attachedProjectId: string | null;
-    attachedNamedModelId: string | null;
   }>;
   projectNameById: Readonly<Record<string, string>>;
-  namedModelNameById: Readonly<Record<string, string>>;
 }) {
   const typeChipClass = TYPE_CHIP[row.type];
   // Tree-connector indent — 16px per depth level. depth 0 = no indent.
@@ -408,15 +400,12 @@ function DashboardRow({
     return ownedRecipes
       .filter((r) => r.attachedProjectId !== row.id)
       .map((r) => {
-        let label: string | null = null;
-        if (r.attachedProjectId) {
-          label = projectNameById[r.attachedProjectId] ?? "(project)";
-        } else if (r.attachedNamedModelId) {
-          label = namedModelNameById[r.attachedNamedModelId] ?? "(unit)";
-        }
+        const label = r.attachedProjectId
+          ? projectNameById[r.attachedProjectId] ?? "(project)"
+          : null;
         return { id: r.id, name: r.name, attachmentLabel: label };
       });
-  }, [ownedRecipes, projectNameById, namedModelNameById, row.id]);
+  }, [ownedRecipes, projectNameById, row.id]);
 
   const handleStatus = (next: DisplayStatus) => {
     startTransition(async () => {
@@ -526,7 +515,9 @@ function DashboardRow({
             <span className={clsx("type-chip", typeChipClass)}>{row.type}</span>
           }
         >
-          {projectTypes.map((t) => (
+          {/* P13.4 sub-project type rule: rows with a parent can only
+              be Unit. Top-level rows can be any project type. */}
+          {(row.parentId ? (["Unit"] as const) : projectTypes).map((t) => (
             <InlineCellPopoverItem
               key={t}
               active={t === row.type}

@@ -15,7 +15,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
 
 interface AttachmentSummary {
-  kind: "project" | "named-model" | "standalone";
+  kind: "project" | "standalone";
   label: string;
   href?: string;
 }

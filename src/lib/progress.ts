@@ -1,4 +1,4 @@
-import type { Project, NamedModel } from "@/db/schema";
+import type { Project } from "@/db/schema";
 
 /**
  * Per-unit progress percentage.
@@ -7,10 +7,12 @@ import type { Project, NamedModel } from "@/db/schema";
  * Build 10/20, Prime 5/20, Paint 3/20, Base 1/20, Complete 1/20
  * scores (10+5+3+1+1) * 20 / 20 = 20%.
  *
- * Named models within the unit each add their own contribution
- * — five booleans, 20% each.
- *
  * Returns an integer 0–100.
+ *
+ * P13.4 — the prior `namedModels[]` second argument is gone. Named
+ * models were promoted to first-class child Unit projects, so any
+ * "individual" contributions now live on the projects table and roll
+ * up via aggregateCounters / the parent's Progress table.
  */
 export function progressPercent(
   project: Pick<
@@ -22,13 +24,9 @@ export function progressPercent(
     | "baseCount"
     | "completeCount"
   >,
-  namedModels: ReadonlyArray<
-    Pick<
-      NamedModel,
-      "isBuilt" | "isPrimed" | "isPainted" | "isBased" | "isComplete"
-    >
-  > = [],
 ): number {
+  if (project.count === 0) return 0;
+
   const rankAndFile =
     project.buildCount +
     project.primeCount +
@@ -36,23 +34,9 @@ export function progressPercent(
     project.baseCount +
     project.completeCount;
 
-  const named = namedModels.reduce((sum, m) => {
-    return (
-      sum +
-      (m.isBuilt ? 1 : 0) +
-      (m.isPrimed ? 1 : 0) +
-      (m.isPainted ? 1 : 0) +
-      (m.isBased ? 1 : 0) +
-      (m.isComplete ? 1 : 0)
-    );
-  }, 0);
-
-  const totalModels = project.count + namedModels.length;
-  if (totalModels === 0) return 0;
-
   // 5 stages * 20% per stage = 100% per fully complete model
-  const score = (rankAndFile + named) * 20;
-  return Math.round(score / totalModels);
+  const score = rankAndFile * 20;
+  return Math.round(score / project.count);
 }
 
 export type AggregateCounters = {
@@ -63,7 +47,6 @@ export type AggregateCounters = {
   paintCount: number;
   baseCount: number;
   completeCount: number;
-  namedModelCount: number;
 };
 
 /**
@@ -73,7 +56,6 @@ export type AggregateCounters = {
 export function aggregateCounters(
   root: Project,
   descendants: ReadonlyArray<Project>,
-  namedModelCountByProjectId: Record<string, number> = {},
 ): AggregateCounters {
   const projects = [root, ...descendants];
   return projects.reduce<AggregateCounters>(
@@ -85,8 +67,6 @@ export function aggregateCounters(
       paintCount: acc.paintCount + p.paintCount,
       baseCount: acc.baseCount + p.baseCount,
       completeCount: acc.completeCount + p.completeCount,
-      namedModelCount:
-        acc.namedModelCount + (namedModelCountByProjectId[p.id] ?? 0),
     }),
     {
       count: 0,
@@ -96,26 +76,21 @@ export function aggregateCounters(
       paintCount: 0,
       baseCount: 0,
       completeCount: 0,
-      namedModelCount: 0,
     },
   );
 }
 
 /**
  * A project is a "leaf" when it represents actual miniatures on the
- * desk — rank-and-file via `count > 0` or character entries via
- * `namedModelCount > 0`. Army / Warband parents at `count === 0` and
- * no named models are non-leaf containers: they aggregate from below.
+ * desk — `count > 0`. Army / Warband / Unit parents with `count === 0`
+ * are non-leaf containers: they aggregate from below.
  *
  * This is the inverse of "is an aggregate container". We use it on
  * the workspace page to decide whether to render the editable
  * StageCounter panel or the read-only AggregateCountersDisplay.
  */
-export function isLeafProject(
-  project: Pick<Project, "count">,
-  namedModelCount = 0,
-): boolean {
-  return project.count > 0 || namedModelCount > 0;
+export function isLeafProject(project: Pick<Project, "count">): boolean {
+  return project.count > 0;
 }
 
 /**

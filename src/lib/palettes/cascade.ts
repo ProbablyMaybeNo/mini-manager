@@ -1,8 +1,7 @@
 /**
  * Pure helpers for palette validation. Lives outside the "use server"
  * actions module so unit tests can import it without dragging in the
- * Next/DB stack — the same precedent as `lib/counters/cascade.ts` and
- * `lib/namedModels/cascade.ts`.
+ * Next/DB stack — the same precedent as `lib/counters/cascade.ts`.
  */
 
 const HEX6 = /^#[0-9A-F]{6}$/;

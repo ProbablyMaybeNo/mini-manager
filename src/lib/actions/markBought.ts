@@ -76,7 +76,8 @@ export async function markBoughtAsNewProject(
   const item = await loadWishlistItemOwned(userId, wishlistItemId);
   if (!item) return { ok: false, error: "Wishlist item not found" };
 
-  // Validate parent (same rules as createProject).
+  // Validate parent (same rules as createProject). P13.4 — Unit is now
+  // a valid parent type; sub-projects must themselves be Unit.
   let finalParentId: string | null = null;
   if (parentId) {
     const parentRows = await db
@@ -89,20 +90,26 @@ export async function markBoughtAsNewProject(
     if (parent.parentId !== null) {
       return {
         ok: false,
-        error: "Maximum 3 levels of nesting: Army → Unit → Model.",
+        error: "Maximum 3 levels of nesting: Army → Unit → Unit.",
       };
     }
-    if (parent.type !== "Army" && parent.type !== "Warband") {
+    if (
+      parent.type !== "Army" &&
+      parent.type !== "Warband" &&
+      parent.type !== "Unit"
+    ) {
       return {
         ok: false,
-        error: "Only Army or Warband parents can contain sub-projects.",
+        error: "Only Army, Warband, or Unit parents can contain sub-projects.",
       };
+    }
+    if (type !== "Unit") {
+      return { ok: false, error: "Sub-projects must be of type Unit." };
     }
     finalParentId = parent.id;
   }
 
-  // Single Model is always 1 mini — match createProject's behaviour.
-  const finalCount = type === "Single Model" ? 1 : count;
+  const finalCount = count;
 
   let newRow: Pick<Project, "id"> | undefined;
   try {

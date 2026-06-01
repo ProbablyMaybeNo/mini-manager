@@ -10,7 +10,7 @@ export interface RecipeRowVm {
   id: string;
   name: string;
   bodyType: string;
-  attachmentKind: "standalone" | "project" | "named-model";
+  attachmentKind: "standalone" | "project";
   attachmentLabel: string | null;
   paletteHexes: string[];
   stepCount: number;
@@ -28,8 +28,9 @@ interface Props {
 }
 
 /**
- * P12.5 — Single sortable table replacing the prior three-section
- * card grid (standalone / project-attached / named-model-attached).
+ * P12.5 — Single sortable table replacing the prior two-section
+ * card grid (standalone / project-attached). P13.4 collapsed the
+ * "named-model-attached" branch when named models folded into Units.
  *
  * Columns:
  *   Name              click → /recipes/<id> editor

@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
 import { listRecipesForTable } from "@/db/queries/recipes";
-import { namedModels, projects } from "@/db/schema";
+import { projects } from "@/db/schema";
 import { NewRecipeButton } from "@/components/recipes/NewRecipeButton";
 import {
   RecipesTable,
@@ -16,9 +16,12 @@ export const dynamic = "force-dynamic";
  * three-section card grid. Ross's brief: name / body type / palette
  * squares / step count / created — with per-row Assign + Share.
  *
- * The attachment label (which project / named model a recipe is
- * attached to) is resolved server-side here so the table component
- * stays presentational. Standalone recipes show "standalone" muted.
+ * The attachment label (which project a recipe is attached to) is
+ * resolved server-side here so the table component stays
+ * presentational. Standalone recipes show "standalone" muted.
+ *
+ * P13.4 — the "named model" attachment branch was removed when named
+ * models folded into Unit projects.
  */
 export default async function RecipesPage() {
   const userId = await currentUserId();
@@ -39,21 +42,10 @@ export default async function RecipesPage() {
     );
   }
 
-  // Resolve attachment labels in one pass each — project name + named-
-  // model label (project · model). Both are owner-scoped via the
-  // projects join.
+  // Resolve attachment labels in one pass — project name.
   const projectIds = Array.from(
     new Set(
-      rows.flatMap((r) =>
-        r.attachedProjectId ? [r.attachedProjectId] : [],
-      ),
-    ),
-  );
-  const namedModelIds = Array.from(
-    new Set(
-      rows.flatMap((r) =>
-        r.attachedNamedModelId ? [r.attachedNamedModelId] : [],
-      ),
+      rows.flatMap((r) => (r.attachedProjectId ? [r.attachedProjectId] : [])),
     ),
   );
 
@@ -66,22 +58,6 @@ export default async function RecipesPage() {
     for (const p of prows) projectNameById.set(p.id, p.name);
   }
 
-  const namedModelLabelById = new Map<string, string>();
-  if (namedModelIds.length > 0) {
-    const nmrows = await db
-      .select({
-        id: namedModels.id,
-        name: namedModels.name,
-        projectName: projects.name,
-      })
-      .from(namedModels)
-      .innerJoin(projects, eq(projects.id, namedModels.projectId))
-      .where(eq(projects.ownerId, userId));
-    for (const r of nmrows) {
-      namedModelLabelById.set(r.id, `${r.projectName} · ${r.name}`);
-    }
-  }
-
   const vm: RecipeRowVm[] = rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -89,9 +65,7 @@ export default async function RecipesPage() {
     attachmentKind: r.attachmentKind,
     attachmentLabel: r.attachedProjectId
       ? projectNameById.get(r.attachedProjectId) ?? "Project"
-      : r.attachedNamedModelId
-        ? namedModelLabelById.get(r.attachedNamedModelId) ?? "Named model"
-        : null,
+      : null,
     paletteHexes: r.paletteHexes,
     stepCount: r.stepCount,
     slotCount: r.slotCount,

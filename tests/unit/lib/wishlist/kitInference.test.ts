@@ -39,18 +39,17 @@ describe("inferKitContents", () => {
     });
   });
 
-  test("no signal → defaults to 1 / Single Model", () => {
+  test("P13.4 — no signal defaults to 1 / Unit (was Single Model pre-P13.4)", () => {
     expect(inferKitContents("Mysterious Artifact")).toEqual({
       modelCount: 1,
-      suggestedType: "Single Model",
+      suggestedType: "Unit",
     });
   });
 
-  test("count==1 known kit → Single Model", () => {
-    // No 1-count entries today; verify via a regex match of 1
+  test("P13.4 — count==1 still folds to Unit", () => {
     expect(inferKitContents("Imperial Knight x1")).toEqual({
       modelCount: 1,
-      suggestedType: "Single Model",
+      suggestedType: "Unit",
     });
   });
 });

@@ -9,9 +9,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import type { Recipe } from "@/db/schema";
 import {
-  attachRecipeToNamedModel,
   attachRecipeToProject,
   createRecipe,
 } from "@/lib/actions/recipes";
@@ -37,12 +35,7 @@ interface ProjectProps extends BaseProps {
   projectId: string;
 }
 
-interface NamedModelProps extends BaseProps {
-  mode: "named-model";
-  namedModelId: string;
-}
-
-type Props = ProjectProps | NamedModelProps;
+type Props = ProjectProps;
 
 type Tab = "pick" | "create";
 
@@ -103,16 +96,10 @@ export function AttachRecipeModal(props: Props) {
     setError(null);
     setConfirmMove(null);
     startTransition(async () => {
-      const result =
-        props.mode === "project"
-          ? await attachRecipeToProject({
-              recipeId,
-              projectId: props.projectId,
-            })
-          : await attachRecipeToNamedModel({
-              recipeId,
-              namedModelId: props.namedModelId,
-            });
+      const result = await attachRecipeToProject({
+        recipeId,
+        projectId: props.projectId,
+      });
       if (result.ok) {
         onClose();
         router.refresh();
@@ -134,10 +121,7 @@ export function AttachRecipeModal(props: Props) {
       const result = await createRecipe({
         name: trimmed,
         bodyType: "infantry",
-        attachedProjectId:
-          props.mode === "project" ? props.projectId : null,
-        attachedNamedModelId:
-          props.mode === "named-model" ? props.namedModelId : null,
+        attachedProjectId: props.projectId,
       });
       if (result.ok) {
         onClose();

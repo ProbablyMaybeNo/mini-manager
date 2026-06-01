@@ -54,11 +54,11 @@ export function MarkBoughtModal({
   const [newCount, setNewCount] = useState<number>(inference.modelCount);
   const [newParentId, setNewParentId] = useState<string | "">("");
 
-  // Existing-unit tab state
+  // Existing-unit tab state. P13.4 — "Single Model" folded into "Unit".
   const eligible = useMemo(
     () =>
       projects.filter(
-        (p) => p.type === "Unit" || p.type === "Single Model" || p.type === "Terrain Piece",
+        (p) => p.type === "Unit" || p.type === "Terrain Piece",
       ),
     [projects],
   );
@@ -163,7 +163,7 @@ export function MarkBoughtModal({
             <>
               {eligible.length === 0 ? (
                 <p className="text-sm font-mono text-[var(--color-fg-muted)]">
-                  No existing Unit / Single Model / Terrain Piece projects yet.
+                  No existing Unit / Terrain Piece projects yet.
                   Switch to the New project tab.
                 </p>
               ) : (
@@ -223,7 +223,7 @@ export function MarkBoughtModal({
               <Field label="Count (models in the kit)">
                 <input
                   type="number"
-                  min={newType === "Single Model" ? 1 : 0}
+                  min={0}
                   value={newCount}
                   onChange={(e) => setNewCount(Math.max(0, Number(e.target.value)))}
                   className={inputClass}

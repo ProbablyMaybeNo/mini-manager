@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 interface Props {
   defaultName?: string;
   attachedProjectId?: string;
-  attachedNamedModelId?: string;
   variant?: "primary" | "subtle";
   label?: string;
 }
@@ -27,7 +26,6 @@ interface Props {
 export function NewRecipeButton({
   defaultName = "",
   attachedProjectId,
-  attachedNamedModelId,
   variant = "primary",
   label = "New recipe",
 }: Props) {
@@ -65,7 +63,6 @@ export function NewRecipeButton({
         name: trimmed,
         bodyType: "infantry",
         attachedProjectId: attachedProjectId ?? null,
-        attachedNamedModelId: attachedNamedModelId ?? null,
       });
       if (result.ok) {
         setOpen(false);

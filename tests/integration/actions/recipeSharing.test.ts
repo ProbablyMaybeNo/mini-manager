@@ -204,7 +204,6 @@ describe("cloneRecipeFromSlug", () => {
     expect(cloneRow.publicSlug).toBeNull();
     expect(cloneRow.isStandalone).toBe(true);
     expect(cloneRow.attachedProjectId).toBeNull();
-    expect(cloneRow.attachedNamedModelId).toBeNull();
 
     // Zones + steps replicated 1:1 under fresh ids.
     const zones = await state

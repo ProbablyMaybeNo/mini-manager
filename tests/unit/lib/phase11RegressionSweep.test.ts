@@ -111,7 +111,6 @@ describe("Phase 11 — decorative brackets stay retired (P11.11)", () => {
     "src/components/wishlist/MarkBoughtModal.tsx",
     "src/components/wishlist/QuickAddBar.tsx",
     "src/components/wishlist/WishlistDetailDrawer.tsx",
-    "src/components/NamedModelRow.tsx",
     "src/components/NewProjectForm.tsx",
     "src/components/recipes/PaintSlotPicker.tsx",
     "src/components/tools/eyedropper/DropZone.tsx",

@@ -112,7 +112,8 @@ describe("exportAllUserData", () => {
     if (!res.ok) return;
 
     const payload = res.data;
-    expect(payload.__exportVersion).toBe(1);
+    // P13.4 bumped the export schema to v2 (named_model dropped).
+    expect(payload.__exportVersion).toBe(2);
     expect(typeof payload.__exportedAt).toBe("string");
     expect(payload.projects).toHaveLength(1);
     expect(payload.recipes).toHaveLength(1);
@@ -121,8 +122,6 @@ describe("exportAllUserData", () => {
     expect(payload.palettes).toHaveLength(1);
     expect(payload.inventoryEntries).toHaveLength(1);
     expect(payload.wishlistItems).toHaveLength(1);
-    // namedModels: zero in this fixture but still present.
-    expect(Array.isArray(payload.namedModels)).toBe(true);
   });
 
   test("isolates owners — Alice's export does NOT include Bob's rows", async () => {

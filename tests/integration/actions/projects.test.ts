@@ -60,12 +60,6 @@ describe("createProject", () => {
     expect(vi.mocked(redirect)).not.toHaveBeenCalled();
   });
 
-  test("Single Model forces count=1 regardless of input", async () => {
-    await createProject({ name: "Hero", type: "Single Model", count: 99 });
-    const [row] = await state.db!.select().from(projects);
-    expect(row!.count).toBe(1);
-  });
-
   test("rejects negative count", async () => {
     const res = await createProject({ name: "Foo", type: "Unit", count: -3 });
     expect(res.ok).toBe(false);
@@ -90,39 +84,75 @@ describe("createProject", () => {
     expect(child[0]!.parentId).toBe(army!.id);
   });
 
-  test("rejects parent that isn't Army or Warband", async () => {
-    await createProject({ name: "A Unit", type: "Unit", count: 10 });
+  test("P13.4 — Unit is now a legal parent (Army/Warband/Unit can host sub-Units)", async () => {
+    await createProject({ name: "Top Unit", type: "Unit", count: 10 });
     const [unit] = await state.db!.select().from(projects);
+
+    await createProject({
+      name: "Sub-unit",
+      type: "Unit",
+      count: 5,
+      parentId: unit!.id,
+    });
+    const child = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.name, "Sub-unit"));
+    expect(child).toHaveLength(1);
+    expect(child[0]!.parentId).toBe(unit!.id);
+  });
+
+  test("P13.4 — sub-projects must be Unit type (Terrain rejected)", async () => {
+    await createProject({ name: "An Army", type: "Army", count: 0 });
+    const [army] = await state.db!.select().from(projects);
+
+    const res = await createProject({
+      name: "Bad child",
+      type: "Terrain Piece",
+      count: 1,
+      parentId: army!.id,
+    });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/Sub-projects must be of type Unit/);
+  });
+
+  test("P13.4 — parent that isn't Army/Warband/Unit is rejected (e.g. Terrain Piece can't parent)", async () => {
+    await createProject({
+      name: "Top terrain",
+      type: "Terrain Piece",
+      count: 1,
+    });
+    const [terrain] = await state.db!.select().from(projects);
 
     const res = await createProject({
       name: "Sub",
-      type: "Single Model",
+      type: "Unit",
       count: 1,
-      parentId: unit!.id,
+      parentId: terrain!.id,
     });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/Only Army or Warband/);
+    if (!res.ok) expect(res.error).toMatch(/Only Army, Warband, or Unit parents/);
   });
 
-  test("rejects 3-deep nesting", async () => {
+  test("rejects 3-deep nesting (Army → Unit → Unit grandchild blocked)", async () => {
     await createProject({ name: "Army", type: "Army", count: 0 });
     const [army] = await state.db!.select().from(projects);
     await createProject({
-      name: "Sub-Army",
-      type: "Army",
+      name: "Mid Unit",
+      type: "Unit",
       count: 0,
       parentId: army!.id,
     });
-    const [sub] = await state
+    const [mid] = await state
       .db!.select()
       .from(projects)
       .where(eq(projects.parentId, army!.id));
 
     const res = await createProject({
-      name: "Unit",
+      name: "Grandchild",
       type: "Unit",
       count: 5,
-      parentId: sub!.id,
+      parentId: mid!.id,
     });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/Maximum 3 levels/);
@@ -153,11 +183,11 @@ describe("updateProjectType", () => {
     await createProject({ name: "Squad", type: "Unit", count: 10 });
     const [row] = await state.db!.select().from(projects);
 
-    const res = await updateProjectType({ id: row!.id, type: "Single Model" });
+    const res = await updateProjectType({ id: row!.id, type: "Terrain Piece" });
     expect(res.ok).toBe(true);
 
     const [updated] = await state.db!.select().from(projects);
-    expect(updated!.type).toBe("Single Model");
+    expect(updated!.type).toBe("Terrain Piece");
   });
 
   test("does not touch projects owned by another user", async () => {

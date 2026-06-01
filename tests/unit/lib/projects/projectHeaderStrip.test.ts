@@ -58,10 +58,8 @@ describe("ProjectHeaderStrip component surface", () => {
     expect(src).toMatch(/variant="success"/);
   });
 
-  test("the addChildCtaLabel switches label by project type", () => {
+  test("P13.4 — addChildCtaLabel always reads '+ Add unit' (sub-projects are Unit-only)", () => {
     expect(src).toContain("+ Add unit");
-    expect(src).toContain("+ Add model");
-    expect(src).toContain("+ Add terrain");
   });
 
   test("the full-width progress bar uses stretch + height={14}", () => {

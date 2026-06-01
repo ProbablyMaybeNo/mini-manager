@@ -21,30 +21,15 @@ const TYPE_CHIP: Readonly<Record<ProjectType, string>> = {
   Army: "type-chip-cyan",
   Warband: "type-chip-cyan",
   Unit: "type-chip-amber",
-  "Single Model": "type-chip-purple",
   "Terrain Piece": "type-chip-green",
   Diorama: "type-chip-purple",
 };
 
-/** "Add unit" / "Add model" / "Add terrain" / "Add diorama" — picked
- *  from the project's type so the CTA reads naturally for what the
- *  painter expects to add below it. */
-function addChildCtaLabel(type: ProjectType): string {
-  switch (type) {
-    case "Army":
-    case "Warband":
-      return "+ Add unit";
-    case "Unit":
-      return "+ Add model";
-    case "Terrain Piece":
-      return "+ Add terrain";
-    case "Diorama":
-      return "+ Add scene";
-    case "Single Model":
-      return "+ Add model";
-    default:
-      return "+ Add";
-  }
+/** P13.4 — every parent type that can host a sub-project hosts Units
+ *  only, so the CTA always reads "+ Add unit". Terrain Piece / Diorama
+ *  are leaf-only; they never render the CTA. */
+function addChildCtaLabel(_type: ProjectType): string {
+  return "+ Add unit";
 }
 
 interface Props {
@@ -56,8 +41,8 @@ interface Props {
   percent: number;
   totalModels: number;
   /** When true the "+ Add unit" button shows + links to new-with-parent.
-   *  Hidden on leaf "Single Model" projects (you can't add children to
-   *  a single model). */
+   *  Hidden on Terrain Piece / Diorama (top-level leaves with no
+   *  children). */
   showAddChild: boolean;
 }
 

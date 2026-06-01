@@ -90,16 +90,6 @@ describe("Library inventory toggle — clear hover affordance (P11.6)", () => {
   });
 });
 
-describe("NamedModel recipe-override toggle — chevron affordance (P11.6)", () => {
-  const src = read("src/components/NamedModelRow.tsx");
-
-  test("expand/collapse chevron flips ▸ ↔ ▾ with aria-expanded", () => {
-    expect(src).toContain("aria-expanded={recipeOpen}");
-    expect(src).toMatch(/recipeOpen \? "▾" : "▸"/);
-  });
-
-  test("aria-label spells out the action both directions", () => {
-    expect(src).toContain('"Hide recipe override"');
-    expect(src).toContain('"Show recipe override"');
-  });
-});
+// P13.4 — the "NamedModel recipe-override toggle" coverage block is
+// gone since NamedModelRow.tsx + the entire named-model entity were
+// removed (PHASE13_PLAN.md). Recipe attachments live on projects now.
