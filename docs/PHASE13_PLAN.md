@@ -95,6 +95,25 @@ After P13.1 cascades + harmony + brand + tool surfaces are done.
 - Check each fits the new solid-fill aesthetic.
 - Fix any straggler `[ ]`-style remnants.
 
+### P13.11 — Focus recipe widget on /projects
+Pulled forward from Phase 14 per Ross 2026-06-01: "the major thing a user will need if they want to use the dashboard while they paint."
+
+- Schema migration:
+  - Add `users.focus_project_id` — nullable FK to projects, set null on project delete.
+  - Add `recipe_zone_steps.notes` — text, nullable. Per-step painting notes.
+- UI on `/projects` (the dashboard):
+  - **FOCUS** section (locked label, Ross's call) above the main projects table.
+  - Focus picker: dropdown of projects with attached recipes. Select one → user.focusProjectId persists.
+  - Big recipe panel: renders the focused project's recipe in full — slot grid + each step's paint card + notes textarea per step.
+  - Auto-save notes on blur (server action + revalidate).
+  - "Clear focus" button to unset.
+- Empty state when no focus set: copy + nudge to attach a recipe / set focus.
+- **Acceptance:** painter can select a focus project from the dashboard, the recipe shows big with per-step notes editable. Notes persist across reloads. Section header reads "FOCUS".
+
+**Naming locked for Phase 14:** the second dashboard section (calendar / heatmap / activity / streak / inspo) will be labelled **PLANNER**, not Campaign. Simpler at-a-glance per Ross's call.
+
+**Inspo image hosting locked for Phase 14:** external URL pastes (Pinterest / IG / ArtStation), no Vercel Blob, no S3. Ships in a day when the time comes.
+
 ## Out of scope (deferred to Phase 14+)
 
 - The R8 polish items (chip target sizes, mobile table-card swap, quick-add suffix-strip, etc.)
