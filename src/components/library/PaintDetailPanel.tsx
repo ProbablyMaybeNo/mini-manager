@@ -24,6 +24,12 @@ const PAINT_TYPE_PILL: Record<string, StatusPillKind> = {
   Lacquer: "neutral",
 };
 import { _internal } from "@/lib/paints/filters";
+import {
+  COLOR_PICKER_HARMONY_LABELS,
+  buildPickerHarmony,
+} from "@/lib/colorPicker/harmonies";
+import type { ColorPickerHarmony } from "@/lib/colorPicker/types";
+import { fastMatchByHueBand } from "@/lib/colorPicker/matchPaints";
 
 /**
  * Right-side slide-in detail panel. Shows the full paint metadata,
@@ -34,10 +40,16 @@ export function PaintDetailPanel({
   paint,
   similarInOtherBrands,
   inventory,
+  allPaints,
 }: {
   paint: Paint | null;
   similarInOtherBrands: ReadonlyArray<Paint>;
   inventory?: { ownedCount: number; isWishlisted: boolean } | undefined;
+  /** P12.22 — the full catalog so the harmonies dropdown can show
+   *  library paints matching a clicked harmony swatch's hue. Pure-
+   *  client filter; only used when one of the inline harmony hues
+   *  is clicked. */
+  allPaints?: ReadonlyArray<Paint>;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -50,7 +62,36 @@ export function PaintDetailPanel({
     return () => clearTimeout(id);
   }, [copied]);
 
-  const harmonies = useMemo(() => (paint ? buildHarmonies(paint.hex) : []), [paint]);
+  // P12.22 — pickable harmony scheme (mono / analogous / complementary
+  // / triadic / split / square / tetradic). Default is complementary
+  // because it's the most-used / most-readable starter harmony.
+  const [harmonyKey, setHarmonyKey] = useState<ColorPickerHarmony>("complementary");
+  const [selectedHarmonyHex, setSelectedHarmonyHex] = useState<string | null>(
+    null,
+  );
+
+  // Reset the harmony selection when the paint changes (otherwise the
+  // dropdown stays on whatever the painter picked for the previous
+  // paint, which surprises them).
+  useEffect(() => {
+    setSelectedHarmonyHex(null);
+  }, [paint?.id]);
+
+  const harmonySwatches = useMemo(() => {
+    if (!paint) return [];
+    const hsl = _internal.parseHex(paint.hex);
+    if (!hsl) return [];
+    const [r, g, b] = hsl;
+    const fullHsl = rgbToHsl(r, g, b);
+    if (!fullHsl) return [];
+    const [h, s, l] = fullHsl;
+    return buildPickerHarmony(harmonyKey, h, s * 100, l * 100);
+  }, [paint, harmonyKey]);
+
+  const harmonyPaintMatches = useMemo(() => {
+    if (!selectedHarmonyHex || !allPaints) return [];
+    return fastMatchByHueBand(selectedHarmonyHex, allPaints, { limit: 12 });
+  }, [selectedHarmonyHex, allPaints]);
 
   function close() {
     const params = new URLSearchParams(sp?.toString() ?? "");
@@ -146,16 +187,95 @@ export function PaintDetailPanel({
 
         <section>
           <h3 className="section-title">Harmonies</h3>
-          <div className="flex gap-1">
-            {harmonies.map((h, i) => (
-              <span
-                key={i}
-                className="h-8 flex-1 rounded-sm border border-[var(--color-border)]"
-                style={{ background: h }}
-                title={h}
-                aria-label={`Harmony ${i + 1} ${h}`}
-              />
-            ))}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="paint-harmony-scheme"
+                className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]"
+              >
+                Scheme
+              </label>
+              <select
+                id="paint-harmony-scheme"
+                value={harmonyKey}
+                onChange={(e) => {
+                  setHarmonyKey(e.target.value as ColorPickerHarmony);
+                  setSelectedHarmonyHex(null);
+                }}
+                className="font-mono text-xs bg-[var(--color-bg)] px-2 py-1 frame"
+              >
+                {COLOR_PICKER_HARMONY_LABELS.map((h) => (
+                  <option key={h.key} value={h.key}>
+                    {h.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div
+              className="flex gap-1 flex-wrap"
+              role="listbox"
+              aria-label={`${harmonyKey} swatches`}
+            >
+              {harmonySwatches.map((hex) => {
+                const active = selectedHarmonyHex === hex;
+                return (
+                  <button
+                    key={hex}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() =>
+                      setSelectedHarmonyHex(active ? null : hex)
+                    }
+                    className="h-8 flex-1 min-w-[32px] rounded-sm transition-transform hover:scale-105 cursor-pointer"
+                    style={{
+                      background: hex,
+                      border: active
+                        ? "2px solid var(--color-cyan)"
+                        : "1px solid var(--color-border-strong)",
+                    }}
+                    title={hex}
+                    aria-label={`Harmony swatch ${hex}`}
+                  />
+                );
+              })}
+            </div>
+            {selectedHarmonyHex && harmonyPaintMatches.length > 0 ? (
+              <div
+                className="mt-1 space-y-0.5 max-h-40 overflow-y-auto"
+                aria-label="Library paints matching the selected harmony swatch"
+              >
+                <p className="text-2xs font-mono text-[var(--color-fg-subtle)] uppercase tracking-wider">
+                  Library matches for {selectedHarmonyHex}
+                </p>
+                {harmonyPaintMatches.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-2 px-2 py-1 frame"
+                  >
+                    <span
+                      aria-hidden
+                      className="h-3 w-3 rounded-sm shrink-0"
+                      style={{
+                        background: p.hex,
+                        border: "1px solid var(--color-border-strong)",
+                      }}
+                    />
+                    <span className="text-2xs font-mono text-[var(--color-fg-muted)] truncate">
+                      {p.brand}
+                    </span>
+                    <span className="text-2xs font-mono text-[var(--color-fg)] truncate">
+                      {p.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {selectedHarmonyHex && harmonyPaintMatches.length === 0 ? (
+              <p className="text-2xs font-mono text-[var(--color-fg-muted)]">
+                No library paints in that hue band.
+              </p>
+            ) : null}
           </div>
         </section>
 

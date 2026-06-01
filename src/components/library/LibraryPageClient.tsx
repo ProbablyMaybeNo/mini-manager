@@ -175,6 +175,7 @@ export function LibraryPageClient({
         paint={selected}
         similarInOtherBrands={similar}
         inventory={selectedInventory}
+        allPaints={paints}
       />
     </div>
   );
