@@ -81,7 +81,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.9 — Color Scheme box.** A horizontal row of 3 starter empty `+` boxes. Click any → opens the same ColorPicker side panel from P12.2. `+ Add paint` button at the end of the row to extend. If a recipe is attached, the boxes pre-fill with that recipe's palette and the box title shows the recipe name.
 
-- [ ] **P12.10 — Progress table.** Replaces the existing NamedModels panel + sub-projects panel + aggregated stages. Single table: **Name · Type · Count (with ± buttons) · Color scheme (squares) · Status bar**. `+ ADD UNIT` / `+ ADD MODEL` / `+ ADD TERRAIN` buttons at the top (green). Inline edit every cell — click status → dropdown, click priority → dropdown, click color scheme cell → recipe creator side panel slides out (the same one from P12.2).
+- [x] **P12.10 — Progress table.** Replaces the existing NamedModels panel + sub-projects panel + aggregated stages. Single table: **Name · Type · Count (with ± buttons) · Color scheme (squares) · Status bar**. `+ ADD UNIT` / `+ ADD MODEL` / `+ ADD TERRAIN` buttons at the top (green). Inline edit every cell — click status → dropdown, click priority → dropdown, click color scheme cell → recipe creator side panel slides out (the same one from P12.2).
 
 ### Pillar 4 — Wishlist split
 

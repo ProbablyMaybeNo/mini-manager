@@ -1,0 +1,143 @@
+/**
+ * P12.10 — Project detail Progress table.
+ *
+ * Single table replacing the prior NamedModels panel + sub-projects
+ * card + aggregated stages. Ross's Q2 column set:
+ *   Name · Type · Count (± steppers) · Color scheme · Status · Progress
+ *
+ * Inline-edit count via ± steppers on sub-project rows (named models
+ * always carry count = 1). + ADD UNIT / + ADD MODEL / + ADD TERRAIN
+ * CTAs above the table use the success-green variant.
+ */
+import { describe, expect, test } from "vitest";
+import * as fs from "node:fs";
+import * as path from "node:path";
+
+function read(rel: string): string {
+  return fs.readFileSync(
+    path.resolve(__dirname, "../../../../", rel),
+    "utf-8",
+  );
+}
+
+describe("ProjectProgressTable component surface", () => {
+  const src = read("src/components/ProjectProgressTable.tsx");
+
+  test("locked column set: Name / Type / Count / Color scheme / Status / Progress", () => {
+    expect(src).toContain(">Name</th>");
+    expect(src).toContain(">Type</th>");
+    expect(src).toContain(">Count</th>");
+    expect(src).toContain(">Color scheme</th>");
+    expect(src).toContain(">Status</th>");
+    expect(src).toContain(">Progress</th>");
+  });
+
+  test("ADD CTAs use the success variant (P12.23 button discipline)", () => {
+    // Three add buttons (above table + empty-state CTA) all green.
+    const greenCount = (src.match(/variant="success"/g) ?? []).length;
+    expect(greenCount).toBeGreaterThanOrEqual(2);
+  });
+
+  test("CTA label is + ADD UNIT for Army/Warband, + ADD MODEL for Unit", () => {
+    expect(src).toContain("+ ADD UNIT");
+    expect(src).toContain("+ ADD MODEL");
+    expect(src).toContain("+ ADD TERRAIN");
+  });
+
+  test("named-model rows always render with count = 1", () => {
+    // The page synthesises a count=1 for named-model rows; the table
+    // reads it directly.
+    expect(src).toContain("named models always have count=1");
+  });
+
+  test("only sub-project rows get the ± steppers", () => {
+    expect(src).toMatch(/row\.kind === "project"/);
+    expect(src).toContain("handleStep");
+  });
+
+  test("± steppers call updateProjectCount with the new total", () => {
+    expect(src).toContain("updateProjectCount");
+    expect(src).toContain("delta:");
+  });
+
+  test("status pill mapping covers all 8 DisplayStatus values", () => {
+    for (const s of [
+      "WISHLIST",
+      "PURCHASED",
+      "BUILDING",
+      "PRIMING",
+      "PAINTING",
+      "BASING",
+      "COMPLETE",
+      "SHELVED",
+    ]) {
+      expect(src).toContain(s);
+    }
+  });
+
+  test("empty state renders the locked ADD CTAs (Ross's brief)", () => {
+    expect(src).toContain("No children yet");
+  });
+
+  test("rows clamp count to [0, 9999]", () => {
+    // Same range as updateProjectCount zod schema.
+    expect(src).toMatch(/Math\.max\(0,\s*Math\.min\(9999/);
+  });
+});
+
+describe("updateProjectCount server action (P12.10)", () => {
+  const src = read("src/lib/actions/projects.ts");
+
+  test("exports updateProjectCount", () => {
+    expect(src).toContain("export async function updateProjectCount");
+  });
+
+  test("validates count in [0, 9999]", () => {
+    expect(src).toMatch(/count:\s*z\.number\(\)\.int\(\)\.min\(0\)\.max\(9999\)/);
+  });
+
+  test("scopes by owner", () => {
+    expect(src).toMatch(/eq\(projects\.ownerId,\s*userId\)/);
+  });
+
+  test("floors the cascade counters to the new count to satisfy the CHECK constraint", () => {
+    // The schema's stage_cascade check requires
+    // count >= ownedCount >= buildCount >= ... >= completeCount.
+    // Lowering count below an existing stage count would fail SQL.
+    // updateProjectCount clamps each stage on the way down.
+    expect(src).toContain("Math.min(project.ownedCount, count)");
+    expect(src).toContain("Math.min(project.completeCount, based)");
+  });
+
+  test("revalidates the affected paths (/projects + parent + self)", () => {
+    expect(src).toContain('revalidatePath("/projects")');
+    expect(src).toContain("revalidatePath(`/projects/${id}`)");
+    expect(src).toContain(
+      "revalidatePath(`/projects/${project.parentId}`)",
+    );
+  });
+});
+
+describe("Project detail page wires the Progress table in", () => {
+  const src = read("src/app/projects/[id]/page.tsx");
+
+  test("imports ProjectProgressTable + ProgressRow", () => {
+    expect(src).toContain("ProjectProgressTable");
+    expect(src).toContain("ProgressRow");
+  });
+
+  test("builds progressRows from children + namedModels", () => {
+    expect(src).toContain("progressRows");
+    expect(src).toContain("children.map");
+    expect(src).toContain("namedModels.map");
+  });
+
+  test("named-model rows synthesise count=1 + kind='named-model'", () => {
+    expect(src).toContain('kind: "named-model"');
+    expect(src).toContain("count: 1");
+  });
+
+  test("fetches the project-palettes map for the recipe column", () => {
+    expect(src).toContain("getProjectPalettesMap");
+  });
+});

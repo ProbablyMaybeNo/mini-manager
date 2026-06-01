@@ -98,3 +98,77 @@ export async function createProject(
   revalidatePath(`/projects/${newRow.id}`);
   redirect(`/projects/${newRow.id}`);
 }
+
+/* ============================================================
+   updateProjectCount — P12.10 inline ± on the Progress table.
+
+   Validates the new count is non-negative + ≤ 9999, scopes by
+   owner, and respects the stage-cascade CHECK constraint: lowering
+   `count` below any existing stage counter would fail the SQL
+   constraint, so we floor the cascade columns to `count` if the new
+   value would shrink past them. Otherwise the database would reject
+   the UPDATE entirely.
+   ============================================================ */
+
+const updateCountSchema = z.object({
+  id: z.string().min(1).max(64),
+  count: z.number().int().min(0).max(9999),
+});
+
+export async function updateProjectCount(
+  raw: z.infer<typeof updateCountSchema>,
+): Promise<ActionResult<{ id: string; count: number }>> {
+  const parsed = updateCountSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid count",
+    };
+  }
+  const { id, count } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  // Floor each cascade counter to the new `count` so we don't trip the
+  // CHECK constraint when shrinking the total below an existing stage
+  // count. Stages above the new count get clamped on the way down.
+  const owned = Math.min(project.ownedCount, count);
+  const built = Math.min(project.buildCount, owned);
+  const primed = Math.min(project.primeCount, built);
+  const painted = Math.min(project.paintCount, primed);
+  const based = Math.min(project.baseCount, painted);
+  const complete = Math.min(project.completeCount, based);
+
+  try {
+    await db
+      .update(projects)
+      .set({
+        count,
+        ownedCount: owned,
+        buildCount: built,
+        primeCount: primed,
+        paintCount: painted,
+        baseCount: based,
+        completeCount: complete,
+      })
+      .where(eq(projects.id, id));
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${id}`);
+    if (project.parentId) {
+      revalidatePath(`/projects/${project.parentId}`);
+    }
+    return { ok: true, data: { id, count } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to update count",
+    };
+  }
+}

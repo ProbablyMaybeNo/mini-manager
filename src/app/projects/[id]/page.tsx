@@ -30,7 +30,12 @@ import {
   type ColorSchemeSlot,
 } from "@/components/ProjectColorSchemeBox";
 import {
+  ProjectProgressTable,
+  type ProgressRow,
+} from "@/components/ProjectProgressTable";
+import {
   getPaintMetaMap,
+  getProjectPalettesMap,
   getRecipeWithZones,
   listRecipesForProject,
 } from "@/db/queries/recipes";
@@ -128,12 +133,61 @@ export default async function ProjectDetailPage({
 
   const showInteractiveCounters = isLeafProject(project, namedModels.length);
 
+  // P12.10 — Build the Progress table's row VM. Sub-project rows
+  // come first (in createdAt order from listChildProjects), then
+  // named-model rows for any individuals on the parent itself. Each
+  // row carries the palette swatches, status, percent, and count.
+  const progressRows: ProgressRow[] = [
+    ...children.map((c) => ({
+      id: c.id,
+      kind: "project" as const,
+      name: c.name,
+      type: c.type as string,
+      count: c.count,
+      paletteHexes: projectPalettes.get(c.id) ?? [],
+      status: displayStatus(c),
+      percent: progressPercent(c),
+      priority: c.priority,
+    })),
+    ...namedModels.map((m) => ({
+      id: m.id,
+      kind: "named-model" as const,
+      name: m.name,
+      type: "Model",
+      count: 1,
+      paletteHexes: [] as string[],
+      // Named-model "status" derives from its booleans the same way
+      // displayStatus does for projects — we synthesise a Project-
+      // shaped object so the helper still works.
+      status: displayStatus({
+        count: 1,
+        ownedCount: 1,
+        buildCount: m.isBuilt ? 1 : 0,
+        primeCount: m.isPrimed ? 1 : 0,
+        paintCount: m.isPainted ? 1 : 0,
+        baseCount: m.isBased ? 1 : 0,
+        completeCount: m.isComplete ? 1 : 0,
+        isShelved: false,
+      }),
+      percent: progressPercent(
+        { count: 0, buildCount: 0, primeCount: 0, paintCount: 0, baseCount: 0, completeCount: 0 },
+        [m],
+      ),
+      priority: null,
+    })),
+  ];
+
   // P12.9 — Color Scheme box. If a recipe is attached, surface its
   // slot palette so the box can pre-fill. We pick the first attached
   // recipe (a project typically has one scheme — multiple attachments
   // exist for the "unit override" pattern but the box reads top-
   // level scheme only).
-  const attachedRecipes = await listRecipesForProject(userId, project.id);
+  // P12.10 — Progress table also needs per-row palette swatches for
+  // each child project; fetch the project palettes map in parallel.
+  const [attachedRecipes, projectPalettes] = await Promise.all([
+    listRecipesForProject(userId, project.id),
+    getProjectPalettesMap(userId),
+  ]);
   const attachedRecipe = attachedRecipes[0] ?? null;
   let colorSchemeSlots: ColorSchemeSlot[] = [];
   if (attachedRecipe) {
@@ -190,6 +244,12 @@ export default async function ProjectDetailPage({
         attachedRecipeId={attachedRecipe?.id ?? null}
         attachedRecipeName={attachedRecipe?.name ?? null}
         slots={colorSchemeSlots}
+      />
+
+      <ProjectProgressTable
+        parentType={project.type}
+        parentId={project.id}
+        rows={progressRows}
       />
 
       {isContainer && aggregate ? (
