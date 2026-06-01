@@ -1,7 +1,7 @@
 import { currentUserId } from "@/lib/auth-stub";
 import {
   countNamedModelsByProject,
-  listTopLevelProjects,
+  listAllProjects,
 } from "@/db/queries/projects";
 import { getProjectPalettesMap } from "@/db/queries/recipes";
 import { QuickAddBar } from "@/components/QuickAddBar";
@@ -33,16 +33,32 @@ export const dynamic = "force-dynamic";
  */
 export default async function ProjectsPage() {
   const userId = await currentUserId();
-  const [topLevel, namedCountByProject, palettesByProjectId] =
+  const [allProjects, namedCountByProject, palettesByProjectId] =
     await Promise.all([
-      listTopLevelProjects(userId),
+      listAllProjects(userId),
       countNamedModelsByProject(userId),
       getProjectPalettesMap(userId),
     ]);
 
-  const isEmpty = topLevel.length === 0;
+  const isEmpty = allProjects.length === 0;
 
-  const rows: ProjectDashboardRow[] = topLevel.map((p) => ({
+  // Compute depth per project: 0 for top-level, 1 for children of
+  // top-level, 2 for grandchildren. Three-level cap is enforced
+  // application-side (see schema notes) so we stop at depth 2.
+  const projectById = new Map<string, (typeof allProjects)[number]>();
+  for (const p of allProjects) projectById.set(p.id, p);
+  const depthCache = new Map<string, number>();
+  const depthOf = (id: string): number => {
+    const cached = depthCache.get(id);
+    if (cached !== undefined) return cached;
+    const node = projectById.get(id);
+    if (!node) return 0;
+    const d = node.parentId ? depthOf(node.parentId) + 1 : 0;
+    depthCache.set(id, d);
+    return d;
+  };
+
+  const rows: ProjectDashboardRow[] = allProjects.map((p) => ({
     id: p.id,
     name: p.name,
     type: p.type,
@@ -53,6 +69,8 @@ export default async function ProjectsPage() {
     progressPercent: progressPercent(p),
     totalModels: p.count + (namedCountByProject[p.id] ?? 0),
     updatedAt: p.updatedAt.getTime(),
+    parentId: p.parentId,
+    depth: depthOf(p.id),
   }));
 
   return (

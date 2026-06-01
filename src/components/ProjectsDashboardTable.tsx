@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import type { Priority, ProjectType } from "@/db/schema";
@@ -8,9 +8,17 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import type { DisplayStatus } from "@/lib/progress";
 
-/** Per-row VM. Page builds these server-side from listTopLevelProjects
+/** Per-row VM. Page builds these server-side from listAllProjects
  *  + getProjectPalettesMap + countNamedModelsByProject + the existing
- *  displayStatus / progressPercent helpers. */
+ *  displayStatus / progressPercent helpers.
+ *
+ * `parentId` is null for top-level projects (Army / Single Model /
+ * Terrain / Diorama / Warband). When set, the row is rendered as a
+ * child INSIDE its parent's expanded section.
+ *
+ * `depth` is computed by the page (0 = top-level, 1 = unit under
+ * army, 2 = model under unit). Used to indent + draw the
+ * tree-connector pseudo-element. */
 export interface ProjectDashboardRow {
   id: string;
   name: string;
@@ -22,6 +30,32 @@ export interface ProjectDashboardRow {
   progressPercent: number;
   totalModels: number;
   updatedAt: number;
+  parentId: string | null;
+  depth: number;
+}
+
+const STORAGE_KEY = "mm.projects.expanded";
+
+function readExpanded(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) return new Set(parsed.map(String));
+  } catch {
+    /* corrupt entry — ignore */
+  }
+  return new Set();
+}
+
+function writeExpanded(set: ReadonlySet<string>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
+  } catch {
+    /* quota / disabled — fail silent */
+  }
 }
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
@@ -96,8 +130,45 @@ export function ProjectsDashboardTable({ rows }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
-  const sorted = useMemo(() => {
-    const arr = rows.slice();
+  // P12.7 — expanded-set state, hydrated from sessionStorage on mount
+  // so navigating away + back to /projects preserves the open Army
+  // expansions. We start with an empty Set on first render to keep
+  // server/client markup identical; the useEffect bumps state from
+  // storage right after.
+  const [expanded, setExpandedState] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setExpandedState(readExpanded());
+  }, []);
+  const setExpanded = (next: Set<string>) => {
+    setExpandedState(next);
+    writeExpanded(next);
+  };
+  const toggleExpanded = (id: string) => {
+    const next = new Set(expanded);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setExpanded(next);
+  };
+
+  // Partition rows once: top-level vs nested. Children indexed by
+  // parentId in a Map for O(1) lookup during sort iteration.
+  const { topLevel, childrenByParent } = useMemo(() => {
+    const top: ProjectDashboardRow[] = [];
+    const children = new Map<string, ProjectDashboardRow[]>();
+    for (const r of rows) {
+      if (r.parentId === null || r.parentId === undefined) {
+        top.push(r);
+      } else {
+        const arr = children.get(r.parentId) ?? [];
+        arr.push(r);
+        children.set(r.parentId, arr);
+      }
+    }
+    return { topLevel: top, childrenByParent: children };
+  }, [rows]);
+
+  const sortedTopLevel = useMemo(() => {
+    const arr = topLevel.slice();
     arr.sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
@@ -125,7 +196,7 @@ export function ProjectsDashboardTable({ rows }: Props) {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return arr;
-  }, [rows, sortKey, sortDir]);
+  }, [topLevel, sortKey, sortDir]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -136,6 +207,22 @@ export function ProjectsDashboardTable({ rows }: Props) {
     }
   };
 
+  // Walk top-level + recursively expanded children in render order.
+  // Children keep their natural array order (createdAt asc from the
+  // SQL query); sort only governs the top-level rows so the Army
+  // hierarchy stays visually intact.
+  const renderRows = useMemo(() => {
+    const out: ProjectDashboardRow[] = [];
+    const walk = (row: ProjectDashboardRow) => {
+      out.push(row);
+      if (!expanded.has(row.id)) return;
+      const kids = childrenByParent.get(row.id) ?? [];
+      for (const k of kids) walk(k);
+    };
+    for (const top of sortedTopLevel) walk(top);
+    return out;
+  }, [sortedTopLevel, childrenByParent, expanded]);
+
   return (
     <div className="frame overflow-x-auto">
       <table className="w-full text-xs font-mono">
@@ -144,6 +231,7 @@ export function ProjectsDashboardTable({ rows }: Props) {
             className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
             style={{ borderBottom: "1px solid var(--color-border-strong)" }}
           >
+            <th scope="col" className="w-8 px-2 py-2" aria-label="Expand" />
             <Th
               label="Name"
               active={sortKey === "name"}
@@ -180,9 +268,18 @@ export function ProjectsDashboardTable({ rows }: Props) {
           </tr>
         </thead>
         <tbody>
-          {sorted.map((row) => (
-            <DashboardRow key={row.id} row={row} />
-          ))}
+          {renderRows.map((row) => {
+            const hasChildren = (childrenByParent.get(row.id) ?? []).length > 0;
+            return (
+              <DashboardRow
+                key={row.id}
+                row={row}
+                hasChildren={hasChildren}
+                expanded={expanded.has(row.id)}
+                onToggleExpand={() => toggleExpanded(row.id)}
+              />
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -226,14 +323,65 @@ function Th({
   );
 }
 
-function DashboardRow({ row }: { row: ProjectDashboardRow }) {
+function DashboardRow({
+  row,
+  hasChildren,
+  expanded,
+  onToggleExpand,
+}: {
+  row: ProjectDashboardRow;
+  hasChildren: boolean;
+  expanded: boolean;
+  onToggleExpand: () => void;
+}) {
   const typeChipClass = TYPE_CHIP[row.type];
+  // Tree-connector indent — 16px per depth level. depth 0 = no indent.
+  const indentPx = row.depth * 16;
   return (
     <tr
       className="hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors"
       style={{ borderBottom: "1px solid var(--color-border)" }}
+      data-depth={row.depth}
     >
-      <td className="px-3 py-2">
+      <td className="px-2 py-2 w-8 text-center">
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            aria-expanded={expanded}
+            aria-label={
+              expanded ? `Collapse ${row.name}` : `Expand ${row.name}`
+            }
+            className="block w-5 h-5 mx-auto text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors"
+          >
+            <span aria-hidden className="inline-block">
+              {expanded ? "▾" : "▸"}
+            </span>
+          </button>
+        ) : row.depth > 0 ? (
+          <span
+            aria-hidden
+            className="block w-5 h-5 mx-auto text-[var(--color-fg-subtle)] opacity-40"
+            title="No children"
+          >
+            ·
+          </span>
+        ) : null}
+      </td>
+      <td
+        className="px-3 py-2 relative"
+        style={{ paddingLeft: indentPx ? `${12 + indentPx}px` : undefined }}
+      >
+        {row.depth > 0 ? (
+          <span
+            aria-hidden
+            className="absolute left-0 top-0 bottom-0 pointer-events-none"
+            style={{
+              left: `${4 + (row.depth - 1) * 16}px`,
+              borderLeft: "1px dashed var(--color-border-strong)",
+            }}
+          />
+        ) : null}
         <Link
           href={`/projects/${row.id}`}
           className="text-[var(--color-cyan)] hover:underline"

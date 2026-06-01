@@ -73,7 +73,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.6 — `/projects` table layout.** Replace current backlog/active/all-projects card sections with a single sortable dashboard table. Columns: **Name · Type · Recipes (palette squares) · Status · Priority · Completion (bar)**. Completion bar tone: red < 25%, pastel yellow 25–75%, neon green 75–100% (the `<ProgressBar tone>` already supports the colour transitions — wire it to thresholds). Sortable by every column.
 
-- [ ] **P12.7 — Expandable hierarchy rows.** Each row has a left chevron — click expands inline to show child rows (Army → Units → Single Models). Indentation + a tree-connector line indicates depth. Persists across navigation (sessionStorage for expanded set). Click any row name → standalone project detail page.
+- [x] **P12.7 — Expandable hierarchy rows.** Each row has a left chevron — click expands inline to show child rows (Army → Units → Single Models). Indentation + a tree-connector line indicates depth. Persists across navigation (sessionStorage for expanded set). Click any row name → standalone project detail page.
 
 ### Pillar 3 — Project detail rebuild
 
