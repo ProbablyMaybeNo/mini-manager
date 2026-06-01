@@ -14,10 +14,10 @@ import { TypeIcon } from "./TypeIcon";
 import { Button } from "@/components/ui/Button";
 
 /**
- * Left-rail filter set. Brand multi-select (collapses by A-Z when > 12
- * brands), line multi-select (filtered to selected brands), type chips,
- * hue band chips, owned-only toggle (disabled until P2.3), hex search,
- * free-text search.
+ * Left-rail filter set. Brand multi-select (flat scrollable checkbox
+ * list — P12.21 retired the A-Z fold), line multi-select (filtered to
+ * selected brands), type chips, hue band chips, owned-only toggle
+ * (disabled until P2.3), hex search, free-text search.
  *
  * Filter state lives in the URL — every change pushes a router.replace
  * so back/forward and link-sharing work. The component shows local state
@@ -101,7 +101,11 @@ export function FilterRail({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hexLocal]);
 
-  const brandCollapse = allBrands.length > 12;
+  // P12.21 — drop the A-Z fold entirely. Ross's brief: render every
+  // brand as a simple scrollable checkbox list. The FlatBrandList
+  // already caps height via max-h-48 + overflow-y-auto so even with
+  // 30+ brands the rail stays bounded.
+  const brandCollapse = false;
   const activeFilterCount = countActiveFilters(filter);
 
   if (isCollapsed) {

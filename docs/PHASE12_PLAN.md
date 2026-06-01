@@ -111,7 +111,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.20 — Filter button + view-toggle polish.** Top-right "Filter" trigger on mobile is a no-op — wire it to open the existing bottom-sheet filter drawer. List/Grid buttons in the view toggle have too-tight spacing — bump padding + gap, restyle to match the terminal-button reference.
 
-- [ ] **P12.21 — Brand filter: checkbox list.** Drop the A-Z fold inside the FilterRail. Render all brands as a simple scrollable checkbox list. Default all checked. User's persistent selection (from P12.19) is the saved baseline.
+- [x] **P12.21 — Brand filter: checkbox list.** Drop the A-Z fold inside the FilterRail. Render all brands as a simple scrollable checkbox list. Default all checked. User's persistent selection (from P12.19) is the saved baseline.
 
 - [ ] **P12.22 — Detail panel harmonies dropdown.** Currently the harmony strip on the paint detail panel just shows the 8 HSL-rotated swatches. Replace with a dropdown for harmony type (mono / analogous / complementary / triadic / split / square) → renders only the harmonised colors for the selected scheme. Clicking any harmony swatch shows library paints matching that hue (inline list below).
 
