@@ -31,12 +31,16 @@ describe("RecipeActionsBar component surface", () => {
     expect(src).toMatch(/variant="success"/);
   });
 
-  test("the Assign-to-project button uses the primary variant (cyan)", () => {
-    // Ross's brief: "Assign to project ▾" is the cyan button in the
-    // pair. P12.23 rules: primary = cyan-filled, reserved for
-    // save / confirm / sign-in / navigate-to.
-    expect(src).toMatch(/variant="primary"/);
+  test("the Assign-to-project button uses success (green) per R7-006", () => {
+    // R7-006 flipped the ATTACH / ASSIGN action off cyan. The button
+    // is now green-filled to match the wider Round-7 rule (green for
+    // ADD / ATTACH / SAVE; cyan reserved for auth + final-step
+    // confirms only). Both Save AND Assign now match — they read as
+    // paired commit actions on the recipe header.
     expect(src).toContain("Assign to project");
+    const idx = src.lastIndexOf("Assign to project ▾");
+    const before = src.slice(Math.max(0, idx - 400), idx);
+    expect(before).toContain('variant="success"');
   });
 
   test("the Assign menu navigates to the destination project after attach", () => {

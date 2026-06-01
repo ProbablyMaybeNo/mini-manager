@@ -272,7 +272,7 @@ export function MarkBoughtModal({
             type="button"
             onClick={tab === "existing" ? submitExisting : submitNew}
             disabled={isPending}
-            variant="primary"
+            variant="success"
             size="sm"
           >
             {isPending ? "Working…" : "✓ Mark bought"}

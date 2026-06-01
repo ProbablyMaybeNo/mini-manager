@@ -68,14 +68,14 @@ export function AddNamedModelForm({
   };
 
   if (!expanded) {
-    // Compact mode renders a primary cyan CTA so the path to add the
-    // first named model is the visual centre of an otherwise-empty
-    // panel. P11.2 — Phase 11 CTA pass.
+    // R7-006 — was primary (cyan fill) per P11.2's "CTA centre" idea.
+    // Round-7 rule: ADD/CREATE flips to success (green). The visual
+    // weight stays identical (filled CTA); only the hue changes.
     return (
       <Button
         type="button"
         onClick={expand}
-        variant={mode === "compact" ? "primary" : "ghost"}
+        variant={mode === "compact" ? "success" : "ghost"}
         size="sm"
       >
         + Add named model

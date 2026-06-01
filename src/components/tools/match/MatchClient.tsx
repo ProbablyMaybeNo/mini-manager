@@ -173,7 +173,7 @@ export function MatchClient() {
               />
               <Button
                 type="submit"
-                variant="primary"
+                variant="secondary"
                 size="sm"
               >
                 Match

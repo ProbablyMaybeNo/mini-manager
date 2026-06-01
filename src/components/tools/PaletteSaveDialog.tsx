@@ -110,7 +110,7 @@ export function PaletteSaveDialog({
           <Button
             type="submit"
             disabled={name.trim().length === 0}
-            variant="primary"
+            variant="success"
             size="sm"
           >
             Save

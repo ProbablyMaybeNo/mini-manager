@@ -295,7 +295,7 @@ export function AttachRecipeModal(props: Props) {
               type="button"
               onClick={() => runAttach(confirmMove.id)}
               disabled={isPending}
-              variant="primary"
+              variant="success"
               size="sm"
             >
               {isPending ? "Moving…" : "Move attachment"}

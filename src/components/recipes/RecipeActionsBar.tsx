@@ -42,10 +42,13 @@ interface Props {
  *       so the painter has a reassuring "yes I'm in the library"
  *       affordance.
  *
- *   Assign to project ▾ (primary / cyan variant)
+ *   Assign to project ▾ (success / green variant — R7-006)
  *     - Opens an inline searchable dropdown of the user's projects.
  *     - On pick: calls attachRecipeToProject + navigates to the
  *       destination project's page (Ross's locked answer).
+ *     - Was primary (cyan) pre-R7. Round-7 audit flipped ATTACH /
+ *       ASSIGN actions to green — cyan-on-buttons is now reserved
+ *       for auth / sign-in / publish-confirm.
  *
  * Animations gated on prefers-reduced-motion.
  */
@@ -156,7 +159,7 @@ export function RecipeActionsBar({
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
           disabled={isPending || projects.length === 0}
-          variant="primary"
+          variant="success"
           size="sm"
           aria-haspopup="menu"
           aria-expanded={menuOpen}

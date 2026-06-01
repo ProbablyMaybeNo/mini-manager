@@ -262,7 +262,7 @@ export default async function ProjectDetailPage({
                 <Button
                   as="a"
                   href={`/projects/new?parent=${project.id}`}
-                  variant="primary"
+                  variant="success"
                   size="sm"
                 >
                   + Add unit

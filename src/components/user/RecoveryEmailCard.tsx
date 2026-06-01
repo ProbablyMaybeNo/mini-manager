@@ -137,7 +137,7 @@ export function RecoveryEmailCard({
           <div className="flex gap-2">
             <Button
               type="submit"
-              variant="primary"
+              variant="success"
               size="sm"
               disabled={isPending}
             >

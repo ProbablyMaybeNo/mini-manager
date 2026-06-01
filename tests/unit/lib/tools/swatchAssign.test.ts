@@ -25,8 +25,11 @@ describe("SwatchAssignButton component surface", () => {
     expect(src).toContain("SendToRecipeModal");
   });
 
-  test("trigger uses variant='primary' (cyan, navigate-to semantic)", () => {
-    expect(src).toMatch(/variant="primary"/);
+  test("trigger uses variant='success' (green, ATTACH semantic) per R7-006", () => {
+    // R7-006 — universal Assign trigger flipped off cyan. Green
+    // matches the Round-7 ADD/ATTACH/ASSIGN bucket and keeps the
+    // visual weight identical to the wheel/match palette Send button.
+    expect(src).toMatch(/variant="success"/);
   });
 
   test("default label is 'Assign ▾'", () => {

@@ -56,9 +56,15 @@ describe("R7-7 — recipes surface button discipline", () => {
   });
 
   test("RecipeActionsBar Save + Assign buttons keep their loud-tone variants", () => {
+    // R7-006 — both Save AND Assign now resolve to success (green).
+    // The pair is symmetrical now; cyan-on-buttons is reserved for
+    // auth and final-step confirms only.
     const bar =
       files.find((f) => f.name === "RecipeActionsBar.tsx")?.src ?? "";
-    expect(bar).toContain('variant="success"');
-    expect(bar).toContain('variant="primary"');
+    // At least two success variant references — one for Save, one for
+    // Assign. Counted exactly so a regression that drops either side
+    // back to ghost / primary fails fast.
+    const matches = bar.match(/variant="success"/g) ?? [];
+    expect(matches.length).toBeGreaterThanOrEqual(2);
   });
 });

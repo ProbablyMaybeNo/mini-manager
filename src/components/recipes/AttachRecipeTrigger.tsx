@@ -31,6 +31,11 @@ type Props = ProjectProps | NamedModelProps;
  * client themselves.
  */
 export function AttachRecipeTrigger(props: Props) {
+  // R7-006 — ATTACH RECIPE flipped from primary (cyan) to success
+  // (green) per the post-Round-7 rule: cyan-on-buttons is reserved for
+  // auth/sign-in/confirm. ATTACH is a create-link action → green. The
+  // "primary" prop alias stays for back-compat with callers that pass
+  // it explicitly; it now resolves to success.
   const { label = "Attach recipe", variant = "primary" } = props;
   const [open, setOpen] = useState(false);
 
@@ -39,7 +44,7 @@ export function AttachRecipeTrigger(props: Props) {
       <Button
         type="button"
         onClick={() => setOpen(true)}
-        variant={variant === "primary" ? "primary" : "ghost"}
+        variant={variant === "primary" ? "success" : "ghost"}
         size="sm"
       >
         {label}

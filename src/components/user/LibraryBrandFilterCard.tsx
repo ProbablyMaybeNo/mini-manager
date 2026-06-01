@@ -145,7 +145,7 @@ export function LibraryBrandFilterCard({
       ) : null}
       <Button
         type="button"
-        variant="primary"
+        variant="success"
         size="sm"
         onClick={handleSave}
         disabled={isPending}

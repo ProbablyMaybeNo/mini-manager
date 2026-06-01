@@ -33,9 +33,11 @@ describe("RecipesTable component surface", () => {
     expect(src).toContain("`/recipes/${row.id}`");
   });
 
-  test("the Assign-row-action uses variant='primary' (cyan)", () => {
-    // Per Ross's locked vocabulary in the brief — Assign is cyan.
-    expect(src).toMatch(/variant="primary"[\s\S]{0,200}Assign/);
+  test("the Assign-row-action uses variant='success' (green) per R7-006", () => {
+    // R7-006 — ATTACH / ASSIGN actions flipped off cyan. Green is the
+    // Round-7 semantic for ADD / ATTACH / ASSIGN; cyan stays for
+    // auth and final-step confirms only.
+    expect(src).toMatch(/variant="success"[\s\S]{0,200}Assign/);
   });
 
   test("the Share-row-action uses variant='warning' (pastel yellow)", () => {

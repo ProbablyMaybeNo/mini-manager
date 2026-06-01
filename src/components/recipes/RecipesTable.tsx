@@ -204,7 +204,7 @@ function RecipeRow({ row }: { row: RecipeRowVm }) {
           <Button
             as="a"
             href={`/recipes/${row.id}`}
-            variant="primary"
+            variant="success"
             size="sm"
             title="Open editor + assign to a project"
           >

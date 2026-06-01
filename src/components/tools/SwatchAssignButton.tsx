@@ -48,7 +48,7 @@ export function SwatchAssignButton({
     <>
       <Button
         type="button"
-        variant="primary"
+        variant="success"
         size={size}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"

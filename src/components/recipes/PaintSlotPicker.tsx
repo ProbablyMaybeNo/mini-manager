@@ -389,7 +389,7 @@ export function PaintSlotPicker({
               type="button"
               onClick={handleConfirmHex}
               disabled={isPending}
-              variant="primary"
+              variant="success"
               size="sm"
             >
               {isPending ? "Saving…" : "Use hex"}

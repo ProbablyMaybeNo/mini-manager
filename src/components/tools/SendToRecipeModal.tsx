@@ -328,7 +328,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                 <Button
                   type="submit"
                   disabled={!canSubmit}
-                  variant="primary"
+                  variant="warning"
                   size="sm"
                 >
                   {isPending ? "Sending…" : "Send →"}

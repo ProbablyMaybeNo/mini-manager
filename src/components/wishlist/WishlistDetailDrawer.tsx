@@ -270,7 +270,7 @@ export function WishlistDetailDrawer({
             type="button"
             onClick={save}
             disabled={isPending}
-            variant="primary"
+            variant="success"
             size="sm"
           >
             {isPending ? "Saving…" : "Save"}

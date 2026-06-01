@@ -93,7 +93,7 @@ export function ChangePasswordCard() {
         ) : null}
         <Button
           type="submit"
-          variant="primary"
+          variant="success"
           size="sm"
           disabled={isPending}
         >

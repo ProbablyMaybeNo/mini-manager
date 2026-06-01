@@ -105,7 +105,7 @@ export function ToolFooterActions({
         onClick={() => setModalOpen(true)}
         disabled={empty}
         title={empty ? "No swatches to send yet" : "Send palette to a recipe"}
-        variant="primary"
+        variant="warning"
         size="sm"
       >
         Send to recipe
