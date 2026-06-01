@@ -175,6 +175,53 @@ export async function updateProjectCount(
 }
 
 /* ============================================================
+   R7-008 — inline-rename the project from its detail page.
+   Replicates the recipe header's contentEditable <h1> pattern.
+   ============================================================ */
+
+const updateNameSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().trim().min(1, "Name is required").max(120, "Name is too long"),
+});
+
+export async function updateProjectName(
+  raw: z.infer<typeof updateNameSchema>,
+): Promise<ActionResult<{ id: string; name: string }>> {
+  const parsed = updateNameSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid name",
+    };
+  }
+  const { id, name } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select({ id: projects.id, parentId: projects.parentId })
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  try {
+    await db.update(projects).set({ name }).where(eq(projects.id, id));
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${id}`);
+    if (project.parentId) {
+      revalidatePath(`/projects/${project.parentId}`);
+    }
+    return { ok: true, data: { id, name } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to rename project",
+    };
+  }
+}
+
+/* ============================================================
    R7-1 inline dashboard editing — type / priority / status bump
    ============================================================ */
 

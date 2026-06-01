@@ -22,9 +22,14 @@ function read(rel: string): string {
 describe("ProjectHeaderStrip component surface", () => {
   const src = read("src/components/ProjectHeaderStrip.tsx");
 
-  test("title renders in cyan with the locked glow", () => {
-    expect(src).toContain("text-[var(--color-cyan)]");
-    expect(src).toMatch(/textShadow:\s*\n?\s*"0 0 12px/);
+  test("title is delegated to EditableProjectTitle (R7-008)", () => {
+    // R7-008 extracted the static cyan <h1> into a client component
+    // that supports inline-rename. The cyan colour + glow now live in
+    // EditableProjectTitle.tsx — pinned in its own test file.
+    expect(src).toContain("EditableProjectTitle");
+    expect(src).toContain(
+      "<EditableProjectTitle projectId={projectId} name={name} />",
+    );
   });
 
   test("type chip uses the existing TYPE_CHIP palette", () => {

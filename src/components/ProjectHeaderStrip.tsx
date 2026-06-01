@@ -4,6 +4,7 @@ import type { DisplayStatus } from "@/lib/progress";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
+import { EditableProjectTitle } from "@/components/EditableProjectTitle";
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
@@ -87,15 +88,7 @@ export function ProjectHeaderStrip({
   return (
     <header className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        <h1
-          className="text-3xl tracking-wide text-[var(--color-cyan)]"
-          style={{
-            textShadow:
-              "0 0 12px color-mix(in srgb, var(--color-cyan) 22%, transparent)",
-          }}
-        >
-          {name}
-        </h1>
+        <EditableProjectTitle projectId={projectId} name={name} />
         <span className={clsx("type-chip", TYPE_CHIP[type])}>{type}</span>
         {faction ? (
           <span className="text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
