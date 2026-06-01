@@ -88,12 +88,14 @@ Same family of complaint as P13.7.
 - Add tooltip: "0 = exact match, ≤2 = imperceptible, >5 = noticeably different. Industry standard (CIE ΔE 2000)."
 - Keep the value display.
 
-### P13.10 — App-wide basic-functions audit (FINAL pass)
+### P13.10 — App-wide basic-functions audit (FINAL pass) ✅ → `a4a2657`
 After P13.1 cascades + harmony + brand + tool surfaces are done.
 
 - Sweep all "basic function" surfaces: pickers, toggles, segmented controls, dropdowns, popovers, empty-states, modals.
 - Check each fits the new solid-fill aesthetic.
 - Fix any straggler `[ ]`-style remnants.
+
+**Stragglers fixed:** `btn-wishlist-cta` legacy CSS class retired in favour of `variant="warning"`; `[ / ]` keyboard hints in `<GlobalSearch>` + `<QuickAddBar>` flipped to semantic `<kbd>`; `[ last N days · ... ]` chrome on `<RecentlyBoughtLine>` dropped; `<InventoryControls>` full-mode wishlist toggle routed through the Button primitive (`variant="warning"`, solid when active / outline when inactive). All modal + picker + popover surfaces audited — Button primitive used everywhere, cyan-tint usage scoped to tabs / filter chips / segmented controls (not action buttons). Tests stay at 1182 passing.
 
 ### P13.11 — Focus recipe widget on /projects ✅ → schema `ccd12dd` · UI `6f357a7`
 Pulled forward from Phase 14 per Ross 2026-06-01: "the major thing a user will need if they want to use the dashboard while they paint."
