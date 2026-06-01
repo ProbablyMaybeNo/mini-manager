@@ -17,6 +17,8 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { RampDisplay } from "./RampDisplay";
+import { ColorPickerDialog } from "@/components/ui/ColorPickerDialog";
+import { Button } from "@/components/ui/Button";
 
 const HEX6 = /^#[0-9A-F]{6}$/;
 
@@ -31,9 +33,12 @@ interface ColorInputProps {
   label: string;
   value: string;
   onChange: (next: string) => void;
+  /** R7-4 — opens the shared ColorPickerDialog so the painter can
+   *  seed this lane from the wheel, library, or eyedropper. */
+  onOpenPicker: () => void;
 }
 
-function ColorInput({ label, value, onChange }: ColorInputProps) {
+function ColorInput({ label, value, onChange, onOpenPicker }: ColorInputProps) {
   const preview = HEX6.test(value) ? value : "var(--color-bg-elevated)";
   const inputId = `gradient-${label.toLowerCase()}-hex`;
   return (
@@ -64,6 +69,15 @@ function ColorInput({ label, value, onChange }: ColorInputProps) {
           placeholder="#0E4A8A"
           className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
         />
+        <Button
+          type="button"
+          onClick={onOpenPicker}
+          variant="ghost"
+          size="sm"
+          aria-label={`Pick a ${label.toLowerCase()} colour`}
+        >
+          Start…
+        </Button>
       </div>
     </div>
   );
@@ -81,6 +95,29 @@ export function GradientClient() {
   const [steps, setSteps] = useState(DEFAULT_STEPS);
   const [paints, setPaints] = useState<ReadonlyArray<Paint>>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
+  const [pickerLane, setPickerLane] = useState<
+    "Shadow" | "Base" | "Highlight" | null
+  >(null);
+
+  const openPickerFor = (lane: "Shadow" | "Base" | "Highlight") =>
+    setPickerLane(lane);
+  const closePicker = () => setPickerLane(null);
+
+  const initialPickerHex =
+    pickerLane === "Shadow"
+      ? shadow
+      : pickerLane === "Base"
+        ? base
+        : pickerLane === "Highlight"
+          ? highlight
+          : null;
+
+  const handlePickerSelect = (hex: string) => {
+    const upper = hex.toUpperCase();
+    if (pickerLane === "Shadow") setShadow(upper);
+    else if (pickerLane === "Base") setBase(upper);
+    else if (pickerLane === "Highlight") setHighlight(upper);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -128,6 +165,7 @@ export function GradientClient() {
   }, [stepsWithMatches]);
 
   return (
+    <>
     <ToolShell
       input={
         <div className="space-y-4">
@@ -139,9 +177,24 @@ export function GradientClient() {
             </p>
           </header>
 
-          <ColorInput label="Shadow" value={shadow} onChange={setShadow} />
-          <ColorInput label="Base" value={base} onChange={setBase} />
-          <ColorInput label="Highlight" value={highlight} onChange={setHighlight} />
+          <ColorInput
+            label="Shadow"
+            value={shadow}
+            onChange={setShadow}
+            onOpenPicker={() => openPickerFor("Shadow")}
+          />
+          <ColorInput
+            label="Base"
+            value={base}
+            onChange={setBase}
+            onOpenPicker={() => openPickerFor("Base")}
+          />
+          <ColorInput
+            label="Highlight"
+            value={highlight}
+            onChange={setHighlight}
+            onOpenPicker={() => openPickerFor("Highlight")}
+          />
 
           <div className="space-y-1">
             <label
@@ -190,5 +243,13 @@ export function GradientClient() {
         />
       }
     />
+    <ColorPickerDialog
+      open={pickerLane !== null}
+      onClose={closePicker}
+      initialHex={initialPickerHex}
+      contextLabel={pickerLane ?? undefined}
+      onSelect={handlePickerSelect}
+    />
+    </>
   );
 }

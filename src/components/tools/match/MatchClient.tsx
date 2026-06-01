@@ -14,6 +14,7 @@ import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { MatchResultsRow } from "./MatchResultsRow";
 import { Button } from "@/components/ui/Button";
+import { ColorPickerDialog } from "@/components/ui/ColorPickerDialog";
 
 const PAGE_SIZE = 50;
 const HEX6 = /^#?[0-9a-fA-F]{6}$/;
@@ -50,6 +51,7 @@ export function MatchClient() {
   const [brandFilter, setBrandFilter] = useState<ReadonlySet<string>>(new Set());
   const [page, setPage] = useState(0);
   const [sendOne, setSendOne] = useState<ToolPaletteSwatch | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -182,6 +184,19 @@ export function MatchClient() {
                 {hexError}
               </p>
             ) : null}
+            {/* R7-4 — "Start with..." opens the ColorPicker dialog so the
+                painter can seed the target from the wheel, the library, or
+                an eyedropped image without typing a hex. */}
+            <Button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              aria-label="Start with a colour from wheel / library / image"
+            >
+              Start with…
+            </Button>
           </form>
 
           {/* NB-11: Brand filter chips — vintage solid-button styling.
@@ -321,6 +336,18 @@ export function MatchClient() {
         toolId="match"
       />
     ) : null}
+    <ColorPickerDialog
+      open={pickerOpen}
+      onClose={() => setPickerOpen(false)}
+      initialHex={HEX6.test(activeHex) ? activeHex : null}
+      contextLabel="Match target"
+      onSelect={(hex) => {
+        const upper = hex.toUpperCase();
+        setHexInput(upper);
+        setActiveHex(upper);
+        setHexError(null);
+      }}
+    />
     </>
   );
 }
