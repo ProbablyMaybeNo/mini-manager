@@ -27,7 +27,9 @@ const TOOL_LABEL: Record<ToolId, string> = {
   wheel: "Wheel",
   match: "Match",
   eyedropper: "Eyedropper",
-  gradient: "Gradient",
+  // P12.14 — UI string flip; the toolId stays 'gradient' for back-
+  // compat with palette source records + the /tools/gradient URL.
+  gradient: "Layering",
 };
 
 /**

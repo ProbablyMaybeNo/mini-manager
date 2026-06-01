@@ -129,6 +129,7 @@ function toolLabel(id: ToolId): string {
     case "eyedropper":
       return "Eyedropper";
     case "gradient":
-      return "Gradient";
+      // P12.14 — UI string flip; toolId stays 'gradient' for back-compat.
+      return "Layering";
   }
 }

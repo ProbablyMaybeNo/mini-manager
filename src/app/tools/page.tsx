@@ -42,7 +42,7 @@ const TOOLS: ReadonlyArray<ToolEntry> = [
   {
     href: "/tools/gradient" as Route,
     glyph: "▤",
-    title: "Gradient Builder",
+    title: "Layering",
     blurb: "Plan a base → highlight ramp with the closest paint per step.",
     tone: "yellow",
   },
