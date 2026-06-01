@@ -4,6 +4,31 @@
 
 This is bigger than any prior phase. **8 pillars, 24 milestones.** Some pillars (12.1 recipe rebuild, 12.3 project detail rebuild) are layout reworks; others (12.7 library polish, 12.8 button discipline) are surface-level sweeps.
 
+## Q&A — Ross's confirmed answers (2026-06-01)
+
+These supersede any earlier guesses elsewhere in the doc:
+
+- **Q1 — One paint per slot.** Each slot = one paint. Users add slots for shadow/mid/highlight. Each layer name (undercoat / basecoat / midcoat / highlight / edge highlight / wash / detail / metallic) can be assigned to multiple paints on the same recipe — e.g. two "basecoat" slots is legal.
+- **Q2 — Progress table rows.** Same column set across all rows regardless of project type: `name / type / count / color scheme / status`. Count = 1 for individual models, blank/null for rows where it doesn't apply.
+- **Q3 — Status derivation.** Present-tense, derived from the lead stage: WISHLIST → PURCHASED (ownedCount > 0) → BUILDING → PRIMING → PAINTING → BASING → COMPLETE (all models complete). One model in a new stage immediately advances the pill — users build sequentially per unit, so partial-stage flicker is rare in practice.
+- **Q4 — Color scheme box when a recipe is attached.** The boxes pre-fill with the recipe's palette automatically. Recipe name shown above. Click any filled box to swap that paint. No empty `+` placeholder when filled.
+- **Q5 — Cyan discipline.** Cyan reserved for: titles, body text, active nav indicator, focus rings. **NO cyan buttons** anywhere. Buttons exclusively use the four-color palette (green / yellow / red / purple).
+- **Q6 — Wishlist statuses.** Rename existing values app-wide: Wanted → WISHLIST, Bought → PURCHASED, Cancelled → HOLD. Schema string migration.
+- **Q7 — Eyedropper pins.** Each pin's position SAMPLES the pixel under it. Dragging a pin re-samples the new location. Add / remove pins recomputes the extracted palette as needed.
+- **Q8 — Status workflow.** Stages are sequential per unit (wargamers build the whole unit before priming, prime the whole unit before painting, etc.). Per-stage counts are partial-progress tracking. Status = the lead stage with any count > 0.
+
+## Resolved smaller calls
+
+- **Color picker layout** — three sub-panels stacked in one scrollable side panel (mini wheel + harmony dropdown / filterable library list / eyedropper sampler). No tab switching.
+- **Paint match algorithm** — hue-band first (instant, ~50 results), with a "Show closer matches" button that runs ΔE2000 against the picked hex (slower, top 20 ranked).
+- **Tier UI pricing** — pulls from PHASE10_PLAN.md: Free / Pro Monthly $4 / Pro Lifetime $29 / Founder $19.
+- **Harmonies dropdown set** — mono / analogous / complementary / triadic / split / square / tetradic.
+- **PAINT/MEDIUM labels in detail panel** — drop them; the paint TYPE pill already conveys the same info.
+- **Recipe Assign flow** — after attaching to a project, navigate to the destination project's page.
+- **Wishlist paint-row Tools → Match** — opens `/tools/match` pre-loaded with the paint's hex.
+- **Library filter button (top-right, currently broken)** — wire to open the existing mobile filter drawer; hide entirely on desktop (FilterRail is already visible).
+- **Archived projects** — stay hidden from the dashboard; an `Archive ▾` filter chip at the top of `/projects` reveals them.
+
 ## Locked design calls (from Ross's brief)
 
 - **Recipe data model.** Schema unchanged. `recipe_zone` table stays. The "name" field of a zone (was "Carapace", "Pauldron") becomes the **color slot label** — a free-text optional name the user can set, but the slot's primary identity is its assigned paint. The existing `recipe_step` table's `technique` field becomes the **layer assignment** (undercoat / basecoat / midcoat / highlight / edge highlight / wash / detail / metallic).
