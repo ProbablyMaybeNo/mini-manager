@@ -73,7 +73,7 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
 
   const [hue, setHue] = useState<number>(seedHsl.h);
   const [sat] = useState<number>(seedHsl.s);
-  const [light] = useState<number>(seedHsl.l);
+  const [light, setLight] = useState<number>(seedHsl.l);
   const [harmony, setHarmony] = useState<ColorPickerHarmony>("complementary");
 
   const pickedHex = useMemo(() => hslToHex(hue, sat, light), [hue, sat, light]);
@@ -248,6 +248,35 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
               title={hex}
             />
           ))}
+        </div>
+
+        {/* R7-3 — horizontal lightness slider. Lives below the wheel +
+            harmony dropdown so the painter can reach darker / lighter
+            variants without dragging the wheel cursor closer to the
+            origin. The picked-hex swatch, the matches list below, AND
+            the harmony swatches all re-render at the new lightness. */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="cp-lightness"
+              className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
+            >
+              Lightness
+            </label>
+            <span className="font-mono text-2xs tabular-nums text-[var(--color-fg-subtle)]">
+              {Math.round(light)}
+            </span>
+          </div>
+          <input
+            id="cp-lightness"
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round(light)}
+            onChange={(e) => setLight(Number(e.target.value))}
+            className="w-full"
+            aria-label="Lightness"
+          />
         </div>
       </section>
 

@@ -115,4 +115,24 @@ describe("ColorPicker hslToHex re-export", () => {
     expect(hslToHex(360, 100, 50)).toBe(hslToHex(0, 100, 50));
     expect(hslToHex(720, 100, 50)).toBe(hslToHex(0, 100, 50));
   });
+
+  /* R7-3 — the picker now exposes a lightness slider (0-100). Make
+   * sure the end-points + a few mid-points produce sane hexes the
+   * UI can render. */
+  test("hslToHex spans the full 0-100 lightness range", () => {
+    // L=0 should be pure black regardless of hue/sat.
+    expect(hslToHex(180, 60, 0)).toBe("#000000");
+    // L=100 should be pure white.
+    expect(hslToHex(180, 60, 100)).toBe("#FFFFFF");
+    // L=50 with H=0 + full sat = pure red.
+    expect(hslToHex(0, 100, 50)).toBe("#FF0000");
+  });
+
+  test("dropping lightness moves the hex toward black", () => {
+    const mid = hslToHex(220, 70, 55);
+    const dark = hslToHex(220, 70, 15);
+    // Same hue + sat, lower L → numerically darker channels.
+    const toInt = (hex: string) => parseInt(hex.slice(1), 16);
+    expect(toInt(dark)).toBeLessThan(toInt(mid));
+  });
 });
