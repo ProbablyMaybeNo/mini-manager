@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { bumpCounter } from "@/lib/actions/counters";
 import { validateBump } from "@/lib/counters/cascade";
@@ -24,28 +24,42 @@ export type OwnedSnapshot = {
  * — minis you've bought or that arrived from the printer. Cascade:
  *   0 ≤ ownedCount ≤ count
  *   ownedCount ≥ buildCount   (lowering owned below build fails)
+ *
+ * P13.5 — Optimistic updates land instantly; the server confirms in
+ * the background via `startTransition`. Buttons stay clickable during
+ * the round-trip so rapid +/- holds keep registering — only the
+ * cascade bounds (count ceiling, build floor) gate the next bump,
+ * not network state. Mirror of the StageCounter rapid-click discipline.
  */
 export function OwnedCounter({ snapshot }: { snapshot: OwnedSnapshot }) {
   const [snap, setSnap] = useState<OwnedSnapshot>(snapshot);
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+
+  // Keep a ref to the latest optimistic value so rapid clicks stack
+  // off the most-recent local state rather than the snapshot that was
+  // captured when the previous click started its transition.
+  const snapRef = useRef(snap);
+  useEffect(() => {
+    snapRef.current = snap;
+  }, [snap]);
 
   useEffect(() => {
     setSnap(snapshot);
+    snapRef.current = snapshot;
   }, [snapshot]);
 
-  const onBump = (delta: 1 | -1) => {
-    // Use the shared validateBump from counters.ts. Owned uses
-    // count as its ceiling and buildCount as its floor — which is
-    // exactly what the helper already encodes for stage="owned".
+  const onBump = useCallback((delta: 1 | -1) => {
+    const current = snapRef.current;
+    // Use the shared validateBump from counters.ts. For stage="owned"
+    // the helper only reads `count` (upper) and `buildCount` (lower);
+    // the other stages aren't part of owned's bounds, so passing
+    // zeros keeps the type happy without affecting validation.
     const check = validateBump(
       {
-        // The helper reads paint/prime/base/complete only for stages
-        // below build; for "owned" it only inspects count + build.
-        // Pass zeros for the unused fields to satisfy the type.
-        count: snap.count,
-        ownedCount: snap.ownedCount,
-        buildCount: snap.buildCount,
+        count: current.count,
+        ownedCount: current.ownedCount,
+        buildCount: current.buildCount,
         primeCount: 0,
         paintCount: 0,
         baseCount: 0,
@@ -60,21 +74,24 @@ export function OwnedCounter({ snapshot }: { snapshot: OwnedSnapshot }) {
     }
     setError(null);
 
-    const prev = snap;
-    setSnap({ ...prev, ownedCount: check.nextValue });
+    const prev = current;
+    const optimistic = { ...prev, ownedCount: check.nextValue };
+    setSnap(optimistic);
+    snapRef.current = optimistic;
 
     startTransition(async () => {
       const result = await bumpCounter({
-        projectId: snap.id,
+        projectId: current.id,
         stage: "owned",
         delta,
       });
       if (!result.ok) {
         setSnap(prev);
+        snapRef.current = prev;
         setError(result.error);
       }
     });
-  };
+  }, []);
 
   if (snap.count === 0) {
     // The stage panel renders the empty-state message; owned has
@@ -118,13 +135,13 @@ export function OwnedCounter({ snapshot }: { snapshot: OwnedSnapshot }) {
           <CounterButton
             label="Decrement owned"
             glyph="−"
-            disabled={!canDecrement || isPending}
+            disabled={!canDecrement}
             onClick={() => onBump(-1)}
           />
           <CounterButton
             label="Increment owned"
             glyph="+"
-            disabled={!canIncrement || isPending}
+            disabled={!canIncrement}
             onClick={() => onBump(1)}
           />
         </span>
