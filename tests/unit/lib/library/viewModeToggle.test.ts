@@ -18,21 +18,28 @@ function read(rel: string): string {
   );
 }
 
-describe("ViewModeToggle — spacing + tap-target floor", () => {
+describe("ViewModeToggle — terminal_ui INIT/SAVE/PAUSE button style", () => {
   const src = read("src/components/library/ViewModeToggle.tsx");
 
-  test("padding bumped to px-5 + gap-2.5", () => {
-    expect(src).toContain("px-5");
-    expect(src).toContain("gap-2.5");
+  // Round-7 (2026-06-01) — Ross feedback: the two buttons were too
+  // close together and joined as a segmented group. New design is two
+  // standalone bordered buttons with a gap between them, yellow as the
+  // selector semantic (cyan-buttons-discipline lock).
+  test("buttons sit separately (gap), not joined as a segmented group", () => {
+    expect(src).toContain("gap-2");
+    expect(src).not.toContain("border border-[var(--color-border-strong)] rounded-sm overflow-hidden");
   });
 
-  test("min-height floor is 36px (desktop tap-target standard)", () => {
-    expect(src).toContain("min-h-[36px]");
+  test("compact size — px-3 padding + min-h-[28px] tap floor", () => {
+    expect(src).toContain("px-3");
+    expect(src).toContain("min-h-[28px]");
   });
 
-  test("active state stays cyan-filled with dark text", () => {
-    expect(src).toContain("bg-[var(--color-accent)]");
+  test("active state uses yellow-filled with dark text (no cyan)", () => {
+    expect(src).toContain("bg-[var(--color-yellow)]");
     expect(src).toContain("text-[var(--color-bg)]");
+    // Cyan banished from buttons per Ross's Round-7 discipline.
+    expect(src).not.toContain("bg-[var(--color-accent)]");
   });
 
   test("ToggleButton has aria-pressed wired for screen readers", () => {

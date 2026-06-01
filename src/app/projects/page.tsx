@@ -86,10 +86,10 @@ export default async function ProjectsPage() {
         <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
           <QuickAddBar />
           <div className="flex gap-2 self-start md:self-end">
-            <Button as="a" href="/projects/import" variant="warning" size="md">
+            <Button as="a" href="/projects/import" variant="warning" size="sm">
               Import army list
             </Button>
-            <Button as="a" href="/projects/new" variant="success" size="md">
+            <Button as="a" href="/projects/new" variant="success" size="sm">
               New project
             </Button>
           </div>
@@ -122,10 +122,10 @@ function EmptyState() {
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
-        <Button as="a" href="/projects/import" variant="warning" size="lg">
+        <Button as="a" href="/projects/import" variant="warning" size="sm">
           Import army list
         </Button>
-        <Button as="a" href="/projects/new" variant="success" size="lg">
+        <Button as="a" href="/projects/new" variant="success" size="sm">
           Create first project
         </Button>
       </div>

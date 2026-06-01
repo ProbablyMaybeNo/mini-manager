@@ -142,6 +142,11 @@ export function InventoryControls({
           redundant (the + already increments + revalidates) so it was
           removed. markPurchased keeps its server-action surface for the
           MarkBoughtModal wishlist flow. */}
+      {/* Owned cluster — Ross feedback 2026-06-01: all controls share
+          the green semantic. `−` is green-outlined (decrement), the
+          count reads in green, `+` is green-outlined (increment). The
+          existing dim-cursor when count===0 prevents accidental drops
+          below zero. */}
       <div className="flex items-center gap-2">
         <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-green)] w-16">
           Owned
@@ -151,10 +156,11 @@ export function InventoryControls({
           onClick={() => bumpOwned(-1)}
           disabled={state.ownedCount === 0 || isPending}
           className={clsx(
-            "tap-target frame px-2 font-mono text-sm",
+            "tap-target inline-flex items-center justify-center min-w-[32px] px-2 py-1 font-mono text-sm leading-none rounded-sm border",
+            "border-[var(--color-green)] text-[var(--color-green)]",
             state.ownedCount === 0
               ? "opacity-40 cursor-not-allowed"
-              : "hover:bg-[color-mix(in_srgb,var(--color-fg)_8%,transparent)]",
+              : "hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)]",
           )}
           aria-label="Decrease owned count"
         >
@@ -167,22 +173,26 @@ export function InventoryControls({
           type="button"
           onClick={() => bumpOwned(1)}
           disabled={isPending}
-          className="tap-target frame px-2 font-mono text-sm text-[var(--color-green)] border-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
+          className="tap-target inline-flex items-center justify-center min-w-[32px] px-2 py-1 font-mono text-sm leading-none rounded-sm border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)]"
           aria-label="Increase owned count"
         >
           +
         </button>
       </div>
+      {/* Add-to-wishlist — Ross feedback: pastel yellow filled when
+          active, yellow outlined when not. Solid bg + dark text on
+          active per the terminal_ui INIT/SAVE button pattern. */}
       <div>
         <button
           type="button"
           onClick={toggleWish}
           disabled={isPending}
           className={clsx(
-            "inline-flex items-center gap-2 px-2 py-1 text-xs font-mono frame tap-target text-[var(--color-yellow)] border-[var(--color-yellow)]",
+            "inline-flex items-center gap-2 px-3 py-1 text-xs font-mono uppercase tracking-wider rounded-sm border tap-target",
+            "border-[var(--color-yellow)]",
             state.isWishlisted
-              ? "bg-[color-mix(in_srgb,var(--color-yellow)_12%,transparent)]"
-              : "hover:bg-[color-mix(in_srgb,var(--color-yellow)_10%,transparent)]",
+              ? "bg-[var(--color-yellow)] text-[var(--color-bg)] font-bold"
+              : "text-[var(--color-yellow)] hover:bg-[color-mix(in_srgb,var(--color-yellow)_12%,transparent)]",
           )}
           aria-pressed={state.isWishlisted}
         >

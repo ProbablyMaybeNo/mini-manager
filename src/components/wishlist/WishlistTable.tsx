@@ -180,8 +180,13 @@ export function WishlistTable({
  * the hidden md: columns (Vendor, Category, Project) drop to 0 because the
  * spans above also have `hidden md:inline`. Desktop restores all eight cols.
  */
+/* Wider status column on desktop (was 80px, now 140px) so the
+ * WishlistToolsMenu + StatusChangePopover both fit without
+ * spilling past the table border (Ross's Round-7 feedback). Title
+ * column shrinks slightly with `minmax(0,1.6fr)` so the total row
+ * still fits 1024px viewports without horizontal scroll. */
 const GRID_CLASS =
-  "grid-cols-[40px_minmax(0,2fr)_70px_14px_56px] md:grid-cols-[40px_minmax(0,2fr)_minmax(0,1fr)_90px_90px_110px_14px_80px]";
+  "grid-cols-[40px_minmax(0,2fr)_70px_14px_120px] md:grid-cols-[40px_minmax(0,1.6fr)_minmax(0,1fr)_80px_90px_110px_14px_140px]";
 
 function Thumbnail({ item }: { item: WishlistItem }) {
   if (item.imageUrl) {

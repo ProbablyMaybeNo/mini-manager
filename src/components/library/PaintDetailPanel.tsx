@@ -153,15 +153,33 @@ export function PaintDetailPanel({
           aria-label={`Swatch ${paint.hex}`}
         />
 
-        <section className="flex items-center gap-3">
-          <TypeIcon type={paint.type} className="text-[var(--color-fg)] text-base" />
-          <StatusPill status={PAINT_TYPE_PILL[paint.type] ?? "neutral"}>
-            {paint.type}
-          </StatusPill>
+        <section
+          className="flex items-center gap-3"
+          aria-label="Paint type and hex confidence"
+        >
+          <span
+            className="inline-flex items-center gap-2"
+            title={`${paint.type} — paint type / medium`}
+          >
+            <TypeIcon type={paint.type} className="text-[var(--color-fg)] text-base" />
+            <StatusPill status={PAINT_TYPE_PILL[paint.type] ?? "neutral"}>
+              {paint.type}
+            </StatusPill>
+          </span>
           <span className="grow" />
-          <HexConfidenceDot confidence={paint.hexConfidence} source={paint.hexSource} />
-          <span className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase">
-            {paint.hexConfidence}
+          <span
+            className="inline-flex items-center gap-2"
+            title={`Hex confidence: ${paint.hexConfidence.toLowerCase()} — how sure we are this hex matches the real paint (source: ${paint.hexSource})`}
+          >
+            <HexConfidenceDot
+              confidence={paint.hexConfidence}
+              source={paint.hexSource}
+            />
+            <span
+              className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase"
+            >
+              {paint.hexConfidence} CONFIDENCE
+            </span>
           </span>
         </section>
 
