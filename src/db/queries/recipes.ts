@@ -348,6 +348,63 @@ export async function listRecipesForTable(
  * at 8 hexes per project so a one-army-thirty-recipes painter still
  * gets a tidy strip.
  */
+/**
+ * R7-1 — Every recipe owned by the user, lean shape for the projects
+ * dashboard's inline AttachRecipe modal. Includes attachedProjectId +
+ * attachedNamedModelId so the table client can resolve human-readable
+ * "attached to X" labels for the picker. createdAt order so the first
+ * one is stable.
+ */
+export async function listOwnedRecipesLean(
+  userId: string,
+): Promise<
+  ReadonlyArray<{
+    id: string;
+    name: string;
+    attachedProjectId: string | null;
+    attachedNamedModelId: string | null;
+  }>
+> {
+  return db
+    .select({
+      id: recipes.id,
+      name: recipes.name,
+      attachedProjectId: recipes.attachedProjectId,
+      attachedNamedModelId: recipes.attachedNamedModelId,
+    })
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId))
+    .orderBy(asc(recipes.createdAt));
+}
+
+/**
+ * R7-1 — Map of projectId → the recipe id to navigate to when the
+ * dashboard "Recipes" cell is clicked. We pick the first recipe by
+ * createdAt asc (deterministic) for projects with multiple attached
+ * recipes; the cell still shows the full palette strip.
+ */
+export async function getProjectFirstRecipeMap(
+  userId: string,
+): Promise<Map<string, string>> {
+  const rows = await db
+    .select({
+      id: recipes.id,
+      attachedProjectId: recipes.attachedProjectId,
+      createdAt: recipes.createdAt,
+    })
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId))
+    .orderBy(asc(recipes.createdAt));
+
+  const map = new Map<string, string>();
+  for (const r of rows) {
+    if (!r.attachedProjectId) continue;
+    if (map.has(r.attachedProjectId)) continue;
+    map.set(r.attachedProjectId, r.id);
+  }
+  return map;
+}
+
 export async function getProjectPalettesMap(
   userId: string,
 ): Promise<Map<string, string[]>> {

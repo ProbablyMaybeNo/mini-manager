@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { projects, projectTypes } from "@/db/schema";
+import { priorities, projects, projectTypes } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import type { DisplayStatus } from "@/lib/progress";
 
 /**
  * Result for client components that want to render errors inline.
@@ -169,6 +170,293 @@ export async function updateProjectCount(
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to update count",
+    };
+  }
+}
+
+/* ============================================================
+   R7-1 inline dashboard editing — type / priority / status bump
+   ============================================================ */
+
+const updateTypeSchema = z.object({
+  id: z.string().min(1).max(64),
+  type: z.enum(projectTypes),
+});
+
+/** R7-1 — inline Type cell on the projects dashboard. */
+export async function updateProjectType(
+  raw: z.infer<typeof updateTypeSchema>,
+): Promise<ActionResult<{ id: string; type: (typeof projectTypes)[number] }>> {
+  const parsed = updateTypeSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid type",
+    };
+  }
+  const { id, type } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  try {
+    await db.update(projects).set({ type }).where(eq(projects.id, id));
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${id}`);
+    return { ok: true, data: { id, type } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to update type",
+    };
+  }
+}
+
+const updatePrioritySchema = z.object({
+  id: z.string().min(1).max(64),
+  priority: z.enum(priorities).nullable(),
+});
+
+/** R7-1 — inline Priority cell on the projects dashboard. `null` clears. */
+export async function updateProjectPriority(
+  raw: z.infer<typeof updatePrioritySchema>,
+): Promise<
+  ActionResult<{ id: string; priority: (typeof priorities)[number] | null }>
+> {
+  const parsed = updatePrioritySchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid priority",
+    };
+  }
+  const { id, priority } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  try {
+    await db.update(projects).set({ priority }).where(eq(projects.id, id));
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${id}`);
+    return { ok: true, data: { id, priority } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to update priority",
+    };
+  }
+}
+
+const bumpStatusSchema = z.object({
+  id: z.string().min(1).max(64),
+  status: z.enum([
+    "WISHLIST",
+    "PURCHASED",
+    "BUILDING",
+    "PRIMING",
+    "PAINTING",
+    "BASING",
+    "COMPLETE",
+    "SHELVED",
+  ]),
+});
+
+/**
+ * R7-1 — inline Status cell on the projects dashboard.
+ *
+ * Status is DERIVED from stage counts, so picking "Bump to PAINTING"
+ * cascades counts so that the picked stage is the lead stage. Strategy
+ * matches the cascade-CHECK constraint:
+ *   count ≥ owned ≥ build ≥ prime ≥ paint ≥ base ≥ complete ≥ 0
+ *
+ * Ross approved option (a): no schema column for manual override. The
+ * displayStatus() helper continues to derive the pill straight off the
+ * stage counts.
+ */
+export async function bumpProjectStatus(
+  raw: z.infer<typeof bumpStatusSchema>,
+): Promise<ActionResult<{ id: string; status: DisplayStatus }>> {
+  const parsed = bumpStatusSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid status",
+    };
+  }
+  const { id, status } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  // SHELVED is orthogonal — flips the boolean, leaves counters alone.
+  if (status === "SHELVED") {
+    try {
+      await db
+        .update(projects)
+        .set({ isShelved: true })
+        .where(eq(projects.id, id));
+      revalidatePath("/projects");
+      revalidatePath(`/projects/${id}`);
+      return { ok: true, data: { id, status } };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Failed to shelve",
+      };
+    }
+  }
+
+  // WISHLIST → zero everything (count === 0). Wishlist is the only state
+  // where `count` is allowed to be zero.
+  if (status === "WISHLIST") {
+    try {
+      await db
+        .update(projects)
+        .set({
+          isShelved: false,
+          count: 0,
+          ownedCount: 0,
+          buildCount: 0,
+          primeCount: 0,
+          paintCount: 0,
+          baseCount: 0,
+          completeCount: 0,
+        })
+        .where(eq(projects.id, id));
+      revalidatePath("/projects");
+      revalidatePath(`/projects/${id}`);
+      return { ok: true, data: { id, status } };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Failed to update status",
+      };
+    }
+  }
+
+  // Bump cascade. The picked status is the LEAD stage — i.e. the
+  // most-advanced stage with any count > 0. To make displayStatus()
+  // return exactly the picked value we:
+  //
+  //   * preserve count (forced to ≥ 1 since the project just left
+  //     WISHLIST),
+  //   * raise every stage at or below the lead to ≥ 1,
+  //   * force every stage ABOVE the lead to 0,
+  //   * keep the cascade-CHECK (count ≥ owned ≥ build ≥ prime ≥ paint
+  //     ≥ base ≥ complete ≥ 0) intact.
+  //
+  // For COMPLETE the lead is the deepest stage, so every lane fills to
+  // the full count.
+  const baseCount = Math.max(1, project.count);
+
+  type StageRule = {
+    owned: number; // minimum
+    build: number;
+    prime: number;
+    paint: number;
+    base: number;
+    complete: number;
+  };
+
+  const ZERO = 0;
+  const ONE = 1;
+  const FILL = baseCount;
+
+  // Each key picks the minimum each stage gets. Stages above the picked
+  // lead are then clamped to 0 below.
+  const minByStatus: Record<
+    Exclude<DisplayStatus, "SHELVED" | "WISHLIST">,
+    StageRule
+  > = {
+    PURCHASED: { owned: ONE, build: ZERO, prime: ZERO, paint: ZERO, base: ZERO, complete: ZERO },
+    BUILDING: { owned: ONE, build: ONE, prime: ZERO, paint: ZERO, base: ZERO, complete: ZERO },
+    PRIMING: { owned: ONE, build: ONE, prime: ONE, paint: ZERO, base: ZERO, complete: ZERO },
+    PAINTING: { owned: ONE, build: ONE, prime: ONE, paint: ONE, base: ZERO, complete: ZERO },
+    BASING: { owned: ONE, build: ONE, prime: ONE, paint: ONE, base: ONE, complete: ZERO },
+    COMPLETE: { owned: FILL, build: FILL, prime: FILL, paint: FILL, base: FILL, complete: FILL },
+  };
+
+  // For every stage strictly above the lead, the count must be 0
+  // (else displayStatus would pick a more-advanced label). For every
+  // stage at or below the lead, raise to max(current, 1) so the lead
+  // logic in displayStatus() lands on the picked status.
+  const above: Record<
+    Exclude<DisplayStatus, "SHELVED" | "WISHLIST">,
+    ReadonlySet<keyof StageRule>
+  > = {
+    PURCHASED: new Set(["build", "prime", "paint", "base", "complete"]),
+    BUILDING: new Set(["prime", "paint", "base", "complete"]),
+    PRIMING: new Set(["paint", "base", "complete"]),
+    PAINTING: new Set(["base", "complete"]),
+    BASING: new Set(["complete"]),
+    COMPLETE: new Set([]),
+  };
+
+  const mins = minByStatus[status];
+  const zeroed = above[status];
+
+  const owned = zeroed.has("owned")
+    ? 0
+    : Math.min(baseCount, Math.max(project.ownedCount, mins.owned));
+  const built = zeroed.has("build")
+    ? 0
+    : Math.min(owned, Math.max(project.buildCount, mins.build));
+  const primed = zeroed.has("prime")
+    ? 0
+    : Math.min(built, Math.max(project.primeCount, mins.prime));
+  const painted = zeroed.has("paint")
+    ? 0
+    : Math.min(primed, Math.max(project.paintCount, mins.paint));
+  const based = zeroed.has("base")
+    ? 0
+    : Math.min(painted, Math.max(project.baseCount, mins.base));
+  const complete = zeroed.has("complete")
+    ? 0
+    : Math.min(based, Math.max(project.completeCount, mins.complete));
+
+  try {
+    await db
+      .update(projects)
+      .set({
+        isShelved: false,
+        count: baseCount,
+        ownedCount: owned,
+        buildCount: built,
+        primeCount: primed,
+        paintCount: painted,
+        baseCount: based,
+        completeCount: complete,
+      })
+      .where(eq(projects.id, id));
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${id}`);
+    if (project.parentId) {
+      revalidatePath(`/projects/${project.parentId}`);
+    }
+    return { ok: true, data: { id, status } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to update status",
     };
   }
 }

@@ -20,8 +20,14 @@ vi.mock("@/lib/auth-stub", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
-const { createProject } = await import("@/lib/actions/projects");
+const {
+  createProject,
+  updateProjectType,
+  updateProjectPriority,
+  bumpProjectStatus,
+} = await import("@/lib/actions/projects");
 const { redirect } = await import("next/navigation");
+const { displayStatus } = await import("@/lib/progress");
 
 beforeEach(async () => {
   const { db, userId } = await makeTestDb();
@@ -135,5 +141,144 @@ describe("createProject", () => {
     });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/Parent project not found/);
+  });
+});
+
+/* ============================================================
+   R7-1 — inline dashboard editing actions
+   ============================================================ */
+
+describe("updateProjectType", () => {
+  test("changes the type for the owner", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 10 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await updateProjectType({ id: row!.id, type: "Single Model" });
+    expect(res.ok).toBe(true);
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(updated!.type).toBe("Single Model");
+  });
+
+  test("does not touch projects owned by another user", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 10 });
+    const [row] = await state.db!.select().from(projects);
+
+    state.userId = "other-user";
+    const res = await updateProjectType({ id: row!.id, type: "Army" });
+    expect(res.ok).toBe(false);
+  });
+});
+
+describe("updateProjectPriority", () => {
+  test("sets a priority + clears it via null", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 5 });
+    const [row] = await state.db!.select().from(projects);
+
+    const setRes = await updateProjectPriority({
+      id: row!.id,
+      priority: "Urgent",
+    });
+    expect(setRes.ok).toBe(true);
+    const [afterSet] = await state.db!.select().from(projects);
+    expect(afterSet!.priority).toBe("Urgent");
+
+    const clearRes = await updateProjectPriority({
+      id: row!.id,
+      priority: null,
+    });
+    expect(clearRes.ok).toBe(true);
+    const [afterClear] = await state.db!.select().from(projects);
+    expect(afterClear!.priority).toBeNull();
+  });
+});
+
+describe("bumpProjectStatus", () => {
+  test("PURCHASED — sets owned ≥ 1, zeroes the rest", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 10 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await bumpProjectStatus({ id: row!.id, status: "PURCHASED" });
+    expect(res.ok).toBe(true);
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(displayStatus(updated!)).toBe("PURCHASED");
+    expect(updated!.ownedCount).toBeGreaterThanOrEqual(1);
+    expect(updated!.buildCount).toBe(0);
+  });
+
+  test("PAINTING — cascade lifts owned/build/prime/paint to ≥ 1", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 5 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await bumpProjectStatus({ id: row!.id, status: "PAINTING" });
+    expect(res.ok).toBe(true);
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(displayStatus(updated!)).toBe("PAINTING");
+    expect(updated!.ownedCount).toBeGreaterThanOrEqual(1);
+    expect(updated!.buildCount).toBeGreaterThanOrEqual(1);
+    expect(updated!.primeCount).toBeGreaterThanOrEqual(1);
+    expect(updated!.paintCount).toBeGreaterThanOrEqual(1);
+    expect(updated!.baseCount).toBe(0);
+    expect(updated!.completeCount).toBe(0);
+  });
+
+  test("WISHLIST — zeroes count + all stages", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 8 });
+    const [row] = await state.db!.select().from(projects);
+    await bumpProjectStatus({ id: row!.id, status: "PAINTING" });
+
+    const res = await bumpProjectStatus({ id: row!.id, status: "WISHLIST" });
+    expect(res.ok).toBe(true);
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(displayStatus(updated!)).toBe("WISHLIST");
+    expect(updated!.count).toBe(0);
+    expect(updated!.ownedCount).toBe(0);
+    expect(updated!.buildCount).toBe(0);
+  });
+
+  test("SHELVED — sets isShelved without disturbing counters", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 5 });
+    const [row] = await state.db!.select().from(projects);
+    await bumpProjectStatus({ id: row!.id, status: "PAINTING" });
+    const [beforeShelve] = await state.db!.select().from(projects);
+
+    const res = await bumpProjectStatus({ id: row!.id, status: "SHELVED" });
+    expect(res.ok).toBe(true);
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(displayStatus(updated!)).toBe("SHELVED");
+    expect(updated!.isShelved).toBe(true);
+    // Stage counters unchanged
+    expect(updated!.paintCount).toBe(beforeShelve!.paintCount);
+  });
+
+  test("demote: COMPLETE → PAINTING clears base + complete", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 4 });
+    const [row] = await state.db!.select().from(projects);
+    await bumpProjectStatus({ id: row!.id, status: "COMPLETE" });
+
+    const res = await bumpProjectStatus({ id: row!.id, status: "PAINTING" });
+    expect(res.ok).toBe(true);
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(displayStatus(updated!)).toBe("PAINTING");
+    expect(updated!.baseCount).toBe(0);
+    expect(updated!.completeCount).toBe(0);
+    expect(updated!.paintCount).toBeGreaterThanOrEqual(1);
+  });
+
+  test("COMPLETE — fills every lane to count", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 6 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await bumpProjectStatus({ id: row!.id, status: "COMPLETE" });
+    expect(res.ok).toBe(true);
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(displayStatus(updated!)).toBe("COMPLETE");
+    expect(updated!.completeCount).toBe(updated!.count);
   });
 });

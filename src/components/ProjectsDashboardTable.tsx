@@ -1,12 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import type { Priority, ProjectType } from "@/db/schema";
+import { priorities, projectTypes } from "@/db/schema";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
+import {
+  InlineCellPopover,
+  InlineCellPopoverItem,
+} from "@/components/ui/InlineCellPopover";
 import type { DisplayStatus } from "@/lib/progress";
+import {
+  bumpProjectStatus,
+  updateProjectPriority,
+  updateProjectType,
+} from "@/lib/actions/projects";
+import {
+  AttachRecipeModal,
+  type RecipeOption,
+} from "@/components/recipes/AttachRecipeModal";
+
+const STATUS_ORDER: ReadonlyArray<DisplayStatus> = [
+  "WISHLIST",
+  "PURCHASED",
+  "BUILDING",
+  "PRIMING",
+  "PAINTING",
+  "BASING",
+  "COMPLETE",
+  "SHELVED",
+];
 
 /** Per-row VM. Page builds these server-side from listAllProjects
  *  + getProjectPalettesMap + countNamedModelsByProject + the existing
@@ -32,6 +58,9 @@ export interface ProjectDashboardRow {
   updatedAt: number;
   parentId: string | null;
   depth: number;
+  /** R7-1 — set when the project already has at least one attached
+   *  recipe. Clicking the Recipes cell navigates here. */
+  firstAttachedRecipeId: string | null;
 }
 
 const STORAGE_KEY = "mm.projects.expanded";
@@ -111,6 +140,20 @@ type SortDir = "asc" | "desc";
 
 interface Props {
   rows: ReadonlyArray<ProjectDashboardRow>;
+  /** R7-1 — every recipe the user owns, pre-fetched server-side. The
+   *  per-row Recipes cell filters to the candidates that aren't yet
+   *  attached to THAT project. */
+  ownedRecipes: ReadonlyArray<{
+    id: string;
+    name: string;
+    attachedProjectId: string | null;
+    attachedNamedModelId: string | null;
+  }>;
+  /** R7-1 — projectId → human name lookup so the AttachRecipeModal can
+   *  show "currently attached to <X>" labels. */
+  projectNameById: Readonly<Record<string, string>>;
+  /** R7-1 — namedModelId → human name lookup, same purpose. */
+  namedModelNameById: Readonly<Record<string, string>>;
 }
 
 /**
@@ -126,7 +169,12 @@ interface Props {
  *
  * Expandable hierarchy rows (Army > Units > Models) land in P12.7.
  */
-export function ProjectsDashboardTable({ rows }: Props) {
+export function ProjectsDashboardTable({
+  rows,
+  ownedRecipes,
+  projectNameById,
+  namedModelNameById,
+}: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
@@ -277,6 +325,9 @@ export function ProjectsDashboardTable({ rows }: Props) {
                 hasChildren={hasChildren}
                 expanded={expanded.has(row.id)}
                 onToggleExpand={() => toggleExpanded(row.id)}
+                ownedRecipes={ownedRecipes}
+                projectNameById={projectNameById}
+                namedModelNameById={namedModelNameById}
               />
             );
           })}
@@ -328,18 +379,80 @@ function DashboardRow({
   hasChildren,
   expanded,
   onToggleExpand,
+  ownedRecipes,
+  projectNameById,
+  namedModelNameById,
 }: {
   row: ProjectDashboardRow;
   hasChildren: boolean;
   expanded: boolean;
   onToggleExpand: () => void;
+  ownedRecipes: ReadonlyArray<{
+    id: string;
+    name: string;
+    attachedProjectId: string | null;
+    attachedNamedModelId: string | null;
+  }>;
+  projectNameById: Readonly<Record<string, string>>;
+  namedModelNameById: Readonly<Record<string, string>>;
 }) {
   const typeChipClass = TYPE_CHIP[row.type];
   // Tree-connector indent — 16px per depth level. depth 0 = no indent.
   const indentPx = row.depth * 16;
+
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [attachOpen, setAttachOpen] = useState(false);
+
+  const attachCandidates: ReadonlyArray<RecipeOption> = useMemo(() => {
+    return ownedRecipes
+      .filter((r) => r.attachedProjectId !== row.id)
+      .map((r) => {
+        let label: string | null = null;
+        if (r.attachedProjectId) {
+          label = projectNameById[r.attachedProjectId] ?? "(project)";
+        } else if (r.attachedNamedModelId) {
+          label = namedModelNameById[r.attachedNamedModelId] ?? "(unit)";
+        }
+        return { id: r.id, name: r.name, attachmentLabel: label };
+      });
+  }, [ownedRecipes, projectNameById, namedModelNameById, row.id]);
+
+  const handleStatus = (next: DisplayStatus) => {
+    startTransition(async () => {
+      const result = await bumpProjectStatus({ id: row.id, status: next });
+      if (result.ok) router.refresh();
+    });
+  };
+
+  const handleType = (next: ProjectType) => {
+    startTransition(async () => {
+      const result = await updateProjectType({ id: row.id, type: next });
+      if (result.ok) router.refresh();
+    });
+  };
+
+  const handlePriority = (next: Priority | null) => {
+    startTransition(async () => {
+      const result = await updateProjectPriority({ id: row.id, priority: next });
+      if (result.ok) router.refresh();
+    });
+  };
+
+  const handleRecipeCellClick = () => {
+    if (row.firstAttachedRecipeId) {
+      router.push(`/recipes/${row.firstAttachedRecipeId}`);
+    } else {
+      setAttachOpen(true);
+    }
+  };
+
   return (
     <tr
-      className="hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors"
+      className={clsx(
+        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors",
+        pending && "opacity-70",
+      )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
     >
@@ -395,16 +508,95 @@ function DashboardRow({
         ) : null}
       </td>
       <td className="px-3 py-2">
-        <span className={clsx("type-chip", typeChipClass)}>{row.type}</span>
+        <InlineCellPopover
+          triggerLabel={`Type · ${row.type}`}
+          trigger={
+            <span className={clsx("type-chip", typeChipClass)}>{row.type}</span>
+          }
+        >
+          {projectTypes.map((t) => (
+            <InlineCellPopoverItem
+              key={t}
+              active={t === row.type}
+              onClick={() => handleType(t)}
+            >
+              {t}
+            </InlineCellPopoverItem>
+          ))}
+        </InlineCellPopover>
       </td>
       <td className="px-3 py-2">
-        <PaletteStrip hexes={row.paletteHexes} />
+        <button
+          type="button"
+          onClick={handleRecipeCellClick}
+          className="text-left cursor-pointer hover:opacity-80 transition-opacity"
+          aria-label={
+            row.firstAttachedRecipeId
+              ? "Open attached recipe"
+              : "Attach a recipe"
+          }
+        >
+          {row.paletteHexes.length > 0 ? (
+            <PaletteStrip hexes={row.paletteHexes} />
+          ) : (
+            <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors">
+              + attach
+            </span>
+          )}
+        </button>
+        <AttachRecipeModal
+          mode="project"
+          projectId={row.id}
+          open={attachOpen}
+          onClose={() => setAttachOpen(false)}
+          candidates={attachCandidates}
+        />
       </td>
       <td className="px-3 py-2">
-        <StatusPill status={STATUS_PILL[row.status]}>{row.status}</StatusPill>
+        <InlineCellPopover
+          triggerLabel={`Status · ${row.status}`}
+          trigger={
+            <StatusPill status={STATUS_PILL[row.status]}>
+              {row.status}
+            </StatusPill>
+          }
+        >
+          {STATUS_ORDER.map((s) => (
+            <InlineCellPopoverItem
+              key={s}
+              active={s === row.status}
+              onClick={() => handleStatus(s)}
+            >
+              {s}
+            </InlineCellPopoverItem>
+          ))}
+        </InlineCellPopover>
       </td>
-      <td className="px-3 py-2 text-[var(--color-fg-muted)]">
-        {row.priority ?? "—"}
+      <td className="px-3 py-2">
+        <InlineCellPopover
+          triggerLabel={`Priority · ${row.priority ?? "Unset"}`}
+          trigger={
+            <span className="font-mono text-xs text-[var(--color-fg-muted)]">
+              {row.priority ?? "—"}
+            </span>
+          }
+        >
+          {priorities.map((p) => (
+            <InlineCellPopoverItem
+              key={p}
+              active={p === row.priority}
+              onClick={() => handlePriority(p)}
+            >
+              {p}
+            </InlineCellPopoverItem>
+          ))}
+          <InlineCellPopoverItem
+            destructive
+            onClick={() => handlePriority(null)}
+          >
+            Clear
+          </InlineCellPopoverItem>
+        </InlineCellPopover>
       </td>
       <td className="px-3 py-2">
         <span className="inline-flex items-center gap-2">

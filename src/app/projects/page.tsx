@@ -3,7 +3,13 @@ import {
   countNamedModelsByProject,
   listAllProjects,
 } from "@/db/queries/projects";
-import { getProjectPalettesMap } from "@/db/queries/recipes";
+import {
+  getProjectFirstRecipeMap,
+  getProjectPalettesMap,
+  listOwnedRecipesLean,
+} from "@/db/queries/recipes";
+import { db } from "@/db/client";
+import { namedModels } from "@/db/schema";
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
@@ -33,14 +39,32 @@ export const dynamic = "force-dynamic";
  */
 export default async function ProjectsPage() {
   const userId = await currentUserId();
-  const [allProjects, namedCountByProject, palettesByProjectId] =
-    await Promise.all([
-      listAllProjects(userId),
-      countNamedModelsByProject(userId),
-      getProjectPalettesMap(userId),
-    ]);
+  const [
+    allProjects,
+    namedCountByProject,
+    palettesByProjectId,
+    firstRecipeByProjectId,
+    ownedRecipes,
+    allNamedModels,
+  ] = await Promise.all([
+    listAllProjects(userId),
+    countNamedModelsByProject(userId),
+    getProjectPalettesMap(userId),
+    getProjectFirstRecipeMap(userId),
+    listOwnedRecipesLean(userId),
+    db
+      .select({ id: namedModels.id, name: namedModels.name })
+      .from(namedModels),
+  ]);
 
   const isEmpty = allProjects.length === 0;
+
+  // Build name lookups so the inline AttachRecipeModal can label
+  // recipes that are currently attached elsewhere.
+  const projectNameById: Record<string, string> = {};
+  for (const p of allProjects) projectNameById[p.id] = p.name;
+  const namedModelNameById: Record<string, string> = {};
+  for (const m of allNamedModels) namedModelNameById[m.id] = m.name;
 
   // Compute depth per project: 0 for top-level, 1 for children of
   // top-level, 2 for grandchildren. Three-level cap is enforced
@@ -71,6 +95,7 @@ export default async function ProjectsPage() {
     updatedAt: p.updatedAt.getTime(),
     parentId: p.parentId,
     depth: depthOf(p.id),
+    firstAttachedRecipeId: firstRecipeByProjectId.get(p.id) ?? null,
   }));
 
   return (
@@ -101,7 +126,12 @@ export default async function ProjectsPage() {
       ) : (
         <>
           <TopWishesPanel />
-          <ProjectsDashboardTable rows={rows} />
+          <ProjectsDashboardTable
+            rows={rows}
+            ownedRecipes={ownedRecipes}
+            projectNameById={projectNameById}
+            namedModelNameById={namedModelNameById}
+          />
           <RecentlyBoughtLine />
         </>
       )}
