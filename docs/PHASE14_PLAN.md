@@ -33,7 +33,7 @@ events                          activity_log                    inspo_images
 
 ## Milestones (build in this order)
 
-### P14.1 — Schema + activity_log emit wiring (FOUNDATION — do FIRST)
+### P14.1 — Schema + activity_log emit wiring (FOUNDATION — do FIRST) ✅
 - Drizzle migration adding the three tables above.
 - Wire `activity_log` writes into existing server actions:
   - `bumpStage*` actions → emit `stage_bump`
@@ -43,12 +43,14 @@ events                          activity_log                    inspo_images
   - `addSlot` → emit `slot_added`
 - Single write helper `logActivity(userId, kind, refId?)` to keep the call sites narrow.
 - **Acceptance:** existing baselines unchanged. New tables created. activity_log rows accumulate as user interacts.
+- **Shipped 2026-06-01 · commit 4a1823a.** 1224 → 1233 passing (+9), typecheck clean. Wires: createProject, bumpCounter, bumpProjectStatus (all branches), createRecipe, addZone, addSlotWithPaint, markBoughtAsNewProject, markBoughtAsExistingUnit.
 
-### P14.2 — PLANNER section scaffold on /projects
+### P14.2 — PLANNER section scaffold on /projects ✅
 - Add PLANNER section header below the existing FOCUS section + above the dashboard table.
 - Empty-state copy describing what's coming: "Your painting cadence — events, streak, recent activity, inspiration. Add an event or paint a model to start it up."
 - Two-column responsive grid skeleton (Calendar left / Activity+Streak+Heatmap+Inspo stacked right on desktop; full stack on mobile).
 - **Acceptance:** section renders, empty states friendly, no widget logic yet.
+- **Shipped 2026-06-01 · commit 37d61a3.** 1233 → 1246 passing (+13), typecheck clean. Five sibling cells (Calendar / Activity / Streak / Heatmap / Inspo) ready for the P14.3–7 widget builders to fill in.
 
 ### P14.3 — Calendar widget
 - Month-view grid (current month default, prev/next nav).
