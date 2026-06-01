@@ -2,6 +2,14 @@
 
 Single source of truth for "what does Ross need to do before recruits land?" Pulls together V2-BUILD-PLAN §14, the credential rotation playbook, the Stripe ship-checklist, the recruit DM template, and the residual P-phase polish items. Living doc — strike items as they ship.
 
+## Verdict (Round 8 audit, 2026-06-01)
+
+# 🟢 Launch — send the invites.
+
+The Round 8 ux-auditor walked the live deploy as a fresh recruit `recruit_r8` across desktop + 375/414px mobile. **Verdict: recruit-ready.** Both headline R7 fixes verified passing in production: custom-hex paint slots persist across reload (R7-001), and edit-slot mode replaces rather than appends (R7-002). All 5 primary recruit flows complete without dead-ends. Zero critical, zero high findings — the 12 remaining items are low/medium polish, post-launch. See `ux-audit/report_v8.md` for the full verification table.
+
+The code side is done. Outstanding tasks are Ross-side: credential rotation, Stripe (deferred until you create the account), and the recruit outreach itself.
+
 ## §14 ship-ready criteria (from V2-BUILD-PLAN)
 
 | # | Criterion | Status |
