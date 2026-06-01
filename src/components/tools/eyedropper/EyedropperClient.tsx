@@ -239,7 +239,7 @@ export function EyedropperClient() {
                   onClick={() => setCameraOpen(true)}
                   disabled={busy || swatches.length >= SWATCH_COUNT}
                   variant="primary"
-                  size="md"
+                  size="sm"
                   className="w-full"
                   aria-label="Open camera sampler"
                 >

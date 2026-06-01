@@ -62,7 +62,7 @@ export function CloneButton({ slug }: Props) {
         onClick={handleClick}
         disabled={isPending}
         variant="success"
-        size="md"
+        size="sm"
         className="w-full sm:w-auto"
       >
         {isPending ? "Cloning…" : "Clone to my recipes"}

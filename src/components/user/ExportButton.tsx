@@ -53,7 +53,7 @@ export function ExportButton() {
         onClick={handleClick}
         disabled={isPending}
         variant="warning"
-        size="md"
+        size="sm"
       >
         {isPending ? "Exporting…" : "Export all my data"}
       </Button>

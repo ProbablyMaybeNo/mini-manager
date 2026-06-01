@@ -48,7 +48,7 @@ export function NewRecipeButton({
       onClick={handleClick}
       disabled={isPending}
       variant={variant === "primary" ? "success" : "ghost"}
-      size="md"
+      size="sm"
     >
       {isPending ? "Creating…" : label}
     </Button>

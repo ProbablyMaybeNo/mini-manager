@@ -61,7 +61,7 @@ export function ForgotPasswordForm({ initialUsername }: Props) {
       <Button
         type="submit"
         variant="primary"
-        size="md"
+        size="lg"
         disabled={isPending}
         className="w-full"
       >

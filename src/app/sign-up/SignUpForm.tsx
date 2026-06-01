@@ -187,7 +187,7 @@ export function SignUpForm() {
       <Button
         type="submit"
         variant="primary"
-        size="md"
+        size="lg"
         disabled={
           isPending ||
           !username.trim() ||

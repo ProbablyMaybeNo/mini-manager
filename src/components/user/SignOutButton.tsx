@@ -16,7 +16,7 @@ export function SignOutButton() {
     <Button
       type="button"
       variant="danger"
-      size="md"
+      size="sm"
       disabled={isPending}
       onClick={() => startTransition(() => signOutAction())}
     >

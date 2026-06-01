@@ -111,7 +111,7 @@ export function AddNamedModelForm({
           type="submit"
           disabled={isPending}
           variant="success"
-          size="md"
+          size="sm"
         >
           {isPending ? "Adding…" : "Add"}
         </Button>
@@ -121,7 +121,7 @@ export function AddNamedModelForm({
             onClick={collapse}
             disabled={isPending}
             variant="ghost"
-            size="md"
+            size="sm"
           >
             Cancel
           </Button>

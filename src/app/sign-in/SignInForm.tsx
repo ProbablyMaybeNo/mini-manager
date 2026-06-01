@@ -90,7 +90,7 @@ export function SignInForm({ redirectTarget, initialError }: SignInFormProps) {
       <Button
         type="submit"
         variant="primary"
-        size="md"
+        size="lg"
         disabled={isPending || !username.trim() || password.length === 0}
         className="w-full"
       >

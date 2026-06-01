@@ -12,7 +12,7 @@ export default function PublicRecipeNotFound() {
       {/* The public 404 is the only way back for an outside user who
           landed on a dead share link — primary variant gets the full
           attention. Button primitive enforces tap-target minimums. */}
-      <Button as="a" href="/" variant="primary" size="md">
+      <Button as="a" href="/" variant="primary" size="sm">
         Back to Mini Manager
       </Button>
     </div>

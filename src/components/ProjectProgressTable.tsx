@@ -92,7 +92,7 @@ export function ProjectProgressTable({
             as="a"
             href={`/projects/new?parent=${parentId}&type=Unit`}
             variant="success"
-            size="md"
+            size="sm"
           >
             {addLabel}
           </Button>
@@ -101,7 +101,7 @@ export function ProjectProgressTable({
               as="a"
               href={`/projects/new?parent=${parentId}&type=Terrain Piece`}
               variant="success"
-              size="md"
+              size="sm"
             >
               + ADD TERRAIN
             </Button>

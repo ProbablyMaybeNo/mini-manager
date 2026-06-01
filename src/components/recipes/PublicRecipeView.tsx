@@ -143,7 +143,7 @@ export async function PublicRecipeView({
 
       <footer className="border-t border-[var(--color-border)] pt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between">
         {isOwner ? (
-          <Button as="a" href={`/recipes/${recipe.id}`} variant="primary" size="md">
+          <Button as="a" href={`/recipes/${recipe.id}`} variant="primary" size="sm">
             Edit in Mini Manager
           </Button>
         ) : (

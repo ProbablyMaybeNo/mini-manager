@@ -90,7 +90,7 @@ export function QuickAddBar() {
           disabled={isPending || value.trim().length === 0}
           aria-label="Add project"
           variant="success"
-          size="md"
+          size="sm"
         >
           {isPending ? "…" : "Add"}
         </Button>

@@ -86,7 +86,7 @@ export function ResetPasswordForm({ token }: Props) {
       <Button
         type="submit"
         variant="primary"
-        size="md"
+        size="lg"
         disabled={isPending}
         className="w-full"
       >

@@ -241,7 +241,7 @@ export function ImportClient() {
             onClick={() => fileInputRef.current?.click()}
             disabled={isPending}
             variant="warning"
-            size="md"
+            size="sm"
           >
             {isPending ? "Parsing…" : "Choose file"}
           </Button>
@@ -275,7 +275,7 @@ export function ImportClient() {
               type="submit"
               disabled={isPending || pasted.trim().length === 0}
               variant="warning"
-              size="md"
+              size="sm"
             >
               {isPending ? "Parsing…" : "Parse list"}
             </Button>

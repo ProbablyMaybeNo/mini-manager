@@ -256,11 +256,11 @@ export function NewProjectForm({
           type="submit"
           disabled={isPending}
           variant="success"
-          size="md"
+          size="sm"
         >
           {isPending ? "Creating…" : "Create project"}
         </Button>
-        <Button as="a" href="/projects" variant="ghost" size="md">
+        <Button as="a" href="/projects" variant="ghost" size="sm">
           Cancel
         </Button>
       </div>

@@ -224,7 +224,7 @@ export function ShareModal({
               onClick={onNativeShare}
               disabled={isPending}
               variant="warning"
-              size="md"
+              size="sm"
               className="w-full"
             >
               Share via…

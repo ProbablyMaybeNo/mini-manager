@@ -299,7 +299,7 @@ export function ImportPreview({
             type="button"
             onClick={onAddUnit}
             variant="ghost"
-            size="md"
+            size="sm"
             className="w-full"
           >
             Add unit
@@ -321,7 +321,7 @@ export function ImportPreview({
           onClick={onApply}
           disabled={busy || units.length === 0}
           variant="success"
-          size="lg"
+          size="sm"
         >
           {busy ? "Applying…" : "Apply → create projects"}
         </Button>

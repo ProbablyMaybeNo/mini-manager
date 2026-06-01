@@ -138,7 +138,7 @@ export function RecoveryEmailCard({
             <Button
               type="submit"
               variant="primary"
-              size="md"
+              size="sm"
               disabled={isPending}
             >
               {email ? "Update" : "Add"}
@@ -147,7 +147,7 @@ export function RecoveryEmailCard({
               <Button
                 type="button"
                 variant="ghost"
-                size="md"
+                size="sm"
                 onClick={() => {
                   setEditing(false);
                   setInputValue("");
