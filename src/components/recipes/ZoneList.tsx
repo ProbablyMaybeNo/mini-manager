@@ -3,20 +3,16 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import {
-  ZONE_PRESET_KEYS,
-  ZONE_PRESET_LABEL,
-  getZonePreset,
-  type ZonePresetKey,
-} from "@/lib/silhouettes/presets";
-import {
-  addZone,
-  addZonesBulk,
+  addSlotWithPaint,
   deleteZone,
   reorderZones,
 } from "@/lib/actions/recipeZones";
+import { updateStep } from "@/lib/actions/recipeSteps";
 import { Card } from "@/components/ui/Card";
 import { LogTag } from "@/components/ui/LogTag";
 import { Button } from "@/components/ui/Button";
+import { ColorPicker } from "@/components/ui/ColorPicker";
+import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 
 export interface ZoneListItem {
   id: string;
@@ -24,10 +20,16 @@ export interface ZoneListItem {
   silhouetteZoneId: string | null;
   stepCount: number;
   swatchHex: string | null;
+  /** First-step id of the slot — used by the picker side panel to
+   *  swap the paint on an already-filled slot via updateStep. */
+  firstStepId: string | null;
 }
 
 interface Props {
   recipeId: string;
+  /** Kept on the props for backwards-compat with the page component +
+   *  any downstream consumer; the starter-set picker is gone in P12.2,
+   *  but bodyType is still useful as a future filter input. */
   bodyType: string;
   zones: ReadonlyArray<ZoneListItem>;
   selectedZoneId: string | null;
@@ -35,22 +37,24 @@ interface Props {
 }
 
 /**
- * The colour-slot CRUD pane. Two ways in:
- *   - `+ Add color` — text input, painter types whatever
- *     ("Carapace", "Shoulder badge", "Pauldron trim", etc.)
- *   - `Use a starter set ▾` — one-shot populate from a preset
- *     pack (Infantry / Vehicle / Monster / Terrain). Defaults to
- *     the recipe's bodyType; painter can pick any pack.
+ * Recipe colour-slot grid (P12.2 rebuild).
  *
- * Reorder uses HTML5 drag-and-drop (same idiom as StepList).
+ * Click an empty `+` slot → opens the ColorPicker side panel. Pick a
+ * colour (any of the three sub-panels) → server-action creates the
+ * zone + a single basecoat step in one call. The slot fills in.
  *
- * UI strings flipped from "Zone" → "Color slot" in P11.3 — schema
- * columns (`recipe_zone`, `silhouetteZoneId`) + server actions
- * (`addZone`, `reorderZones`) intentionally stay named as-is.
+ * Click a filled slot → opens the side panel pre-seeded with that
+ * slot's paint. Picking a different colour swaps the paint via
+ * updateStep on the first step. (Layer assignment for additional
+ * steps in the same slot lands in P12.3.)
+ *
+ * The body-part starter dropdown is gone — model-part presets are
+ * out of scope per Ross's brief ("Recipes are about COLOR and PAINTS,
+ * not parts of a model"). The schema's silhouetteZoneId column stays
+ * but the picker UI no longer writes it.
  */
 export function ZoneList({
   recipeId,
-  bodyType,
   zones,
   selectedZoneId,
   onSelectZone,
@@ -62,6 +66,13 @@ export function ZoneList({
   const [, startReorderTransition] = useTransition();
   const draggedIdRef = useRef<string | null>(null);
   const [dragTargetId, setDragTargetId] = useState<string | null>(null);
+
+  // Side-panel state — null when closed; otherwise either "new" (an
+  // empty + tile was clicked) or the editing slot's id.
+  type PickerTarget = { kind: "new" } | { kind: "edit"; zoneId: string };
+  const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
+  const [pickerError, setPickerError] = useState<string | null>(null);
+  const [isSaving, startSaveTransition] = useTransition();
 
   useEffect(() => {
     setLocalZones(zones);
@@ -92,94 +103,244 @@ export function ZoneList({
     });
   };
 
-  return (
-    <Card
-      title={`Color slots · ${localZones.length}`}
-      headerActions={
-        localZones.length > 1 ? (
-          <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider normal-case">
-            drag ≡ to reorder
-          </span>
-        ) : null
+  const handlePickerSelect = (selection: ColorPickerSelection) => {
+    setPickerError(null);
+    startSaveTransition(async () => {
+      if (pickerTarget?.kind === "new") {
+        const result = await addSlotWithPaint({
+          recipeId,
+          paintId: selection.paintId ?? null,
+          customColorHex: selection.paintId ? null : selection.hex,
+        });
+        if (!result.ok) {
+          setPickerError(result.error);
+          return;
+        }
+        // The page will revalidate + the parent re-renders zones —
+        // close the panel + select the new slot.
+        setPickerTarget(null);
+        onSelectZone(result.data.zoneId);
+      } else if (pickerTarget?.kind === "edit") {
+        const target = localZones.find((z) => z.id === pickerTarget.zoneId);
+        if (!target?.firstStepId) {
+          setPickerError(
+            "This slot has no step to update. Add a layer first.",
+          );
+          return;
+        }
+        const result = await updateStep({
+          id: target.firstStepId,
+          paintId: selection.paintId ?? null,
+          customColorHex: selection.paintId ? null : selection.hex,
+        });
+        if (!result.ok) {
+          setPickerError(result.error);
+          return;
+        }
+        setPickerTarget(null);
       }
-    >
-      <div className="space-y-2">
-      <p className="text-xs font-sans text-[var(--color-fg-subtle)] leading-snug">
-        Each colour slot is one part of the model — carapace, pauldron,
-        eye lens. Add a slot, then pick a paint and a technique for it.
-      </p>
-      {/* P11.3 deep redesign: horizontal strip of clickable colour
-          squares. Empty slots render with a dim border + slot name;
-          filled slots show the actual paint swatch. Click → selects
-          the slot and surfaces the technique editor below. */}
-      <div
-        className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(112px,1fr))]"
-        role="list"
-        aria-label="Color slots"
+    });
+  };
+
+  const editingZone =
+    pickerTarget?.kind === "edit"
+      ? localZones.find((z) => z.id === pickerTarget.zoneId) ?? null
+      : null;
+
+  return (
+    <>
+      <Card
+        title={`Color slots · ${localZones.length}`}
+        headerActions={
+          localZones.length > 1 ? (
+            <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider normal-case">
+              drag ≡ to reorder
+            </span>
+          ) : null
+        }
       >
-        {localZones.map((zone) => (
-          <ColorSlotCell
-            key={zone.id}
-            zone={zone}
-            selected={selectedZoneId === zone.id}
-            onSelect={() => onSelectZone(zone.id)}
-            isDragTarget={dragTargetId === zone.id}
-            onDragStart={() => {
-              draggedIdRef.current = zone.id;
-            }}
-            onDragOver={(event) => {
-              if (draggedIdRef.current && draggedIdRef.current !== zone.id) {
-                event.preventDefault();
-                setDragTargetId(zone.id);
-              }
-            }}
-            onDrop={(event) => {
-              event.preventDefault();
-              handleDrop(zone.id);
-            }}
-            onDragEnd={() => {
-              draggedIdRef.current = null;
-              setDragTargetId(null);
-            }}
-          />
-        ))}
-        {/* The trailing "+ Add color" tile lives inside the same grid
-            so a partially-full row stays balanced visually. Clicking
-            it scrolls to + focuses the existing add-control below. */}
-        <AddSlotTile />
-      </div>
-      {localZones.length === 0 ? (
-        <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-          No colour slots yet. Use{" "}
-          <span className="font-mono uppercase tracking-wider">+ Add color</span>{" "}
-          above, or load a starter set below.
-        </p>
-      ) : null}
+        <div className="space-y-2">
+          <p className="text-xs font-sans text-[var(--color-fg-subtle)] leading-snug">
+            Click any{" "}
+            <span className="font-mono uppercase tracking-wider">+</span>{" "}
+            slot to pick a paint. Click a filled slot to swap its paint.
+          </p>
+          <div
+            className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(112px,1fr))]"
+            role="list"
+            aria-label="Color slots"
+          >
+            {localZones.map((zone) => (
+              <ColorSlotCell
+                key={zone.id}
+                zone={zone}
+                selected={selectedZoneId === zone.id}
+                onSelect={() => {
+                  onSelectZone(zone.id);
+                  setPickerTarget({ kind: "edit", zoneId: zone.id });
+                }}
+                isDragTarget={dragTargetId === zone.id}
+                onDragStart={() => {
+                  draggedIdRef.current = zone.id;
+                }}
+                onDragOver={(event) => {
+                  if (draggedIdRef.current && draggedIdRef.current !== zone.id) {
+                    event.preventDefault();
+                    setDragTargetId(zone.id);
+                  }
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  handleDrop(zone.id);
+                }}
+                onDragEnd={() => {
+                  draggedIdRef.current = null;
+                  setDragTargetId(null);
+                }}
+              />
+            ))}
+            <AddSlotTile onClick={() => setPickerTarget({ kind: "new" })} />
+          </div>
 
-      {reorderError ? (
-        <p
-          role="alert"
-          className="flex items-start gap-2 frame px-3 py-1.5 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
-        >
-          <LogTag variant="err" />
-          <span>{reorderError}</span>
-        </p>
-      ) : null}
+          {localZones.length === 0 ? (
+            <p className="text-xs font-sans text-[var(--color-fg-muted)]">
+              No colour slots yet. Click the{" "}
+              <span className="font-mono uppercase tracking-wider">+</span>{" "}
+              tile above to pick your first paint.
+            </p>
+          ) : null}
 
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <AddZoneControl recipeId={recipeId} />
-        <StarterZonesControl recipeId={recipeId} defaultBodyType={bodyType} />
-      </div>
-      </div>
-    </Card>
+          {reorderError ? (
+            <p
+              role="alert"
+              className="flex items-start gap-2 frame px-3 py-1.5 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
+            >
+              <LogTag variant="err" />
+              <span>{reorderError}</span>
+            </p>
+          ) : null}
+        </div>
+      </Card>
+
+      {pickerTarget ? (
+        <ColorPickerSidePanel
+          contextLabel={
+            pickerTarget.kind === "new"
+              ? "Add a new colour slot"
+              : `Edit slot · ${editingZone?.name ?? ""}`
+          }
+          initial={
+            pickerTarget.kind === "edit" && editingZone?.swatchHex
+              ? { hex: editingZone.swatchHex }
+              : null
+          }
+          busy={isSaving}
+          error={pickerError}
+          onClose={() => {
+            setPickerTarget(null);
+            setPickerError(null);
+          }}
+          onSelect={handlePickerSelect}
+        />
+      ) : null}
+    </>
   );
 }
 
 /**
- * Horizontal-strip cell rendering for one colour slot. Replaces the
- * old vertical `<ZoneRow>` (kept below as a back-compat alias if any
- * external consumer ever exists, but ZoneList itself uses these now).
- * P11.3 deep redesign — Ross's "empty colored squares" ask.
+ * Slide-out side panel that hosts the ColorPicker primitive. Renders
+ * as a fixed-right drawer on desktop (480px wide), full-width on
+ * mobile. Backdrop click closes; the user can also Esc out.
+ *
+ * Pure-presentational — animation handled via CSS transitions gated
+ * on prefers-reduced-motion.
+ */
+function ColorPickerSidePanel({
+  contextLabel,
+  initial,
+  busy,
+  error,
+  onClose,
+  onSelect,
+}: {
+  contextLabel: string;
+  initial: { hex: string } | null;
+  busy: boolean;
+  error: string | null;
+  onClose: () => void;
+  onSelect: (selection: ColorPickerSelection) => void;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex"
+      role="dialog"
+      aria-modal="true"
+      aria-label={contextLabel}
+    >
+      <div
+        aria-hidden
+        onClick={onClose}
+        className="flex-1 bg-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
+      />
+      <aside
+        className="w-full md:w-[480px] h-full bg-[var(--color-bg-elevated)] flex flex-col"
+        style={{ borderLeft: "1px solid var(--color-border-strong)" }}
+      >
+        <header
+          className="flex items-center justify-between px-4 py-3"
+          style={{ borderBottom: "1px solid var(--color-border)" }}
+        >
+          <h2 className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg)]">
+            {contextLabel}
+          </h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            aria-label="Close picker"
+          >
+            Close
+          </Button>
+        </header>
+        <div className="flex-1 overflow-y-auto">
+          <ColorPicker
+            value={initial ? { hex: initial.hex } : null}
+            onSelect={onSelect}
+            contextLabel={undefined}
+          />
+        </div>
+        {error ? (
+          <p
+            role="alert"
+            className="m-3 frame px-3 py-2 text-2xs font-mono text-[var(--color-red)] bg-[color-mix(in_srgb,var(--color-red)_8%,transparent)]"
+          >
+            {error}
+          </p>
+        ) : null}
+        {busy ? (
+          <p className="m-3 text-2xs font-mono text-[var(--color-fg-muted)] text-center">
+            Saving…
+          </p>
+        ) : null}
+      </aside>
+    </div>
+  );
+}
+
+/**
+ * Horizontal-strip cell rendering for one colour slot. Click → opens
+ * the picker side panel pre-seeded with this slot's paint. The delete
+ * affordance lives in the corner (hover-revealed) so accidental swaps
+ * never wipe the slot.
  */
 function ColorSlotCell({
   zone,
@@ -203,7 +364,7 @@ function ColorSlotCell({
   const [isPending, startTransition] = useTransition();
   const filled = zone.swatchHex !== null;
 
-  const handleDelete = (event: React.MouseEvent) => {
+  const handleDelete = (event: React.MouseEvent | React.KeyboardEvent) => {
     event.stopPropagation();
     if (
       typeof window !== "undefined" &&
@@ -218,8 +379,7 @@ function ColorSlotCell({
     });
   };
 
-  // Use a dark-text-on-swatch contrast pick so the name renders on
-  // any colour. Computed once per render from the hex.
+  // Pick dark or light text against the swatch for max readability.
   const textColor = filled ? readableTextOn(zone.swatchHex!) : "var(--color-fg)";
 
   return (
@@ -246,10 +406,6 @@ function ColorSlotCell({
           selected && "shadow-[0_0_0_2px_var(--color-cyan)]",
           isPending && "opacity-50 cursor-progress",
         )}
-        // Inline border + bg — Tailwind v4's `border-2 border-dashed
-        // border-[var(--color-X)]` collapses to border-width:0 in some
-        // arrangements (UX-V6-002). Inline `border` shorthand guarantees
-        // the dashed/solid distinction renders.
         style={{
           background: filled ? zone.swatchHex! : "transparent",
           border: selected
@@ -262,7 +418,10 @@ function ColorSlotCell({
         <span
           aria-hidden
           className="self-start cursor-grab text-2xs font-mono leading-none px-1 py-0.5 rounded-sm opacity-60 group-hover:opacity-100"
-          style={{ color: textColor, background: filled ? "rgba(0,0,0,0.2)" : "transparent" }}
+          style={{
+            color: textColor,
+            background: filled ? "rgba(0,0,0,0.2)" : "transparent",
+          }}
           title="Drag to reorder"
         >
           ≡
@@ -280,7 +439,9 @@ function ColorSlotCell({
           className="block text-2xs font-mono uppercase tracking-wider text-center opacity-70"
           style={filled ? { color: textColor } : { color: "var(--color-fg-muted)" }}
         >
-          {filled ? `${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}` : "no paint"}
+          {filled
+            ? `${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}`
+            : "no paint"}
         </span>
       </button>
       <span
@@ -291,11 +452,16 @@ function ColorSlotCell({
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            handleDelete(event as unknown as React.MouseEvent);
+            handleDelete(event);
           }
         }}
         className="absolute top-1 right-1 text-2xs font-mono leading-none px-1 py-0.5 rounded-sm opacity-0 group-hover:opacity-100 hover:text-[var(--color-red)] cursor-pointer"
-        style={{ color: textColor, background: filled ? "rgba(0,0,0,0.2)" : "color-mix(in srgb, var(--color-bg) 70%, transparent)" }}
+        style={{
+          color: textColor,
+          background: filled
+            ? "rgba(0,0,0,0.2)"
+            : "color-mix(in srgb, var(--color-bg) 70%, transparent)",
+        }}
       >
         ×
       </span>
@@ -304,31 +470,22 @@ function ColorSlotCell({
 }
 
 /**
- * Trailing tile in the slot grid that scrolls + focuses the AddZoneControl
- * input below. Lets the user add a new slot from the strip itself instead
- * of hunting for the form. Visually balances rows that don't fill exactly.
+ * Trailing "+" tile in the slot grid. Opens the ColorPicker side
+ * panel in "new" mode so the painter goes from empty grid to first
+ * paint in two clicks.
  */
-function AddSlotTile() {
+function AddSlotTile({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
-      onClick={() => {
-        // Find the "+ Add color" trigger Button below and click it.
-        // AddZoneControl's input has autoFocus, so the form opens +
-        // focuses in one user-perceived step.
-        const trigger = document.querySelector<HTMLButtonElement>(
-          'button[data-add-zone-trigger]',
-        );
-        if (trigger) {
-          trigger.scrollIntoView({ behavior: "smooth", block: "nearest" });
-          trigger.click();
-        }
-      }}
+      onClick={onClick}
       aria-label="Add a colour slot"
       className="aspect-square flex flex-col items-center justify-center gap-1.5 rounded-sm hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-all cursor-pointer text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:[border-color:var(--color-cyan)]"
       style={{ border: "2px dashed var(--color-border-strong)" }}
     >
-      <span aria-hidden className="font-mono text-2xl leading-none">+</span>
+      <span aria-hidden className="font-mono text-2xl leading-none">
+        +
+      </span>
       <span className="font-mono text-2xs uppercase tracking-wider">
         Add color
       </span>
@@ -338,9 +495,8 @@ function AddSlotTile() {
 
 /**
  * Pick black or white for text rendered on a coloured background.
- * Uses the standard sRGB perceived-luminance threshold (~0.55) — light
- * swatches get dark text, dark swatches get light text. Falls back to
- * the fg token if the hex is malformed.
+ * sRGB perceived-luminance threshold (~0.55). Falls back to the fg
+ * token if the hex is malformed.
  */
 function readableTextOn(hex: string): string {
   const clean = hex.startsWith("#") ? hex.slice(1) : hex;
@@ -351,203 +507,4 @@ function readableTextOn(hex: string): string {
   if ([r, g, b].some(Number.isNaN)) return "var(--color-fg)";
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
   return luminance > 0.55 ? "#0a0a0a" : "#f5f5f5";
-}
-
-/**
- * @deprecated kept for tests; ZoneList itself now renders ColorSlotCell.
- */
-function AddZoneControl({ recipeId }: { recipeId: string }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const reset = () => {
-    setOpen(false);
-    setName("");
-    setError(null);
-  };
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setError(null);
-    const trimmed = name.trim();
-    if (trimmed.length === 0) {
-      setError("Slot name is required");
-      return;
-    }
-    startTransition(async () => {
-      const result = await addZone({ recipeId, name: trimmed });
-      if (result.ok) reset();
-      else setError(result.error);
-    });
-  };
-
-  if (!open) {
-    return (
-      <Button
-        type="button"
-        onClick={() => setOpen(true)}
-        variant="primary"
-        size="sm"
-        // Targeted by the AddSlotTile in the slot grid so clicking
-        // the trailing "+ Add color" tile opens this control.
-        data-add-zone-trigger
-      >
-        + Add color
-      </Button>
-    );
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="frame p-3 space-y-3 bg-[var(--color-bg-elevated)] w-full"
-    >
-      <input
-        type="text"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        placeholder="e.g. Carapace, Pauldron trim, Tongues…"
-        maxLength={80}
-        autoFocus
-        className="block w-full px-3 py-2 font-mono text-xs bg-[var(--color-bg)] frame focus:border-[var(--color-accent)]"
-      />
-
-      {error ? (
-        <p
-          role="alert"
-          className="flex items-start gap-2 text-2xs font-mono text-[var(--color-red)]"
-        >
-          <LogTag variant="err" />
-          <span>{error}</span>
-        </p>
-      ) : null}
-
-      <div className="flex items-center gap-2">
-        <Button
-          type="submit"
-          disabled={isPending}
-          variant="primary"
-          size="sm"
-        >
-          {isPending ? "Adding…" : "Add"}
-        </Button>
-        <Button
-          type="button"
-          onClick={reset}
-          variant="ghost"
-          size="sm"
-        >
-          Cancel
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-function StarterZonesControl({
-  recipeId,
-  defaultBodyType,
-}: {
-  recipeId: string;
-  defaultBodyType: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const isPresetKey = (k: string): k is ZonePresetKey =>
-    (ZONE_PRESET_KEYS as ReadonlyArray<string>).includes(k);
-  const initialKey: ZonePresetKey = isPresetKey(defaultBodyType)
-    ? defaultBodyType
-    : "infantry";
-  const [picked, setPicked] = useState<ZonePresetKey>(initialKey);
-
-  const applyPreset = () => {
-    const preset = getZonePreset(picked);
-    if (!preset || preset.length === 0) {
-      setError("Empty preset");
-      return;
-    }
-    setError(null);
-    startTransition(async () => {
-      const result = await addZonesBulk({
-        recipeId,
-        zones: preset.map((z) => ({ id: z.id, name: z.name })),
-      });
-      if (result.ok) setOpen(false);
-      else setError(result.error);
-    });
-  };
-
-  if (!open) {
-    return (
-      <Button
-        type="button"
-        onClick={() => setOpen(true)}
-        variant="ghost"
-        size="sm"
-      >
-        Use a starter set ▾
-      </Button>
-    );
-  }
-
-  return (
-    <div className="frame p-3 space-y-3 bg-[var(--color-bg-elevated)] w-full">
-      <div className="flex flex-wrap items-center gap-2">
-        {ZONE_PRESET_KEYS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setPicked(key)}
-            className={clsx(
-              "px-2 py-1 frame tap-target text-2xs font-mono uppercase tracking-wider",
-              picked === key
-                ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-                : "text-[var(--color-fg-muted)]",
-            )}
-          >
-            {ZONE_PRESET_LABEL[key]}
-          </button>
-        ))}
-      </div>
-
-      <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
-        Adds <strong>{getZonePreset(picked)?.length ?? 0}</strong> colour
-        slots to the recipe. Edit or delete any row after.
-      </p>
-
-      {error ? (
-        <p
-          role="alert"
-          className="flex items-start gap-2 text-2xs font-mono text-[var(--color-red)]"
-        >
-          <LogTag variant="err" />
-          <span>{error}</span>
-        </p>
-      ) : null}
-
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          onClick={applyPreset}
-          disabled={isPending}
-          variant="primary"
-          size="sm"
-        >
-          {isPending ? "Adding…" : "Add all"}
-        </Button>
-        <Button
-          type="button"
-          onClick={() => setOpen(false)}
-          variant="ghost"
-          size="sm"
-        >
-          Cancel
-        </Button>
-      </div>
-    </div>
-  );
 }

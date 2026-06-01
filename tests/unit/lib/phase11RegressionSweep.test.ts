@@ -52,9 +52,12 @@ describe("Phase 11 — concrete vocabulary survives (P11.1 / P11.3 / P11.4)", ()
   });
 
   test("Recipe slot vocabulary survives — no `>Add zone<` strings", () => {
+    // P12.2 replaced the free-text "+ Add color" Button with an
+    // AddSlotTile (still labelled "Add color") that opens the
+    // ColorPicker side panel. The locked vocabulary survives.
     const src = read("src/components/recipes/ZoneList.tsx");
     expect(src).not.toContain(">Add zone<");
-    expect(src).toContain("+ Add color");
+    expect(src).toContain("Add color");
   });
 
   test("Wishlist panel uses 'Wishlist' title, no 'Shopping for this'", () => {
@@ -124,10 +127,13 @@ describe("Phase 11 — microcopy persisted (P11.12)", () => {
     );
   });
 
-  test("ZoneList colour-slot inline help persists", () => {
-    expect(read("src/components/recipes/ZoneList.tsx")).toMatch(
-      /Each colour slot is one part of the model/,
-    );
+  test("ZoneList colour-slot inline help persists (P12.2 microcopy)", () => {
+    // P12.2 replaced the "Each colour slot is one part of the model"
+    // copy from P11.12 with a click-to-pick affordance pointer. The
+    // recipe is now about COLOUR + PAINTS, not model parts.
+    const src = read("src/components/recipes/ZoneList.tsx");
+    expect(src).toContain("Click any");
+    expect(src).toContain("slot to pick a paint");
   });
 
   test("Tools H1 subheadings stay painter-vocab", () => {

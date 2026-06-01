@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { asc, eq } from "drizzle-orm";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { recipeZones } from "@/db/schema";
+import { recipeSteps, recipeZones } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -20,9 +20,13 @@ vi.mock("@/lib/auth-stub", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { createRecipe } = await import("@/lib/actions/recipes");
-const { addZone, updateZone, deleteZone, reorderZones } = await import(
-  "@/lib/actions/recipeZones"
-);
+const {
+  addZone,
+  addSlotWithPaint,
+  updateZone,
+  deleteZone,
+  reorderZones,
+} = await import("@/lib/actions/recipeZones");
 
 async function seedRecipe(): Promise<string> {
   const res = await createRecipe({ name: "Test Recipe", bodyType: "infantry" });
@@ -182,5 +186,112 @@ describe("reorderZones", () => {
     });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/Unknown zone id/);
+  });
+});
+
+/* ============================================================
+   addSlotWithPaint — P12.2 one-shot zone + basecoat step.
+   ============================================================ */
+
+describe("addSlotWithPaint (P12.2)", () => {
+  test("creates a zone and a basecoat step pinning the paint", async () => {
+    const recipeId = await seedRecipe();
+    const res = await addSlotWithPaint({
+      recipeId,
+      paintId: "citadel-mephiston-red",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const zones = await zonesFor(recipeId);
+    expect(zones).toHaveLength(1);
+    expect(zones[0]?.name).toBe("Slot 1");
+    expect(zones[0]?.position).toBe(0);
+
+    const steps = await state.db!
+      .select()
+      .from(recipeSteps)
+      .where(eq(recipeSteps.zoneId, res.data.zoneId));
+    expect(steps).toHaveLength(1);
+    expect(steps[0]?.technique).toBe("basecoat");
+    expect(steps[0]?.paintId).toBe("citadel-mephiston-red");
+    expect(steps[0]?.customColorHex).toBeNull();
+    expect(steps[0]?.position).toBe(0);
+  });
+
+  test("accepts a customColorHex when no paintId is provided", async () => {
+    const recipeId = await seedRecipe();
+    const res = await addSlotWithPaint({
+      recipeId,
+      customColorHex: "#FF8800",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const steps = await state.db!
+      .select()
+      .from(recipeSteps)
+      .where(eq(recipeSteps.zoneId, res.data.zoneId));
+    expect(steps[0]?.customColorHex).toBe("#FF8800");
+    expect(steps[0]?.paintId).toBeNull();
+  });
+
+  test("auto-names slots Slot 1 / Slot 2 / Slot 3 with incrementing positions", async () => {
+    const recipeId = await seedRecipe();
+    await addSlotWithPaint({ recipeId, paintId: "p1" });
+    await addSlotWithPaint({ recipeId, paintId: "p2" });
+    await addSlotWithPaint({ recipeId, paintId: "p3" });
+
+    const zones = await zonesFor(recipeId);
+    expect(zones.map((z) => z.name)).toEqual(["Slot 1", "Slot 2", "Slot 3"]);
+    expect(zones.map((z) => z.position)).toEqual([0, 1, 2]);
+  });
+
+  test("accepts an explicit custom name", async () => {
+    const recipeId = await seedRecipe();
+    const res = await addSlotWithPaint({
+      recipeId,
+      name: "  Pauldron  ",
+      paintId: "p1",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const zones = await zonesFor(recipeId);
+    expect(zones[0]?.name).toBe("Pauldron");
+  });
+
+  test("rejects when neither paintId nor customColorHex is set", async () => {
+    const recipeId = await seedRecipe();
+    const res = await addSlotWithPaint({ recipeId });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/exactly one/);
+  });
+
+  test("rejects when both paintId and customColorHex are set", async () => {
+    const recipeId = await seedRecipe();
+    const res = await addSlotWithPaint({
+      recipeId,
+      paintId: "p1",
+      customColorHex: "#FF0000",
+    });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/exactly one/);
+  });
+
+  test("rejects malformed customColorHex", async () => {
+    const recipeId = await seedRecipe();
+    const res = await addSlotWithPaint({
+      recipeId,
+      customColorHex: "not-a-hex",
+    });
+    expect(res.ok).toBe(false);
+  });
+
+  test("rejects a recipe the user does not own", async () => {
+    const recipeId = await seedRecipe();
+    state.userId = "intruder";
+    const res = await addSlotWithPaint({ recipeId, paintId: "p1" });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/Recipe not found/);
   });
 });

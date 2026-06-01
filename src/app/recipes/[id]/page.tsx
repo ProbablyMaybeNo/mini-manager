@@ -91,6 +91,11 @@ export default async function RecipeEditorPage({
       silhouetteZoneId: z.silhouetteZoneId,
       stepCount: z.steps.length,
       swatchHex,
+      // P12.2 — the ColorPicker side panel needs this to call
+      // updateStep when the painter swaps the paint on an already-
+      // filled slot. null when the slot has no step yet (rare; can
+      // happen mid-edit if a step was deleted but the zone wasn't).
+      firstStepId: firstStep?.id ?? null,
     };
   });
 

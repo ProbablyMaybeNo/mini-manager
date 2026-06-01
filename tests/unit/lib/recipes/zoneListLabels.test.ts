@@ -1,10 +1,14 @@
 /**
- * P11.3 — Recipe editor "Zone" → "Color slot" UI rename.
+ * P11.3 + P12.2 — Recipe editor "Zone" → "Color slot" UI vocabulary.
  *
- * The schema, server actions, and underlying table (`recipe_zone`)
+ * The schema, table (`recipe_zone`), and most server actions
  * intentionally keep the word "zone" — only user-facing strings flip.
- * These tests pin the visible labels so a future grep-and-replace
- * can't accidentally drag the data layer back into the UI vocabulary.
+ * P12.2 then rewired the click behaviour so picking a paint creates a
+ * fully-formed slot via the new `addSlotWithPaint` server action; the
+ * old free-text "Add zone" name input + starter-pack dropdown were
+ * dropped per Ross's brief ("recipes are about COLOR, not parts of a
+ * model"). These tests pin the visible vocabulary so a future grep-
+ * and-replace can't accidentally drag the data layer back into the UI.
  *
  * We read the source files as text (not import them) because the
  * components are `'use client'` modules with transitive server-action
@@ -21,7 +25,7 @@ function read(rel: string): string {
   );
 }
 
-describe("ZoneList — UI strings flipped to 'colour slot' (P11.3)", () => {
+describe("ZoneList — UI strings flipped to 'colour slot' (P11.3 + P12.2)", () => {
   const src = read("src/components/recipes/ZoneList.tsx");
 
   test("Card title uses 'Color slots ·' instead of 'Zones ·'", () => {
@@ -29,29 +33,29 @@ describe("ZoneList — UI strings flipped to 'colour slot' (P11.3)", () => {
     expect(src).not.toContain("title={`Zones · ");
   });
 
-  test("primary CTA reads '+ Add color' instead of 'Add zone'", () => {
-    expect(src).toContain("+ Add color");
+  test("the AddSlotTile carries the 'Add color' label", () => {
+    // P12.2 replaced the free-text "+ Add color" Button with an
+    // AddSlotTile that opens the ColorPicker side panel. The visible
+    // label remains "Add color" — Ross's locked vocabulary.
+    expect(src).toContain("Add color");
     expect(src).not.toContain(">Add zone</");
     expect(src).not.toContain(">Add zone<");
   });
 
-  test("secondary CTA reads 'Use a starter set' not 'Use starter zones'", () => {
-    expect(src).toContain("Use a starter set");
-    expect(src).not.toContain("Use starter zones");
-  });
-
-  test("validation error talks about 'Slot' not 'Zone'", () => {
-    expect(src).toContain("Slot name is required");
-    expect(src).not.toContain("Zone name is required");
-  });
-
   test("empty-state copy references 'colour slots' not 'zones'", () => {
+    // P12.2 rewrote the empty-state copy to point at the + tile.
     expect(src).toContain("No colour slots yet");
+    expect(src).not.toContain("No zones yet");
   });
 
-  test("inline help microcopy explains what a slot is", () => {
-    // Plain-prose one-liner under the section heading per P11.12.
-    expect(src).toMatch(/Each colour slot is one part of the model/);
+  test("inline help microcopy points the user at the + slot", () => {
+    // P11.12's "Each colour slot is one part of the model" copy was
+    // retired in P12.2 — Ross's brief locks "recipes are about COLOR
+    // and PAINTS, not parts of a model". The replacement microcopy
+    // points the user at the click-to-pick affordance.
+    expect(src).toContain("Click any");
+    expect(src).toContain("slot to pick a paint");
+    expect(src).not.toMatch(/one part of the model/);
   });
 
   test("delete confirm prompt + aria-label use 'colour slot'", () => {
@@ -59,10 +63,28 @@ describe("ZoneList — UI strings flipped to 'colour slot' (P11.3)", () => {
   });
 
   test("schema-level server actions still imported under their original names", () => {
-    // The data layer is untouched — `addZone`, `reorderZones`, etc. remain.
-    expect(src).toContain("addZone,");
+    // The data layer is untouched — `reorderZones` + `deleteZone` keep
+    // their original names. `addSlotWithPaint` is the new one-shot
+    // action introduced in P12.2 (zone + first basecoat step) which
+    // supersedes the bare `addZone` import in this file.
+    expect(src).toContain("addSlotWithPaint,");
     expect(src).toContain("reorderZones,");
     expect(src).toContain("deleteZone,");
+  });
+
+  test("the starter-set preset dropdown is gone", () => {
+    // P12.2 drops the "Use a starter set" affordance entirely. Model-
+    // part presets are out of scope per Ross's brief.
+    expect(src).not.toContain("Use a starter set");
+    expect(src).not.toContain("StarterZonesControl");
+    expect(src).not.toContain("ZONE_PRESET_KEYS");
+  });
+
+  test("the ColorPicker primitive is wired into the slot flow", () => {
+    // The keystone of P12.2 — clicking any slot or the + tile opens
+    // the ColorPicker side panel.
+    expect(src).toContain("ColorPicker");
+    expect(src).toContain("ColorPickerSidePanel");
   });
 });
 

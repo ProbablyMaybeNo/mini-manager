@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { and, eq, max } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { recipes, recipeZones, type RecipeZone } from "@/db/schema";
+import {
+  recipes,
+  recipeSteps,
+  recipeZones,
+  type RecipeZone,
+} from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { getZoneWithOwnerCheck } from "@/db/queries/recipes";
 import type { ActionResult } from "@/lib/actions/projects";
@@ -162,6 +167,106 @@ export async function addZonesBulk(
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to add zones",
+    };
+  }
+}
+
+/* ============================================================
+   addSlotWithPaint — P12.2 one-shot: creates a zone AND a single
+   basecoat step that pins the chosen paint OR a custom hex. This is
+   the action wired to the recipe slot grid's ColorPicker side panel
+   so picking a colour creates a fully-formed slot in one round-trip.
+
+   `name` is optional — when omitted, the slot gets a default
+   "Slot N" label using the next position. The user can rename later.
+   ============================================================ */
+
+const hexShape = z
+  .string()
+  .trim()
+  .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/i, "Hex must be #RGB or #RRGGBB");
+
+const addSlotWithPaintSchema = z
+  .object({
+    recipeId: recipeIdSchema,
+    name: z
+      .string()
+      .trim()
+      .min(1, "Slot name is required")
+      .max(80, "Slot name is too long")
+      .optional(),
+    paintId: z.string().min(1).max(64).nullish(),
+    customColorHex: hexShape.nullish(),
+  })
+  .refine(
+    (d) => Boolean(d.paintId) !== Boolean(d.customColorHex),
+    { message: "Provide exactly one of paintId or customColorHex" },
+  );
+
+export async function addSlotWithPaint(
+  raw: z.infer<typeof addSlotWithPaintSchema>,
+): Promise<ActionResult<{ zoneId: string; stepId: string }>> {
+  const parsed = addSlotWithPaintSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid slot",
+    };
+  }
+  const { recipeId, paintId, customColorHex } = parsed.data;
+  const userId = await currentUserId();
+
+  const owned = await verifyRecipeOwnership(userId, recipeId);
+  if (!owned) return { ok: false, error: "Recipe not found" };
+
+  // Position = max + 1, or 0 if no zones yet.
+  const positionRows = await db
+    .select({ maxPos: max(recipeZones.position) })
+    .from(recipeZones)
+    .where(eq(recipeZones.recipeId, recipeId));
+  const currentMax = positionRows[0]?.maxPos ?? null;
+  const nextPosition = currentMax === null ? 0 : currentMax + 1;
+
+  // Default name "Slot N" — N is 1-indexed, matches the position +1.
+  const slotName = parsed.data.name ?? `Slot ${nextPosition + 1}`;
+
+  try {
+    const zoneInserted = await db
+      .insert(recipeZones)
+      .values({
+        recipeId,
+        name: slotName,
+        silhouetteZoneId: null,
+        position: nextPosition,
+      })
+      .returning();
+    const zoneRow = zoneInserted[0];
+    if (!zoneRow) return { ok: false, error: "Slot insert returned no row" };
+
+    const stepInserted = await db
+      .insert(recipeSteps)
+      .values({
+        zoneId: zoneRow.id,
+        position: 0,
+        technique: "basecoat",
+        paintId: paintId ?? null,
+        customColorHex: customColorHex ?? null,
+        notesMd: null,
+      })
+      .returning();
+    const stepRow = stepInserted[0];
+    if (!stepRow) {
+      // Roll back the orphaned zone if the step insert failed silently.
+      await db.delete(recipeZones).where(eq(recipeZones.id, zoneRow.id));
+      return { ok: false, error: "Step insert returned no row" };
+    }
+
+    revalidateForRecipe(recipeId);
+    return { ok: true, data: { zoneId: zoneRow.id, stepId: stepRow.id } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to add slot",
     };
   }
 }
