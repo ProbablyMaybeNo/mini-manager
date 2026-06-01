@@ -1,33 +1,75 @@
 import { eq } from "drizzle-orm";
 import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
-import { listAllRecipesGrouped } from "@/db/queries/recipes";
+import { listRecipesForTable } from "@/db/queries/recipes";
 import { namedModels, projects } from "@/db/schema";
 import { NewRecipeButton } from "@/components/recipes/NewRecipeButton";
-import { RecipeCard } from "@/components/recipes/RecipeCard";
+import {
+  RecipesTable,
+  type RecipeRowVm,
+} from "@/components/recipes/RecipesTable";
 import { AccentCounter } from "@/components/ui/AccentCounter";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * P12.5 — Single table view of every recipe, replacing the prior
+ * three-section card grid. Ross's brief: name / body type / palette
+ * squares / step count / created — with per-row Assign + Share.
+ *
+ * The attachment label (which project / named model a recipe is
+ * attached to) is resolved server-side here so the table component
+ * stays presentational. Standalone recipes show "standalone" muted.
+ */
 export default async function RecipesPage() {
   const userId = await currentUserId();
-  const grouped = await listAllRecipesGrouped(userId);
+  const rows = await listRecipesForTable(userId);
 
-  const projectIds = grouped.byProject.map((g) => g.projectId);
-  const namedModelIds = grouped.byNamedModel.map((g) => g.namedModelId);
+  if (rows.length === 0) {
+    return (
+      <div className="p-6 md:p-8 max-w-7xl space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-3xl tracking-wide">RECIPES</h1>
+          <p className="text-sm text-[var(--color-fg-muted)] max-w-xl font-sans leading-snug">
+            Paint schemes the way you mix them — each recipe is a stack of
+            colour slots, each slot a paint plus the layer you use on it.
+          </p>
+        </header>
+        <EmptyState />
+      </div>
+    );
+  }
+
+  // Resolve attachment labels in one pass each — project name + named-
+  // model label (project · model). Both are owner-scoped via the
+  // projects join.
+  const projectIds = Array.from(
+    new Set(
+      rows.flatMap((r) =>
+        r.attachedProjectId ? [r.attachedProjectId] : [],
+      ),
+    ),
+  );
+  const namedModelIds = Array.from(
+    new Set(
+      rows.flatMap((r) =>
+        r.attachedNamedModelId ? [r.attachedNamedModelId] : [],
+      ),
+    ),
+  );
 
   const projectNameById = new Map<string, string>();
   if (projectIds.length > 0) {
-    const rows = await db
+    const prows = await db
       .select({ id: projects.id, name: projects.name })
       .from(projects)
       .where(eq(projects.ownerId, userId));
-    for (const r of rows) projectNameById.set(r.id, r.name);
+    for (const p of prows) projectNameById.set(p.id, p.name);
   }
 
   const namedModelLabelById = new Map<string, string>();
   if (namedModelIds.length > 0) {
-    const rows = await db
+    const nmrows = await db
       .select({
         id: namedModels.id,
         name: namedModels.name,
@@ -36,127 +78,43 @@ export default async function RecipesPage() {
       .from(namedModels)
       .innerJoin(projects, eq(projects.id, namedModels.projectId))
       .where(eq(projects.ownerId, userId));
-    for (const r of rows) {
+    for (const r of nmrows) {
       namedModelLabelById.set(r.id, `${r.projectName} · ${r.name}`);
     }
   }
 
-  const isEmpty =
-    grouped.standalone.length === 0 &&
-    grouped.byProject.length === 0 &&
-    grouped.byNamedModel.length === 0;
-
-  if (isEmpty) {
-    return (
-      <div className="p-6 md:p-8 max-w-6xl space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-3xl tracking-wide">RECIPES</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] max-w-xl font-sans leading-snug">
-            Paint schemes the way you mix them — each recipe is a stack of
-            colour slots, each slot a paint plus the technique you use on it.
-          </p>
-        </header>
-        <EmptyState />
-      </div>
-    );
-  }
+  const vm: RecipeRowVm[] = rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    bodyType: r.bodyType,
+    attachmentKind: r.attachmentKind,
+    attachmentLabel: r.attachedProjectId
+      ? projectNameById.get(r.attachedProjectId) ?? "Project"
+      : r.attachedNamedModelId
+        ? namedModelLabelById.get(r.attachedNamedModelId) ?? "Named model"
+        : null,
+    paletteHexes: r.paletteHexes,
+    stepCount: r.stepCount,
+    slotCount: r.slotCount,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    publicSlug: r.publicSlug,
+  }));
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl space-y-8">
+    <div className="p-6 md:p-8 max-w-7xl space-y-6">
       <header className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl tracking-wide">RECIPES</h1>
           <p className="text-sm text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans leading-snug">
-            Paint schemes the way you mix them — each recipe is a stack of
-            colour slots. Attach a recipe to a project, override it per
-            named model, or save it standalone.
+            Every paint scheme in your library. Click a name to edit;
+            use the row actions to assign to a project or share.
           </p>
         </div>
         <NewRecipeButton />
       </header>
-
-      {grouped.standalone.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="section-title">Standalone · {grouped.standalone.length}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {grouped.standalone.map((recipe) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                attachment={{ kind: "standalone", label: "Standalone" }}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {grouped.byProject.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="section-title">
-            Attached to projects ·{" "}
-            {grouped.byProject.reduce((acc, g) => acc + g.recipes.length, 0)}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {grouped.byProject.flatMap((group) =>
-              group.recipes.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  attachment={{
-                    kind: "project",
-                    label: projectNameById.get(group.projectId) ?? "Project",
-                  }}
-                />
-              )),
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      {grouped.byNamedModel.length > 0 ? (
-        <NamedModelSection
-          byNamedModel={grouped.byNamedModel}
-          labelById={namedModelLabelById}
-        />
-      ) : null}
+      <RecipesTable rows={vm} />
     </div>
-  );
-}
-
-function NamedModelSection({
-  byNamedModel,
-  labelById,
-}: {
-  byNamedModel: ReadonlyArray<{
-    namedModelId: string;
-    recipes: ReadonlyArray<import("@/db/schema").Recipe>;
-  }>;
-  labelById: ReadonlyMap<string, string>;
-}) {
-  const total = byNamedModel.reduce((acc, g) => acc + g.recipes.length, 0);
-  return (
-    <section className="space-y-3">
-      <details>
-        <summary className="section-title cursor-pointer list-none flex items-center gap-2">
-          <span aria-hidden className="text-[var(--color-fg-subtle)]">▸</span>
-          <span>Attached to named models · {total}</span>
-        </summary>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
-          {byNamedModel.flatMap((group) =>
-            group.recipes.map((recipe) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                attachment={{
-                  kind: "named-model",
-                  label: labelById.get(group.namedModelId) ?? "Named model",
-                }}
-              />
-            )),
-          )}
-        </div>
-      </details>
-    </section>
   );
 }
 
@@ -166,9 +124,9 @@ function EmptyState() {
       <AccentCounter value="03" />
       <h2 className="text-lg glow-cyan">No recipes yet</h2>
       <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto leading-snug">
-        Build your first scheme: add a colour slot, pin a paint from the
-        library, pick a technique. Attach it to an army when you&apos;re
-        ready, or keep it as a saved palette.
+        Build your first scheme: click a + slot, pick a paint from the
+        wheel / library / eyedropper, assign it a layer. Attach the
+        finished recipe to an army when you&apos;re ready.
       </p>
       <NewRecipeButton label="Create your first recipe" />
     </div>

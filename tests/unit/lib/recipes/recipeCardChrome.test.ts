@@ -56,7 +56,10 @@ describe("Recipes index — readability microcopy (P11.7 + P11.12)", () => {
   });
 
   test("empty-state copy uses 'colour slot' vocabulary", () => {
-    expect(src).toMatch(/add a colour slot/);
+    // P12.5 updated copy: "click a + slot, pick a paint…" replaces the
+    // older "add a colour slot" cue. Both vocabularies count as
+    // "colour slot" / "+ slot" surfaces.
+    expect(src).toMatch(/colour slot|\+ slot/);
     expect(src).not.toMatch(/pick an infantry zone/);
   });
 });

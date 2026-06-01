@@ -67,7 +67,7 @@ These supersede any earlier guesses elsewhere in the doc:
   - **Assign to project ▾** (cyan button) — dropdown of user's projects; on pick, auto-attaches this recipe to that project's color scheme and navigates to it
   Plus existing Share modal stays accessible.
 
-- [ ] **P12.5 — Recipes list table redesign.** `/recipes` becomes a table: name / body type (or remove if redundant) / palette swatches (small colored squares of slot paints) / step count / created. Per-row actions: `Assign ▾` button + `Share` button (yellow). Click a row name → opens the recipe editor.
+- [x] **P12.5 — Recipes list table redesign.** `/recipes` becomes a table: name / body type (or remove if redundant) / palette swatches (small colored squares of slot paints) / step count / created. Per-row actions: `Assign ▾` button + `Share` button (yellow). Click a row name → opens the recipe editor.
 
 ### Pillar 2 — Projects dashboard rebuild
 

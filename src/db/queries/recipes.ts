@@ -224,6 +224,121 @@ export async function listAllRecipesGrouped(
 }
 
 /**
+ * P12.5 — Flat table-shape view of every recipe owned by the user,
+ * with each recipe's palette swatches + step count + attachment
+ * label already resolved server-side.
+ *
+ * One read pass each over `recipes`, `recipe_zone`, `recipe_step` —
+ * O(R+Z+S) instead of the N+1 the card-per-recipe page used to do.
+ */
+
+export interface RecipeTableRow {
+  id: string;
+  name: string;
+  bodyType: Recipe["bodyType"];
+  attachmentKind: "standalone" | "project" | "named-model";
+  /** Optional attachment label (project name, or "<Project> · <Model>")
+   *  resolved by the caller — left null here so this stays pure-data. */
+  attachedProjectId: string | null;
+  attachedNamedModelId: string | null;
+  /** Up to 8 hexes in zone-position order — the palette strip. */
+  paletteHexes: string[];
+  /** Total step count across every zone. */
+  stepCount: number;
+  /** Total slot count (== zone count). */
+  slotCount: number;
+  /** ms-timestamps so the table can sort. */
+  createdAt: number;
+  updatedAt: number;
+  publicSlug: string | null;
+}
+
+export async function listRecipesForTable(
+  userId: string,
+): Promise<ReadonlyArray<RecipeTableRow>> {
+  const recipeRows = await db
+    .select()
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId))
+    .orderBy(desc(recipes.updatedAt));
+
+  if (recipeRows.length === 0) return [];
+
+  const recipeIds = recipeRows.map((r) => r.id);
+  const zoneRows = await db
+    .select()
+    .from(recipeZones)
+    .where(inArray(recipeZones.recipeId, recipeIds))
+    .orderBy(asc(recipeZones.recipeId), asc(recipeZones.position));
+
+  const zoneIds = zoneRows.map((z) => z.id);
+  const stepRows =
+    zoneIds.length > 0
+      ? await db
+          .select()
+          .from(recipeSteps)
+          .where(inArray(recipeSteps.zoneId, zoneIds))
+          .orderBy(asc(recipeSteps.zoneId), asc(recipeSteps.position))
+      : [];
+
+  const stepsByZoneId = new Map<string, RecipeStep[]>();
+  for (const s of stepRows) {
+    const arr = stepsByZoneId.get(s.zoneId) ?? [];
+    arr.push(s);
+    stepsByZoneId.set(s.zoneId, arr);
+  }
+
+  const zonesByRecipeId = new Map<string, RecipeZone[]>();
+  for (const z of zoneRows) {
+    const arr = zonesByRecipeId.get(z.recipeId) ?? [];
+    arr.push(z);
+    zonesByRecipeId.set(z.recipeId, arr);
+  }
+
+  const paintHex = await getPaintHexMap();
+
+  const out: RecipeTableRow[] = [];
+  for (const r of recipeRows) {
+    const zones = zonesByRecipeId.get(r.id) ?? [];
+    let stepCount = 0;
+    const paletteHexes: string[] = [];
+    for (const z of zones) {
+      const steps = stepsByZoneId.get(z.id) ?? [];
+      stepCount += steps.length;
+      const first = steps[0];
+      if (first?.customColorHex) {
+        paletteHexes.push(first.customColorHex);
+      } else if (first?.paintId) {
+        const hex = paintHex.get(first.paintId);
+        if (hex) paletteHexes.push(hex);
+      }
+      if (paletteHexes.length >= 8) break;
+    }
+    const attachmentKind: RecipeTableRow["attachmentKind"] =
+      r.attachedProjectId
+        ? "project"
+        : r.attachedNamedModelId
+          ? "named-model"
+          : "standalone";
+    out.push({
+      id: r.id,
+      name: r.name,
+      bodyType: r.bodyType,
+      attachmentKind,
+      attachedProjectId: r.attachedProjectId,
+      attachedNamedModelId: r.attachedNamedModelId,
+      paletteHexes,
+      stepCount,
+      slotCount: zones.length,
+      createdAt: r.createdAt.getTime(),
+      updatedAt: r.updatedAt.getTime(),
+      publicSlug: r.publicSlug,
+    });
+  }
+  return out;
+}
+
+/**
  * Map of projectId → recipes attached to it. Used by the dashboard
  * and any "show me recipes in flight" view.
  */
