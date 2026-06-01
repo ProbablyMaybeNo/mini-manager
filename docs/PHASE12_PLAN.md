@@ -103,7 +103,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.17 — Plan tier section + pricing.** Replace the current static "Plan: FREE" card with a richer block: tier badge + price + feature bullets. Subscription vs lifetime distinction. Founder slot for early supporters. Placeholder until P10 Stripe ships — copy + structure can be in place.
 
-- [ ] **P12.18 — Password change.** Form with current password + new password + confirm. Server action uses bcryptjs `verifyPassword` for the current + `hashPassword` for the new. Updates `passwordHash` column.
+- [x] **P12.18 — Password change.** Form with current password + new password + confirm. Server action uses bcryptjs `verifyPassword` for the current + `hashPassword` for the new. Updates `passwordHash` column.
 
 - [ ] **P12.19 — Persistent library brand filter.** Add `library_brand_filter` column to user table (JSON array of brand IDs). User page renders a checkbox list of all brands in the catalog (default all checked). Saving writes to the column. Library page reads the saved filter as the default brand set on load.
 

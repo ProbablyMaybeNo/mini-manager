@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { ChangePasswordCard } from "@/components/user/ChangePasswordCard";
 import { ExportButton } from "@/components/user/ExportButton";
 import { RecoveryEmailCard } from "@/components/user/RecoveryEmailCard";
 import { SignOutButton } from "@/components/user/SignOutButton";
@@ -171,6 +172,8 @@ export default async function UserPage() {
         initialEmail={initialEmail}
         initialVerified={initialVerified}
       />
+
+      <ChangePasswordCard />
 
       <Card title="Backup & export" ariaLabel="Backup and export">
         <p className="text-sm font-sans text-[var(--color-fg)] leading-snug">
