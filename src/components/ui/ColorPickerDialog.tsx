@@ -73,10 +73,15 @@ export function ColorPickerDialog({
           ×
         </button>
       </div>
+      {/* UX-905 — `contextLabel` is intentionally NOT forwarded.
+          The dialog header above already shows it; passing it down
+          rendered a duplicate <h2> + .section-title inside the picker
+          panel. The ColorPicker still receives it via `aria-label` on
+          its outer region for AT users — that wiring lives in the
+          inner aria-label on the ColorPicker's wrapping <div role="region">. */}
       <ColorPicker
         value={initialHex ? { hex: initialHex } : null}
         onSelect={handleSelect}
-        contextLabel={contextLabel}
       />
     </dialog>
   );
