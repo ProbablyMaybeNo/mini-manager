@@ -90,12 +90,13 @@ events                          activity_log                    inspo_images
 - **No fetch, no storage, no thumbnail generation.** External URL passthrough only.
 - **Shipped 2026-06-01 · commit e53e7f5.** 1279 → 1321 passing (+42), typecheck clean. Surface: `src/db/queries/inspoImages.ts` (displayed / all / per-row owner check), `src/lib/actions/inspoImages.ts` (addInspoImage / toggleInspoDisplay / deleteInspoImage / reorderInspoImages — URL-shape Zod refine accepts http+https only, NEVER fetches the pasted URL), `InspoGalleryGrid` (2-col mobile / 3-col desktop, `<img src={url} loading="lazy">` — no Next/Image proxy), `AddInspoForm` (solid-fill success), `ManageInspoModal` (per-row show/hide / delete / native HTML5 drag-to-reorder + Save order, Escape + click-outside dismiss).
 
-### P14.8 — Mobile responsiveness pass on the PLANNER section
+### P14.8 — Mobile responsiveness pass on the PLANNER section ✅
 - Calendar collapses to a friendly compact month at <md.
 - Activity stream stacks naturally.
 - Streak counter renders inline with heatmap on a tight strip.
 - Heatmap last-30-day strip or horizontal scroll fallback.
 - Inspo gallery 2-column on mobile.
+- **Shipped 2026-06-01 · commit cc4db15.** 1400 → 1406 passing (+6). Playwright e2e check on /projects at 375px asserting no horizontal scroll. Note: ui-builder agent timed out before committing; verified locally + committed manually.
 
 ### P14.9 — Round 11 UX audit
 - Dispatch ux-auditor against live deploy after P14.1–8 ship.
