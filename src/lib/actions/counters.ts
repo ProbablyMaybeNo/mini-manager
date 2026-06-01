@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { projects } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { logActivity } from "@/lib/activityLog";
 import type { ActionResult } from "@/lib/actions/projects";
 import {
   STAGE_COLUMN,
@@ -86,6 +87,9 @@ export async function bumpCounter(
         : "Failed to update counter.";
     return { ok: false, error: message };
   }
+
+  // P14.1 — feed the PLANNER activity stream + heatmap + streak.
+  await logActivity(userId, "stage_bump", projectId);
 
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/projects");

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { priorities, projects, projectTypes } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { logActivity } from "@/lib/activityLog";
 import type { DisplayStatus } from "@/lib/progress";
 
 /**
@@ -109,6 +110,9 @@ export async function createProject(
   if (!newRow) {
     return { ok: false, error: "Failed to create project" };
   }
+
+  // P14.1 — feed the PLANNER activity stream.
+  await logActivity(userId, "project_created", newRow.id);
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${newRow.id}`);
@@ -376,6 +380,9 @@ export async function bumpProjectStatus(
         .update(projects)
         .set({ isShelved: true })
         .where(eq(projects.id, id));
+      // P14.1 — every status bump counts as a stage_bump for the
+      // PLANNER stream, regardless of which branch we took.
+      await logActivity(userId, "stage_bump", id);
       revalidatePath("/projects");
       revalidatePath(`/projects/${id}`);
       return { ok: true, data: { id, status } };
@@ -404,6 +411,7 @@ export async function bumpProjectStatus(
           completeCount: 0,
         })
         .where(eq(projects.id, id));
+      await logActivity(userId, "stage_bump", id);
       revalidatePath("/projects");
       revalidatePath(`/projects/${id}`);
       return { ok: true, data: { id, status } };
@@ -509,6 +517,7 @@ export async function bumpProjectStatus(
         completeCount: complete,
       })
       .where(eq(projects.id, id));
+    await logActivity(userId, "stage_bump", id);
     revalidatePath("/projects");
     revalidatePath(`/projects/${id}`);
     if (project.parentId) {

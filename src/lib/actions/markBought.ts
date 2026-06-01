@@ -12,6 +12,7 @@ import {
   type WishlistItem,
 } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { logActivity } from "@/lib/activityLog";
 import type { ActionResult } from "@/lib/actions/projects";
 import { bumpCounter } from "@/lib/actions/counters";
 
@@ -134,6 +135,10 @@ export async function markBoughtAsNewProject(
 
   await stampBought(wishlistItemId);
 
+  // P14.1 — feed the PLANNER activity stream. Wishlist row id pins
+  // the activity row to the original kit purchase.
+  await logActivity(userId, "paint_added", wishlistItemId);
+
   revalidatePath("/projects");
   revalidatePath(`/projects/${newRow.id}`);
   revalidatePath("/wishlist");
@@ -179,6 +184,9 @@ export async function markBoughtAsExistingUnit(
   }
 
   await stampBought(wishlistItemId);
+
+  // P14.1 — feed the PLANNER activity stream.
+  await logActivity(userId, "paint_added", wishlistItemId);
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}`);

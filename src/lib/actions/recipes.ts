@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { bodyTypes, projects, recipes, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { logActivity } from "@/lib/activityLog";
 import type { ActionResult } from "@/lib/actions/projects";
 
 const recipeIdSchema = z.string().min(1).max(64);
@@ -125,6 +126,9 @@ export async function createRecipe(
       .returning({ id: recipes.id });
     const row = inserted[0];
     if (!row) return { ok: false, error: "Insert returned no row" };
+
+    // P14.1 — feed the PLANNER activity stream.
+    await logActivity(userId, "recipe_created", row.id);
 
     revalidatePath("/recipes");
     if (d.attachedProjectId) {

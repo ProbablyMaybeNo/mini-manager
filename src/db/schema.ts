@@ -722,3 +722,149 @@ export const importsRelations = relations(imports, ({ one }) => ({
 
 export type Import = typeof imports.$inferSelect;
 export type NewImport = typeof imports.$inferInsert;
+
+/* ============================================================
+   Domain — Phase 14 PLANNER tables
+   ============================================================
+   Three sibling tables feeding the dashboard PLANNER section:
+
+     events       — painter's calendar (tournaments, deadlines,
+                    battles, other). Rendered as a month grid on
+                    the dashboard.
+
+     activity_log — append-only stream of "the painter did a
+                    thing" rows. Drives the activity widget +
+                    streak counter + heatmap.
+
+     inspo_images — external URL pastes (Pinterest / IG /
+                    ArtStation). NO storage, NO fetch — display
+                    via <img src={url}>. position_index controls
+                    drag-order; is_displayed lets the painter
+                    park images without deleting them.
+
+   All three cascade-delete with the owning user.
+   ============================================================ */
+
+export const eventKinds = ["tournament", "deadline", "battle", "other"] as const;
+export type EventKind = (typeof eventKinds)[number];
+
+export const events = sqliteTable(
+  "event",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** Stored as unix-ms timestamp like the rest of the schema. The
+     *  calendar widget interprets this as a day-local date — time of
+     *  day is ignored. */
+    eventDate: integer("event_date", { mode: "timestamp_ms" }).notNull(),
+    kind: text("kind", { enum: eventKinds }).notNull(),
+    notes: text("notes"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    userDateIdx: index("event_user_date_idx").on(t.userId, t.eventDate),
+  }),
+);
+
+/**
+ * `activity_log.kind` enum. Extensible — adding a new entry here
+ * means downstream readers (activity stream + streak + heatmap)
+ * gain it for free; the only constraint is that the value is a
+ * string the painter can read in the stream microcopy.
+ */
+export const activityLogKinds = [
+  "stage_bump",
+  "recipe_created",
+  "project_created",
+  "paint_added",
+  "slot_added",
+] as const;
+export type ActivityLogKind = (typeof activityLogKinds)[number];
+
+export const activityLog = sqliteTable(
+  "activity_log",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: activityLogKinds }).notNull(),
+    /** Optional foreign-key-ish pointer to the entity that triggered
+     *  the row — project id for stage_bump / project_created,
+     *  recipe id for recipe_created, wishlist item id for paint_added,
+     *  zone id for slot_added. Not enforced as a SQL FK because the
+     *  target table varies by kind. */
+    refId: text("ref_id"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    /** Descending lookup by user — the activity stream reads "last 20
+     *  for this user ordered by created_at desc", so this index is
+     *  the hot path. Drizzle emits a plain BTree; we order desc at
+     *  query time. */
+    userCreatedIdx: index("activity_log_user_created_idx").on(
+      t.userId,
+      t.createdAt,
+    ),
+  }),
+);
+
+export const inspoImages = sqliteTable(
+  "inspo_image",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** External URL — Pinterest / IG / ArtStation. No fetch, no
+     *  storage. Display via <img src={url}>. URL shape is validated
+     *  at the action layer, not at the schema level. */
+    url: text("url").notNull(),
+    altText: text("alt_text"),
+    /** Drag order on the gallery grid. 0 = first cell. */
+    positionIndex: integer("position_index").notNull().default(0),
+    /** False = parked / hidden, True = visible on the dashboard
+     *  gallery. Lets the painter curate the on-display set without
+     *  destroying the row. */
+    isDisplayed: integer("is_displayed", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    userPositionIdx: index("inspo_image_user_position_idx").on(
+      t.userId,
+      t.positionIndex,
+    ),
+  }),
+);
+
+export const eventsRelations = relations(events, ({ one }) => ({
+  user: one(users, { fields: [events.userId], references: [users.id] }),
+}));
+
+export const activityLogRelations = relations(activityLog, ({ one }) => ({
+  user: one(users, { fields: [activityLog.userId], references: [users.id] }),
+}));
+
+export const inspoImagesRelations = relations(inspoImages, ({ one }) => ({
+  user: one(users, { fields: [inspoImages.userId], references: [users.id] }),
+}));
+
+export type Event = typeof events.$inferSelect;
+export type NewEvent = typeof events.$inferInsert;
+
+export type ActivityLogRow = typeof activityLog.$inferSelect;
+export type NewActivityLogRow = typeof activityLog.$inferInsert;
+
+export type InspoImage = typeof inspoImages.$inferSelect;
+export type NewInspoImage = typeof inspoImages.$inferInsert;

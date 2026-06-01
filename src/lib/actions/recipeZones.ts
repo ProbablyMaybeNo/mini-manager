@@ -11,6 +11,7 @@ import {
   type RecipeZone,
 } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { logActivity } from "@/lib/activityLog";
 import { getZoneWithOwnerCheck } from "@/db/queries/recipes";
 import type { ActionResult } from "@/lib/actions/projects";
 
@@ -111,6 +112,8 @@ export async function addZone(
       .returning();
     const row = inserted[0];
     if (!row) return { ok: false, error: "Insert returned no row" };
+    // P14.1 — feed the PLANNER activity stream.
+    await logActivity(userId, "slot_added", row.id);
     revalidateForRecipe(recipeId);
     return { ok: true, data: row };
   } catch (err) {
@@ -260,6 +263,9 @@ export async function addSlotWithPaint(
       await db.delete(recipeZones).where(eq(recipeZones.id, zoneRow.id));
       return { ok: false, error: "Step insert returned no row" };
     }
+
+    // P14.1 — feed the PLANNER activity stream.
+    await logActivity(userId, "slot_added", zoneRow.id);
 
     revalidateForRecipe(recipeId);
     return { ok: true, data: { zoneId: zoneRow.id, stepId: stepRow.id } };
