@@ -26,13 +26,25 @@ import { PlannerStreakCell } from "./PlannerStreakCell";
  * src/app/projects/page.tsx. Empty-state copy is permanent — even
  * once the real widgets ship, an "no data yet" view re-uses the
  * same wording.
+ *
+ * P14.3 — Calendar cell is now an async server component that reads
+ * the `?calYear` / `?calMonth` search params for prev / next month
+ * nav. We thread them through this composite so the section stays
+ * the single mount point on the page.
  */
-export function PlannerSection() {
+interface Props {
+  /** P14.3 — `?calYear` / `?calMonth` search-param values driving
+   *  the calendar widget's prev / next month nav. */
+  calYear?: string;
+  calMonth?: string;
+}
+
+export async function PlannerSection({ calYear, calMonth }: Props = {}) {
   return (
     <Card title="PLANNER" accentColor="amber">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="md:col-span-3">
-          <PlannerCalendarCell />
+          <PlannerCalendarCell calYear={calYear} calMonth={calMonth} />
         </div>
         <div className="md:col-span-2 grid grid-cols-1 gap-4">
           <PlannerActivityCell />

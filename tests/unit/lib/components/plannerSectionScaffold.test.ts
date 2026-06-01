@@ -24,7 +24,10 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
 
   test("mounts the PlannerSection composite on /projects", () => {
     expect(page).toContain("PlannerSection");
-    expect(page).toMatch(/<PlannerSection\s*\/>/);
+    // P14.3 — PlannerSection now takes optional `calYear` / `calMonth`
+    // search-param props so the calendar widget can switch months.
+    // The match accepts the bare scaffold OR the props-bearing form.
+    expect(page).toMatch(/<PlannerSection(\s+[^>]*)?\s*\/>/);
   });
 
   test("PLANNER section sits BELOW FOCUS and ABOVE the dashboard table", () => {

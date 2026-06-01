@@ -44,7 +44,23 @@ export const dynamic = "force-dynamic";
  * dashboard stays both queueable (paint shopping) and trackable
  * (paint history).
  */
-export default async function ProjectsPage() {
+interface ProjectsPageProps {
+  /** P14.3 — calendar prev/next nav writes `?calYear` + `?calMonth`
+   *  client-side via `router.replace`. The dashboard then re-renders
+   *  the PLANNER calendar against the new month. Next 16 hands
+   *  searchParams as an awaited promise per the App-Router rules. */
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function ProjectsPage({
+  searchParams,
+}: ProjectsPageProps) {
+  const params = (await searchParams) ?? {};
+  const calYearRaw = params.calYear;
+  const calMonthRaw = params.calMonth;
+  const calYear = Array.isArray(calYearRaw) ? calYearRaw[0] : calYearRaw;
+  const calMonth = Array.isArray(calMonthRaw) ? calMonthRaw[0] : calMonthRaw;
+
   const userId = await currentUserId();
   const [
     allProjects,
@@ -200,7 +216,7 @@ export default async function ProjectsPage() {
               dashboard table. Scaffold-only here: each cell is an
               empty-state placeholder ready for the P14.3–7 widget
               builders to fill in. */}
-          <PlannerSection />
+          <PlannerSection calYear={calYear} calMonth={calMonth} />
 
           <TopWishesPanel />
           <ProjectsDashboardTable
