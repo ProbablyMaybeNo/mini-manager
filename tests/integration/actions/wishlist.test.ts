@@ -45,7 +45,7 @@ describe("createWishlistItem", () => {
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.data.title).toBe("Citadel Mephiston Red");
-    expect(res.data.status).toBe("Wanted");
+    expect(res.data.status).toBe("WISHLIST");
     expect(res.data.priority).toBe("Medium");
     expect(res.data.category).toBe("Other");
     expect(res.data.currency).toBe("USD");
@@ -119,7 +119,7 @@ describe("setWishlistStatus", () => {
 
     const res = await setWishlistStatus({
       id: created.data.id,
-      status: "Bought",
+      status: "PURCHASED",
     });
     expect(res.ok).toBe(true);
 
@@ -127,7 +127,7 @@ describe("setWishlistStatus", () => {
       .db!.select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, created.data.id));
-    expect(row!.status).toBe("Bought");
+    expect(row!.status).toBe("PURCHASED");
     expect(row!.dateResolved).not.toBeNull();
   });
 
@@ -135,14 +135,14 @@ describe("setWishlistStatus", () => {
     const created = await createWishlistItem({ title: "Buy me" });
     if (!created.ok) throw new Error("setup failed");
 
-    await setWishlistStatus({ id: created.data.id, status: "Bought" });
-    await setWishlistStatus({ id: created.data.id, status: "Wanted" });
+    await setWishlistStatus({ id: created.data.id, status: "PURCHASED" });
+    await setWishlistStatus({ id: created.data.id, status: "WISHLIST" });
 
     const [row] = await state
       .db!.select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, created.data.id));
-    expect(row!.status).toBe("Wanted");
+    expect(row!.status).toBe("WISHLIST");
     expect(row!.dateResolved).toBeNull();
   });
 });

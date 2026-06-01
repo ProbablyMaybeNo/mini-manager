@@ -28,7 +28,7 @@ function parseStatus(raw: string | string[] | undefined): WishlistStatus | "All"
   if (v && (wishlistStatuses as readonly string[]).includes(v)) {
     return v as WishlistStatus;
   }
-  return "Wanted";
+  return "WISHLIST";
 }
 
 function parseCategory(raw: string | string[] | undefined): WishlistCategory | null {
@@ -73,7 +73,7 @@ export default async function WishlistPage({
   }));
 
   const hasActiveFilters =
-    status !== "Wanted" || category !== null || vendor !== null;
+    status !== "WISHLIST" || category !== null || vendor !== null;
 
   return (
     <div className="flex flex-col h-screen">

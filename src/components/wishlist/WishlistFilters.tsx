@@ -12,9 +12,9 @@ import {
 } from "@/db/schema";
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: WishlistStatus | "All"; label: string }> = [
-  { value: "Wanted", label: "Wanted" },
-  { value: "Bought", label: "Bought" },
-  { value: "Cancelled", label: "Cancelled" },
+  { value: "WISHLIST", label: "Wishlist" },
+  { value: "PURCHASED", label: "Purchased" },
+  { value: "HOLD", label: "Hold" },
   { value: "All", label: "All" },
 ];
 
@@ -56,7 +56,7 @@ export function WishlistFilters({
         <Chip
           key={opt.value}
           active={status === opt.value}
-          onClick={() => setParam("status", opt.value === "Wanted" ? null : opt.value)}
+          onClick={() => setParam("status", opt.value === "WISHLIST" ? null : opt.value)}
         >
           {opt.label}
         </Chip>

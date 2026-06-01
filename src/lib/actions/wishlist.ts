@@ -7,6 +7,7 @@ import { db } from "@/db/client";
 import {
   wishlistItems,
   wishlistCategories,
+  wishlistKinds,
   wishlistStatuses,
   priorities,
   type WishlistItem,
@@ -14,6 +15,7 @@ import {
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
 import { scrapeUrl } from "@/lib/scrape";
+import { inferWishlistKind } from "@/lib/wishlist/kindInference";
 
 /* ============================================================
    Schemas
@@ -48,6 +50,11 @@ const updateSchema = z.object({ id: z.string().min(1).max(64), ...baseFields })
 const statusSchema = z.object({
   id: z.string().min(1).max(64),
   status: z.enum(wishlistStatuses),
+});
+
+const kindSchema = z.object({
+  id: z.string().min(1).max(64),
+  kind: z.enum(wishlistKinds),
 });
 
 /* ============================================================
@@ -86,6 +93,11 @@ export async function createWishlistItem(
         currency: d.currency ?? "USD",
         category: d.category ?? "Other",
         priority: d.priority ?? "Medium",
+        kind: inferWishlistKind({
+          title: d.title,
+          vendor: d.vendor ?? null,
+          category: d.category ?? null,
+        }),
         projectId: d.projectId ?? null,
         notesMd: d.notesMd ?? null,
       })
@@ -228,7 +240,8 @@ export async function scrapeAndCreateWishlistItem(
         currency,
         category,
         priority: "Medium",
-        status: "Wanted",
+        status: "WISHLIST",
+        kind: inferWishlistKind({ title, vendor, category }),
         scrapedMetadata: metadata,
       })
       .returning();
@@ -262,7 +275,7 @@ export async function setWishlistStatus(
   if (!existing[0]) return { ok: false, error: "Item not found" };
 
   const patch: Partial<typeof wishlistItems.$inferInsert> = { status };
-  if (status === "Wanted") patch.dateResolved = null;
+  if (status === "WISHLIST") patch.dateResolved = null;
   else patch.dateResolved = new Date();
 
   try {
@@ -280,6 +293,49 @@ export async function setWishlistStatus(
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Failed to update status",
+    };
+  }
+}
+
+/**
+ * P12.12 — flip a wishlist row between 'paint' and 'model'. Used by
+ * the two-table /wishlist layout when the painter realises an
+ * automatic kind inference was wrong.
+ */
+export async function setWishlistKind(
+  raw: z.infer<typeof kindSchema>,
+): Promise<ActionResult<WishlistItem>> {
+  const parsed = kindSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  const userId = await currentUserId();
+  const { id, kind } = parsed.data;
+
+  const existing = await db
+    .select()
+    .from(wishlistItems)
+    .where(and(eq(wishlistItems.id, id), eq(wishlistItems.ownerId, userId)))
+    .limit(1);
+  if (!existing[0]) return { ok: false, error: "Item not found" };
+
+  try {
+    const updated = await db
+      .update(wishlistItems)
+      .set({ kind })
+      .where(eq(wishlistItems.id, id))
+      .returning();
+    const row = updated[0];
+    if (!row) return { ok: false, error: "Update returned no row" };
+    revalidatePath("/wishlist");
+    return { ok: true, data: row };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to update kind",
     };
   }
 }

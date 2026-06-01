@@ -255,7 +255,7 @@ export function WishlistDetailDrawer({
           Delete
         </Button>
         <div className="flex items-center gap-2">
-          {item.status !== "Bought" ? (
+          {item.status !== "PURCHASED" ? (
             <Button
               type="button"
               onClick={openBoughtModal}

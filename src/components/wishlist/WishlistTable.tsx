@@ -28,9 +28,9 @@ const PRIORITY_DOT: Record<Priority, string> = {
 };
 
 const STATUS_PILL: Record<WishlistItem["status"], StatusPillKind> = {
-  Wanted: "wishlist",
-  Bought: "ok",
-  Cancelled: "neutral",
+  WISHLIST: "wishlist",
+  PURCHASED: "ok",
+  HOLD: "neutral",
 };
 
 export function WishlistTable({
@@ -243,8 +243,8 @@ function StatusChangePopover({
     });
   };
 
-  // Bought is terminal from the table — no menu, just the static pill.
-  if (item.status === "Bought") {
+  // PURCHASED is terminal from the table — no menu, just the static pill.
+  if (item.status === "PURCHASED") {
     return <StatusPill status={STATUS_PILL[item.status]}>{item.status}</StatusPill>;
   }
 
@@ -261,7 +261,7 @@ function StatusChangePopover({
       >
         <StatusPill
           status={STATUS_PILL[item.status]}
-          className={item.status === "Cancelled" ? "line-through" : undefined}
+          className={item.status === "HOLD" ? "line-through" : undefined}
         >
           {item.status} ▾
         </StatusPill>
@@ -272,7 +272,7 @@ function StatusChangePopover({
           aria-label="Change status"
           className="absolute right-0 top-full mt-1 z-30 min-w-[140px] frame-strong bg-[var(--color-bg-panel)] shadow-xl py-1"
         >
-          {item.status === "Wanted" ? (
+          {item.status === "WISHLIST" ? (
             <>
               <MenuItem
                 onSelect={() => {
@@ -281,16 +281,16 @@ function StatusChangePopover({
                 }}
                 tone="ok"
               >
-                ✓ Mark bought
+                ✓ Mark purchased
               </MenuItem>
-              <MenuItem onSelect={() => setStatus("Cancelled")} tone="muted">
-                × Mark cancelled
+              <MenuItem onSelect={() => setStatus("HOLD")} tone="muted">
+                · Move to hold
               </MenuItem>
             </>
           ) : null}
-          {item.status === "Cancelled" ? (
-            <MenuItem onSelect={() => setStatus("Wanted")} tone="wishlist">
-              ↻ Restore to wanted
+          {item.status === "HOLD" ? (
+            <MenuItem onSelect={() => setStatus("WISHLIST")} tone="wishlist">
+              ↻ Restore to wishlist
             </MenuItem>
           ) : null}
         </div>

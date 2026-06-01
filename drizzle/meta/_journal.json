@@ -50,6 +50,13 @@
       "when": 1780192074310,
       "tag": "0006_make_email_nullable_add_password",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1780303538767,
+      "tag": "0007_wishlist_phase12_rename",
+      "breakpoints": true
     }
   ]
 }

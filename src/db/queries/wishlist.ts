@@ -65,7 +65,7 @@ export interface WishlistTotals {
  */
 export async function wishlistTotals(
   userId: string,
-  status: WishlistStatus | "All" = "Wanted",
+  status: WishlistStatus | "All" = "WISHLIST",
 ): Promise<WishlistTotals> {
   const filters = [eq(wishlistItems.ownerId, userId)];
   if (status !== "All") filters.push(eq(wishlistItems.status, status));
@@ -105,7 +105,7 @@ export async function listWishlistByProject(
       and(
         eq(wishlistItems.ownerId, userId),
         eq(wishlistItems.projectId, projectId),
-        eq(wishlistItems.status, "Wanted"),
+        eq(wishlistItems.status, "WISHLIST"),
       ),
     )
     .orderBy(desc(wishlistItems.dateAdded));
@@ -124,7 +124,7 @@ export async function listTopWishes(
   const rows = await db
     .select()
     .from(wishlistItems)
-    .where(and(eq(wishlistItems.ownerId, userId), eq(wishlistItems.status, "Wanted")))
+    .where(and(eq(wishlistItems.ownerId, userId), eq(wishlistItems.status, "WISHLIST")))
     .orderBy(desc(wishlistItems.dateAdded))
     .limit(limit * 4); // small overscan so rerank still has options
 
@@ -158,7 +158,7 @@ export async function recentlyBought(
     .where(
       and(
         eq(wishlistItems.ownerId, userId),
-        eq(wishlistItems.status, "Bought"),
+        eq(wishlistItems.status, "PURCHASED"),
         sql`${wishlistItems.dateResolved} >= ${cutoff.getTime()}`,
       ),
     );

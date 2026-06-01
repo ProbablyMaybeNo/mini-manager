@@ -30,7 +30,7 @@ async function seedWishlistItem(ownerId = state.userId): Promise<string> {
     id,
     ownerId,
     title: "Necron Warriors",
-    status: "Wanted",
+    status: "WISHLIST",
   });
   return id;
 }
@@ -84,7 +84,7 @@ describe("markBoughtAsNewProject", () => {
       .select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, wishlistItemId));
-    expect(item!.status).toBe("Bought");
+    expect(item!.status).toBe("PURCHASED");
     expect(item!.dateResolved).not.toBeNull();
   });
 
@@ -182,7 +182,7 @@ describe("markBoughtAsNewProject", () => {
       .select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, wishlistItemId));
-    expect(item!.status).toBe("Wanted");
+    expect(item!.status).toBe("WISHLIST");
   });
 
   test("cannot resolve another user's wishlist item", async () => {
@@ -222,7 +222,7 @@ describe("markBoughtAsExistingUnit", () => {
       .select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, wishlistItemId));
-    expect(item!.status).toBe("Bought");
+    expect(item!.status).toBe("PURCHASED");
   });
 
   test("rejects a delta that would exceed the roster cap", async () => {
@@ -245,7 +245,7 @@ describe("markBoughtAsExistingUnit", () => {
       .select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, wishlistItemId));
-    expect(item!.status).toBe("Wanted");
+    expect(item!.status).toBe("WISHLIST");
   });
 
   test("rejects an unknown target project", async () => {

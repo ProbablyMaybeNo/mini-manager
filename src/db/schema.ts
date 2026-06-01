@@ -278,8 +278,29 @@ export const wishlistCategories = [
 ] as const;
 export type WishlistCategory = (typeof wishlistCategories)[number];
 
-export const wishlistStatuses = ["Wanted", "Bought", "Cancelled"] as const;
+/**
+ * Phase-12 (P12.11) wishlist status rename. Ross's Q6 locked answer:
+ *   Wanted    -> WISHLIST
+ *   Bought    -> PURCHASED
+ *   Cancelled -> HOLD
+ *
+ * Lock-stepped with the project status rename (P12.6). The old
+ * string values are no longer in the application's enum — the
+ * Drizzle migration in this milestone rewrites every existing row
+ * to the new vocabulary in-place.
+ */
+export const wishlistStatuses = ["WISHLIST", "PURCHASED", "HOLD"] as const;
 export type WishlistStatus = (typeof wishlistStatuses)[number];
+
+/**
+ * P12.11 — wishlist_item.kind column. Splits the wishlist into
+ * paint shopping vs model shopping. The /wishlist page renders
+ * two separate tables driven off this column (P12.12), and the
+ * scrape pipeline writes 'paint' by default for paint-detail
+ * scrapes + 'model' for everything else.
+ */
+export const wishlistKinds = ["paint", "model"] as const;
+export type WishlistKind = (typeof wishlistKinds)[number];
 
 export const wishlistItems = sqliteTable(
   "wishlist_item",
@@ -303,7 +324,8 @@ export const wishlistItems = sqliteTable(
     priority: text("priority", { enum: priorities }).notNull().default("Medium"),
     status: text("status", { enum: wishlistStatuses })
       .notNull()
-      .default("Wanted"),
+      .default("WISHLIST"),
+    kind: text("kind", { enum: wishlistKinds }).notNull().default("paint"),
     notesMd: text("notes_md"),
     scrapedMetadata: text("scraped_metadata"), // JSON blob from the scraper (P2.5)
     dateAdded: integer("date_added", { mode: "timestamp_ms" })
