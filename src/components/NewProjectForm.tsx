@@ -255,7 +255,7 @@ export function NewProjectForm({
         <Button
           type="submit"
           disabled={isPending}
-          variant="primary"
+          variant="success"
           size="md"
         >
           {isPending ? "Creating…" : "Create project"}

@@ -119,7 +119,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.23 — Button variant semantics.** Add three new variants to the Button primitive: `success` (green-filled, for ADD/CREATE/NEW), `warning` (pastel-yellow-filled, for SHARE/IMPORT/EXPORT/ADD-TO-WISHLIST). The existing `primary` (cyan) stays but is restricted to navigation / "save" / "confirm" — not ADD. `danger` (red) stays for delete/destroy/cancel. `purple` for SPECIAL/FEATURED/FOUNDER. Update globals.css with the new `.btn-success` + `.btn-warning` classes.
 
-- [ ] **P12.24 — Sweep every button across the app to the right semantic.** ADD MODEL / ADD UNIT / NEW PROJECT / CREATE RECIPE → success (green). Share/Export/Import/Add-to-wishlist → warning (yellow). Cancel/Delete/Remove → danger (red). Founder/Pro/Featured → purple. Save/Confirm/Sign-in → primary (cyan). This is a sweep similar to the Round-5 bracket-retirement; cleanups across ~40 files.
+- [x] **P12.24 — Sweep every button across the app to the right semantic.** ADD MODEL / ADD UNIT / NEW PROJECT / CREATE RECIPE → success (green). Share/Export/Import/Add-to-wishlist → warning (yellow). Cancel/Delete/Remove → danger (red). Founder/Pro/Featured → purple. Save/Confirm/Sign-in → primary (cyan). This is a sweep similar to the Round-5 bracket-retirement; cleanups across ~40 files.
 
 ## Out of scope (deferred)
 

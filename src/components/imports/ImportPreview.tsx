@@ -320,7 +320,7 @@ export function ImportPreview({
           type="button"
           onClick={onApply}
           disabled={busy || units.length === 0}
-          variant="primary"
+          variant="success"
           size="lg"
         >
           {busy ? "Applying…" : "Apply → create projects"}

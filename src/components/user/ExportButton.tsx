@@ -52,7 +52,7 @@ export function ExportButton() {
         type="button"
         onClick={handleClick}
         disabled={isPending}
-        variant="secondary"
+        variant="warning"
         size="md"
       >
         {isPending ? "Exporting…" : "Export all my data"}

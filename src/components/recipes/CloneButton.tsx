@@ -61,7 +61,7 @@ export function CloneButton({ slug }: Props) {
         type="button"
         onClick={handleClick}
         disabled={isPending}
-        variant="primary"
+        variant="success"
         size="md"
         className="w-full sm:w-auto"
       >

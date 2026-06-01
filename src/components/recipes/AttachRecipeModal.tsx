@@ -253,7 +253,7 @@ export function AttachRecipeModal(props: Props) {
               <Button
                 type="submit"
                 disabled={isPending}
-                variant="primary"
+                variant="success"
                 size="sm"
               >
                 {isPending ? "Creating…" : "Create & attach"}

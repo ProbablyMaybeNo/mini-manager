@@ -161,7 +161,7 @@ export function StepList({
         type="button"
         onClick={handleAdd}
         disabled={isAddPending}
-        variant="primary"
+        variant="success"
         size="sm"
       >
         {isAddPending ? "Adding…" : "Add step"}

@@ -89,7 +89,7 @@ export function QuickAddBar() {
           type="submit"
           disabled={isPending || value.trim().length === 0}
           aria-label="Add project"
-          variant="primary"
+          variant="success"
           size="md"
         >
           {isPending ? "…" : "Add"}

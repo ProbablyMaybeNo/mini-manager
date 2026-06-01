@@ -81,7 +81,7 @@ export function QuickAddBar() {
           type="submit"
           disabled={isPending || value.trim().length === 0}
           aria-label="Add wishlist item"
-          variant="primary"
+          variant="success"
           size="md"
         >
           {isPending ? "…" : "Add"}
