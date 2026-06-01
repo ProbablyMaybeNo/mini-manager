@@ -48,6 +48,19 @@ export const users = sqliteTable("user", {
   username: text("username").unique(),
   passwordHash: text("password_hash"),
   plan: text("plan").notNull().default("free"),
+  /**
+   * P10.1 — Stripe billing columns. All four are nullable on the free
+   * tier; populated by the Stripe webhook after a successful Checkout.
+   * `plan_expires_at` is a ms-timestamp; null means lifetime (one-time
+   * Pro Lifetime / Founder purchase) OR an active monthly sub whose
+   * next billing cycle hasn't been written yet.
+   * `founder_claimed_at` stamps the moment a user took a Founder slot
+   * (so the About page can render the list in order).
+   */
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  planExpiresAt: integer("plan_expires_at", { mode: "timestamp_ms" }),
+  founderClaimedAt: integer("founder_claimed_at", { mode: "timestamp_ms" }),
   recoveryEmail: text("recovery_email"),
   recoveryEmailVerified: integer("recovery_email_verified", {
     mode: "timestamp_ms",
@@ -868,3 +881,26 @@ export type NewActivityLogRow = typeof activityLog.$inferInsert;
 
 export type InspoImage = typeof inspoImages.$inferSelect;
 export type NewInspoImage = typeof inspoImages.$inferInsert;
+
+/* ============================================================
+   Domain — Phase 10 BILLING tables
+   ============================================================
+   Singleton-style key/value store for billing-adjacent counters.
+   The seeded `founder_sold` row tracks how many Founder Edition
+   slots have been claimed; the /pricing page reads it to render
+   "X of 100 remaining", and the Stripe webhook atomically bumps
+   it when a `checkout.session.completed` for the Founder price
+   fires. Other future counters (sign-ups, daily metrics) can
+   ride the same table without further schema churn.
+   ============================================================ */
+
+export const metaCounters = sqliteTable("meta_counters", {
+  key: text("key").primaryKey(),
+  value: integer("value").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type MetaCounter = typeof metaCounters.$inferSelect;
+export type NewMetaCounter = typeof metaCounters.$inferInsert;
