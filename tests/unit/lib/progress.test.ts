@@ -158,8 +158,8 @@ describe("isLeafProject", () => {
   });
 });
 
-describe("displayStatus", () => {
-  test("shelved beats everything else", () => {
+describe("displayStatus — Phase-12 locked status set", () => {
+  test("shelved beats everything else (SHELVED)", () => {
     expect(
       displayStatus({
         count: 10,
@@ -171,9 +171,9 @@ describe("displayStatus", () => {
         completeCount: 10,
         isShelved: true,
       }),
-    ).toBe("Shelved");
+    ).toBe("SHELVED");
   });
-  test("count === 0 → New", () => {
+  test("count === 0 → WISHLIST", () => {
     expect(
       displayStatus({
         count: 0,
@@ -185,9 +185,9 @@ describe("displayStatus", () => {
         completeCount: 0,
         isShelved: false,
       }),
-    ).toBe("New");
+    ).toBe("WISHLIST");
   });
-  test("Pile = owned but nothing built", () => {
+  test("PURCHASED = ownedCount > 0 but nothing built", () => {
     expect(
       displayStatus({
         count: 10,
@@ -199,22 +199,65 @@ describe("displayStatus", () => {
         completeCount: 0,
         isShelved: false,
       }),
-    ).toBe("Pile");
+    ).toBe("PURCHASED");
   });
-  test("most-advanced stage wins", () => {
-    const base = {
-      count: 10,
-      ownedCount: 10,
-      buildCount: 10,
-      primeCount: 10,
-      paintCount: 5,
-      baseCount: 0,
-      completeCount: 0,
-      isShelved: false,
-    };
-    expect(displayStatus(base)).toBe("Painting");
+  test("BUILDING = buildCount > 0, nothing primed", () => {
+    expect(
+      displayStatus({
+        count: 10,
+        ownedCount: 10,
+        buildCount: 3,
+        primeCount: 0,
+        paintCount: 0,
+        baseCount: 0,
+        completeCount: 0,
+        isShelved: false,
+      }),
+    ).toBe("BUILDING");
   });
-  test("complete_count === count → Completed", () => {
+  test("PRIMING = primeCount > 0, nothing painted", () => {
+    expect(
+      displayStatus({
+        count: 10,
+        ownedCount: 10,
+        buildCount: 10,
+        primeCount: 5,
+        paintCount: 0,
+        baseCount: 0,
+        completeCount: 0,
+        isShelved: false,
+      }),
+    ).toBe("PRIMING");
+  });
+  test("most-advanced stage wins: PAINTING beats PRIMING", () => {
+    expect(
+      displayStatus({
+        count: 10,
+        ownedCount: 10,
+        buildCount: 10,
+        primeCount: 10,
+        paintCount: 5,
+        baseCount: 0,
+        completeCount: 0,
+        isShelved: false,
+      }),
+    ).toBe("PAINTING");
+  });
+  test("BASING = baseCount > 0, not all complete", () => {
+    expect(
+      displayStatus({
+        count: 10,
+        ownedCount: 10,
+        buildCount: 10,
+        primeCount: 10,
+        paintCount: 10,
+        baseCount: 3,
+        completeCount: 0,
+        isShelved: false,
+      }),
+    ).toBe("BASING");
+  });
+  test("complete_count === count → COMPLETE", () => {
     expect(
       displayStatus({
         count: 10,
@@ -226,6 +269,6 @@ describe("displayStatus", () => {
         completeCount: 10,
         isShelved: false,
       }),
-    ).toBe("Completed");
+    ).toBe("COMPLETE");
   });
 });

@@ -339,6 +339,101 @@ export async function listRecipesForTable(
 }
 
 /**
+ * P12.6 — Map of projectId → palette hexes (up to 8 swatches in
+ * zone-position order) summed across every recipe attached to that
+ * project. Used by the new projects dashboard table for the Recipes
+ * column.
+ *
+ * One SELECT each over recipes / zones / steps. The palette is bounded
+ * at 8 hexes per project so a one-army-thirty-recipes painter still
+ * gets a tidy strip.
+ */
+export async function getProjectPalettesMap(
+  userId: string,
+): Promise<Map<string, string[]>> {
+  const recipeRows = await db
+    .select({
+      id: recipes.id,
+      attachedProjectId: recipes.attachedProjectId,
+    })
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId));
+
+  const recipesByProject = new Map<string, string[]>();
+  for (const r of recipeRows) {
+    if (!r.attachedProjectId) continue;
+    const arr = recipesByProject.get(r.attachedProjectId) ?? [];
+    arr.push(r.id);
+    recipesByProject.set(r.attachedProjectId, arr);
+  }
+  const allRecipeIds = recipeRows
+    .filter((r) => r.attachedProjectId)
+    .map((r) => r.id);
+
+  if (allRecipeIds.length === 0) return new Map();
+
+  const zoneRows = await db
+    .select({
+      id: recipeZones.id,
+      recipeId: recipeZones.recipeId,
+      position: recipeZones.position,
+    })
+    .from(recipeZones)
+    .where(inArray(recipeZones.recipeId, allRecipeIds))
+    .orderBy(asc(recipeZones.recipeId), asc(recipeZones.position));
+
+  const zoneIds = zoneRows.map((z) => z.id);
+  const stepRows = zoneIds.length
+    ? await db
+        .select({
+          zoneId: recipeSteps.zoneId,
+          position: recipeSteps.position,
+          paintId: recipeSteps.paintId,
+          customColorHex: recipeSteps.customColorHex,
+        })
+        .from(recipeSteps)
+        .where(inArray(recipeSteps.zoneId, zoneIds))
+        .orderBy(asc(recipeSteps.zoneId), asc(recipeSteps.position))
+    : [];
+
+  // First step per zone — that's the slot's representative paint.
+  const firstStepByZoneId = new Map<
+    string,
+    { paintId: string | null; customColorHex: string | null }
+  >();
+  for (const s of stepRows) {
+    if (firstStepByZoneId.has(s.zoneId)) continue;
+    firstStepByZoneId.set(s.zoneId, {
+      paintId: s.paintId,
+      customColorHex: s.customColorHex,
+    });
+  }
+
+  const paintHex = await getPaintHexMap();
+  const out = new Map<string, string[]>();
+  for (const [projectId, recipeIds] of recipesByProject) {
+    const hexes: string[] = [];
+    for (const rid of recipeIds) {
+      const recipeZonesForR = zoneRows.filter((z) => z.recipeId === rid);
+      for (const z of recipeZonesForR) {
+        const first = firstStepByZoneId.get(z.id);
+        if (!first) continue;
+        if (first.customColorHex) {
+          hexes.push(first.customColorHex);
+        } else if (first.paintId) {
+          const hex = paintHex.get(first.paintId);
+          if (hex) hexes.push(hex);
+        }
+        if (hexes.length >= 8) break;
+      }
+      if (hexes.length >= 8) break;
+    }
+    if (hexes.length > 0) out.set(projectId, hexes);
+  }
+  return out;
+}
+
+/**
  * Map of projectId → recipes attached to it. Used by the dashboard
  * and any "show me recipes in flight" view.
  */

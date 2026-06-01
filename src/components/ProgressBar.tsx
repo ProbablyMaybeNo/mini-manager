@@ -50,16 +50,24 @@ export function ProgressBar({
   className?: string;
 }) {
   const clamped = Math.max(0, Math.min(100, percent));
+  // Phase-12 (P12.6) tone thresholds Ross locked:
+  //   neutral when empty (0%)
+  //   danger / pastel-red when behind         (< 25%)
+  //   warning / pastel-yellow when mid-build  (25–74%)
+  //   ok / neon-green when ahead              (>= 75%)
+  // Older thresholds were 0/50/100 → cyan-info/amber/green. The
+  // updated set matches the projects-dashboard "behind / mid / ahead"
+  // glance Ross's brief calls out.
   const resolvedTone: Exclude<ProgressTone, "auto"> =
     tone !== "auto"
       ? tone
       : clamped === 0
         ? "neutral"
-        : clamped >= 100
+        : clamped >= 75
           ? "ok"
-          : clamped >= 50
+          : clamped >= 25
             ? "warning"
-            : "info";
+            : "danger";
 
   const fillClass = TONE_FILL[resolvedTone];
   const trackBg = "bg-[var(--color-bg-panel)]";

@@ -28,13 +28,14 @@ import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
 
 const HEADER_STATUS_PILL: Record<string, StatusPillKind> = {
-  New: "info",
-  Pile: "neutral",
-  Assembling: "info",
-  Priming: "info",
-  Painting: "warning",
-  Completed: "ok",
-  Shelved: "neutral",
+  WISHLIST: "wishlist",
+  PURCHASED: "neutral",
+  BUILDING: "info",
+  PRIMING: "info",
+  PAINTING: "warning",
+  BASING: "warning",
+  COMPLETE: "ok",
+  SHELVED: "neutral",
 };
 
 export const dynamic = "force-dynamic";

@@ -10,13 +10,14 @@ const STATUS_PILL: Record<
   ReturnType<typeof displayStatus>,
   StatusPillKind
 > = {
-  New: "info",
-  Pile: "neutral",
-  Assembling: "info",
-  Priming: "info",
-  Painting: "warning",
-  Completed: "ok",
-  Shelved: "neutral",
+  WISHLIST: "wishlist",
+  PURCHASED: "neutral",
+  BUILDING: "info",
+  PRIMING: "info",
+  PAINTING: "warning",
+  BASING: "warning",
+  COMPLETE: "ok",
+  SHELVED: "neutral",
 };
 
 const PRIORITY_TONE: Record<NonNullable<Project["priority"]>, string> = {
@@ -97,11 +98,7 @@ export function ProjectRow({
         <ProgressBar percent={percent} width={22} />
       </span>
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
-        {status === "New" ? (
-          <StatusPill status="neutral">NEW</StatusPill>
-        ) : (
-          <StatusPill status={STATUS_PILL[status]}>{status}</StatusPill>
-        )}
+        <StatusPill status={STATUS_PILL[status]}>{status}</StatusPill>
         {totalModels > 0 ? (
           <span className="text-2xs font-mono text-[var(--color-fg-muted)]">
             {percent}%

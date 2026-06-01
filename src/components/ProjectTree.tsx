@@ -82,7 +82,7 @@ function ProjectTreeRow({
         </span>
         <ProgressBar percent={percent} width={11} className="hidden md:inline" />
         <span className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider whitespace-nowrap flex-shrink-0">
-          {status === "New" ? "—" : status} · {percent}%
+          {status === "WISHLIST" && project.count === 0 ? "—" : status} · {percent}%
         </span>
       </Link>
     </li>

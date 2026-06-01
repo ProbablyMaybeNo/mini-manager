@@ -119,8 +119,35 @@ export function isLeafProject(
 }
 
 /**
+ * Phase-12 status set (Ross's locked answer Q3): present-tense, lead-
+ * stage-derived. WISHLIST → PURCHASED → BUILDING → PRIMING → PAINTING
+ * → BASING → COMPLETE. Plus SHELVED for mid-stage hibernation —
+ * orthogonal to the workflow stages above.
+ *
+ * Status = the lead (most-advanced) stage with any count > 0. One
+ * model entering a new stage immediately flips the pill, because
+ * wargamers build sequentially per-unit (Ross's confirmed Q8
+ * workflow).
+ */
+export type DisplayStatus =
+  | "SHELVED"
+  | "COMPLETE"
+  | "BASING"
+  | "PAINTING"
+  | "PRIMING"
+  | "BUILDING"
+  | "PURCHASED"
+  | "WISHLIST";
+
+/**
  * Derived display status — used when we don't want to show raw counters.
  * Order matters: most-advanced state wins.
+ *
+ * The string set was renamed in Phase 12 (P12.6) per Ross's brief.
+ * Previously: New / Pile / Assembling / Priming / Painting / Completed
+ * / Shelved. The new vocabulary is present-tense + lock-stepped with
+ * the wishlist status rename (Wanted -> WISHLIST, Bought ->
+ * PURCHASED).
  */
 export function displayStatus(
   project: Pick<
@@ -134,13 +161,14 @@ export function displayStatus(
     | "completeCount"
     | "isShelved"
   >,
-): "Shelved" | "Completed" | "Painting" | "Priming" | "Assembling" | "Pile" | "New" {
-  if (project.isShelved) return "Shelved";
-  if (project.count === 0) return "New";
-  if (project.completeCount === project.count) return "Completed";
-  if (project.paintCount > 0) return "Painting";
-  if (project.primeCount > 0) return "Priming";
-  if (project.buildCount > 0) return "Assembling";
-  if (project.ownedCount > 0) return "Pile";
-  return "New";
+): DisplayStatus {
+  if (project.isShelved) return "SHELVED";
+  if (project.count === 0) return "WISHLIST";
+  if (project.completeCount === project.count) return "COMPLETE";
+  if (project.baseCount > 0) return "BASING";
+  if (project.paintCount > 0) return "PAINTING";
+  if (project.primeCount > 0) return "PRIMING";
+  if (project.buildCount > 0) return "BUILDING";
+  if (project.ownedCount > 0) return "PURCHASED";
+  return "WISHLIST";
 }
