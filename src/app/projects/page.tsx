@@ -25,6 +25,7 @@ import {
   type FocusStepView,
   type FocusZoneView,
 } from "@/components/focus/FocusPanel";
+import { PlannerSection } from "@/components/planner/PlannerSection";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
 export const dynamic = "force-dynamic";
@@ -194,6 +195,12 @@ export default async function ProjectsPage() {
               )}
             </div>
           </Card>
+
+          {/* P14.2 — PLANNER section. Sits between FOCUS + the
+              dashboard table. Scaffold-only here: each cell is an
+              empty-state placeholder ready for the P14.3–7 widget
+              builders to fill in. */}
+          <PlannerSection />
 
           <TopWishesPanel />
           <ProjectsDashboardTable
