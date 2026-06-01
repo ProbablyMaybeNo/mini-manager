@@ -1,10 +1,15 @@
 import { currentUserId } from "@/lib/auth-stub";
 import { listAllProjects } from "@/db/queries/projects";
 import {
+  getPaintMetaMap,
   getProjectFirstRecipeMap,
   getProjectPalettesMap,
   listOwnedRecipesLean,
 } from "@/db/queries/recipes";
+import {
+  getFocusedRecipeBundle,
+  listFocusCandidates,
+} from "@/db/queries/focus";
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
@@ -13,6 +18,13 @@ import {
   type ProjectDashboardRow,
 } from "@/components/ProjectsDashboardTable";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { FocusPicker } from "@/components/focus/FocusPicker";
+import {
+  FocusPanel,
+  type FocusStepView,
+  type FocusZoneView,
+} from "@/components/focus/FocusPanel";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
 export const dynamic = "force-dynamic";
@@ -38,14 +50,55 @@ export default async function ProjectsPage() {
     palettesByProjectId,
     firstRecipeByProjectId,
     ownedRecipes,
+    focusCandidates,
+    focusBundle,
+    paintMeta,
   ] = await Promise.all([
     listAllProjects(userId),
     getProjectPalettesMap(userId),
     getProjectFirstRecipeMap(userId),
     listOwnedRecipesLean(userId),
+    // P13.11 — focus widget data.
+    listFocusCandidates(userId),
+    getFocusedRecipeBundle(userId),
+    getPaintMetaMap(),
   ]);
 
   const isEmpty = allProjects.length === 0;
+
+  // P13.11 — Build the FocusPanel's view model from the bundle.
+  // Resolves paintId to brand+name+hex via the cached paint catalog.
+  const focusZones: FocusZoneView[] = focusBundle
+    ? focusBundle.zones.map((z) => {
+        const steps: FocusStepView[] = z.steps.map((s) => {
+          const meta = s.paintId ? paintMeta.get(s.paintId) ?? null : null;
+          const hex = s.customColorHex ?? meta?.hex ?? null;
+          const label = meta?.label ?? null;
+          return {
+            id: s.id,
+            zoneId: s.zoneId,
+            position: s.position,
+            technique: s.technique,
+            paintHex: hex,
+            paintLabel: label,
+            notes: s.notes,
+          };
+        });
+        const firstStep = z.steps[0];
+        const swatchHex =
+          firstStep?.customColorHex ??
+          (firstStep?.paintId
+            ? paintMeta.get(firstStep.paintId)?.hex ?? null
+            : null);
+        return {
+          id: z.id,
+          name: z.name,
+          position: z.position,
+          swatchHex,
+          steps,
+        };
+      })
+    : [];
 
   // Build name lookup so the inline AttachRecipeModal can label
   // recipes that are currently attached elsewhere.
@@ -111,6 +164,37 @@ export default async function ProjectsPage() {
         <EmptyState />
       ) : (
         <>
+          {/* P13.11 — FOCUS section. Renders above the dashboard table
+              so the painter can sit at the desk and read the recipe of
+              the project they're working on without navigating away.
+              The section header reads "FOCUS" (locked label, Ross's
+              call); empty state nudges the painter to pick a project. */}
+          <Card title="FOCUS" accentColor="green">
+            <div className="space-y-4">
+              <FocusPicker
+                options={focusCandidates.map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                  type: c.type,
+                  attachedRecipeName: c.attachedRecipeName,
+                }))}
+                currentFocusId={focusBundle?.project.id ?? null}
+              />
+              {focusBundle ? (
+                <FocusPanel
+                  projectId={focusBundle.project.id}
+                  projectName={focusBundle.project.name}
+                  recipeName={focusBundle.recipe.name}
+                  zones={focusZones}
+                />
+              ) : (
+                <FocusEmptyState
+                  hasCandidates={focusCandidates.length > 0}
+                />
+              )}
+            </div>
+          </Card>
+
           <TopWishesPanel />
           <ProjectsDashboardTable
             rows={rows}
@@ -120,6 +204,37 @@ export default async function ProjectsPage() {
           <RecentlyBoughtLine />
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * P13.11 — Empty state for the FOCUS section. Differentiates between
+ * "you have projects but none of them have recipes" (nudge toward
+ * attaching one) and "you have recipes you could focus on right now"
+ * (nudge toward picking one from the dropdown above).
+ */
+function FocusEmptyState({ hasCandidates }: { hasCandidates: boolean }) {
+  return (
+    <div className="frame p-4 space-y-2">
+      <p className="text-sm font-sans text-[var(--color-fg)] leading-relaxed">
+        Pick a project to focus on while you paint — its recipe will
+        live here.
+      </p>
+      <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+        {hasCandidates ? (
+          <>
+            Choose one from the picker above to see its slot grid + per-step
+            notes textareas, ready to scribble in.
+          </>
+        ) : (
+          <>
+            Attach a recipe from any project workspace first (open a project
+            → tap a swatch in the Color scheme box). Then it&apos;ll show up
+            here as a focus target.
+          </>
+        )}
+      </p>
     </div>
   );
 }
