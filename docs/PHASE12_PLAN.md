@@ -95,7 +95,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.14 — Rename Gradient → Layering.** All UI strings flip. URL stays `/tools/gradient` (back-compat) but the page renders as "Layering" + new component name internally. Rewire the gradient client to the new mental model: user picks a base color (via ColorPicker primitive) → tool generates shadow/mid/highlight steps with library-paint matches per step. Per-step filter by company. Each step assignable to a project or recipe via "Assign ▾" button.
 
-- [ ] **P12.15 — Eyedropper movable pins.** Overlay pin circles on the uploaded image. Each pin = one of the k-means-extracted paints. Drag any pin to reassign which region of the image that paint represents. Add / remove pins (max 8). Each pin clickable to assign that paint to a project or recipe.
+- [x] **P12.15 — Eyedropper movable pins.** Overlay pin circles on the uploaded image. Each pin = one of the k-means-extracted paints. Drag any pin to reassign which region of the image that paint represents. Add / remove pins (max 8). Each pin clickable to assign that paint to a project or recipe.
 
 - [ ] **P12.16 — Universal "Assign to ▾" on every tool result.** Wheel harmony swatches, Match results, Layering steps, Eyedropper paints — every paint surface in `/tools/*` gets an Assign button that opens a project/recipe picker and auto-attaches.
 

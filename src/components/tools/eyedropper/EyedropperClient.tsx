@@ -18,6 +18,8 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { DropZone } from "./DropZone";
+import { EyedropperPins, type Pin } from "./EyedropperPins";
+import { placePins } from "@/lib/tools/eyedropper/pinPlacement";
 import {
   CameraSampler,
   isCameraSamplerSupported,
@@ -37,10 +39,37 @@ export function EyedropperClient() {
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sampled, setSampled] = useState<SampledImage | null>(null);
-  const [swatches, setSwatches] = useState<ReadonlyArray<string>>([]);
+  /** P12.15 — pins is now the source of truth. Each pin's hex becomes
+   *  one extracted swatch. Drag-end re-samples the pixel under the
+   *  pin, which updates pin.hex, which ripples through to swatches. */
+  const [pins, setPins] = useState<ReadonlyArray<Pin>>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+
+  // The legacy swatches[] surface is derived from pins so the rest of
+  // the page (palette display, match resolution, footer) keeps reading
+  // the same shape it always has.
+  const swatches: ReadonlyArray<string> = pins.map((p) => p.hex);
+  const setSwatches = (
+    next:
+      | ReadonlyArray<string>
+      | ((prev: ReadonlyArray<string>) => ReadonlyArray<string>),
+  ): void => {
+    setPins((prev) => {
+      const nextArr =
+        typeof next === "function"
+          ? next(prev.map((p) => p.hex))
+          : next;
+      // Preserve pin coordinates when possible (same index → same x/y).
+      return nextArr.map((hex, i) => {
+        const existing = prev[i];
+        return existing
+          ? { ...existing, hex: hex.toUpperCase() }
+          : { x: 0, y: 0, hex: hex.toUpperCase() };
+      });
+    });
+  };
 
   // Load the paint catalog once.
   useEffect(() => {
@@ -83,7 +112,10 @@ export function EyedropperClient() {
         image.height,
         { k: SWATCH_COUNT },
       );
-      setSwatches(extracted);
+      // P12.15 — place a pin per cluster centroid by walking the image
+      // once + grabbing the pixel closest to each extracted hex.
+      const placements = placePins(image, extracted);
+      setPins(placements);
     } catch (err) {
       setError(
         err instanceof Error
@@ -115,7 +147,7 @@ export function EyedropperClient() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setSampled(null);
-    setSwatches([]);
+    setPins([]);
     setError(null);
   };
 
@@ -156,16 +188,32 @@ export function EyedropperClient() {
           {previewUrl ? (
             <div className="space-y-2">
               <div className="frame overflow-hidden">
-                <img
-                  src={previewUrl}
-                  alt="Reference"
-                  className="block w-full h-auto"
-                />
+                {sampled ? (
+                  <EyedropperPins
+                    imageUrl={previewUrl}
+                    sampled={sampled}
+                    pins={pins}
+                    onPinChange={(idx, next) =>
+                      setPins((prev) =>
+                        prev.map((p, i) => (i === idx ? next : p)),
+                      )
+                    }
+                    onPinRemove={(idx) =>
+                      setPins((prev) => prev.filter((_, i) => i !== idx))
+                    }
+                  />
+                ) : (
+                  <img
+                    src={previewUrl}
+                    alt="Reference"
+                    className="block w-full h-auto"
+                  />
+                )}
               </div>
               <div className="flex items-center justify-between gap-2">
                 <p className="text-2xs font-mono text-[var(--color-fg-muted)]">
                   {sampled
-                    ? `${sampled.width} × ${sampled.height} px sampled`
+                    ? `${sampled.width} × ${sampled.height} px · ${pins.length}/8 pin${pins.length === 1 ? "" : "s"} · drag to re-sample`
                     : "Decoding…"}
                 </p>
                 <Button
