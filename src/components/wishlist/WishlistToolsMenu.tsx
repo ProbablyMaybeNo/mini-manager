@@ -10,7 +10,7 @@ interface Props {
 }
 
 /**
- * P12.13 — Per-paint-row "Tools ▾" affordance on /wishlist.
+ * P12.13 — Per-paint-row "Open in ▾" affordance on /wishlist.
  *
  * Drops a small menu next to the row's status pill. Menu items:
  *   - Wheel    → /tools/wheel?name=<paint title>
@@ -24,7 +24,11 @@ interface Props {
  * and the wheel falls back to catalog-resolution on its end.
  *
  * The button uses variant="ghost" so the row's existing status pill
- * remains the visual anchor — Tools is a secondary affordance.
+ * remains the visual anchor — Open in is a secondary affordance.
+ *
+ * R7-010 — label flipped from "Tools ▾" to "Open in ▾" so it doesn't
+ * collide with the sidebar Tools page name. The trigger button text
+ * + the menu's aria-label both reflect the new vocabulary.
  */
 export function WishlistToolsMenu({ paintTitle }: Props) {
   const [open, setOpen] = useState(false);
@@ -64,12 +68,12 @@ export function WishlistToolsMenu({ paintTitle }: Props) {
         aria-expanded={open}
         title="Open this paint in a tool"
       >
-        Tools ▾
+        Open in ▾
       </Button>
       {open ? (
         <div
           role="menu"
-          aria-label="Paint tools"
+          aria-label="Open paint in a tool"
           className="absolute right-0 top-full mt-1 z-30 min-w-[140px] frame-strong bg-[var(--color-bg-panel)] shadow-xl py-1"
           onClick={(e) => e.stopPropagation()}
         >

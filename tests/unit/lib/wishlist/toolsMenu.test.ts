@@ -44,8 +44,21 @@ describe("WishlistToolsMenu component surface", () => {
     expect(src).toContain("URLSearchParams({ name: paintTitle })");
   });
 
-  test("opens via Tools ▾ button, closes on outside click + Escape", () => {
-    expect(src).toContain("Tools ▾");
+  test("opens via 'Open in ▾' button (R7-010), closes on outside click + Escape", () => {
+    // R7-010 renamed the trigger label from "Tools ▾" to "Open in ▾"
+    // so it doesn't collide with the sidebar Tools page name. The
+    // outside-click + Escape close handlers stay wired the same.
+    expect(src).toContain("Open in ▾");
+    // The old label survives only in the docblock that explains the
+    // R7-010 rename — no JSX node should render it any more. Find the
+    // line carrying the closing > and confirm the new label appears.
+    const buttonIdx = src.indexOf("Open in ▾");
+    const beforeButton = src.slice(0, buttonIdx);
+    // The Button JSX node above the trigger label must NOT render the
+    // old text.
+    const lastButtonOpen = beforeButton.lastIndexOf("<Button");
+    const buttonJsx = src.slice(lastButtonOpen, buttonIdx + 30);
+    expect(buttonJsx).not.toContain("Tools ▾");
     expect(src).toContain('document.addEventListener("mousedown"');
     expect(src).toContain("Escape");
   });
