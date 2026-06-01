@@ -25,6 +25,15 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ProjectHeaderStrip } from "@/components/ProjectHeaderStrip";
+import {
+  ProjectColorSchemeBox,
+  type ColorSchemeSlot,
+} from "@/components/ProjectColorSchemeBox";
+import {
+  getPaintMetaMap,
+  getRecipeWithZones,
+  listRecipesForProject,
+} from "@/db/queries/recipes";
 
 export const dynamic = "force-dynamic";
 
@@ -119,6 +128,35 @@ export default async function ProjectDetailPage({
 
   const showInteractiveCounters = isLeafProject(project, namedModels.length);
 
+  // P12.9 — Color Scheme box. If a recipe is attached, surface its
+  // slot palette so the box can pre-fill. We pick the first attached
+  // recipe (a project typically has one scheme — multiple attachments
+  // exist for the "unit override" pattern but the box reads top-
+  // level scheme only).
+  const attachedRecipes = await listRecipesForProject(userId, project.id);
+  const attachedRecipe = attachedRecipes[0] ?? null;
+  let colorSchemeSlots: ColorSchemeSlot[] = [];
+  if (attachedRecipe) {
+    const full = await getRecipeWithZones(userId, attachedRecipe.id);
+    if (full) {
+      const paintMeta = await getPaintMetaMap();
+      colorSchemeSlots = full.zones.map((z) => {
+        const firstStep = z.steps[0];
+        const hex =
+          firstStep?.customColorHex ??
+          (firstStep?.paintId
+            ? paintMeta.get(firstStep.paintId)?.hex ?? null
+            : null);
+        return {
+          zoneId: z.id,
+          firstStepId: firstStep?.id ?? null,
+          hex,
+          name: z.name,
+        };
+      });
+    }
+  }
+
   return (
     <div className="p-6 md:p-8 max-w-5xl space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
@@ -144,6 +182,14 @@ export default async function ProjectDetailPage({
           project.type === "Warband" ||
           project.type === "Unit"
         }
+      />
+
+      <ProjectColorSchemeBox
+        projectId={project.id}
+        projectName={project.name}
+        attachedRecipeId={attachedRecipe?.id ?? null}
+        attachedRecipeName={attachedRecipe?.name ?? null}
+        slots={colorSchemeSlots}
       />
 
       {isContainer && aggregate ? (
