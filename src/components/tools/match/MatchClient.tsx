@@ -199,11 +199,10 @@ export function MatchClient() {
             </Button>
           </form>
 
-          {/* NB-11: Brand filter chips — vintage solid-button styling.
-              Active state is filled cyan + dark fg (high contrast, reads
-              from across the room); inactive is bordered chrome with full
-              fg colour (was muted, too pale to read). Min-height 28px
-              meets tap-target floor without going full button-md. */}
+          {/* R7-6 — Brand filter chips. Cyan is banned from button
+              fills app-wide; the active state now uses the FilterRail
+              library-chip pattern: cyan-tinted bg + cyan border + cyan
+              fg. Same visual hierarchy, no cyan-fill CTA confusion. */}
           <div className="space-y-2">
             <p className="section-title">Brand filter · {brandFilter.size || "all"}</p>
             <div className="flex flex-wrap gap-1.5">
@@ -218,7 +217,7 @@ export function MatchClient() {
                     className={clsx(
                       "px-2.5 py-1 min-h-[28px] text-2xs font-mono uppercase tracking-[0.08em] rounded-sm border transition-colors",
                       active
-                        ? "bg-[var(--color-cyan)] text-[var(--color-bg)] border-[var(--color-cyan)]"
+                        ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
                         : "bg-transparent text-[var(--color-fg)] border-[var(--color-border-strong)] hover:border-[var(--color-cyan)] hover:text-[var(--color-cyan)]",
                     )}
                   >
