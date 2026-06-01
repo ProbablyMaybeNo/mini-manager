@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { InspoImage } from "@/db/schema";
 import { AddInspoForm } from "./AddInspoForm";
@@ -31,6 +32,21 @@ interface Props {
 
 export function InspoGalleryGrid({ displayed, all }: Props) {
   const [isManageOpen, setIsManageOpen] = useState(false);
+  // UX-1103 — track per-image load failures so we can swap the broken
+  // <img> for a friendly fallback tile + "open source" link. Keys are
+  // the InspoImage `id` so reordering / re-rendering stays stable.
+  const [brokenIds, setBrokenIds] = useState<ReadonlySet<string>>(
+    () => new Set<string>(),
+  );
+
+  const markBroken = (id: string) => {
+    setBrokenIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
 
   const hasAny = all.length > 0;
 
@@ -67,19 +83,49 @@ export function InspoGalleryGrid({ displayed, all }: Props) {
           aria-label="Inspo gallery"
           className="grid grid-cols-2 md:grid-cols-3 gap-2"
         >
-          {displayed.map((img) => (
-            <li
-              key={img.id}
-              className="frame overflow-hidden bg-[var(--color-bg-elevated)] aspect-square"
-            >
-              <img
-                src={img.url}
-                alt={img.altText ?? "Inspo reference"}
-                loading="lazy"
-                className="w-full h-full object-cover"
-              />
-            </li>
-          ))}
+          {displayed.map((img) => {
+            const isBroken = brokenIds.has(img.id);
+            const altText = img.altText ?? "Inspo reference";
+            return (
+              <li
+                key={img.id}
+                className="frame overflow-hidden bg-[var(--color-bg-elevated)] aspect-square"
+              >
+                {isBroken ? (
+                  // UX-1103 — fallback tile for images that 503 / 403 /
+                  // refuse hotlink. Painter sees a framed grey panel
+                  // with a broken-image glyph + "Couldn't load — open
+                  // source" link, not the alt text floating in
+                  // nothing. The source URL still opens in a new tab
+                  // so they can verify it themselves.
+                  <a
+                    href={img.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={altText}
+                    className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors"
+                  >
+                    <ImageOff aria-hidden size={20} />
+                    <span className="font-sans text-2xs leading-snug">
+                      Couldn&apos;t load — open source
+                    </span>
+                  </a>
+                ) : (
+                  <img
+                    src={img.url}
+                    alt={altText}
+                    loading="lazy"
+                    // UX-1103 — `no-referrer` reduces 403s from
+                    // Pinterest's hotlink-protection by stripping
+                    // the painter's referer from the request.
+                    referrerPolicy="no-referrer"
+                    onError={() => markBroken(img.id)}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
