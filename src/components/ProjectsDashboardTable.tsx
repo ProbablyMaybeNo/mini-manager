@@ -269,59 +269,94 @@ export function ProjectsDashboardTable({
   }, [sortedTopLevel, childrenByParent, expanded]);
 
   return (
-    <div className="frame overflow-x-auto">
-      <table className="w-full text-xs font-mono">
-        <thead>
-          <tr
-            className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-            style={{ borderBottom: "1px solid var(--color-border-strong)" }}
-          >
-            <th scope="col" className="w-8 px-2 py-2" aria-label="Expand" />
-            <Th
-              label="Name"
-              active={sortKey === "name"}
-              dir={sortDir}
-              onClick={() => handleSort("name")}
-            />
-            <Th
-              label="Type"
-              active={sortKey === "type"}
-              dir={sortDir}
-              onClick={() => handleSort("type")}
-            />
-            <th scope="col" className="px-3 py-2">
-              Recipes
-            </th>
-            <Th
-              label="Status"
-              active={sortKey === "status"}
-              dir={sortDir}
-              onClick={() => handleSort("status")}
-            />
-            <Th
-              label="Priority"
-              active={sortKey === "priority"}
-              dir={sortDir}
-              onClick={() => handleSort("priority")}
-            />
-            <Th
-              label="Completion"
-              active={sortKey === "progressPercent"}
-              dir={sortDir}
-              onClick={() => handleSort("progressPercent")}
-            />
-            <th
-              scope="col"
-              className="px-3 py-2 text-right"
-              aria-label="Row actions"
-            />
-          </tr>
-        </thead>
-        <tbody>
+    <>
+      {/* UX-901 — desktop table (md+). Hidden on phones; the stacked-
+          card layout below covers the mobile viewport per WCAG 2.2
+          §1.4.10 (no horizontal scrolling at 320-414px). */}
+      <div className="frame overflow-x-auto hidden md:block">
+        <table className="w-full text-xs font-mono">
+          <thead>
+            <tr
+              className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
+              style={{ borderBottom: "1px solid var(--color-border-strong)" }}
+            >
+              <th scope="col" className="w-8 px-2 py-2" aria-label="Expand" />
+              <Th
+                label="Name"
+                active={sortKey === "name"}
+                dir={sortDir}
+                onClick={() => handleSort("name")}
+              />
+              <Th
+                label="Type"
+                active={sortKey === "type"}
+                dir={sortDir}
+                onClick={() => handleSort("type")}
+              />
+              <th scope="col" className="px-3 py-2">
+                Recipes
+              </th>
+              <Th
+                label="Status"
+                active={sortKey === "status"}
+                dir={sortDir}
+                onClick={() => handleSort("status")}
+              />
+              <Th
+                label="Priority"
+                active={sortKey === "priority"}
+                dir={sortDir}
+                onClick={() => handleSort("priority")}
+              />
+              <Th
+                label="Completion"
+                active={sortKey === "progressPercent"}
+                dir={sortDir}
+                onClick={() => handleSort("progressPercent")}
+              />
+              <th
+                scope="col"
+                className="px-3 py-2 text-right"
+                aria-label="Row actions"
+              />
+            </tr>
+          </thead>
+          <tbody>
+            {renderRows.map((row) => {
+              const hasChildren = (childrenByParent.get(row.id) ?? []).length > 0;
+              return (
+                <DashboardRow
+                  key={row.id}
+                  row={row}
+                  hasChildren={hasChildren}
+                  expanded={expanded.has(row.id)}
+                  onToggleExpand={() => toggleExpanded(row.id)}
+                  ownedRecipes={ownedRecipes}
+                  projectNameById={projectNameById}
+                />
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* UX-901 — mobile stack-card layout. One <article> per project,
+          stacked vertically. All the same fields the table carries
+          (name, type, recipes, status, priority, completion, delete)
+          but reflowed so nothing clips at 320-414px. Sort controls live
+          in the header above the list since the table's column-header
+          buttons aren't visible on this layout. */}
+      <div className="md:hidden space-y-3">
+        <MobileSortBar
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onChangeKey={(k) => handleSort(k)}
+        />
+        <ul className="space-y-3" role="list" aria-label="Projects">
           {renderRows.map((row) => {
             const hasChildren = (childrenByParent.get(row.id) ?? []).length > 0;
             return (
-              <DashboardRow
+              <DashboardCard
                 key={row.id}
                 row={row}
                 hasChildren={hasChildren}
@@ -332,8 +367,65 @@ export function ProjectsDashboardTable({
               />
             );
           })}
-        </tbody>
-      </table>
+        </ul>
+      </div>
+    </>
+  );
+}
+
+/**
+ * UX-901 — Sort control on the mobile card layout. The table's
+ * sortable column headers aren't visible on phones, so this surfaces
+ * the same sort keys as a labeled <select> + a direction toggle.
+ * Keeps the dashboard sortable on every viewport.
+ */
+function MobileSortBar({
+  sortKey,
+  sortDir,
+  onChangeKey,
+}: {
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onChangeKey: (key: SortKey) => void;
+}) {
+  const SORT_LABELS: Record<SortKey, string> = {
+    name: "Name",
+    type: "Type",
+    status: "Status",
+    priority: "Priority",
+    progressPercent: "Completion",
+    updatedAt: "Recently updated",
+  };
+  return (
+    <div className="frame px-3 py-2 flex items-center gap-2">
+      <label
+        htmlFor="mobile-sort-key"
+        className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]"
+      >
+        Sort
+      </label>
+      <select
+        id="mobile-sort-key"
+        value={sortKey}
+        onChange={(e) => onChangeKey(e.target.value as SortKey)}
+        className="flex-1 font-mono text-xs bg-[var(--color-bg)] px-2 py-1 frame"
+      >
+        {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+          <option key={k} value={k}>
+            {SORT_LABELS[k]}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={() => onChangeKey(sortKey)}
+        aria-label={`Toggle sort direction (currently ${sortDir === "asc" ? "ascending" : "descending"})`}
+        className="tap-target inline-flex items-center justify-center w-9 h-9 frame text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors"
+      >
+        <span aria-hidden className="text-xs font-mono">
+          {sortDir === "asc" ? "▲" : "▼"}
+        </span>
+      </button>
     </div>
   );
 }
@@ -627,6 +719,263 @@ function DashboardRow({
         />
       </td>
     </tr>
+  );
+}
+
+/**
+ * UX-901 — Stacked card layout for the projects dashboard on mobile.
+ *
+ * Mirrors DashboardRow's behaviour (inline edits via InlineCellPopover,
+ * recipe-cell tap routes to /recipes/<id> or opens AttachRecipeModal,
+ * delete via DeleteProjectButton) but reflows the fields so nothing
+ * clips at 320-414px viewport widths. Layout per backlog:
+ *
+ *   Header line: chevron (if has children) · Name link · Type chip
+ *   Faction (when set) below name
+ *   Palette strip + recipes cell
+ *   Status pill + Priority pill (inline row)
+ *   Completion progress bar — full-width
+ *   Delete link bottom-right
+ *
+ * Indent + tree-connector use the same depth-based offset as the
+ * table row so a sub-project still reads as nested.
+ */
+function DashboardCard({
+  row,
+  hasChildren,
+  expanded,
+  onToggleExpand,
+  ownedRecipes,
+  projectNameById,
+}: {
+  row: ProjectDashboardRow;
+  hasChildren: boolean;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  ownedRecipes: ReadonlyArray<{
+    id: string;
+    name: string;
+    attachedProjectId: string | null;
+  }>;
+  projectNameById: Readonly<Record<string, string>>;
+}) {
+  const typeChipClass = TYPE_CHIP[row.type];
+  // Mobile indent is shallower than the table (8px per level) so the
+  // card content doesn't get pinched at 320px.
+  const indentPx = row.depth * 8;
+
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [attachOpen, setAttachOpen] = useState(false);
+
+  const attachCandidates: ReadonlyArray<RecipeOption> = useMemo(() => {
+    return ownedRecipes
+      .filter((r) => r.attachedProjectId !== row.id)
+      .map((r) => {
+        const label = r.attachedProjectId
+          ? projectNameById[r.attachedProjectId] ?? "(project)"
+          : null;
+        return { id: r.id, name: r.name, attachmentLabel: label };
+      });
+  }, [ownedRecipes, projectNameById, row.id]);
+
+  const handleStatus = (next: DisplayStatus) => {
+    startTransition(async () => {
+      const result = await bumpProjectStatus({ id: row.id, status: next });
+      if (result.ok) router.refresh();
+    });
+  };
+
+  const handleType = (next: ProjectType) => {
+    startTransition(async () => {
+      const result = await updateProjectType({ id: row.id, type: next });
+      if (result.ok) router.refresh();
+    });
+  };
+
+  const handlePriority = (next: Priority | null) => {
+    startTransition(async () => {
+      const result = await updateProjectPriority({ id: row.id, priority: next });
+      if (result.ok) router.refresh();
+    });
+  };
+
+  const handleRecipeCellClick = () => {
+    if (row.firstAttachedRecipeId) {
+      router.push(`/recipes/${row.firstAttachedRecipeId}`);
+    } else {
+      setAttachOpen(true);
+    }
+  };
+
+  return (
+    <li
+      className={clsx(
+        "frame p-3 space-y-3",
+        pending && "opacity-70",
+      )}
+      data-depth={row.depth}
+      style={{ marginLeft: indentPx ? `${indentPx}px` : undefined }}
+    >
+      {/* Header: chevron + name + type chip */}
+      <div className="flex items-start gap-2">
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            aria-expanded={expanded}
+            aria-label={
+              expanded ? `Collapse ${row.name}` : `Expand ${row.name}`
+            }
+            className="tap-target shrink-0 inline-flex items-center justify-center w-9 h-9 -ml-1 text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors transition-transform motion-reduce:transition-none rounded-sm"
+          >
+            <span
+              aria-hidden
+              className={clsx(
+                "inline-block leading-none transition-transform",
+                "motion-reduce:transition-none",
+                expanded ? "rotate-90" : "rotate-0",
+              )}
+            >
+              ▸
+            </span>
+          </button>
+        ) : null}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              href={`/projects/${row.id}`}
+              className="text-sm font-mono text-[var(--color-cyan)] hover:underline truncate"
+            >
+              {row.name}
+            </Link>
+            <InlineCellPopover
+              triggerLabel={`Type · ${row.type}`}
+              trigger={
+                <span className={clsx("type-chip", typeChipClass)}>
+                  {row.type}
+                </span>
+              }
+            >
+              {(row.parentId ? (["Unit"] as const) : projectTypes).map((t) => (
+                <InlineCellPopoverItem
+                  key={t}
+                  active={t === row.type}
+                  onClick={() => handleType(t)}
+                >
+                  {t}
+                </InlineCellPopoverItem>
+              ))}
+            </InlineCellPopover>
+          </div>
+          {row.faction ? (
+            <p className="mt-1 text-2xs font-mono text-[var(--color-fg-muted)] truncate">
+              {row.faction}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Recipes row */}
+      <div className="flex items-center gap-2">
+        <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] w-20 shrink-0">
+          Recipes
+        </span>
+        <button
+          type="button"
+          onClick={handleRecipeCellClick}
+          className="text-left cursor-pointer hover:opacity-80 transition-opacity"
+          aria-label={
+            row.firstAttachedRecipeId
+              ? "Open attached recipe"
+              : "Attach a recipe"
+          }
+        >
+          {row.paletteHexes.length > 0 ? (
+            <PaletteStrip hexes={row.paletteHexes} />
+          ) : (
+            <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors">
+              + attach
+            </span>
+          )}
+        </button>
+        <AttachRecipeModal
+          mode="project"
+          projectId={row.id}
+          open={attachOpen}
+          onClose={() => setAttachOpen(false)}
+          candidates={attachCandidates}
+        />
+      </div>
+
+      {/* Status + priority row */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <InlineCellPopover
+          triggerLabel={`Status · ${row.status}`}
+          trigger={
+            <StatusPill status={STATUS_PILL[row.status]}>
+              {row.status}
+            </StatusPill>
+          }
+        >
+          {STATUS_ORDER.map((s) => (
+            <InlineCellPopoverItem
+              key={s}
+              active={s === row.status}
+              onClick={() => handleStatus(s)}
+            >
+              {s}
+            </InlineCellPopoverItem>
+          ))}
+        </InlineCellPopover>
+        <InlineCellPopover
+          triggerLabel={`Priority · ${row.priority ?? "Unset"}`}
+          trigger={
+            <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] frame px-2 py-0.5">
+              {row.priority ?? "—"}
+            </span>
+          }
+        >
+          {priorities.map((p) => (
+            <InlineCellPopoverItem
+              key={p}
+              active={p === row.priority}
+              onClick={() => handlePriority(p)}
+            >
+              {p}
+            </InlineCellPopoverItem>
+          ))}
+          <InlineCellPopoverItem
+            destructive
+            onClick={() => handlePriority(null)}
+          >
+            Clear
+          </InlineCellPopoverItem>
+        </InlineCellPopover>
+      </div>
+
+      {/* Completion bar — full width */}
+      <div className="flex items-center gap-2">
+        <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] w-20 shrink-0">
+          Done
+        </span>
+        <ProgressBar percent={row.progressPercent} width={28} />
+        <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
+          {row.progressPercent}%
+        </span>
+      </div>
+
+      {/* Delete pinned bottom-right */}
+      <div className="flex justify-end">
+        <DeleteProjectButton
+          projectId={row.id}
+          projectName={row.name}
+          redirectToProjectsOnSuccess={false}
+          inline
+          label="Delete"
+        />
+      </div>
+    </li>
   );
 }
 
