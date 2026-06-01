@@ -45,7 +45,11 @@ export function ColorPickerDialog({
   }, [open]);
 
   const handleSelect = (sel: ColorPickerSelection) => {
-    onSelect(sel.hex, sel.paintId);
+    // R7-001 — `paintId` is now explicitly `string | null` on the
+    // selection (null means "raw hex, no library paint"). The dialog
+    // collapses null → undefined so existing tool callers (Match /
+    // Layering) keep their pre-R7 `paintId?: string` shape.
+    onSelect(sel.hex, sel.paintId ?? undefined);
     onClose();
   };
 

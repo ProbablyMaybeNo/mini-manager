@@ -11,7 +11,10 @@ import {
 } from "@/lib/actions/recipeZones";
 import { updateStep } from "@/lib/actions/recipeSteps";
 import { createRecipe } from "@/lib/actions/recipes";
-import type { ColorPickerSelection } from "@/lib/colorPicker/types";
+import type {
+  ColorPickerMode,
+  ColorPickerSelection,
+} from "@/lib/colorPicker/types";
 
 export interface ColorSchemeSlot {
   /** Recipe-zone id for this slot. Used to call updateStep when the
@@ -233,6 +236,7 @@ export function ProjectColorSchemeBox({
               ? "Add a colour to this scheme"
               : `Swap slot · ${slots[pickerTarget.slotIndex]?.name ?? ""}`
           }
+          mode={pickerTarget.kind === "new" ? "add-slot" : "edit-slot"}
           initialHex={initialHex}
           busy={isSaving}
           error={pickerError}
@@ -312,6 +316,7 @@ function FilledBox({
 
 function ColorPickerSidePanel({
   contextLabel,
+  mode,
   initialHex,
   busy,
   error,
@@ -319,6 +324,7 @@ function ColorPickerSidePanel({
   onSelect,
 }: {
   contextLabel: string;
+  mode: ColorPickerMode;
   initialHex: string | null;
   busy: boolean;
   error: string | null;
@@ -356,6 +362,7 @@ function ColorPickerSidePanel({
           <ColorPicker
             value={initialHex ? { hex: initialHex } : null}
             onSelect={onSelect}
+            mode={mode}
           />
         </div>
         {error ? (

@@ -12,7 +12,10 @@ import { Card } from "@/components/ui/Card";
 import { LogTag } from "@/components/ui/LogTag";
 import { Button } from "@/components/ui/Button";
 import { ColorPicker } from "@/components/ui/ColorPicker";
-import type { ColorPickerSelection } from "@/lib/colorPicker/types";
+import type {
+  ColorPickerMode,
+  ColorPickerSelection,
+} from "@/lib/colorPicker/types";
 import {
   phase12LayerKeys,
   phase12LayerLabel,
@@ -202,7 +205,12 @@ export function ZoneList({
           <p className="text-xs font-sans text-[var(--color-fg-subtle)] leading-snug">
             Click any{" "}
             <span className="font-mono uppercase tracking-wider">+</span>{" "}
-            slot to pick a paint. Click a filled slot to swap its paint.
+            slot to ADD a new colour. Click a filled slot to REPLACE its
+            paint. To layer paints on a slot, select it and use{" "}
+            <span className="font-mono uppercase tracking-wider">
+              + Add step
+            </span>{" "}
+            on the Steps panel.
           </p>
           <div
             className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(112px,1fr))]"
@@ -268,6 +276,7 @@ export function ZoneList({
               ? "Add a new colour slot"
               : `Edit slot · ${editingZone?.name ?? ""}`
           }
+          mode={pickerTarget.kind === "new" ? "add-slot" : "edit-slot"}
           initial={
             pickerTarget.kind === "edit" && editingZone?.swatchHex
               ? { hex: editingZone.swatchHex }
@@ -378,6 +387,7 @@ function LayerSelector({
  */
 function ColorPickerSidePanel({
   contextLabel,
+  mode,
   initial,
   currentLayer,
   showLayerSelector,
@@ -388,6 +398,7 @@ function ColorPickerSidePanel({
   onLayerSelect,
 }: {
   contextLabel: string;
+  mode: ColorPickerMode;
   initial: { hex: string } | null;
   currentLayer: TechniqueKey | null;
   showLayerSelector: boolean;
@@ -449,6 +460,7 @@ function ColorPickerSidePanel({
             value={initial ? { hex: initial.hex } : null}
             onSelect={onSelect}
             contextLabel={undefined}
+            mode={mode}
           />
         </div>
         {error ? (

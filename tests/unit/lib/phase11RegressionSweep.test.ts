@@ -132,13 +132,15 @@ describe("Phase 11 — microcopy persisted (P11.12)", () => {
     );
   });
 
-  test("ZoneList colour-slot inline help persists (P12.2 microcopy)", () => {
+  test("ZoneList colour-slot inline help persists (P12.2 / R7-002 microcopy)", () => {
     // P12.2 replaced the "Each colour slot is one part of the model"
     // copy from P11.12 with a click-to-pick affordance pointer. The
-    // recipe is now about COLOUR + PAINTS, not model parts.
+    // recipe is now about COLOUR + PAINTS, not model parts. R7-002
+    // sharpened the verbs (ADD vs REPLACE) to fix the auditor's
+    // "edit-slot ambiguity" finding.
     const src = read("src/components/recipes/ZoneList.tsx");
     expect(src).toContain("Click any");
-    expect(src).toContain("slot to pick a paint");
+    expect(src).toContain("slot to ADD a new colour");
   });
 
   test("Tools H1 subheadings stay painter-vocab", () => {

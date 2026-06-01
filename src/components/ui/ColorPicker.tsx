@@ -21,6 +21,7 @@ import {
 } from "@/lib/colorPicker/matchPaints";
 import type {
   ColorPickerHarmony,
+  ColorPickerMode,
   ColorPickerSelection,
 } from "@/lib/colorPicker/types";
 import { DropZone } from "@/components/tools/eyedropper/DropZone";
@@ -37,6 +38,12 @@ interface Props {
   /** Allows the host (recipe slot grid, project Color Scheme box, etc.)
    *  to label the picker contextually, e.g. "Slot 1" / "Highlight". */
   contextLabel?: string;
+  /** Whether the host is creating a brand-new slot ("add-slot") or
+   *  swapping the paint on an existing one ("edit-slot"). Controls the
+   *  in-panel microcopy so the painter is never ambiguous about whether
+   *  picking a colour creates or replaces. Defaults to "add-slot" for
+   *  back-compat with pre-R7 consumers. R7-002. */
+  mode?: ColorPickerMode;
 }
 
 /**
@@ -57,7 +64,12 @@ interface Props {
  *
  * Animations gated on prefers-reduced-motion.
  */
-export function ColorPicker({ value, onSelect, contextLabel }: Props) {
+export function ColorPicker({
+  value,
+  onSelect,
+  contextLabel,
+  mode = "add-slot",
+}: Props) {
   /* ---------- catalog + currently picked colour ---------- */
   const [paints, setPaints] = useState<ReadonlyArray<Paint>>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -158,9 +170,17 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
     }
   };
 
-  /* ---------- selection emit ---------- */
-  const emit = (sel: ColorPickerSelection) => {
-    onSelect(sel);
+  /* ---------- selection emit ----------
+     R7-001 — wheel, harmony swatches, and eyedropper swatches all emit
+     via these two helpers. `emitHex` pins `paintId: null` explicitly
+     (vs. leaving the field undefined) so the consumer's downstream
+     branching never conflates "raw hex picked" with "use existing
+     paintId". The library-row path keeps the paintId set. */
+  const emitHex = (hex: string) => {
+    onSelect({ hex, paintId: null });
+  };
+  const emitPaint = (hex: string, paintId: string) => {
+    onSelect({ hex, paintId });
   };
 
   return (
@@ -174,6 +194,20 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
       {contextLabel ? (
         <p className="section-title">{contextLabel}</p>
       ) : null}
+
+      {/* R7-002 — mode-disambiguating hint. The painter is never
+          ambiguous about whether picking a colour creates a new slot or
+          replaces the paint on the existing one. Lives at the top of
+          the picker so it's visible regardless of which sub-panel they
+          interact with. */}
+      <p
+        className="text-2xs font-mono text-[var(--color-fg-subtle)] leading-snug"
+        data-testid="picker-mode-hint"
+      >
+        {mode === "edit-slot"
+          ? "Picking a colour REPLACES this slot's paint."
+          : "Picking a colour ADDS a new slot."}
+      </p>
 
       {/* -------- Sub-panel 1: mini wheel + harmony -------- */}
       <section aria-labelledby="cp-wheel-heading" className="space-y-3">
@@ -198,7 +232,7 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
             type="button"
             variant="success"
             size="sm"
-            onClick={() => emit({ hex: pickedHex })}
+            onClick={() => emitHex(pickedHex)}
             className="ml-auto"
           >
             Use this colour
@@ -238,7 +272,7 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
               key={`${idx}-${hex}`}
               type="button"
               role="listitem"
-              onClick={() => emit({ hex })}
+              onClick={() => emitHex(hex)}
               aria-label={`Use harmony swatch ${hex}`}
               className="block w-9 h-9 rounded-sm cursor-pointer hover:scale-110 transition-transform"
               style={{
@@ -319,7 +353,7 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
             <li key={paint.id}>
               <button
                 type="button"
-                onClick={() => emit({ hex: paint.hex, paintId: paint.id })}
+                onClick={() => emitPaint(paint.hex, paint.id)}
                 className={clsx(
                   "w-full flex items-center gap-3 px-2 py-1.5 frame text-left hover:border-[var(--color-cyan)] transition-colors",
                   value?.paintId === paint.id &&
@@ -394,7 +428,7 @@ export function ColorPicker({ value, onSelect, contextLabel }: Props) {
                 key={`${idx}-${hex}`}
                 type="button"
                 role="listitem"
-                onClick={() => emit({ hex })}
+                onClick={() => emitHex(hex)}
                 aria-label={`Use extracted swatch ${hex}`}
                 className="block w-9 h-9 rounded-sm cursor-pointer hover:scale-110 transition-transform"
                 style={{

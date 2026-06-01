@@ -53,8 +53,15 @@ describe("ZoneList — UI strings flipped to 'colour slot' (P11.3 + P12.2)", () 
     // retired in P12.2 — Ross's brief locks "recipes are about COLOR
     // and PAINTS, not parts of a model". The replacement microcopy
     // points the user at the click-to-pick affordance.
+    //
+    // R7-002 then rewrote the copy to disambiguate ADD vs REPLACE vs
+    // layer-on-step. The "Click any +" anchor stays; the verb is now
+    // ADD and the swap path is REPLACE. The layer-via-Steps escape
+    // hatch is called out by name.
     expect(src).toContain("Click any");
-    expect(src).toContain("slot to pick a paint");
+    expect(src).toContain("slot to ADD a new colour");
+    expect(src).toContain("REPLACE its");
+    expect(src).toContain("+ Add step");
     expect(src).not.toMatch(/one part of the model/);
   });
 
