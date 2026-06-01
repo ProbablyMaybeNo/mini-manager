@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { ExportButton } from "@/components/user/ExportButton";
 import { RecoveryEmailCard } from "@/components/user/RecoveryEmailCard";
+import { SignOutButton } from "@/components/user/SignOutButton";
 import { Card } from "@/components/ui/Card";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { db } from "@/db/client";
@@ -86,6 +87,14 @@ export default async function UserPage() {
         <div className="pt-3">
           <ExportButton />
         </div>
+      </Card>
+
+      <Card title="Session" ariaLabel="Session">
+        <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-snug mb-3">
+          End your session on this device. You&apos;ll need to sign in again
+          to use Mini Manager.
+        </p>
+        <SignOutButton />
       </Card>
     </div>
   );

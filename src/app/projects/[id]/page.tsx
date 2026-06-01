@@ -25,6 +25,7 @@ import {
 } from "@/lib/progress";
 import { Card } from "@/components/ui/Card";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
+import { Button } from "@/components/ui/Button";
 
 const HEADER_STATUS_PILL: Record<string, StatusPillKind> = {
   New: "info",
@@ -162,12 +163,14 @@ export default async function ProjectDetailPage({
             <Card
               title={`Sub-projects · ${children.length}`}
               headerActions={
-                <Link
-                  href={{ pathname: "/projects/new", query: { parent: project.id } }}
-                  className="inline-flex items-center gap-1 px-3 py-1 text-2xs font-mono uppercase tracking-wider rounded-sm bg-[var(--color-cyan)] text-[var(--color-bg)] hover:brightness-110 transition-all"
+                <Button
+                  as="a"
+                  href={`/projects/new?parent=${project.id}`}
+                  variant="primary"
+                  size="sm"
                 >
                   + Add unit
-                </Link>
+                </Button>
               }
             >
               {children.length === 0 ? (

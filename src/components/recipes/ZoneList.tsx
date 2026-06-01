@@ -242,15 +242,22 @@ function ColorSlotCell({
         aria-label={`${filled ? "Edit" : "Configure"} colour slot ${zone.name}`}
         title={`${zone.name} · ${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}`}
         className={clsx(
-          "w-full aspect-square flex flex-col items-stretch justify-between rounded-sm border-2 transition-all cursor-pointer p-2",
-          selected
-            ? "border-[var(--color-cyan)] shadow-[0_0_0_2px_var(--color-cyan)]"
-            : filled
-              ? "border-[var(--color-border-strong)] hover:border-[var(--color-cyan)]"
-              : "border-dashed border-[var(--color-border-strong)] hover:border-[var(--color-cyan)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)]",
+          "w-full aspect-square flex flex-col items-stretch justify-between rounded-sm transition-all cursor-pointer p-2",
+          selected && "shadow-[0_0_0_2px_var(--color-cyan)]",
           isPending && "opacity-50 cursor-progress",
         )}
-        style={{ background: filled ? zone.swatchHex! : "transparent" }}
+        // Inline border + bg — Tailwind v4's `border-2 border-dashed
+        // border-[var(--color-X)]` collapses to border-width:0 in some
+        // arrangements (UX-V6-002). Inline `border` shorthand guarantees
+        // the dashed/solid distinction renders.
+        style={{
+          background: filled ? zone.swatchHex! : "transparent",
+          border: selected
+            ? "2px solid var(--color-cyan)"
+            : filled
+              ? "2px solid var(--color-border-strong)"
+              : "2px dashed var(--color-border-strong)",
+        }}
       >
         <span
           aria-hidden
@@ -318,7 +325,8 @@ function AddSlotTile() {
         }
       }}
       aria-label="Add a colour slot"
-      className="aspect-square flex flex-col items-center justify-center gap-1.5 rounded-sm border-2 border-dashed border-[var(--color-border-strong)] hover:border-[var(--color-cyan)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-all cursor-pointer text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]"
+      className="aspect-square flex flex-col items-center justify-center gap-1.5 rounded-sm hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-all cursor-pointer text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:[border-color:var(--color-cyan)]"
+      style={{ border: "2px dashed var(--color-border-strong)" }}
     >
       <span aria-hidden className="font-mono text-2xl leading-none">+</span>
       <span className="font-mono text-2xs uppercase tracking-wider">
