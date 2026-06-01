@@ -1,0 +1,28 @@
+[
+  {
+    "id": "UX-1001",
+    "severity": "low",
+    "category": "content",
+    "principle": "NN/g #4 Consistency and standards · Refactoring UI — labels should match the user's mental model",
+    "location": "library row star toggle (`InventoryControls` compact) vs `/wishlist` page partitioning",
+    "screenshot": "n/a — fresh-eyes observation",
+    "problem": "The star button on a library row says `Add to wishlist` and toggles a paint's `isWishlisted` inventory flag, but the `/wishlist` page only renders rows added via the vendor-URL quick-add or via the Match tool. After starring a paint from the library, recruits will navigate to /wishlist expecting to see it there and find an empty PAINTS section instead. The wishlist page's own empty-state copy reveals the intended path: `\"Match a hex with the Match tool and add it to your wishlist to see it here\"` — which means there are two parallel \"wishlist\" data sources with the same name. This is the strongest candidate for a recruit-DM-window confusion item.",
+    "fix": "Either (a) wire the library row star action through to the same wishlist table the page reads from (preferred, single source of truth), or (b) rename the library star aria-label/visible label to `Favorite` / `Want` and clarify in the row tooltip that the global wishlist lives on /wishlist. Lowest-effort cut: change the aria-label and visible button label in `InventoryControls` (lines 124 + 200) from `Add to wishlist` to `Mark as wanted` and add a one-line tooltip pointing recruits at the /wishlist page for kit-level wishes.",
+    "effort": "small",
+    "confidence": 0.72,
+    "needs_human": true
+  },
+  {
+    "id": "UX-1002",
+    "severity": "low",
+    "category": "feedback",
+    "principle": "NN/g #1 Visibility of system status",
+    "location": "first page-load on a cold Vercel edge → NET·LAG status bar",
+    "screenshot": "n/a — observed twice during the audit, on /projects load and on /user scroll",
+    "problem": "First request after a Vercel cold-start trips the >1200 ms threshold in `StatusBar.useNetStatus()`, so a fresh recruit lands and sees `NET·LAG` (amber) in the chrome bar for ~15 s. UX-911 mitigates this with a tooltip explaining the state, but recruits unfamiliar with the app will spot the amber-on-black flash before they think to hover. Not a blocker — the tooltip copy is already excellent (`\"Your work is still saving\"`) — but worth knowing it surfaces.",
+    "fix": "Optional: bump `PING_INTERVAL` first-tick to 25 s (skip the boot-time edge cold-start), OR raise the LAG threshold from 1200 ms to 2000 ms (Vercel cold starts can hit ~1.5 s on free-tier without indicating a real network issue). Both are one-line changes in `StatusBar.tsx` lines 26 / 68. Acceptable to ship as-is.",
+    "effort": "trivial",
+    "confidence": 0.65,
+    "needs_human": false
+  }
+]
