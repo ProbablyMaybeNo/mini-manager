@@ -89,11 +89,14 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       expect(src).toMatch(/days/i);
     });
 
-    test("Heatmap cell shows a placeholder 30-day strip", () => {
+    test("Heatmap cell renders a grid + last-90-days microcopy", () => {
+      // P14.6 - the placeholder 30-day strip was swapped for the
+      // real 90-day grid + tooltip + intensity-binned cells. The
+      // scaffold test now pins the surrounding shape (Card, grid,
+      // last-N-days copy) rather than the specific 30-cell strip.
       const src = read("src/components/planner/PlannerHeatmapCell.tsx");
-      // Inline grid-template-columns sets the 30-cell strip.
-      expect(src).toContain("repeat(30");
-      expect(src).toMatch(/last 30 days/i);
+      expect(src).toContain("HEATMAP");
+      expect(src).toMatch(/last \d+ days/i);
     });
 
     test("Inspo cell shows the locked paste-only copy", () => {
