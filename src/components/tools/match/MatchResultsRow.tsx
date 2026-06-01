@@ -11,13 +11,16 @@ interface Props {
   /** P12.16 — render the universal "Assign ▾" affordance next to the
    *  Use button. Wired by MatchClient (which passes its toolId). */
   showAssign?: boolean;
+  /** P13.6 — click the swatch cell to reseed the target hex via the
+   *  ColorPicker (the parent owns the picker mount). */
+  onPickColor?: (hex: string) => void;
 }
 
 /**
  * One row in the cross-brand match table. Mono columns: swatch / brand /
- * name / line · type / ΔE + confidence dot / [ Use ].
+ * name / line · type / MATCH + confidence dot / [ Use ].
  */
-export function MatchResultsRow({ result, onUse, showAssign }: Props) {
+export function MatchResultsRow({ result, onUse, showAssign, onPickColor }: Props) {
   const { paint, deltaE, confidence } = result;
   const confidenceColor =
     confidence === "high"
@@ -31,15 +34,32 @@ export function MatchResultsRow({ result, onUse, showAssign }: Props) {
       role="row"
       className="grid grid-cols-[24px_1fr_72px_auto] items-center gap-2 px-2 py-1.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
     >
-      <span
-        role="cell"
-        aria-hidden
-        className="inline-block w-5 h-5 rounded-sm border"
-        style={{
-          background: paint.hex,
-          borderColor: "var(--color-border-strong)",
-        }}
-      />
+      {/* P13.6 — clicking the swatch reseeds the target hex via the
+          parent's ColorPicker. Keyboard accessible. */}
+      {onPickColor ? (
+        <button
+          role="cell"
+          type="button"
+          onClick={() => onPickColor(paint.hex)}
+          aria-label={`Reseed match target from ${paint.brand} ${paint.name}`}
+          title="Use this colour as target"
+          className="inline-block w-5 h-5 rounded-sm border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] hover:ring-2 hover:ring-[var(--color-accent)]"
+          style={{
+            background: paint.hex,
+            borderColor: "var(--color-border-strong)",
+          }}
+        />
+      ) : (
+        <span
+          role="cell"
+          aria-hidden
+          className="inline-block w-5 h-5 rounded-sm border"
+          style={{
+            background: paint.hex,
+            borderColor: "var(--color-border-strong)",
+          }}
+        />
+      )}
       <div role="cell" className="min-w-0">
         <div className="font-mono text-xs text-[var(--color-fg)] truncate">
           {paint.brand} {paint.name}

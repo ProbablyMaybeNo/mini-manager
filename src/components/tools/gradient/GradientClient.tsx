@@ -47,9 +47,14 @@ function ColorInput({ label, value, onChange, onOpenPicker }: ColorInputProps) {
         {label}
       </label>
       <div className="flex items-center gap-2">
-        <span
-          aria-hidden
-          className="inline-block w-9 h-9 rounded-sm border shrink-0"
+        {/* P13.6 — the swatch preview is now a click-target that opens
+            the ColorPicker. Keyboard accessible via Enter/Space. */}
+        <button
+          type="button"
+          onClick={onOpenPicker}
+          aria-label={`Open colour picker for ${label.toLowerCase()}`}
+          title={`Pick a ${label.toLowerCase()} colour`}
+          className="inline-block w-9 h-9 rounded-sm border shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] hover:ring-2 hover:ring-[var(--color-accent)]"
           style={{
             background: preview,
             borderColor: "var(--color-border-strong)",

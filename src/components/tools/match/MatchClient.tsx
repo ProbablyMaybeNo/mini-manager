@@ -124,6 +124,15 @@ export function MatchClient() {
     });
   };
 
+  // P13.6 — clicking a result swatch opens the ColorPicker pre-seeded
+  // with that hex so the painter can nudge it (lightness slider, etc.)
+  // before re-running the search.
+  const handleResultPickColor = (hex: string) => {
+    setHexInput(hex);
+    setActiveHex(hex);
+    setPickerOpen(true);
+  };
+
   // Footer "Send to recipe" / "Save palette" hand off the active target
   // hex as a single-swatch palette. If the painter wants the top match
   // instead, they hit [ Use ] on the row.
@@ -154,9 +163,14 @@ export function MatchClient() {
               Target hex
             </label>
             <div className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className="inline-block w-10 h-10 rounded-sm border shrink-0"
+              {/* P13.6 — the swatch preview cell is now click-to-open
+                  the ColorPicker. Keyboard accessible via Enter/Space. */}
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                aria-label="Open colour picker for match target"
+                title="Pick a colour"
+                className="inline-block w-10 h-10 rounded-sm border shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] hover:ring-2 hover:ring-[var(--color-accent)]"
                 style={{
                   background: HEX6.test(activeHex) ? activeHex : "var(--color-bg-elevated)",
                   borderColor: "var(--color-border-strong)",
@@ -291,8 +305,9 @@ export function MatchClient() {
                 <MatchResultsRow
                   key={r.paint.id}
                   result={r}
-                  onUse={handleUse}
                   showAssign
+                  onUse={handleUse}
+                  onPickColor={handleResultPickColor}
                 />
               ))
             )}
