@@ -603,22 +603,6 @@ select.frame-strong {
   background: color-mix(in srgb, var(--color-purple-pastel) 10%, transparent);
 }
 
-/* Wishlist tint — legacy modifier from P11.4 that tinted a cyan
-   outlined secondary button to yellow for wishlist intent. With the
-   P13.1 solid-button overhaul the canonical wishlist CTA is now
-   `variant="warning"` (solid pastel-yellow + black text). The
-   modifier remains for any straggler call site so it keeps rendering
-   a coherent yellow surface — solid fill aligned with the new
-   discipline. */
-.btn-wishlist-cta {
-  background: var(--color-yellow);
-  color: var(--color-bg);
-  border-color: var(--color-yellow);
-}
-.btn-wishlist-cta:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-yellow) 85%, white);
-}
-
 /* Type chips — used on project list rows to colour-code the project
    kind at a glance (P11.5). Subtle ~12% tinted background + matched
    foreground colour. Smaller and softer than a StatusPill (which

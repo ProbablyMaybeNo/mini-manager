@@ -66,12 +66,14 @@ export function QuickAddBar() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-1 w-full md:w-[420px]">
       <div className="flex items-center gap-2">
-        <span
-          className="font-mono text-xs text-[var(--color-fg-muted)] select-none"
+        {/* P13.10 — keyboard hint as <kbd>, not bracket-text. The `/`
+            shortcut focuses this input from anywhere on the page. */}
+        <kbd
           aria-hidden
+          className="font-mono text-xs text-[var(--color-fg-muted)] select-none px-1 py-0.5 frame"
         >
-          [ / ]
-        </span>
+          /
+        </kbd>
         <input
           ref={inputRef}
           type="text"

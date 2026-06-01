@@ -47,19 +47,23 @@ describe("Wishlist page heading — microcopy refresh (P11.4)", () => {
   });
 });
 
-describe("btn-wishlist-cta CSS modifier (P11.4)", () => {
+describe("Wishlist CTA on /projects/[id] (P11.4 → P13.10)", () => {
+  // P11.4 introduced .btn-wishlist-cta as an outline-yellow modifier that
+  // flipped a `variant="secondary"` Button to the wishlist palette.
+  // P13.1 made `variant="warning"` solid-yellow with black text — the
+  // canonical wishlist CTA. P13.10 retires the modifier and pins the
+  // project workspace consumer onto `variant="warning"` directly.
   const css = read("src/app/globals.css");
+  const projectPage = read("src/app/projects/[id]/page.tsx");
 
-  test("CSS class is defined in globals", () => {
-    expect(css).toMatch(/\.btn-wishlist-cta\s*\{/);
+  test("legacy .btn-wishlist-cta CSS modifier is gone from globals", () => {
+    expect(css).not.toMatch(/\.btn-wishlist-cta\s*\{/);
   });
 
-  test("flips the secondary button to the pastel-yellow palette token", () => {
-    expect(css).toMatch(
-      /\.btn-wishlist-cta\s*\{[\s\S]*?color:\s*var\(--color-yellow\)/,
-    );
-    expect(css).toMatch(
-      /\.btn-wishlist-cta\s*\{[\s\S]*?border-color:\s*var\(--color-yellow\)/,
-    );
+  test("the project workspace's + Wishlist button uses variant='warning'", () => {
+    // The button sits next to "+ Add unit" in the action button row.
+    expect(projectPage).toMatch(/\+ Wishlist/);
+    expect(projectPage).toMatch(/variant="warning"/);
+    expect(projectPage).not.toMatch(/btn-wishlist-cta/);
   });
 });

@@ -7,6 +7,7 @@ import {
   setOwnedCount,
   toggleWishlistedPaint,
 } from "@/lib/actions/inventory";
+import { Button } from "@/components/ui/Button";
 import { LogTag } from "@/components/ui/LogTag";
 import { useToast } from "@/components/ui/Toast";
 
@@ -179,26 +180,25 @@ export function InventoryControls({
           +
         </button>
       </div>
-      {/* Add-to-wishlist — Ross feedback: pastel yellow filled when
-          active, yellow outlined when not. Solid bg + dark text on
-          active per the terminal_ui INIT/SAVE button pattern. */}
+      {/* Add-to-wishlist — P13.10: routed through the Button primitive.
+          `variant="warning"` is the canonical wishlist CTA after P13.1.
+          When active we ship the solid pastel-yellow fill (the new
+          default tone); when inactive we drop to `tone="outline"` so
+          the inert state reads as low-emphasis without losing the
+          yellow palette anchor. */}
       <div>
-        <button
+        <Button
           type="button"
           onClick={toggleWish}
           disabled={isPending}
-          className={clsx(
-            "inline-flex items-center gap-2 px-3 py-1 text-xs font-mono uppercase tracking-wider rounded-sm border tap-target",
-            "border-[var(--color-yellow)]",
-            state.isWishlisted
-              ? "bg-[var(--color-yellow)] text-[var(--color-bg)] font-bold"
-              : "text-[var(--color-yellow)] hover:bg-[color-mix(in_srgb,var(--color-yellow)_12%,transparent)]",
-          )}
+          variant="warning"
+          size="sm"
+          tone={state.isWishlisted ? "solid" : "outline"}
           aria-pressed={state.isWishlisted}
         >
           <span aria-hidden>{state.isWishlisted ? "★" : "☆"}</span>
           <span>{state.isWishlisted ? "Wishlisted" : "Add to wishlist"}</span>
-        </button>
+        </Button>
       </div>
       {error ? (
         <p role="alert" className="flex items-start gap-2 text-xs font-mono text-[var(--color-red)]">

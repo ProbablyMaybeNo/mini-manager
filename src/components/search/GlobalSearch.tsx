@@ -145,9 +145,16 @@ export function GlobalSearch() {
     >
       <div className="w-full max-w-xl bg-[var(--color-bg-panel)] frame-strong shadow-2xl">
         <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--color-border)]">
-          <span aria-hidden className="font-mono text-2xs text-[var(--color-fg-muted)]">
-            [ / ]
-          </span>
+          {/* P13.10 — keyboard hint rendered as <kbd> instead of a
+              `[ / ]` bracket-text remnant. Same visual weight, semantic
+              markup, aligned with the P13.1 bracket-retirement
+              discipline (StageCounter does the same thing). */}
+          <kbd
+            aria-hidden
+            className="font-mono text-2xs text-[var(--color-fg-muted)] px-1 py-0.5 frame"
+          >
+            /
+          </kbd>
           <input
             ref={inputRef}
             value={query}

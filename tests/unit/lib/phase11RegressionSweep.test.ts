@@ -40,8 +40,13 @@ describe("Phase 11 — palette tokens still in place (P11.10)", () => {
     expect(css).toMatch(/\.type-chip-yellow/);
   });
 
-  test("btn-wishlist-cta modifier survives", () => {
-    expect(css).toMatch(/\.btn-wishlist-cta/);
+  // P13.10 — the .btn-wishlist-cta legacy modifier was retired. The
+  // P13.1 solid-fill Button overhaul made `variant="warning"` the
+  // canonical wishlist CTA (solid pastel-yellow + black text), so
+  // overlaying a separate class on top of `variant="secondary"` was
+  // doing duplicate work + leaving a tombstone in globals.css.
+  test("btn-wishlist-cta legacy modifier is gone (P13.10 cleanup)", () => {
+    expect(css).not.toMatch(/\.btn-wishlist-cta\s*\{/);
   });
 });
 

@@ -217,9 +217,8 @@ export default async function ProjectDetailPage({
       <Button
         as="a"
         href={`/wishlist?project=${project.id}`}
-        variant="secondary"
+        variant="warning"
         size="sm"
-        className="btn-wishlist-cta"
       >
         + Wishlist
       </Button>

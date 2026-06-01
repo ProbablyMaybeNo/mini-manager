@@ -3,7 +3,9 @@ import "server-only";
 import { currentUserId } from "@/lib/auth-stub";
 import { recentlyBought } from "@/db/queries/wishlist";
 
-/** "[ last 7 days: 4 items · $87.42 spent ]" — hidden when empty. */
+/** "Last 7 days: 4 items · $87.42 spent" — hidden when empty.
+ *  P13.10 — dropped the decorative `[ ... ]` bracket-chrome wrapper
+ *  per the app-wide bracket retirement. */
 export async function RecentlyBoughtLine({ windowDays = 7 }: { windowDays?: number }) {
   const userId = await currentUserId();
   const { count, totalByCurrency } = await recentlyBought(userId, windowDays);
@@ -12,8 +14,8 @@ export async function RecentlyBoughtLine({ windowDays = 7 }: { windowDays?: numb
   const totals = Object.entries(totalByCurrency).map(([code, n]) => formatTotal(n, code));
   return (
     <p className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
-      [ last {windowDays} days: {count} item{count === 1 ? "" : "s"}
-      {totals.length > 0 ? ` · ${totals.join(" · ")} spent` : ""} ]
+      Last {windowDays} days: {count} item{count === 1 ? "" : "s"}
+      {totals.length > 0 ? ` · ${totals.join(" · ")} spent` : ""}
     </p>
   );
 }
