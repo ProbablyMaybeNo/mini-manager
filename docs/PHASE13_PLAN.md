@@ -22,7 +22,7 @@ Drop the `[ ]` bracketed-text aesthetic for buttons app-wide. Replace with **sol
 - This cascades to every page that consumes Button — no downstream changes needed if API stays the same.
 - **Acceptance:** every button on the app renders as a solid color with crisp B/W text. No `[ ]` brackets visible. Tests green.
 
-### P13.2 — Project workspace simplification
+### P13.2 — Project workspace simplification ✅ → `b23d4a0`
 Remove the four panels Ross flagged from `src/app/projects/[id]/page.tsx`:
 
 - **Remove `AttachedRecipePanel`** — recipe info already lives in `ProjectColorSchemeBox`.
@@ -34,7 +34,7 @@ Leaf workspace becomes: **Header → ColorSchemeBox → Progress Table → Stage
 
 Delete the unused panel component files outright once nothing imports them.
 
-### P13.3 — Delete project + cascade
+### P13.3 — Delete project + cascade ✅ → `a43f044`
 New feature.
 
 - `deleteProject` server action — validates ownership, deletes the project AND all descendants.
@@ -42,7 +42,7 @@ New feature.
 - Mounts on project detail header (next to settings button) AND on each row of the `/projects` dashboard table.
 - After delete: redirect to `/projects` if from detail, revalidate dashboard if from table.
 
-### P13.4 — Schema: fold Model into Unit, drop namedModels, type constraints
+### P13.4 — Schema: fold Model into Unit, drop namedModels, type constraints ✅ → `193f286`
 Schema migration. **Land each step in its own commit so we can roll back narrowly.**
 
 - Migration 1: Backfill — UPDATE projects SET type='Unit', count=count WHERE type='Single Model'. (Single Model was already a 1-of, just rename.)
