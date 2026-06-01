@@ -49,10 +49,12 @@ function ToggleButton({
   ariaLabel: string;
   children: React.ReactNode;
 }) {
-  /* NB-4 spacing: bumped horizontal padding (px-4) and gap (gap-2) so the
-     icon and label don't crowd, and added min-height to meet the 32px
-     desktop tap-target floor. Tracking widened to 0.08em to match other
-     mono chrome chips. */
+  /* P12.20 spacing pass: bumped horizontal padding (px-5), gap (gap-2.5),
+     and min-height (36px) so the toggle reads as a terminal-button bank
+     instead of compact icon row. Tracking stays at 0.08em (matches other
+     mono chrome chips). Active state keeps cyan-filled + dark text from
+     the locked btn-primary discipline; hover gets a brighter cyan
+     accent so the button feels responsive. */
   return (
     <button
       type="button"
@@ -60,11 +62,11 @@ function ToggleButton({
       aria-label={ariaLabel}
       aria-pressed={active}
       className={clsx(
-        "inline-flex items-center gap-2 px-4 py-1.5 min-h-[32px] font-mono text-xs uppercase tracking-[0.08em]",
+        "inline-flex items-center gap-2.5 px-5 py-2 min-h-[36px] font-mono text-xs uppercase tracking-[0.08em]",
         "transition-colors",
         active
           ? "bg-[var(--color-accent)] text-[var(--color-bg)]"
-          : "text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]",
+          : "text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]",
       )}
     >
       {children}
