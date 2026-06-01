@@ -52,6 +52,14 @@ export const users = sqliteTable("user", {
   recoveryEmailVerified: integer("recovery_email_verified", {
     mode: "timestamp_ms",
   }),
+  /**
+   * P12.19 — Persistent library brand filter. JSON-encoded array of
+   * brand strings the painter wants the /library page to show by
+   * default. Null = "all brands visible". The library page's
+   * existing FilterRail reads this as the initial state on load; the
+   * painter can adjust it inline + persist via the /user page.
+   */
+  libraryBrandFilter: text("library_brand_filter"),
 });
 
 export const accounts = sqliteTable(

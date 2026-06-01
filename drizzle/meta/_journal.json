@@ -57,6 +57,13 @@
       "when": 1780303538767,
       "tag": "0007_wishlist_phase12_rename",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1780305375697,
+      "tag": "0008_user_library_brand_filter",
+      "breakpoints": true
     }
   ]
 }

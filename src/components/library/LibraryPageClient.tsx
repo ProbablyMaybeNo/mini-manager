@@ -32,13 +32,28 @@ export interface InventorySnapshot {
 export function LibraryPageClient({
   paints,
   inventory,
+  defaultBrands,
 }: {
   paints: ReadonlyArray<Paint>;
   inventory: ReadonlyMap<string, InventorySnapshot>;
+  /** P12.19 — when the URL carries no `brand=...` param, fall back to
+   *  this saved brand selection. The /user page's library-brand-filter
+   *  card writes this through users.libraryBrandFilter. Empty array
+   *  OR undefined both mean "all brands visible". */
+  defaultBrands?: ReadonlyArray<string>;
 }) {
   const sp = useSearchParams();
 
-  const filter = useMemo(() => filterFromSearchParams(sp), [sp]);
+  const filter = useMemo(() => {
+    const fromUrl = filterFromSearchParams(sp);
+    // Apply the user's saved brand default only when the URL didn't
+    // already specify a brand list — otherwise an in-page brand pick
+    // would silently be overwritten on every render.
+    if (fromUrl.brands.length === 0 && defaultBrands && defaultBrands.length > 0) {
+      return { ...fromUrl, brands: [...defaultBrands] };
+    }
+    return fromUrl;
+  }, [sp, defaultBrands]);
   const sortMode = useMemo(() => sortFromSearchParams(sp), [sp]);
   const selectedId = useMemo(() => selectedPaintFromSearchParams(sp), [sp]);
 

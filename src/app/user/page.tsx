@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { ChangePasswordCard } from "@/components/user/ChangePasswordCard";
 import { ExportButton } from "@/components/user/ExportButton";
+import { LibraryBrandFilterCard } from "@/components/user/LibraryBrandFilterCard";
 import { RecoveryEmailCard } from "@/components/user/RecoveryEmailCard";
 import { SignOutButton } from "@/components/user/SignOutButton";
 import { Card } from "@/components/ui/Card";
@@ -8,6 +9,8 @@ import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { decodeLibraryBrandFilter } from "@/lib/libraryBrandFilter/decode";
+import { listAllBrands } from "@/lib/actions/libraryBrandFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +95,20 @@ export default async function UserPage() {
   const initialEmail = row[0]?.recoveryEmail ?? null;
   const initialVerified = Boolean(row[0]?.recoveryEmailVerified);
 
+  // P12.19 — also read libraryBrandFilter for the new card. Fetch
+  // the full brand list in parallel.
+  const [savedFilter, availableBrands] = await Promise.all([
+    db
+      .select({ libraryBrandFilter: users.libraryBrandFilter })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+    listAllBrands(),
+  ]);
+  const initialBrands = decodeLibraryBrandFilter(
+    savedFilter[0]?.libraryBrandFilter ?? null,
+  );
+
   // Plan tier is hardcoded to FREE until the paid-tier flag ships.
   // The mapping above is in place so the day the schema field lands,
   // this becomes a single-line swap. P11.9.
@@ -174,6 +191,11 @@ export default async function UserPage() {
       />
 
       <ChangePasswordCard />
+
+      <LibraryBrandFilterCard
+        availableBrands={availableBrands}
+        initial={initialBrands}
+      />
 
       <Card title="Backup & export" ariaLabel="Backup and export">
         <p className="text-sm font-sans text-[var(--color-fg)] leading-snug">

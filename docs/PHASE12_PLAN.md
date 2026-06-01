@@ -105,7 +105,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.18 — Password change.** Form with current password + new password + confirm. Server action uses bcryptjs `verifyPassword` for the current + `hashPassword` for the new. Updates `passwordHash` column.
 
-- [ ] **P12.19 — Persistent library brand filter.** Add `library_brand_filter` column to user table (JSON array of brand IDs). User page renders a checkbox list of all brands in the catalog (default all checked). Saving writes to the column. Library page reads the saved filter as the default brand set on load.
+- [x] **P12.19 — Persistent library brand filter.** Add `library_brand_filter` column to user table (JSON array of brand IDs). User page renders a checkbox list of all brands in the catalog (default all checked). Saving writes to the column. Library page reads the saved filter as the default brand set on load.
 
 ### Pillar 7 — Library polish
 

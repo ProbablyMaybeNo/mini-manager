@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `library_brand_filter` text;

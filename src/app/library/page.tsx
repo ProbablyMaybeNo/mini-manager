@@ -3,6 +3,7 @@ import "server-only";
 import { Suspense } from "react";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { eq } from "drizzle-orm";
 
 import type { PaintCatalog } from "@/lib/paints/types";
 import {
@@ -12,6 +13,9 @@ import {
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { currentUserId } from "@/lib/auth-stub";
 import { AccentCounter } from "@/components/ui/AccentCounter";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { decodeLibraryBrandFilter } from "@/lib/libraryBrandFilter/decode";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +33,20 @@ async function loadPaintCatalog(): Promise<PaintCatalog> {
 
 export default async function LibraryPage() {
   const userId = await currentUserId();
-  const [catalog, inventoryEntries] = await Promise.all([
+  const [catalog, inventoryEntries, userRow] = await Promise.all([
     loadPaintCatalog(),
     listInventoryByUser(userId),
+    db
+      .select({ libraryBrandFilter: users.libraryBrandFilter })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
   ]);
+  // P12.19 — saved brand filter. null = "no filter". Library client
+  // applies this only when the URL doesn't already carry a brand list.
+  const defaultBrands = decodeLibraryBrandFilter(
+    userRow[0]?.libraryBrandFilter ?? null,
+  );
 
   // Trim the DB row down to what the client actually needs.
   const inventory = new Map<string, InventorySnapshot>();
@@ -60,7 +74,11 @@ export default async function LibraryPage() {
           </div>
         }
       >
-        <LibraryPageClient paints={catalog.paints} inventory={inventory} />
+        <LibraryPageClient
+          paints={catalog.paints}
+          inventory={inventory}
+          defaultBrands={defaultBrands ?? undefined}
+        />
       </Suspense>
     </div>
   );
