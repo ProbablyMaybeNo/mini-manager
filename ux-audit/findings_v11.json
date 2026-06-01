@@ -10,7 +10,8 @@
     "fix": "Pluralise based on count: `count === 1 ? 'DAY' : 'DAYS'` in the headline label, and `count === 1 ? '1 day — don't break the chain.' : count + ' days — don't break the chain.'` in the supporting line. Replace the ASCII hyphen with an em-dash to match the rest of the app's punctuation style.",
     "effort": "trivial",
     "confidence": 0.98,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "1f8f627"
   },
   {
     "id": "UX-1102",
@@ -23,7 +24,8 @@
     "fix": "Switch `SAVE ORDER` to `variant=\"success\"` so it matches the green save/create idiom used by ADD EVENT, ADD INSPO, NEW PROJECT. One-line change in `ManageInspoModal.tsx`.",
     "effort": "trivial",
     "confidence": 0.93,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "1f8f627"
   },
   {
     "id": "UX-1103",
@@ -36,7 +38,8 @@
     "fix": "Add an `onError` handler on the `<img>` that sets local state → renders a styled fallback tile: a `frame`-bordered grey box with a small image-broken Lucide icon and the muted-foreground copy `Couldn't load — open source`, where the alt text becomes the tile's hover title and the underlying URL is still clickable (opens in new tab). Add `referrerPolicy=\"no-referrer\"` and `loading=\"lazy\"` (already lazy) to the `<img>` to maximise the odds of the load succeeding from Pinterest in the first place.",
     "effort": "small",
     "confidence": 0.88,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "8f49f1d"
   },
   {
     "id": "UX-1104",
@@ -49,7 +52,8 @@
     "fix": "Parse `calMonth` as 1-indexed at the URL boundary (the page-level Server Component that reads the search params), subtract 1 only when handing to the grid component. Update the grid's `navigate(delta)` URLSearchParams.set call to write `String(nextMonth + 1)`. Pure boundary fix: no internal logic changes, no migration of stored data. Comment in CalendarMonthGrid.tsx changes from `0-based month index` to `1-based month index in URL, 0-based internally`.",
     "effort": "small",
     "confidence": 0.9,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "7968874"
   },
   {
     "id": "UX-1105",
@@ -62,7 +66,8 @@
     "fix": "Format the aria-label as `${MONTH_NAMES[focusedMonth]} ${cell.day}, ${focusedYear}${hasEvents ? `, ${dayEvents.length} ${dayEvents.length === 1 ? 'event' : 'events'}` : ''}` — e.g. `\"June 8, 2026, 1 event\"`. Today gets the prefix `Today, ` so the label reads `\"Today, June 1, 2026\"`. One-block edit in CalendarMonthGrid.tsx around line 285–290.",
     "effort": "trivial",
     "confidence": 0.95,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "1f8f627"
   },
   {
     "id": "UX-1106",
@@ -75,7 +80,8 @@
     "fix": "Change the footer string to `Hover or tap a cell for the count.` (or split via `useIsTouch()`-style hook into hover-only vs. tap-only variants). One-line content fix in PlannerHeatmapCell.tsx.",
     "effort": "trivial",
     "confidence": 0.85,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "1f8f627"
   },
   {
     "id": "UX-1107",
@@ -88,7 +94,8 @@
     "fix": "Switch the tooltip to `${count} ${count === 1 ? 'activity' : 'activities'} · ${dayLabel}` to align with the rest of the dashboard's vocabulary. Or use the more painter-natural `4 bumps · Mon 1 Jun` if all entries are stage bumps. Trivial copy change.",
     "effort": "trivial",
     "confidence": 0.7,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "1f8f627"
   },
   {
     "id": "UX-1108",
@@ -101,6 +108,7 @@
     "fix": "Pad the drag handle to a 32×32 (desktop) / 44×44 (mobile-via-tap-target class) hit area while keeping the visual dot cluster the same size. Wrap the icon in a `tap-target` button and rely on the project's existing CSS that already enforces the 40px floor on `tap-target`.",
     "effort": "trivial",
     "confidence": 0.78,
-    "needs_human": false
+    "needs_human": false,
+    "resolved": "1f8f627"
   }
 ]
