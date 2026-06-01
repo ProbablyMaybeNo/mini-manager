@@ -9,7 +9,6 @@ import {
   listNamedModelsByProject,
 } from "@/db/queries/projects";
 import type { Project } from "@/db/schema";
-import { ProgressBar } from "@/components/ProgressBar";
 import { OwnedCounter } from "@/components/OwnedCounter";
 import { StageCounter } from "@/components/StageCounter";
 import { NamedModelsPanel } from "@/components/NamedModelsPanel";
@@ -24,19 +23,8 @@ import {
   progressPercent,
 } from "@/lib/progress";
 import { Card } from "@/components/ui/Card";
-import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
-
-const HEADER_STATUS_PILL: Record<string, StatusPillKind> = {
-  WISHLIST: "wishlist",
-  PURCHASED: "neutral",
-  BUILDING: "info",
-  PRIMING: "info",
-  PAINTING: "warning",
-  BASING: "warning",
-  COMPLETE: "ok",
-  SHELVED: "neutral",
-};
+import { ProjectHeaderStrip } from "@/components/ProjectHeaderStrip";
 
 export const dynamic = "force-dynamic";
 
@@ -141,22 +129,22 @@ export default async function ProjectDetailPage({
         <span className="text-[var(--color-fg)]">{project.name}</span>
       </nav>
 
-      <header className="space-y-2">
-        <div className="flex items-start gap-4">
-          <h1 className="text-3xl tracking-wide">{project.name.toUpperCase()}</h1>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
-          <span>{project.type}</span>
-          {project.faction ? <span>· {project.faction}</span> : null}
-          <span>
-            · {headerTotalModels} model{headerTotalModels === 1 ? "" : "s"}
-          </span>
-          <StatusPill status={HEADER_STATUS_PILL[status] ?? "neutral"}>
-            {status} · {percent}%
-          </StatusPill>
-        </div>
-        <ProgressBar percent={percent} width={32} className="block pt-1" />
-      </header>
+      <ProjectHeaderStrip
+        projectId={project.id}
+        name={project.name}
+        type={project.type}
+        faction={project.faction}
+        status={status}
+        percent={percent}
+        totalModels={headerTotalModels}
+        // Single Model / Terrain Piece / Diorama are leaf-only — no
+        // children allowed. Army / Warband / Unit can hold a sub-tree.
+        showAddChild={
+          project.type === "Army" ||
+          project.type === "Warband" ||
+          project.type === "Unit"
+        }
+      />
 
       {isContainer && aggregate ? (
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6">

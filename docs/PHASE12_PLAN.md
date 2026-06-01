@@ -77,7 +77,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 ### Pillar 3 — Project detail rebuild
 
-- [ ] **P12.8 — Header strip.** Project title (cyan, big), then a stat row: type chip · model count · status pill · `+ Add unit` (or model/terrain etc.) green CTA. Below the row: full-width colored progress bar (same red/yellow/green thresholds as the dashboard) with percent overlay.
+- [x] **P12.8 — Header strip.** Project title (cyan, big), then a stat row: type chip · model count · status pill · `+ Add unit` (or model/terrain etc.) green CTA. Below the row: full-width colored progress bar (same red/yellow/green thresholds as the dashboard) with percent overlay.
 
 - [ ] **P12.9 — Color Scheme box.** A horizontal row of 3 starter empty `+` boxes. Click any → opens the same ColorPicker side panel from P12.2. `+ Add paint` button at the end of the row to extend. If a recipe is attached, the boxes pre-fill with that recipe's palette and the box title shows the recipe name.
 

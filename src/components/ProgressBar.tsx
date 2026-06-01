@@ -41,13 +41,24 @@ export function ProgressBar({
   width = 20,
   tone = "auto",
   className,
+  stretch = false,
+  height = 8,
 }: {
   percent: number;
   /** Cells of the original ASCII bar — mapped to ~6px per cell so the
-   *  visual footprint matches the old bracket version. */
+   *  visual footprint matches the old bracket version. Ignored when
+   *  `stretch` is true. */
   width?: number;
   tone?: ProgressTone;
   className?: string;
+  /** P12.8 — full-width mode. When true the bar takes 100% of its
+   *  parent container's inline-size instead of a fixed pixel width.
+   *  Used by the project detail header strip. */
+  stretch?: boolean;
+  /** P12.8 — taller bar variant for the project detail header
+   *  (default 8px stays cell-row friendly; 14px sells the "page-
+   *  level progress" feel). */
+  height?: number;
 }) {
   const clamped = Math.max(0, Math.min(100, percent));
   // Phase-12 (P12.6) tone thresholds Ross locked:
@@ -86,12 +97,17 @@ export function ProgressBar({
       className={clsx(
         // UX-V5-012/014: bumped from h-1.5 (6px) to h-2 (8px) so the
         // track + fill read as a real bar at 0%, not a hairline scratch.
-        "relative inline-block h-2 rounded-sm overflow-hidden align-middle",
+        "relative rounded-sm overflow-hidden",
+        stretch ? "block w-full" : "inline-block align-middle",
         trackBg,
         trackBorder,
         className,
       )}
-      style={{ width: `${minPx}px` }}
+      style={
+        stretch
+          ? { height: `${height}px` }
+          : { width: `${minPx}px`, height: `${height}px` }
+      }
     >
       <span
         aria-hidden
