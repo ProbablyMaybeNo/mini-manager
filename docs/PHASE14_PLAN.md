@@ -61,23 +61,26 @@ events                          activity_log                    inspo_images
 - Mobile: full-width single column, tappable day cells.
 - **Shipped 2026-06-01 · commit d2dee1e.** 1246 → 1279 passing (+33), typecheck clean. Surface: `src/db/queries/events.ts`, `src/lib/actions/events.ts` (createEvent / updateEvent / deleteEvent — Zod-validated, owner-scoped), `CalendarMonthGrid` (7-col grid + Prev/Today/Next nav writing `?calYear`/`?calMonth`, coloured dots per kind, today-ring highlight, day-expand panel with inline edit/delete), `AddEventForm` (solid-fill success — CREATE intent).
 
-### P14.4 — Activity stream widget
+### P14.4 — Activity stream widget ✅
 - Reads from `activity_log`, last 20 rows for current user, ordered desc by `created_at`.
 - Each row: timestamp + kind glyph + sentence ("Built Intercessor Squad · 2h ago", "Created recipe Necron Bone · yesterday", etc.).
 - Time-ago helper. Resolve `ref_id` to the entity's name where useful.
 - Empty state: "No activity yet. Bump a stage or create a recipe to populate the stream."
+- **Shipped 2026-06-01 · commit 1f4a46e.** 1246 → 1284 passing (+38), typecheck clean. Surface: `src/db/queries/activityLog.ts` (shared `getRecentActivity` + `getActivityByDay` + `toDayKey` — the single source of truth all three activity-log widgets read from; refId-resolution maps project/recipe/zone/wishlist for the stream microcopy), `PlannerActivityCell` (async server component, defaults to no-prop fetch, accepts `rows` test seam), `plannerActivityHelpers` (pure `sentenceFor` + `formatRelative` outside the cell so unit tests run in node env without next-auth).
 
-### P14.5 — Streak counter widget
+### P14.5 — Streak counter widget ✅
 - Derived from `activity_log` — count consecutive days with at least one stage-bump or recipe-create action.
 - Display: big number + "days" label + microcopy ("On a 6-day painting streak — keep it up." / "Last paint: 3 days ago — break it open."), per state.
 - Mobile-tight.
+- **Shipped 2026-06-01 · commit e7784de.** 1359 → 1381 passing (+22), typecheck clean. Surface: `PlannerStreakCell` (async server component, reads `getActivityByDay(userId, last 60 days)`), `plannerStreakHelpers` (pure `dayHasStreakActivity` + `computeStreak` + `microcopyFor`). Number colour cascades green / amber / muted by state.
 
-### P14.6 — Heatmap widget
+### P14.6 — Heatmap widget ✅
 - 90-day grid of cells (one per day), colour intensity by activity count for that day.
 - Title row with month labels.
 - Hover/tap → tooltip "5 actions · Mon 26 May."
 - Reads from `activity_log` grouped by date.
 - Mobile: scrollable horizontally OR collapsed to last-30-day view.
+- **Shipped 2026-06-01 · commit c7086f0.** 1381 → 1400 passing (+19), typecheck clean. Surface: `PlannerHeatmapCell` (async server component, 13-col × 7-row grid with `overflow-x-auto` mobile fallback, role='grid' + tooltip text on every cell), `plannerHeatmapHelpers` (pure `intensityFor` 0/1/2-4/5+ binning + `buildHeatmapCells` 90-day dense walk + `monthLabels` top-row anchor + `tooltipFor` singular/plural). Intensity tiers via color-mix on `var(--color-green)`; blanks use the muted panel tint that matched the P14.2 scaffold strip so the empty state visual stays stable.
 
 ### P14.7 — Inspo gallery widget ✅
 - 3- or 4-column Notion-style image grid of `inspo_images.url` pastes (where `is_displayed = true`).
