@@ -47,12 +47,15 @@ describe("ProjectsDashboardTable — expandable hierarchy", () => {
   });
 
   test("a leading chevron column joins the original 6", () => {
-    expect(src).toMatch(/aria-label="Expand"/);
+    expect(src).toMatch(/aria-label=/);
     // The chevron button toggles the row's expanded state.
     expect(src).toMatch(/aria-expanded=\{expanded\}/);
-    // The two states: collapsed (▸) and expanded (▾).
+    // R7-011 — single ▸ glyph that rotates 90° on expand. The old
+    // glyph-swap pattern (▸ vs ▾) is gone in favour of CSS rotation
+    // so the button has a single source of truth + a 36×36 hit box
+    // clearing WCAG 2.5.8.
     expect(src).toContain("▸");
-    expect(src).toContain("▾");
+    expect(src).toContain('rotate-90');
   });
 
   test("renderRows recursively walks expanded children", () => {

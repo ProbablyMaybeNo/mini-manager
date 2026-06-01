@@ -456,7 +456,7 @@ function DashboardRow({
       style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
     >
-      <td className="px-2 py-2 w-8 text-center">
+      <td className="px-2 py-2 w-10 text-center">
         {hasChildren ? (
           <button
             type="button"
@@ -465,16 +465,28 @@ function DashboardRow({
             aria-label={
               expanded ? `Collapse ${row.name}` : `Expand ${row.name}`
             }
-            className="block w-5 h-5 mx-auto text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors"
+            className="inline-flex items-center justify-center w-9 h-9 mx-auto text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors transition-transform motion-reduce:transition-none rounded-sm"
           >
-            <span aria-hidden className="inline-block">
-              {expanded ? "▾" : "▸"}
+            {/* R7-011 — caret rotates 90deg on expand instead of swapping
+                glyphs. Single ▸ glyph stays put; CSS rotation gives the
+                state cue. Gated on prefers-reduced-motion (motion-reduce
+                snaps the rotation without a tween). The 36×36 hit box
+                clears WCAG 2.5.8 (Target Size, ≥24×24). */}
+            <span
+              aria-hidden
+              className={clsx(
+                "inline-block leading-none transition-transform",
+                "motion-reduce:transition-none",
+                expanded ? "rotate-90" : "rotate-0",
+              )}
+            >
+              ▸
             </span>
           </button>
         ) : row.depth > 0 ? (
           <span
             aria-hidden
-            className="block w-5 h-5 mx-auto text-[var(--color-fg-subtle)] opacity-40"
+            className="block w-9 h-9 mx-auto text-[var(--color-fg-subtle)] opacity-40"
             title="No children"
           >
             ·
