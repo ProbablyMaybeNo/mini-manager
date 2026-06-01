@@ -57,8 +57,10 @@ describe("Wishlist page heading — microcopy refresh (P11.4)", () => {
   test("subheading microcopy is plain prose, no internal milestone refs", () => {
     // Old copy mentioned "P2.5" — that's internal vocabulary leaking
     // into a user surface. Phase 11 retires it.
+    // P12.12 — Phase-12 wishlist split updated the subheading to
+    // "Paints and models you want to buy".
     expect(src).not.toContain("P2.5");
-    expect(src).toMatch(/Paints, kits, and tools you want to buy/);
+    expect(src).toMatch(/Paints and models you want to buy/);
   });
 });
 

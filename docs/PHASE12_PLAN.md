@@ -87,7 +87,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.11 — Schema: wishlist item kind.** Add `kind: 'paint' | 'model'` column to the `wishlist_item` table. Drizzle migration. Default existing rows to whatever they look like (heuristic — has paint-related metadata = paint, else model). One-time backfill.
 
-- [ ] **P12.12 — Two-table layout on `/wishlist`.** Stacked: "Models" table at top with its 5 columns, "Paints" table below with its 7 columns. Each table independently filterable by status. Inline editing on every cell — no row click → drawer. Drop the right-side drawer entirely.
+- [x] **P12.12 — Two-table layout on `/wishlist`.** Stacked: "Models" table at top with its 5 columns, "Paints" table below with its 7 columns. Each table independently filterable by status. Inline editing on every cell — no row click → drawer. Drop the right-side drawer entirely.
 
 - [ ] **P12.13 — Tools dropdown per paint row.** New "Tools ▾" affordance on each paint row → reveals Wheel / Match / Layering options → opens the corresponding tool pre-populated with that paint's hex + name.
 

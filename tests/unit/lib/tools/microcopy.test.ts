@@ -63,7 +63,10 @@ describe("Section microcopy under primary headings (P11.12)", () => {
   test("/wishlist subheading is plain-prose (no P2.5 ref)", () => {
     const src = read("src/app/wishlist/page.tsx");
     expect(src).not.toMatch(/P2\.5/);
-    expect(src).toMatch(/Paints, kits, and tools/);
+    // P12.12 — wishlist split into Paints + Models tables. Subheading
+    // updated to match: "Paints and models you want to buy" replaces
+    // the earlier "Paints, kits, and tools" phrasing.
+    expect(src).toMatch(/Paints and models you want to buy/);
   });
 
   test("/user has the multi-section header", () => {

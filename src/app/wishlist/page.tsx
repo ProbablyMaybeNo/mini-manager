@@ -18,7 +18,6 @@ import { QuickAddBar } from "@/components/wishlist/QuickAddBar";
 import { WishlistFilters } from "@/components/wishlist/WishlistFilters";
 import { WishlistTable } from "@/components/wishlist/WishlistTable";
 import { PriceFooter } from "@/components/wishlist/PriceFooter";
-import { WishlistDetailDrawer } from "@/components/wishlist/WishlistDetailDrawer";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +38,18 @@ function parseCategory(raw: string | string[] | undefined): WishlistCategory | n
   return null;
 }
 
+/**
+ * P12.12 — Wishlist split into two stacked tables.
+ *
+ * Ross's locked layout: Models table at the top, Paints table below.
+ * Each renders the same column set the existing WishlistTable
+ * supports (we get the partition by filtering items by `kind` —
+ * which P12.11 added to the schema). Status filter applies to both
+ * tables; the painter sees their full wishlist in one scroll.
+ *
+ * The slide-out detail drawer (WishlistDetailDrawer) is gone per
+ * Ross's brief — inline editing only.
+ */
 export default async function WishlistPage({
   searchParams,
 }: {
@@ -50,7 +61,6 @@ export default async function WishlistPage({
   const status = parseStatus(params.status);
   const category = parseCategory(params.category);
   const vendor = typeof params.vendor === "string" ? params.vendor : null;
-  const selectedItemId = typeof params.item === "string" ? params.item : null;
 
   const [items, totals, vendors, projects] = await Promise.all([
     listWishlist(userId, { status, category, vendor }),
@@ -58,10 +68,6 @@ export default async function WishlistPage({
     listWishlistVendors(userId),
     listAllProjects(userId),
   ]);
-
-  const selected = selectedItemId
-    ? items.find((i) => i.id === selectedItemId) ?? null
-    : null;
 
   const projectOptions = projects.map((p) => ({
     id: p.id,
@@ -75,6 +81,12 @@ export default async function WishlistPage({
   const hasActiveFilters =
     status !== "WISHLIST" || category !== null || vendor !== null;
 
+  // P12.12 partition by kind. The kind column was added in P12.11 with
+  // a heuristic backfill, so pre-Phase-12 rows already have a sensible
+  // default ('paint' unless their title looks like a kit / box / etc).
+  const modelItems = items.filter((i) => i.kind === "model");
+  const paintItems = items.filter((i) => i.kind === "paint");
+
   return (
     <div className="flex flex-col h-screen">
       <header className="px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)] space-y-4">
@@ -82,8 +94,9 @@ export default async function WishlistPage({
           <div>
             <h1 className="text-3xl tracking-wide">WISHLIST</h1>
             <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans leading-snug">
-              Paints, kits, and tools you want to buy. Paste a vendor URL
-              to auto-fill the row, or type a name for a manual entry.
+              Paints and models you want to buy. Paste a vendor URL to
+              auto-fill the row, or type a name for a manual entry.
+              Each row gets sorted into Models or Paints automatically.
             </p>
           </div>
           <QuickAddBar />
@@ -96,13 +109,41 @@ export default async function WishlistPage({
         />
       </header>
 
-      <main className="flex-1 min-h-0 overflow-y-auto p-6 md:p-8">
-        <WishlistTable items={items} projects={projectOptions} hasActiveFilters={hasActiveFilters} />
+      <main className="flex-1 min-h-0 overflow-y-auto p-6 md:p-8 space-y-8">
+        <section aria-label="Models" className="space-y-2">
+          <h2 className="section-title">Models · {modelItems.length}</h2>
+          {modelItems.length === 0 ? (
+            <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
+              No model rows match. Add a kit, box, or unit from a vendor URL
+              and it&apos;ll land here.
+            </p>
+          ) : (
+            <WishlistTable
+              items={modelItems}
+              projects={projectOptions}
+              hasActiveFilters={hasActiveFilters}
+            />
+          )}
+        </section>
+
+        <section aria-label="Paints" className="space-y-2">
+          <h2 className="section-title">Paints · {paintItems.length}</h2>
+          {paintItems.length === 0 ? (
+            <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
+              No paint rows match. Match a hex with the Match tool and add
+              it to your wishlist to see it here.
+            </p>
+          ) : (
+            <WishlistTable
+              items={paintItems}
+              projects={projectOptions}
+              hasActiveFilters={hasActiveFilters}
+            />
+          )}
+        </section>
       </main>
 
       <PriceFooter count={totals.count} totalByCurrency={totals.totalByCurrency} />
-
-      <WishlistDetailDrawer item={selected} projects={projectOptions} />
     </div>
   );
 }
