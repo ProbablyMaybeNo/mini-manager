@@ -53,35 +53,35 @@ Schema migration. **Land each step in its own commit so we can roll back narrowl
 - Sub-project type rule: Army/Warband/Unit parent can hold **only Unit** as children. Terrain Piece + Diorama stay top-level only. Enforce in `src/app/projects/new/page.tsx` (the parent-aware new-project picker) + the inline status dropdown's type cell.
 - **Acceptance:** existing data preserved, no orphan Single Models, no UI offers Model/Single Model anywhere, type tests green.
 
-### P13.5 — Stage counter performance
+### P13.5 — Stage counter performance ✅ → `c8e0f7c`
 Diagnose & fix slowness when bumping build/prime/paint/base/complete.
 
 - Hypothesis: server action + `revalidatePath` round-trip is what's slow.
 - Fix: optimistic UI with `useTransition` + local state update. Visual change within 50ms; server confirms in background. On error, revert + toast.
 - Also: visually shrink the counter — Ross said "the aggregator could be much smaller and better designed." Look for places where 3-4 rows could collapse to 1 dense row.
 
-### P13.6 — Gradient + Match clickable color cells
+### P13.6 — Gradient + Match clickable color cells ✅ → `1ee0136`
 Each shadow/base/highlight cell becomes click-target. Opens the `ColorPicker` primitive (with R7-3 lightness slider) in a popover.
 
 - `MatchClient.tsx` + `GradientClient.tsx` — wrap each color cell in a `<Popover>` or `<Drawer>` mount.
 - ColorPicker selection updates the active stop's hex; tool re-renders matches/ramp.
 - Keyboard accessible: Enter to open, Esc to close.
 
-### P13.7 — Match brand filter redesign
+### P13.7 — Match brand filter redesign ✅ → `97fe99c`
 Current filter is "jumbled" per Ross.
 
 - Audit `MatchClient.tsx` brand filter section.
 - Redesign with P13.1 solid-color buttons; group by brand family if 6+ brands; alphabetise; consider columns for >12 brands.
 - Tighter visual hierarchy. Mobile-friendly stack.
 
-### P13.8 — Color wheel harmony display redesign
+### P13.8 — Color wheel harmony display redesign ✅ → `f4f831a`
 Same family of complaint as P13.7.
 
 - `src/app/tools/wheel/` — audit the harmony picker.
 - Redesign as clear stacked rows: solid color swatch + harmony name + per-swatch action button.
 - No more bracketed labels — falls under P13.1 discipline.
 
-### P13.9 — ΔE label clarity
+### P13.9 — ΔE label clarity ✅ → `9a8d160`
 `ΔE` is jargon. Make it legible to recruits.
 
 - Rename column header to `MATCH` or `DIFF` or `CLOSENESS`. Probably `MATCH` since the page is called Match.
