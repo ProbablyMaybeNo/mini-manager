@@ -461,6 +461,47 @@ input, textarea, select {
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
 }
 
+/* Success / warning / purple — Phase 12 four-colour discipline.
+   Ross locked: ADD/CREATE/NEW = green, SHARE/IMPORT/EXPORT/ADD-TO-WISH
+   = yellow, SPECIAL/FEATURED/FOUNDER = purple. Cyan stays reserved for
+   titles + body text + active nav + focus rings — NOT buttons by default.
+
+   `success` + `warning` are filled (solid background, dark text) so they
+   read as the primary action surface on the page they appear on; `purple`
+   is outlined because its uses are decorative / status (not "do this now").
+
+   The dark `color: var(--color-bg)` on solid-bg variants is set with a
+   safe fallback inline because the Tailwind v4 chained-arbitrary
+   utility issue burned us in UX-V6-001 (cyan-on-cyan invisible CTA).
+   These .btn-* CSS classes are the canonical path — never re-derive
+   them with arbitrary Tailwind classes in components. */
+.btn-success {
+  background: var(--color-green);
+  color: var(--color-bg);
+  border-color: var(--color-green);
+}
+.btn-success:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-green) 85%, white);
+}
+
+.btn-warning {
+  background: var(--color-yellow);
+  color: var(--color-bg);
+  border-color: var(--color-yellow);
+}
+.btn-warning:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-yellow) 85%, white);
+}
+
+.btn-purple {
+  background: transparent;
+  color: var(--color-purple-pastel);
+  border-color: var(--color-purple-pastel);
+}
+.btn-purple:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-purple-pastel) 10%, transparent);
+}
+
 /* Wishlist tint — modifier class applied alongside `.btn-secondary` to
    flip the cyan accent to pastel yellow for "wishlist" intent (one
    color per intent across the app, per the locked 5-color palette).

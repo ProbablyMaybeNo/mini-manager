@@ -5,7 +5,14 @@ import type {
 } from "react";
 import { clsx } from "clsx";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "success"
+  | "warning"
+  | "purple";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
@@ -13,6 +20,9 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   secondary: "btn-secondary",
   ghost: "btn-ghost",
   danger: "btn-danger",
+  success: "btn-success",
+  warning: "btn-warning",
+  purple: "btn-purple",
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
@@ -41,9 +51,23 @@ type AnchorElProps = CommonProps &
 
 export type ButtonProps = ButtonElProps | AnchorElProps;
 
-/** Button primitive — variants: primary (filled cyan) / secondary (outlined
- *  cyan) / ghost (transparent, hover-accent) / danger (outlined red).
- *  Sizes: sm / md / lg. Pass `as="a"` to render as an anchor. */
+/** Button primitive — semantic variants for the four-colour palette
+ *  Ross locked in Phase 12:
+ *
+ *    primary  — cyan filled. RESERVED for save / confirm / sign-in.
+ *               NOT for ADD/CREATE/NEW (those go to `success`).
+ *    secondary— cyan outline. Navigation, secondary cta.
+ *    ghost    — transparent, hover-accent. Tertiary.
+ *    danger   — pastel-red outline. Remove / cancel / delete / destroy.
+ *    success  — neon-green filled (dark text). ADD / CREATE / NEW /
+ *               SAVE-NEW. The default "I'm making something" button.
+ *    warning  — pastel-yellow filled (dark text). SHARE / IMPORT /
+ *               EXPORT / ADD-TO-WISHLIST. The "lateral move" CTA.
+ *    purple   — pastel-purple outline. SPECIAL / FEATURED / FOUNDER /
+ *               PRO-TIER affordances.
+ *
+ *  Sizes: sm / md / lg. Pass `as="a"` to render as an anchor.
+ *  See P12.23 for the full discipline + P12.24 for the app-wide sweep. */
 export function Button(props: ButtonProps) {
   const variant: ButtonVariant = props.variant ?? "secondary";
   const size: ButtonSize = props.size ?? "md";
