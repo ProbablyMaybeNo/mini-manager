@@ -133,6 +133,18 @@ export default async function ProjectDetailPage({
 
   const showInteractiveCounters = isLeafProject(project, namedModels.length);
 
+  // P12.9 — Color Scheme box. If a recipe is attached, surface its
+  // slot palette so the box can pre-fill. We pick the first attached
+  // recipe (a project typically has one scheme — multiple attachments
+  // exist for the "unit override" pattern but the box reads top-
+  // level scheme only).
+  // P12.10 — Progress table also needs per-row palette swatches for
+  // each child project; fetch the project palettes map in parallel.
+  const [attachedRecipes, projectPalettes] = await Promise.all([
+    listRecipesForProject(userId, project.id),
+    getProjectPalettesMap(userId),
+  ]);
+
   // P12.10 — Build the Progress table's row VM. Sub-project rows
   // come first (in createdAt order from listChildProjects), then
   // named-model rows for any individuals on the parent itself. Each
@@ -177,17 +189,6 @@ export default async function ProjectDetailPage({
     })),
   ];
 
-  // P12.9 — Color Scheme box. If a recipe is attached, surface its
-  // slot palette so the box can pre-fill. We pick the first attached
-  // recipe (a project typically has one scheme — multiple attachments
-  // exist for the "unit override" pattern but the box reads top-
-  // level scheme only).
-  // P12.10 — Progress table also needs per-row palette swatches for
-  // each child project; fetch the project palettes map in parallel.
-  const [attachedRecipes, projectPalettes] = await Promise.all([
-    listRecipesForProject(userId, project.id),
-    getProjectPalettesMap(userId),
-  ]);
   const attachedRecipe = attachedRecipes[0] ?? null;
   let colorSchemeSlots: ColorSchemeSlot[] = [];
   if (attachedRecipe) {

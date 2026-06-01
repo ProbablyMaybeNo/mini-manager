@@ -9,33 +9,37 @@ Single source of truth for "what does Ross need to do before recruits land?" Pul
 | 1 | Every primary flow (§6, all 9) executable end-to-end on desktop AND mobile | ✅ Confirmed via 9 Playwright missions + Phase 12 rebuild |
 | 2 | Lighthouse 90+ mobile / 95+ desktop on `/`, `/library`, `/projects`, `/recipes/[id]`, `/tools/eyedropper` | ⚠️ Desktop ✓ at last run; mobile 4 of 5 routes ✓, 3 routes 87-89 (LCP-bound) |
 | 3 | 0 TypeScript errors | ✅ Every commit ticks `tsc --noEmit` clean |
-| 4 | E2E coverage on flows 1, 2, 3 (the core) | ✅ M1/M2/M3 + M4 + M6 + M9 + M7 (import) — currently M7.1 needs a selector update post-P12 |
+| 4 | E2E coverage on flows 1, 2, 3 (the core) | ✅ M1/M2/M3 + M4 + M6 + M9 + M7 (import) — M7.1 TDZ bug fixed 2026-06-01 |
 | 5 | Ross uses it as his only paint-planning tool 4 weeks | ⏳ **Ross-side** — start the clock |
 | 6 | 10 r/minipainting recruits tested; 7 say "I'd pay for this" | ⏳ **Ross-side** — see `docs/RECRUIT_DM.md` |
 
 ## Outstanding code work
 
-### Round 7 UI fixes (ui-builder running)
-- R7-1 project table inline editing
-- R7-2 app-wide small-button sweep
-- R7-3 ColorPicker lightness slider
-- R7-4 Tools "Start with..." color picker
-- R7-5 Library top-right random button verification
-- R7-6 Cyan-buttons survivor sweep
-- R7-7 Recipe page button sweep
+### Round 7 UI fixes — ✅ ALL SHIPPED
+- R7-1 ✅ `4f33305` Project table inline editing (status/type/recipe/priority popovers)
+- R7-2 ✅ `7ec3176` App-wide small-button sweep (14 files demoted to `sm`)
+- R7-3 ✅ `17429cc` ColorPicker lightness slider (dark-colour reach unlocked)
+- R7-4 ✅ `18a9fa1` Tools "Start with..." (Match + Layering now seedable)
+- R7-5 ✅ `e704300` Library mobile-filter trigger (`md:hidden xl:hidden` belt-and-braces)
+- R7-6 ✅ `95c7bda` Cyan-on-button purge (Phase 12 discipline reinforced)
+- R7-7 ✅ `3380418` Recipe page button sweep (sentinel test pinned)
 
-→ See `docs/UI_BACKLOG_R7.md`. Agent in flight as of 2026-06-01. Reports back automatically.
+977 tests passing (+16 over Phase 12 baseline). Typecheck clean. Pushed to main 2026-06-01.
 
-### Round 7 UX audit (ux-auditor running)
-Deep dive against live URL, "is this launch-ready?" framing. Will write `ux-audit/findings_v7.json` + report. Includes onboarding gap audit + mobile breakdown + accessibility sweep.
+### Round 7 critical fixes (ui-builder in flight)
+ux-auditor returned with 30 findings (3 critical, 10 high). 1 phantom (UX-R7-003 — `/tools/layering` doesn't exist). 2 real criticals + 9 high follow-ups in `docs/UI_BACKLOG_R7_CRITICAL.md`. Agent dispatched 2026-06-01; reports back when done.
+
+Real criticals:
+- UX-R7-001 Custom wheel "Use this colour" silently drops selection (headline P12 action)
+- UX-R7-002 EDIT SLOT panel ambiguates replace-vs-append
 
 ### Phase 10 — Stripe pricing gates (deferred until Ross creates Stripe account)
 - See `docs/PHASE10_PLAN.md` for 8 milestones
 - **Ross-side prerequisite:** create Stripe account + 3 products (Pro Monthly $4 / Pro Lifetime $29 / Founder $19) + copy 5 env vars into Vercel
 - Once env vars are in place, fire `milestone-builder docs/PHASE10_PLAN.md --max 8`
 
-### Known test failure (low priority)
-- `qa_imports.spec.ts M7.1` — expects `<h1>` with project name after applying an import. Phase 12 P12.8 added ProjectHeaderStrip with the h1, so the assertion should match. Failure may be in the Apply server action or the redirect target. **Not blocking launch** — import is a power-user feature, not a primary flow. Fix during the next test sweep.
+### Known test failures — none currently
+- `qa_imports.spec.ts M7.1` — ✅ Fixed 2026-06-01. Root cause was a TDZ ReferenceError in `src/app/projects/[id]/page.tsx` — the `progressRows` map read `projectPalettes` before its `await Promise.all` initialiser. Fired the moment an Army with children rendered (which is exactly what Apply does). Moved the await above the map. Affected ANY project with sub-projects — silent 500 in prod for the import flow + any Army containing units.
 
 ## Ross's side — pre-launch tasks
 
