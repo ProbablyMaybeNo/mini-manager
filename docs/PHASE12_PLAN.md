@@ -52,7 +52,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 ### Pillar 1 — Recipe rebuild (the centerpiece)
 
-- [ ] **P12.1 — `<ColorPicker>` primitive.** New shared primitive at `src/components/ui/ColorPicker.tsx`. Renders three stacked sub-panels:
+- [x] **P12.1 — `<ColorPicker>` primitive.** New shared primitive at `src/components/ui/ColorPicker.tsx`. Renders three stacked sub-panels:
   1. Mini color wheel (SVG HSL ring, draggable cursor) + harmony dropdown (mono / analogous / complementary / triadic / split / square / tetradic) → shows up to 6 harmonised swatches below the wheel
   2. Filterable library paint list (search + brand filter + type filter) with paint swatches and metadata
   3. Eyedropper sampler (drop / paste image → k-means top 6) — reuses existing `kmeans.ts` + DropZone components if possible
