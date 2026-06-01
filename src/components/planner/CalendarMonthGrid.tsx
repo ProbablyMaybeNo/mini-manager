@@ -47,7 +47,9 @@ interface Props {
   events: ReadonlyArray<CalendarEventView>;
   /** Year of the focused month (e.g. 2026). */
   year: number;
-  /** 0-based month index (Jan = 0). */
+  /** 0-based month index internally (Jan = 0). UX-1104 — the URL
+   *  `?calMonth` contract is 1-based (Jan = 1, Dec = 12) to match
+   *  human convention; the parent cell converts before passing in. */
   monthIndex: number;
 }
 
@@ -195,9 +197,13 @@ export function CalendarMonthGrid({ events, year, monthIndex }: Props) {
     setFocusedYear(nextYear);
     // Tell the page to re-fetch for the new month. The page reads
     // year + month via search params (handled in the page wrapper).
+    // UX-1104 — write `calMonth` 1-indexed (Jan = 1, Dec = 12) so a
+    // shared or bookmarked URL lands on the month a human would
+    // expect. The cell parser converts back to the 0-based index
+    // this grid uses internally.
     const params = new URLSearchParams();
     params.set("calYear", String(nextYear));
-    params.set("calMonth", String(nextMonth));
+    params.set("calMonth", String(nextMonth + 1));
     startTransition(() => {
       router.replace(`/projects?${params.toString()}#planner-calendar`);
     });

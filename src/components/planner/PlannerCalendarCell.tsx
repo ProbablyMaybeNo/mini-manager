@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/Card";
 import { currentUserId } from "@/lib/auth-stub";
 import { listEventsInMonth } from "@/db/queries/events";
 import { CalendarMonthGrid } from "./CalendarMonthGrid";
+import { parseCalSearchParams } from "./plannerCalendarHelpers";
 
 /**
  * P14.3 — Calendar cell.
@@ -23,34 +24,18 @@ import { CalendarMonthGrid } from "./CalendarMonthGrid";
 interface Props {
   /** Optional `?calYear` from the page's searchParams. */
   calYear?: string;
-  /** Optional `?calMonth` (0-based) from the page's searchParams. */
+  /** Optional `?calMonth` from the page's searchParams.
+   *
+   *  UX-1104 — 1-indexed in the URL contract (Jan = 1, Dec = 12) to
+   *  match the universal human convention. Painters who bookmark or
+   *  share a `?calMonth=7` URL land on July, not August. The cell
+   *  converts to the 0-based index the grid expects internally. */
   calMonth?: string;
-}
-
-function parseYearMonth(
-  rawYear: string | undefined,
-  rawMonth: string | undefined,
-): { year: number; monthIndex: number } {
-  const now = new Date();
-  const fallbackYear = now.getUTCFullYear();
-  const fallbackMonth = now.getUTCMonth();
-
-  const yearNum = rawYear ? Number(rawYear) : NaN;
-  const monthNum = rawMonth ? Number(rawMonth) : NaN;
-
-  const year = Number.isFinite(yearNum) && yearNum > 1970 && yearNum < 3000
-    ? Math.trunc(yearNum)
-    : fallbackYear;
-  const monthIndex =
-    Number.isFinite(monthNum) && monthNum >= 0 && monthNum <= 11
-      ? Math.trunc(monthNum)
-      : fallbackMonth;
-  return { year, monthIndex };
 }
 
 export async function PlannerCalendarCell({ calYear, calMonth }: Props) {
   const userId = await currentUserId();
-  const { year, monthIndex } = parseYearMonth(calYear, calMonth);
+  const { year, monthIndex } = parseCalSearchParams(calYear, calMonth);
   const events = await listEventsInMonth(userId, year, monthIndex);
 
   return (
