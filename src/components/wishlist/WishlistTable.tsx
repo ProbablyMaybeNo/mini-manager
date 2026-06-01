@@ -10,6 +10,7 @@ import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { AccentCounter } from "@/components/ui/AccentCounter";
 import { setWishlistStatus } from "@/lib/actions/wishlist";
+import { WishlistToolsMenu } from "./WishlistToolsMenu";
 
 export interface WishlistTableProjectOption {
   id: string;
@@ -37,10 +38,15 @@ export function WishlistTable({
   items,
   projects,
   hasActiveFilters = false,
+  showTools = false,
 }: {
   items: ReadonlyArray<WishlistItem>;
   projects: ReadonlyArray<WishlistTableProjectOption>;
   hasActiveFilters?: boolean;
+  /** P12.13 — when true, each row gets a "Tools ▾" menu (Wheel /
+   *  Match / Layering) pre-loaded with the paint's title. The
+   *  /wishlist page passes true for the paints section only. */
+  showTools?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -144,7 +150,11 @@ export function WishlistTable({
           <span
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-2"
           >
+            {showTools ? (
+              <WishlistToolsMenu paintTitle={item.title} />
+            ) : null}
             <StatusChangePopover
               item={item}
               onMarkBought={() => setBoughtFor(item)}

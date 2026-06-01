@@ -138,6 +138,7 @@ export default async function WishlistPage({
               items={paintItems}
               projects={projectOptions}
               hasActiveFilters={hasActiveFilters}
+              showTools
             />
           )}
         </section>
