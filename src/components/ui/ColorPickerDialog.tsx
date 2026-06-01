@@ -79,10 +79,20 @@ export function ColorPickerDialog({
           panel. The ColorPicker still receives it via `aria-label` on
           its outer region for AT users — that wiring lives in the
           inner aria-label on the ColorPicker's wrapping <div role="region">. */}
-      <ColorPicker
-        value={initialHex ? { hex: initialHex } : null}
-        onSelect={handleSelect}
-      />
+      {/* UX-906 — only mount the picker when the dialog is open, and
+          key it on `initialHex` so re-opening with a different field
+          value triggers a fresh mount. Without this, the wheel hue,
+          lightness slider, library search query, and eyedropper
+          preview from the previous session bleed into the next one
+          and the painter sees a stale colour that doesn't match the
+          field they just clicked. */}
+      {open ? (
+        <ColorPicker
+          key={initialHex ?? "no-initial"}
+          value={initialHex ? { hex: initialHex } : null}
+          onSelect={handleSelect}
+        />
+      ) : null}
     </dialog>
   );
 }
