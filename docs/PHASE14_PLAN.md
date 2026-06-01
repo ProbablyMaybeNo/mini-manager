@@ -52,13 +52,14 @@ events                          activity_log                    inspo_images
 - **Acceptance:** section renders, empty states friendly, no widget logic yet.
 - **Shipped 2026-06-01 · commit 37d61a3.** 1233 → 1246 passing (+13), typecheck clean. Five sibling cells (Calendar / Activity / Streak / Heatmap / Inspo) ready for the P14.3–7 widget builders to fill in.
 
-### P14.3 — Calendar widget
+### P14.3 — Calendar widget ✅
 - Month-view grid (current month default, prev/next nav).
 - Days with events render a coloured dot (per `event.kind`).
 - "Add event" inline form: name + date picker + kind dropdown + notes. Server action `createEvent` + `updateEvent` + `deleteEvent`.
 - Click a day → list events for that day with edit/delete affordances.
 - Highlight today's cell.
 - Mobile: full-width single column, tappable day cells.
+- **Shipped 2026-06-01 · commit d2dee1e.** 1246 → 1279 passing (+33), typecheck clean. Surface: `src/db/queries/events.ts`, `src/lib/actions/events.ts` (createEvent / updateEvent / deleteEvent — Zod-validated, owner-scoped), `CalendarMonthGrid` (7-col grid + Prev/Today/Next nav writing `?calYear`/`?calMonth`, coloured dots per kind, today-ring highlight, day-expand panel with inline edit/delete), `AddEventForm` (solid-fill success — CREATE intent).
 
 ### P14.4 — Activity stream widget
 - Reads from `activity_log`, last 20 rows for current user, ordered desc by `created_at`.
@@ -78,12 +79,13 @@ events                          activity_log                    inspo_images
 - Reads from `activity_log` grouped by date.
 - Mobile: scrollable horizontally OR collapsed to last-30-day view.
 
-### P14.7 — Inspo gallery widget
+### P14.7 — Inspo gallery widget ✅
 - 3- or 4-column Notion-style image grid of `inspo_images.url` pastes (where `is_displayed = true`).
 - "Add inspo" form: paste URL + optional alt text. Server validates URL shape, doesn't fetch. Display via `<img src={url}>`.
 - "Manage" button → full list with show/hide toggles + delete + reorder (drag) → `is_displayed` and `position_index` persist.
 - Empty state: "Paste a URL from Pinterest, Instagram, or ArtStation to start your reference board."
 - **No fetch, no storage, no thumbnail generation.** External URL passthrough only.
+- **Shipped 2026-06-01 · commit e53e7f5.** 1279 → 1321 passing (+42), typecheck clean. Surface: `src/db/queries/inspoImages.ts` (displayed / all / per-row owner check), `src/lib/actions/inspoImages.ts` (addInspoImage / toggleInspoDisplay / deleteInspoImage / reorderInspoImages — URL-shape Zod refine accepts http+https only, NEVER fetches the pasted URL), `InspoGalleryGrid` (2-col mobile / 3-col desktop, `<img src={url} loading="lazy">` — no Next/Image proxy), `AddInspoForm` (solid-fill success), `ManageInspoModal` (per-row show/hide / delete / native HTML5 drag-to-reorder + Save order, Escape + click-outside dismiss).
 
 ### P14.8 — Mobile responsiveness pass on the PLANNER section
 - Calendar collapses to a friendly compact month at <md.
