@@ -522,3 +522,140 @@ export async function bumpProjectStatus(
     };
   }
 }
+
+/* ============================================================
+   P13.3 — deleteProject + cascade
+
+   Removes a project and every descendant in one shot. The schema
+   already has `onDelete: cascade` on `project.parentId`, so a single
+   DELETE on the root row triggers the rest. We still compute the
+   descendant set up-front so we can return the cascade count to the
+   caller (used by the confirm modal microcopy).
+
+   Ownership scoped: only the owner can delete. Attached recipes lose
+   their `attached_project_id` (FK `ON DELETE set null`), not their
+   data — so the painter doesn't lose a recipe because they deleted
+   the project they had it attached to.
+============================================================ */
+
+const deleteProjectSchema = z.object({
+  id: z.string().min(1).max(64),
+});
+
+export async function deleteProject(
+  raw: z.infer<typeof deleteProjectSchema>,
+): Promise<ActionResult<{ id: string; descendantCount: number }>> {
+  const parsed = deleteProjectSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid id",
+    };
+  }
+  const { id } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  // Walk descendants from the in-memory project list — SQLite has no
+  // native recursive CTE wired through our drizzle helpers, but the
+  // numbers here are tiny (a painter's full tree) so the JS walk is
+  // cheap and stays consistent with the workspace page's helper.
+  const allProjects = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.ownerId, userId));
+  const childrenByParent = new Map<string, string[]>();
+  for (const p of allProjects) {
+    if (!p.parentId) continue;
+    const arr = childrenByParent.get(p.parentId) ?? [];
+    arr.push(p.id);
+    childrenByParent.set(p.parentId, arr);
+  }
+  const descendants: string[] = [];
+  const stack: string[] = [id];
+  while (stack.length > 0) {
+    const head = stack.pop();
+    if (head === undefined) break;
+    for (const childId of childrenByParent.get(head) ?? []) {
+      descendants.push(childId);
+      stack.push(childId);
+    }
+  }
+
+  const parentId = project.parentId;
+
+  try {
+    // Cascade is handled by `onDelete: cascade` on project.parentId —
+    // a single DELETE removes the whole sub-tree.
+    await db.delete(projects).where(eq(projects.id, id));
+    revalidatePath("/projects");
+    if (parentId) revalidatePath(`/projects/${parentId}`);
+    return {
+      ok: true,
+      data: { id, descendantCount: descendants.length },
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to delete project",
+    };
+  }
+}
+
+/**
+ * P13.3 — Lightweight descendant counter used by the confirm modal so
+ * the prompt can read "Delete X and N sub-projects?". Returns the
+ * descendant count (NOT including the project itself). Owner-scoped.
+ */
+export async function countProjectDescendants(
+  raw: z.infer<typeof deleteProjectSchema>,
+): Promise<ActionResult<{ count: number }>> {
+  const parsed = deleteProjectSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid id",
+    };
+  }
+  const { id } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  if (rows.length === 0) {
+    return { ok: false, error: "Project not found" };
+  }
+
+  const allProjects = await db
+    .select({ id: projects.id, parentId: projects.parentId })
+    .from(projects)
+    .where(eq(projects.ownerId, userId));
+  const childrenByParent = new Map<string, string[]>();
+  for (const p of allProjects) {
+    if (!p.parentId) continue;
+    const arr = childrenByParent.get(p.parentId) ?? [];
+    arr.push(p.id);
+    childrenByParent.set(p.parentId, arr);
+  }
+  let count = 0;
+  const stack: string[] = [id];
+  while (stack.length > 0) {
+    const head = stack.pop();
+    if (head === undefined) break;
+    for (const childId of childrenByParent.get(head) ?? []) {
+      count++;
+      stack.push(childId);
+    }
+  }
+  return { ok: true, data: { count } };
+}

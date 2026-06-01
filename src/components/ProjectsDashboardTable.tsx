@@ -22,6 +22,7 @@ import {
   AttachRecipeModal,
   type RecipeOption,
 } from "@/components/recipes/AttachRecipeModal";
+import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
 
 const STATUS_ORDER: ReadonlyArray<DisplayStatus> = [
   "WISHLIST",
@@ -308,6 +309,11 @@ export function ProjectsDashboardTable({
               active={sortKey === "progressPercent"}
               dir={sortDir}
               onClick={() => handleSort("progressPercent")}
+            />
+            <th
+              scope="col"
+              className="px-3 py-2 text-right"
+              aria-label="Row actions"
             />
           </tr>
         </thead>
@@ -608,6 +614,17 @@ function DashboardRow({
             {row.progressPercent}%
           </span>
         </span>
+      </td>
+      <td className="px-3 py-2 text-right">
+        {/* P13.3 — per-row Delete trigger. Inline + red so the dashboard
+            stays scannable; the modal handles the destructive confirm. */}
+        <DeleteProjectButton
+          projectId={row.id}
+          projectName={row.name}
+          redirectToProjectsOnSuccess={false}
+          inline
+          label="Delete"
+        />
       </td>
     </tr>
   );

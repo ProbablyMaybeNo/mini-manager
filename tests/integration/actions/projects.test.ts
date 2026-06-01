@@ -25,6 +25,8 @@ const {
   updateProjectType,
   updateProjectPriority,
   bumpProjectStatus,
+  deleteProject,
+  countProjectDescendants,
 } = await import("@/lib/actions/projects");
 const { redirect } = await import("next/navigation");
 const { displayStatus } = await import("@/lib/progress");
@@ -310,5 +312,137 @@ describe("bumpProjectStatus", () => {
     const [updated] = await state.db!.select().from(projects);
     expect(displayStatus(updated!)).toBe("COMPLETE");
     expect(updated!.completeCount).toBe(updated!.count);
+  });
+});
+
+/* ============================================================
+   P13.3 — deleteProject + cascade
+   ============================================================ */
+
+describe("countProjectDescendants", () => {
+  test("returns 0 for a leaf project with no children", async () => {
+    await createProject({ name: "Lone Unit", type: "Unit", count: 5 });
+    const [row] = await state.db!.select().from(projects);
+    const res = await countProjectDescendants({ id: row!.id });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.count).toBe(0);
+  });
+
+  test("walks the full sub-tree (Army → Unit → Unit)", async () => {
+    await createProject({ name: "Army", type: "Army", count: 0 });
+    const [army] = await state.db!.select().from(projects);
+    await createProject({
+      name: "Mid Unit",
+      type: "Unit",
+      count: 0,
+      parentId: army!.id,
+    });
+    const [mid] = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.parentId, army!.id));
+    // Try to nest grandchild — blocked by 3-level cap. Insert a second
+    // top-level child instead so we exercise multiple descendants.
+    await createProject({
+      name: "Sibling Unit",
+      type: "Unit",
+      count: 0,
+      parentId: army!.id,
+    });
+
+    const res = await countProjectDescendants({ id: army!.id });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.count).toBe(2);
+    // Mid-level project's own descendant count is 0 (3-level cap).
+    const midRes = await countProjectDescendants({ id: mid!.id });
+    if (midRes.ok) expect(midRes.data.count).toBe(0);
+  });
+
+  test("rejects a project the user doesn't own", async () => {
+    await createProject({ name: "Mine", type: "Unit", count: 5 });
+    const [row] = await state.db!.select().from(projects);
+    state.userId = "intruder";
+    const res = await countProjectDescendants({ id: row!.id });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/Project not found/);
+  });
+});
+
+describe("deleteProject", () => {
+  test("removes a leaf project", async () => {
+    await createProject({ name: "Doomed", type: "Unit", count: 5 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await deleteProject({ id: row!.id });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.descendantCount).toBe(0);
+
+    const after = await state.db!.select().from(projects);
+    expect(after).toHaveLength(0);
+  });
+
+  test("cascade-removes every descendant in one shot", async () => {
+    await createProject({ name: "Army", type: "Army", count: 0 });
+    const [army] = await state.db!.select().from(projects);
+    await createProject({
+      name: "Unit A",
+      type: "Unit",
+      count: 10,
+      parentId: army!.id,
+    });
+    await createProject({
+      name: "Unit B",
+      type: "Unit",
+      count: 5,
+      parentId: army!.id,
+    });
+
+    const before = await state.db!.select().from(projects);
+    expect(before).toHaveLength(3);
+
+    const res = await deleteProject({ id: army!.id });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.descendantCount).toBe(2);
+
+    const after = await state.db!.select().from(projects);
+    expect(after).toHaveLength(0);
+  });
+
+  test("rejects deletion by a different user", async () => {
+    await createProject({ name: "Mine", type: "Unit", count: 5 });
+    const [row] = await state.db!.select().from(projects);
+
+    state.userId = "intruder";
+    const res = await deleteProject({ id: row!.id });
+    expect(res.ok).toBe(false);
+
+    const after = await state.db!.select().from(projects);
+    expect(after).toHaveLength(1);
+  });
+
+  test("does not touch siblings outside the sub-tree", async () => {
+    await createProject({ name: "Army A", type: "Army", count: 0 });
+    const [armyA] = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.name, "Army A"));
+    await createProject({
+      name: "Unit under A",
+      type: "Unit",
+      count: 5,
+      parentId: armyA!.id,
+    });
+    await createProject({ name: "Army B", type: "Army", count: 0 });
+    await createProject({ name: "Standalone Unit", type: "Unit", count: 3 });
+
+    const res = await deleteProject({ id: armyA!.id });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.descendantCount).toBe(1);
+
+    const after = await state.db!.select().from(projects);
+    // Army B + the standalone unit survive — 2 rows.
+    expect(after).toHaveLength(2);
+    const names = after.map((r) => r.name).sort();
+    expect(names).toEqual(["Army B", "Standalone Unit"]);
   });
 });
