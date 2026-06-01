@@ -25,7 +25,9 @@ test.describe("M4 — Tools", () => {
     await expect(page.getByRole("link", { name: /Colour Wheel/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Match/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Eyedropper/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Gradient/i })).toBeVisible();
+    // Phase 12 P12.14 renamed Gradient → Layering. URL path stays
+    // /tools/gradient for back-compat; the visible label is "Layering".
+    await expect(page.getByRole("link", { name: /Layering/i })).toBeVisible();
 
     // 2. Wheel route loads with its canvas + harmony picker.
     await page.getByRole("link", { name: /Colour Wheel/i }).click();
