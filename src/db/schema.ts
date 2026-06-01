@@ -60,6 +60,20 @@ export const users = sqliteTable("user", {
    * painter can adjust it inline + persist via the /user page.
    */
   libraryBrandFilter: text("library_brand_filter"),
+  /**
+   * P13.11 — Pinned "what am I painting right now" project. The
+   * /projects dashboard renders the focused project's full recipe at
+   * the top in a FOCUS section so the painter can sit at the desk
+   * and read the recipe + scribble per-step notes without navigating
+   * away. Nullable; null means no focus is set (empty FOCUS section).
+   *
+   * ON DELETE SET NULL so deleting the focused project doesn't
+   * cascade-delete the user row.
+   */
+  focusProjectId: text("focus_project_id").references(
+    (): AnySQLiteColumn => projects.id,
+    { onDelete: "set null" },
+  ),
 });
 
 export const accounts = sqliteTable(
@@ -464,6 +478,18 @@ export const recipeSteps = sqliteTable(
     /** For "this is a mix": stores the rendered hex of the result. */
     customColorHex: text("custom_color_hex"),
     notesMd: text("notes_md"),
+    /**
+     * P13.11 — Free-form per-step painting notes. Edited inline on
+     * the dashboard FOCUS panel so the painter can scribble "do two
+     * thin coats" / "wet blend on the edge" / "mixed with 2 parts
+     * Lahmian medium" against the actual paint they're using. Saved
+     * on blur via the `updateStepNotes` server action.
+     *
+     * Distinct from `notesMd` (which has historically been a recipe-
+     * author description field rendered on the public share page);
+     * this column is the painter's working notes during the paint.
+     */
+    notes: text("notes"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),
