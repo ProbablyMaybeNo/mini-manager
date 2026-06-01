@@ -10,7 +10,7 @@ Ross dropped a 10-item batch the moment Round 8 returned the 🟢 verdict. None 
 
 ## Milestones (build in this order)
 
-### P13.1 — Button primitive overhaul (FOUNDATION — do FIRST)
+### P13.1 — Button primitive overhaul (FOUNDATION — do FIRST) ✅ → `3054f9b`
 Drop the `[ ]` bracketed-text aesthetic for buttons app-wide. Replace with **solid-color filled buttons + black or white text per WCAG contrast.**
 
 - Rewrite `src/components/ui/Button.tsx`:
