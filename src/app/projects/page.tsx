@@ -17,7 +17,6 @@ import {
   ProjectsDashboardTable,
   type ProjectDashboardRow,
 } from "@/components/ProjectsDashboardTable";
-import { AccentCounter } from "@/components/ui/AccentCounter";
 import { Button } from "@/components/ui/Button";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
@@ -142,7 +141,6 @@ export default async function ProjectsPage() {
 function EmptyState() {
   return (
     <div className="relative frame p-8 text-center space-y-6 overflow-hidden">
-      <AccentCounter value="01" />
       <div>
         <h2 className="text-lg glow-cyan mb-3">No projects yet</h2>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto">

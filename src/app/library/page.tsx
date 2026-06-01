@@ -12,7 +12,6 @@ import {
 } from "@/components/library/LibraryPageClient";
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { currentUserId } from "@/lib/auth-stub";
-import { AccentCounter } from "@/components/ui/AccentCounter";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { decodeLibraryBrandFilter } from "@/lib/libraryBrandFilter/decode";
@@ -60,7 +59,6 @@ export default async function LibraryPage() {
   return (
     <div className="flex flex-col h-[calc(100dvh-3rem-5rem)] md:h-screen">
       <header className="relative overflow-hidden px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-[var(--color-border)]">
-        <AccentCounter value="02" />
         <h1 className="text-3xl tracking-wide">LIBRARY</h1>
         <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans pr-24 md:pr-0">
           {catalog.__row_count.toLocaleString()} paints across the cross-brand catalog.

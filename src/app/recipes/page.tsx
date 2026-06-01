@@ -8,7 +8,6 @@ import {
   RecipesTable,
   type RecipeRowVm,
 } from "@/components/recipes/RecipesTable";
-import { AccentCounter } from "@/components/ui/AccentCounter";
 
 export const dynamic = "force-dynamic";
 
@@ -121,7 +120,6 @@ export default async function RecipesPage() {
 function EmptyState() {
   return (
     <div className="relative frame p-8 text-center space-y-4 overflow-hidden">
-      <AccentCounter value="03" />
       <h2 className="text-lg glow-cyan">No recipes yet</h2>
       <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto leading-snug">
         Build your first scheme: click a + slot, pick a paint from the
