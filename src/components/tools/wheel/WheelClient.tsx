@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   buildHarmony,
   getHarmonyMeta,
+  hexToHsl,
   type HarmonyKey,
 } from "@/lib/tools/wheel/harmonies";
 import type { Paint } from "@/lib/paints/types";
 import { loadPaints } from "@/lib/paints/loader";
+import { resolvePaintByName } from "@/lib/tools/wheel/resolvePaint";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
@@ -35,8 +38,34 @@ const DEFAULT_HARMONY: HarmonyKey = "complementary";
  * SendToRecipeModal.
  */
 export function WheelClient() {
-  const [primary, setPrimary] = useState<PrimaryHs>(DEFAULT_PRIMARY);
-  const [lightness, setLightness] = useState<number>(DEFAULT_LIGHTNESS);
+  const searchParams = useSearchParams();
+  // R7-004 — `?hex=` and `?name=` deep-link params seed the primary
+  // pick on mount. `?hex=` is the canonical param (Wheel needs a hex
+  // anyway); `?name=` survives as a soft fallback so the Wishlist
+  // "Tools ▾ → Wheel" menu (which only knows the paint title) still
+  // pre-seeds via catalog resolution. Both are read once at mount —
+  // mid-session URL edits don't re-seed.
+  const initialHex = searchParams?.get("hex") ?? null;
+  const initialName = searchParams?.get("name") ?? null;
+  const seededFromName = useRef(false);
+
+  const initialPrimary = useMemo<PrimaryHs>(() => {
+    if (initialHex) {
+      const hsl = hexToHsl(initialHex);
+      if (hsl) return { hue: hsl.h, saturation: hsl.s };
+    }
+    return DEFAULT_PRIMARY;
+  }, [initialHex]);
+  const initialLightness = useMemo<number>(() => {
+    if (initialHex) {
+      const hsl = hexToHsl(initialHex);
+      if (hsl) return Math.round(hsl.l);
+    }
+    return DEFAULT_LIGHTNESS;
+  }, [initialHex]);
+
+  const [primary, setPrimary] = useState<PrimaryHs>(initialPrimary);
+  const [lightness, setLightness] = useState<number>(initialLightness);
   const [harmony, setHarmony] = useState<HarmonyKey>(DEFAULT_HARMONY);
   const [pinnedHexes, setPinnedHexes] = useState<ReadonlySet<string>>(new Set());
   const [activeStopId, setActiveStopId] = useState<string>("p");
@@ -48,7 +77,24 @@ export function WheelClient() {
     let mounted = true;
     loadPaints()
       .then((rows) => {
-        if (mounted) setPaints(rows);
+        if (mounted) {
+          setPaints(rows);
+          // R7-004 — if `?hex=` wasn't supplied but `?name=` was, look
+          // the title up in the catalog now (case-insensitive substring
+          // match against name / brand / line, prefer exact-name) and
+          // seed the wheel from the matched paint's hex.
+          if (!initialHex && initialName && !seededFromName.current) {
+            const matched = resolvePaintByName(rows, initialName);
+            if (matched) {
+              const hsl = hexToHsl(matched.hex);
+              if (hsl) {
+                setPrimary({ hue: hsl.h, saturation: hsl.s });
+                setLightness(Math.round(hsl.l));
+                seededFromName.current = true;
+              }
+            }
+          }
+        }
       })
       .catch(() => {
         // Catalog failure is non-fatal — the wheel still works without
@@ -60,7 +106,7 @@ export function WheelClient() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [initialHex, initialName]);
 
   // Derive the ordered list of hex strings from the harmony.
   const harmonyHexes = useMemo(

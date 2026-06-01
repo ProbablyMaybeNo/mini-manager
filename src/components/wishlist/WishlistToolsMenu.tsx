@@ -18,9 +18,10 @@ interface Props {
  *   - Layering → /tools/gradient?name=<paint title>
  *
  * The destination tools accept the `name` query param + use it to
- * pre-populate their search input. This shortcut + paint-name carry-
- * over keeps the painter's "I picked Mephiston Red here, now help me
- * design with it" intent in one click.
+ * pre-populate their search input. WheelClient additionally accepts
+ * `?hex=` as the canonical pre-seed param (R7-004); since wishlist
+ * items don't carry a resolved hex, this menu keeps sending `?name=`
+ * and the wheel falls back to catalog-resolution on its end.
  *
  * The button uses variant="ghost" so the row's existing status pill
  * remains the visual anchor — Tools is a secondary affordance.
