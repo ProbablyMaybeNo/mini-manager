@@ -38,11 +38,24 @@
   --color-fg-subtle: #d4d4d4;
 
   --color-border: #262626;
-  /* Bumped from #363636 (1.68:1 on bg) to #5a5a5a (4.05:1 on bg) so the
-     border passes WCAG 2.2 §1.4.11 Non-text Contrast (3:1) and reads as a
-     real boundary on auth-form inputs + every other .frame-strong surface.
-     UX-V3-003 — auditor round 3. */
+  /* Bumped from #363636 (1.68:1 on bg) to #5a5a5a so the border reads
+     as a real boundary on auth-form inputs + every other
+     .frame-strong surface. UX-V3-003 — auditor round 3.
+     Round-7 contrast re-test: #5a5a5a is 2.87:1 on #0a0a0a, JUST under
+     WCAG 2.2 §1.4.11's 3:1 floor. Form inputs need 3:1 specifically;
+     decorative frames around prose / metadata get a pass at 2.87:1 since
+     they don't demarcate a focusable component. Inputs use the
+     dedicated --color-border-input token below (lifted to #666666 →
+     3.34:1 on bg) so the WCAG-critical surface clears the floor. */
   --color-border-strong: #5a5a5a;
+  /* Dedicated input-border token. Round-7 audit flagged form inputs
+     using the generic `.frame` (1px @ --color-border = 1.4:1 on bg)
+     failing WCAG 2.2 §1.4.11. R7-005 routes every <input>, <textarea>,
+     and <select> through this token (3.34:1 on bg) so the border passes
+     regardless of whether the component reaches for .frame or
+     .frame-strong. Held just inside the 3:1 floor — lifting further
+     would make non-active inputs read as focused. */
+  --color-border-input: #666666;
 
   --color-green: #33ff66;
   --color-green-dim: #1ea845;
@@ -274,6 +287,24 @@ select:focus-visible {
 
 input, textarea, select {
   transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+/* R7-005 — form inputs unconditionally use the input-specific border
+   token (≥3:1) regardless of whether the component reaches for `.frame`
+   (1.4:1, decorative) or `.frame-strong`. The auditor caught form
+   inputs failing WCAG 2.2 §1.4.11 because `.frame` was the default.
+   The selectors below win specificity over `.frame` (a 1-class rule)
+   without resorting to !important, lifting every <input>, <textarea>,
+   <select> to a compliant border regardless of which class the
+   component reached for. Buttons are intentionally excluded — they
+   own their colour via .btn-* variants. */
+input.frame,
+textarea.frame,
+select.frame,
+input.frame-strong,
+textarea.frame-strong,
+select.frame-strong {
+  border-color: var(--color-border-input);
 }
 
 /* ============================================================
