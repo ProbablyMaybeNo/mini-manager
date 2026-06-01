@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
 import {
@@ -11,6 +11,7 @@ import { listInventoryByUser } from "@/db/queries/inventory";
 import { namedModels, projects } from "@/db/schema";
 import { RecipeHeader } from "@/components/recipes/RecipeHeader";
 import { RecipeEditorClient } from "@/components/recipes/RecipeEditorClient";
+import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
 import type { ZoneListItem } from "@/components/recipes/ZoneList";
 import type { StepRowData } from "@/components/recipes/StepRow";
 import type { MarkdownInput, MarkdownZone } from "@/lib/recipes/markdown";
@@ -71,11 +72,33 @@ export default async function RecipeEditorPage({
   const recipe = await getRecipeWithZones(userId, id);
   if (!recipe) notFound();
 
-  const [paintMeta, attachment, inventoryEntries] = await Promise.all([
-    getPaintMetaMap(),
-    resolveAttachment(recipe),
-    listInventoryByUser(userId),
-  ]);
+  const [paintMeta, attachment, inventoryEntries, assignProjects] =
+    await Promise.all([
+      getPaintMetaMap(),
+      resolveAttachment(recipe),
+      listInventoryByUser(userId),
+      // P12.4 — fetch the user's projects for the "Assign to project ▾"
+      // dropdown in the recipe header. Non-archived only; alphabetical
+      // by name. Top-level + nested both surface so the painter can
+      // pick a unit or single-model child too.
+      db
+        .select({
+          id: projects.id,
+          name: projects.name,
+          type: projects.type,
+        })
+        .from(projects)
+        .where(
+          and(eq(projects.ownerId, userId), isNull(projects.archivedAt)),
+        )
+        .orderBy(asc(projects.name)),
+    ]);
+  const assignProjectsOptions: ReadonlyArray<AssignProjectOption> =
+    assignProjects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      type: p.type,
+    }));
 
   // Slim the nested shape to what each client component actually needs.
   const zoneItems: ZoneListItem[] = recipe.zones.map((z) => {
@@ -179,6 +202,7 @@ export default async function RecipeEditorPage({
       <RecipeHeader
         recipe={recipe}
         attachment={attachment}
+        assignProjects={assignProjectsOptions}
         share={{
           markdown: markdownInput,
           jsonPayload: {

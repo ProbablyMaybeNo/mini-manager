@@ -6,6 +6,10 @@ import { clsx } from "clsx";
 import type { Recipe } from "@/db/schema";
 import { deleteRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { ShareButton } from "@/components/recipes/ShareButton";
+import {
+  RecipeActionsBar,
+  type AssignProjectOption,
+} from "@/components/recipes/RecipeActionsBar";
 import type { MarkdownInput } from "@/lib/recipes/markdown";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +33,10 @@ interface Props {
   recipe: Recipe;
   attachment: AttachmentSummary;
   share: ShareData;
+  /** P12.4 — all of the user's projects, surfaced in the "Assign to
+   *  project ▾" dropdown. The recipe page fetches these server-side
+   *  + passes them down. */
+  assignProjects: ReadonlyArray<AssignProjectOption>;
 }
 
 const NAME_DEBOUNCE_MS = 600;
@@ -45,7 +53,12 @@ const NAME_DEBOUNCE_MS = 600;
  * than in the editor shell because the trigger lives in the header
  * row right next to it.
  */
-export function RecipeHeader({ recipe, attachment, share }: Props) {
+export function RecipeHeader({
+  recipe,
+  attachment,
+  share,
+  assignProjects,
+}: Props) {
   const router = useRouter();
   const nameRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -152,24 +165,32 @@ export function RecipeHeader({ recipe, attachment, share }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <ShareButton
+        <div className="flex flex-col items-end gap-2">
+          <RecipeActionsBar
             recipeId={recipe.id}
-            recipeName={recipe.name}
-            initialPublicSlug={recipe.publicSlug}
-            markdownInput={share.markdown}
-            jsonPayload={share.jsonPayload}
+            isStandalone={recipe.isStandalone}
+            projects={assignProjects}
+            currentlyAttachedProjectId={recipe.attachedProjectId}
           />
-          <Button
-            type="button"
-            onClick={openDelete}
-            disabled={isPending}
-            variant="danger"
-            size="sm"
-            title="Delete recipe"
-          >
-            Delete
-          </Button>
+          <div className="flex items-center gap-3">
+            <ShareButton
+              recipeId={recipe.id}
+              recipeName={recipe.name}
+              initialPublicSlug={recipe.publicSlug}
+              markdownInput={share.markdown}
+              jsonPayload={share.jsonPayload}
+            />
+            <Button
+              type="button"
+              onClick={openDelete}
+              disabled={isPending}
+              variant="danger"
+              size="sm"
+              title="Delete recipe"
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
 
