@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   CLOCK_PLACEHOLDER,
   formatTime,
+  NET_TOOLTIP,
   SSR_NET_STATUS,
   TONE_COLOR,
 } from "@/components/StatusBar";
@@ -58,6 +59,34 @@ describe("TONE_COLOR", () => {
     expect(keys).toContain("danger");
     expect(keys).toContain("info");
     expect(keys).toContain("neutral");
+  });
+});
+
+describe("NET_TOOLTIP (UX-911)", () => {
+  // Recruits seeing NET LAG flash amber would worry their save just
+  // failed. The amber tooltip has to explicitly reassure them that
+  // their work is still saving. Lock the copy here so a future
+  // refactor doesn't quietly drop the reassurance.
+  test("LAG tooltip explicitly reassures the user their work is still saving", () => {
+    expect(NET_TOOLTIP.LAG.toLowerCase()).toContain("still saving");
+  });
+
+  test("OFF tooltip warns that changes won't save", () => {
+    expect(NET_TOOLTIP.OFF.toLowerCase()).toContain("won't save");
+  });
+
+  test("ON tooltip describes normal connectivity", () => {
+    expect(NET_TOOLTIP.ON.toLowerCase()).toContain("normally");
+  });
+
+  test("all three NET states are mapped", () => {
+    expect(Object.keys(NET_TOOLTIP).sort()).toEqual(["LAG", "OFF", "ON"]);
+  });
+
+  test("no tooltip is empty", () => {
+    for (const key of Object.keys(NET_TOOLTIP) as Array<keyof typeof NET_TOOLTIP>) {
+      expect(NET_TOOLTIP[key].length).toBeGreaterThan(10);
+    }
   });
 });
 

@@ -114,6 +114,10 @@ interface SegmentProps {
   label: string;
   value: string;
   tone: "ok" | "warning" | "danger" | "info" | "neutral";
+  /** UX-911 — optional native + AT tooltip. When set, the segment
+   *  wraps its value in a span with title= AND aria-label= so both
+   *  hover-by-mouse and screen-reader users see the same copy. */
+  tooltip?: string;
 }
 
 /** Exported for unit-testing. */
@@ -125,12 +129,34 @@ export const TONE_COLOR: Record<SegmentProps["tone"], string> = {
   neutral: "text-[var(--color-fg-muted)]",
 };
 
-function Segment({ label, value, tone }: SegmentProps) {
+/**
+ * UX-911 — Tooltip copy for each NET state. Recruits seeing NET LAG
+ * flash amber would worry their save just failed; the tooltip
+ * explicitly reassures them that the request is still in-flight.
+ * Exported for unit-testing.
+ */
+export const NET_TOOLTIP: Record<NetStatus, string> = {
+  ON: "Connected — server responding normally.",
+  LAG: "Server's responding slower than usual. Your work is still saving.",
+  OFF: "Browser reports you're offline. Changes won't save until you reconnect.",
+};
+
+function Segment({ label, value, tone, tooltip }: SegmentProps) {
   return (
     <span className="inline-flex items-center gap-1 font-mono text-[11px] leading-none tracking-wider uppercase whitespace-nowrap">
       <span className="text-[var(--color-fg-subtle)]">{label}</span>
       <span className="text-[var(--color-border-strong)]">·</span>
-      <span className={TONE_COLOR[tone]}>{value}</span>
+      {tooltip ? (
+        <span
+          className={TONE_COLOR[tone]}
+          title={tooltip}
+          aria-label={`${label} ${value} — ${tooltip}`}
+        >
+          {value}
+        </span>
+      ) : (
+        <span className={TONE_COLOR[tone]}>{value}</span>
+      )}
     </span>
   );
 }
@@ -168,7 +194,12 @@ export function StatusBar() {
     >
       <Segment label="SYS" value="OK" tone="ok" />
       <Divider />
-      <Segment label="NET" value={net} tone={netTone} />
+      <Segment
+        label="NET"
+        value={net}
+        tone={netTone}
+        tooltip={NET_TOOLTIP[net]}
+      />
       <Divider />
       <Segment label="TIME" value={time} tone="neutral" />
     </div>
