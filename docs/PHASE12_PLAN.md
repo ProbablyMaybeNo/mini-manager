@@ -60,7 +60,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - [x] **P12.2 — Recipe slot grid + side-panel flow.** Replace current ZoneList vertical-strip-with-zones with the **empty + boxes** pattern. Each slot is a clickable square. Click `+` (or any empty slot) → opens `<ColorPicker>` in a right slide-out side panel (~480px wide on desktop, full-width on mobile). Pick a color/paint → side panel closes, slot fills with the swatch + paint name. Drop the "starter pack" preset dropdown (model-part presets are out of scope per the brief). Add a trailing `+ Add color` square to extend the row.
 
-- [ ] **P12.3 — Layer-assignment on filled slots.** Click a filled slot → reveals a layer selector (the 8 layers from the brief). Stored on the existing `recipe_step` table's `technique` field. The first step of each slot defaults to "basecoat" but the user can override. Visual: small layer chip overlaid on the swatch (top-right corner) showing the assigned layer name in tiny caps.
+- [x] **P12.3 — Layer-assignment on filled slots.** Click a filled slot → reveals a layer selector (the 8 layers from the brief). Stored on the existing `recipe_step` table's `technique` field. The first step of each slot defaults to "basecoat" but the user can override. Visual: small layer chip overlaid on the swatch (top-right corner) showing the assigned layer name in tiny caps.
 
 - [ ] **P12.4 — Save vs Assign actions.** Recipe header gets two clearly distinct CTAs:
   - **Save** (green button) — adds to Recipes list, stays on the page

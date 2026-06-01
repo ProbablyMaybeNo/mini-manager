@@ -96,6 +96,12 @@ export default async function RecipeEditorPage({
       // filled slot. null when the slot has no step yet (rare; can
       // happen mid-edit if a step was deleted but the zone wasn't).
       firstStepId: firstStep?.id ?? null,
+      // P12.3 — the slot's layer chip (top-right corner) renders this
+      // and the side-panel layer selector defaults to it. The picker
+      // surfaces the locked Phase-12 layer set; this technique is
+      // typed widely (full TechniqueKey union) so legacy values from
+      // older recipes still display.
+      firstStepTechnique: firstStep?.technique ?? null,
     };
   });
 

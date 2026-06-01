@@ -336,12 +336,44 @@ export const wishlistItems = sqliteTable(
 export const bodyTypes = ["infantry", "vehicle", "monster", "terrain"] as const;
 export type BodyType = (typeof bodyTypes)[number];
 
+/**
+ * `recipe_step.technique` enum.
+ *
+ * Phase 12 (P12.3) repurposes this column from "painting technique"
+ * (basecoat / wash / drybrush / etc.) to "layer assignment in Ross's
+ * locked 8-layer set" (undercoat / basecoat / midcoat / highlight /
+ * edge_highlight / wash / detail / metallic).
+ *
+ * The Phase-12 layer set is added at the FRONT of the union (so new
+ * code defaults to it via picker UIs) but the old technique keys
+ * stay as deprecated-but-still-valid values so:
+ *   - existing recipes in the database keep parsing without a
+ *     destructive enum-string migration
+ *   - shared / imported recipes from before P12 still validate
+ *   - the markdown share format keeps emitting the same strings
+ *
+ * The locked Phase-12 set:
+ *   undercoat / basecoat / midcoat / highlight / edge_highlight
+ *   / wash / detail / metallic
+ *
+ * Legacy values retained: layer / drybrush / glaze / stipple /
+ * wet_blend / two_thin_coats / zenithal_prime. UI surfaces post-P12
+ * should not offer them in pickers — but the schema still parses
+ * them for back-compat.
+ */
 export const techniqueKeys = [
+  // Phase-12 locked set
+  "undercoat",
   "basecoat",
-  "layer",
-  "wash",
-  "drybrush",
+  "midcoat",
+  "highlight",
   "edge_highlight",
+  "wash",
+  "detail",
+  "metallic",
+  // Legacy keys — retained for back-compat (P12.3)
+  "layer",
+  "drybrush",
   "glaze",
   "stipple",
   "wet_blend",
@@ -349,6 +381,35 @@ export const techniqueKeys = [
   "zenithal_prime",
 ] as const;
 export type TechniqueKey = (typeof techniqueKeys)[number];
+
+/**
+ * The locked Phase-12 layer subset — the keys a P12+ picker should
+ * actually surface. UI consumers should iterate this, not the full
+ * union, so legacy keys stay out of new pickers.
+ */
+export const phase12LayerKeys = [
+  "undercoat",
+  "basecoat",
+  "midcoat",
+  "highlight",
+  "edge_highlight",
+  "wash",
+  "detail",
+  "metallic",
+] as const;
+export type Phase12LayerKey = (typeof phase12LayerKeys)[number];
+
+/** Human label for each Phase-12 layer. UI strings, not enum values. */
+export const phase12LayerLabel: Record<Phase12LayerKey, string> = {
+  undercoat: "Undercoat",
+  basecoat: "Basecoat",
+  midcoat: "Midcoat",
+  highlight: "Highlight",
+  edge_highlight: "Edge highlight",
+  wash: "Wash",
+  detail: "Detail",
+  metallic: "Metallic",
+};
 
 export const recipes = sqliteTable(
   "recipe",

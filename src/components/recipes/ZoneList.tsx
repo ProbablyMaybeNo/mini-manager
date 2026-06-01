@@ -13,6 +13,12 @@ import { LogTag } from "@/components/ui/LogTag";
 import { Button } from "@/components/ui/Button";
 import { ColorPicker } from "@/components/ui/ColorPicker";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
+import {
+  phase12LayerKeys,
+  phase12LayerLabel,
+  type Phase12LayerKey,
+  type TechniqueKey,
+} from "@/db/schema";
 
 export interface ZoneListItem {
   id: string;
@@ -23,6 +29,18 @@ export interface ZoneListItem {
   /** First-step id of the slot — used by the picker side panel to
    *  swap the paint on an already-filled slot via updateStep. */
   firstStepId: string | null;
+  /** First-step technique (== Phase-12 layer name for new slots). The
+   *  slot's swatch overlay chip renders this; the side-panel layer
+   *  selector defaults to it. Null when the slot has no step yet. */
+  firstStepTechnique: TechniqueKey | null;
+}
+
+/** True when `key` is one of Ross's Phase-12 layer names. Legacy
+ *  techniques (layer / drybrush / glaze etc.) return false so they
+ *  render as a generic chip without misclaiming a Phase-12 slot. */
+function isPhase12Layer(key: TechniqueKey | null): key is Phase12LayerKey {
+  if (!key) return false;
+  return (phase12LayerKeys as readonly string[]).includes(key);
 }
 
 interface Props {
@@ -142,6 +160,27 @@ export function ZoneList({
     });
   };
 
+  // P12.3 — when the painter picks a layer from the side-panel layer
+  // selector, update the first step's technique field. Doesn't close
+  // the side panel — layer assignment is a quick edit + the painter
+  // might still want to swap the paint after.
+  const handleLayerSelect = (layer: Phase12LayerKey) => {
+    if (pickerTarget?.kind !== "edit") return;
+    const target = localZones.find((z) => z.id === pickerTarget.zoneId);
+    if (!target?.firstStepId) {
+      setPickerError("This slot has no step to update.");
+      return;
+    }
+    setPickerError(null);
+    startSaveTransition(async () => {
+      const result = await updateStep({
+        id: target.firstStepId!,
+        technique: layer,
+      });
+      if (!result.ok) setPickerError(result.error);
+    });
+  };
+
   const editingZone =
     pickerTarget?.kind === "edit"
       ? localZones.find((z) => z.id === pickerTarget.zoneId) ?? null
@@ -234,6 +273,12 @@ export function ZoneList({
               ? { hex: editingZone.swatchHex }
               : null
           }
+          currentLayer={
+            pickerTarget.kind === "edit"
+              ? editingZone?.firstStepTechnique ?? null
+              : null
+          }
+          showLayerSelector={pickerTarget.kind === "edit"}
           busy={isSaving}
           error={pickerError}
           onClose={() => {
@@ -241,9 +286,85 @@ export function ZoneList({
             setPickerError(null);
           }}
           onSelect={handlePickerSelect}
+          onLayerSelect={handleLayerSelect}
         />
       ) : null}
     </>
+  );
+}
+
+/**
+ * LayerSelector — the 8-button row Ross's brief locks for slot layer
+ * assignment. Shown above the ColorPicker inside the side panel when
+ * the painter is editing an existing slot.
+ *
+ * Each button is a small mono-cap chip; the currently-assigned layer
+ * gets a cyan border. Picking a different layer immediately fires
+ * onSelect (no commit affordance — Ross's brief explicitly wants
+ * "Click any paint to assign it to a layer" speed).
+ *
+ * Legacy techniques (layer / drybrush / glaze etc.) on already-saved
+ * recipes render the currentLayer label as a hint above the buttons
+ * but are NOT in the selectable set — the painter clicking any of
+ * the 8 locked layers replaces the legacy value.
+ */
+function LayerSelector({
+  currentLayer,
+  onSelect,
+}: {
+  currentLayer: TechniqueKey | null;
+  onSelect: (layer: Phase12LayerKey) => void;
+}) {
+  const isLockedLayer =
+    currentLayer && (phase12LayerKeys as readonly string[]).includes(currentLayer);
+
+  return (
+    <section
+      aria-label="Layer assignment"
+      className="space-y-3 p-4"
+      style={{ borderBottom: "1px solid var(--color-border)" }}
+    >
+      <h3 className="section-title">Layer</h3>
+      {currentLayer && !isLockedLayer ? (
+        <p className="text-2xs font-mono text-[var(--color-fg-subtle)]">
+          Currently assigned (legacy):{" "}
+          <span className="text-[var(--color-fg-muted)] uppercase tracking-wider">
+            {currentLayer.replace(/_/g, " ")}
+          </span>
+        </p>
+      ) : null}
+      <div
+        className="grid grid-cols-2 sm:grid-cols-4 gap-2"
+        role="listbox"
+        aria-label="Layers"
+      >
+        {phase12LayerKeys.map((key) => {
+          const selected = currentLayer === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="option"
+              aria-selected={selected}
+              onClick={() => onSelect(key)}
+              className={clsx(
+                "px-2 py-1.5 font-mono text-2xs uppercase tracking-wider rounded-sm transition-colors text-center",
+                selected
+                  ? "text-[var(--color-cyan)]"
+                  : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
+              )}
+              style={{
+                border: selected
+                  ? "2px solid var(--color-cyan)"
+                  : "1px solid var(--color-border-strong)",
+              }}
+            >
+              {phase12LayerLabel[key]}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -258,17 +379,23 @@ export function ZoneList({
 function ColorPickerSidePanel({
   contextLabel,
   initial,
+  currentLayer,
+  showLayerSelector,
   busy,
   error,
   onClose,
   onSelect,
+  onLayerSelect,
 }: {
   contextLabel: string;
   initial: { hex: string } | null;
+  currentLayer: TechniqueKey | null;
+  showLayerSelector: boolean;
   busy: boolean;
   error: string | null;
   onClose: () => void;
   onSelect: (selection: ColorPickerSelection) => void;
+  onLayerSelect: (layer: Phase12LayerKey) => void;
 }) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -312,6 +439,12 @@ function ColorPickerSidePanel({
           </Button>
         </header>
         <div className="flex-1 overflow-y-auto">
+          {showLayerSelector ? (
+            <LayerSelector
+              currentLayer={currentLayer}
+              onSelect={onLayerSelect}
+            />
+          ) : null}
           <ColorPicker
             value={initial ? { hex: initial.hex } : null}
             onSelect={onSelect}
@@ -435,12 +568,21 @@ function ColorSlotCell({
         >
           {zone.name}
         </span>
+        {/* P12.3 — layer chip overlaid in the bottom band of the slot.
+            Renders the assigned Phase-12 layer name in tiny caps when
+            one is set (basecoat / midcoat / highlight / etc.). Legacy
+            techniques render their underscored name as-is. Empty slots
+            show the existing "no paint" hint. */}
         <span
-          className="block text-2xs font-mono uppercase tracking-wider text-center opacity-70"
+          className="block text-2xs font-mono uppercase tracking-wider text-center opacity-80"
           style={filled ? { color: textColor } : { color: "var(--color-fg-muted)" }}
         >
           {filled
-            ? `${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}`
+            ? isPhase12Layer(zone.firstStepTechnique)
+              ? phase12LayerLabel[zone.firstStepTechnique]
+              : zone.firstStepTechnique
+                ? zone.firstStepTechnique.replace(/_/g, " ")
+                : `${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}`
             : "no paint"}
         </span>
       </button>
