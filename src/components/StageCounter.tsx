@@ -311,6 +311,9 @@ export function CounterButton({
 }: {
   label: string;
   glyph: string;
+  /** True when the bump is currently illegal (e.g. capped at the
+   *  next-stage ceiling). The button still receives clicks so the
+   *  inline cascade error fires on attempt — see UX-902. */
   disabled: boolean;
   onClick: () => void;
   title?: string;
@@ -319,14 +322,19 @@ export function CounterButton({
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
+      // UX-902 — keep the button clickable on a capped attempt so
+      // onClick still fires and the parent's validateBump surfaces
+      // the cascade error in the inline red alert. AT users see the
+      // disabled state via aria-disabled; the visual treatment matches
+      // a native disabled button (opacity + cursor).
+      aria-disabled={disabled || undefined}
       aria-label={label}
       title={title}
       className={clsx(
         "tap-target inline-flex items-center justify-center px-3 py-1.5",
         "frame-strong font-mono text-sm leading-none select-none",
         disabled
-          ? "opacity-40 cursor-not-allowed"
+          ? "opacity-40 cursor-not-allowed text-[var(--color-fg-subtle)]"
           : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] active:bg-[color-mix(in_srgb,var(--color-green)_14%,transparent)]",
       )}
     >
