@@ -157,8 +157,9 @@ export function SwatchActions({
                     r.confidence === "medium" && "text-[var(--color-amber)]",
                     r.confidence === "low" && "text-[var(--color-fg-muted)]",
                   )}
+                  title="Match closeness — 0 = exact, ≤2 = imperceptible, >5 = noticeably different. Industry standard (CIE ΔE 2000)."
                 >
-                  ΔE {r.deltaE.toFixed(1)}
+                  {r.deltaE.toFixed(1)}
                 </span>
               </div>
             ))

@@ -56,7 +56,7 @@ export function RampDisplay({ steps }: Props) {
                   s.match.confidence === "medium" && "text-[var(--color-amber)]",
                   s.match.confidence === "low" && "text-[var(--color-fg-muted)]",
                 )}
-                title={`${s.match.paint.brand} ${s.match.paint.name} · ΔE ${s.match.deltaE.toFixed(1)}`}
+                title={`${s.match.paint.brand} ${s.match.paint.name} · match ${s.match.deltaE.toFixed(1)} (0 = exact, ≤2 = imperceptible)`}
               >
                 {s.match.paint.name}
               </div>

@@ -287,13 +287,16 @@ export function MatchClient() {
             >
               <span role="columnheader" aria-label="Swatch" />
               <span role="columnheader">Paint</span>
+              {/* P13.9 — `ΔE` is jargon for recruits. Relabelled to
+                  `MATCH` (the page name carries the meaning) with a
+                  plain-prose tooltip explaining the 0/≤2/>5 scale. */}
               <span
                 role="columnheader"
                 className="text-right inline-flex items-center justify-end gap-1 cursor-help"
-                title="ΔE = colour difference (CIE Delta-E 2000). Lower is closer: under 1 is imperceptible, 1–3 is a close match, 5+ is noticeably different."
-                aria-label="ΔE colour difference"
+                title="0 = exact match, ≤2 = imperceptible, >5 = noticeably different. Industry standard (CIE ΔE 2000)."
+                aria-label="Match closeness (0 = exact, lower is closer)"
               >
-                <span>ΔE</span>
+                <span>MATCH</span>
                 <span
                   aria-hidden
                   className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-[var(--color-border-strong)] text-[10px] leading-none font-mono normal-case tracking-normal text-[var(--color-fg-subtle)]"

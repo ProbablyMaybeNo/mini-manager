@@ -81,8 +81,9 @@ export function MatchResultsRow({ result, onUse, showAssign, onPickColor }: Prop
             confidence === "medium" && "text-[var(--color-amber)]",
             confidence === "low" && "text-[var(--color-fg-muted)]",
           )}
+          title="0 = exact match, ≤2 = imperceptible, >5 = noticeably different. Industry standard (CIE ΔE 2000)."
         >
-          ΔE {deltaE.toFixed(1)}
+          {deltaE.toFixed(1)}
         </span>
       </div>
       <div role="cell" className="flex items-center gap-2 justify-end">
