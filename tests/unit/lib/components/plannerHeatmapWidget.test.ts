@@ -139,28 +139,31 @@ describe("monthLabels (P14.6)", () => {
   });
 });
 
-describe("tooltipFor (P14.6)", () => {
-  test("0 actions uses the plural 'actions' word", () => {
+describe("tooltipFor (P14.6 + UX-1107)", () => {
+  // UX-1107 — tooltip vocabulary aligned with ACTIVITY widget +
+  // activity_log schema. "actions" → "activities" / "activity" so the
+  // painter reads the heatmap and the activity stream as one surface.
+  test("0 activities uses the plural form", () => {
     expect(
       tooltipFor({ date: "2026-05-26", count: 0, intensity: "none" }),
-    ).toBe("0 actions . Tue 26 May");
+    ).toBe("0 activities . Tue 26 May");
   });
 
-  test("1 action uses singular 'action'", () => {
+  test("1 activity uses singular 'activity'", () => {
     expect(
       tooltipFor({ date: "2026-05-26", count: 1, intensity: "low" }),
-    ).toBe("1 action . Tue 26 May");
+    ).toBe("1 activity . Tue 26 May");
   });
 
-  test("multiple actions use the plural form", () => {
+  test("multiple activities use the plural form", () => {
     expect(
       tooltipFor({ date: "2026-05-26", count: 5, intensity: "high" }),
-    ).toBe("5 actions . Tue 26 May");
+    ).toBe("5 activities . Tue 26 May");
   });
 
   test("Sunday boundary case (2026-06-07 is a Sunday)", () => {
     expect(
       tooltipFor({ date: "2026-06-07", count: 2, intensity: "mid" }),
-    ).toBe("2 actions . Sun 7 Jun");
+    ).toBe("2 activities . Sun 7 Jun");
   });
 });

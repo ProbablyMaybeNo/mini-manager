@@ -62,6 +62,8 @@ export async function PlannerStreakCell({ days, now }: Props = {}) {
     : isActive
       ? "text-[var(--color-amber)]"
       : "text-[var(--color-fg-muted)]";
+  const unitLabel = result.streak === 1 ? "DAY" : "DAYS";
+  const ariaUnit = result.streak === 1 ? "day" : "days";
 
   return (
     <Card title="STREAK" titleAs="h3" accentColor="purple">
@@ -69,12 +71,12 @@ export async function PlannerStreakCell({ days, now }: Props = {}) {
         <div className="flex items-baseline gap-2">
           <span
             className={"text-3xl tabular-nums tracking-wide font-medium " + numberColor}
-            aria-label={result.streak + " days"}
+            aria-label={result.streak + " " + ariaUnit}
           >
             {result.streak}
           </span>
           <span className="text-xs font-sans text-[var(--color-fg-muted)] uppercase tracking-wide">
-            days
+            {unitLabel}
           </span>
         </div>
         <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">

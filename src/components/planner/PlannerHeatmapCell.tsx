@@ -116,8 +116,8 @@ export async function PlannerHeatmapCell({ days, now }: Props = {}) {
           ))}
         </div>
         <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
-          Your last {WINDOW_DAYS} days of painting. Hover a cell for the
-          count.
+          Your last {WINDOW_DAYS} days of painting. Hover or tap a cell
+          for the count.
         </p>
       </div>
     </Card>

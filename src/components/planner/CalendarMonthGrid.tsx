@@ -281,14 +281,29 @@ export function CalendarMonthGrid({ events, year, monthIndex }: Props) {
             const isToday = cell.key === today;
             const isExpanded = expandedDayKey === cell.key;
             const hasEvents = dayEvents.length > 0;
+            // UX-1105 — screen-reader-friendly aria-label. Speaks as
+            // "Today, June 1, 2026, 1 event" instead of the raw ISO
+            // key "2026-06-01 · 1 event(s)". `cell.key` is built from
+            // (cellYear, cellMonth, cellDay) earlier in the grid; we
+            // parse the literal so out-of-month pad cells still read
+            // with the correct month name.
+            const [, mmRaw, ddRaw] = cell.key.split("-");
+            const cellYear = Number(cell.key.slice(0, 4));
+            const cellMonth = Number(mmRaw) - 1;
+            const cellDay = Number(ddRaw);
+            const eventSuffix = hasEvents
+              ? `, ${dayEvents.length} ${
+                  dayEvents.length === 1 ? "event" : "events"
+                }`
+              : "";
+            const todayPrefix = isToday ? "Today, " : "";
+            const ariaLabel = `${todayPrefix}${MONTH_NAMES[cellMonth]} ${cellDay}, ${cellYear}${eventSuffix}`;
             return (
               <button
                 key={cell.key}
                 type="button"
                 role="gridcell"
-                aria-label={`${cell.key}${
-                  hasEvents ? ` · ${dayEvents.length} event(s)` : ""
-                }`}
+                aria-label={ariaLabel}
                 aria-current={isToday ? "date" : undefined}
                 onClick={() => {
                   setActionError(null);

@@ -104,9 +104,12 @@ function monthAbbrev(mm1: number): string {
 }
 
 /**
- * Tooltip text for one cell. "5 actions . Mon 26 May" pattern (the
+ * Tooltip text for one cell. "5 activities . Mon 26 May" pattern (the
  * "·" middot in the plan becomes a plain "." here so the title
  * attribute renders cleanly on every browser).
+ *
+ * UX-1107 — vocabulary aligned with the rest of the dashboard
+ * (ACTIVITY widget, activity_log schema, getActivityByDay).
  */
 export function tooltipFor(cell: HeatmapCell): string {
   const [y, m, d] = cell.date.split("-").map(Number) as [number, number, number];
@@ -117,6 +120,6 @@ export function tooltipFor(cell: HeatmapCell): string {
     day.getUTCDay()
   ];
   const monAbbrev = monthAbbrev(m);
-  const unit = cell.count === 1 ? "action" : "actions";
+  const unit = cell.count === 1 ? "activity" : "activities";
   return cell.count + " " + unit + " . " + weekday + " " + d + " " + monAbbrev;
 }

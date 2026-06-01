@@ -92,13 +92,21 @@ export function computeStreak(
  */
 export function microcopyFor(result: StreakResult): string {
   if (result.streak >= 7) {
-    return "On a " + result.streak + "-day painting streak - keep it up.";
+    return "On a " + result.streak + "-day painting streak — keep it up.";
   }
   if (result.streak >= 1) {
-    return result.streak + " days - don't break the chain.";
+    const unit = result.streak === 1 ? "day" : "days";
+    return result.streak + " " + unit + " — don't break the chain.";
   }
   if (result.daysSinceLast !== null && result.daysSinceLast <= 3) {
-    return "Last paint: " + result.daysSinceLast + " days ago - break it open.";
+    const unit = result.daysSinceLast === 1 ? "day" : "days";
+    return (
+      "Last paint: " +
+      result.daysSinceLast +
+      " " +
+      unit +
+      " ago — break it open."
+    );
   }
   return "Bump a stage to start your streak.";
 }

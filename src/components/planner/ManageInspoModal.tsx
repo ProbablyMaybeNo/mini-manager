@@ -177,7 +177,7 @@ export function ManageInspoModal({ rows, onClose }: Props) {
           <div className="inline-flex items-center gap-2">
             <Button
               type="button"
-              variant="primary"
+              variant="success"
               size="sm"
               onClick={onSaveOrder}
               disabled={isPending}
@@ -218,9 +218,14 @@ export function ManageInspoModal({ rows, onClose }: Props) {
                     !row.isDisplayed && "opacity-70",
                   )}
                 >
+                  {/* UX-1108 — pad the drag handle to a tap-target
+                       hit area (44×44 mobile, 32×32 desktop) while
+                       keeping the visual ⋮⋮ glyph at its original
+                       size. Painters on a phone-sized modal need a
+                       fat-finger-proof grip. */}
                   <span
                     aria-hidden
-                    className="font-mono text-2xs text-[var(--color-fg-muted)] cursor-grab select-none"
+                    className="tap-target inline-flex items-center justify-center font-mono text-2xs text-[var(--color-fg-muted)] cursor-grab select-none"
                     title="Drag to reorder"
                   >
                     ⋮⋮

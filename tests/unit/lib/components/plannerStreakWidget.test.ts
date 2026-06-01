@@ -155,30 +155,39 @@ describe("microcopyFor (P14.5)", () => {
   test("streak >= 7 uses the celebratory line", () => {
     expect(
       microcopyFor({ streak: 7, daysSinceLast: 0 }),
-    ).toBe("On a 7-day painting streak - keep it up.");
+    ).toBe("On a 7-day painting streak — keep it up.");
   });
 
   test("streak 14 still uses the celebratory line", () => {
     expect(microcopyFor({ streak: 14, daysSinceLast: 0 })).toBe(
-      "On a 14-day painting streak - keep it up.",
+      "On a 14-day painting streak — keep it up.",
     );
   });
 
-  test("streak in 1-6 uses the chain line", () => {
+  test("streak in 2-6 uses the chain line with plural 'days'", () => {
+    // UX-1101 — count > 1 keeps "days" plural.
     expect(microcopyFor({ streak: 3, daysSinceLast: 0 })).toBe(
-      "3 days - don't break the chain.",
+      "3 days — don't break the chain.",
     );
   });
 
-  test("streak 1 uses the chain line", () => {
+  test("streak 1 uses the singular 'day' (UX-1101)", () => {
+    // UX-1101 — count === 1 must pluralise correctly.
     expect(microcopyFor({ streak: 1, daysSinceLast: 0 })).toBe(
-      "1 days - don't break the chain.",
+      "1 day — don't break the chain.",
     );
   });
 
-  test("streak 0 + recent activity uses the come-back line", () => {
+  test("streak 0 + recent activity (multi-day) uses the come-back line", () => {
     expect(microcopyFor({ streak: 0, daysSinceLast: 2 })).toBe(
-      "Last paint: 2 days ago - break it open.",
+      "Last paint: 2 days ago — break it open.",
+    );
+  });
+
+  test("streak 0 + 1-day-ago activity uses singular 'day' (UX-1101)", () => {
+    // UX-1101 — singular form for daysSinceLast === 1.
+    expect(microcopyFor({ streak: 0, daysSinceLast: 1 })).toBe(
+      "Last paint: 1 day ago — break it open.",
     );
   });
 
