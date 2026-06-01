@@ -11,8 +11,6 @@ import { OwnedCounter } from "@/components/OwnedCounter";
 import { StageCounter } from "@/components/StageCounter";
 import { ProjectTree } from "@/components/ProjectTree";
 import { AggregateCountersDisplay } from "@/components/AggregateCountersDisplay";
-import { ShoppingForThisPanel } from "@/components/wishlist/ShoppingForThisPanel";
-import { AttachedRecipePanel } from "@/components/recipes/AttachedRecipePanel";
 import {
   aggregateCounters,
   displayStatus,
@@ -64,6 +62,19 @@ function collectDescendants(
   return out;
 }
 
+/**
+ * P13.2 — Project workspace simplification.
+ *
+ * Per Ross's batch (PHASE13_PLAN.md):
+ *   - The AttachedRecipePanel is gone — recipe info already lives in
+ *     ProjectColorSchemeBox; rendering it twice on the same page is
+ *     visual noise.
+ *   - The ShoppingForThisPanel is gone — replaced by a `+ Wishlist`
+ *     button rendered next to the existing `+ Add unit` action.
+ *   - The leaf workspace stack is now:
+ *       Header → ColorSchemeBox → Progress Table → Stages →
+ *         action button row
+ */
 export default async function ProjectDetailPage({
   params,
 }: {
@@ -186,6 +197,34 @@ export default async function ProjectDetailPage({
     }
   }
 
+  // P13.2 — Action button row below the Stages card on leaf
+  // workspaces. The `+ Wishlist` button replaces the removed
+  // ShoppingForThisPanel; it deep-links to the filtered wishlist
+  // page for this project.
+  const actionButtonRow = (
+    <div className="flex flex-wrap items-center gap-2">
+      {canHaveChildren ? (
+        <Button
+          as="a"
+          href={`/projects/new?parent=${project.id}`}
+          variant="success"
+          size="sm"
+        >
+          + Add unit
+        </Button>
+      ) : null}
+      <Button
+        as="a"
+        href={`/wishlist?project=${project.id}`}
+        variant="secondary"
+        size="sm"
+        className="btn-wishlist-cta"
+      >
+        + Wishlist
+      </Button>
+    </div>
+  );
+
   return (
     <div className="p-6 md:p-8 max-w-5xl space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
@@ -260,34 +299,19 @@ export default async function ProjectDetailPage({
           </div>
         </div>
       ) : (
-        <>
-          {/*
-            Leaf-project layout — StageCounter (or Stages-only fallback)
-            sits left, the attached-recipe panel sits right. On mobile
-            they stack; on md+ the recipe panel fills the middle of the
-            workspace so the page doesn't have a dead-zone after the
-            header. P11.2 — Phase 11 layout sweep.
-          */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            <div className="space-y-6">
-              {showInteractiveCounters ? (
-                <Card title="Roster">
-                  <OwnedCounter snapshot={ownedSnapshot} />
-                </Card>
-              ) : null}
+        <div className="space-y-6">
+          {showInteractiveCounters ? (
+            <Card title="Roster">
+              <OwnedCounter snapshot={ownedSnapshot} />
+            </Card>
+          ) : null}
 
-              <Card title="Stages" accentColor="cyan">
-                <StageCounter snapshot={stageSnapshot} />
-              </Card>
-            </div>
+          <Card title="Stages" accentColor="cyan">
+            <StageCounter snapshot={stageSnapshot} />
+          </Card>
 
-            <AttachedRecipePanel projectId={project.id} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            <ShoppingForThisPanel projectId={project.id} />
-          </div>
-        </>
+          {actionButtonRow}
+        </div>
       )}
     </div>
   );

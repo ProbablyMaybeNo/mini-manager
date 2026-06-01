@@ -16,27 +16,10 @@ function read(rel: string): string {
   );
 }
 
-describe("ShoppingForThisPanel — wishlist rename (P11.4)", () => {
-  const src = read("src/components/wishlist/ShoppingForThisPanel.tsx");
-
-  test("Card title reads 'Wishlist · N' not 'Shopping for this · N'", () => {
-    expect(src).toContain("Wishlist · ");
-    expect(src).not.toContain("Shopping for this · ");
-  });
-
-  test("uses yellow accent on the Card chrome", () => {
-    expect(src).toContain('accentColor="yellow"');
-  });
-
-  test("renders the `+ Add to wishlist` CTA at the panel header", () => {
-    expect(src).toContain("+ Add to wishlist");
-    expect(src).toContain("btn-wishlist-cta");
-  });
-
-  test("empty-state copy uses plain-prose wishlist language", () => {
-    expect(src).toMatch(/Paints, kits, or tools you want for this project/);
-  });
-});
+// P13.2 — ShoppingForThisPanel.tsx removed (project workspace
+// simplification). The wishlist link is now a single button next to
+// "+ Add unit" on the leaf workspace; the dedicated panel + its
+// rename coverage block are retired.
 
 describe("WishlistTable empty state — Shopping references retired (P11.4)", () => {
   const src = read("src/components/wishlist/WishlistTable.tsx");

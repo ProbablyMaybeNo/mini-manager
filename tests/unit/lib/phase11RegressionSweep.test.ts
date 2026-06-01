@@ -60,11 +60,10 @@ describe("Phase 11 — concrete vocabulary survives (P11.1 / P11.3 / P11.4)", ()
     expect(src).toContain("Add color");
   });
 
-  test("Wishlist panel uses 'Wishlist' title, no 'Shopping for this'", () => {
-    const src = read("src/components/wishlist/ShoppingForThisPanel.tsx");
-    expect(src).not.toContain("Shopping for this · ");
-    expect(src).toContain("Wishlist · ");
-  });
+  // P13.2 — ShoppingForThisPanel.tsx removed (workspace simplification).
+  // The "Shopping for this" → "Wishlist" rename's surface is now the
+  // `+ Wishlist` button on the leaf workspace action row; the panel
+  // itself no longer exists.
 });
 
 describe("Phase 11 — primitives wired (P11.5 / P11.7 / P11.8 / P11.9)", () => {
