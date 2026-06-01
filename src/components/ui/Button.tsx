@@ -14,6 +14,7 @@ export type ButtonVariant =
   | "warning"
   | "purple";
 export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonTone = "solid" | "outline";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: "btn-primary",
@@ -34,6 +35,11 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 interface CommonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** Visual tone. `solid` (default) renders the variant as a filled
+   *  block of colour with black text — the canonical P13.1 button.
+   *  `outline` flips back to transparent bg + coloured text + coloured
+   *  border for low-emphasis surfaces (e.g. dense inline actions). */
+  tone?: ButtonTone;
   children: ReactNode;
   className?: string;
 }
@@ -51,38 +57,53 @@ type AnchorElProps = CommonProps &
 
 export type ButtonProps = ButtonElProps | AnchorElProps;
 
-/** Button primitive — semantic variants for the four-colour palette
- *  Ross locked in Phase 12:
+/** Button primitive — semantic variants for the locked five-colour palette.
  *
- *    primary  — cyan filled. RESERVED for save / confirm / sign-in.
+ *  Phase 12 (P12.23) locked the intent → colour map. Phase 13 (P13.1)
+ *  killed the bracketed-outline aesthetic — every button now ships
+ *  filled-solid by default with high-contrast black text per WCAG AA.
+ *
+ *    primary  — solid cyan + black text. Save / confirm / sign-in.
  *               NOT for ADD/CREATE/NEW (those go to `success`).
- *    secondary— cyan outline. Navigation, secondary cta.
- *    ghost    — transparent, hover-accent. Tertiary.
- *    danger   — pastel-red outline. Remove / cancel / delete / destroy.
- *    success  — neon-green filled (dark text). ADD / CREATE / NEW /
+ *    secondary— solid cyan + black text. Navigation, secondary cta.
+ *    ghost    — solid panel-grey + white text. Tertiary / dismiss / cancel.
+ *    danger   — solid red + black text. Remove / delete / destroy.
+ *    success  — solid neon-green + black text. ADD / CREATE / NEW /
  *               SAVE-NEW. The default "I'm making something" button.
- *    warning  — pastel-yellow filled (dark text). SHARE / IMPORT /
+ *    warning  — solid pastel-yellow + black text. SHARE / IMPORT /
  *               EXPORT / ADD-TO-WISHLIST. The "lateral move" CTA.
- *    purple   — pastel-purple outline. SPECIAL / FEATURED / FOUNDER /
- *               PRO-TIER affordances.
+ *    purple   — solid pastel-purple + black text. SPECIAL / FEATURED /
+ *               FOUNDER / PRO-TIER affordances.
  *
  *  Sizes: sm / md / lg. Pass `as="a"` to render as an anchor.
- *  See P12.23 for the full discipline + P12.24 for the app-wide sweep. */
+ *  Pass `tone="outline"` to drop back to the transparent-bordered
+ *  rendering for low-emphasis surfaces — solid stays the default. */
 export function Button(props: ButtonProps) {
   const variant: ButtonVariant = props.variant ?? "secondary";
   const size: ButtonSize = props.size ?? "md";
+  const tone: ButtonTone = props.tone ?? "solid";
   const cls = clsx(
     "btn",
     VARIANT_CLASS[variant],
     SIZE_CLASS[size],
+    tone === "outline" && "btn-outline",
     props.className,
   );
 
   if (props.as === "a") {
-    const { as: _as, variant: _v, size: _s, className: _c, children, ...rest } = props;
+    const {
+      as: _as,
+      variant: _v,
+      size: _s,
+      tone: _t,
+      className: _c,
+      children,
+      ...rest
+    } = props;
     void _as;
     void _v;
     void _s;
+    void _t;
     void _c;
     return (
       <a className={cls} {...rest}>
@@ -90,10 +111,19 @@ export function Button(props: ButtonProps) {
       </a>
     );
   }
-  const { as: _as, variant: _v, size: _s, className: _c, children, ...rest } = props;
+  const {
+    as: _as,
+    variant: _v,
+    size: _s,
+    tone: _t,
+    className: _c,
+    children,
+    ...rest
+  } = props;
   void _as;
   void _v;
   void _s;
+  void _t;
   void _c;
   return (
     <button className={cls} {...rest}>

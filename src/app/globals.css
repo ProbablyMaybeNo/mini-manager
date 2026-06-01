@@ -423,8 +423,27 @@ select.frame-strong {
   .card-body { padding: 12px; }
 }
 
-/* Button primitives — variants: primary / secondary / ghost / danger.
-   Sizes: sm / md / lg. Always tap-target compliant. */
+/* Button primitives — variants: primary / secondary / ghost / danger
+   / success / warning / purple. Sizes: sm / md / lg.
+
+   P13.1 (2026-06-01) overhaul — Ross killed the `[ ]` bracketed-text
+   aesthetic on action buttons. Every variant now renders SOLID-FILLED
+   with black text (`var(--color-bg)`) by default. The four-colour
+   discipline (P12.23) is preserved — variants still map intent →
+   colour — only the tone flipped from outline to fill.
+
+   Contrast (text-on-fill, verified WCAG 2.2 §1.4.3, ≥4.5:1 AA):
+     primary  cyan #7dd3fc  + black: 11.87:1  AAA
+     secondary cyan ditto   (now solid)
+     ghost    near-bg neutral + white text (low-emphasis surface)
+     danger   red  #ff4757  + black:  5.93:1  AA
+     success  green #33ff66 + black: 14.74:1  AAA
+     warning  yellow #ffe066 + black: 15.18:1  AAA
+     purple   purple #b794f6 + black:  8.09:1  AAA
+
+   Outline tone — `.btn-outline-*` modifiers flip back to transparent bg
+   + coloured text + coloured border for low-emphasis surfaces. Driven
+   from the `tone="outline"` Button prop. Solid stays the default. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -434,6 +453,7 @@ select.frame-strong {
   font-size: var(--text-sm);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  font-weight: 600;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -454,58 +474,53 @@ select.frame-strong {
 .btn-md { padding: 8px 16px; min-height: 36px; }
 .btn-lg { padding: 10px 20px; min-height: 44px; font-size: var(--text-base); }
 
+/* ----- Solid-fill variants (default tone) -----
+   Every action button on the app reads as a solid block of colour with
+   crisp black text. The variant carries semantic intent (success =
+   create, warning = lateral, danger = destroy, purple = special,
+   primary/secondary = navigate/confirm). No bracket-outline chrome. */
 .btn-primary {
-  background: var(--color-accent);
+  background: var(--color-cyan);
   color: var(--color-bg);
-  border-color: var(--color-accent);
+  border-color: var(--color-cyan);
 }
 .btn-primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-accent) 85%, white);
+  background: color-mix(in srgb, var(--color-cyan) 85%, white);
 }
 
 .btn-secondary {
-  background: transparent;
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--color-cyan);
+  color: var(--color-bg);
+  border-color: var(--color-cyan);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  background: color-mix(in srgb, var(--color-cyan) 85%, white);
 }
 
+/* Ghost — the one variant that stays "low-key" for tertiary actions
+   sitting inside dense surfaces (cancel, dismiss, secondary nav).
+   Solid mid-grey fill so it still reads as a button, not a link;
+   white text for contrast (#cfcfcf foreground gives ~9:1 on #1f1f1f
+   panel grey, well clear of AA). */
 .btn-ghost {
-  background: transparent;
+  background: var(--color-bg-panel);
   color: var(--color-fg);
   border-color: var(--color-border-strong);
 }
 .btn-ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-fg) 6%, transparent);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-fg) 12%, var(--color-bg-panel));
+  border-color: var(--color-fg-muted);
 }
 
 .btn-danger {
-  background: transparent;
-  color: var(--color-danger);
-  border-color: var(--color-danger);
+  background: var(--color-red);
+  color: var(--color-bg);
+  border-color: var(--color-red);
 }
 .btn-danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  background: color-mix(in srgb, var(--color-red) 85%, white);
 }
 
-/* Success / warning / purple — Phase 12 four-colour discipline.
-   Ross locked: ADD/CREATE/NEW = green, SHARE/IMPORT/EXPORT/ADD-TO-WISH
-   = yellow, SPECIAL/FEATURED/FOUNDER = purple. Cyan stays reserved for
-   titles + body text + active nav + focus rings — NOT buttons by default.
-
-   `success` + `warning` are filled (solid background, dark text) so they
-   read as the primary action surface on the page they appear on; `purple`
-   is outlined because its uses are decorative / status (not "do this now").
-
-   The dark `color: var(--color-bg)` on solid-bg variants is set with a
-   safe fallback inline because the Tailwind v4 chained-arbitrary
-   utility issue burned us in UX-V6-001 (cyan-on-cyan invisible CTA).
-   These .btn-* CSS classes are the canonical path — never re-derive
-   them with arbitrary Tailwind classes in components. */
 .btn-success {
   background: var(--color-green);
   color: var(--color-bg);
@@ -525,25 +540,83 @@ select.frame-strong {
 }
 
 .btn-purple {
-  background: transparent;
-  color: var(--color-purple-pastel);
+  background: var(--color-purple-pastel);
+  color: var(--color-bg);
   border-color: var(--color-purple-pastel);
 }
 .btn-purple:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-purple-pastel) 10%, transparent);
+  background: color-mix(in srgb, var(--color-purple-pastel) 85%, white);
 }
 
-/* Wishlist tint — modifier class applied alongside `.btn-secondary` to
-   flip the cyan accent to pastel yellow for "wishlist" intent (one
-   color per intent across the app, per the locked 5-color palette).
-   Used by + Add to wishlist CTAs in the project workspace panel + the
-   wishlist page header. P11.4. */
-.btn-wishlist-cta {
+/* ----- Outline tone (low-emphasis modifier) -----
+   Applied by Button when `tone="outline"`. Flips the variant back to
+   transparent background + coloured text + coloured border. Use
+   sparingly — only on surfaces where a solid block of colour would
+   crowd the visual hierarchy (e.g. dense table-row inline actions). */
+.btn-outline {
+  background: transparent;
+}
+.btn-outline.btn-primary,
+.btn-outline.btn-secondary {
+  color: var(--color-cyan);
+  border-color: var(--color-cyan);
+}
+.btn-outline.btn-primary:hover:not(:disabled),
+.btn-outline.btn-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-cyan) 10%, transparent);
+}
+.btn-outline.btn-ghost {
+  color: var(--color-fg);
+  border-color: var(--color-border-strong);
+}
+.btn-outline.btn-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-fg) 6%, transparent);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.btn-outline.btn-danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.btn-outline.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+.btn-outline.btn-success {
+  color: var(--color-green);
+  border-color: var(--color-green);
+}
+.btn-outline.btn-success:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-green) 10%, transparent);
+}
+.btn-outline.btn-warning {
   color: var(--color-yellow);
   border-color: var(--color-yellow);
 }
-.btn-wishlist-cta:hover:not(:disabled) {
+.btn-outline.btn-warning:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-yellow) 10%, transparent);
+}
+.btn-outline.btn-purple {
+  color: var(--color-purple-pastel);
+  border-color: var(--color-purple-pastel);
+}
+.btn-outline.btn-purple:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-purple-pastel) 10%, transparent);
+}
+
+/* Wishlist tint — legacy modifier from P11.4 that tinted a cyan
+   outlined secondary button to yellow for wishlist intent. With the
+   P13.1 solid-button overhaul the canonical wishlist CTA is now
+   `variant="warning"` (solid pastel-yellow + black text). The
+   modifier remains for any straggler call site so it keeps rendering
+   a coherent yellow surface — solid fill aligned with the new
+   discipline. */
+.btn-wishlist-cta {
+  background: var(--color-yellow);
+  color: var(--color-bg);
+  border-color: var(--color-yellow);
+}
+.btn-wishlist-cta:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-yellow) 85%, white);
 }
 
 /* Type chips — used on project list rows to colour-code the project
