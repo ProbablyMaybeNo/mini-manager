@@ -719,6 +719,43 @@ select.frame-strong {
   .segment { transition: none; }
 }
 
+/* Filter chip — shared tappable filter/toggle pill (UX-1308). Used by
+   the wishlist STATUS/CATEGORY filter rows (and other inline filter
+   surfaces) so they read as discrete tappable chips (border + resting
+   ground) rather than a prose blob, and clear the 44px touch floor on
+   coarse pointers. The active chip takes the cyan accent (border + text
+   + faint fill) and exposes aria-pressed via the consumer. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+  transition:
+    border-color 150ms ease-out,
+    color 150ms ease-out,
+    background-color 150ms ease-out;
+}
+.chip:hover:not(.chip-active) {
+  border-color: var(--color-fg-muted);
+  color: var(--color-fg);
+}
+.chip-active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-elevated));
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip { transition: none; }
+}
+
 /* StatusPill — bordered, mono, all-caps, 1px border, semantic colour.
    Drives status indicators across project rows, paint types, wishlist. */
 .pill {

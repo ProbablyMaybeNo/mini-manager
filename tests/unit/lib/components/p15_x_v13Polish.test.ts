@@ -14,6 +14,33 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1308 — wishlist filters are 44px tappable chips", () => {
+  const css = read("src/app/globals.css");
+  const chip = read("src/components/ui/FilterChip.tsx");
+  const filters = read("src/components/wishlist/WishlistFilters.tsx");
+
+  test(".chip has a resting border + ground so it reads as a chip", () => {
+    expect(css).toMatch(/\.chip\s*\{[\s\S]*?border:\s*1px solid var\(--color-border-strong\)/);
+    expect(css).toMatch(/\.chip\s*\{[\s\S]*?background:\s*var\(--color-bg-elevated\)/);
+  });
+
+  test("FilterChip floors to 44px on touch via tap-target + exposes aria-pressed", () => {
+    expect(chip).toContain('"chip tap-target"');
+    expect(chip).toContain("aria-pressed={active}");
+  });
+
+  test("WishlistFilters uses the shared FilterChip (local Chip removed)", () => {
+    expect(filters).toContain("import { FilterChip }");
+    expect(filters).toContain("<FilterChip");
+    expect(filters).not.toContain("function Chip(");
+  });
+
+  test("per-row status menu actions floor to tap-target", () => {
+    const table = read("src/components/wishlist/WishlistTable.tsx");
+    expect(table).toContain('"tap-target w-full text-left px-3 py-1.5');
+  });
+});
+
 describe("UX-1305 — recipes list reflows to stacked cards below 768px", () => {
   const src = read("src/components/recipes/RecipesTable.tsx");
 

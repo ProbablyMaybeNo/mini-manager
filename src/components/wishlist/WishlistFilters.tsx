@@ -2,14 +2,13 @@
 
 import { useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { clsx } from "clsx";
 
 import {
   wishlistCategories,
-  wishlistStatuses,
   type WishlistCategory,
   type WishlistStatus,
 } from "@/db/schema";
+import { FilterChip } from "@/components/ui/FilterChip";
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: WishlistStatus | "All"; label: string }> = [
   { value: "WISHLIST", label: "Wishlist" },
@@ -53,13 +52,13 @@ export function WishlistFilters({
         Status
       </span>
       {STATUS_OPTIONS.map((opt) => (
-        <Chip
+        <FilterChip
           key={opt.value}
           active={status === opt.value}
           onClick={() => setParam("status", opt.value === "WISHLIST" ? null : opt.value)}
         >
           {opt.label}
-        </Chip>
+        </FilterChip>
       ))}
 
       <span className="mx-2 h-4 w-px bg-[var(--color-border)]" aria-hidden />
@@ -67,20 +66,20 @@ export function WishlistFilters({
       <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] mr-1">
         Category
       </span>
-      <Chip
+      <FilterChip
         active={category === null}
         onClick={() => setParam("category", null)}
       >
         Any
-      </Chip>
+      </FilterChip>
       {wishlistCategories.map((c) => (
-        <Chip
+        <FilterChip
           key={c}
           active={category === c}
           onClick={() => setParam("category", category === c ? null : c)}
         >
           {c}
-        </Chip>
+        </FilterChip>
       ))}
 
       {vendors.length > 0 ? (
@@ -107,29 +106,3 @@ export function WishlistFilters({
   );
 }
 
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  void wishlistStatuses; // satisfies the lint rule that imports are used.
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={clsx(
-        "inline-flex items-center px-2 py-1 text-2xs font-mono rounded-sm border transition-colors",
-        active
-          ? "border-[var(--color-accent)] text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
-          : "border-[var(--color-border)] text-[var(--color-fg-muted)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-fg)]",
-      )}
-      aria-pressed={active}
-    >
-      {children}
-    </button>
-  );
-}

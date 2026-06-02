@@ -116,7 +116,8 @@
     "fix": "Render these filters/actions as the same 44px tap-target chip primitive the planner now uses (visible border/background, ≥44px touch height, gap between, wrap cleanly). Apply the shared chip component so wishlist/tools/library inline filters match the planner.",
     "effort": "small",
     "confidence": 0.88,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1309",

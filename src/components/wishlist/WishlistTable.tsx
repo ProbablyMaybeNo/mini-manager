@@ -359,7 +359,9 @@ function MenuItem({
       role="menuitem"
       onClick={onSelect}
       className={clsx(
-        "w-full text-left px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors",
+        // UX-1308 — the per-row status actions (Mark purchased / Move to
+        // hold / Restore) floor to a 44px touch target via tap-target.
+        "tap-target w-full text-left px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors flex items-center",
         toneClass,
       )}
     >
