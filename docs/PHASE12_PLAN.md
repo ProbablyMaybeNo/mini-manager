@@ -21,7 +21,7 @@ These supersede any earlier guesses elsewhere in the doc:
 
 - **Color picker layout** — three sub-panels stacked in one scrollable side panel (mini wheel + harmony dropdown / filterable library list / eyedropper sampler). No tab switching.
 - **Paint match algorithm** — hue-band first (instant, ~50 results), with a "Show closer matches" button that runs ΔE2000 against the picked hex (slower, top 20 ranked).
-- **Tier UI pricing** — pulls from PHASE10_PLAN.md: Free / Pro Monthly $4 / Pro Lifetime $29 / Founder $19.
+- **Tier UI pricing** — pulls from PHASE10_PLAN.md: Free / Pro Monthly $4 / Pro Lifetime $36 / Founder $19.
 - **Harmonies dropdown set** — mono / analogous / complementary / triadic / split / square / tetradic.
 - **PAINT/MEDIUM labels in detail panel** — drop them; the paint TYPE pill already conveys the same info.
 - **Recipe Assign flow** — after attaching to a project, navigate to the destination project's page.

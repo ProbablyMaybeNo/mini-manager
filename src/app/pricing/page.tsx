@@ -64,8 +64,8 @@ const TIERS: ReadonlyArray<TierCard> = [
   {
     tier: "pro_lifetime",
     name: "PRO · LIFETIME",
-    price: "$29 one-time",
-    blurb: "Pay once. Full Pro forever.",
+    price: "$36 one-time",
+    blurb: "Pay once. Three months free vs monthly. Full Pro forever.",
     accent: "green",
     highlight: true,
     features: [

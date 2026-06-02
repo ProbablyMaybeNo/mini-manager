@@ -47,7 +47,7 @@ For the **10 r/minipainting recruits** step in the launch path. Goal: 7 of 10 sa
 >
 > 1. Try to build a **real** project — an actual army or unit you're planning, not a throwaway. The flow gets weirder the more you make it real.
 > 2. If you stumble on something, screenshot it and tell me what you EXPECTED to happen. The "expected" half is where the gold is.
-> 3. The honest answer to "would you pay $4/month or $29 once for this" is what I'm trying to figure out. Tell me even if it's no.
+> 3. The honest answer to "would you pay $4/month or $36 once for this" is what I'm trying to figure out. Tell me even if it's no.
 >
 > No need for a formal report — bullet points, Discord messages, voice notes, whatever's fastest for you. Cheers.
 
@@ -85,5 +85,5 @@ Notion page or a `recruits.md` file:
 
 - Don't apologise for the app being early. Lead with what it does, not what it doesn't.
 - Don't promise features that aren't shipped ("we're adding X next week"). Promise nothing.
-- Don't pitch the price unless they ask. The Reddit post mentions $4 / $29; that's enough.
+- Don't pitch the price unless they ask. The Reddit post mentions $4 / $36; that's enough.
 - Don't follow up more than twice. If they signed up and went quiet, they went quiet.

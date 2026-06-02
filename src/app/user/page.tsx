@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
  *
  *   FREE         $0       — everything works, no caps
  *   PRO_MONTHLY  $4/mo    — subscription
- *   PRO_LIFETIME $29      — one-time, full Pro forever
+ *   PRO_LIFETIME $36      — one-time, full Pro forever (3 free months vs monthly)
  *   FOUNDER      $19      — early supporter slot (locked-in lifetime)
  *
  * Tiers are not yet schema-backed (`users.plan` defaults to "free" +
@@ -47,7 +47,7 @@ const PLAN_LABEL: Readonly<Record<PlanTier, string>> = {
 const PLAN_PRICE: Readonly<Record<PlanTier, string>> = {
   FREE: "$0",
   PRO_MONTHLY: "$4 / month",
-  PRO_LIFETIME: "$29 one-time",
+  PRO_LIFETIME: "$36 one-time",
   FOUNDER: "$19 one-time",
 };
 const PLAN_BLURB: Readonly<Record<PlanTier, string>> = {
