@@ -221,7 +221,7 @@ open the same popover framed "You own this — N near matches" (no buy nag). Sol
 `success` Button on the wishlist add; no cyan, no raw hex in className, `@theme`
 tokens only. +26 tests (helper behaviour + popover/client wiring, source-level
 per the no-jsdom convention): **1744 passing / 1 skipped** (from 1718/1). `tsc`
-clean. Commit `44ab1c6`. **Local commit only — not pushed.**
+clean. Commit `274fd3d`. **Local commit only — not pushed.**
 
 - Tapping an **unowned** cell opens a popover (reuse the existing paint-detail /
   picker popover primitives — match `PaintDetailPanel` / `PaintSlotPicker`
