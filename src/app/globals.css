@@ -474,6 +474,17 @@ select.frame-strong {
 .btn-md { padding: 8px 16px; min-height: 36px; }
 .btn-lg { padding: 10px 20px; min-height: 44px; font-size: var(--text-base); }
 
+/* UX-1201 — on touch/coarse-pointer devices floor every button to a
+   44px tappable height (WCAG 2.2 §2.5.8 / Apple HIG 44pt). The P15.2
+   sweep floored the base .btn + steppers but missed the .btn-sm and
+   .btn-md modifiers, leaving ~28-36px pills across nearly every CTA.
+   Horizontal padding is untouched; only the vertical floor is raised,
+   and only under (pointer: coarse) so desktop density is preserved. */
+@media (pointer: coarse) {
+  .btn-sm { min-height: 44px; }
+  .btn-md { min-height: 44px; }
+}
+
 /* ----- Solid-fill variants (default tone) -----
    Every action button on the app reads as a solid block of colour with
    crisp black text. The variant carries semantic intent (success =

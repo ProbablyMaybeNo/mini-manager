@@ -11,7 +11,8 @@
     "fix": "Set `.btn-sm { min-height: 44px }` for touch (or drop the -sm modifier on mobile via a media query / coarse-pointer query). One CSS rule fixes the majority of touch-target failures app-wide. Keep horizontal padding; only the vertical floor needs raising.",
     "effort": "trivial",
     "confidence": 0.99,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done"
   },
   {
     "id": "UX-1202",
