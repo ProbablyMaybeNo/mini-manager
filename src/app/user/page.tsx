@@ -152,9 +152,17 @@ export default async function UserPage() {
           ))}
         </ul>
         <div className="mt-4 pt-3 border-t border-[var(--color-border)] space-y-2">
-          <p className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-            Coming soon
-          </p>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+              Coming soon
+            </p>
+            <a
+              href="/pricing"
+              className="text-2xs font-mono uppercase tracking-wider text-[var(--color-green)] hover:underline"
+            >
+              View pricing →
+            </a>
+          </div>
           <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-2xs font-mono">
             {(["PRO_MONTHLY", "PRO_LIFETIME", "FOUNDER"] as const).map(
               (tier) => (

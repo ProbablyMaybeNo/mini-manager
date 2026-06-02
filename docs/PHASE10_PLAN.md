@@ -44,7 +44,7 @@ CREATE TABLE meta_counters (
 
 ## Milestones
 
-- [ ] **P10.1 — Stripe SDK + schema migration + plan constants.**
+- [x] **P10.1 — Stripe SDK + schema migration + plan constants.** _Completed 2026-06-01 · commit 1193876._
   - Install `stripe` (Node SDK).
   - Drizzle migration adding the four user columns + `meta_counters` table; seed `founder_sold = 0`.
   - New `src/lib/billing/plans.ts` — `PLAN_LIMITS` constant + `getPlanForUser(user)` + `isWithinLimit(user, resource, currentCount)` helpers.
@@ -56,11 +56,17 @@ CREATE TABLE meta_counters (
   - UI surfaces (NewProjectForm, NewRecipeButton, QuickAddBar) read the upgradeUrl from the action result and show a soft "Upgrade →" link inline with the error.
   - Integration tests: free user at 1 project → second create rejected; Pro user at 50 projects → still ok.
 
-- [ ] **P10.3 — `/pricing` page.**
+- [x] **P10.3 — `/pricing` page.** ✅ (Billy direct, milestone-builder hit session cap mid-P10.3)
   - New route `src/app/pricing/page.tsx` (public — accessible signed-out for marketing).
-  - Three Card primitives side by side desktop, stacked mobile: Free (current plan badge if signed in & free) / Pro / Lifetime / Founder.
-  - Founder card shows "X of 100 remaining" live (server-fetched from `meta_counters`); hidden entirely when 0 remain.
-  - CTA per card: signed-out → `/sign-up?next=/pricing`; signed-in + verified email → POST `/api/billing/checkout`; signed-in + unverified → "Verify your email to upgrade →" linking to `/settings#recovery-email`.
+  - Four-up Card grid (1-col mobile / 2-col md / 4-col xl): Free / Pro Monthly / Pro Lifetime (highlighted) / Founder.
+  - Founder card shows live `X of 100 remaining` from `meta_counters`; entire card hidden when sold out.
+  - CTAs:
+    - Signed-out → "Start free, upgrade later" → `/sign-up?next=/pricing`
+    - Signed-in current tier → disabled "Current plan" badge
+    - Signed-in + unverified email → "Verify email to upgrade" → `/user`
+    - Signed-in + verified → stub "Checkout coming soon" (Stripe wire pending P10.4)
+  - `/user` Plan card now links to `/pricing` via "View pricing →" affordance.
+  - **Shipped 2026-06-01.** Tests + typecheck clean at 1486 passing.
 
 - [ ] **P10.4 — Stripe Checkout session API + redirect.**
   - `POST /api/billing/checkout` — `{ priceKey: "pro_monthly" | "pro_lifetime" | "founder" }`. Validates session, validates verified email, creates Stripe Customer if not exists (stamps `stripe_customer_id`), creates Checkout Session with success/cancel URLs, returns `{ url }`.
