@@ -10,10 +10,13 @@
 import { describe, expect, test } from "vitest";
 import {
   CELLS_PER_ROW_GROUP,
+  CELL_MIN_PX,
   CONDENSED_DEFAULT_THRESHOLD,
   chunkCells,
   condensedCells,
   filterCellsByBrands,
+  gridColumnsFor,
+  intrinsicRowSizeFor,
   pickDefaultDensity,
   rowGroupCount,
 } from "@/components/planner/heatSinkHelpers";
@@ -170,5 +173,56 @@ describe("pickDefaultDensity (P16.4 default density)", () => {
 
   test("empty collection → Full (something to fill)", () => {
     expect(pickDefaultDensity(summary(0, 0))).toBe("full");
+  });
+});
+
+/* ============================================================
+   P16.6 — mobile cell sizing (UX-1202)
+   ============================================================ */
+
+describe("CELL_MIN_PX (P16.6 mobile cell sizing)", () => {
+  test("Condensed cells clear the 24px WCAG 2.5.8 target floor", () => {
+    // Condensed is the default once a collection clears the threshold and
+    // the surface the painter actually taps — it must be tappable.
+    expect(CELL_MIN_PX.condensed).toBeGreaterThanOrEqual(24);
+  });
+
+  test("Condensed cells are bigger than Full (reach over density)", () => {
+    expect(CELL_MIN_PX.condensed).toBeGreaterThan(CELL_MIN_PX.full);
+  });
+
+  test("Full cells lift off the old 7px floor toward tappability", () => {
+    // Full is the dense catalog overview, but even there cells beat the
+    // old 7px floor so taps land closer.
+    expect(CELL_MIN_PX.full).toBeGreaterThan(7);
+  });
+});
+
+describe("gridColumnsFor (P16.6 reflow to full width)", () => {
+  test("uses auto-fill with the density's min cell edge and a 1fr companion", () => {
+    // `1fr` makes columns grow past the floor to consume leftover width,
+    // so a wider phone enlarges cells instead of growing side margin.
+    expect(gridColumnsFor("condensed")).toBe(
+      "repeat(auto-fill, minmax(" + CELL_MIN_PX.condensed + "px, 1fr))",
+    );
+    expect(gridColumnsFor("full")).toBe(
+      "repeat(auto-fill, minmax(" + CELL_MIN_PX.full + "px, 1fr))",
+    );
+  });
+
+  test("Condensed columns request a wider min than Full", () => {
+    // A crude but stable assertion that the Condensed template is the
+    // tappable one.
+    expect(gridColumnsFor("condensed")).toContain(
+      CELL_MIN_PX.condensed + "px",
+    );
+    expect(gridColumnsFor("full")).toContain(CELL_MIN_PX.full + "px");
+  });
+});
+
+describe("intrinsicRowSizeFor (P16.6 scroll stability)", () => {
+  test("tracks the density's cell min edge so reserved space matches", () => {
+    expect(intrinsicRowSizeFor("condensed")).toBe(CELL_MIN_PX.condensed);
+    expect(intrinsicRowSizeFor("full")).toBe(CELL_MIN_PX.full);
   });
 });

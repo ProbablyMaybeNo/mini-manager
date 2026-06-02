@@ -224,3 +224,81 @@ describe("HeatSinkGridClient — tap opens popover + optimistic border (P16.5)",
     expect(src).toMatch(/allCells=\{cells\}/);
   });
 });
+
+/* ============================================================
+   P16.6 — mobile polish: popover containment + cell sizing + chips.
+   Source-level sentinels (no jsdom in this env), matching the
+   established client-component test discipline above.
+   ============================================================ */
+
+describe("HeatSinkGapFillPopover — mobile containment (UX-1203)", () => {
+  const src = read("src/components/planner/HeatSinkGapFillPopover.tsx");
+
+  test("renders a fixed bottom sheet on mobile, clear of the bottom nav", () => {
+    // Fixed to the viewport bottom with clearance above the bottom tab
+    // bar (its 56px height + safe-area inset) so actions never tuck under
+    // it.
+    expect(src).toContain("fixed");
+    expect(src).toContain("bottom-[calc(60px+env(safe-area-inset-bottom,0px))]");
+  });
+
+  test("flips above the cell on desktop when there's no room below", () => {
+    // Collision-aware placement measured in a layout effect; the `above`
+    // branch anchors the popover to the cell's top edge.
+    expect(src).toContain("useLayoutEffect");
+    expect(src).toContain("getBoundingClientRect");
+    expect(src).toMatch(/placement === "above"/);
+    expect(src).toContain("md:bottom-full");
+    expect(src).toContain("md:top-full");
+  });
+
+  test("flip decision compares space below vs popover height", () => {
+    expect(src).toContain("spaceBelow");
+    expect(src).toContain("offsetHeight");
+    expect(src).toMatch(/setPlacement\(/);
+  });
+
+  test("the body scrolls inside a clamped sheet so actions stay reachable", () => {
+    // The popover is a flex column with a scrolling body and clamped
+    // height — the Mark-as-wanted buttons are always inside the scroll
+    // area.
+    expect(src).toContain("flex flex-col");
+    expect(src).toContain("flex-1 overflow-y-auto");
+    expect(src).toMatch(/max-h-\[70vh\]/);
+  });
+});
+
+describe("HeatSinkGridClient — mobile cell sizing + chips (UX-1202 / UX-1210)", () => {
+  const src = read("src/components/planner/HeatSinkGridClient.tsx");
+
+  test("the grid columns reflow per density via the sizing helper", () => {
+    // gridColumnsFor(density) drives auto-fill columns so cells fill the
+    // width and grow with the viewport instead of leaving margin.
+    expect(src).toContain("gridColumnsFor(density)");
+    expect(src).toContain("gridTemplateColumns: gridColumnsFor(density)");
+  });
+
+  test("off-screen row groups reserve the density-correct intrinsic size", () => {
+    expect(src).toContain("intrinsicRowSizeFor(density)");
+    expect(src).toContain("containIntrinsicSize");
+    expect(src).toContain("[content-visibility:auto]");
+  });
+
+  test("no leftover hard-coded 7px column floor", () => {
+    // The old `minmax(7px, 1fr)` is gone — sizing is delegated to the
+    // helper so density controls the floor.
+    expect(src).not.toContain("minmax(7px, 1fr)");
+  });
+
+  test("brand chips are real ≥44px-tappable chips that wrap, not prose", () => {
+    // `tap-target` gives the touch floor; the label wraps cleanly instead
+    // of truncating at the right edge.
+    expect(src).toMatch(/tap-target[\s\S]*whitespace-normal/);
+    expect(src).not.toContain("truncate max-w-[10rem]");
+  });
+
+  test("brand chip row keeps a gap and a right gutter (no edge clipping)", () => {
+    expect(src).toMatch(/aria-label="Filter by brand"[\s\S]*gap-1\.5/);
+    expect(src).toMatch(/aria-label="Filter by brand"[\s\S]*pr-1/);
+  });
+});

@@ -12,6 +12,8 @@ import {
   coverageReadout,
   filterCellsByBrands,
   formatCount,
+  gridColumnsFor,
+  intrinsicRowSizeFor,
   pickDefaultDensity,
   type GridDensity,
 } from "./heatSinkHelpers";
@@ -192,7 +194,7 @@ export function HeatSinkGridClient({
       <div
         role="group"
         aria-label="Filter by brand"
-        className="flex flex-wrap gap-1 max-h-24 overflow-y-auto"
+        className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1"
       >
         <BrandChip
           active={allBrandsActive}
@@ -236,9 +238,12 @@ export function HeatSinkGridClient({
               key={groupIndex}
               role="row"
               data-row-group=""
-              className="grid gap-[1px] [content-visibility:auto] [contain-intrinsic-size:auto_12px]"
+              data-cell-min={intrinsicRowSizeFor(density)}
+              className="grid gap-[1px] [content-visibility:auto]"
               style={{
-                gridTemplateColumns: "repeat(auto-fill, minmax(7px, 1fr))",
+                gridTemplateColumns: gridColumnsFor(density),
+                containIntrinsicSize:
+                  "auto " + intrinsicRowSizeFor(density) + "px",
               }}
             >
               {group.map((cell) => {
@@ -348,9 +353,15 @@ function BrandChip({
       onClick={onClick}
       aria-pressed={active}
       className={clsx(
-        "inline-flex items-center justify-center px-2 py-0.5",
-        "font-mono text-2xs uppercase tracking-[0.04em]",
-        "border rounded-sm transition-colors truncate max-w-[10rem]",
+        // P16.6 (UX-1210): a real ≥44px-tappable chip. `tap-target`
+        // gives the touch floor (44px, 32px on md+); the label wraps
+        // cleanly inside (`whitespace-normal text-left`) instead of
+        // clipping at the right edge, and there's no fixed max-width to
+        // truncate it. Reads as a chip, not prose.
+        "tap-target inline-flex items-center justify-center px-2.5 py-1.5",
+        "font-mono text-2xs uppercase tracking-[0.04em] leading-tight",
+        "whitespace-normal text-center break-words",
+        "border rounded-sm transition-colors",
         active
           ? "bg-[var(--color-amber)] text-[var(--color-bg)] border-[var(--color-amber)]"
           : "text-[var(--color-fg-muted)] border-[var(--color-border)] hover:border-[var(--color-amber)] hover:text-[var(--color-fg)]",

@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { toggleWishlistedPaint } from "@/lib/actions/inventory";
@@ -29,10 +35,28 @@ import {
  * clamped via `max-w-[calc(100vw-...)]` — matching the `PaintSlotPicker` /
  * `InlineCellPopover` primitives.
  *
+ * P16.6 — mobile containment (UX-1203). The Round-12 audit found the
+ * anchored-below popover overflowing the fold at 375 and hiding its action
+ * buttons behind the fixed bottom nav at 414. Two placements now:
+ *
+ *   - **Mobile (< md):** a bottom SHEET — `fixed` to the bottom of the
+ *     viewport, clear of the fixed bottom tab bar (its `min-h-[56px]` +
+ *     `env(safe-area-inset-bottom)`), with its body scrolling inside a
+ *     `max-h` clamp. The "Mark as wanted" actions are always inside that
+ *     scroll area, so they're reachable thumb-only no matter which cell
+ *     was tapped.
+ *   - **Desktop (>= md):** anchored to the cell, but FLIP-ABOVE when the
+ *     measured space below the anchor can't fit the popover (collision-
+ *     aware placement without pulling in a positioning lib). Clamped to
+ *     the viewport height via `max-h`.
+ *
  * No raw hex in classes — swatch fills come from each paint's stored hex
  * (data, not a token) via inline style; the wishlist add is a `success`
  * (solid neon-green) Button per the locked palette. No cyan on the action.
  */
+
+/** Placement of the desktop-anchored popover relative to its cell. */
+type Placement = "below" | "above";
 
 interface Props {
   /** The tapped cell. */
@@ -62,6 +86,27 @@ export function HeatSinkGapFillPopover({
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Desktop placement: anchored below the cell by default, flipped above
+  // when the measured space below can't fit the popover. Mobile uses a
+  // fixed bottom sheet instead (CSS breakpoint), so this only steers the
+  // `md:` anchored layout. Measured once on open in a layout effect so the
+  // flip happens before paint (no visible jump).
+  const [placement, setPlacement] = useState<Placement>("below");
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    const anchor = el?.parentElement;
+    if (!el || !anchor) return;
+    const anchorRect = anchor.getBoundingClientRect();
+    const popoverHeight = el.offsetHeight;
+    const spaceBelow = window.innerHeight - anchorRect.bottom;
+    const spaceAbove = anchorRect.top;
+    // Flip above only when below can't fit the popover but above can —
+    // otherwise stay below (the sheet/clamp handles the squeeze case).
+    setPlacement(
+      spaceBelow < popoverHeight && spaceAbove > spaceBelow ? "above" : "below",
+    );
+  }, []);
 
   // Escape + click-outside dismiss — matches the popover primitives.
   useEffect(() => {
@@ -107,15 +152,30 @@ export function HeatSinkGapFillPopover({
       aria-label={
         cell.paint.brand + " " + cell.paint.name + " — fill this gap"
       }
+      data-placement={placement}
       className={clsx(
-        "absolute z-50 left-1/2 top-full mt-1 -translate-x-1/2",
-        "w-[280px] max-w-[calc(100vw-1.5rem)]",
-        "frame-strong bg-[var(--color-bg-panel)] shadow-xl",
+        "z-50 frame-strong bg-[var(--color-bg-panel)] shadow-xl",
+        "flex flex-col overflow-hidden",
+        // Mobile (< md): a fixed bottom SHEET, clear of the bottom tab
+        // bar (its 56px height + safe-area inset), body scrolls inside its
+        // own max-height so the action buttons are always reachable
+        // thumb-only (UX-1203).
+        "fixed left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] max-w-[360px]",
+        "bottom-[calc(60px+env(safe-area-inset-bottom,0px))] top-auto",
+        "max-h-[70vh]",
+        // Desktop (>= md): anchored to the cell, flipping above when there
+        // isn't room below. Clamped to viewport height.
+        "md:absolute md:left-1/2 md:-translate-x-1/2 md:w-[280px]",
+        "md:max-w-[calc(100vw-1.5rem)] md:max-h-[80vh]",
+        placement === "above"
+          ? "md:bottom-full md:top-auto md:mb-1 md:mt-0"
+          : "md:top-full md:bottom-auto md:mt-1 md:mb-0",
       )}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      {/* Header — the tapped paint. */}
-      <div className="flex items-start gap-2 px-3 py-2 border-b border-[var(--color-border)]">
+      {/* Header — the tapped paint. Pinned (shrink-0) so the body below
+          scrolls under it inside the clamped sheet. */}
+      <div className="shrink-0 flex items-start gap-2 px-3 py-2 border-b border-[var(--color-border)]">
         <span
           aria-hidden
           className="mt-0.5 h-7 w-7 shrink-0 rounded-sm border border-[var(--color-border-strong)]"
@@ -140,7 +200,10 @@ export function HeatSinkGapFillPopover({
         </button>
       </div>
 
-      <div className="p-3 space-y-2">
+      {/* Body — scrolls inside the clamped sheet so the Mark-as-wanted
+          actions stay reachable even when the popover is taller than the
+          space above the bottom nav (UX-1203). */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         <p
           className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]"
           data-testid="gap-fill-heading"
@@ -177,10 +240,7 @@ export function HeatSinkGapFillPopover({
             No near matches in the catalog.
           </p>
         ) : (
-          <ul
-            aria-label="Near-hue candidates"
-            className="space-y-1 max-h-[40vh] overflow-y-auto"
-          >
+          <ul aria-label="Near-hue candidates" className="space-y-1">
             {candidates.map((candidate) => {
               const liveState = stateForPaint(
                 candidate.paint.id,

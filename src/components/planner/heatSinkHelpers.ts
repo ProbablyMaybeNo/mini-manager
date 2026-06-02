@@ -159,6 +159,60 @@ export function pickDefaultDensity(summary: CoverageSummary): GridDensity {
 }
 
 /* ============================================================
+   P16.6 — mobile cell sizing.
+
+   The Round-12 audit (UX-1202) measured grid cells at 16-21px (≤7px in
+   Full), well below the WCAG 2.5.8 24px target floor, with extra viewport
+   width wasted as side margin rather than enlarging the cells. The fix:
+   give each density its own minimum cell size so the `auto-fill` columns
+   reflow to fill the full width with tappable cells.
+
+     - **Condensed** (the painter's collection — the default once their
+       collection clears the threshold) gets a TAPPABLE floor: cells are
+       big enough to thumb without mis-hitting. This is the surface a
+       painter actually pokes at, so it leads with reach over density.
+     - **Full** (the whole catalog) stays the dense colour-field overview
+       but lifts off the 7px floor to a still-tappable-enough minimum so
+       the spectrum reads as a field yet taps land closer.
+
+   The numbers are CSS-grid column floors fed to
+   `repeat(auto-fill, minmax(<floor>, 1fr))` — the `1fr` makes every
+   column grow to consume leftover width, so a 414px phone enlarges cells
+   instead of growing the margin.
+   ============================================================ */
+
+/**
+ * Minimum cell edge (px) per density. Condensed leads with a tappable
+ * 28px floor (clears the 24px WCAG minimum with margin); Full keeps the
+ * catalog dense but lifts to 12px so taps land closer than the old 7px.
+ * The `1fr` companion column lets cells grow past the floor to fill width.
+ */
+export const CELL_MIN_PX: Record<GridDensity, number> = {
+  condensed: 28,
+  full: 12,
+};
+
+/**
+ * The `grid-template-columns` value for a density — `auto-fill` columns
+ * with the density's min cell edge, each growing to `1fr` so the row
+ * consumes the full width (no wasted side margin). Returned as a string
+ * for the inline grid style.
+ */
+export function gridColumnsFor(density: GridDensity): string {
+  return "repeat(auto-fill, minmax(" + CELL_MIN_PX[density] + "px, 1fr))";
+}
+
+/**
+ * The `contain-intrinsic-size` placeholder height (px) for an off-screen
+ * row group at a given density — the browser reserves this while the group
+ * is skipped so scroll position stays stable. Tracks the cell min edge so
+ * the reserved space is in the right ballpark for the real rendered height.
+ */
+export function intrinsicRowSizeFor(density: GridDensity): number {
+  return CELL_MIN_PX[density];
+}
+
+/* ============================================================
    P16.5 — gap-fill popover view helpers.
 
    Tapping a cell opens a popover anchored to it. The popover shows the

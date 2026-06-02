@@ -236,7 +236,43 @@ clean. Commit `274fd3d`. **Local commit only — not pushed.**
 - Tests: tap unowned → action wired + optimistic border flip; nearest-candidates
   populated; owned-cell variant copy.
 
-### P16.6 — Mobile + Round 12-adjacent audit hook
+### P16.6 — Mobile + Round 12-adjacent audit hook ✅
+
+**Shipped** 2026-06-02 — fixed the three Round-12 heat-sink-grid findings
+(`ux-audit/findings_v12.json`), all within the planner scope fence
+(`src/components/planner/**`):
+
+- **UX-1202 (cell size + reflow):** new per-density `CELL_MIN_PX`
+  (`gridColumnsFor` / `intrinsicRowSizeFor` helpers). **Condensed**
+  (the painter's collection — the default once the collection clears the
+  threshold, and the surface actually tapped) now renders cells at
+  `minmax(28px, 1fr)`, clearing the 24px WCAG 2.5.8 target with margin;
+  **Full** (the dense catalog overview) lifts off the old 7px floor to
+  `minmax(12px, 1fr)`. `1fr` companion columns reflow to fill the full
+  width, so a 414 phone enlarges cells instead of growing side margin.
+  **Tradeoff call:** Condensed leads with reach (tappable), Full stays the
+  dense colour field — no halt needed. P16.4 perf (row-chunking,
+  `content-visibility:auto`, brand filter, density toggle) intact; the
+  intrinsic-size now tracks the density's cell edge for scroll stability.
+- **UX-1203 (popover containment):** the gap-fill popover is now a fixed
+  bottom **sheet** on mobile (`< md`) — clamped clear of the bottom tab
+  bar (`bottom: 60px + env(safe-area-inset-bottom)`), a flex-column body
+  scrolling inside `max-h-[70vh]` so "Mark as wanted" is always reachable
+  thumb-only. On desktop (`>= md`) it stays anchored to the cell but
+  **flips above** when a `useLayoutEffect` measures insufficient room below
+  (collision-aware, no positioning lib added).
+- **UX-1210 (brand-filter chips):** coverage brand chips are now real
+  `tap-target` chips (44px touch / 32px md+), wrapping cleanly
+  (`whitespace-normal`, no `truncate`/`max-w` clipping), `gap-1.5` between
+  chips, `pr-1` right gutter on the row. (Did not touch `globals.css` —
+  owned by the parallel P15.3 agent; the other inline filter rows on
+  /wishlist, /tools/match, /library are outside this scope fence.)
+
++29 tests (cell-sizing helpers, popover placement/flip + bottom-sheet
+sentinels, chip layout sentinels): **1804 passing / 1 skipped** (from
+1775/1). `tsc` clean. **Local commit only — not pushed.** Mobile eyeball at
+375/414 still wants a human glance (the mechanics are verified by tests +
+typecheck).
 
 - 375 / 414 / 768 pass on the grid specifically: cell size legibility, header
   wrap, popover within viewport, brand-filter chips scroll, toggle reachable.
