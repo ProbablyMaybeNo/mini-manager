@@ -70,7 +70,12 @@ Coverage state per paint = LEFT JOIN paints (static) ⟕ inventory_entry (per us
 
 ## Milestones (build in this order)
 
-### P16.1 — Hue-sort + coverage helpers (FOUNDATION — do FIRST)
+### P16.1 — Hue-sort + coverage helpers (FOUNDATION — do FIRST) ✅
+
+**Shipped** 2026-06-02 — `src/lib/paints/hue.ts` + `coverage.ts` + tests.
+Neutral-band saturation threshold locked at `0.12` (tuned note in `hue.ts`).
+`nearestPaintsByHue` ranks by ΔE2000 (reuses `tools/match/deltaE`).
++34 unit tests (1663 passing / 1 skipped).
 
 Pure, unit-testable, no React, no DB.
 
