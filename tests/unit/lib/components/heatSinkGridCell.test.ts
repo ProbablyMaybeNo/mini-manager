@@ -1,30 +1,33 @@
 /**
- * P16.3 — HeatSinkGridCell render.
+ * P16.3 / P16.4 — HeatSinkGridCell server seam.
  *
- * The cell is an async server component; we render it with the `grid`
- * test seam (so it never touches the DB) and walk the returned tree to
- * pin: exactly one gridcell per coverage cell, the border class tracks
- * each cell's coverage state, the fill is the paint's stored hex, and
- * the header readout carries the summary math.
+ * The cell is an async server component that, since P16.4, delegates the
+ * render to the `HeatSinkGridClient` client component (brand filter +
+ * Condensed/Full toggle + row-chunked grid). The client uses React
+ * hooks, so it can't be invoked in the Node unit env — here we render
+ * the cell with the `view` test seam (so it never touches the DB) and
+ * assert it mounts the client with the composed grid, brand list, and
+ * default brand filter wired through unchanged.
  *
- * The data layer (getCoverageGrid / composeCoverageGrid) is covered by
- * tests/integration/actions/paintCoverage.test.ts; here we only assert
- * the view.
+ * The cell-level render (gridcells, borders, fills, header) is covered
+ * by the pure helpers in heatSinkPerf.test.ts + heatSinkHelpers.test.ts;
+ * the data layer by tests/integration/actions/paintCoverage.test.ts.
  */
 import { describe, expect, test, vi } from "vitest";
 
 // Stub the server read layer + auth so importing the cell module in the
-// node unit env doesn't pull in the DB client. The `grid` prop seam
+// node unit env doesn't pull in the DB client. The `view` prop seam
 // means these are never actually called, but the imports must resolve.
 vi.mock("@/db/queries/paintCoverage", () => ({
-  getCoverageGrid: vi.fn(),
+  getCoverageGridView: vi.fn(),
 }));
 vi.mock("@/lib/auth-stub", () => ({
   currentUserId: vi.fn(async () => "test-user"),
 }));
 
 import { HeatSinkGridCell } from "@/components/planner/HeatSinkGridCell";
-import type { CoverageGrid } from "@/db/queries/paintCoverage";
+import { HeatSinkGridClient } from "@/components/planner/HeatSinkGridClient";
+import type { CoverageGridView } from "@/db/queries/paintCoverage";
 import type { CoverageState } from "@/lib/paints/coverage";
 import type { Paint } from "@/lib/paints/types";
 
@@ -47,23 +50,6 @@ function findAll(
   return acc;
 }
 
-function collectText(node: unknown, acc: string[] = []): string[] {
-  if (node == null) return acc;
-  if (typeof node === "string") {
-    acc.push(node);
-    return acc;
-  }
-  if (Array.isArray(node)) {
-    for (const child of node) collectText(child, acc);
-    return acc;
-  }
-  const n = node as AnyNode;
-  if (typeof n === "object" && n.props?.children != null) {
-    collectText(n.props.children, acc);
-  }
-  return acc;
-}
-
 const paint = (id: string, hex: string): Paint => ({
   id,
   brand: "Citadel",
@@ -81,72 +67,44 @@ const cell = (id: string, hex: string, state: CoverageState) => ({
   state,
 });
 
-const grid: CoverageGrid = {
-  cells: [
-    cell("red", "#ff0000", "owned"),
-    cell("green", "#00ff00", "wanted"),
-    cell("blue", "#0000ff", "none"),
-  ],
-  summary: { owned: 1204, wanted: 312, total: 7144, ownedPct: 17 },
+const view: CoverageGridView = {
+  grid: {
+    cells: [
+      cell("red", "#ff0000", "owned"),
+      cell("green", "#00ff00", "wanted"),
+      cell("blue", "#0000ff", "none"),
+    ],
+    summary: { owned: 1204, wanted: 312, total: 7144, ownedPct: 17 },
+  },
+  brands: ["Citadel"],
+  defaultBrandFilter: ["Citadel"],
 };
 
-async function renderCell(g: CoverageGrid) {
-  return (await HeatSinkGridCell({ grid: g })) as unknown;
+async function renderCell(v: CoverageGridView) {
+  return (await HeatSinkGridCell({ view: v })) as unknown;
 }
 
-function gridCells(tree: unknown): AnyNode[] {
-  return findAll(tree, (n) => n.props?.role === "gridcell");
-}
-
-describe("HeatSinkGridCell render (P16.3)", () => {
-  test("renders exactly one gridcell per coverage cell", async () => {
-    const tree = await renderCell(grid);
-    expect(gridCells(tree)).toHaveLength(3);
+describe("HeatSinkGridCell server seam (P16.4)", () => {
+  test("mounts the HeatSinkGridClient", async () => {
+    const tree = await renderCell(view);
+    const clients = findAll(tree, (n) => n.type === HeatSinkGridClient);
+    expect(clients).toHaveLength(1);
   });
 
-  test("the grid container advertises its cell count", async () => {
-    const tree = await renderCell(grid);
-    const container = findAll(
+  test("passes the composed grid, brands, and default filter through", async () => {
+    const tree = await renderCell(view);
+    const client = findAll(tree, (n) => n.type === HeatSinkGridClient)[0];
+    expect(client?.props.grid).toBe(view.grid);
+    expect(client?.props.brands).toEqual(["Citadel"]);
+    expect(client?.props.defaultBrandFilter).toEqual(["Citadel"]);
+  });
+
+  test("renders inside the COVERAGE card", async () => {
+    const tree = await renderCell(view);
+    const cards = findAll(
       tree,
-      (n) => typeof n.props?.["data-cell-count"] === "number",
-    )[0];
-    expect(container?.props["data-cell-count"]).toBe(3);
-  });
-
-  test("each cell's border class matches its coverage state", async () => {
-    const tree = await renderCell(grid);
-    const byState = new Map(
-      gridCells(tree).map((c) => [c.props["data-state"], c.props.className]),
+      (n) => n.props?.title === "COVERAGE" && n.props?.accentColor === "green",
     );
-    expect(byState.get("owned")).toContain("border-[var(--color-green)]");
-    expect(byState.get("wanted")).toContain("border-[var(--color-amber)]");
-    expect(byState.get("none")).toContain("border-transparent");
-  });
-
-  test("each cell is filled with its paint's stored hex", async () => {
-    const tree = await renderCell(grid);
-    const fills = gridCells(tree).map(
-      (c) => (c.props.style as { backgroundColor?: string })?.backgroundColor,
-    );
-    expect(fills).toEqual(["#ff0000", "#00ff00", "#0000ff"]);
-  });
-
-  test("header readout carries the summary math, comma-grouped", async () => {
-    const tree = await renderCell(grid);
-    const text = collectText(tree).join(" ");
-    expect(text).toContain("1,204 / 7,144 owned · 312 wanted");
-  });
-
-  test("coverage bar reflects ownedPct", async () => {
-    const tree = await renderCell(grid);
-    const bar = findAll(tree, (n) => n.props?.role === "progressbar")[0];
-    expect(bar?.props["aria-valuenow"]).toBe(17);
-  });
-
-  test("no gridcell border uses cyan (P13.1)", async () => {
-    const tree = await renderCell(grid);
-    for (const c of gridCells(tree)) {
-      expect(String(c.props.className)).not.toContain("cyan");
-    }
+    expect(cards).toHaveLength(1);
   });
 });

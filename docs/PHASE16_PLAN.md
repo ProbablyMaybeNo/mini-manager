@@ -154,7 +154,38 @@ out of P16.3 scope, not committed here.
 - Tests: grid renders N cells, border class matches coverage state, header math,
   PLANNER section still mounts all surviving widgets.
 
-### P16.4 — Performance pass (gate before gap-fill UX)
+### P16.4 — Performance pass (gate before gap-fill UX) ✅
+
+**Shipped** 2026-06-02 — DOM approach, **canvas NOT needed**. Split the grid
+into a server seam (`HeatSinkGridCell` — fetches `getCoverageGridView`) + a
+client wrapper (`HeatSinkGridClient`) mirroring the `PlannerInspoCell` →
+`InspoGalleryGrid` pattern. Applied, in order:
+1. **Row-chunking** — the visible cells split into ~100-cell row groups
+   (`chunkCells`, `CELLS_PER_ROW_GROUP = 100`); each group is a
+   `[content-visibility:auto] [contain-intrinsic-size:auto_12px]` container so
+   off-screen groups skip layout + paint. The wrapper-only hint from P16.3
+   (one `content-visibility` on the flat 7,144-node grid) is replaced by
+   per-group containment — the browser now skips whole offscreen chunks.
+2. **Brand filter** chip row (`filterCellsByBrands`) — defaults to the
+   painter's saved `users.library_brand_filter` (reused
+   `decodeLibraryBrandFilter`, NO new column; read server-side via
+   `getDefaultBrandFilter`, passed down). "All" chip resets to unfiltered;
+   every-brand-selected reads as no filter.
+3. **Condensed / Full toggle** (`condensedCells` + `pickDefaultDensity`) —
+   Condensed renders owned+wanted only (the collection as a spectrum); Full
+   renders the whole catalog. **Default threshold = 60 owned/wanted paints**
+   (`CONDENSED_DEFAULT_THRESHOLD`): ≥ 60 → Condensed, else Full so a near-empty
+   collection still shows the catalog to fill. Solid-fill green toggle, amber
+   brand chips — no cyan, no `[ ]` brackets.
+
+Extended `paintCoverage.ts` (added `getCoverageGridView`, `getDefaultBrandFilter`,
+`brandsInGrid`, `CoverageGridView`; `getCoverageGrid` untouched for other
+callers). +40 tests (row-chunking group counts, brand-filter narrowing,
+condensed/full switch, default-density threshold, default-filter wiring +
+brand-list derivation): **1718 passing / 1 skipped** (from 1698/1). `tsc`
+clean. **Canvas escape-hatch not triggered** — row-chunking + filter + condensed
+shrink the working set enough that the DOM grid is the shippable approach;
+P16.5 gap-fill can proceed on the DOM grid.
 
 - Profile the full 7,144-cell render on desktop + a throttled mobile profile.
 - Apply, in order of cheapness, until interaction stays smooth:

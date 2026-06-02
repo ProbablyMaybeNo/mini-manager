@@ -13,9 +13,11 @@
  * the query output so the buckets + summary are pinned together.
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { eq } from "drizzle-orm";
 import { makeTestDb, seedExtraUser, type TestDb } from "../_helpers/testDb";
-import { inventoryEntries } from "@/db/schema";
+import { inventoryEntries, users } from "@/db/schema";
 import type { Paint } from "@/lib/paints/types";
+import type { CoverageGrid } from "@/db/queries/paintCoverage";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -32,9 +34,12 @@ vi.mock("@/lib/auth-stub", () => ({
   currentUserId: async () => state.userId,
 }));
 
-const { getInventoryByPaintId, composeCoverageGrid } = await import(
-  "@/db/queries/paintCoverage"
-);
+const {
+  getInventoryByPaintId,
+  composeCoverageGrid,
+  getDefaultBrandFilter,
+  brandsInGrid,
+} = await import("@/db/queries/paintCoverage");
 
 const p = (id: string, hex: string): Paint => ({
   id,
@@ -152,5 +157,63 @@ describe("getCoverageGrid composition", () => {
     const grid = composeCoverageGrid(paints, inventory);
     const order = grid.cells.map((c) => c.paint.id);
     expect(order).toEqual(["red", "green", "blue", "grey"]);
+  });
+});
+
+describe("getDefaultBrandFilter (P16.4)", () => {
+  test("null when the painter has no saved filter", async () => {
+    const filter = await getDefaultBrandFilter(state.userId);
+    expect(filter).toBeNull();
+  });
+
+  test("decodes the painter's saved library_brand_filter array", async () => {
+    await state.db!
+      .update(users)
+      .set({ libraryBrandFilter: JSON.stringify(["Citadel", "Vallejo"]) })
+      .where(eq(users.id, state.userId));
+    const filter = await getDefaultBrandFilter(state.userId);
+    expect(filter).toEqual(["Citadel", "Vallejo"]);
+  });
+
+  test("malformed JSON decodes to null (all brands)", async () => {
+    await state.db!
+      .update(users)
+      .set({ libraryBrandFilter: "{not json" })
+      .where(eq(users.id, state.userId));
+    const filter = await getDefaultBrandFilter(state.userId);
+    expect(filter).toBeNull();
+  });
+
+  test("is scoped to the calling user", async () => {
+    const other = await seedExtraUser(state.db!);
+    await state.db!
+      .update(users)
+      .set({ libraryBrandFilter: JSON.stringify(["Army Painter"]) })
+      .where(eq(users.id, other));
+    const mine = await getDefaultBrandFilter(state.userId);
+    expect(mine).toBeNull();
+  });
+});
+
+describe("brandsInGrid (P16.4)", () => {
+  test("distinct brands across cells, sorted", () => {
+    const grid: CoverageGrid = {
+      cells: [
+        { paint: p("a", "#ff0000"), state: "none" },
+        { paint: { ...p("b", "#00ff00"), brand: "Vallejo" }, state: "none" },
+        { paint: { ...p("c", "#0000ff"), brand: "Army Painter" }, state: "none" },
+        { paint: { ...p("d", "#808080"), brand: "Vallejo" }, state: "none" },
+      ],
+      summary: { owned: 0, wanted: 0, total: 4, ownedPct: 0 },
+    };
+    expect(brandsInGrid(grid)).toEqual(["Army Painter", "Citadel", "Vallejo"]);
+  });
+
+  test("empty grid → empty brand list", () => {
+    const grid: CoverageGrid = {
+      cells: [],
+      summary: { owned: 0, wanted: 0, total: 0, ownedPct: 0 },
+    };
+    expect(brandsInGrid(grid)).toEqual([]);
   });
 });
