@@ -184,6 +184,7 @@
   },
   {
     "id": "UX-1314",
+    "fixed": true,
     "severity": "low",
     "category": "performance",
     "principle": "Polish / resource hygiene; NN/g #8 minimalist (no broken requests)",

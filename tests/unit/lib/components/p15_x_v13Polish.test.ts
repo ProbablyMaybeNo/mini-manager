@@ -14,6 +14,20 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1314 — root /favicon.ico resolves (no 404 on load)", () => {
+  test("app/favicon.ico exists so Next serves it at the root", () => {
+    const p = path.resolve(__dirname, "../../../../src/app/favicon.ico");
+    expect(fs.existsSync(p)).toBe(true);
+  });
+
+  test("the file is a valid ICO (magic bytes 00 00 01 00)", () => {
+    const buf = fs.readFileSync(
+      path.resolve(__dirname, "../../../../src/app/favicon.ico"),
+    );
+    expect(buf.subarray(0, 4)).toEqual(Buffer.from([0x00, 0x00, 0x01, 0x00]));
+  });
+});
+
 describe("UX-1303 — library owned/★ toggles get a 44px tap area in card layout", () => {
   const src = read("src/components/library/InventoryControls.tsx");
 
