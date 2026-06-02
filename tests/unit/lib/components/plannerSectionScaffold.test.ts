@@ -30,15 +30,18 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
     expect(page).toMatch(/<PlannerSection(\s+[^>]*)?\s*\/>/);
   });
 
-  test("PLANNER section sits BELOW FOCUS and ABOVE the dashboard table", () => {
+  test("dashboard order is FOCUS, then the project table, then PLANNER", () => {
+    // Ross 2026-06-02 reorder: the project table is the spine of the
+    // app and now sits directly under FOCUS — it had been buried below
+    // the entire PLANNER section. New order: FOCUS → table → PLANNER.
     const focusIdx = page.indexOf('title="FOCUS"');
-    const plannerIdx = page.indexOf("<PlannerSection");
     const tableIdx = page.indexOf("<ProjectsDashboardTable");
+    const plannerIdx = page.indexOf("<PlannerSection");
     expect(focusIdx).toBeGreaterThan(-1);
-    expect(plannerIdx).toBeGreaterThan(-1);
     expect(tableIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeLessThan(plannerIdx);
-    expect(plannerIdx).toBeLessThan(tableIdx);
+    expect(plannerIdx).toBeGreaterThan(-1);
+    expect(focusIdx).toBeLessThan(tableIdx);
+    expect(tableIdx).toBeLessThan(plannerIdx);
   });
 
   describe("PlannerSection composite", () => {

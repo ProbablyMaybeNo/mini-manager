@@ -291,18 +291,25 @@ export default async function ProjectsPage({
             </div>
           </Card>
 
-          {/* P14.2 — PLANNER section. Sits between FOCUS + the
-              dashboard table. Scaffold-only here: each cell is an
-              empty-state placeholder ready for the P14.3–7 widget
-              builders to fill in. */}
-          <PlannerSection calYear={calYear} calMonth={calMonth} />
-
-          <TopWishesPanel />
+          {/* Dashboard order (Ross 2026-06-02): FOCUS → project table
+              → Top Wishes → PLANNER → recently bought. The project
+              table is the spine of the app, so it sits directly under
+              FOCUS — it had previously been buried below the entire
+              PLANNER section, which made projects feel "lost". */}
           <ProjectsDashboardTable
             rows={rows}
             ownedRecipes={ownedRecipes}
             projectNameById={projectNameById}
           />
+
+          <TopWishesPanel />
+
+          {/* PLANNER section (P14) — calendar + activity + streak +
+              heatmap + inspo. Now below the project table so the
+              painter sees their actual projects before the planning
+              widgets. */}
+          <PlannerSection calYear={calYear} calMonth={calMonth} />
+
           <RecentlyBoughtLine />
         </>
       )}
