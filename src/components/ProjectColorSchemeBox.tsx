@@ -357,7 +357,7 @@ function ColorPickerSidePanel({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex"
+      className="fixed inset-0 z-50 flex flex-col md:flex-row"
       role="dialog"
       aria-modal="true"
       aria-label={contextLabel}
@@ -367,9 +367,11 @@ function ColorPickerSidePanel({
         onClick={onClose}
         className="flex-1 bg-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
       />
+      {/* UX-1216 — bottom sheet on mobile, right-side drawer on desktop
+          (mirrors the recipe ZoneList picker for a consistent feel). */}
       <aside
-        className="w-full md:w-[480px] h-full bg-[var(--color-bg-elevated)] flex flex-col"
-        style={{ borderLeft: "1px solid var(--color-border-strong)" }}
+        className="w-full max-h-[88vh] md:max-h-none md:w-[480px] md:h-full bg-[var(--color-bg-elevated)] flex flex-col border-t border-[var(--color-border-strong)] md:border-t-0 md:border-l md:border-[var(--color-border-strong)]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}
       >
         <header
           className="flex items-center justify-between px-4 py-3"

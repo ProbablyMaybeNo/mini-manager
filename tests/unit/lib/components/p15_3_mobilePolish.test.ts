@@ -208,3 +208,23 @@ describe("UX-1215 — library switches to card layout below 768px", () => {
     expect(src).toContain('<div className="flex-1 min-w-0">');
   });
 });
+
+describe("UX-1216 — recipe colour picker is a bottom sheet on mobile", () => {
+  test("ZoneList picker stacks as a bottom sheet on mobile, right drawer on desktop", () => {
+    const src = read("src/components/recipes/ZoneList.tsx");
+    expect(src).toContain("fixed inset-0 z-50 flex flex-col md:flex-row");
+    expect(src).toContain("w-full max-h-[88vh] md:max-h-none md:w-[480px]");
+    expect(src).toContain("env(safe-area-inset-bottom");
+  });
+
+  test("ProjectColorSchemeBox picker mirrors the bottom-sheet treatment", () => {
+    const src = read("src/components/ProjectColorSchemeBox.tsx");
+    expect(src).toContain("fixed inset-0 z-50 flex flex-col md:flex-row");
+    expect(src).toContain("w-full max-h-[88vh] md:max-h-none md:w-[480px]");
+  });
+
+  test("ColorPicker content keeps a right gutter (p-4) so actions aren't flush", () => {
+    const src = read("src/components/ui/ColorPicker.tsx");
+    expect(src).toContain('className="flex flex-col gap-4 p-4 overflow-y-auto"');
+  });
+});

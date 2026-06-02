@@ -235,6 +235,7 @@
     "fix": "Add consistent right padding/gutter (>=12-16px) to these containers so trailing text/buttons aren't flush to the edge; render the recipe color picker as a full-screen sheet/modal on mobile rather than an inline aside.",
     "effort": "small",
     "confidence": 0.72,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done — both recipe/scheme ColorPicker side panels now render as a true BOTTOM SHEET on mobile (flex-col + w-full max-h-[88vh], safe-area padded) and the right-side drawer on desktop (md:flex-row md:w-[480px]); the ColorPicker content already carries a p-4 (16px) gutter so USE THIS COLOUR / SHOW MORE MATCHES aren't flush. The misc eyedropper/import/tab-label clips already sit inside ≥16px container padding (ToolShell p-4), clearing the audit's 12-16px gutter target."
   }
 ]
