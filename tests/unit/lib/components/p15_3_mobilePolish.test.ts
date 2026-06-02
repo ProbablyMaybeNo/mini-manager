@@ -205,9 +205,10 @@ describe("UX-1215 — library switches to card layout below 768px", () => {
     expect(src).toContain("isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP");
   });
 
-  test("the mobile branch gives NAME a full-width line (no ambiguous truncation)", () => {
-    expect(src).toMatch(/if \(isMobile\) \{/);
-    expect(src).toContain('<div className="flex-1 min-w-0">');
+  test("the mobile card gives NAME a full-width line (no ambiguous truncation)", () => {
+    // UX-1506 superseded the JS `if (isMobile)` branch with WIDTH-gated CSS;
+    // the NAME still owns a full-width md:hidden flex-1 container on the card.
+    expect(src).toContain('<div className="md:hidden flex-1 min-w-0">');
   });
 });
 

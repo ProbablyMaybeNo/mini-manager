@@ -35,17 +35,29 @@ describe("LibraryTable mobile card layout (UX-1215)", () => {
   });
 
   test("PaintRow renders a stacked card on mobile (NAME on its own line)", () => {
-    // The mobile branch is a flex card, not the dense grid.
-    expect(SRC).toMatch(/if \(isMobile\) \{[\s\S]*?return \(/);
-    // NAME gets a full-width flex-1 container so it never truncates to
-    // ambiguity against a sibling column.
-    expect(SRC).toContain('<div className="flex-1 min-w-0">');
+    // UX-1506 — the layout is now WIDTH-gated CSS (max-md card / md grid) in
+    // a single DOM rather than a JS `if (isMobile)` branch, so the dense
+    // grid can never render on a phone before hydration. The card body is a
+    // md:hidden flex-1 container that gives NAME its own full-width line.
+    expect(SRC).toContain('<div className="md:hidden flex-1 min-w-0">');
+    // The brittle JS-branch layout split is gone.
+    expect(SRC).not.toMatch(/if \(isMobile\) \{[\s\S]*?return \(/);
   });
 
   test("desktop grid is unchanged (preserves the 9-col layout)", () => {
     expect(SRC).toContain(
       "md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]",
     );
+  });
+
+  test("UX-1506 — the row is a CSS card below md, dense grid at md+ (no JS gate)", () => {
+    // One DOM, two layouts, width-gated — correct on every viewport even
+    // before the JS breakpoint syncs (the SSR-timing root cause).
+    expect(SRC).toContain(
+      "w-full max-w-full overflow-hidden flex items-center md:grid",
+    );
+    // The scroll container can never show a horizontal scrollbar.
+    expect(SRC).toContain("overflow-y-auto overflow-x-hidden");
   });
 
   test("the old mobile grid columns + line-clamp brand wrap are gone", () => {

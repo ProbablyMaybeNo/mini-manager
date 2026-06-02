@@ -82,6 +82,7 @@
   },
   {
     "id": "UX-1506",
+    "fixed": true,
     "round13_ref": "NEW regression",
     "verdict": "NEW",
     "severity": "high",
