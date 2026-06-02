@@ -13,7 +13,7 @@ Ross's 2026-06-02 priority post-BrushForge competitive analysis. BrushForge is m
 
 ## Milestones (build in this order)
 
-### P15.0 — FOCUS completion (FIRST — small, high-leverage)
+### P15.0 — FOCUS completion (FIRST — small, high-leverage) ✅
 
 Close the gap between the FOCUS panel we shipped (recipe + notes + stopwatch + multi-recipe tabs) and the painting companion Ross described in the original brief.
 
@@ -27,6 +27,7 @@ Close the gap between the FOCUS panel we shipped (recipe + notes + stopwatch + m
 - **Recipe completion %.** Compute as `done_steps / total_steps` across all slots in the active recipe. Render as a thin progress bar across the FOCUS panel header background or as a small "67% COMPLETE" indicator.
 - Tests: persistence, active-slot URL state, done-step persistence, project-pill rollup math.
 - **Acceptance:** painter at the bench can tick steps as they apply paint, see their progress, and bump stage counters without scrolling away from FOCUS.
+- **Shipped 2026-06-02 (P15.0 feature commit).** 1587 → 1618 passing (+31), 1 skipped, typecheck clean. Surface: `recipe_step_completion` table + migration `0014_gifted_omega_flight.sql` (per-painter done-state keyed `(user_id, step_id)`, FK-cascade on user + step), `src/db/queries/stepCompletion.ts` (`getCompletedStepIds`), `src/lib/actions/stepCompletion.ts` (`setStepCompletion` toggle + `advanceSlot` bulk-complete-and-advance — owner-gated, Zod-validated), `src/lib/focus/rollup.ts` (`projectStatePill` + `recipeCompletionPercent` pure helpers), `FocusQuickActions` (+Paint / +Prime via shared `bumpCounter` / Advance slot — solid success+warning, no cyan), `SlotActivator` (writes `?focusSlot`), `StepCompletionCheckbox` (optimistic per-step toggle), `FocusPanel` (active-slot outline + ▶ WORKING ON label, per-step checkbox in active slot, done-step muting + NEXT tag, project-state pill, thin completion progress bar). Active slot persists via `?focusSlot`, falls back to first slot with an undone step.
 
 ### P15.1 — PWA install (manifest + service worker + icons)
 

@@ -626,6 +626,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   recipes: many(recipes),
   palettes: many(palettes),
   imports: many(imports),
+  recipeStepCompletions: many(recipeStepCompletion),
 }));
 
 
@@ -672,12 +673,79 @@ export const recipeZonesRelations = relations(recipeZones, ({ one, many }) => ({
   steps: many(recipeSteps),
 }));
 
-export const recipeStepsRelations = relations(recipeSteps, ({ one }) => ({
+export const recipeStepsRelations = relations(recipeSteps, ({ one, many }) => ({
   zone: one(recipeZones, {
     fields: [recipeSteps.zoneId],
     references: [recipeZones.id],
   }),
+  completions: many(recipeStepCompletion),
 }));
+
+/* ============================================================
+   Domain — Recipe step completion (P15.0)
+   ============================================================
+   Per-painter "I've finished applying this step" marks. Keyed by
+   (user_id, step_id) so done-state is local to the painter who owns
+   the recipe — never global. A row's existence IS the done flag;
+   un-ticking a step deletes the row rather than carrying a boolean,
+   so the table stays sparse (only done steps occupy space).
+
+   The FOCUS panel renders a checkbox per step in the active slot;
+   ticking inserts a row, un-ticking removes it. The "Advance slot"
+   quick-action bulk-inserts every step in the current slot. Recipe
+   completion % is `count(rows for this recipe's steps) / total steps`.
+
+   Cascade-deletes on BOTH the owning user (account deletion) and the
+   step (recipe edit removes a step → its completion marks vanish).
+   ============================================================ */
+
+export const recipeStepCompletion = sqliteTable(
+  "recipe_step_completion",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stepId: text("step_id")
+      .notNull()
+      .references(() => recipeSteps.id, { onDelete: "cascade" }),
+    completedAt: integer("completed_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    /** Hot path: "which steps has this user completed?" — the FOCUS
+     *  panel reads all completion rows for the active recipe's steps
+     *  scoped to the painter. */
+    userStepIdx: index("recipe_step_completion_user_step_idx").on(
+      t.userId,
+      t.stepId,
+    ),
+    /** A painter can only mark a given step done once. Re-ticking is a
+     *  no-op insert guarded by this unique index. */
+    userStepUq: uniqueIndex("recipe_step_completion_user_step_unique").on(
+      t.userId,
+      t.stepId,
+    ),
+  }),
+);
+
+export const recipeStepCompletionRelations = relations(
+  recipeStepCompletion,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [recipeStepCompletion.userId],
+      references: [users.id],
+    }),
+    step: one(recipeSteps, {
+      fields: [recipeStepCompletion.stepId],
+      references: [recipeSteps.id],
+    }),
+  }),
+);
+
+export type RecipeStepCompletion = typeof recipeStepCompletion.$inferSelect;
+export type NewRecipeStepCompletion = typeof recipeStepCompletion.$inferInsert;
 
 /* ============================================================
    Type exports for the app

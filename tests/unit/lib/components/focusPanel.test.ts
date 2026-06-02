@@ -17,6 +17,23 @@ vi.mock("@/lib/actions/focus", () => ({
   updateStepNotes: vi.fn(async () => ({ ok: true, data: { stepId: "" } })),
 }));
 
+// P15.0 — FocusPanel now also pulls in the counters + stepCompletion
+// server actions (via FocusQuickActions / StepCompletionCheckbox /
+// SlotActivator) and next/navigation hooks. Stub them so the component
+// module loads + the function-component walker can render the children.
+vi.mock("@/lib/actions/counters", () => ({
+  bumpCounter: vi.fn(async () => ({ ok: true })),
+}));
+vi.mock("@/lib/actions/stepCompletion", () => ({
+  setStepCompletion: vi.fn(async () => ({ ok: true, data: {} })),
+  advanceSlot: vi.fn(async () => ({ ok: true, data: { nextSlotId: null } })),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  usePathname: () => "/projects",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 import {
   FocusPanel,
   type FocusZoneView,
@@ -78,6 +95,13 @@ function render(
   extra: {
     recipes?: ReadonlyArray<{ id: string; name: string }>;
     activeRecipeId?: string;
+    activeSlotId?: string | null;
+    projectCounts?: {
+      buildCount: number;
+      primeCount: number;
+      paintCount: number;
+      completeCount: number;
+    };
   } = {},
 ): ReactElement {
   return FocusPanel({
@@ -105,6 +129,7 @@ function basicZones(): FocusZoneView[] {
           paintHex: "#aa0033",
           paintLabel: "Citadel Mephiston Red",
           notes: null,
+          done: false,
         },
         {
           id: "s2",
@@ -114,6 +139,7 @@ function basicZones(): FocusZoneView[] {
           paintHex: "#ff6655",
           paintLabel: "Citadel Wild Rider Red",
           notes: "thin to 2:1 contrast medium",
+          done: false,
         },
       ],
     },
@@ -211,6 +237,7 @@ describe("FocusPanel — per-step rendering (P13.11)", () => {
             paintHex: "#888888",
             paintLabel: "Test",
             notes: null,
+            done: false,
           },
         ],
       },
@@ -261,5 +288,219 @@ describe("FocusPanel — recipe tab strip (UX-907)", () => {
     // Tree renders fine without throwing — the tab labels do not
     // appear because the tab strip is guarded by activeRecipeId.
     expect(tree).toBeDefined();
+  });
+});
+
+describe("FocusPanel — P15.0 active slot + step completion", () => {
+  test("active slot gets the WORKING ON label + data-active-slot marker", () => {
+    const tree = render(basicZones(), { activeSlotId: "z1" });
+    const activeSections = findAll(
+      tree,
+      (n) => n.props["data-active-slot"] === "true",
+    );
+    expect(activeSections).toHaveLength(1);
+    expect(activeSections[0]!.props["data-slot-id"]).toBe("z1");
+
+    // The "▶ WORKING ON" label is rendered inside SlotActivator (a client
+    // component the walker leaves as a placeholder). Assert the panel
+    // passes it isActive=true for exactly the active slot, and false for
+    // the rest — that's what drives the label.
+    const activators = findAll(
+      tree,
+      (n) => typeof n.props.slotId === "string" && "isActive" in n.props,
+    );
+    const activeActivators = activators.filter(
+      (n) => n.props.isActive === true,
+    );
+    expect(activeActivators).toHaveLength(1);
+    expect(activeActivators[0]!.props.slotId).toBe("z1");
+  });
+
+  test("only one slot is active at a time", () => {
+    const tree = render(basicZones(), { activeSlotId: "z2" });
+    const activeSections = findAll(
+      tree,
+      (n) => n.props["data-active-slot"] === "true",
+    );
+    expect(activeSections).toHaveLength(1);
+    expect(activeSections[0]!.props["data-slot-id"]).toBe("z2");
+  });
+
+  test("checkboxes render only inside the active slot", () => {
+    const tree = render(basicZones(), { activeSlotId: "z1" });
+    // StepCompletionCheckbox is a client component the walker can't fully
+    // render — match its placeholder by the props the panel passes it.
+    const checkboxes = findAll(
+      tree,
+      (n) =>
+        typeof n.props.stepId === "string" &&
+        typeof n.props.done === "boolean" &&
+        typeof n.props.label === "string",
+    );
+    // z1 has 2 steps; z2 has 0 — so exactly 2 checkbox children.
+    expect(checkboxes).toHaveLength(2);
+  });
+
+  test("no checkboxes when there is no active slot", () => {
+    const tree = render(basicZones(), { activeSlotId: null });
+    const checkboxes = findAll(
+      tree,
+      (n) =>
+        typeof n.props.stepId === "string" &&
+        typeof n.props.done === "boolean" &&
+        typeof n.props.label === "string",
+    );
+    expect(checkboxes).toHaveLength(0);
+  });
+
+  test("done steps render muted (line-through + opacity)", () => {
+    const zones: FocusZoneView[] = [
+      {
+        id: "z1",
+        name: "Armor",
+        position: 0,
+        swatchHex: "#aa0033",
+        steps: [
+          {
+            id: "s1",
+            zoneId: "z1",
+            position: 0,
+            technique: "basecoat",
+            paintHex: "#aa0033",
+            paintLabel: "Mephiston Red",
+            notes: null,
+            done: true,
+          },
+          {
+            id: "s2",
+            zoneId: "z1",
+            position: 1,
+            technique: "highlight",
+            paintHex: "#ff6655",
+            paintLabel: "Wild Rider Red",
+            notes: null,
+            done: false,
+          },
+        ],
+      },
+    ];
+    const tree = render(zones, { activeSlotId: "z1" });
+    const doneRows = findAll(
+      tree,
+      (n) => n.props["data-step-done"] === "true",
+    );
+    expect(doneRows).toHaveLength(1);
+    expect(doneRows[0]!.props["data-step-id"]).toBe("s1");
+    const text = JSON.stringify(tree);
+    expect(text).toContain("line-through");
+  });
+
+  test("the first undone step in the active slot gets a NEXT tag", () => {
+    const zones: FocusZoneView[] = [
+      {
+        id: "z1",
+        name: "Armor",
+        position: 0,
+        swatchHex: "#aa0033",
+        steps: [
+          {
+            id: "s1",
+            zoneId: "z1",
+            position: 0,
+            technique: "basecoat",
+            paintHex: "#aa0033",
+            paintLabel: "Mephiston Red",
+            notes: null,
+            done: true,
+          },
+          {
+            id: "s2",
+            zoneId: "z1",
+            position: 1,
+            technique: "highlight",
+            paintHex: "#ff6655",
+            paintLabel: "Wild Rider Red",
+            notes: null,
+            done: false,
+          },
+          {
+            id: "s3",
+            zoneId: "z1",
+            position: 2,
+            technique: "edge_highlight",
+            paintHex: "#ffaa99",
+            paintLabel: "Fire Dragon Bright",
+            notes: null,
+            done: false,
+          },
+        ],
+      },
+    ];
+    const tree = render(zones, { activeSlotId: "z1" });
+    const nextTags = findAll(tree, (n) => "data-next-tag" in n.props);
+    // Exactly one NEXT tag — on the first undone step (s2), not s3.
+    expect(nextTags).toHaveLength(1);
+  });
+
+  test("renders the project-state pill from projectCounts", () => {
+    const tree = render(basicZones(), {
+      activeSlotId: "z1",
+      projectCounts: {
+        buildCount: 12,
+        primeCount: 8,
+        paintCount: 3,
+        completeCount: 0,
+      },
+    });
+    const pills = findAll(tree, (n) => "data-project-pill" in n.props);
+    expect(pills).toHaveLength(1);
+    const text = JSON.stringify(tree);
+    expect(text).toContain("BUILT");
+    expect(text).toContain("PRIMED");
+    expect(text).toContain("PAINTED");
+    expect(text).toContain("COMPLETE");
+  });
+
+  test("renders a recipe-completion progressbar with the right percent", () => {
+    const zones: FocusZoneView[] = [
+      {
+        id: "z1",
+        name: "Armor",
+        position: 0,
+        swatchHex: "#aa0033",
+        steps: [
+          {
+            id: "s1",
+            zoneId: "z1",
+            position: 0,
+            technique: "basecoat",
+            paintHex: "#aa0033",
+            paintLabel: "A",
+            notes: null,
+            done: true,
+          },
+          {
+            id: "s2",
+            zoneId: "z1",
+            position: 1,
+            technique: "highlight",
+            paintHex: "#ff6655",
+            paintLabel: "B",
+            notes: null,
+            done: false,
+          },
+        ],
+      },
+    ];
+    const tree = render(zones, { activeSlotId: "z1" });
+    const bars = findAll(tree, (n) => n.props.role === "progressbar");
+    expect(bars).toHaveLength(1);
+    // 1 of 2 done = 50%.
+    expect(bars[0]!.props["aria-valuenow"]).toBe(50);
+    // The label renders as the JSX fragment [50, "% complete"] — assert
+    // both pieces appear (they aren't a contiguous string in the tree).
+    const text = JSON.stringify(tree);
+    expect(text).toContain("% complete");
+    expect(text).toMatch(/50[^"]*?"% complete"/);
   });
 });
