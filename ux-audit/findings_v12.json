@@ -166,7 +166,8 @@
     "fix": "Add `<meta name='mobile-web-app-capable' content='yes'>` and `<meta name='apple-mobile-web-app-capable' content='yes'>`, an `apple-mobile-web-app-status-bar-style` value, and `viewport-fit=cover` to the viewport meta (plus env(safe-area-inset-*) padding on the fixed header/bottom-nav).",
     "effort": "trivial",
     "confidence": 0.9,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done"
   },
   {
     "id": "UX-1213",

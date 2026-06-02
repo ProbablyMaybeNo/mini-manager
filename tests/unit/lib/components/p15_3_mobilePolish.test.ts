@@ -33,3 +33,26 @@ describe("UX-1201 — .btn-sm/.btn-md floor to 44px on coarse pointers", () => {
     expect(css).toContain(".btn-sm { padding: 4px 10px; min-height: 28px;");
   });
 });
+
+describe("UX-1212 — iOS standalone meta + viewport-fit for safe areas", () => {
+  const layout = read("src/app/layout.tsx");
+
+  test("metadata.other adds the unprefixed mobile-web-app-capable", () => {
+    expect(layout).toContain('"mobile-web-app-capable": "yes"');
+  });
+
+  test("appleWebApp.capable remains true (emits the apple-prefixed meta)", () => {
+    expect(layout).toMatch(/appleWebApp:\s*\{[\s\S]*?capable:\s*true/);
+  });
+
+  test("viewport opts into viewport-fit: cover for notch safe areas", () => {
+    expect(layout).toContain('viewportFit: "cover"');
+  });
+
+  test("fixed chrome pads for safe-area insets", () => {
+    const header = read("src/components/MobileHeader.tsx");
+    const tabbar = read("src/components/BottomTabBar.tsx");
+    expect(header).toContain("env(safe-area-inset-top");
+    expect(tabbar).toContain("env(safe-area-inset-bottom");
+  });
+});

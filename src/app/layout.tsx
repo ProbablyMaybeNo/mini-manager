@@ -39,12 +39,22 @@ export const metadata: Metadata = {
   icons: {
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
   },
+  // UX-1212 — the newer cross-browser standalone hint. `appleWebApp.capable`
+  // above emits `apple-mobile-web-app-capable`; this adds the unprefixed
+  // `mobile-web-app-capable` so Android/Chrome "Add to Home Screen" also
+  // launches fully standalone.
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#050607",
   width: "device-width",
   initialScale: 1,
+  // UX-1212 — extend the standalone app into notched-device safe areas.
+  // Paired with env(safe-area-inset-*) padding on the fixed chrome.
+  viewportFit: "cover",
 };
 
 /**
