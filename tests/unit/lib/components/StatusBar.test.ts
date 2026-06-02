@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   CLOCK_PLACEHOLDER,
   formatTime,
+  LAG_THRESHOLD_MS,
   NET_TOOLTIP,
   SSR_NET_STATUS,
   TONE_COLOR,
@@ -87,6 +88,19 @@ describe("NET_TOOLTIP (UX-911)", () => {
     for (const key of Object.keys(NET_TOOLTIP) as Array<keyof typeof NET_TOOLTIP>) {
       expect(NET_TOOLTIP[key].length).toBeGreaterThan(10);
     }
+  });
+});
+
+describe("LAG_THRESHOLD_MS (UX-1002)", () => {
+  // Vercel free-tier cold starts routinely take ~1.3-1.8s. Threshold must
+  // sit above that band so otherwise-healthy sessions don't flash amber.
+  test("threshold is at least 2000ms to clear Vercel cold-start band", () => {
+    expect(LAG_THRESHOLD_MS).toBeGreaterThanOrEqual(2000);
+  });
+
+  test("threshold is a finite positive number", () => {
+    expect(Number.isFinite(LAG_THRESHOLD_MS)).toBe(true);
+    expect(LAG_THRESHOLD_MS).toBeGreaterThan(0);
   });
 });
 

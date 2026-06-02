@@ -26,6 +26,15 @@ type NetStatus = "ON" | "LAG" | "OFF";
 const PING_INTERVAL = 15_000;
 
 /**
+ * UX-1002 — LAG threshold. Bumped from 1200ms to 2000ms because Vercel
+ * free-tier cold starts routinely take ~1.3-1.8s and were flashing amber
+ * on otherwise-healthy sessions. The UX-911 tooltip already reassures
+ * users their work is saving, but the flash itself was misleading.
+ * Exported for unit-testing.
+ */
+export const LAG_THRESHOLD_MS = 2000;
+
+/**
  * Deterministic first-render values. Server and client MUST agree on the
  * very first render or React throws a hydration mismatch. Real connectivity
  * and the live clock are only knowable on the client, so we render these
@@ -65,7 +74,7 @@ function useNetStatus(): NetStatus {
       try {
         await fetch("/", { method: "HEAD", cache: "no-store" });
         const elapsed = performance.now() - start;
-        setStatus(elapsed > 1200 ? "LAG" : "ON");
+        setStatus(elapsed > LAG_THRESHOLD_MS ? "LAG" : "ON");
       } catch {
         setStatus("LAG");
       }
