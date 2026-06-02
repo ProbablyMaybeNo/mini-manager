@@ -35,20 +35,37 @@ import {
  * clamped via `max-w-[calc(100vw-...)]` — matching the `PaintSlotPicker` /
  * `InlineCellPopover` primitives.
  *
- * P16.6 — mobile containment (UX-1203). The Round-12 audit found the
- * anchored-below popover overflowing the fold at 375 and hiding its action
- * buttons behind the fixed bottom nav at 414. Two placements now:
+ * P16.6 — mobile containment, CSS-WIDTH-DRIVEN (UX-1301). The Round-15
+ * audit found the prior, JS-gated fix STILL trapped touch users: gating
+ * the bottom-sheet placement on a runtime `isMobile` flag meant that when
+ * the flag read false in prod (coarse-pointer/width detection is
+ * unreliable), the desktop cell-anchored path ran and pushed the header +
+ * × close button above y=0, off-screen and undismissable. JS detection is
+ * NOT a reliable signal for layout here.
  *
- *   - **Mobile (< md):** a bottom SHEET — `fixed` to the bottom of the
- *     viewport, clear of the fixed bottom tab bar (its `min-h-[56px]` +
- *     `env(safe-area-inset-bottom)`), with its body scrolling inside a
- *     `max-h` clamp. The "Mark as wanted" actions are always inside that
- *     scroll area, so they're reachable thumb-only no matter which cell
- *     was tapped.
- *   - **Desktop (>= md):** anchored to the cell, but FLIP-ABOVE when the
- *     measured space below the anchor can't fit the popover (collision-
- *     aware placement without pulling in a positioning lib). Clamped to
- *     the viewport height via `max-h`.
+ * The robust fix: placement is decided ENTIRELY by Tailwind WIDTH media
+ * queries (`max-md:` / `md:`), never by JS. There is exactly ONE rendered
+ * element with BOTH placements layered as responsive classes:
+ *
+ *   - **< 768px (`max-md:`):** a TRUE viewport-bottom sheet — `fixed`,
+ *     `inset-x-2` (8px gutters), pinned to
+ *     `bottom-[calc(60px+env(safe-area-inset-bottom))]` clear of the fixed
+ *     bottom tab bar, `top-auto`, `max-h-[70vh]`, body scrolling inside the
+ *     clamp. Because `fixed` is relative to the viewport (not the cell
+ *     anchor) and `top` is forced `auto` at this width, the header + ×
+ *     close + WANT actions are ALWAYS on-screen, thumb-reachable, no matter
+ *     which cell was tapped.
+ *   - **>= 768px (`md:`):** anchored to the cell (`absolute`), FLIP-ABOVE
+ *     when the measured space below can't fit the popover. The flip is the
+ *     only thing JS still steers, and it ONLY emits `md:`-scoped classes —
+ *     so nothing it computes can ever reach the mobile sheet.
+ *
+ * Critically, no JS-set inline `top` is ever emitted (the flip uses
+ * `md:top-full` / `md:bottom-full` utility classes, not a measured pixel
+ * value), and the `max-md:!top-auto` utility guarantees the sheet's top
+ * can never be overridden — even by a stray inline style — below 768px.
+ * The `isMobile` prop is now used ONLY to skip the desktop measurement
+ * effect early; it has ZERO influence on the rendered placement classes.
  *
  * No raw hex in classes — swatch fills come from each paint's stored hex
  * (data, not a token) via inline style; the wishlist add is a `success`
@@ -64,10 +81,13 @@ interface Props {
   /** Every catalog cell — candidates rank against the full set so a near
    *  match that the painter doesn't own yet still surfaces. */
   allCells: readonly CoverageCell[];
-  /** Coarse-pointer / narrow-viewport gate from the grid client. When
-   *  true the popover renders as a TRUE viewport-bottom sheet decoupled
-   *  from the cell anchor (UX-1301); when false it's the desktop
-   *  cell-anchored / flip-above popover. */
+  /** Coarse-pointer / narrow-viewport hint from the grid client. UX-1301:
+   *  this is NO LONGER used to choose the placement (that is decided purely
+   *  by CSS width media queries so an unreliable runtime flag can't trap
+   *  touch users). It is used ONLY as an early-out for the desktop
+   *  flip-above measurement effect, so a known-mobile client skips a
+   *  needless `getBoundingClientRect`. The rendered layout is identical
+   *  whether this is true or false. */
   isMobile: boolean;
   /** Local coverage state for a paint id, reflecting any optimistic flips
    *  this session so the popover re-tags candidates after a "Mark as
@@ -93,17 +113,18 @@ export function HeatSinkGapFillPopover({
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Desktop placement: anchored below the cell by default, flipped above
-  // when the measured space below can't fit the popover. Mobile uses a
-  // fixed bottom sheet instead (CSS breakpoint), so this only steers the
-  // `md:` anchored layout. Measured once on open in a layout effect so the
-  // flip happens before paint (no visible jump).
+  // Desktop (>= 768px) placement only: anchored below the cell by default,
+  // flipped above when the measured space below can't fit the popover.
+  // `placement` toggles `md:`-scoped utility classes EXCLUSIVELY — below
+  // 768px the `max-md:` bottom-sheet classes win regardless, so whatever
+  // this computes can never reach the mobile sheet (UX-1301). Measured once
+  // on open in a layout effect so the flip happens before paint.
   const [placement, setPlacement] = useState<Placement>("below");
   useLayoutEffect(() => {
-    // Mobile is a fixed bottom sheet — no cell-anchored measurement, so
-    // the flip logic must NOT run (it's the desktop branch only). This
-    // also keeps the bottom sheet's top pinned to `auto` with nothing
-    // measuring/clobbering it (UX-1301).
+    // On a known-mobile client the desktop `md:` classes are inert (the
+    // viewport is < 768px), so skip the measurement — it would be a wasted
+    // reflow. This early-out is an optimization only; the rendered sheet is
+    // CSS-driven and identical whether or not this runs.
     if (isMobile) return;
     const el = rootRef.current;
     const anchor = el?.parentElement;
@@ -163,39 +184,34 @@ export function HeatSinkGapFillPopover({
       aria-label={
         cell.paint.brand + " " + cell.paint.name + " — fill this gap"
       }
-      data-placement={isMobile ? "sheet" : placement}
-      data-sheet={isMobile ? "" : undefined}
-      // UX-1301: on mobile, FORCE `top: auto` via an inline style so the
-      // bottom sheet can never inherit / be overridden by the desktop
-      // cell-anchored top (the regression where an inline `top:-359px`
-      // pushed the header + × close button above y=0, off-screen). Inline
-      // style is the highest-specificity layer short of `!important`, and
-      // since we render the mobile branch with NO anchored top at all,
-      // nothing competes with it. Desktop leaves positioning to classes.
-      style={isMobile ? { top: "auto" } : undefined}
+      // `data-placement` reports the EFFECTIVE placement for tests/debug:
+      // a bottom sheet below 768px (width-driven, never JS-driven), else the
+      // measured desktop anchor. The desktop value is purely informational
+      // below 768px — the `max-md:` classes win there.
+      data-placement="sheet md:anchored"
+      data-sheet-placement={placement}
+      // UX-1301: NO JS-set inline `top` is ever emitted. The flip uses
+      // `md:`-scoped utility classes, and `max-md:!top-auto` below forces
+      // the sheet's top to `auto` at the highest utility specificity — so
+      // the header + × close can never be clipped above the viewport top.
       className={clsx(
         "z-50 frame-strong bg-[var(--color-bg-panel)] shadow-xl",
         "flex flex-col overflow-hidden",
-        isMobile
-          ? clsx(
-              // Mobile: a TRUE viewport-bottom sheet, fully decoupled from
-              // the cell anchor — `fixed` to the viewport, pinned above the
-              // bottom tab bar (60px + safe-area inset), the BODY scrolls
-              // inside a 70vh clamp so the header + × close + WANT actions
-              // are always on-screen and reachable thumb-only (UX-1301).
-              "fixed left-2 right-2 -translate-x-0",
-              "bottom-[calc(60px+env(safe-area-inset-bottom,0px))]",
-              "w-auto max-w-[480px] mx-auto max-h-[70vh]",
-            )
-          : clsx(
-              // Desktop: anchored to the cell, flipping above when there
-              // isn't room below. Clamped to viewport height.
-              "absolute left-1/2 -translate-x-1/2 w-[280px]",
-              "max-w-[calc(100vw-1.5rem)] max-h-[80vh]",
-              placement === "above"
-                ? "bottom-full top-auto mb-1 mt-0"
-                : "top-full bottom-auto mt-1 mb-0",
-            ),
+        // --- < 768px: a TRUE viewport-bottom sheet (UX-1301) ---
+        // `fixed` is relative to the VIEWPORT, fully decoupled from the cell
+        // anchor; pinned above the bottom tab bar (60px + safe-area inset)
+        // with 8px gutters; `top` forced `auto` (with `!` so no inline/class
+        // top can win) and a 70vh clamp + scrolling body keep the header +
+        // × close + WANT actions on-screen, thumb-reachable, for ANY cell.
+        "max-md:fixed max-md:inset-x-2 max-md:!top-auto",
+        "max-md:bottom-[calc(60px+env(safe-area-inset-bottom,0px))]",
+        "max-md:mx-auto max-md:w-auto max-md:max-w-[480px] max-md:max-h-[70vh]",
+        // --- >= 768px: cell-anchored, flipping above when no room below ---
+        "md:absolute md:left-1/2 md:-translate-x-1/2 md:w-[280px]",
+        "md:max-w-[calc(100vw-1.5rem)] md:max-h-[80vh]",
+        placement === "above"
+          ? "md:bottom-full md:top-auto md:mb-1 md:mt-0"
+          : "md:top-full md:bottom-auto md:mt-1 md:mb-0",
       )}
       onMouseDown={(e) => e.stopPropagation()}
     >

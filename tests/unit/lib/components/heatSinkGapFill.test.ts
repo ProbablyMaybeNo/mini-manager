@@ -231,59 +231,66 @@ describe("HeatSinkGridClient — tap opens popover + optimistic border (P16.5)",
    established client-component test discipline above.
    ============================================================ */
 
-describe("HeatSinkGapFillPopover — mobile containment (UX-1203)", () => {
+describe("HeatSinkGapFillPopover — mobile containment, CSS-WIDTH-DRIVEN (UX-1301)", () => {
   const src = read("src/components/planner/HeatSinkGapFillPopover.tsx");
 
-  test("renders a fixed bottom sheet on mobile, clear of the bottom nav", () => {
-    // Fixed to the viewport bottom with clearance above the bottom tab
-    // bar (its 56px height + safe-area inset) so actions never tuck under
-    // it.
-    expect(src).toContain("fixed");
-    expect(src).toContain("bottom-[calc(60px+env(safe-area-inset-bottom,0px))]");
+  // The launch-gating regression: the prior fix gated the bottom-sheet on a
+  // runtime `isMobile` flag. In prod the flag read false, the desktop
+  // anchored path ran, and the header + × close button rendered above y=0,
+  // off-screen and undismissable. The robust fix below makes the sheet a
+  // function of VIEWPORT WIDTH (Tailwind `max-md:`), never of JS detection.
+
+  test("UX-1301: the bottom sheet is keyed on width (max-md:), not a JS flag", () => {
+    // The defining proof the fix is CSS-width-driven: `max-md:fixed` makes
+    // the popover a viewport-fixed sheet below 768px regardless of any JS
+    // runtime detection. No isMobile ternary picks the positioning.
+    expect(src).toContain("max-md:fixed");
+    expect(src).toContain(
+      "max-md:bottom-[calc(60px+env(safe-area-inset-bottom,0px))]",
+    );
   });
 
-  test("flips above the cell on desktop when there's no room below", () => {
-    // Collision-aware placement measured in a layout effect; the `above`
-    // branch anchors the popover to the cell's top edge. Desktop is the
-    // JS-gated (`!isMobile`) branch, so the anchor classes are bare (no
-    // `md:` prefix) — the mobile sheet is a separate branch entirely.
+  test("UX-1301: the mobile sheet's top is forced auto at width (max-md:!top-auto)", () => {
+    // The crux of the regression fix: below 768px the sheet's `top` is
+    // pinned to `auto` at the highest utility specificity (`!`), so NO
+    // inline style or cell-anchored class can clip the header above y=0.
+    expect(src).toContain("max-md:!top-auto");
+  });
+
+  test("UX-1301: NO JS-set inline top is ever emitted (would defeat the CSS rule)", () => {
+    // The old bug was an inline `top: ...` measured from the cell. The fix
+    // must never write an inline top — the flip uses md: utility classes.
+    // Guard against both the old `top:"auto"` inline AND any measured top.
+    expect(src).not.toMatch(/style=\{[^}]*top\s*:/);
+    expect(src).not.toContain('{ top: "auto" }');
+  });
+
+  test("UX-1301: positioning is NOT branched on the isMobile prop", () => {
+    // No `isMobile ? <fixed-classes> : <absolute-classes>` ternary — the
+    // single rendered element layers both placements as max-md: / md:
+    // classes. (isMobile may still appear as a perf early-out in the
+    // effect, but not as a className/style selector.)
+    expect(src).not.toMatch(/isMobile\s*\?\s*clsx/);
+    expect(src).not.toMatch(/style=\{isMobile/);
+  });
+
+  test("UX-1301: the desktop anchor + flip are md:-scoped only", () => {
+    // Above 768px: cell-anchored, flipping above when there's no room
+    // below. Every desktop positioning class is `md:`-prefixed so it can
+    // never leak onto the mobile sheet.
     expect(src).toContain("useLayoutEffect");
     expect(src).toContain("getBoundingClientRect");
     expect(src).toMatch(/placement === "above"/);
-    expect(src).toContain("bottom-full top-auto");
-    expect(src).toContain("top-full bottom-auto");
+    expect(src).toContain("md:absolute");
+    expect(src).toContain("md:bottom-full md:top-auto");
+    expect(src).toContain("md:top-full md:bottom-auto");
   });
 
-  // UX-1301 — the launch-gating regression. The mobile sheet must be a
-  // TRUE viewport-bottom sheet that the desktop cell-anchor can never
-  // override (the old bug: an inline `top:-359px` pushed the header + ×
-  // off the top of the screen).
-  test("UX-1301: mobile branch is JS-gated, not just a CSS media query", () => {
-    // The placement is decided by the `isMobile` prop the grid passes,
-    // so the desktop anchored top is NEVER applied on a mobile client —
-    // there's no shared style for an inline top to win against.
-    expect(src).toContain("isMobile");
-    expect(src).toMatch(/isMobile\s*\?/);
-  });
-
-  test("UX-1301: mobile forces top:auto inline so nothing can override it", () => {
-    // Inline style is the highest-specificity layer; on mobile we pin
-    // top:auto so no cell-anchored top (inline or class) can clip the
-    // sheet above the viewport top.
-    expect(src).toMatch(/style=\{isMobile \? \{ top: "auto" \}/);
-  });
-
-  test("UX-1301: the flip-above measurement is skipped on mobile", () => {
-    // The layout-effect bails early when isMobile, so it never measures
-    // the cell anchor or sets a placement that could move the sheet.
-    expect(src).toMatch(/if \(isMobile\) return;/);
-  });
-
-  test("UX-1301: mobile sheet pins left/right gutters + a max-height clamp", () => {
-    // left-2 / right-2 = 8px gutters; the 70vh clamp + scrolling body keep
-    // the header + × close + WANT actions on-screen.
-    expect(src).toContain("left-2 right-2");
-    expect(src).toMatch(/max-h-\[70vh\]/);
+  test("UX-1301: mobile sheet pins 8px gutters + a 70vh max-height clamp", () => {
+    // inset-x-2 = 8px gutters; the 70vh clamp + scrolling body keep the
+    // header + × close + WANT actions on-screen for ANY tapped cell.
+    expect(src).toContain("max-md:inset-x-2");
+    expect(src).toMatch(/max-md:max-h-\[70vh\]/);
   });
 
   test("flip decision compares space below vs popover height", () => {
@@ -293,12 +300,12 @@ describe("HeatSinkGapFillPopover — mobile containment (UX-1203)", () => {
   });
 
   test("the body scrolls inside a clamped sheet so actions stay reachable", () => {
-    // The popover is a flex column with a scrolling body and clamped
+    // The popover is a flex column with a scrolling body and a clamped
     // height — the Mark-as-wanted buttons are always inside the scroll
-    // area.
+    // area, never tucked below the bottom nav.
     expect(src).toContain("flex flex-col");
     expect(src).toContain("flex-1 overflow-y-auto");
-    expect(src).toMatch(/max-h-\[70vh\]/);
+    expect(src).toMatch(/max-md:max-h-\[70vh\]/);
   });
 });
 

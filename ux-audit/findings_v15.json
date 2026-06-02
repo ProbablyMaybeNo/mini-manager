@@ -2,7 +2,9 @@
   {
     "id": "UX-1501",
     "round13_ref": "UX-1301",
-    "verdict": "FAIL",
+    "verdict": "FIXED",
+    "status": "fixed",
+    "fix_note": "p16.6: gap-fill popover bottom-sheet placement is now CSS-WIDTH-driven (Tailwind max-md:fixed / max-md:!top-auto / max-md:inset-x-2 / max-md:bottom-[calc(60px+env(safe-area-inset-bottom))] / max-md:max-h-[70vh]), no longer gated on a runtime isMobile flag. No JS-set inline top is emitted; the desktop cell-anchor + flip-above are md:-scoped only. Below 768px the header + × close are always on-screen (top>=0) regardless of which cell is tapped.",
     "severity": "critical",
     "category": "responsive",
     "principle": "NN/g #3 User control and freedom; WCAG 2.2 §2.4.11 Focus Not Obscured; Apple HIG modal sheet",
