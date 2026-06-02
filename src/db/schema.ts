@@ -627,6 +627,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   palettes: many(palettes),
   imports: many(imports),
   recipeStepCompletions: many(recipeStepCompletion),
+  paintNotes: many(paintNotes),
 }));
 
 
@@ -746,6 +747,52 @@ export const recipeStepCompletionRelations = relations(
 
 export type RecipeStepCompletion = typeof recipeStepCompletion.$inferSelect;
 export type NewRecipeStepCompletion = typeof recipeStepCompletion.$inferInsert;
+
+/* ============================================================
+   Domain — Per-paint notes (P15.x)
+   ============================================================
+   A painter's free-form note attached to a *paint* (not a step).
+   The note follows that paint everywhere it's pinned — editing it on
+   one FOCUS step updates every occurrence of the same paint. Distinct
+   from `recipe_step.notes`, which is a per-occurrence working note.
+
+   Keyed by (user_id, paint_id) with a unique index so each painter
+   has at most one note per paint. `paint_id` references paints.json by
+   id with NO SQL foreign key — the catalog is a static asset, not a
+   table (same pattern/comment as `inventory_entry.paint_id`). An empty
+   note is cleared by deleting the row, keeping the table sparse.
+
+   Cascade-deletes with the owning user (account deletion).
+   ============================================================ */
+
+export const paintNotes = sqliteTable(
+  "paint_notes",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** References paints.json by id — no SQL foreign key since the
+     *  catalog is a static asset, not a table. */
+    paintId: text("paint_id").notNull(),
+    note: text("note"),
+    ...timestamps,
+  },
+  (t) => ({
+    userIdx: index("paint_notes_user_idx").on(t.userId),
+    userPaintUq: uniqueIndex("paint_notes_user_paint_unique").on(
+      t.userId,
+      t.paintId,
+    ),
+  }),
+);
+
+export const paintNotesRelations = relations(paintNotes, ({ one }) => ({
+  user: one(users, { fields: [paintNotes.userId], references: [users.id] }),
+}));
+
+export type PaintNote = typeof paintNotes.$inferSelect;
+export type NewPaintNote = typeof paintNotes.$inferInsert;
 
 /* ============================================================
    Type exports for the app

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { updateStepNotes } from "@/lib/actions/focus";
+import { setPaintNote } from "@/lib/actions/paintNotes";
 import { phase12LayerLabel, type Phase12LayerKey, type TechniqueKey } from "@/db/schema";
 import { RecipeTabs, type RecipeTab } from "@/components/focus/RecipeTabs";
 import { FocusQuickActions } from "@/components/focus/FocusQuickActions";
@@ -41,6 +42,15 @@ export interface FocusStepView {
   paintHex: string | null;
   paintLabel: string | null;
   notes: string | null;
+  /** P15.x — the catalog paint id this step pins, if any. Custom-mix
+   *  steps (no paint, only a hex) are null and don't get a per-paint
+   *  note editor. */
+  paintId: string | null;
+  /** P15.x — the paint's GLOBAL per-paint note (keyed on the paint, not
+   *  the step). Threaded from `paint_notes`; the same value decorates
+   *  every step that pins this paint. Null when the paint has no note or
+   *  the step has no paint. */
+  paintNote: string | null;
   /** P15.0 — per-painter done-state for this step. Renders a ticked
    *  checkbox + muted row in the active slot. */
   done: boolean;
@@ -365,6 +375,9 @@ export function FocusPanel({
                                   </span>
                                 ) : null}
                               </p>
+                              {step.paintId ? (
+                                <PaintNoteEditor step={step} />
+                              ) : null}
                             </div>
 
                             <NotesEditor step={step} zoneName={zone.name} />
@@ -482,6 +495,112 @@ function NotesEditor({
                 : "—"}
         </span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * P15.x — Per-PAINT note editor. Distinct from `NotesEditor` (which
+ * saves a per-STEP note): this textarea edits the paint's GLOBAL note,
+ * keyed on the paint id, so the value follows the paint to every step it
+ * pins. Save-on-blur via `setPaintNote`, optimistic, mirroring the
+ * per-step editor's state machine.
+ *
+ * The "applies to this paint everywhere" hint makes the per-paint scope
+ * legible so the painter understands editing here updates every
+ * occurrence of the paint — not just this row.
+ *
+ * Only rendered for paint-backed steps (caller gates on `step.paintId`).
+ */
+function PaintNoteEditor({ step }: { step: FocusStepView }) {
+  const paintId = step.paintId!;
+  const [note, setNote] = useState<string>(step.paintNote ?? "");
+  const [saved, setSaved] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle",
+  );
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  // Sync local state when the server pushes a new value — either another
+  // tab edited the paint, OR the painter edited the SAME paint on a
+  // different step in this panel (revalidate re-renders every occurrence).
+  const remoteValueRef = useRef<string>(step.paintNote ?? "");
+  useEffect(() => {
+    const remote = step.paintNote ?? "";
+    if (remote !== remoteValueRef.current) {
+      remoteValueRef.current = remote;
+      setNote(remote);
+    }
+  }, [step.paintNote]);
+
+  const persist = useCallback(() => {
+    const trimmed = note.trim();
+    const remote = remoteValueRef.current;
+    if (trimmed === remote.trim()) return; // no change
+    setSaved("saving");
+    setErrorMsg(null);
+    startTransition(async () => {
+      const result = await setPaintNote(paintId, trimmed);
+      if (!result.ok) {
+        setSaved("error");
+        setErrorMsg(result.error);
+        return;
+      }
+      remoteValueRef.current = trimmed;
+      setSaved("saved");
+      window.setTimeout(() => setSaved("idle"), 1_500);
+    });
+  }, [note, paintId]);
+
+  return (
+    <div className="space-y-1" data-paint-note-for={paintId}>
+      <label
+        htmlFor={`paint-note-${step.id}`}
+        className="flex items-center gap-1 font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"
+      >
+        <span aria-hidden>◆</span>
+        Paint note
+        <span className="normal-case tracking-normal text-[var(--color-fg-muted)]">
+          · applies to this paint everywhere
+        </span>
+      </label>
+      <textarea
+        id={`paint-note-${step.id}`}
+        value={note}
+        placeholder="Note for this paint (mix, brand sub, technique)…"
+        rows={1}
+        onChange={(e) => setNote(e.target.value)}
+        onBlur={persist}
+        className={clsx(
+          "w-full px-2 py-1 font-mono text-2xs leading-snug",
+          "bg-[var(--color-bg)] text-[var(--color-fg-muted)]",
+          "border border-dashed border-[var(--color-border-strong)] rounded-sm",
+          "focus:outline-2 focus:outline-[var(--color-fg-subtle)]",
+          "resize-y min-h-[2rem]",
+        )}
+      />
+      <span
+        className={clsx(
+          "font-mono text-2xs uppercase tracking-wider",
+          saved === "saved"
+            ? "text-[var(--color-green)]"
+            : saved === "saving"
+              ? "text-[var(--color-fg-muted)]"
+              : saved === "error"
+                ? "text-[var(--color-red)]"
+                : "text-transparent",
+        )}
+        aria-live="polite"
+        role="status"
+      >
+        {saved === "saved"
+          ? "Saved"
+          : saved === "saving"
+            ? "Saving…"
+            : saved === "error"
+              ? errorMsg ?? "Save failed"
+              : "—"}
+      </span>
     </div>
   );
 }

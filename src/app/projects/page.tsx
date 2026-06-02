@@ -11,6 +11,7 @@ import {
   listFocusCandidates,
 } from "@/db/queries/focus";
 import { getCompletedStepIds } from "@/db/queries/stepCompletion";
+import { getPaintNotesMap } from "@/db/queries/paintNotes";
 import {
   getInProgressSession,
   getSessionRollups,
@@ -27,9 +28,9 @@ import { Card } from "@/components/ui/Card";
 import { FocusPicker } from "@/components/focus/FocusPicker";
 import {
   FocusPanel,
-  type FocusStepView,
   type FocusZoneView,
 } from "@/components/focus/FocusPanel";
+import { buildFocusZones } from "@/lib/focus/rollup";
 import { Stopwatch } from "@/components/focus/Stopwatch";
 import { PlannerSection } from "@/components/planner/PlannerSection";
 import { displayStatus, progressPercent } from "@/lib/progress";
@@ -117,41 +118,34 @@ export default async function ProjectsPage({
   const focusStepIds = focusBundle
     ? focusBundle.zones.flatMap((z) => z.steps.map((s) => s.id))
     : [];
-  const completedStepIds = await getCompletedStepIds(userId, focusStepIds);
+  // P15.x — distinct paint ids across the focused recipe's paint-backed
+  // steps. Per-paint notes are keyed on the paint, so we fetch the note
+  // map bounded by these ids and thread the same note into every step
+  // that pins the paint.
+  const focusPaintIds = focusBundle
+    ? Array.from(
+        new Set(
+          focusBundle.zones.flatMap((z) =>
+            z.steps.flatMap((s) => (s.paintId ? [s.paintId] : [])),
+          ),
+        ),
+      )
+    : [];
+  const [completedStepIds, paintNotesMap] = await Promise.all([
+    getCompletedStepIds(userId, focusStepIds),
+    getPaintNotesMap(userId, focusPaintIds),
+  ]);
 
-  // P13.11 — Build the FocusPanel's view model from the bundle.
-  // Resolves paintId to brand+name+hex via the cached paint catalog.
+  // P13.11 / P15.x — Build the FocusPanel's view model from the bundle.
+  // Resolves paintId to brand+name+hex via the cached paint catalog and
+  // threads each step's per-painter done-state + the paint's global note.
   const focusZones: FocusZoneView[] = focusBundle
-    ? focusBundle.zones.map((z) => {
-        const steps: FocusStepView[] = z.steps.map((s) => {
-          const meta = s.paintId ? paintMeta.get(s.paintId) ?? null : null;
-          const hex = s.customColorHex ?? meta?.hex ?? null;
-          const label = meta?.label ?? null;
-          return {
-            id: s.id,
-            zoneId: s.zoneId,
-            position: s.position,
-            technique: s.technique,
-            paintHex: hex,
-            paintLabel: label,
-            notes: s.notes,
-            done: completedStepIds.has(s.id),
-          };
-        });
-        const firstStep = z.steps[0];
-        const swatchHex =
-          firstStep?.customColorHex ??
-          (firstStep?.paintId
-            ? paintMeta.get(firstStep.paintId)?.hex ?? null
-            : null);
-        return {
-          id: z.id,
-          name: z.name,
-          position: z.position,
-          swatchHex,
-          steps,
-        };
-      })
+    ? buildFocusZones(
+        focusBundle.zones,
+        paintMeta,
+        completedStepIds,
+        paintNotesMap,
+      )
     : [];
 
   // P15.0 — resolve the active slot. Honour `?focusSlot` when it points

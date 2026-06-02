@@ -16,6 +16,13 @@ import type { ReactElement } from "react";
 vi.mock("@/lib/actions/focus", () => ({
   updateStepNotes: vi.fn(async () => ({ ok: true, data: { stepId: "" } })),
 }));
+// P15.x — FocusPanel now also pulls in the per-paint note action.
+vi.mock("@/lib/actions/paintNotes", () => ({
+  setPaintNote: vi.fn(async () => ({
+    ok: true,
+    data: { paintId: "", cleared: false },
+  })),
+}));
 
 // P15.0 — FocusPanel now also pulls in the counters + stepCompletion
 // server actions (via FocusQuickActions / StepCompletionCheckbox /
@@ -128,6 +135,8 @@ function basicZones(): FocusZoneView[] {
           technique: "basecoat",
           paintHex: "#aa0033",
           paintLabel: "Citadel Mephiston Red",
+          paintId: null,
+          paintNote: null,
           notes: null,
           done: false,
         },
@@ -138,6 +147,8 @@ function basicZones(): FocusZoneView[] {
           technique: "edge_highlight",
           paintHex: "#ff6655",
           paintLabel: "Citadel Wild Rider Red",
+          paintId: null,
+          paintNote: null,
           notes: "thin to 2:1 contrast medium",
           done: false,
         },
@@ -236,6 +247,8 @@ describe("FocusPanel — per-step rendering (P13.11)", () => {
             technique: "wet_blend",
             paintHex: "#888888",
             paintLabel: "Test",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: false,
           },
@@ -368,6 +381,8 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             technique: "basecoat",
             paintHex: "#aa0033",
             paintLabel: "Mephiston Red",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: true,
           },
@@ -378,6 +393,8 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             technique: "highlight",
             paintHex: "#ff6655",
             paintLabel: "Wild Rider Red",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: false,
           },
@@ -410,6 +427,8 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             technique: "basecoat",
             paintHex: "#aa0033",
             paintLabel: "Mephiston Red",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: true,
           },
@@ -420,6 +439,8 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             technique: "highlight",
             paintHex: "#ff6655",
             paintLabel: "Wild Rider Red",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: false,
           },
@@ -430,6 +451,8 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             technique: "edge_highlight",
             paintHex: "#ffaa99",
             paintLabel: "Fire Dragon Bright",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: false,
           },
@@ -476,6 +499,8 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             technique: "basecoat",
             paintHex: "#aa0033",
             paintLabel: "A",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: true,
           },
@@ -486,6 +511,8 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             technique: "highlight",
             paintHex: "#ff6655",
             paintLabel: "B",
+            paintId: null,
+            paintNote: null,
             notes: null,
             done: false,
           },

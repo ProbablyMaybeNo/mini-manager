@@ -16,13 +16,23 @@ Living doc; tick as they land.
 
 ## Needs a decision before build
 
-- [ ] **Per-paint notes in the FOCUS color scheme.** Ross wants to note
+- [x] **Per-paint notes in the FOCUS color scheme.** Ross wants to note
       colours/techniques against the paints he's using, to refer to while
       painting. We ALREADY have per-*step* notes (`recipe_step.notes`,
       edited inline on FOCUS). Open question: does he want notes attached to
       the *paint itself* (one note per paint, follows that paint everywhere
       it's used) vs the current *per-step* model (a note per occurrence)?
-      → see the question posed to Ross. Build follows his answer.
+      → Ross's LOCKED call: **per-paint** (the note follows the paint
+      everywhere it's used).
+      - **Shipped:** new `paint_notes` table (unique on user+paint,
+        migration `0015_aberrant_smasher.sql`), `getPaintNotesMap` query,
+        `setPaintNote` upsert/clear action, per-paint editor in the FOCUS
+        panel with an "applies to this paint everywhere" affordance. The
+        existing per-step notes were KEPT (non-destructive). Tests +18
+        (1680 → 1698 passing / 1 skipped), `tsc --noEmit` clean.
+      - **Follow-up flagged:** the per-paint + per-step note fields now sit
+        adjacent on each paint-backed step and can read as redundant. Left
+        as-is per scope; needs a consolidation decision (see report).
 
 ## Already shipped (reconciled — do NOT rebuild)
 
