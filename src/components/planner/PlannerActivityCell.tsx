@@ -28,6 +28,7 @@ const KIND_GLYPH: Record<ActivityLogKind, string> = {
   project_created: "+",
   paint_added: "o",
   slot_added: "[]",
+  paint_session: "~",
 };
 
 const KIND_LABEL: Record<ActivityLogKind, string> = {
@@ -36,6 +37,7 @@ const KIND_LABEL: Record<ActivityLogKind, string> = {
   project_created: "project",
   paint_added: "paint",
   slot_added: "slot",
+  paint_session: "session",
 };
 
 export async function PlannerActivityCell({ rows, now }: Props = {}) {

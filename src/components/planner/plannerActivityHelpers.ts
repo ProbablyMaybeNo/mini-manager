@@ -19,6 +19,8 @@ export function sentenceFor(row: ActivityStreamRow): string {
       return name ? "Added paint to " + name : "Bought paint";
     case "slot_added":
       return name ? "Added slot to " + (row.parentRecipeName ?? name) : "Added a slot";
+    case "paint_session":
+      return name ? "Painted " + name : "Logged a paint session";
   }
 }
 

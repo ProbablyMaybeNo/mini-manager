@@ -10,6 +10,10 @@ import {
   getFocusedRecipeBundle,
   listFocusCandidates,
 } from "@/db/queries/focus";
+import {
+  getInProgressSession,
+  getSessionRollups,
+} from "@/db/queries/paintSessions";
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
@@ -25,6 +29,7 @@ import {
   type FocusStepView,
   type FocusZoneView,
 } from "@/components/focus/FocusPanel";
+import { Stopwatch } from "@/components/focus/Stopwatch";
 import { PlannerSection } from "@/components/planner/PlannerSection";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
@@ -78,6 +83,8 @@ export default async function ProjectsPage({
     focusCandidates,
     focusBundle,
     paintMeta,
+    inProgressSession,
+    sessionRollups,
   ] = await Promise.all([
     listAllProjects(userId),
     getProjectPalettesMap(userId),
@@ -87,6 +94,10 @@ export default async function ProjectsPage({
     listFocusCandidates(userId),
     getFocusedRecipeBundle(userId, focusRecipeId ?? null),
     getPaintMetaMap(),
+    // Phase-14 spillover — stopwatch state. Both calls are cheap;
+    // the rollup totals are server-rendered once per page load.
+    getInProgressSession(userId),
+    getSessionRollups(userId),
   ]);
 
   const isEmpty = allProjects.length === 0;
@@ -205,6 +216,23 @@ export default async function ProjectsPage({
                 }))}
                 currentFocusId={focusBundle?.project.id ?? null}
               />
+              {focusBundle ? (
+                <Stopwatch
+                  projectId={focusBundle.project.id}
+                  inProgressSession={
+                    inProgressSession
+                      ? {
+                          id: inProgressSession.id,
+                          projectId: inProgressSession.projectId,
+                          startedAt: inProgressSession.startedAt.getTime(),
+                          pausedMs: inProgressSession.pausedMs,
+                        }
+                      : null
+                  }
+                  todaySeconds={sessionRollups.todaySeconds}
+                  weekSeconds={sessionRollups.weekSeconds}
+                />
+              ) : null}
               {focusBundle ? (
                 <FocusPanel
                   projectId={focusBundle.project.id}

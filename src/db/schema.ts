@@ -796,6 +796,9 @@ export const activityLogKinds = [
   "project_created",
   "paint_added",
   "slot_added",
+  // Phase-14 stopwatch: emitted on session STOP only (start would
+  // spam the activity stream — every painter sitdown is a no-op).
+  "paint_session",
 ] as const;
 export type ActivityLogKind = (typeof activityLogKinds)[number];
 
@@ -873,6 +876,59 @@ export const inspoImagesRelations = relations(inspoImages, ({ one }) => ({
   user: one(users, { fields: [inspoImages.userId], references: [users.id] }),
 }));
 
+/**
+ * Phase-14 spillover — stopwatch sessions.
+ *
+ * Records a painter's at-the-desk time per project. A session opens
+ * with `ended_at = null` (in-progress) and closes with `ended_at` +
+ * `duration_seconds` stamped. `paused_ms` accumulates pause time so
+ * the duration calculation can subtract idle minutes — `duration_seconds
+ *  = (ended_at - started_at - paused_ms) / 1000` rounded down.
+ *
+ * One open session per user is the convention (the start action
+ * refuses to open a new one if any session has `ended_at = null`).
+ * Cascade-deletes follow user/project so orphaned sessions don't pile
+ * up after a project removal.
+ */
+export const paintSessions = sqliteTable(
+  "paint_sessions",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+    /** Null while in-progress; stamped on stop. */
+    endedAt: integer("ended_at", { mode: "timestamp_ms" }),
+    /** Computed on stop = floor((endedAt - startedAt - pausedMs) / 1000). */
+    durationSeconds: integer("duration_seconds"),
+    /** Cumulative pause time in ms. 0 until first pause. */
+    pausedMs: integer("paused_ms").notNull().default(0),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    /** Hot path: "today's sessions for this user" + "in-progress
+     *  lookup". Descending startedAt is the natural rollup order. */
+    userStartedIdx: index("paint_sessions_user_started_idx").on(
+      t.userId,
+      t.startedAt,
+    ),
+  }),
+);
+
+export const paintSessionsRelations = relations(paintSessions, ({ one }) => ({
+  user: one(users, { fields: [paintSessions.userId], references: [users.id] }),
+  project: one(projects, {
+    fields: [paintSessions.projectId],
+    references: [projects.id],
+  }),
+}));
+
 export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
 
@@ -881,6 +937,9 @@ export type NewActivityLogRow = typeof activityLog.$inferInsert;
 
 export type InspoImage = typeof inspoImages.$inferSelect;
 export type NewInspoImage = typeof inspoImages.$inferInsert;
+
+export type PaintSession = typeof paintSessions.$inferSelect;
+export type NewPaintSession = typeof paintSessions.$inferInsert;
 
 /* ============================================================
    Domain — Phase 10 BILLING tables
