@@ -81,7 +81,10 @@ function ColorInput({ label, value, onChange, onOpenPicker }: ColorInputProps) {
           size="sm"
           aria-label={`Pick a ${label.toLowerCase()} colour`}
         >
-          Start…
+          {/* UX-1312 — the prior ellipsis label truncated to nothing and
+              never hinted at opening a colour picker. "Pick" matches the
+              aria-label intent and fits without an ellipsis. */}
+          Pick
         </Button>
       </div>
     </div>

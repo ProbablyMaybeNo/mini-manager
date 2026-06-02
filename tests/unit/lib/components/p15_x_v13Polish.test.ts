@@ -14,6 +14,18 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1312 — gradient colour-picker button label is meaningful", () => {
+  const src = read("src/components/tools/gradient/GradientClient.tsx");
+
+  test("the ambiguous truncating 'Start…' label is gone", () => {
+    expect(src).not.toContain("Start…");
+  });
+
+  test("the visible label matches the picker intent ('Pick')", () => {
+    expect(src).toMatch(/aria-label=\{`Pick a \$\{label\.toLowerCase\(\)\} colour`\}[\s\S]*?Pick\s*<\/Button>/);
+  });
+});
+
 describe("UX-1311 — recipe step swatch/delete hit boxes no longer overlap", () => {
   const src = read("src/components/recipes/StepRow.tsx");
 

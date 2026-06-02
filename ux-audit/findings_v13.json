@@ -178,7 +178,8 @@
     "fix": "Give the button enough width (or shorter copy) to show a meaningful visible label that matches the aria-label, e.g. 'Pick' with a swatch/eyedropper icon, or 'Pick colour'. Avoid the trailing-ellipsis truncation on a label this short.",
     "effort": "trivial",
     "confidence": 0.75,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1313",
