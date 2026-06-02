@@ -37,7 +37,7 @@ describe("User page — plan-tier pill (P11.9 + P12.17)", () => {
   test("Plan card surfaces the locked pricing", () => {
     expect(src).toContain("$0");
     expect(src).toContain("$4 / month");
-    expect(src).toContain("$29 one-time");
+    expect(src).toContain("$36 one-time");
     expect(src).toContain("$19 one-time");
   });
 
