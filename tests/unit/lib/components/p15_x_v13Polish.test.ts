@@ -14,6 +14,28 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1305 — recipes list reflows to stacked cards below 768px", () => {
+  const src = read("src/components/recipes/RecipesTable.tsx");
+
+  test("a mobile card list renders below md, table hidden below md", () => {
+    expect(src).toContain('<div className="md:hidden flex flex-col gap-2">');
+    expect(src).toContain('<div className="hidden md:block frame overflow-x-auto">');
+  });
+
+  test("the card row exists and keeps Assign + Share as full-width buttons", () => {
+    expect(src).toContain("function RecipeCardRow");
+    // Both actions stretch (flex-1) so they never scroll off the edge.
+    const cardIdx = src.indexOf("function RecipeCardRow");
+    const cardBlock = src.slice(cardIdx);
+    expect(cardBlock).toContain('className="flex-1"');
+  });
+
+  test("the desktop table is preserved (still semantic)", () => {
+    expect(src).toContain("<table");
+    expect(src).toContain("<thead");
+  });
+});
+
 describe("UX-1304 — wishlist rows reflow to a stacked card below 768px", () => {
   const src = read("src/components/wishlist/WishlistTable.tsx");
 

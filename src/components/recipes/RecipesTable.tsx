@@ -72,7 +72,16 @@ export function RecipesTable({ rows }: Props) {
   };
 
   return (
-    <div className="frame overflow-x-auto">
+    <>
+      {/* UX-1305 — below md the horizontally-scrolling table hid the
+          Assign/Share row actions off-screen. Render a stacked card list
+          on mobile and reserve the dense sortable table for md+. */}
+      <div className="md:hidden flex flex-col gap-2">
+        {sorted.map((row) => (
+          <RecipeCardRow key={row.id} row={row} />
+        ))}
+      </div>
+      <div className="hidden md:block frame overflow-x-auto">
       <table className="w-full text-xs font-mono">
         <thead>
           <tr
@@ -128,6 +137,58 @@ export function RecipesTable({ rows }: Props) {
           ))}
         </tbody>
       </table>
+      </div>
+    </>
+  );
+}
+
+/**
+ * UX-1305 — mobile card row. Name on its own line, body chip + palette +
+ * slot/step counts beneath, and the Assign/Share actions as full-width
+ * buttons so they never scroll off the right edge.
+ */
+function RecipeCardRow({ row }: { row: RecipeRowVm }) {
+  return (
+    <div className="frame px-3 py-3 flex flex-col gap-2 bg-[var(--color-bg-elevated)]">
+      <div className="flex items-start justify-between gap-2">
+        <Link
+          href={`/recipes/${row.id}`}
+          className="font-mono text-sm text-[var(--color-cyan)] hover:underline min-w-0 truncate"
+        >
+          {row.name}
+        </Link>
+        <StatusPill status="neutral">{row.bodyType}</StatusPill>
+      </div>
+      <PaletteStrip hexes={row.paletteHexes} />
+      <div className="flex items-center gap-3 text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
+        <span>{row.slotCount} slots</span>
+        <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
+        <span>{row.stepCount} steps</span>
+        <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
+        <span className="truncate">{row.attachmentLabel ?? "standalone"}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          as="a"
+          href={`/recipes/${row.id}`}
+          variant="success"
+          size="sm"
+          className="flex-1"
+          title="Open editor + assign to a project"
+        >
+          Assign ▾
+        </Button>
+        <Button
+          as="a"
+          href={row.publicSlug ? `/r/${row.publicSlug}` : `/recipes/${row.id}`}
+          variant="warning"
+          size="sm"
+          className="flex-1"
+          title={row.publicSlug ? "Open shared link" : "Open editor to share"}
+        >
+          Share
+        </Button>
+      </div>
     </div>
   );
 }

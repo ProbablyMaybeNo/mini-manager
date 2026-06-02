@@ -71,7 +71,8 @@
     "fix": "Below 768px, render each recipe as a stacked card (name + body chip + palette swatches on stacked lines, with New/Assign/Share as full-width or wrapped buttons), matching the library card pattern. Keep the table for ≥768px.",
     "effort": "medium",
     "confidence": 0.9,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1306",
