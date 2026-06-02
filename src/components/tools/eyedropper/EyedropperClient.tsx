@@ -46,6 +46,17 @@ export function EyedropperClient() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  // UX-1206 — `isCameraSamplerSupported` is a module-level browser
+  // feature-detect: false during SSR (no `navigator`), true on the
+  // client. Rendering the camera button straight off it produced a
+  // server/client HTML mismatch (React #418). Gate it behind a
+  // post-mount flag so the server and first client render agree
+  // (no button), then reveal after hydration.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const cameraAvailable = mounted && isCameraSamplerSupported;
 
   // The legacy swatches[] surface is derived from pins so the rest of
   // the page (palette display, match resolution, footer) keeps reading
@@ -233,7 +244,7 @@ export function EyedropperClient() {
                 onError={handleError}
                 disabled={busy}
               />
-              {isCameraSamplerSupported ? (
+              {cameraAvailable ? (
                 <Button
                   type="button"
                   onClick={() => setCameraOpen(true)}
@@ -285,7 +296,7 @@ export function EyedropperClient() {
 
           {swatches.length === 0 ? (
             <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-6 text-center">
-              No image yet. Drop one on the left.
+              No image yet — drop or choose one to extract colours.
             </p>
           ) : (
             <div className="space-y-3">

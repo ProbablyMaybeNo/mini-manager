@@ -56,3 +56,30 @@ describe("UX-1212 — iOS standalone meta + viewport-fit for safe areas", () => 
     expect(tabbar).toContain("env(safe-area-inset-bottom");
   });
 });
+
+describe("UX-1206 — eyedropper camera button is post-mount gated (no #418)", () => {
+  const src = read("src/components/tools/eyedropper/EyedropperClient.tsx");
+
+  test("a mounted flag is set in an effect", () => {
+    expect(src).toContain("const [mounted, setMounted] = useState(false)");
+    expect(src).toMatch(/useEffect\(\(\)\s*=>\s*\{\s*setMounted\(true\);?\s*\}/);
+  });
+
+  test("camera visibility derives from mounted && support, not raw support", () => {
+    expect(src).toContain("mounted && isCameraSamplerSupported");
+    expect(src).toContain("{cameraAvailable ? (");
+    expect(src).not.toContain("{isCameraSamplerSupported ? (");
+  });
+});
+
+describe("UX-1207 — eyedropper empty-state copy is layout-agnostic", () => {
+  const src = read("src/components/tools/eyedropper/EyedropperClient.tsx");
+
+  test("no 'on the left' directional copy", () => {
+    expect(src).not.toContain("Drop one on the left");
+  });
+
+  test("copy is direction-neutral", () => {
+    expect(src).toContain("No image yet — drop or choose one to extract colours.");
+  });
+});

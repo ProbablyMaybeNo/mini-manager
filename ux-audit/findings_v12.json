@@ -82,7 +82,8 @@
     "fix": "Find the component on the eyedropper page rendering non-deterministic content during SSR (often a timestamp, clipboard/camera capability check, or Math.random) and gate it behind useEffect/`suppressHydrationWarning`, or render it client-only. Verify the console is clean after.",
     "effort": "small",
     "confidence": 0.85,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done"
   },
   {
     "id": "UX-1207",
@@ -96,7 +97,8 @@
     "fix": "Use layout-agnostic copy, e.g. 'No image yet — drop or choose one above to extract colours.' Or branch the string on breakpoint.",
     "effort": "trivial",
     "confidence": 0.92,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done"
   },
   {
     "id": "UX-1208",
