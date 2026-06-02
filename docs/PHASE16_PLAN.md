@@ -101,7 +101,13 @@ Pure, unit-testable, no React, no DB.
   excludes self + respects n.
 - **Acceptance:** helpers green in the node test env; no UI yet.
 
-### P16.2 — Coverage query + server read
+### P16.2 — Coverage query + server read ✅
+
+**Shipped** 2026-06-02 — `src/db/queries/paintCoverage.ts` + integration tests.
+`getInventoryByPaintId` (slim indexed read), `composeCoverageGrid` (pure,
+testable join), `getCoverageGrid` (top-level read: disk catalog + inventory).
+Catalog cached per export timestamp (mirrors `getPaintMetaMap`).
++6 integration tests (1669 passing / 1 skipped).
 
 - New `src/db/queries/paintCoverage.ts`:
   - `getInventoryByPaintId(userId)` → `Map<paintId, {ownedCount, isWishlisted}>`
