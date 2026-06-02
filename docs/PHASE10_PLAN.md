@@ -11,7 +11,7 @@ The funnel: anonymous browsing → free sign-up (username + password, no email) 
 | **Free** | $0 | 1 project · 1 recipe · 3 wishlist items · library + basic tools | No email required to sign up; required to upgrade |
 | **Pro Monthly** | $4 / month | Unlimited everything + Tools-Pro + Sharing-Pro | Cancellable anytime |
 | **Pro Lifetime** | $36 one-time | Same as Pro Monthly, forever | Best long-term value |
-| **Founder Edition** | $19 one-time | Pro Lifetime + name on About page + early-access perks | **Capped at 100 sales** |
+| **Founder Edition** | $26 one-time | Pro Lifetime + name on About page + early-access perks | **Capped at 100 sales** |
 
 **Tools-Pro:** advanced tools — palette save beyond 3, eyedropper history, gradient ramp export. **Sharing-Pro:** custom recipe URLs, OG image customization, view analytics. (Concrete scoping in P10.3.)
 
@@ -102,7 +102,7 @@ CREATE TABLE meta_counters (
 
 Before P10.4 can be tested live:
 - [ ] Create Stripe account (`stripe.com/signup`); enable Tax + Customer Portal.
-- [ ] Create three Products: "Mini Manager Pro Monthly" / "Mini Manager Pro Lifetime" / "Mini Manager Founder Edition" with prices $4/mo, $36, $19.
+- [ ] Create three Products: "Mini Manager Pro Monthly" / "Mini Manager Pro Lifetime" / "Mini Manager Founder Edition" with prices $4/mo, $36, $26.
 - [ ] Copy the three price IDs into Vercel env vars: `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_LIFETIME`, `STRIPE_PRICE_FOUNDER`.
 - [ ] Copy `sk_live_...` and `whsec_...` into `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
 - [ ] After P10.5 deploys, register the webhook endpoint: `https://miniaturemanager.vercel.app/api/billing/webhook` with the three event types.

@@ -78,7 +78,7 @@ const TIERS: ReadonlyArray<TierCard> = [
   {
     tier: "founder",
     name: "FOUNDER",
-    price: "$19 one-time",
+    price: "$26 one-time",
     blurb: "Early supporter seat — 100 only.",
     accent: "purple",
     features: [

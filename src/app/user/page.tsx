@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
  *   FREE         $0       — everything works, no caps
  *   PRO_MONTHLY  $4/mo    — subscription
  *   PRO_LIFETIME $36      — one-time, full Pro forever (3 free months vs monthly)
- *   FOUNDER      $19      — early supporter slot (locked-in lifetime)
+ *   FOUNDER      $26      — early supporter slot (locked-in lifetime)
  *
  * Tiers are not yet schema-backed (`users.plan` defaults to "free" +
  * nothing writes the paid values). The mappings below are the
@@ -48,13 +48,13 @@ const PLAN_PRICE: Readonly<Record<PlanTier, string>> = {
   FREE: "$0",
   PRO_MONTHLY: "$4 / month",
   PRO_LIFETIME: "$36 one-time",
-  FOUNDER: "$19 one-time",
+  FOUNDER: "$26 one-time",
 };
 const PLAN_BLURB: Readonly<Record<PlanTier, string>> = {
   FREE: "Every feature, no caps. The default seat.",
   PRO_MONTHLY: "Sync + multi-device, billed monthly. Cancel anytime.",
   PRO_LIFETIME: "Sync + multi-device, paid once. Full Pro forever.",
-  FOUNDER: "Early supporter slot — locked-in lifetime access at $19.",
+  FOUNDER: "Early supporter slot — locked-in lifetime access at $26.",
 };
 const PLAN_FEATURES: Readonly<Record<PlanTier, ReadonlyArray<string>>> = {
   FREE: [

@@ -38,7 +38,7 @@ describe("User page — plan-tier pill (P11.9 + P12.17)", () => {
     expect(src).toContain("$0");
     expect(src).toContain("$4 / month");
     expect(src).toContain("$36 one-time");
-    expect(src).toContain("$19 one-time");
+    expect(src).toContain("$26 one-time");
   });
 
   test("Founder tier renders in pastel-purple (locked special slot)", () => {

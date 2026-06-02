@@ -10,7 +10,7 @@
  *                   menu. Sign-up needs only a username + password.
  *   pro_monthly   — unlimited. $4 / month.
  *   pro_lifetime  — unlimited. $36 one-time (3 free months vs monthly).
- *   founder       — unlimited. $19 one-time. Capped at 100 seats; same
+ *   founder       — unlimited. $26 one-time. Capped at 100 seats; same
  *                   limits as pro_lifetime, separate identity (badge,
  *                   About-page listing).
  *
@@ -66,7 +66,7 @@ export const PLAN_PRICE: Readonly<Record<PlanTier, string>> = Object.freeze({
   free: "$0",
   pro_monthly: "$4 / month",
   pro_lifetime: "$36 one-time",
-  founder: "$19 one-time",
+  founder: "$26 one-time",
 });
 
 /**

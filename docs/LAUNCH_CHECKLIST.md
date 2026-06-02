@@ -43,7 +43,7 @@ Real criticals:
 
 ### Phase 10 — Stripe pricing gates (deferred until Ross creates Stripe account)
 - See `docs/PHASE10_PLAN.md` for 8 milestones
-- **Ross-side prerequisite:** create Stripe account + 3 products (Pro Monthly $4 / Pro Lifetime $36 / Founder $19) + copy 5 env vars into Vercel
+- **Ross-side prerequisite:** create Stripe account + 3 products (Pro Monthly $4 / Pro Lifetime $36 / Founder $26) + copy 5 env vars into Vercel
 - Once env vars are in place, fire `milestone-builder docs/PHASE10_PLAN.md --max 8`
 
 ### Known test failures — none currently
