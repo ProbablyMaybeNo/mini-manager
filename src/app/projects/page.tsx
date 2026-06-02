@@ -213,11 +213,23 @@ export default async function ProjectsPage({
         </div>
         <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
           <QuickAddBar />
-          <div className="flex gap-2 self-start md:self-end">
-            <Button as="a" href="/projects/import" variant="warning" size="sm">
+          <div className="flex gap-2 w-full md:w-auto md:self-end">
+            <Button
+              as="a"
+              href="/projects/import"
+              variant="warning"
+              size="sm"
+              className="flex-1 md:flex-none"
+            >
               Import army list
             </Button>
-            <Button as="a" href="/projects/new" variant="success" size="sm">
+            <Button
+              as="a"
+              href="/projects/new"
+              variant="success"
+              size="sm"
+              className="flex-1 md:flex-none"
+            >
               New project
             </Button>
           </div>
@@ -244,23 +256,11 @@ export default async function ProjectsPage({
                 }))}
                 currentFocusId={focusBundle?.project.id ?? null}
               />
-              {focusBundle ? (
-                <Stopwatch
-                  projectId={focusBundle.project.id}
-                  inProgressSession={
-                    inProgressSession
-                      ? {
-                          id: inProgressSession.id,
-                          projectId: inProgressSession.projectId,
-                          startedAt: inProgressSession.startedAt.getTime(),
-                          pausedMs: inProgressSession.pausedMs,
-                        }
-                      : null
-                  }
-                  todaySeconds={sessionRollups.todaySeconds}
-                  weekSeconds={sessionRollups.weekSeconds}
-                />
-              ) : null}
+              {/* Recipe first — the painter should see what they're
+                  painting right under the picker. The stopwatch is a
+                  tool you start once, so it sits below the recipe
+                  (Ross 2026-06-02: "I don't see the focus recipe" — it
+                  was buried under the stopwatch on mobile). */}
               {focusBundle ? (
                 <FocusPanel
                   projectId={focusBundle.project.id}
@@ -282,6 +282,23 @@ export default async function ProjectsPage({
                   hasCandidates={focusCandidates.length > 0}
                 />
               )}
+              {focusBundle ? (
+                <Stopwatch
+                  projectId={focusBundle.project.id}
+                  inProgressSession={
+                    inProgressSession
+                      ? {
+                          id: inProgressSession.id,
+                          projectId: inProgressSession.projectId,
+                          startedAt: inProgressSession.startedAt.getTime(),
+                          pausedMs: inProgressSession.pausedMs,
+                        }
+                      : null
+                  }
+                  todaySeconds={sessionRollups.todaySeconds}
+                  weekSeconds={sessionRollups.weekSeconds}
+                />
+              ) : null}
             </div>
           </Card>
 

@@ -86,6 +86,10 @@ export function FocusPicker({ options, currentFocusId }: Props) {
         onChange={(e) => onChange(e.target.value)}
         className={clsx(
           "frame px-3 py-1.5 font-mono text-xs",
+          // Mobile: fill the card width + allow shrink so the long
+          // "name · type · recipe" option truncates inside the card
+          // gutter instead of clipping the chevron past the edge.
+          "w-full sm:w-auto min-w-0 max-w-full truncate",
           "bg-[var(--color-bg-panel)] text-[var(--color-fg)]",
           "border border-[var(--color-border-strong)] rounded-sm",
           "focus:outline-2 focus:outline-[var(--color-cyan)]",
