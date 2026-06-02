@@ -4,6 +4,9 @@ import {
   bandForHex,
   closerMatchesDeltaE,
   fastMatchByHueBand,
+  MATCH_DEFAULT_DELTAE,
+  MATCH_EXPANDED_DELTAE,
+  matchesWithinDeltaE,
 } from "@/lib/colorPicker/matchPaints";
 
 /* P12.1 — ColorPicker paint-match helpers.
@@ -142,6 +145,64 @@ describe("closerMatchesDeltaE", () => {
 
   test("malformed target hex returns no results", () => {
     const out = closerMatchesDeltaE("not-a-hex", FIXTURES);
+    expect(out).toEqual([]);
+  });
+});
+
+describe("matchesWithinDeltaE (UX-908)", () => {
+  // The old hue-band default surfaced very-far paints like "Near black"
+  // for a magenta pick simply because both fell in the red-purple band.
+  // The new helper caps by perceptual ΔE so unrelated colours don't
+  // pad the result list.
+
+  test("defaults are sane — tight default, looser expanded", () => {
+    expect(MATCH_DEFAULT_DELTAE).toBe(10);
+    expect(MATCH_EXPANDED_DELTAE).toBeGreaterThan(MATCH_DEFAULT_DELTAE);
+  });
+
+  test("returns matches sorted ascending by ΔE", () => {
+    const out = matchesWithinDeltaE("#FF0000", FIXTURES, 30);
+    for (let i = 1; i < out.length; i++) {
+      const curr = out[i];
+      const prev = out[i - 1];
+      if (curr && prev) {
+        expect(curr.deltaE).toBeGreaterThanOrEqual(prev.deltaE);
+      }
+    }
+  });
+
+  test("caps results by perceptual distance, not by row count", () => {
+    // Magenta pick. Every result must be within the cap; no far-off
+    // greys / blacks should slip in just because the catalog has them.
+    const out = matchesWithinDeltaE("#DD44AA", FIXTURES, 10);
+    for (const m of out) {
+      expect(m.deltaE).toBeLessThanOrEqual(10);
+    }
+    // The fixture's "Near black" sits >>10 ΔE from magenta — it must
+    // be filtered out, even though both share the red-purple band.
+    expect(out.map((m) => m.paint.id)).not.toContain("black");
+  });
+
+  test("a very tight cap can yield zero results", () => {
+    // The fixture catalog has no near-perfect magenta — at ΔE ≤ 0.5,
+    // the only qualifier would be a near-identical hex, and there
+    // isn't one. The empty state is part of the user-facing fix.
+    const out = matchesWithinDeltaE("#DD44AA", FIXTURES, 0.5);
+    expect(out.length).toBeLessThanOrEqual(1);
+  });
+
+  test("expanded ΔE returns at least as many rows as default", () => {
+    const tight = matchesWithinDeltaE("#FF0000", FIXTURES, MATCH_DEFAULT_DELTAE);
+    const loose = matchesWithinDeltaE(
+      "#FF0000",
+      FIXTURES,
+      MATCH_EXPANDED_DELTAE,
+    );
+    expect(loose.length).toBeGreaterThanOrEqual(tight.length);
+  });
+
+  test("malformed target hex returns no results", () => {
+    const out = matchesWithinDeltaE("garbage", FIXTURES);
     expect(out).toEqual([]);
   });
 });

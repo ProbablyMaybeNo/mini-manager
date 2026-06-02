@@ -134,3 +134,43 @@ export function closerMatchesDeltaE(
 ): MatchResult[] {
   return findClosestPaints(hex, paints, { limit });
 }
+
+/**
+ * UX-908 — Library-match defaults for the ColorPicker side panel.
+ *
+ * The old default was `fastMatchByHueBand` which returns up to 50
+ * same-hue-band paints in catalog order, including very-far matches
+ * (picking magenta surfaced "Rubber Black" because both sit in the
+ * red-purple band). Cap by perceptual distance, not band membership.
+ *
+ * `MATCH_DEFAULT_DELTAE` — the painter's "could pass as the same colour"
+ * threshold. ΔE2000 < 5 reads "medium" confidence in the match-tool's
+ * existing classifier; 10 stretches that into "useful family" without
+ * letting drastically-off paints pad the list.
+ *
+ * `MATCH_EXPANDED_DELTAE` — used when the painter asks for more matches.
+ * Loosens to 30 (still well below the match-tool's "top 20 always" cap)
+ * so cross-band approximations and dramatic-shadow alternatives show up.
+ */
+export const MATCH_DEFAULT_DELTAE = 10;
+export const MATCH_EXPANDED_DELTAE = 30;
+
+/**
+ * UX-908 — Return paints sorted ascending by ΔE2000, capped at the given
+ * perceptual threshold. Reuses `findClosestPaints` (single source of
+ * truth for perceptual ranking) and then trims by ΔE rather than by row
+ * count. Result count is "however many paints actually qualify", which
+ * is the user-facing fix: an unrelated colour gets fewer matches, not 50
+ * random in-band rows.
+ */
+export function matchesWithinDeltaE(
+  hex: string,
+  paints: ReadonlyArray<Paint>,
+  maxDeltaE = MATCH_DEFAULT_DELTAE,
+): MatchResult[] {
+  // Pull a generous top-N from the perceptual sort, then prune by ΔE.
+  // The hard cap on the inner call exists to bound the worst-case
+  // sort+slice work; it's never the user-facing limit.
+  const ranked = findClosestPaints(hex, paints, { limit: 200 });
+  return ranked.filter((m) => m.deltaE <= maxDeltaE);
+}

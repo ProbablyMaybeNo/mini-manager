@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { clsx } from "clsx";
 import type { Paint } from "@/lib/paints/types";
+import type { MatchResult } from "@/lib/tools/match/find";
 import { loadPaints } from "@/lib/paints/loader";
 import { hexToHsl } from "@/lib/tools/wheel/harmonies";
 import {
@@ -16,8 +17,9 @@ import {
 } from "@/lib/colorPicker/harmonies";
 import {
   bandForHex,
-  closerMatchesDeltaE,
-  fastMatchByHueBand,
+  MATCH_DEFAULT_DELTAE,
+  MATCH_EXPANDED_DELTAE,
+  matchesWithinDeltaE,
 } from "@/lib/colorPicker/matchPaints";
 import type {
   ColorPickerHarmony,
@@ -113,11 +115,17 @@ export function ColorPicker({
     };
   }, []);
 
-  /* ---------- library sub-panel state ---------- */
+  /* ---------- library sub-panel state ----------
+     UX-908 — Library list is now always ΔE2000-sorted and capped by
+     perceptual distance, not row count. Default ΔE ≤ 10 ("useful
+     family"); "Show more matches" loosens to ≤ 30 ("cross-band
+     approximations"). Replaces the old hue-band default that
+     surfaced "Rubber Black" for a magenta pick simply because they
+     share the red-purple band. */
   const [textQuery, setTextQuery] = useState("");
-  const [showCloser, setShowCloser] = useState(false);
+  const [showFurther, setShowFurther] = useState(false);
 
-  const libraryRows = useMemo<Paint[]>(() => {
+  const libraryRows = useMemo<MatchResult[]>(() => {
     let pool: ReadonlyArray<Paint> = paints;
     if (textQuery.trim()) {
       const q = textQuery.trim().toLowerCase();
@@ -128,11 +136,9 @@ export function ColorPicker({
           (p.line ?? "").toLowerCase().includes(q),
       );
     }
-    if (showCloser) {
-      return closerMatchesDeltaE(pickedHex, pool, 20).map((m) => m.paint);
-    }
-    return fastMatchByHueBand(pickedHex, pool, { limit: 50 });
-  }, [paints, textQuery, pickedHex, showCloser]);
+    const cap = showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE;
+    return matchesWithinDeltaE(pickedHex, pool, cap);
+  }, [paints, textQuery, pickedHex, showFurther]);
 
   /* ---------- eyedropper sub-panel state ---------- */
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -333,57 +339,67 @@ export function ColorPicker({
           <span className="text-2xs font-mono text-[var(--color-fg-subtle)]">
             {catalogLoading
               ? "Loading catalog…"
-              : `${libraryRows.length} match${libraryRows.length === 1 ? "" : "es"}`}
+              : `${libraryRows.length} match${libraryRows.length === 1 ? "" : "es"} · ΔE ≤ ${showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE}`}
           </span>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setShowCloser((v) => !v)}
-            aria-pressed={showCloser}
+            onClick={() => setShowFurther((v) => !v)}
+            aria-pressed={showFurther}
           >
-            {showCloser ? "Hue-band filter" : "Show closer matches"}
+            {showFurther ? "Tight match" : "Show more matches"}
           </Button>
         </div>
         <ul
           className="max-h-72 overflow-y-auto space-y-1"
           aria-label="Matching library paints"
         >
-          {libraryRows.map((paint) => (
-            <li key={paint.id}>
+          {libraryRows.map((m) => (
+            <li key={m.paint.id}>
               <button
                 type="button"
-                onClick={() => emitPaint(paint.hex, paint.id)}
+                onClick={() => emitPaint(m.paint.hex, m.paint.id)}
                 className={clsx(
                   "w-full flex items-center gap-3 px-2 py-1.5 frame text-left hover:border-[var(--color-cyan)] transition-colors",
-                  value?.paintId === paint.id &&
+                  value?.paintId === m.paint.id &&
                     "border-[var(--color-cyan)]",
                 )}
-                aria-current={value?.paintId === paint.id || undefined}
+                aria-current={value?.paintId === m.paint.id || undefined}
               >
                 <span
                   aria-hidden
                   className="block w-6 h-6 rounded-sm flex-shrink-0"
                   style={{
-                    background: paint.hex,
+                    background: m.paint.hex,
                     border: "1px solid var(--color-border-strong)",
                   }}
                 />
-                <span className="flex flex-col min-w-0">
+                <span className="flex flex-col min-w-0 flex-1">
                   <span className="font-mono text-xs truncate text-[var(--color-fg)]">
-                    {paint.name}
+                    {m.paint.name}
                   </span>
                   <span className="font-mono text-2xs text-[var(--color-fg-muted)] truncate">
-                    {paint.brand}
-                    {paint.line ? ` · ${paint.line}` : ""}
+                    {m.paint.brand}
+                    {m.paint.line ? ` · ${m.paint.line}` : ""}
                   </span>
+                </span>
+                {/* UX-908 — Surface the ΔE per row so the painter can
+                    eyeball how close each candidate really is. <2 is
+                    high-confidence, <5 medium. Lower = closer. */}
+                <span
+                  aria-label={`Delta E ${m.deltaE.toFixed(1)}`}
+                  className="font-mono text-2xs tabular-nums text-[var(--color-fg-subtle)] flex-shrink-0"
+                >
+                  ΔE {m.deltaE.toFixed(1)}
                 </span>
               </button>
             </li>
           ))}
           {!catalogLoading && libraryRows.length === 0 ? (
             <li className="px-2 py-3 text-2xs font-sans text-[var(--color-fg-muted)] text-center">
-              No paints match. Try a different colour or "Show closer matches".
+              No paints within ΔE {showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE}.
+              {!showFurther ? ' Try "Show more matches".' : ""}
             </li>
           ) : null}
         </ul>

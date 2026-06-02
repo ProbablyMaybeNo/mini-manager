@@ -59,7 +59,10 @@ describe("ColorPicker — R7-001 emit contract", () => {
   });
 
   test("library row is wired to emitPaint with paint.id", () => {
-    expect(src).toContain("onClick={() => emitPaint(paint.hex, paint.id)}");
+    // UX-908 — Library rows are now MatchResult objects (paint + deltaE)
+    // so the call site reads `m.paint.hex` / `m.paint.id`. The contract
+    // is unchanged: a library-row click still emits via emitPaint.
+    expect(src).toContain("onClick={() => emitPaint(m.paint.hex, m.paint.id)}");
   });
 
   test("no callsite emits a selection without a paintId field", () => {
