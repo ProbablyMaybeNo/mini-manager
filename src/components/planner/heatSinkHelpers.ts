@@ -11,7 +11,9 @@
  */
 import type { CoverageState } from "@/lib/paints/coverage";
 import type { CoverageSummary } from "@/lib/paints/coverage";
+import { nearestPaintsByHue } from "@/lib/paints/coverage";
 import type { CoverageCell } from "@/db/queries/paintCoverage";
+import type { Paint } from "@/lib/paints/types";
 
 /**
  * Border colour for a cell, keyed by coverage state. Owned → green,
@@ -154,4 +156,90 @@ export function pickDefaultDensity(summary: CoverageSummary): GridDensity {
   return summary.owned + summary.wanted >= CONDENSED_DEFAULT_THRESHOLD
     ? "condensed"
     : "full";
+}
+
+/* ============================================================
+   P16.5 — gap-fill popover view helpers.
+
+   Tapping a cell opens a popover anchored to it. The popover shows the
+   tapped paint + its nearest-hue catalog neighbours ("candidates to fill
+   this gap" / "close matches you already own"), each tagged with its own
+   coverage state and offering a one-tap "Mark as wanted". All the data
+   shaping is pure + unit-tested here; the client (HeatSinkGridClient)
+   owns the interaction (popover open/close, the wishlist action call, and
+   the optimistic border flip).
+
+   Candidates come from the full catalog the client already holds —
+   `grid.cells` always spans every catalog paint regardless of the
+   Condensed/Full density toggle (density only narrows the *visible* set),
+   so no extra server query is needed. A near match might be a paint the
+   painter doesn't own yet (a "none" cell dropped in Condensed view), so
+   we rank against every cell, not just the visible ones.
+   ============================================================ */
+
+/** How many near-hue candidates the gap-fill popover offers. */
+export const GAP_FILL_CANDIDATE_COUNT = 6;
+
+/** One near-match row in the gap-fill popover: a paint + its live state. */
+export interface GapFillCandidate {
+  paint: Paint;
+  state: CoverageState;
+}
+
+/**
+ * The near-hue candidates for a tapped cell, nearest first, excluding the
+ * tapped paint itself. Computed from the full cell set the client holds:
+ * we rank the catalog paints by ΔE2000 via the frozen `nearestPaintsByHue`
+ * then re-attach each candidate's coverage state so the popover can tag it
+ * owned / wanted / none. `n` defaults to `GAP_FILL_CANDIDATE_COUNT`.
+ */
+export function buildGapFillCandidates(
+  target: CoverageCell,
+  allCells: readonly CoverageCell[],
+  n: number = GAP_FILL_CANDIDATE_COUNT,
+): GapFillCandidate[] {
+  if (n <= 0) return [];
+  const stateByPaintId = new Map<string, CoverageState>();
+  const paints: Paint[] = [];
+  for (const c of allCells) {
+    stateByPaintId.set(c.paint.id, c.state);
+    paints.push(c.paint);
+  }
+  return nearestPaintsByHue(target.paint, paints, n).map((paint) => ({
+    paint,
+    state: stateByPaintId.get(paint.id) ?? "none",
+  }));
+}
+
+/**
+ * Popover heading copy, framed by whether the painter already owns the
+ * tapped paint. Owned cells get a reassuring "you own this" frame (no nag
+ * to buy); unowned cells get a "fill this gap" frame. The count is the
+ * number of near matches shown.
+ */
+export function gapFillHeading(
+  targetState: CoverageState,
+  candidateCount: number,
+): string {
+  const matches =
+    candidateCount === 1 ? "1 near match" : formatCount(candidateCount) + " near matches";
+  if (targetState === "owned") {
+    return "You own this — " + matches;
+  }
+  return "Fill this gap — " + matches;
+}
+
+/**
+ * Short label for a candidate's coverage state, shown as a pill beside
+ * each near-match row. Mirrors the border legend (owned / wanted / none).
+ */
+export function candidateStateLabel(state: CoverageState): string {
+  switch (state) {
+    case "owned":
+      return "Owned";
+    case "wanted":
+      return "Wanted";
+    default:
+      return "Not owned";
+  }
 }

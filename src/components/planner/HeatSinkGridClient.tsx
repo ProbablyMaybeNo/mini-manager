@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { clsx } from "clsx";
 import type { CoverageGrid } from "@/db/queries/paintCoverage";
+import type { CoverageState } from "@/lib/paints/coverage";
 import {
   CELLS_PER_ROW_GROUP,
   borderClassFor,
@@ -14,6 +15,7 @@ import {
   pickDefaultDensity,
   type GridDensity,
 } from "./heatSinkHelpers";
+import { HeatSinkGapFillPopover } from "./HeatSinkGapFillPopover";
 
 /**
  * P16.4 — performance-pass client wrapper for the heat-sink grid.
@@ -68,6 +70,34 @@ export function HeatSinkGridClient({
   const [density, setDensity] = useState<GridDensity>(() =>
     pickDefaultDensity(summary),
   );
+
+  // P16.5 — gap-fill. `openPaintId` is the cell whose popover is open
+  // (null = none). `wantedOverrides` holds paint ids optimistically
+  // flipped to "wanted" this session so their border turns amber without
+  // a server refetch; it's read back when re-tagging cells + candidates.
+  const [openPaintId, setOpenPaintId] = useState<string | null>(null);
+  const [wantedOverrides, setWantedOverrides] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+
+  // Effective coverage state for a paint: an optimistic "wanted" flip wins
+  // over the original (unless the painter already owned it). Drives both
+  // the border colour and the popover's candidate tags.
+  const stateForPaint = useCallback(
+    (paintId: string, fallback: CoverageState): CoverageState => {
+      if (fallback === "owned") return "owned";
+      return wantedOverrides.has(paintId) ? "wanted" : fallback;
+    },
+    [wantedOverrides],
+  );
+
+  const markWanted = useCallback((paintId: string) => {
+    setWantedOverrides((prev) => {
+      const next = new Set(prev);
+      next.add(paintId);
+      return next;
+    });
+  }, []);
 
   const brandFilterArray = useMemo<readonly string[] | null>(() => {
     if (selectedBrands === null) return null;
@@ -211,22 +241,56 @@ export function HeatSinkGridClient({
                 gridTemplateColumns: "repeat(auto-fill, minmax(7px, 1fr))",
               }}
             >
-              {group.map((cell) => (
-                <span
-                  key={cell.paint.id}
-                  role="gridcell"
-                  data-state={cell.state}
-                  title={cell.paint.brand + " " + cell.paint.name}
-                  aria-label={
-                    cell.paint.brand + " " + cell.paint.name + ", " + cell.state
-                  }
-                  className={
-                    "aspect-square rounded-[1px] border " +
-                    borderClassFor(cell.state)
-                  }
-                  style={{ backgroundColor: cell.paint.hex }}
-                />
-              ))}
+              {group.map((cell) => {
+                const effectiveState = stateForPaint(
+                  cell.paint.id,
+                  cell.state,
+                );
+                const isOpen = openPaintId === cell.paint.id;
+                return (
+                  <span
+                    key={cell.paint.id}
+                    className="relative aspect-square"
+                  >
+                    <button
+                      type="button"
+                      role="gridcell"
+                      data-state={effectiveState}
+                      aria-haspopup="dialog"
+                      aria-expanded={isOpen}
+                      title={cell.paint.brand + " " + cell.paint.name}
+                      aria-label={
+                        cell.paint.brand +
+                        " " +
+                        cell.paint.name +
+                        ", " +
+                        effectiveState +
+                        ". Tap to fill this gap."
+                      }
+                      onClick={() =>
+                        setOpenPaintId((prev) =>
+                          prev === cell.paint.id ? null : cell.paint.id,
+                        )
+                      }
+                      className={clsx(
+                        "block h-full w-full rounded-[1px] border cursor-pointer",
+                        "hover:outline hover:outline-1 hover:outline-[var(--color-fg-muted)]",
+                        borderClassFor(effectiveState),
+                      )}
+                      style={{ backgroundColor: cell.paint.hex }}
+                    />
+                    {isOpen ? (
+                      <HeatSinkGapFillPopover
+                        cell={cell}
+                        allCells={cells}
+                        stateForPaint={stateForPaint}
+                        onClose={() => setOpenPaintId(null)}
+                        onMarkedWanted={markWanted}
+                      />
+                    ) : null}
+                  </span>
+                );
+              })}
             </div>
           ))
         )}

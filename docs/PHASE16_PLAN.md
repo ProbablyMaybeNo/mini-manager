@@ -202,7 +202,26 @@ P16.5 gap-fill can proceed on the DOM grid.
 - **Acceptance:** scroll + initial paint stay smooth at 375px; no long task
   >50ms on interaction in the throttled profile.
 
-### P16.5 — Gap-fill interaction
+### P16.5 — Gap-fill interaction ✅
+
+**Shipped** 2026-06-02 — `HeatSinkGapFillPopover.tsx` (new popover subcomponent)
+wired into `HeatSinkGridClient`. Cells are now `<button role="gridcell">`; tapping
+one opens a popover anchored to it (`z-50`, `max-w-[calc(100vw-1.5rem)]`,
+Escape + click-outside dismiss — matching the `PaintSlotPicker` /
+`InlineCellPopover` primitives). Popover shows the tapped paint (swatch + brand +
+name + state) and its nearest-hue candidates via the **frozen**
+`nearestPaintsByHue` (new pure helper `buildGapFillCandidates` ranks against the
+full `grid.cells` the client already holds — candidates include unowned "none"
+cells dropped in Condensed view; **no new server query**). Each unowned paint
+(tapped cell + candidates) gets a one-tap **"Mark as wanted"** that calls the
+**existing** `toggleWishlistedPaint` action (UX-1001 path — reused, not
+re-implemented) and optimistically flips the cell border to amber via a
+session-local `wantedOverrides` set (owned cells never downgrade). Owned cells
+open the same popover framed "You own this — N near matches" (no buy nag). Solid
+`success` Button on the wishlist add; no cyan, no raw hex in className, `@theme`
+tokens only. +26 tests (helper behaviour + popover/client wiring, source-level
+per the no-jsdom convention): **1744 passing / 1 skipped** (from 1718/1). `tsc`
+clean. Commit `44ab1c6`. **Local commit only — not pushed.**
 
 - Tapping an **unowned** cell opens a popover (reuse the existing paint-detail /
   picker popover primitives — match `PaintDetailPanel` / `PaintSlotPicker`
