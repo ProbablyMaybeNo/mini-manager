@@ -14,6 +14,23 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1313 — pricing highlights one recommended tier", () => {
+  const src = read("src/app/pricing/page.tsx");
+
+  test("Pro Lifetime carries the highlight flag", () => {
+    expect(src).toMatch(/tier:\s*"pro_lifetime"[\s\S]*?highlight:\s*true/);
+  });
+
+  test("the highlighted card renders a 'Best value' ribbon", () => {
+    expect(src).toContain("Best value");
+    expect(src).toContain("card.highlight ?");
+  });
+
+  test("the highlighted card gets an accent border + glow (no other tier does)", () => {
+    expect(src).toContain("border-[var(--color-green)] shadow-[0_0_0_1px_var(--color-green)");
+  });
+});
+
 describe("UX-1312 — gradient colour-picker button label is meaningful", () => {
   const src = read("src/components/tools/gradient/GradientClient.tsx");
 

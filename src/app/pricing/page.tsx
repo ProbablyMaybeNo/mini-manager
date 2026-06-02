@@ -185,11 +185,25 @@ function TierCardView({
   const founderSoldOut = card.tier === "founder" && inventory.soldOut;
 
   return (
-    <Card
-      title={card.name}
-      ariaLabel={`${card.name} tier — ${card.price}`}
-      accentColor={card.accent}
-    >
+    <div className={card.highlight ? "relative" : undefined}>
+      {/* UX-1313 — one recommended tier (Pro Lifetime) gets a "Best value"
+          ribbon + accent-glow border so the eye has an anchor, per the
+          universal pricing-table convention (Von Restorff). */}
+      {card.highlight ? (
+        <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 inline-flex items-center px-2 py-0.5 rounded-sm font-mono text-2xs uppercase tracking-wider bg-[var(--color-green)] text-[var(--color-bg)]">
+          Best value
+        </span>
+      ) : null}
+      <Card
+        title={card.name}
+        ariaLabel={`${card.name} tier — ${card.price}${card.highlight ? " — recommended" : ""}`}
+        accentColor={card.accent}
+        className={
+          card.highlight
+            ? "border-[var(--color-green)] shadow-[0_0_0_1px_var(--color-green),0_0_18px_-4px_color-mix(in_srgb,var(--color-green)_50%,transparent)]"
+            : undefined
+        }
+      >
       <div className="space-y-4">
         <div className="space-y-1">
           <p className="text-2xl font-mono tabular-nums text-[var(--color-fg)]">
@@ -231,7 +245,8 @@ function TierCardView({
           />
         </div>
       </div>
-    </Card>
+      </Card>
+    </div>
   );
 }
 

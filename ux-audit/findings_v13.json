@@ -193,7 +193,9 @@
     "fix": "Highlight one recommended tier (e.g. Pro Lifetime or Founder) with a distinct border/accent glow + a 'Best value' / 'Most popular' ribbon, and order it visually as the anchor. Keep the others de-emphasised so the recommendation reads instantly.",
     "effort": "small",
     "confidence": 0.65,
-    "needs_human": true
+    "needs_human": true,
+    "status": "fixed",
+    "note": "Highlighted Pro Lifetime (the existing highlight flag) with a green Best value ribbon + accent-glow border. Did not reorder the grid — Pro Lifetime already sits centre-right; a reorder is a heavier layout decision left for a human if wanted."
   },
   {
     "id": "UX-1314",
