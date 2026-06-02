@@ -129,7 +129,8 @@
     "fix": "On mobile, shrink the hero (e.g. cap at ~120-160px or move it inline beside the H1) so at least username + password + the submit button are visible above the fold. The form is the task; the image should defer to it (Apple HIG deference).",
     "effort": "small",
     "confidence": 0.85,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done"
   },
   {
     "id": "UX-1210",

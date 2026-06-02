@@ -120,3 +120,15 @@ describe("UX-1211 — sub-AA separator dots fixed", () => {
     expect(src).toContain('<span aria-hidden className="opacity-50">·</span>');
   });
 });
+
+describe("UX-1209 — auth hero capped on mobile so the form clears the fold", () => {
+  test("sign-up caps the logo at 150px on mobile, full width at md+", () => {
+    const src = read("src/app/sign-up/page.tsx");
+    expect(src).toContain('w-full max-w-[150px] md:max-w-none');
+  });
+
+  test("sign-in mirrors the capped hero", () => {
+    const src = read("src/app/sign-in/page.tsx");
+    expect(src).toContain('w-full max-w-[150px] md:max-w-none');
+  });
+});

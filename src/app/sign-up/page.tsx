@@ -21,8 +21,14 @@ export default async function SignUpPage() {
     <div className="min-h-screen flex items-start md:items-center justify-center p-6 md:p-8">
       <div className="w-full max-w-md space-y-6">
         <h1 className="sr-only">Create your Mini Manager account</h1>
+        {/* UX-1209 — on mobile the full-width hero (~312px square) pushed
+            Password / Confirm / submit below the 667 fold. Cap it at
+            150px on small screens so the form is the visible task; it
+            grows back to full panel width at md+. */}
         <div className="flex justify-center pt-2 md:pt-0">
-          <Logo decorative />
+          <div className="w-full max-w-[150px] md:max-w-none">
+            <Logo decorative />
+          </div>
         </div>
 
         <Card title="Create account" ariaLabel="Create account">
