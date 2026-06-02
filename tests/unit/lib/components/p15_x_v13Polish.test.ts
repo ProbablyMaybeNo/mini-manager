@@ -14,6 +14,22 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1310 — DELETE PROJECT drops to a red outline (quieter)", () => {
+  test("the detail-page trigger uses variant=danger + tone=outline", () => {
+    const src = read("src/components/projects/DeleteProjectButton.tsx");
+    expect(src).toContain('variant="danger"');
+    expect(src).toContain('tone="outline"');
+  });
+
+  test("the confirm modal keeps the SOLID red 'Delete forever' (no outline)", () => {
+    const src = read("src/components/projects/DeleteProjectModal.tsx");
+    const idx = src.indexOf("Delete forever");
+    const block = src.slice(Math.max(0, idx - 400), idx);
+    expect(block).toContain('variant="danger"');
+    expect(block).not.toContain('tone="outline"');
+  });
+});
+
 describe("UX-1308 — wishlist filters are 44px tappable chips", () => {
   const css = read("src/app/globals.css");
   const chip = read("src/components/ui/FilterChip.tsx");

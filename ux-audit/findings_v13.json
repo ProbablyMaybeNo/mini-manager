@@ -147,7 +147,9 @@
     "fix": "Keep the destructive red semantics but lower its prominence: use a red OUTLINE/ghost variant (red text + border, transparent fill) rather than a solid red fill, and/or move it out of the prime top-right slot into a quieter position (e.g. bottom of the page or behind a '⋯ more' menu). Reserve the solid-red fill for the confirm-modal's final 'Delete forever' button (which already exists).",
     "effort": "trivial",
     "confidence": 0.7,
-    "needs_human": true
+    "needs_human": true,
+    "status": "fixed",
+    "note": "Applied the red OUTLINE tone (kept the top-right slot — moving placement is a layout decision; outline alone resolves the over-salience). Solid red reserved for the modal's Delete forever."
   },
   {
     "id": "UX-1311",

@@ -44,9 +44,16 @@ export function DeleteProjectButton({
           {label}
         </button>
       ) : (
+        // UX-1310 — the solid-red fill over-corrected: it was the single
+        // loudest element on the detail page, pulling the eye to the
+        // hazard above the project's actual task. Drop to the red OUTLINE
+        // tone (red text + border, transparent fill) so it still reads as
+        // destructive but no longer dominates. The solid-red fill is
+        // reserved for the confirm modal's final "Delete forever".
         <Button
           type="button"
           variant="danger"
+          tone="outline"
           size="sm"
           onClick={() => setOpen(true)}
         >
