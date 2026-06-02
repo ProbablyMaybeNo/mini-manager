@@ -11,6 +11,7 @@ import { RecipeNotes } from "@/components/recipes/RecipeNotes";
 import { StepList } from "@/components/recipes/StepList";
 import type { StepRowData } from "@/components/recipes/StepRow";
 import { Card } from "@/components/ui/Card";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 interface Props {
   recipe: Recipe;
@@ -92,32 +93,18 @@ function MobilePaneTabs({
   active: Pane;
   onChange: (p: Pane) => void;
 }) {
-  const tabs: ReadonlyArray<{ key: Pane; label: string }> = [
-    { key: "zones", label: "Slots" },
-    { key: "notes", label: "Notes" },
-  ];
   return (
-    <nav
-      aria-label="Editor panes"
-      className="md:hidden flex items-center gap-1 frame p-1"
-    >
-      {tabs.map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => onChange(t.key)}
-          className={clsx(
-            "flex-1 px-3 py-2 text-xs font-mono uppercase tracking-wider tap-target rounded-sm",
-            active === t.key
-              ? "text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
-              : "text-[var(--color-fg-muted)]",
-          )}
-          aria-pressed={active === t.key}
-        >
-          {t.label}
-        </button>
-      ))}
-    </nav>
+    <SegmentedControl<Pane>
+      ariaLabel="Editor panes"
+      options={[
+        { value: "zones", label: "Slots" },
+        { value: "notes", label: "Notes" },
+      ]}
+      value={active}
+      onChange={onChange}
+      fill
+      className="md:hidden"
+    />
   );
 }
 

@@ -31,7 +31,6 @@
   },
   {
     "id": "UX-1303",
-    "fixed": true,
     "severity": "high",
     "category": "accessibility",
     "principle": "WCAG 2.2 §2.5.8 Target Size (Minimum, 24px); Apple HIG 44pt; Material 48dp; Fitts's Law",
@@ -42,7 +41,8 @@
     "fix": "Give each toggle button horizontal padding (or a fixed `width: 44px`) so the hit area is ≥44×44px (min 24px). Keep the ○/★ glyph its current visual size, centered in the expanded target. The two toggles should be a 2-column 44px-each cluster at the card's right edge.",
     "effort": "trivial",
     "confidence": 0.96,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1304",
@@ -84,11 +84,11 @@
     "fix": "Give the active tab/segment a visible selected style (underline/border-bottom 2px in the accent, or filled background + bolder weight) AND correct semantics: role=tab + aria-selected on the modal/editor tabs; the density toggle already has aria-pressed but needs the matching visual treatment. Fix once in the shared tab/segmented-control primitive.",
     "effort": "small",
     "confidence": 0.92,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1307",
-    "fixed": true,
     "severity": "medium",
     "category": "accessibility",
     "principle": "WCAG 2.2 §2.5.8 Target Size (Minimum); Apple HIG 44pt; consistency with auth inputs",
@@ -99,7 +99,8 @@
     "fix": "Extend the coarse-pointer floor to inputs/selects: `@media (pointer: coarse) { .input, select, textarea { min-height: 44px } }` (or apply the existing .input token's mobile height). Confirm the recipe step <select> and tool hex inputs reach 44px.",
     "effort": "trivial",
     "confidence": 0.9,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1308",
@@ -187,7 +188,6 @@
   },
   {
     "id": "UX-1314",
-    "fixed": true,
     "severity": "low",
     "category": "performance",
     "principle": "Polish / resource hygiene; NN/g #8 minimalist (no broken requests)",
@@ -198,7 +198,8 @@
     "fix": "Add a /favicon.ico (or a <link rel='icon' href='/icon.svg'> / app/icon route in Next.js app dir) so the root favicon request resolves 200. Verify no 404 in console after.",
     "effort": "trivial",
     "confidence": 0.9,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1315",

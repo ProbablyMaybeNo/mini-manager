@@ -33,11 +33,12 @@ describe("AttachRecipeModal — two-tab contract (UX-904)", () => {
   const src = read("src/components/recipes/AttachRecipeModal.tsx");
 
   test("modal exposes a 'Pick existing' tab", () => {
-    expect(src).toContain('label="Pick existing"');
+    // UX-1306 — tabs are now driven by the shared SegmentedControl.
+    expect(src).toContain('label: "Pick existing"');
   });
 
   test("modal exposes a 'Create new' tab", () => {
-    expect(src).toContain('label="Create new"');
+    expect(src).toContain('label: "Create new"');
   });
 
   test("Pick existing tab attaches via the existing attachRecipeToProject action", () => {

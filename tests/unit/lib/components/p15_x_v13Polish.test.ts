@@ -14,6 +14,35 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1306 — shared SegmentedControl gives the active segment a solid fill", () => {
+  const css = read("src/app/globals.css");
+  const primitive = read("src/components/ui/SegmentedControl.tsx");
+
+  test(".segment-active takes a solid cyan fill + black text (visible active state)", () => {
+    expect(css).toMatch(/\.segment-active\s*\{[\s\S]*?background:\s*var\(--color-cyan\)/);
+    expect(css).toMatch(/\.segment-active\s*\{[\s\S]*?color:\s*var\(--color-bg\)/);
+  });
+
+  test("the primitive sets BOTH aria-selected (tab role) and aria-pressed", () => {
+    expect(primitive).toContain('role="tab"');
+    expect(primitive).toContain("aria-selected={active}");
+    expect(primitive).toContain("aria-pressed={active}");
+  });
+
+  test("ATTACH RECIPE modal uses the shared SegmentedControl (no local TabButton)", () => {
+    const src = read("src/components/recipes/AttachRecipeModal.tsx");
+    expect(src).toContain("import { SegmentedControl }");
+    expect(src).toContain("<SegmentedControl<Tab>");
+    expect(src).not.toContain("function TabButton");
+  });
+
+  test("recipe editor pane switch uses the shared SegmentedControl", () => {
+    const src = read("src/components/recipes/RecipeEditorClient.tsx");
+    expect(src).toContain("import { SegmentedControl }");
+    expect(src).toContain("<SegmentedControl<Pane>");
+  });
+});
+
 describe("UX-1307 — in-app inputs/selects/textarea floor to 44px on touch", () => {
   const css = read("src/app/globals.css");
 

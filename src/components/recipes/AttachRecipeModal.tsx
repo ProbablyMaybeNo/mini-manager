@@ -14,6 +14,7 @@ import {
   createRecipe,
 } from "@/lib/actions/recipes";
 import { Button } from "@/components/ui/Button";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 export interface RecipeOption {
   id: string;
@@ -153,16 +154,15 @@ export function AttachRecipeModal(props: Props) {
         </button>
       </div>
 
-      <div className="flex items-center gap-1 px-3 pt-3">
-        <TabButton
-          active={tab === "pick"}
-          onClick={() => setTab("pick")}
-          label="Pick existing"
-        />
-        <TabButton
-          active={tab === "create"}
-          onClick={() => setTab("create")}
-          label="Create new"
+      <div className="px-3 pt-3">
+        <SegmentedControl<Tab>
+          ariaLabel="Attach recipe mode"
+          options={[
+            { value: "pick", label: "Pick existing" },
+            { value: "create", label: "Create new" },
+          ]}
+          value={tab}
+          onChange={setTab}
         />
       </div>
 
@@ -299,28 +299,3 @@ export function AttachRecipeModal(props: Props) {
   );
 }
 
-function TabButton({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={clsx(
-        "px-3 py-1.5 text-2xs font-mono uppercase tracking-wider tap-target rounded-sm border-b-2",
-        active
-          ? "text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] border-[var(--color-accent)]"
-          : "text-[var(--color-fg-muted)] border-transparent",
-      )}
-      aria-pressed={active}
-    >
-      {label}
-    </button>
-  );
-}

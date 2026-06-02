@@ -674,6 +674,51 @@ select.frame-strong {
   background: color-mix(in srgb, var(--color-purple-pastel) 8%, transparent);
 }
 
+/* Segmented control — shared tab/segment primitive (UX-1306). Replaces
+   the ad-hoc per-surface TabButton/MobilePaneTabs that gave the selected
+   segment only a ~10% colour-mix tint (invisible against the panel) and
+   no distinct foreground — so users couldn't tell which view was active.
+   The selected segment now takes a SOLID cyan fill + black text (the
+   P13.1 fill discipline), inert segments stay muted on a transparent
+   ground inside a bordered track. */
+.segmented {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+.segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-fg-muted);
+  background: transparent;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+.segment:hover:not(.segment-active) {
+  color: var(--color-fg);
+  background: color-mix(in srgb, var(--color-fg) 6%, transparent);
+}
+.segment-active {
+  color: var(--color-bg);
+  background: var(--color-cyan);
+}
+@media (prefers-reduced-motion: reduce) {
+  .segment { transition: none; }
+}
+
 /* StatusPill — bordered, mono, all-caps, 1px border, semantic colour.
    Drives status indicators across project rows, paint types, wishlist. */
 .pill {
