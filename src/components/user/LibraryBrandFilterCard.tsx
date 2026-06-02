@@ -112,7 +112,11 @@ export function LibraryBrandFilterCard({
             <li key={brand}>
               <label
                 className={clsx(
-                  "flex items-center gap-2 px-2 py-1 rounded-sm cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-cyan)_6%,transparent)]",
+                  // UX-1204 — the bare 13px checkbox was the only target.
+                  // tap-target floors the whole row to 44px (mobile) /
+                  // 32px (desktop); w-full makes the entire row tappable
+                  // (brand toggles are high-frequency, repeated taps).
+                  "tap-target w-full flex items-center gap-2 px-2 py-1 rounded-sm cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-cyan)_6%,transparent)]",
                   checked
                     ? "text-[var(--color-fg)]"
                     : "text-[var(--color-fg-muted)]",

@@ -117,7 +117,10 @@ export function InventoryControls({
           aria-pressed={state.ownedCount > 0}
           aria-label={state.ownedCount > 0 ? "Mark as not owned" : "Mark as owned"}
           className={clsx(
-            "inline-flex justify-center items-center font-mono text-xs min-h-[24px] py-1",
+            // UX-1204 — fill the grid cell so the hit area spans the full
+            // 40px row height + full column width rather than just the
+            // glyph. The visual ✓/○ stays centered and unchanged.
+            "inline-flex justify-center items-center font-mono text-xs w-full h-full min-h-[40px]",
             state.ownedCount > 0
               ? "text-[var(--color-green)]"
               : "text-[var(--color-fg-subtle)] hover:text-[var(--color-green)]",
@@ -136,7 +139,10 @@ export function InventoryControls({
           aria-label={state.isWishlisted ? "Unmark" : "Mark as wanted"}
           title={WANTED_TOOLTIP}
           className={clsx(
-            "inline-flex justify-center items-center font-mono text-xs min-h-[24px] py-1",
+            // UX-1204 — fill the grid cell (full row height + column width)
+            // so the favourite toggle's hit area is the whole cell, not the
+            // ~24px glyph. Visual ★/☆ unchanged.
+            "inline-flex justify-center items-center font-mono text-xs w-full h-full min-h-[40px]",
             state.isWishlisted
               ? "text-[var(--color-yellow)]"
               : "text-[var(--color-fg-subtle)] hover:text-[var(--color-yellow)]",

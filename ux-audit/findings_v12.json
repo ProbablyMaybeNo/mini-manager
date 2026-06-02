@@ -56,7 +56,8 @@
     "fix": "Wrap each checkbox/toggle in a >=44px tappable hit area (padding or an invisible expanded target via ::before), keeping the visual glyph its current size. For the /user brand list, give each row a full-width 44px tap target. For library row toggles, ensure the icon button hit-box is 44px square.",
     "effort": "small",
     "confidence": 0.95,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done — /user brand-filter rows now `tap-target w-full` (44px mobile / 32px desktop, whole row tappable). Library owned/favourite compact toggles fill the full grid cell (w-full h-full, 40px row height) instead of wrapping the ~24px glyph; the 40px virtualised ROW_HEIGHT caps vertical extent (a true 44px-square per-cell target needs the column rework, which the mobile card layout in UX-1215 delivers). FOCUS step-done checkbox already carried tap-target from P15.2."
   },
   {
     "id": "UX-1205",

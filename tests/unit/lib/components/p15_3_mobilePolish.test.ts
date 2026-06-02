@@ -171,3 +171,26 @@ describe("UX-1214 — FOCUS per-paint note surfaces its cross-project scope", ()
     expect(helperIdx).toBeGreaterThan(editorIdx);
   });
 });
+
+describe("UX-1204 — small checkbox/toggle hit areas expanded to ≥44px", () => {
+  test("/user brand-filter row floors to tap-target full-width", () => {
+    const src = read("src/components/user/LibraryBrandFilterCard.tsx");
+    expect(src).toContain("tap-target w-full flex items-center gap-2");
+  });
+
+  test("/library owned + favourite toggles fill their cell (full row height)", () => {
+    const src = read("src/components/library/InventoryControls.tsx");
+    // Two compact toggles both fill the cell rather than wrapping the glyph.
+    const occurrences = src.split(
+      "inline-flex justify-center items-center font-mono text-xs w-full h-full min-h-[40px]",
+    ).length - 1;
+    expect(occurrences).toBe(2);
+    expect(src).not.toContain("min-h-[24px] py-1");
+  });
+
+  test("FOCUS step-done checkbox already carries tap-target (P15.2, kept)", () => {
+    const src = read("src/components/focus/StepCompletionCheckbox.tsx");
+    expect(src).toContain("tap-target inline-flex items-center justify-center");
+    expect(src).toContain("w-5 h-5"); // visual glyph unchanged
+  });
+});
