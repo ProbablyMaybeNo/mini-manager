@@ -1,0 +1,71 @@
+# Phase 15 — Mobile Excellence + FOCUS Completion
+
+Ross's 2026-06-02 priority post-BrushForge competitive analysis. BrushForge is mobile-only; Mini Manager has cross-device (web → phone/tablet/desktop) as a genuine differentiator. **Plus** Ross flagged that FOCUS shipped as a display, not a companion — workflow features from the original brief are missing. This phase closes both gaps.
+
+**Status:** PLANNED, 2026-06-02.
+
+## Resolved decisions
+
+- **No native app shell** (Capacitor / React Native). PWA gives 90% of "feels like an app" benefit at 5% the cost. App Store submission is Phase 20+.
+- **Web-first stays.** Don't compromise desktop polish chasing mobile gains.
+- **Offline-first goal:** matches BrushForge's pitch. Service worker caches library + projects for offline access.
+- **FOCUS panel = painting companion, not static display.** Painter using it at the bench should be able to advance state, track progress, mark steps done without leaving the panel.
+
+## Milestones (build in this order)
+
+### P15.0 — FOCUS completion (FIRST — small, high-leverage)
+
+Close the gap between the FOCUS panel we shipped (recipe + notes + stopwatch + multi-recipe tabs) and the painting companion Ross described in the original brief.
+
+- **Current-slot indicator.** When a slot is "active" (most recently interacted with OR explicitly selected), render with a distinct visual treatment — outline + "▶ WORKING ON" label. One slot at a time. Persist active-slot in URL `?focusSlot=<slotId>` so it survives reload.
+- **Step done-checkbox per recipe step.** Each step in the active slot's step list gets a checkbox. Persists to a new `recipe_step_completion` table keyed by `(user_id, step_id)` so done state is per-painter (not global). Done steps render visually muted; the next undone step gets a subtle "NEXT" tag.
+- **Inline quick-action buttons in the FOCUS header.**
+  - `+ Paint` — bumps `paintCount` on the focused project (cascade-safe, uses existing `bumpCounter` action).
+  - `+ Prime` — bumps `primeCount` if Build > Prime.
+  - `Advance slot` — marks current slot's steps all done + advances active-slot to the next undone slot.
+- **Project state pill in FOCUS header.** Mini stage breakdown: "12 BUILT · 8 PRIMED · 3 PAINTED · 0 COMPLETE." Single-row, mono-caps, tight density. Updates optimistically.
+- **Recipe completion %.** Compute as `done_steps / total_steps` across all slots in the active recipe. Render as a thin progress bar across the FOCUS panel header background or as a small "67% COMPLETE" indicator.
+- Tests: persistence, active-slot URL state, done-step persistence, project-pill rollup math.
+- **Acceptance:** painter at the bench can tick steps as they apply paint, see their progress, and bump stage counters without scrolling away from FOCUS.
+
+### P15.1 — PWA install (manifest + service worker + icons)
+
+- `public/manifest.json` with name, short_name="Mini Manager", start_url=/projects, display=standalone, theme color, background color.
+- App icons (192×192, 512×512, 180×180 apple-touch). Generate from existing wordmark or paint-can glyph.
+- Service worker registration in root layout: cache app shell for offline.
+- iOS "Add to Home Screen" meta tags + apple-touch-icon.
+- Lighthouse PWA audit should pass installability check.
+
+### P15.2 — Touch-target sweep app-wide
+
+- Audit every interactive element for ≥44×44 (Apple HIG) and ≥24×24 (WCAG 2.5.8).
+- Common offenders: small icon buttons, sort chevrons, inline cell triggers, segmented control sub-buttons.
+- Tests: visual regression pins on the surfaces touched.
+
+### P15.3 — Mobile audit + page-by-page polish
+
+- Walk every primary surface at 375×667 (iPhone SE/13 mini), 414×896 (iPhone Pro Max), 768×1024 (iPad portrait).
+- Surfaces: `/projects`, `/projects/[id]`, `/library`, `/wishlist`, `/recipes`, `/recipes/[id]`, `/tools/match`, `/tools/gradient`, `/tools/wheel`, `/tools/eyedropper`, `/pricing`, `/user`, `/sign-in`, `/sign-up`.
+- Findings → focused commits per surface. Tests INTO each commit.
+- Driven by data from a fresh ux-auditor mobile-only run.
+
+### P15.4 — Offline reads via service worker
+
+- Service worker intercepts library JSON + project read endpoints.
+- Cache-then-network strategy: serve cached data immediately, refresh in background.
+- "Offline mode" indicator in the StatusBar (NET·ON dot turns amber with "OFFLINE — cached data" tooltip).
+- Write actions queue locally and replay on reconnect (stretch — could defer to Phase 19 if too involved).
+
+### P15.5 — Mobile Round 12 audit
+
+- Fresh ux-auditor pass against live deploy in mobile-only mode.
+- Verify P15.0 → P15.4 landed correctly; surface any regressions.
+- Verdict on "is mobile launch-ready as the primary experience?"
+
+## Out of scope
+
+- Native app shell (Capacitor/React Native) — Phase 20+
+- App Store submission — Phase 20+
+- Push notifications — Phase 20+ (requires real backend)
+- Camera integration / photo capture — handled in Phase 16 F.2 (photo-to-palette)
+- Recipe step-done dependencies (linked / required-order) — could be Phase 17+; v1 is independent toggles per step
