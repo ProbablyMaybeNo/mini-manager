@@ -296,7 +296,11 @@ function StatusChangePopover({
         aria-haspopup="menu"
         aria-expanded={open}
         title="Change status"
-        className="inline-flex items-center"
+        // UX-1504 — the per-row status trigger wrapped a ~21px StatusPill
+        // with no padding/min-height, well under the 44px touch floor.
+        // tap-target floors the tappable button to 44px (mobile) / 32px
+        // (desktop) without enlarging the visual pill inside it.
+        className="tap-target inline-flex items-center justify-center"
       >
         <StatusPill
           status={STATUS_PILL[item.status]}

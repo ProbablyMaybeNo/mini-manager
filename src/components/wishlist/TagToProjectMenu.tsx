@@ -75,7 +75,10 @@ export function TagToProjectMenu({
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={clsx(
-          "inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-fg)_8%,transparent)] hover:border-[var(--color-accent)] transition-colors",
+          // UX-1504 — the project-tag trigger was a 29px px-2 py-1 pill,
+          // under the 44px touch floor. tap-target floors it to 44px
+          // (mobile) / 32px (desktop); padding/visuals otherwise unchanged.
+          "tap-target inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-fg)_8%,transparent)] hover:border-[var(--color-accent)] transition-colors",
           current ? "text-[var(--color-cyan)]" : "text-[var(--color-fg-muted)]",
         )}
         aria-haspopup="listbox"

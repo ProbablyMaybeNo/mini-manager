@@ -114,6 +114,20 @@ describe("UX-1308 — wishlist filters are 44px tappable chips", () => {
     const table = read("src/components/wishlist/WishlistTable.tsx");
     expect(table).toContain('"tap-target w-full text-left px-3 py-1.5');
   });
+
+  // UX-1504 (Round 15) — the per-row STATUS trigger ("WISHLIST ▾") wrapped a
+  // 21px StatusPill with no padding, and the project-tag trigger
+  // ("OPEN IN ▾") was a 29px pill. Both now carry tap-target so the
+  // *trigger* (not just the open menu) clears the 44px touch floor.
+  test("the per-row STATUS trigger floors to tap-target (UX-1504)", () => {
+    const table = read("src/components/wishlist/WishlistTable.tsx");
+    expect(table).toContain('"tap-target inline-flex items-center justify-center"');
+  });
+
+  test("the project-tag (OPEN IN) trigger floors to tap-target (UX-1504)", () => {
+    const menu = read("src/components/wishlist/TagToProjectMenu.tsx");
+    expect(menu).toContain("tap-target inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 frame");
+  });
 });
 
 describe("UX-1305 — recipes list reflows to stacked cards below 768px", () => {

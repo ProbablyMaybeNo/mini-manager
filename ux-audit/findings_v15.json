@@ -50,6 +50,7 @@
   },
   {
     "id": "UX-1504",
+    "fixed": true,
     "round13_ref": "UX-1308",
     "verdict": "FAIL (partial)",
     "severity": "high",
