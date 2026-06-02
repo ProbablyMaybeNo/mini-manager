@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
-import { updateStepNotes } from "@/lib/actions/focus";
 import { setPaintNote } from "@/lib/actions/paintNotes";
 import { phase12LayerLabel, type Phase12LayerKey, type TechniqueKey } from "@/db/schema";
 import { RecipeTabs, type RecipeTab } from "@/components/focus/RecipeTabs";
@@ -26,11 +25,15 @@ import {
  *     shows the zone's first-step hex.
  *   - Step cards: one card per step in zone order, with the resolved
  *     paint (or custom-mix swatch) + brand+name + technique label +
- *     auto-saving notes textarea.
+ *     the per-PAINT note editor (the single notes affordance — see below).
  *
- * The notes textarea fires `updateStepNotes` on blur — no save button,
- * no manual confirmation. The textarea stays interactive during the
- * save round-trip so the painter can keep typing on adjacent steps.
+ * Notes model (Ross's 2026-06-02 locked call): the FOCUS scheme keeps
+ * ONLY the per-PAINT note (`PaintNoteEditor`), keyed on the paint so the
+ * value follows that paint to every step it pins. The former per-STEP
+ * "Painting notes…" textarea (`recipe_step.notes` via `updateStepNotes`)
+ * was retired from this panel. The `recipe_step.notes` column + its
+ * action remain in the schema — this is a UI consolidation, not a data
+ * change — they're simply no longer surfaced in FOCUS.
  */
 
 export interface FocusStepView {
@@ -41,7 +44,6 @@ export interface FocusStepView {
   technique: TechniqueKey;
   paintHex: string | null;
   paintLabel: string | null;
-  notes: string | null;
   /** P15.x — the catalog paint id this step pins, if any. Custom-mix
    *  steps (no paint, only a hex) are null and don't get a per-paint
    *  note editor. */
@@ -315,8 +317,8 @@ export function FocusPanel({
                             className={clsx(
                               "grid items-start gap-3",
                               isActiveSlot
-                                ? "grid-cols-[auto_auto_minmax(0,1fr)] md:grid-cols-[auto_auto_minmax(0,1fr)_minmax(0,1.5fr)]"
-                                : "grid-cols-[auto_minmax(0,1fr)] md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1.5fr)]",
+                                ? "grid-cols-[auto_auto_minmax(0,1fr)]"
+                                : "grid-cols-[auto_minmax(0,1fr)]",
                               "p-2 rounded-sm",
                               "bg-[var(--color-bg-panel)]",
                               "border border-[var(--color-border)]",
@@ -379,8 +381,6 @@ export function FocusPanel({
                                 <PaintNoteEditor step={step} />
                               ) : null}
                             </div>
-
-                            <NotesEditor step={step} zoneName={zone.name} />
                           </li>
                         );
                       })}
@@ -397,118 +397,16 @@ export function FocusPanel({
 }
 
 /**
- * Notes textarea + auto-save state machine. Extracted from the row
- * render so the hooks live in their own component and the parent
- * FocusPanel JSX tree stays static (the unit tests walk the JSX tree
- * without a renderer, which only works on static structure).
- */
-function NotesEditor({
-  step,
-  zoneName,
-}: {
-  step: FocusStepView;
-  zoneName: string;
-}) {
-  const [notes, setNotes] = useState<string>(step.notes ?? "");
-  const [saved, setSaved] = useState<"idle" | "saving" | "saved" | "error">(
-    "idle",
-  );
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
-  // Sync local state when the server pushes a new value (revalidate
-  // after another tab edited the same step).
-  const remoteValueRef = useRef<string>(step.notes ?? "");
-  useEffect(() => {
-    const remote = step.notes ?? "";
-    if (remote !== remoteValueRef.current) {
-      remoteValueRef.current = remote;
-      setNotes(remote);
-    }
-  }, [step.notes]);
-
-  const persist = useCallback(() => {
-    const trimmed = notes.trim();
-    const remote = remoteValueRef.current;
-    if (trimmed === remote.trim()) return; // no change
-    setSaved("saving");
-    setErrorMsg(null);
-    startTransition(async () => {
-      const result = await updateStepNotes({
-        stepId: step.id,
-        notes: trimmed === "" ? null : trimmed,
-      });
-      if (!result.ok) {
-        setSaved("error");
-        setErrorMsg(result.error);
-        return;
-      }
-      remoteValueRef.current = trimmed;
-      setSaved("saved");
-      // Fade the "saved" badge back to idle after a beat so it doesn't
-      // become permanent UI.
-      window.setTimeout(() => setSaved("idle"), 1_500);
-    });
-  }, [notes, step.id]);
-
-  return (
-    <div className="col-span-2 md:col-span-1 min-w-0 space-y-1">
-      <label htmlFor={`step-notes-${step.id}`} className="sr-only">
-        Painting notes for {zoneName} · step {step.position + 1}
-      </label>
-      <textarea
-        id={`step-notes-${step.id}`}
-        value={notes}
-        placeholder="Painting notes…"
-        rows={2}
-        onChange={(e) => setNotes(e.target.value)}
-        onBlur={persist}
-        className={clsx(
-          "w-full px-2 py-1.5 font-mono text-xs leading-snug",
-          "bg-[var(--color-bg)] text-[var(--color-fg)]",
-          "border border-[var(--color-border)] rounded-sm",
-          "focus:outline-2 focus:outline-[var(--color-cyan)]",
-          "resize-y min-h-[3.5rem]",
-        )}
-      />
-      <div className="flex items-center justify-between gap-2 min-h-[1rem]">
-        <span
-          className={clsx(
-            "font-mono text-2xs uppercase tracking-wider",
-            saved === "saved"
-              ? "text-[var(--color-green)]"
-              : saved === "saving"
-                ? "text-[var(--color-fg-muted)]"
-                : saved === "error"
-                  ? "text-[var(--color-red)]"
-                  : "text-transparent",
-          )}
-          aria-live="polite"
-          role="status"
-        >
-          {saved === "saved"
-            ? "Saved"
-            : saved === "saving"
-              ? "Saving…"
-              : saved === "error"
-                ? errorMsg ?? "Save failed"
-                : "—"}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/**
- * P15.x — Per-PAINT note editor. Distinct from `NotesEditor` (which
- * saves a per-STEP note): this textarea edits the paint's GLOBAL note,
- * keyed on the paint id, so the value follows the paint to every step it
- * pins. Save-on-blur via `setPaintNote`, optimistic, mirroring the
- * per-step editor's state machine.
+ * P15.x — Per-PAINT note editor. This is the FOCUS scheme's SINGLE notes
+ * affordance per paint-backed step (Ross's 2026-06-02 call retired the
+ * old per-step textarea). The note is keyed on the paint id, so the
+ * value follows the paint to every step it pins. Save-on-blur via
+ * `setPaintNote`, optimistic.
  *
- * The "applies to this paint everywhere" hint makes the per-paint scope
- * legible so the painter understands editing here updates every
- * occurrence of the paint — not just this row.
+ * The "applies to this paint everywhere" hint stays: it's no longer
+ * disambiguating from a second field, but it still earns its place by
+ * making the per-paint (global, not per-occurrence) scope legible so the
+ * painter understands editing here updates every step that uses the paint.
  *
  * Only rendered for paint-backed steps (caller gates on `step.paintId`).
  */

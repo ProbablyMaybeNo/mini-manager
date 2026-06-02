@@ -327,8 +327,8 @@ function FocusEmptyState({ hasCandidates }: { hasCandidates: boolean }) {
       <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
         {hasCandidates ? (
           <>
-            Choose one from the picker above to see its slot grid + per-step
-            notes textareas, ready to scribble in.
+            Choose one from the picker above to see its slot grid + per-paint
+            note fields, ready to scribble in.
           </>
         ) : (
           <>

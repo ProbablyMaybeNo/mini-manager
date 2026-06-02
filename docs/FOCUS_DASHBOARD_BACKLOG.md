@@ -30,9 +30,17 @@ Living doc; tick as they land.
         panel with an "applies to this paint everywhere" affordance. The
         existing per-step notes were KEPT (non-destructive). Tests +18
         (1680 → 1698 passing / 1 skipped), `tsc --noEmit` clean.
-      - **Follow-up flagged:** the per-paint + per-step note fields now sit
-        adjacent on each paint-backed step and can read as redundant. Left
-        as-is per scope; needs a consolidation decision (see report).
+      - **Follow-up RESOLVED (2026-06-02):** consolidated the FOCUS scheme
+        to per-PAINT notes ONLY. The per-step "Painting notes…" textarea
+        (`recipe_step.notes` via `updateStepNotes`) was retired from the
+        FOCUS panel; `PaintNoteEditor` is now the single notes affordance
+        per paint-backed step. NON-DESTRUCTIVE: the `recipe_step.notes`
+        column, the `updateStepNotes` action + its integration test, and
+        the recipe-editor `notesMd` field all remain untouched — this was a
+        FOCUS-only UI consolidation. The now-dead `notes` field was also
+        trimmed from the `FocusStepView` view model + `buildFocusZones`.
+        Tests updated to assert the per-step editor is GONE and the
+        per-paint editor remains.
 
 ## Already shipped (reconciled — do NOT rebuild)
 

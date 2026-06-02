@@ -113,7 +113,12 @@ describe("buildFocusZones", () => {
     expect(out[0]!.steps[0]!.paintHex).toBe("#5A9DD8");
   });
 
-  test("still threads the per-step note + done-state alongside the paint note", () => {
+  test("does NOT thread the per-step note into the view model (FOCUS notes are per-paint only)", () => {
+    // Ross's 2026-06-02 locked call: the FOCUS scheme keeps ONLY the
+    // per-paint note. The source RecipeStep still carries `notes`
+    // (the column is non-destructively preserved), but buildFocusZones
+    // must not surface it on the view model — only the paint note +
+    // done-state thread through.
     const zones = [
       zone("z1", [
         step({ id: "s1", zoneId: "z1", paintId: PAINT_A, notes: "per-step note" }),
@@ -126,7 +131,7 @@ describe("buildFocusZones", () => {
       new Map([[PAINT_A, "per-paint note"]]),
     );
     const s = out[0]!.steps[0]!;
-    expect(s.notes).toBe("per-step note");
+    expect(s).not.toHaveProperty("notes");
     expect(s.paintNote).toBe("per-paint note");
     expect(s.done).toBe(true);
   });

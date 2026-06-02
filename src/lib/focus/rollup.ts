@@ -112,7 +112,6 @@ export function buildFocusZones(
         technique: s.technique,
         paintHex: hex,
         paintLabel: label,
-        notes: s.notes,
         paintId: s.paintId,
         paintNote,
         done: completedStepIds.has(s.id),

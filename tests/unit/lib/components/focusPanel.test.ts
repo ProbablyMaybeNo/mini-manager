@@ -4,19 +4,20 @@
  * Pins the panel's structure so the dashboard FOCUS section keeps the
  * shape the painter relies on: slot palette at the top, then a section
  * per zone, with a step card per step carrying paint label + technique
- * + auto-saving notes textarea.
+ * + the per-PAINT note editor.
+ *
+ * Notes consolidation (Ross's 2026-06-02 locked call): the FOCUS scheme
+ * keeps ONLY the per-paint note. The old per-step "Painting notes…"
+ * textarea (`recipe_step.notes` / `updateStepNotes`) is retired from this
+ * panel — these tests assert it's gone and the per-paint editor remains.
  */
 import { describe, expect, test, vi } from "vitest";
 import type { ReactElement } from "react";
 
-// FocusPanel imports `updateStepNotes` which has a `"use server"`
-// directive — loading that module pulls in @/auth → next-auth → next.
-// In the unit env (node, no Next runtime) those resolutions fail.
-// Stub the action surface so the component module can load.
-vi.mock("@/lib/actions/focus", () => ({
-  updateStepNotes: vi.fn(async () => ({ ok: true, data: { stepId: "" } })),
-}));
-// P15.x — FocusPanel now also pulls in the per-paint note action.
+// FocusPanel pulls in the per-paint note action, which has a
+// `"use server"` directive — loading that module pulls in @/auth →
+// next-auth → next. In the unit env (node, no Next runtime) those
+// resolutions fail, so stub the action surface so the module can load.
 vi.mock("@/lib/actions/paintNotes", () => ({
   setPaintNote: vi.fn(async () => ({
     ok: true,
@@ -137,7 +138,6 @@ function basicZones(): FocusZoneView[] {
           paintLabel: "Citadel Mephiston Red",
           paintId: null,
           paintNote: null,
-          notes: null,
           done: false,
         },
         {
@@ -149,7 +149,6 @@ function basicZones(): FocusZoneView[] {
           paintLabel: "Citadel Wild Rider Red",
           paintId: null,
           paintNote: null,
-          notes: "thin to 2:1 contrast medium",
           done: false,
         },
       ],
@@ -249,18 +248,83 @@ describe("FocusPanel — per-step rendering (P13.11)", () => {
             paintLabel: "Test",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: false,
           },
         ],
       },
     ];
     const text = JSON.stringify(render(zones));
-    // The technique enum still propagates to the NotesEditor's `step`
-    // prop (that's how the notes feature gets the raw key) — so we
-    // can't assert the raw "wet_blend" is absent. We only assert the
-    // human label is present.
+    // The technique enum still propagates to the step card's `step`
+    // prop (that's how the row gets the raw key) — so we can't assert
+    // the raw "wet_blend" is absent. We only assert the human label is
+    // present.
     expect(text).toContain("Wet Blend");
+  });
+});
+
+describe("FocusPanel — notes consolidation (per-paint only, 2026-06-02)", () => {
+  function paintBackedZones(): FocusZoneView[] {
+    return [
+      {
+        id: "z1",
+        name: "Armor",
+        position: 0,
+        swatchHex: "#aa0033",
+        steps: [
+          {
+            id: "s1",
+            zoneId: "z1",
+            position: 0,
+            technique: "basecoat",
+            paintHex: "#aa0033",
+            paintLabel: "Citadel Mephiston Red",
+            paintId: "citadel-mephiston-red",
+            paintNote: "2 thin coats",
+            done: false,
+          },
+        ],
+      },
+    ];
+  }
+
+  // PaintNoteEditor is a hook-driven component the walker can't fully
+  // render (same caveat as StepCompletionCheckbox / SlotActivator), so we
+  // match its *element node* by the `step` prop the panel passes it — a
+  // step object carrying a non-null paintId.
+  const isPaintNoteEditor = (n: AnyNode) => {
+    const step = n.props.step as { paintId?: unknown } | undefined;
+    return (
+      step != null &&
+      typeof step === "object" &&
+      "paintId" in step &&
+      typeof step.paintId === "string"
+    );
+  };
+
+  test("renders the per-paint note editor for a paint-backed step", () => {
+    const tree = render(paintBackedZones());
+    const paintEditors = findAll(tree, isPaintNoteEditor);
+    expect(paintEditors).toHaveLength(1);
+    const step = paintEditors[0]!.props.step as { paintId: string };
+    expect(step.paintId).toBe("citadel-mephiston-red");
+  });
+
+  test("does NOT render the retired per-step 'Painting notes…' textarea", () => {
+    const text = JSON.stringify(render(paintBackedZones()));
+    // The old per-step NotesEditor placeholder + its sr-only label copy +
+    // its id prefix must be gone from the FOCUS panel entirely.
+    expect(text).not.toContain("Painting notes…");
+    expect(text).not.toContain("step-notes-");
+    expect(text).not.toMatch(/Painting notes for/);
+  });
+
+  test("custom-mix steps (no paint) render no notes editor at all", () => {
+    // basicZones() steps all have paintId: null → no per-paint editor;
+    // and the per-step editor is gone for everyone, so a custom-mix row
+    // carries zero note fields.
+    const tree = render(basicZones());
+    expect(findAll(tree, isPaintNoteEditor)).toHaveLength(0);
+    expect(JSON.stringify(tree)).not.toContain("Painting notes…");
   });
 });
 
@@ -383,7 +447,6 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             paintLabel: "Mephiston Red",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: true,
           },
           {
@@ -395,7 +458,6 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             paintLabel: "Wild Rider Red",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: false,
           },
         ],
@@ -429,7 +491,6 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             paintLabel: "Mephiston Red",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: true,
           },
           {
@@ -441,7 +502,6 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             paintLabel: "Wild Rider Red",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: false,
           },
           {
@@ -453,7 +513,6 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             paintLabel: "Fire Dragon Bright",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: false,
           },
         ],
@@ -501,7 +560,6 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             paintLabel: "A",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: true,
           },
           {
@@ -513,7 +571,6 @@ describe("FocusPanel — P15.0 active slot + step completion", () => {
             paintLabel: "B",
             paintId: null,
             paintNote: null,
-            notes: null,
             done: false,
           },
         ],
