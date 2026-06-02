@@ -156,3 +156,18 @@ describe("UX-1208 — DELETE PROJECT reads as destructive + has a confirm", () =
     expect(src).toContain("Delete forever");
   });
 });
+
+describe("UX-1214 — FOCUS per-paint note surfaces its cross-project scope", () => {
+  const src = read("src/components/focus/FocusPanel.tsx");
+
+  test("a dedicated helper states the note applies everywhere", () => {
+    expect(src).toContain("This note shows everywhere you use this paint.");
+  });
+
+  test("the helper lives in the PaintNoteEditor (after the textarea)", () => {
+    const editorIdx = src.indexOf("function PaintNoteEditor");
+    const helperIdx = src.indexOf("This note shows everywhere you use this paint.");
+    expect(editorIdx).toBeGreaterThan(0);
+    expect(helperIdx).toBeGreaterThan(editorIdx);
+  });
+});

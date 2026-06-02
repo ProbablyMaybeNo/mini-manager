@@ -204,7 +204,8 @@
     "fix": "Add a one-line helper next to the note field, e.g. 'This note shows everywhere you use this paint.' to communicate scope (recognition over recall).",
     "effort": "trivial",
     "confidence": 0.7,
-    "needs_human": true
+    "needs_human": true,
+    "status": "done — added a dedicated helper line under the per-paint note textarea: 'This note shows everywhere you use this paint.' (the label tail carried the same intent but can wrap out of view on mobile)."
   },
   {
     "id": "UX-1215",

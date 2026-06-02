@@ -477,6 +477,13 @@ function PaintNoteEditor({ step }: { step: FocusStepView }) {
           "resize-y min-h-[2rem]",
         )}
       />
+      {/* UX-1214 — explicit scope helper below the field. The label tail
+          carries the same intent, but on mobile it can wrap out of view;
+          this dedicated line keeps the cross-project scope discoverable
+          (recognition over recall). */}
+      <p className="font-mono text-2xs leading-snug text-[var(--color-fg-muted)]">
+        This note shows everywhere you use this paint.
+      </p>
       <span
         className={clsx(
           "font-mono text-2xs uppercase tracking-wider",
