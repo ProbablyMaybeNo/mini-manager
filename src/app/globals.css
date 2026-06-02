@@ -864,3 +864,28 @@ select.frame-strong {
   mix-blend-mode: screen;
   display: block;
 }
+
+/* Heat-sink gap-fill popover — mobile bottom sheet (UX-1301).
+   The Tailwind `max-md:!top-auto` utility silently no-ops under
+   Tailwind v4 (v4 moved the important modifier from the `!` prefix to
+   a `!` suffix), so the prior two fixes never overrode the anchored
+   `top`, leaving the header + × close clipped above the viewport on a
+   phone. This explicit width-media rule with `!important` is immune to
+   that variant quirk: below 768px the dialog is a true viewport-bottom
+   sheet pinned clear of the fixed bottom tab bar, top forced auto so
+   nothing can push it off-screen, height clamped with the body
+   scrolling inside. Desktop (>= 768px) keeps the cell-anchored flip
+   behaviour from the component's `md:` classes. */
+@media (max-width: 767px) {
+  .gap-fill-sheet {
+    position: fixed !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    top: auto !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: 480px;
+    margin-inline: auto !important;
+    max-height: 70vh !important;
+  }
+}

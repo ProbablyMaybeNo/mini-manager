@@ -35,37 +35,33 @@ import {
  * clamped via `max-w-[calc(100vw-...)]` — matching the `PaintSlotPicker` /
  * `InlineCellPopover` primitives.
  *
- * P16.6 — mobile containment, CSS-WIDTH-DRIVEN (UX-1301). The Round-15
- * audit found the prior, JS-gated fix STILL trapped touch users: gating
- * the bottom-sheet placement on a runtime `isMobile` flag meant that when
- * the flag read false in prod (coarse-pointer/width detection is
- * unreliable), the desktop cell-anchored path ran and pushed the header +
- * × close button above y=0, off-screen and undismissable. JS detection is
- * NOT a reliable signal for layout here.
+ * P16.6 / UX-1301 — mobile containment, EXPLICIT-CSS-DRIVEN. Three passes
+ * were needed here. (1) A JS `isMobile` flag picked the placement — it read
+ * false in prod and ran the desktop anchored path, clipping the header + ×
+ * close above y=0. (2) Tailwind `max-md:` utilities incl. `max-md:!top-auto`
+ * — but the `!`-PREFIX important syntax silently no-ops under Tailwind v4
+ * (v4 moved the important modifier to a `!` SUFFIX), so the anchored `top`
+ * was never overridden and the sheet still clipped off-screen. JS detection
+ * AND the prefix-bang utility are both unreliable signals here.
  *
- * The robust fix: placement is decided ENTIRELY by Tailwind WIDTH media
- * queries (`max-md:` / `md:`), never by JS. There is exactly ONE rendered
- * element with BOTH placements layered as responsive classes:
+ * The robust fix: placement below 768px is decided by an EXPLICIT
+ * `@media (max-width:767px)` rule (`.gap-fill-sheet` in globals.css) using
+ * plain `!important` — immune to any Tailwind-variant quirk. The dialog
+ * carries the `gap-fill-sheet` class; that rule makes it a true viewport-
+ * bottom sheet (`position:fixed`, `top:auto`, pinned above the bottom tab
+ * bar, `max-height:70vh`) so the header + × close + WANT actions are ALWAYS
+ * on-screen for any tapped cell. The body scrolls inside the clamp.
  *
- *   - **< 768px (`max-md:`):** a TRUE viewport-bottom sheet — `fixed`,
- *     `inset-x-2` (8px gutters), pinned to
- *     `bottom-[calc(60px+env(safe-area-inset-bottom))]` clear of the fixed
- *     bottom tab bar, `top-auto`, `max-h-[70vh]`, body scrolling inside the
- *     clamp. Because `fixed` is relative to the viewport (not the cell
- *     anchor) and `top` is forced `auto` at this width, the header + ×
- *     close + WANT actions are ALWAYS on-screen, thumb-reachable, no matter
- *     which cell was tapped.
  *   - **>= 768px (`md:`):** anchored to the cell (`absolute`), FLIP-ABOVE
  *     when the measured space below can't fit the popover. The flip is the
  *     only thing JS still steers, and it ONLY emits `md:`-scoped classes —
- *     so nothing it computes can ever reach the mobile sheet.
+ *     so nothing it computes can ever reach the mobile sheet, and the
+ *     `.gap-fill-sheet` media rule only applies below 768px anyway.
  *
  * Critically, no JS-set inline `top` is ever emitted (the flip uses
  * `md:top-full` / `md:bottom-full` utility classes, not a measured pixel
- * value), and the `max-md:!top-auto` utility guarantees the sheet's top
- * can never be overridden — even by a stray inline style — below 768px.
- * The `isMobile` prop is now used ONLY to skip the desktop measurement
- * effect early; it has ZERO influence on the rendered placement classes.
+ * value). The `isMobile` prop is now used ONLY to skip the desktop
+ * measurement effect early; it has ZERO influence on rendered placement.
  *
  * No raw hex in classes — swatch fills come from each paint's stored hex
  * (data, not a token) via inline style; the wishlist add is a `success`
@@ -198,14 +194,14 @@ export function HeatSinkGapFillPopover({
         "z-50 frame-strong bg-[var(--color-bg-panel)] shadow-xl",
         "flex flex-col overflow-hidden",
         // --- < 768px: a TRUE viewport-bottom sheet (UX-1301) ---
-        // `fixed` is relative to the VIEWPORT, fully decoupled from the cell
-        // anchor; pinned above the bottom tab bar (60px + safe-area inset)
-        // with 8px gutters; `top` forced `auto` (with `!` so no inline/class
-        // top can win) and a 70vh clamp + scrolling body keep the header +
-        // × close + WANT actions on-screen, thumb-reachable, for ANY cell.
-        "max-md:fixed max-md:inset-x-2 max-md:!top-auto",
-        "max-md:bottom-[calc(60px+env(safe-area-inset-bottom,0px))]",
-        "max-md:mx-auto max-md:w-auto max-md:max-w-[480px] max-md:max-h-[70vh]",
+        // Placement is handled by the `.gap-fill-sheet` rule in globals.css
+        // (an explicit `@media (max-width:767px)` block with `!important`),
+        // NOT by `max-md:` utilities — Tailwind v4 silently drops the
+        // `max-md:!top-auto` important-prefix variant, which let the anchored
+        // `top` clip the header + × close off-screen on a phone (twice). The
+        // CSS rule forces a viewport-bottom sheet, `top:auto`, height clamp +
+        // scrolling body, so the close + WANT actions are always reachable.
+        "gap-fill-sheet",
         // --- >= 768px: cell-anchored, flipping above when no room below ---
         "md:absolute md:left-1/2 md:-translate-x-1/2 md:w-[280px]",
         "md:max-w-[calc(100vw-1.5rem)] md:max-h-[80vh]",
