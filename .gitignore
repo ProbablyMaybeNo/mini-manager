@@ -47,6 +47,7 @@ test-results/
 .dev-server.log
 
 # ux-audit run artifacts — keep findings_*.json as the record, drop
-# the screenshots + the playwright-mcp browser cache
+# the screenshots (incl. per-round subfolders) + the playwright-mcp cache
 .playwright-mcp/
 ux-audit/*.png
+ux-audit/**/*.png
