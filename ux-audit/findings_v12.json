@@ -220,7 +220,8 @@
     "fix": "On mobile switch the library list to a card/stacked row layout (swatch + full name + brand + hex on their own lines) instead of a squeezed multi-column table; reserve the table for >=768 (where it already reads well).",
     "effort": "medium",
     "confidence": 0.8,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done — below 768 LibraryTable renders a stacked card per paint: 32px swatch + NAME on its own full-width line + brand · type · hex beneath + owned/favourite toggles pinned right. The virtualiser sizes rows per breakpoint (64px mobile / 40px desktop) via a matchMedia hook so windowing math stays correct. Desktop ≥md keeps the dense 9-col table. Supersedes UX-910's mobile-grid rebalance."
   },
   {
     "id": "UX-1216",

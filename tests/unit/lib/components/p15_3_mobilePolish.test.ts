@@ -194,3 +194,17 @@ describe("UX-1204 — small checkbox/toggle hit areas expanded to ≥44px", () =
     expect(src).toContain("w-5 h-5"); // visual glyph unchanged
   });
 });
+
+describe("UX-1215 — library switches to card layout below 768px", () => {
+  const src = read("src/components/library/LibraryTable.tsx");
+
+  test("rows size per breakpoint so the card can be taller on mobile", () => {
+    expect(src).toContain("ROW_HEIGHT_MOBILE = 64");
+    expect(src).toContain("isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP");
+  });
+
+  test("the mobile branch gives NAME a full-width line (no ambiguous truncation)", () => {
+    expect(src).toMatch(/if \(isMobile\) \{/);
+    expect(src).toContain('<div className="flex-1 min-w-0">');
+  });
+});

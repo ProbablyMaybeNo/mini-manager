@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useLayoutEffect } from "react";
+import { useRef, useState, useLayoutEffect, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
@@ -9,8 +9,29 @@ import { TypeIcon } from "./TypeIcon";
 import { HexConfidenceDot } from "./HexConfidenceDot";
 import { InventoryControls } from "./InventoryControls";
 
-const ROW_HEIGHT = 40; // px — fixed so the virtualiser can do simple math
+// UX-1215 — the dense 40px multi-column row truncated NAME to ambiguity
+// on phones ("3b Au …"). Below 768 each row grows to a 64px stacked card
+// (NAME on its own full-width line, then brand · type · hex beneath) so
+// adjacent paints stay distinguishable. Desktop keeps the dense table.
+// The virtualiser needs a single numeric height, so we pick one per
+// breakpoint via matchMedia rather than CSS alone.
+const ROW_HEIGHT_DESKTOP = 40;
+const ROW_HEIGHT_MOBILE = 64;
 const OVERSCAN = 8;
+
+/** Tracks the `(max-width: 767px)` breakpoint so the virtualiser can
+ *  size rows numerically. SSR-safe: starts false, syncs on mount. */
+function useIsMobileLibrary(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    const sync = () => setIsMobile(mql.matches);
+    sync();
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, []);
+  return isMobile;
+}
 
 /**
  * Dense library table with hand-rolled windowing. We render only the
@@ -30,6 +51,8 @@ export function LibraryTable({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewport, setViewport] = useState(0);
+  const isMobile = useIsMobileLibrary();
+  const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP;
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -40,12 +63,12 @@ export function LibraryTable({
     return () => ro.disconnect();
   }, []);
 
-  const totalHeight = paints.length * ROW_HEIGHT;
-  const visibleCount = Math.ceil(viewport / ROW_HEIGHT) + OVERSCAN * 2;
-  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+  const totalHeight = paints.length * rowHeight;
+  const visibleCount = Math.ceil(viewport / rowHeight) + OVERSCAN * 2;
+  const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - OVERSCAN);
   const endIndex = Math.min(paints.length, startIndex + visibleCount);
   const slice = paints.slice(startIndex, endIndex);
-  const offsetY = startIndex * ROW_HEIGHT;
+  const offsetY = startIndex * rowHeight;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
@@ -72,6 +95,8 @@ export function LibraryTable({
                   rowIndex={startIndex + i}
                   active={p.id === selectedPaintId}
                   inventory={inventoryByPaint.get(p.id)}
+                  rowHeight={rowHeight}
+                  isMobile={isMobile}
                 />
               ))}
             </div>
@@ -87,7 +112,10 @@ function TableHeader() {
   return (
     <div
       className={clsx(
-        "grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
+        // UX-1215 — the column header only makes sense for the dense
+        // desktop table; the mobile card layout is self-labelling, so
+        // hide the header strip below md.
+        "hidden md:grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
         GRID_CLASS,
       )}
       role="row"
@@ -110,31 +138,30 @@ function TableHeader() {
 }
 
 /**
- * Mobile collapses to swatch / brand / name / type / hex / owned /
- * wanted — Line + SKU are visually hidden via `hidden md:inline`
- * and so don't occupy mobile grid cells. Desktop restores the full
- * 9-col layout.
- *
- * UX-910 — Mobile (<md) brand was fixed at 90px which crowded long
- * paint names like "507a Admiralty Dark Grey" out to "507a Admiralty…".
- * Rebalanced so NAME gets ~1.5× the share of BRAND via fr-based
- * minmax columns; BRAND is allowed to wrap to 2 lines (line-clamp-2)
- * within the fixed 40px row. NAME still truncates because there's
- * always only one row to show it in.
+ * Desktop (≥md) dense 9-col grid: swatch / brand / line / name / sku /
+ * type / hex / owned / wanted. Below md the LibraryTable renders the
+ * stacked card layout (see PaintRow's `isMobile` branch — UX-1215), so
+ * this grid only governs the desktop table now. UX-910's earlier
+ * mobile-grid rebalance is superseded by the card layout, which gives
+ * NAME a full line and removes the truncation-to-ambiguity entirely.
  */
 const GRID_CLASS =
-  "grid-cols-[24px_minmax(0,1fr)_minmax(0,1.5fr)_24px_60px_36px_28px] md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]";
+  "md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]";
 
 function PaintRow({
   paint,
   rowIndex,
   active,
   inventory,
+  rowHeight,
+  isMobile,
 }: {
   paint: Paint;
   rowIndex: number;
   active: boolean;
   inventory: { ownedCount: number; isWishlisted: boolean } | undefined;
+  rowHeight: number;
+  isMobile: boolean;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -151,6 +178,73 @@ function PaintRow({
       e.preventDefault();
       openDetail();
     }
+  }
+
+  // UX-1215 — mobile card layout: NAME on its own full-width line so it
+  // never truncates to ambiguity, with brand · type · hex on a second
+  // line and the owned/favourite toggles pinned right. Desktop keeps the
+  // dense multi-column grid below.
+  if (isMobile) {
+    return (
+      <div
+        role="row"
+        tabIndex={0}
+        onClick={openDetail}
+        onKeyDown={onRowKeyDown}
+        aria-rowindex={rowIndex + 1}
+        aria-current={active ? "true" : undefined}
+        className={clsx(
+          "caret-row",
+          "w-full flex items-center gap-3 px-3 text-left font-mono cursor-pointer",
+          "border-b border-[var(--color-border)]",
+          "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
+          "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
+          active && "bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]",
+        )}
+        style={{ height: rowHeight }}
+      >
+        <span
+          role="gridcell"
+          aria-colindex={1}
+          aria-hidden
+          className="h-8 w-8 shrink-0 rounded-sm border border-[var(--color-border)]"
+          style={{ background: paint.hex }}
+        />
+        <div className="flex-1 min-w-0">
+          <div
+            role="gridcell"
+            aria-colindex={4}
+            className={clsx(
+              "truncate text-sm leading-tight",
+              active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]",
+            )}
+          >
+            {paint.name}
+          </div>
+          <div className="flex items-center gap-2 text-2xs text-[var(--color-fg-muted)] leading-tight mt-0.5">
+            <span role="gridcell" aria-colindex={2} className="truncate max-w-[45%]">
+              {paint.brand}
+            </span>
+            <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
+            <span role="gridcell" aria-colindex={6} className="inline-flex items-center shrink-0">
+              <TypeIcon type={paint.type} className="text-[var(--color-fg-muted)]" />
+            </span>
+            <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
+            <span role="gridcell" aria-colindex={7} className="inline-flex items-center gap-1 uppercase shrink-0">
+              <HexConfidenceDot confidence={paint.hexConfidence} source={paint.hexSource} />
+              <span>{paint.hex.slice(1)}</span>
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <InventoryControls
+            paintId={paint.id}
+            initial={inventory}
+            variant="compact"
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -171,7 +265,7 @@ function PaintRow({
         GRID_CLASS,
       )}
       style={{
-        height: ROW_HEIGHT,
+        height: rowHeight,
       }}
     >
       <span
@@ -183,14 +277,12 @@ function PaintRow({
         )}
         style={{ background: paint.hex }}
       />
-      {/* UX-910 — Brand wraps to 2 lines on mobile to give NAME more
-          width; desktop keeps the single-line truncate. The fixed
-          40px row + leading-tight keeps two short lines (e.g. "Two
-          Thin Coats") inside the row without breaking virtualisation. */}
+      {/* Desktop table keeps the single-line truncate; the mobile card
+          layout (above) gives NAME its own full-width line. */}
       <span
         role="gridcell"
         aria-colindex={2}
-        className="text-[var(--color-fg-muted)] line-clamp-2 leading-tight md:line-clamp-none md:truncate md:leading-normal"
+        className="text-[var(--color-fg-muted)] truncate"
       >
         {paint.brand}
       </span>
