@@ -128,7 +128,9 @@
     "fix": "Gate the live clock behind useEffect (render an empty/placeholder time on the server, set the real time client-side) or add suppressHydrationWarning to the time node, and render it client-only. Verify the all-session console is #418-free afterward.",
     "effort": "small",
     "confidence": 0.7,
-    "needs_human": true
+    "needs_human": true,
+    "status": "fixed",
+    "note": "Clock was already placeholder-gated (useEffect-set, --:--:-- SSR default); added suppressHydrationWarning to the TIME node as the belt-and-suspenders fix the finding requests. If #418 persists, the source is elsewhere — needs a live console check."
   },
   {
     "id": "UX-1310",

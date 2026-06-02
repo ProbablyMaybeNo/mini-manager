@@ -149,6 +149,11 @@ interface SegmentProps {
    *  wraps its value in a span with title= AND aria-label= so both
    *  hover-by-mouse and screen-reader users see the same copy. */
   tooltip?: string;
+  /** UX-1309 — for the live clock: the value transitions from the SSR
+   *  placeholder to the real time on mount, which is the one node whose
+   *  text legitimately differs post-hydration. suppressHydrationWarning
+   *  keeps that node from being flagged as a React hydration mismatch. */
+  suppressHydrationWarning?: boolean;
 }
 
 /** Exported for unit-testing. */
@@ -178,7 +183,7 @@ export const NET_TOOLTIP: Record<NetStatus, string> = {
   OFF: "OFFLINE — cached data. You can still browse what's loaded; changes won't save until you reconnect.",
 };
 
-function Segment({ label, value, tone, tooltip }: SegmentProps) {
+function Segment({ label, value, tone, tooltip, suppressHydrationWarning }: SegmentProps) {
   return (
     <span className="inline-flex items-center gap-1 font-mono text-[11px] leading-none tracking-wider uppercase whitespace-nowrap">
       <span className="text-[var(--color-fg-subtle)]">{label}</span>
@@ -191,11 +196,14 @@ function Segment({ label, value, tone, tooltip }: SegmentProps) {
           className={TONE_COLOR[tone]}
           title={tooltip}
           aria-label={`${label} ${value} — ${tooltip}`}
+          suppressHydrationWarning={suppressHydrationWarning}
         >
           {value}
         </span>
       ) : (
-        <span className={TONE_COLOR[tone]}>{value}</span>
+        <span className={TONE_COLOR[tone]} suppressHydrationWarning={suppressHydrationWarning}>
+          {value}
+        </span>
       )}
     </span>
   );
@@ -240,7 +248,7 @@ export function StatusBar() {
         tooltip={NET_TOOLTIP[net]}
       />
       <Divider />
-      <Segment label="TIME" value={time} tone="neutral" />
+      <Segment label="TIME" value={time} tone="neutral" suppressHydrationWarning />
     </div>
   );
 }

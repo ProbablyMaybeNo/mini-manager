@@ -14,6 +14,27 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1309 — live clock node is hydration-safe (no #418)", () => {
+  const src = read("src/components/StatusBar.tsx");
+
+  test("first render still uses the SSR placeholder so SSR/CSR agree", () => {
+    expect(src).toContain('CLOCK_PLACEHOLDER = "--:--:--"');
+    expect(src).toContain("useState<string>(CLOCK_PLACEHOLDER)");
+  });
+
+  test("the real time is only set inside useEffect (client-only)", () => {
+    expect(src).toMatch(
+      /useEffect\(\(\)\s*=>\s*\{\s*setTime\(formatTime\(new Date\(\)\)\)/,
+    );
+  });
+
+  test("the TIME segment carries suppressHydrationWarning", () => {
+    expect(src).toContain(
+      '<Segment label="TIME" value={time} tone="neutral" suppressHydrationWarning />',
+    );
+  });
+});
+
 describe("UX-1306 — shared SegmentedControl gives the active segment a solid fill", () => {
   const css = read("src/app/globals.css");
   const primitive = read("src/components/ui/SegmentedControl.tsx");
