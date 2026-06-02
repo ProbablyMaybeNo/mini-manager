@@ -14,6 +14,28 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1307 — in-app inputs/selects/textarea floor to 44px on touch", () => {
+  const css = read("src/app/globals.css");
+
+  test("a (pointer: coarse) block raises input/select/textarea to 44px", () => {
+    expect(css).toMatch(
+      /@media\s*\(pointer:\s*coarse\)\s*\{[\s\S]*?textarea\s*\{[\s\S]*?min-height:\s*44px/,
+    );
+  });
+
+  test("checkboxes/radios are excluded from the input floor", () => {
+    expect(css).toContain('input:not([type="checkbox"]):not([type="radio"])');
+  });
+
+  test("desktop is untouched — the input floor is coarse-pointer gated only", () => {
+    // The bare `input, textarea, select { … }` rule carries only a
+    // transition, never an unconditional min-height.
+    const bareRule = css.match(/\ninput, textarea, select \{([\s\S]*?)\}/);
+    expect(bareRule).not.toBeNull();
+    expect(bareRule![1]).not.toContain("min-height");
+  });
+});
+
 describe("UX-1314 — root /favicon.ico resolves (no 404 on load)", () => {
   test("app/favicon.ico exists so Next serves it at the root", () => {
     const p = path.resolve(__dirname, "../../../../src/app/favicon.ico");

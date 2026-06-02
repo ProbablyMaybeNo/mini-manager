@@ -485,6 +485,22 @@ select.frame-strong {
   .btn-md { min-height: 44px; }
 }
 
+/* UX-1307 — the P15.2 coarse-pointer sweep floored buttons but left text
+   inputs/selects/textarea at their intrinsic 25-37px height (the auth
+   inputs were sized correctly by hand, but every in-app field and the
+   recipe step <select> at 25px were sub-target). Floor them all to 44px
+   on touch to match the buttons + auth inputs; desktop density is
+   preserved (only under pointer: coarse). Checkboxes/radios are excluded
+   — they own their own tap-target wrappers and a 44px box would distort
+   the glyph. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+}
+
 /* ----- Solid-fill variants (default tone) -----
    Every action button on the app reads as a solid block of colour with
    crisp black text. The variant carries semantic intent (success =
