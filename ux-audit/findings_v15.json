@@ -33,6 +33,7 @@
   },
   {
     "id": "UX-1503",
+    "fixed": true,
     "round13_ref": "UX-1307",
     "verdict": "FAIL (partial)",
     "severity": "high",
@@ -94,6 +95,7 @@
   },
   {
     "id": "UX-1507",
+    "fixed": true,
     "round13_ref": "NEW (systemic)",
     "verdict": "NEW",
     "severity": "medium",

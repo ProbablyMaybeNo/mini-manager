@@ -14,18 +14,20 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
-describe("UX-1201 — .btn-sm/.btn-md floor to 44px on coarse pointers", () => {
+describe("UX-1201 / UX-1507 — .btn-sm/.btn-md floor to 44px on mobile", () => {
   const css = read("src/app/globals.css");
 
-  test("a (pointer: coarse) media query raises .btn-sm to 44px", () => {
+  // UX-1507 root-cause: the gate must include a WIDTH query, not just
+  // (pointer: coarse) — coarse-only never matched on mobile viewports.
+  test("the button floor is gated on width (max-width: 767px), not pointer alone", () => {
     expect(css).toMatch(
-      /@media\s*\(pointer:\s*coarse\)\s*\{[\s\S]*?\.btn-sm\s*\{[\s\S]*?min-height:\s*44px/,
+      /@media\s*\(pointer:\s*coarse\),\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\.btn-sm\s*\{[\s\S]*?min-height:\s*44px/,
     );
   });
 
-  test("the same coarse-pointer block also floors .btn-md", () => {
+  test("the same mobile block also floors .btn-md", () => {
     expect(css).toMatch(
-      /@media\s*\(pointer:\s*coarse\)\s*\{[\s\S]*?\.btn-md\s*\{[\s\S]*?min-height:\s*44px/,
+      /@media\s*\(pointer:\s*coarse\),\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\.btn-md\s*\{[\s\S]*?min-height:\s*44px/,
     );
   });
 

@@ -196,12 +196,15 @@ describe("UX-1306 — shared SegmentedControl gives the active segment a solid f
   });
 });
 
-describe("UX-1307 — in-app inputs/selects/textarea floor to 44px on touch", () => {
+describe("UX-1307 / UX-1503 — in-app inputs/selects/textarea floor to 44px on mobile", () => {
   const css = read("src/app/globals.css");
 
-  test("a (pointer: coarse) block raises input/select/textarea to 44px", () => {
+  // UX-1503 root-cause: the recipe step <select> was still 25px because the
+  // floor was gated on (pointer: coarse) alone, which doesn't apply on
+  // mobile viewports. The WIDTH gate (max-width: 767px) makes it reliable.
+  test("the input floor is gated on width (max-width: 767px), not pointer alone", () => {
     expect(css).toMatch(
-      /@media\s*\(pointer:\s*coarse\)\s*\{[\s\S]*?textarea\s*\{[\s\S]*?min-height:\s*44px/,
+      /@media\s*\(pointer:\s*coarse\),\s*\(max-width:\s*767px\)\s*\{[\s\S]*?textarea\s*\{[\s\S]*?min-height:\s*44px/,
     );
   });
 

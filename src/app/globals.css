@@ -474,26 +474,33 @@ select.frame-strong {
 .btn-md { padding: 8px 16px; min-height: 36px; }
 .btn-lg { padding: 10px 20px; min-height: 44px; font-size: var(--text-base); }
 
-/* UX-1201 — on touch/coarse-pointer devices floor every button to a
-   44px tappable height (WCAG 2.2 §2.5.8 / Apple HIG 44pt). The P15.2
-   sweep floored the base .btn + steppers but missed the .btn-sm and
-   .btn-md modifiers, leaving ~28-36px pills across nearly every CTA.
-   Horizontal padding is untouched; only the vertical floor is raised,
-   and only under (pointer: coarse) so desktop density is preserved. */
-@media (pointer: coarse) {
+/* UX-1201 / UX-1507 — floor every button to a 44px tappable height on
+   mobile (WCAG 2.2 §2.5.8 / Apple HIG 44pt). The P15.2 sweep floored the
+   base .btn + steppers but missed the .btn-sm and .btn-md modifiers,
+   leaving ~28-36px pills across nearly every CTA.
+
+   ROOT-CAUSE FIX (Round 15): the gate used to be `@media (pointer: coarse)`
+   alone, which does NOT reliably match on mobile viewports — Playwright
+   emulation and many real phones report a fine pointer, so the rule never
+   applied and the buttons stayed sub-44px. Re-gate on WIDTH as well
+   (`max-width: 767px`) so it fires on every mobile viewport regardless of
+   the reported pointer type. Either condition matching is enough; desktop
+   (fine pointer AND ≥768px) keeps its tight density untouched. */
+@media (pointer: coarse), (max-width: 767px) {
   .btn-sm { min-height: 44px; }
   .btn-md { min-height: 44px; }
 }
 
-/* UX-1307 — the P15.2 coarse-pointer sweep floored buttons but left text
-   inputs/selects/textarea at their intrinsic 25-37px height (the auth
-   inputs were sized correctly by hand, but every in-app field and the
-   recipe step <select> at 25px were sub-target). Floor them all to 44px
-   on touch to match the buttons + auth inputs; desktop density is
-   preserved (only under pointer: coarse). Checkboxes/radios are excluded
-   — they own their own tap-target wrappers and a 44px box would distort
-   the glyph. */
-@media (pointer: coarse) {
+/* UX-1307 / UX-1503 — floor native form controls to 44px on mobile. The
+   auth inputs were hand-sized, but every in-app field and the recipe step
+   <select> sat at 25-37px. Same root-cause as above: the prior
+   `@media (pointer: coarse)` gate didn't apply on mobile viewports (the
+   recipe step <select> was still 25px in Round 15), so the WIDTH gate
+   (`max-width: 767px`) is added alongside it. Desktop density is preserved
+   (only fires below 768px or on a coarse pointer). Checkboxes/radios are
+   excluded — they own their own tap-target wrappers and a 44px box would
+   distort the glyph. */
+@media (pointer: coarse), (max-width: 767px) {
   input:not([type="checkbox"]):not([type="radio"]),
   select,
   textarea {
