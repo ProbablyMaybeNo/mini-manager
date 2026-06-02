@@ -20,9 +20,9 @@ Items deferred across R9 / R10 / R11 audits + Phase 14 (stopwatch) spillover. Wo
 
 These both modify `src/components/focus/FocusPanel.tsx` and `src/components/focus/FocusPicker.tsx` — must ship in the same agent run.
 
-- [ ] **UX-907 — Multi-recipe per project tabs on FOCUS / leaf workspace.** A project can have 2+ recipes attached but FOCUS panel + leaf COLOR SCHEME box only display ONE (most recent). Per-step notes from older recipes appear to "disappear" (still persisted, just hidden). Fix: horizontal tab/segmented control above the slot grid when 2+ recipes attached; default to most recently used; segmented buttons follow P13.1 solid-fill discipline.
+- [x] **UX-907 — Multi-recipe per project tabs on FOCUS / leaf workspace.** A project can have 2+ recipes attached but FOCUS panel + leaf COLOR SCHEME box only display ONE (most recent). Per-step notes from older recipes appear to "disappear" (still persisted, just hidden). Fix: horizontal tab/segmented control above the slot grid when 2+ recipes attached; default to most recently used; segmented buttons follow P13.1 solid-fill discipline. → `3d5a321`
 
-- [ ] **Phase 14 spillover — Stopwatch feature.** Originally planned for FOCUS, deferred until PLANNER landed. Now ships:
+- [x] **Phase 14 spillover — Stopwatch feature.** Originally planned for FOCUS, deferred until PLANNER landed. Now ships: → `2f50fcb`
   - Stopwatch UI in the FOCUS panel header (start / pause / resume / stop).
   - Optional `paint_sessions` table: `id`, `user_id`, `project_id`, `started_at`, `ended_at`, `duration_seconds`.
   - On stop → persist session row + emit `activity_log` row `kind = 'paint_session'`.
