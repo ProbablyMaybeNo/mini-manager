@@ -218,17 +218,21 @@ describe("UX-1307 — in-app inputs/selects/textarea floor to 44px on touch", ()
   });
 });
 
-describe("UX-1314 — root /favicon.ico resolves (no 404 on load)", () => {
-  test("app/favicon.ico exists so Next serves it at the root", () => {
-    const p = path.resolve(__dirname, "../../../../src/app/favicon.ico");
+describe("UX-1314 — app icon is served via app/icon.png", () => {
+  // NOTE: the original UX-1314 fix shipped an app/favicon.ico, but that
+  // file was a malformed ICO ("PNG is not in RGBA format") that FAILED
+  // the Turbopack production build and blocked every deploy. It was
+  // removed; Next's App Router generates the icon <link> from
+  // app/icon.png (+ apple-icon.png), which is the real icon mechanism.
+  // A valid root /favicon.ico is a follow-up (needs a real ICO encoder).
+  test("app/icon.png exists so Next emits the favicon link", () => {
+    const p = path.resolve(__dirname, "../../../../src/app/icon.png");
     expect(fs.existsSync(p)).toBe(true);
   });
 
-  test("the file is a valid ICO (magic bytes 00 00 01 00)", () => {
-    const buf = fs.readFileSync(
-      path.resolve(__dirname, "../../../../src/app/favicon.ico"),
-    );
-    expect(buf.subarray(0, 4)).toEqual(Buffer.from([0x00, 0x00, 0x01, 0x00]));
+  test("the build-breaking favicon.ico is gone", () => {
+    const p = path.resolve(__dirname, "../../../../src/app/favicon.ico");
+    expect(fs.existsSync(p)).toBe(false);
   });
 });
 
