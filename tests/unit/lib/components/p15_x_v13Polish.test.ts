@@ -14,6 +14,30 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1304 — wishlist rows reflow to a stacked card below 768px", () => {
+  const src = read("src/components/wishlist/WishlistTable.tsx");
+
+  test("the row is flex-col on mobile, grid at md+ (no clipped STATUS pill)", () => {
+    expect(src).toContain("flex flex-col gap-2 md:grid md:items-center md:gap-3");
+  });
+
+  test("the desktop grid template is md-gated (mobile has no grid columns)", () => {
+    expect(src).toContain(
+      "md:grid-cols-[40px_minmax(0,1.6fr)_minmax(0,1fr)_80px_90px_110px_14px_140px]",
+    );
+    expect(src).not.toContain("grid-cols-[40px_minmax(0,2fr)_70px_14px_120px]");
+  });
+
+  test("the header strip is hidden below md (card is self-labelling)", () => {
+    expect(src).toContain("hidden md:grid items-center gap-3 px-3 py-1.5");
+  });
+
+  test("inner wrappers dissolve into the grid on desktop via md:contents", () => {
+    const occurrences = src.split("md:contents").length - 1;
+    expect(occurrences).toBe(2);
+  });
+});
+
 describe("UX-1309 — live clock node is hydration-safe (no #418)", () => {
   const src = read("src/components/StatusBar.tsx");
 

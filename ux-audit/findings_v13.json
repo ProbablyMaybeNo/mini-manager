@@ -56,7 +56,8 @@
     "fix": "Below 768px, render each wishlist row as a stacked card (title on its own line; price, P-flag, and the STATUS / OPEN-IN controls on a second wrapped line) exactly as the library card rebuild did. Reserve the multi-column table for ≥768px.",
     "effort": "medium",
     "confidence": 0.93,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1305",

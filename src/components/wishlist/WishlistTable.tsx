@@ -81,9 +81,12 @@ export function WishlistTable({
 
   return (
     <div className="frame">
+      {/* UX-1304 — the column header only makes sense for the dense
+          desktop table; the mobile card layout is self-labelling, so
+          hide the header strip below md. */}
       <div
         className={clsx(
-          "grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
+          "hidden md:grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
           GRID_CLASS,
         )}
       >
@@ -110,54 +113,76 @@ export function WishlistTable({
           }}
           className={clsx(
             "caret-row",
-            "grid items-center gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
+            // UX-1304 — below md the row is a stacked card so the STATUS
+            // / OPEN-IN controls never clip off the right edge of a phone.
+            // At md+ it restores the dense multi-column grid.
+            "flex flex-col gap-2 md:grid md:items-center md:gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
             GRID_CLASS,
           )}
         >
-          <Thumbnail item={item} />
-          <div className="min-w-0">
-            <p className="font-mono text-sm truncate text-[var(--color-fg)]">
-              {item.title}
-            </p>
-            {item.sourceUrl ? (
-              <p className="text-2xs font-mono text-[var(--color-fg-subtle)] truncate">
-                {item.sourceUrl}
+          {/* Mobile: title row (thumb + title own a full line). Desktop:
+              the thumb and title are the first two grid cells. */}
+          <div className="flex items-center gap-3 min-w-0 md:contents">
+            <Thumbnail item={item} />
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-sm truncate text-[var(--color-fg)]">
+                {item.title}
               </p>
-            ) : null}
+              {item.sourceUrl ? (
+                <p className="text-2xs font-mono text-[var(--color-fg-subtle)] truncate">
+                  {item.sourceUrl}
+                </p>
+              ) : null}
+            </div>
+            {/* Priority dot rides the title line on mobile; on desktop it
+                jumps to its own grid cell via md:hidden / md:inline-block. */}
+            <span
+              className={clsx(
+                "inline-block h-2.5 w-2.5 rounded-full shrink-0 md:hidden",
+                PRIORITY_DOT[item.priority],
+              )}
+              title={`Priority ${item.priority}`}
+            />
           </div>
           <span className="hidden md:inline text-xs font-mono text-[var(--color-fg-muted)] truncate">
             {item.vendor ?? "—"}
           </span>
-          <span className="text-xs font-mono text-right text-[var(--color-fg)]">
-            {formatPrice(item.price, item.currency)}
-          </span>
-          <span className="hidden md:inline text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
-            {item.category}
-          </span>
-          <span className="hidden md:inline">
-            <TagToProjectMenu
-              itemId={item.id}
-              current={item.projectId}
-              projects={projects}
+          {/* Mobile second line: price + status (+ tools) wrap cleanly. */}
+          <div className="flex flex-wrap items-center gap-3 md:contents">
+            <span className="text-xs font-mono text-[var(--color-fg)] md:text-right">
+              {formatPrice(item.price, item.currency)}
+            </span>
+            <span className="hidden md:inline text-xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wide">
+              {item.category}
+            </span>
+            <span className="hidden md:inline">
+              <TagToProjectMenu
+                itemId={item.id}
+                current={item.projectId}
+                projects={projects}
+              />
+            </span>
+            <span
+              className={clsx(
+                "hidden md:inline-block h-2.5 w-2.5 rounded-full",
+                PRIORITY_DOT[item.priority],
+              )}
+              title={`Priority ${item.priority}`}
             />
-          </span>
-          <span
-            className={clsx("inline-block h-2.5 w-2.5 rounded-full", PRIORITY_DOT[item.priority])}
-            title={`Priority ${item.priority}`}
-          />
-          <span
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-2"
-          >
-            {showTools ? (
-              <WishlistToolsMenu paintTitle={item.title} />
-            ) : null}
-            <StatusChangePopover
-              item={item}
-              onMarkBought={() => setBoughtFor(item)}
-            />
-          </span>
+            <span
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-2 ml-auto md:ml-0"
+            >
+              {showTools ? (
+                <WishlistToolsMenu paintTitle={item.title} />
+              ) : null}
+              <StatusChangePopover
+                item={item}
+                onMarkBought={() => setBoughtFor(item)}
+              />
+            </span>
+          </div>
         </div>
       ))}
       {boughtFor ? (
@@ -174,17 +199,18 @@ export function WishlistTable({
 }
 
 /**
- * Mobile collapses the table to thumb / title / price / priority / status —
- * the hidden md: columns (Vendor, Category, Project) drop to 0 because the
- * spans above also have `hidden md:inline`. Desktop restores all eight cols.
+ * UX-1304 — mobile is now a stacked CARD (flex-col), so only the desktop
+ * grid template matters here. At md+ the eight columns restore: thumb /
+ * title / vendor / price / category / project / priority / status.
+ *
+ * Wider status column on desktop (140px) so the WishlistToolsMenu +
+ * StatusChangePopover both fit without spilling past the table border
+ * (Ross's Round-7 feedback). Title column shrinks slightly with
+ * `minmax(0,1.6fr)` so the total row still fits 1024px viewports without
+ * horizontal scroll.
  */
-/* Wider status column on desktop (was 80px, now 140px) so the
- * WishlistToolsMenu + StatusChangePopover both fit without
- * spilling past the table border (Ross's Round-7 feedback). Title
- * column shrinks slightly with `minmax(0,1.6fr)` so the total row
- * still fits 1024px viewports without horizontal scroll. */
 const GRID_CLASS =
-  "grid-cols-[40px_minmax(0,2fr)_70px_14px_120px] md:grid-cols-[40px_minmax(0,1.6fr)_minmax(0,1fr)_80px_90px_110px_14px_140px]";
+  "md:grid-cols-[40px_minmax(0,1.6fr)_minmax(0,1fr)_80px_90px_110px_14px_140px]";
 
 function Thumbnail({ item }: { item: WishlistItem }) {
   if (item.imageUrl) {
