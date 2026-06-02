@@ -115,7 +115,8 @@
     "fix": "Style destructive actions with the error/red role color and ensure a confirmation step (modal or undo toast) precedes deletion. Per NN/g, prevent the error rather than rely on recovery.",
     "effort": "small",
     "confidence": 0.78,
-    "needs_human": true
+    "needs_human": true,
+    "status": "done — detail-page DELETE switched from the inline text-link to the solid red variant=danger Button; the confirm step (DeleteProjectModal with descendant count + 'cannot be undone' + 'Delete forever') already existed and now fronts a clearly destructive trigger. Dashboard rows keep the inline red trigger for table density."
   },
   {
     "id": "UX-1209",

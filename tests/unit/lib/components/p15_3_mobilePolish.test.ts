@@ -132,3 +132,27 @@ describe("UX-1209 — auth hero capped on mobile so the form clears the fold", (
     expect(src).toContain('w-full max-w-[150px] md:max-w-none');
   });
 });
+
+describe("UX-1208 — DELETE PROJECT reads as destructive + has a confirm", () => {
+  test("detail page uses the solid danger Button, not the inline text-link", () => {
+    const src = read("src/app/projects/[id]/page.tsx");
+    // The DeleteProjectButton block on the detail page no longer passes
+    // `inline`, so it falls through to the variant="danger" solid Button.
+    const idx = src.indexOf("<DeleteProjectButton");
+    expect(idx).toBeGreaterThan(0);
+    const block = src.slice(idx, src.indexOf("/>", idx));
+    expect(block).not.toContain("inline");
+    expect(block).toContain("redirectToProjectsOnSuccess");
+  });
+
+  test("the non-inline trigger renders variant=danger", () => {
+    const src = read("src/components/projects/DeleteProjectButton.tsx");
+    expect(src).toContain('variant="danger"');
+  });
+
+  test("a confirm modal guards the delete (not undoable)", () => {
+    const src = read("src/components/projects/DeleteProjectModal.tsx");
+    expect(src).toContain("This action cannot be undone");
+    expect(src).toContain("Delete forever");
+  });
+});

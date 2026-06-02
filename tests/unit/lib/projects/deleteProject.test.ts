@@ -67,9 +67,16 @@ describe("Project detail page mounts the delete trigger", () => {
     expect(src).toContain("DeleteProjectButton");
   });
 
-  test("renders the inline trigger on the breadcrumb row with redirect-to-projects on success", () => {
-    expect(src).toMatch(/DeleteProjectButton[\s\S]*?redirectToProjectsOnSuccess/);
-    expect(src).toMatch(/DeleteProjectButton[\s\S]*?inline/);
+  test("renders the solid danger trigger (not the inline text-link) with redirect-to-projects on success", () => {
+    // UX-1208 — the detail-page delete now uses the solid red
+    // variant="danger" Button so the destructive action reads as
+    // destructive. The `inline` text-link tone was indistinguishable
+    // from a benign link.
+    const idx = src.indexOf("<DeleteProjectButton");
+    expect(idx).toBeGreaterThan(0);
+    const block = src.slice(idx, src.indexOf("/>", idx));
+    expect(block).toContain("redirectToProjectsOnSuccess");
+    expect(block).not.toContain("inline");
   });
 });
 

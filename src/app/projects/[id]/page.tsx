@@ -277,13 +277,15 @@ export default async function ProjectDetailPage({
           {" > "}
           <span className="text-[var(--color-fg)]">{project.name}</span>
         </span>
-        {/* P13.3 — Delete trigger on the detail header. Inline + red so
-            it's discoverable without dominating the workspace top. */}
+        {/* UX-1208 — destructive actions must read as destructive. The
+            inline text-link tone was indistinguishable from a benign
+            link; render the solid red `variant="danger"` Button so the
+            irreversible delete is visually distinct. The confirm step
+            lives in DeleteProjectModal. */}
         <DeleteProjectButton
           projectId={project.id}
           projectName={project.name}
           redirectToProjectsOnSuccess
-          inline
         />
       </nav>
 
