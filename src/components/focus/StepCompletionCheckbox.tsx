@@ -41,7 +41,12 @@ export function StepCompletionCheckbox({ stepId, done, label }: Props) {
   return (
     <label
       className={clsx(
-        "inline-flex items-center cursor-pointer select-none shrink-0",
+        // P15.2 — the visual checkbox is 20px; without padding the touch
+        // target was just the box. tap-target + justify-center expands the
+        // hit area to 44px (mobile) / 32px (desktop) around the 20px box —
+        // the painter ticks steps at the bench with a fingertip, not a
+        // cursor, so this is a primary FOCUS-companion touch surface.
+        "tap-target inline-flex items-center justify-center cursor-pointer select-none shrink-0",
         pending && "opacity-70",
       )}
       title={error ?? undefined}

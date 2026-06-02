@@ -191,7 +191,7 @@ export function PaintDetailPanel({
               type="button"
               onClick={copyHex}
               aria-label={`Copy hex code ${paint.hex}`}
-              className="text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
+              className="tap-target inline-flex items-center text-xs font-mono px-2 py-1 frame hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
             >
               {copied ? "✓ copied" : "copy"}
             </button>
@@ -245,7 +245,7 @@ export function PaintDetailPanel({
                     onClick={() =>
                       setSelectedHarmonyHex(active ? null : hex)
                     }
-                    className="h-8 flex-1 min-w-[32px] rounded-sm transition-transform hover:scale-105 cursor-pointer"
+                    className="tap-target h-8 flex-1 min-w-[32px] rounded-sm transition-transform hover:scale-105 cursor-pointer"
                     style={{
                       background: hex,
                       border: active

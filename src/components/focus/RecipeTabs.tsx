@@ -81,6 +81,11 @@ export function RecipeTabs({
             type="button"
             variant="success"
             size="sm"
+            // P15.2 — sm buttons are 28px; tap-target floors the FOCUS
+            // recipe tabs at 44px (mobile) / 32px (desktop) so a painter
+            // switches recipes at the bench by touch. Visual padding is
+            // unchanged — only the min hit-box grows.
+            className="tap-target"
             tone={isActive ? "solid" : "outline"}
             aria-selected={isActive}
             role="tab"

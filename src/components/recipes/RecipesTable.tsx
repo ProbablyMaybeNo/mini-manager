@@ -154,7 +154,10 @@ function Th({
         type="button"
         onClick={onClick}
         className={clsx(
-          "uppercase tracking-wider transition-colors",
+          // P15.2 — bare text sort triggers only had the text line-height
+          // as their hit-box. tap-target + inline-flex floors the button at
+          // 44px (mobile) / 32px (desktop) inside the header cell.
+          "tap-target inline-flex items-center uppercase tracking-wider transition-colors",
           active ? "text-[var(--color-cyan)]" : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
         )}
         aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}

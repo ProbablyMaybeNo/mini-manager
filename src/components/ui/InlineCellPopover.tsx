@@ -74,7 +74,11 @@ export function InlineCellPopover({
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={clsx(
-          "cursor-pointer hover:opacity-90 transition-opacity",
+          // P15.2 — the trigger wraps a ~20px pill/strip; the bare button
+          // had no min hit-box. `tap-target` floors it at 44px (mobile) /
+          // 32px (desktop) without enlarging the inner pill visual, and
+          // inline-flex keeps the pill vertically centred in the taller box.
+          "tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity",
           triggerClassName,
         )}
       >
@@ -123,7 +127,9 @@ export function InlineCellPopoverItem({
       data-cell-popover-close
       onClick={onClick}
       className={clsx(
-        "w-full text-left px-2 py-1 font-mono text-2xs uppercase tracking-wider transition-colors",
+        // P15.2 — py-1 text-2xs landed at ~22px, under the WCAG 2.5.8
+        // 24px floor. py-1.5 + min-h clears the floor for the menu rows.
+        "w-full text-left px-2 py-1.5 min-h-[28px] flex items-center font-mono text-2xs uppercase tracking-wider transition-colors",
         destructive
           ? "text-[var(--color-red)] hover:bg-[color-mix(in_srgb,var(--color-red)_12%,transparent)]"
           : "text-[var(--color-fg)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",

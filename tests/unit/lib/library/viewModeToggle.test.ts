@@ -30,9 +30,15 @@ describe("ViewModeToggle — terminal_ui INIT/SAVE/PAUSE button style", () => {
     expect(src).not.toContain("border border-[var(--color-border-strong)] rounded-sm overflow-hidden");
   });
 
-  test("compact size — px-3 padding + min-h-[28px] tap floor", () => {
+  // P15.2 — touch-target sweep replaced the bespoke min-h-[28px] with the
+  // shared `tap-target` utility (44px mobile / 32px desktop per globals.css)
+  // so the segmented sub-buttons clear the Apple-HIG touch floor on phones
+  // while staying tight on the dense desktop toolbar.
+  test("compact size — px-3 padding + tap-target touch floor", () => {
     expect(src).toContain("px-3");
-    expect(src).toContain("min-h-[28px]");
+    expect(src).toContain("tap-target");
+    // The bespoke 28px floor is gone — sizing is now centralised.
+    expect(src).not.toContain("min-h-[28px]");
   });
 
   test("active state uses yellow-filled with dark text (no cyan)", () => {

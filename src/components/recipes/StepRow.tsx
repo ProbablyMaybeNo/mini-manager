@@ -165,7 +165,9 @@ export function StepRow({
           type="button"
           onClick={() => setPickerOpen((prev) => !prev)}
           className={clsx(
-            "w-full flex items-center gap-2 px-2 py-1 frame text-left",
+            // P15.2 — paint-slot trigger was py-1 (~28px). tap-target floors
+            // the height to 44px (mobile) / 32px (desktop); already full-width.
+            "tap-target w-full flex items-center gap-2 px-2 py-1 frame text-left",
             pickerOpen && "border-[var(--color-cyan)]",
             "hover:bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)]",
           )}

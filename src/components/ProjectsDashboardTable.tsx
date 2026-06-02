@@ -447,7 +447,10 @@ function Th({
         type="button"
         onClick={onClick}
         className={clsx(
-          "uppercase tracking-wider transition-colors",
+          // P15.2 — bare text sort triggers had only the text line-height
+          // (~16px) as their hit-box. tap-target + inline-flex floors the
+          // button at 44px (mobile) / 32px (desktop) inside the header cell.
+          "tap-target inline-flex items-center uppercase tracking-wider transition-colors",
           active
             ? "text-[var(--color-cyan)]"
             : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
@@ -630,7 +633,10 @@ function DashboardRow({
         <button
           type="button"
           onClick={handleRecipeCellClick}
-          className="text-left cursor-pointer hover:opacity-80 transition-opacity"
+          // P15.2 — inline recipe-cell trigger had no min hit-box; the
+          // palette strip / "+ attach" label are short. tap-target floors
+          // the touch area without changing the strip's own footprint.
+          className="tap-target inline-flex items-center text-left cursor-pointer hover:opacity-80 transition-opacity"
           aria-label={
             row.firstAttachedRecipeId
               ? "Open attached recipe"
@@ -884,7 +890,10 @@ function DashboardCard({
         <button
           type="button"
           onClick={handleRecipeCellClick}
-          className="text-left cursor-pointer hover:opacity-80 transition-opacity"
+          // P15.2 — inline recipe-cell trigger had no min hit-box; the
+          // palette strip / "+ attach" label are short. tap-target floors
+          // the touch area without changing the strip's own footprint.
+          className="tap-target inline-flex items-center text-left cursor-pointer hover:opacity-80 transition-opacity"
           aria-label={
             row.firstAttachedRecipeId
               ? "Open attached recipe"

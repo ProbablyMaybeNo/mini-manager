@@ -175,7 +175,9 @@ export function ImportClient() {
             setError(null);
           }}
           className={clsx(
-            "px-4 py-2 min-h-[36px] font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
+            // P15.2 — segmented tab sub-buttons floored via tap-target
+            // (44px mobile / 32px desktop) for the touch HIG target.
+            "tap-target px-4 py-2 font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
             mode === "drop"
               ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
               : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]",
@@ -192,7 +194,9 @@ export function ImportClient() {
             setError(null);
           }}
           className={clsx(
-            "px-4 py-2 min-h-[36px] font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
+            // P15.2 — segmented tab sub-buttons floored via tap-target
+            // (44px mobile / 32px desktop) for the touch HIG target.
+            "tap-target px-4 py-2 font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
             mode === "paste"
               ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
               : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]",

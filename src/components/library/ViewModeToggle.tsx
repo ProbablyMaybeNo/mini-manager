@@ -63,7 +63,11 @@ function ToggleButton({
       aria-label={ariaLabel}
       aria-pressed={active}
       className={clsx(
-        "inline-flex items-center gap-1.5 px-3 py-1 min-h-[28px]",
+        // P15.2 — segmented sub-buttons were a bespoke 28px min-height
+        // (under the 44px HIG touch target). tap-target floors them at
+        // 44px (mobile) / 32px (desktop) so the visual stays tight on the
+        // dense desktop toolbar while clearing the touch floor on phones.
+        "tap-target inline-flex items-center justify-center gap-1.5 px-3 py-1",
         "font-mono text-2xs font-bold uppercase tracking-[0.08em]",
         "border rounded-sm transition-colors",
         active

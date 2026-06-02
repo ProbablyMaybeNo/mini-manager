@@ -32,7 +32,10 @@ export function MatchResultsRow({ result, onUse, showAssign, onPickColor }: Prop
   return (
     <div
       role="row"
-      className="grid grid-cols-[24px_1fr_72px_auto] items-center gap-2 px-2 py-1.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
+      // P15.2 — first track widened 24px → 44px so the clickable swatch
+      // (a reseed trigger) can carry a 44px touch hit-box while keeping a
+      // 20px visual chip, centred. The decorative-span variant centres too.
+      className="grid grid-cols-[44px_1fr_72px_auto] items-center gap-2 px-2 py-1.5 border-b border-[var(--color-border)] hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
     >
       {/* P13.6 — clicking the swatch reseeds the target hex via the
           parent's ColorPicker. Keyboard accessible. */}
@@ -43,22 +46,35 @@ export function MatchResultsRow({ result, onUse, showAssign, onPickColor }: Prop
           onClick={() => onPickColor(paint.hex)}
           aria-label={`Reseed match target from ${paint.brand} ${paint.name}`}
           title="Use this colour as target"
-          className="inline-block w-5 h-5 rounded-sm border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] hover:ring-2 hover:ring-[var(--color-accent)]"
-          style={{
-            background: paint.hex,
-            borderColor: "var(--color-border-strong)",
-          }}
-        />
+          // P15.2 — the button is the 44px (mobile) / 32px (desktop) hit-box;
+          // the inner span keeps the original 20px visual swatch. The ring
+          // hover/focus cue moves onto the inner chip so the affordance still
+          // reads as "this swatch is clickable".
+          className="tap-target inline-flex items-center justify-center cursor-pointer group focus:outline-none"
+        >
+          <span
+            aria-hidden
+            className="inline-block w-5 h-5 rounded-sm border group-focus:ring-2 group-focus:ring-[var(--color-accent)] group-hover:ring-2 group-hover:ring-[var(--color-accent)]"
+            style={{
+              background: paint.hex,
+              borderColor: "var(--color-border-strong)",
+            }}
+          />
+        </button>
       ) : (
         <span
           role="cell"
           aria-hidden
-          className="inline-block w-5 h-5 rounded-sm border"
-          style={{
-            background: paint.hex,
-            borderColor: "var(--color-border-strong)",
-          }}
-        />
+          className="inline-flex items-center justify-center"
+        >
+          <span
+            className="inline-block w-5 h-5 rounded-sm border"
+            style={{
+              background: paint.hex,
+              borderColor: "var(--color-border-strong)",
+            }}
+          />
+        </span>
       )}
       <div role="cell" className="min-w-0">
         <div className="font-mono text-xs text-[var(--color-fg)] truncate">
