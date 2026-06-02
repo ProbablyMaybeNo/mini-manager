@@ -321,6 +321,98 @@ describe("query helpers (P13.11)", () => {
     expect(bundle!.project.id).toBe(projectId);
     expect(bundle!.zones).toHaveLength(1);
     expect(bundle!.zones[0]?.steps).toHaveLength(1);
+    // UX-907 — bundle reports the full attached-recipe list so the tab
+    // strip has the data it needs without an extra round-trip.
+    expect(bundle!.allRecipes).toHaveLength(1);
+  });
+
+  test("getFocusedRecipeBundle exposes ALL attached recipes (UX-907)", async () => {
+    const { projectId, recipeId } = await seedProjectWithRecipe({
+      recipeName: "Older scheme",
+    });
+    // Add a second + third recipe attached to the same project. Set
+    // updatedAt explicitly so the most-recently-updated ordering is
+    // deterministic (default $defaultFn resolves to Date.now() which
+    // can collide across rows inserted in the same millisecond).
+    const base = Date.now();
+    // Bump the first recipe's updatedAt to the oldest known timestamp.
+    await state.db!
+      .update(recipes)
+      .set({ updatedAt: new Date(base - 2_000) })
+      .where(eq(recipes.id, recipeId));
+    const second = nanoid(16);
+    await state.db!.insert(recipes).values({
+      id: second,
+      ownerId: state.userId,
+      name: "Middle scheme",
+      attachedProjectId: projectId,
+      bodyType: "infantry",
+      updatedAt: new Date(base - 1_000),
+    });
+    const third = nanoid(16);
+    await state.db!.insert(recipes).values({
+      id: third,
+      ownerId: state.userId,
+      name: "Newest scheme",
+      attachedProjectId: projectId,
+      bodyType: "infantry",
+      updatedAt: new Date(base),
+    });
+
+    await focusActions.setFocusProject({ projectId });
+    const bundle = await focusQueries.getFocusedRecipeBundle(state.userId);
+    expect(bundle).not.toBeNull();
+    // All three recipes appear in the tab list.
+    expect(bundle!.allRecipes).toHaveLength(3);
+    // Default selection = head of the list (most-recently-updated).
+    expect(bundle!.allRecipes[0]?.id).toBe(third);
+    expect(bundle!.recipe.id).toBe(third);
+  });
+
+  test("getFocusedRecipeBundle honours preferredRecipeId (UX-907)", async () => {
+    const { projectId, recipeId: firstId } = await seedProjectWithRecipe();
+    const base = Date.now();
+    await state.db!
+      .update(recipes)
+      .set({ updatedAt: new Date(base - 1_000) })
+      .where(eq(recipes.id, firstId));
+    const secondId = nanoid(16);
+    await state.db!.insert(recipes).values({
+      id: secondId,
+      ownerId: state.userId,
+      name: "Second scheme",
+      attachedProjectId: projectId,
+      bodyType: "infantry",
+      updatedAt: new Date(base),
+    });
+
+    await focusActions.setFocusProject({ projectId });
+
+    // Without preference — picks newest (secondId has the later
+    // updatedAt by 1s).
+    const def = await focusQueries.getFocusedRecipeBundle(state.userId);
+    expect(def!.recipe.id).toBe(secondId);
+
+    // With explicit preference — picks the requested recipe.
+    const pref = await focusQueries.getFocusedRecipeBundle(
+      state.userId,
+      firstId,
+    );
+    expect(pref!.recipe.id).toBe(firstId);
+    expect(pref!.allRecipes.map((r) => r.id)).toContain(firstId);
+  });
+
+  test("getFocusedRecipeBundle falls back to default when preferredRecipeId is unowned/unknown (UX-907)", async () => {
+    const { projectId } = await seedProjectWithRecipe();
+    await focusActions.setFocusProject({ projectId });
+
+    const bundle = await focusQueries.getFocusedRecipeBundle(
+      state.userId,
+      "totally-bogus-id",
+    );
+    // Bogus id silently falls back instead of returning null — the
+    // dashboard stays renderable when the URL param is stale.
+    expect(bundle).not.toBeNull();
   });
 
   test("ON DELETE SET NULL — deleting the focused project nulls the focus", async () => {

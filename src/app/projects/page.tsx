@@ -60,6 +60,14 @@ export default async function ProjectsPage({
   const calMonthRaw = params.calMonth;
   const calYear = Array.isArray(calYearRaw) ? calYearRaw[0] : calYearRaw;
   const calMonth = Array.isArray(calMonthRaw) ? calMonthRaw[0] : calMonthRaw;
+  // UX-907 — recipe-tab persistence. The FocusPanel's tab strip writes
+  // `?focusRecipe=<id>` so the painter's selection survives reloads and
+  // navigation. Unknown / unowned ids fall back to the most-recently-
+  // updated recipe inside the query helper.
+  const focusRecipeRaw = params.focusRecipe;
+  const focusRecipeId = Array.isArray(focusRecipeRaw)
+    ? focusRecipeRaw[0]
+    : focusRecipeRaw;
 
   const userId = await currentUserId();
   const [
@@ -77,7 +85,7 @@ export default async function ProjectsPage({
     listOwnedRecipesLean(userId),
     // P13.11 — focus widget data.
     listFocusCandidates(userId),
-    getFocusedRecipeBundle(userId),
+    getFocusedRecipeBundle(userId, focusRecipeId ?? null),
     getPaintMetaMap(),
   ]);
 
@@ -203,6 +211,8 @@ export default async function ProjectsPage({
                   projectName={focusBundle.project.name}
                   recipeName={focusBundle.recipe.name}
                   zones={focusZones}
+                  recipes={focusBundle.allRecipes}
+                  activeRecipeId={focusBundle.recipe.id}
                 />
               ) : (
                 <FocusEmptyState

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { updateStepNotes } from "@/lib/actions/focus";
 import { phase12LayerLabel, type Phase12LayerKey, type TechniqueKey } from "@/db/schema";
+import { RecipeTabs, type RecipeTab } from "@/components/focus/RecipeTabs";
 
 /**
  * P13.11 — Dashboard FOCUS recipe panel.
@@ -48,6 +49,14 @@ interface Props {
   projectName: string;
   recipeName: string;
   zones: ReadonlyArray<FocusZoneView>;
+  /** UX-907 — Every attached recipe in tab order. When the array has
+   *  2+ entries, FocusPanel renders the tab strip above the slot grid
+   *  so the painter can switch between recipes; with 1 (or omitted)
+   *  it stays hidden and the panel reads exactly as before. */
+  recipes?: ReadonlyArray<RecipeTab>;
+  /** Active recipe id for the tab strip — typically the same id whose
+   *  data populated `zones`. Required when `recipes.length >= 2`. */
+  activeRecipeId?: string;
 }
 
 function isPhase12Layer(key: TechniqueKey): key is Phase12LayerKey {
@@ -69,8 +78,12 @@ export function FocusPanel({
   projectName,
   recipeName,
   zones,
+  recipes,
+  activeRecipeId,
 }: Props) {
   const totalSteps = zones.reduce((acc, z) => acc + z.steps.length, 0);
+  const tabRecipes = recipes ?? [];
+  const showTabs = tabRecipes.length >= 2 && activeRecipeId;
 
   return (
     <div className="space-y-4" data-project-id={projectId}>
@@ -91,6 +104,15 @@ export function FocusPanel({
           {totalSteps === 1 ? "" : "s"}
         </p>
       </header>
+
+      {showTabs ? (
+        <RecipeTabs
+          recipes={tabRecipes}
+          activeId={activeRecipeId!}
+          paramKey="focusRecipe"
+          label="Attached recipes"
+        />
+      ) : null}
 
       {zones.length === 0 ? (
         <p className="frame p-4 text-xs font-sans text-[var(--color-fg-muted)]">

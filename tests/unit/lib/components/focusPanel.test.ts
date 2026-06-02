@@ -73,12 +73,19 @@ function findAll(
   return out;
 }
 
-function render(zones: ReadonlyArray<FocusZoneView>): ReactElement {
+function render(
+  zones: ReadonlyArray<FocusZoneView>,
+  extra: {
+    recipes?: ReadonlyArray<{ id: string; name: string }>;
+    activeRecipeId?: string;
+  } = {},
+): ReactElement {
   return FocusPanel({
     projectId: "proj_1",
     projectName: "Crimson Fists",
     recipeName: "Power-armour scheme",
     zones,
+    ...extra,
   }) as unknown as ReactElement;
 }
 
@@ -214,5 +221,45 @@ describe("FocusPanel — per-step rendering (P13.11)", () => {
     // can't assert the raw "wet_blend" is absent. We only assert the
     // human label is present.
     expect(text).toContain("Wet Blend");
+  });
+});
+
+describe("FocusPanel — recipe tab strip (UX-907)", () => {
+  test("does not render tabs when only one recipe is attached", () => {
+    const tree = render(basicZones(), {
+      recipes: [{ id: "r1", name: "Lone scheme" }],
+      activeRecipeId: "r1",
+    });
+    const text = JSON.stringify(tree);
+    // The lone recipe's name doesn't show up as a tab label.
+    expect(text).not.toContain("Lone scheme");
+  });
+
+  test("renders the tab strip when 2+ recipes are attached", () => {
+    const tree = render(basicZones(), {
+      recipes: [
+        { id: "r1", name: "Power-armour scheme" },
+        { id: "r2", name: "Bone trim scheme" },
+      ],
+      activeRecipeId: "r1",
+    });
+    const text = JSON.stringify(tree);
+    // Both recipe names render — one as the active tab, one inactive.
+    expect(text).toContain("Power-armour scheme");
+    expect(text).toContain("Bone trim scheme");
+  });
+
+  test("does not render tabs when activeRecipeId is missing", () => {
+    // Defensive guard: even with multiple recipes, no active id means
+    // the panel renders without the tab strip rather than crashing.
+    const tree = render(basicZones(), {
+      recipes: [
+        { id: "r1", name: "A" },
+        { id: "r2", name: "B" },
+      ],
+    });
+    // Tree renders fine without throwing — the tab labels do not
+    // appear because the tab strip is guarded by activeRecipeId.
+    expect(tree).toBeDefined();
   });
 });

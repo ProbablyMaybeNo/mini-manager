@@ -86,8 +86,10 @@ export async function listFocusCandidates(
 }
 
 /**
- * P13.11 — Full nested shape of the focused project's first attached
- * recipe — project meta + recipe + zones + steps in display order.
+ * P13.11 — Full nested shape of the focused project's selected attached
+ * recipe — project meta + recipe + zones + steps in display order, plus
+ * (UX-907) the *full list* of attached recipes so the FocusPanel can
+ * render a tab strip when 2+ are attached.
  *
  * Returns null when:
  *   - no focus is set, or
@@ -99,15 +101,25 @@ export async function listFocusCandidates(
  *
  * Bundles paintId resolution into the caller so the page can render
  * brand+name labels without an extra round-trip.
+ *
+ * `preferredRecipeId` — when the URL carries `?focusRecipe=<id>`, pass
+ * it here. The selection sticks if the id is owned + attached to the
+ * focused project; otherwise we fall back to the most-recently-updated
+ * attached recipe (same default ProjectColorSchemeBox uses).
  */
 export interface FocusRecipeBundle {
   project: Project;
   recipe: Recipe;
   zones: ReadonlyArray<RecipeZone & { steps: ReadonlyArray<RecipeStep> }>;
+  /** UX-907 — every attached recipe in tab order (most-recently-updated
+   *  first). When length >= 2 the FocusPanel renders a tab strip; with
+   *  length 1 the strip is suppressed and current behaviour is preserved. */
+  allRecipes: ReadonlyArray<{ id: string; name: string }>;
 }
 
 export async function getFocusedRecipeBundle(
   userId: string,
+  preferredRecipeId?: string | null,
 ): Promise<FocusRecipeBundle | null> {
   const focusedId = await getFocusProjectId(userId);
   if (!focusedId) return null;
@@ -120,8 +132,9 @@ export async function getFocusedRecipeBundle(
   const project = projectRows[0];
   if (!project) return null;
 
-  // Pick the most-recently-updated attached recipe — matches the
-  // selection ProjectColorSchemeBox already does on the detail page.
+  // Fetch ALL attached recipes — sorted most-recently-updated first.
+  // The default selection picks the head of that list, matching prior
+  // behaviour; the explicit URL preference can override.
   const recipeRows = await db
     .select()
     .from(recipes)
@@ -131,10 +144,15 @@ export async function getFocusedRecipeBundle(
         eq(recipes.attachedProjectId, project.id),
       ),
     )
-    .orderBy(desc(recipes.updatedAt))
-    .limit(1);
-  const recipe = recipeRows[0];
-  if (!recipe) return null;
+    .orderBy(desc(recipes.updatedAt));
+
+  if (recipeRows.length === 0) return null;
+
+  const allRecipes = recipeRows.map((r) => ({ id: r.id, name: r.name }));
+  const recipe =
+    (preferredRecipeId
+      ? recipeRows.find((r) => r.id === preferredRecipeId)
+      : null) ?? recipeRows[0]!;
 
   const zoneRows = await db
     .select()
@@ -143,7 +161,7 @@ export async function getFocusedRecipeBundle(
     .orderBy(asc(recipeZones.position));
 
   if (zoneRows.length === 0) {
-    return { project, recipe, zones: [] };
+    return { project, recipe, zones: [], allRecipes };
   }
 
   const zoneIds = zoneRows.map((z) => z.id);
@@ -164,5 +182,6 @@ export async function getFocusedRecipeBundle(
     project,
     recipe,
     zones: zoneRows.map((z) => ({ ...z, steps: stepsByZone.get(z.id) ?? [] })),
+    allRecipes,
   };
 }

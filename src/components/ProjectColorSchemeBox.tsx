@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ColorPicker } from "@/components/ui/ColorPicker";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { RecipeTabs, type RecipeTab } from "@/components/focus/RecipeTabs";
 import {
   addSlotWithPaint,
   deleteZone,
@@ -37,6 +38,12 @@ interface Props {
   attachedRecipeName: string | null;
   /** Existing slots in zone-position order. Empty when none. */
   slots: ReadonlyArray<ColorSchemeSlot>;
+  /** UX-907 — Every recipe attached to this project (most-recently-
+   *  updated first). When length >= 2 we render the RecipeTabs strip
+   *  above the swatch row so the painter can switch between recipes
+   *  without leaving the leaf workspace; the active tab is the
+   *  `attachedRecipeId` chosen by the page. */
+  attachedRecipes?: ReadonlyArray<RecipeTab>;
 }
 
 /**
@@ -64,6 +71,7 @@ export function ProjectColorSchemeBox({
   attachedRecipeId,
   attachedRecipeName,
   slots,
+  attachedRecipes = [],
 }: Props) {
   const router = useRouter();
   const [pickerTarget, setPickerTarget] = useState<
@@ -172,6 +180,16 @@ export function ProjectColorSchemeBox({
         accentColor="cyan"
       >
         <div className="space-y-3">
+          {/* UX-907 — When 2+ recipes attached, surface the recipe-picker
+              affordance as a tab strip. RecipeTabs is a noop for < 2. */}
+          {attachedRecipeId && attachedRecipes.length >= 2 ? (
+            <RecipeTabs
+              recipes={attachedRecipes}
+              activeId={attachedRecipeId}
+              paramKey="recipe"
+              label="Attached recipes"
+            />
+          ) : null}
           {!attachedRecipeId ? (
             <p className="text-xs font-sans text-[var(--color-fg-subtle)] leading-snug">
               Click a{" "}

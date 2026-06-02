@@ -78,13 +78,23 @@ function collectDescendants(
  */
 export default async function ProjectDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  /** UX-907 — `?recipe=<id>` switches which attached recipe the
+   *  COLOR SCHEME box renders when 2+ are attached. */
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
   const userId = await currentUserId();
   const project = await getProjectById(userId, id);
   if (!project) notFound();
+
+  const sp = (await searchParams) ?? {};
+  const recipeParamRaw = sp.recipe;
+  const recipeParam = Array.isArray(recipeParamRaw)
+    ? recipeParamRaw[0]
+    : recipeParamRaw;
 
   // P13.4 — Army, Warband AND Unit can host sub-projects (which are
   // always Unit-typed per the new sub-project rule). The container
@@ -175,7 +185,15 @@ export default async function ProjectDetailPage({
     priority: c.priority,
   }));
 
-  const attachedRecipe = attachedRecipes[0] ?? null;
+  // UX-907 — when 2+ recipes are attached we render a tab strip and
+  // honour `?recipe=<id>` for the active selection. Fall back to most-
+  // recently-updated (already the listRecipesForProject default order).
+  const attachedRecipe =
+    (recipeParam
+      ? attachedRecipes.find((r) => r.id === recipeParam)
+      : null) ??
+    attachedRecipes[0] ??
+    null;
   let colorSchemeSlots: ColorSchemeSlot[] = [];
   if (attachedRecipe) {
     const full = await getRecipeWithZones(userId, attachedRecipe.id);
@@ -264,6 +282,10 @@ export default async function ProjectDetailPage({
         attachedRecipeId={attachedRecipe?.id ?? null}
         attachedRecipeName={attachedRecipe?.name ?? null}
         slots={colorSchemeSlots}
+        attachedRecipes={attachedRecipes.map((r) => ({
+          id: r.id,
+          name: r.name,
+        }))}
       />
 
       <ProjectProgressTable
