@@ -26,7 +26,8 @@
     "fix": "On mobile, increase the minimum cell size to >=24px (ideally 28-32px) and let the grid reflow column count to fill available width. Consider a mobile-specific 'tap to zoom region' interaction, or reduce default density (fewer brands/hues shown until the user drills in) so individual cells are tappable. Pair with UX-1203 (popover containment).",
     "effort": "large",
     "confidence": 0.9,
-    "needs_human": true
+    "needs_human": true,
+    "status": "done (P16.6) — per-density CELL_MIN_PX: Condensed cells minmax(28px,1fr) clear the 24px target with margin (Condensed is the tapped default); Full minmax(12px,1fr) lifts off the old 7px floor for the dense overview. `1fr` columns reflow to fill the full width so 414 enlarges cells, not margins. P16.4 perf (row-chunking, content-visibility, brand filter, density toggle) intact."
   },
   {
     "id": "UX-1203",
@@ -40,7 +41,8 @@
     "fix": "Make the popover flip above the cell when there isn't room below (collision-aware placement, e.g. Floating UI flip middleware), clamp it within the visual viewport minus the fixed bottom-nav height, and/or render it as a bottom sheet on mobile. Ensure its action buttons are always within the safe scrollable area.",
     "effort": "medium",
     "confidence": 0.92,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done (P16.6) — mobile renders a fixed bottom SHEET clear of the bottom tab bar (bottom: 60px + env(safe-area-inset-bottom)) with a flex-column body that scrolls inside max-h-[70vh], so Mark-as-wanted is always reachable. Desktop keeps the anchored popover but flips above the cell when a useLayoutEffect measures insufficient room below (no positioning lib added)."
   },
   {
     "id": "UX-1204",
@@ -141,7 +143,8 @@
     "fix": "Render filters as visually distinct chips (border/background, >=44px tall, gap between them, horizontal scroll or wrap with consistent spacing). This both raises the tap target and signals interactivity. Coordinates with UX-1201 if they share .btn-sm.",
     "effort": "small",
     "confidence": 0.85,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done (P16.6) — coverage brand chips only (the /wishlist, /tools/match, /library inline filter rows are outside the planner scope fence and untouched here). Chips now use `tap-target` (44px touch / 32px md+), wrap cleanly with whitespace-normal (no truncate/max-w clipping), gap-1.5 between chips, pr-1 right gutter on the row. The chips are a planner-local custom button, not the .btn-sm Button primitive, so they're fixed in-component."
   },
   {
     "id": "UX-1211",
@@ -155,7 +158,8 @@
     "fix": "Either raise separator color to >=#8a8a8a (>=4.5:1) or mark them aria-hidden and accept as non-text decoration. Prefer raising the value for visual polish.",
     "effort": "trivial",
     "confidence": 0.95,
-    "needs_human": false
+    "needs_human": false,
+    "status": "done"
   },
   {
     "id": "UX-1212",

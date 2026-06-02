@@ -184,7 +184,7 @@ export function EyedropperPins({
                   }}
                 />
                 <span>{idx + 1}</span>
-                <span className="opacity-50">·</span>
+                <span aria-hidden className="opacity-50">·</span>
                 <span className="opacity-80">{pin.hex}</span>
                 <span className="opacity-50 ml-1">×</span>
               </button>

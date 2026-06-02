@@ -182,7 +182,10 @@ function Segment({ label, value, tone, tooltip }: SegmentProps) {
   return (
     <span className="inline-flex items-center gap-1 font-mono text-[11px] leading-none tracking-wider uppercase whitespace-nowrap">
       <span className="text-[var(--color-fg-subtle)]">{label}</span>
-      <span className="text-[var(--color-border-strong)]">·</span>
+      {/* UX-1211 — decorative separator. Was --color-border-strong
+          (#5a5a5a → 2.87:1, below AA); raised to --color-fg-muted and
+          aria-hidden since it carries no unique meaning. */}
+      <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
       {tooltip ? (
         <span
           className={TONE_COLOR[tone]}

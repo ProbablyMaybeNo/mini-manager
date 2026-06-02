@@ -107,3 +107,16 @@ describe("UX-1205 — /user FREE caps match the /pricing locked truth", () => {
     expect(pricing).toContain('"3 wishlist items"');
   });
 });
+
+describe("UX-1211 — sub-AA separator dots fixed", () => {
+  test("StatusBar separator no longer uses the failing border-strong colour", () => {
+    const src = read("src/components/StatusBar.tsx");
+    expect(src).not.toContain('text-[var(--color-border-strong)]">·</span>');
+    expect(src).toContain('<span aria-hidden className="text-[var(--color-fg-muted)]">·</span>');
+  });
+
+  test("eyedropper pin-list separator is aria-hidden (decorative)", () => {
+    const src = read("src/components/tools/eyedropper/EyedropperPins.tsx");
+    expect(src).toContain('<span aria-hidden className="opacity-50">·</span>');
+  });
+});
