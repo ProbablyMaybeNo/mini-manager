@@ -34,10 +34,14 @@ describe("ProjectColorSchemeBox component surface", () => {
     expect(src).toMatch(/variant="success"[\s\S]{0,200}\+ Add paint/);
   });
 
-  test("clicking a + box without a recipe creates one inline", () => {
-    expect(src).toContain("handleCreateRecipeAndOpenPicker");
-    expect(src).toContain("createRecipe");
-    expect(src).toContain("attachedProjectId: projectId");
+  test("clicking a + box without a recipe opens the unified AttachRecipeModal (UX-904)", () => {
+    // Pre-UX-904 the + ghost called handleCreateRecipeAndOpenPicker
+    // which silently created an auto-named "<project> scheme" recipe
+    // with no chance to pick an existing one. Now it opens the same
+    // modal the /projects table uses: Pick existing OR Create new.
+    expect(src).toContain("AttachRecipeModal");
+    expect(src).toMatch(/setAttachOpen\(true\)/);
+    expect(src).not.toContain("handleCreateRecipeAndOpenPicker");
   });
 
   test("clicking a + box with a recipe attached calls addSlotWithPaint", () => {

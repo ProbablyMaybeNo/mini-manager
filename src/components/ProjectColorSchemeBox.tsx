@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { RecipeTabs, type RecipeTab } from "@/components/focus/RecipeTabs";
 import {
+  AttachRecipeModal,
+  type RecipeOption,
+} from "@/components/recipes/AttachRecipeModal";
+import {
   addSlotWithPaint,
   deleteZone,
 } from "@/lib/actions/recipeZones";
 import { updateStep } from "@/lib/actions/recipeSteps";
-import { createRecipe } from "@/lib/actions/recipes";
 import type {
   ColorPickerMode,
   ColorPickerSelection,
@@ -44,6 +47,11 @@ interface Props {
    *  without leaving the leaf workspace; the active tab is the
    *  `attachedRecipeId` chosen by the page. */
   attachedRecipes?: ReadonlyArray<RecipeTab>;
+  /** UX-904 — Recipes the user owns that are NOT yet attached here.
+   *  Powers the AttachRecipeModal "Pick existing" tab so clicking the
+   *  + ghost on an empty scheme opens the same modal as /projects → +.
+   *  Default [] keeps the prop optional for older call sites. */
+  attachCandidates?: ReadonlyArray<RecipeOption>;
 }
 
 /**
@@ -67,11 +75,12 @@ interface Props {
  */
 export function ProjectColorSchemeBox({
   projectId,
-  projectName,
+  projectName: _projectName,
   attachedRecipeId,
   attachedRecipeName,
   slots,
   attachedRecipes = [],
+  attachCandidates = [],
 }: Props) {
   const router = useRouter();
   const [pickerTarget, setPickerTarget] = useState<
@@ -79,27 +88,12 @@ export function ProjectColorSchemeBox({
   >(null);
   const [pickerError, setPickerError] = useState<string | null>(null);
   const [isSaving, startSaveTransition] = useTransition();
-
-  // Without an attached recipe, clicking + creates a fresh recipe
-  // first (named after the project) + attaches it + opens the picker
-  // again so the first slot can be added. Keeps the painter's two-
-  // click "I want a scheme" intent flowing.
-  const handleCreateRecipeAndOpenPicker = () => {
-    setPickerError(null);
-    startSaveTransition(async () => {
-      const result = await createRecipe({
-        name: `${projectName} scheme`,
-        attachedProjectId: projectId,
-      });
-      if (!result.ok) {
-        setPickerError(result.error);
-        return;
-      }
-      // Server-side revalidation will refresh; close the picker so
-      // the new attached state lands.
-      router.refresh();
-    });
-  };
+  // UX-904 — When no recipe is attached, the + ghost opens the unified
+  // AttachRecipeModal (same modal as /projects → + ATTACH). Previously
+  // the + immediately created a "<projectName> scheme" recipe with no
+  // chance to pick an existing one, which dropped the painter into a
+  // fresh empty editor even when they already owned a perfect recipe.
+  const [attachOpen, setAttachOpen] = useState(false);
 
   const handlePickerSelect = (selection: ColorPickerSelection) => {
     setPickerError(null);
@@ -210,7 +204,7 @@ export function ProjectColorSchemeBox({
                   onClick={
                     attachedRecipeId
                       ? () => setPickerTarget({ kind: "new" })
-                      : handleCreateRecipeAndOpenPicker
+                      : () => setAttachOpen(true)
                   }
                   disabled={isSaving}
                 />
@@ -265,6 +259,18 @@ export function ProjectColorSchemeBox({
           onSelect={handlePickerSelect}
         />
       ) : null}
+
+      {/* UX-904 — Unified attach-recipe modal. Opens from the + ghost
+          when no recipe is attached yet. Same modal the /projects
+          dashboard row uses, so both surfaces expose the painter's
+          "pick existing OR create new" choice identically. */}
+      <AttachRecipeModal
+        mode="project"
+        projectId={projectId}
+        open={attachOpen}
+        onClose={() => setAttachOpen(false)}
+        candidates={attachCandidates}
+      />
     </>
   );
 }

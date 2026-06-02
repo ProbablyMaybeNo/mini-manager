@@ -33,8 +33,10 @@ import {
   getPaintMetaMap,
   getProjectPalettesMap,
   getRecipeWithZones,
+  listOwnedRecipesLean,
   listRecipesForProject,
 } from "@/db/queries/recipes";
+import type { RecipeOption } from "@/components/recipes/AttachRecipeModal";
 
 export const dynamic = "force-dynamic";
 
@@ -107,12 +109,18 @@ export default async function ProjectDetailPage({
 
   // Containers fetch the wider context they need for aggregation; leaf
   // projects skip these queries entirely so the workspace stays cheap.
-  const [children, allProjects] = canHaveChildren
-    ? await Promise.all([
-        listChildProjects(userId, project.id),
-        listAllProjects(userId),
-      ])
-    : [[] as ReadonlyArray<Project>, [] as ReadonlyArray<Project>];
+  // UX-904 — `ownedRecipes` is fetched ALWAYS now (cheap lean shape)
+  // so the COLOR SCHEME box can open the AttachRecipeModal with "Pick
+  // existing" + "Create new" tabs from any project — leaf or container.
+  // We need the projects list too for the recipe-attachment-label
+  // lookup, so widen the fetch beyond containers.
+  const [children, allProjects, ownedRecipes] = await Promise.all([
+    canHaveChildren
+      ? listChildProjects(userId, project.id)
+      : Promise.resolve([] as ReadonlyArray<Project>),
+    listAllProjects(userId),
+    listOwnedRecipesLean(userId),
+  ]);
 
   // A project is a "container view" only when it both can host children
   // AND has a count of 0 (no rank-and-file of its own). A Unit with
@@ -184,6 +192,22 @@ export default async function ProjectDetailPage({
     percent: progressPercent(c),
     priority: c.priority,
   }));
+
+  // UX-904 — Build the AttachRecipeModal candidate list. Filters out
+  // recipes already attached to THIS project (they'd be no-ops to
+  // re-attach) and labels the rest with their current attachment so
+  // the painter sees "moves from: <project>" warnings inline.
+  const projectNameById: Record<string, string> = {};
+  for (const p of allProjects) projectNameById[p.id] = p.name;
+  const attachCandidates: ReadonlyArray<RecipeOption> = ownedRecipes
+    .filter((r) => r.attachedProjectId !== project.id)
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      attachmentLabel: r.attachedProjectId
+        ? projectNameById[r.attachedProjectId] ?? "(project)"
+        : null,
+    }));
 
   // UX-907 — when 2+ recipes are attached we render a tab strip and
   // honour `?recipe=<id>` for the active selection. Fall back to most-
@@ -286,6 +310,7 @@ export default async function ProjectDetailPage({
           id: r.id,
           name: r.name,
         }))}
+        attachCandidates={attachCandidates}
       />
 
       <ProjectProgressTable
