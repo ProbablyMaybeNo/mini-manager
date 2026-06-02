@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { PlannerActivityCell } from "./PlannerActivityCell";
 import { PlannerCalendarCell } from "./PlannerCalendarCell";
-import { PlannerHeatmapCell } from "./PlannerHeatmapCell";
+import { HeatSinkGridCell } from "./HeatSinkGridCell";
 import { PlannerInspoCell } from "./PlannerInspoCell";
 import { PlannerStreakCell } from "./PlannerStreakCell";
 
@@ -18,7 +18,7 @@ import { PlannerStreakCell } from "./PlannerStreakCell";
  *
  * Layout:
  *   - On `md+`: 5-column grid. Calendar takes the left 3 cols across
- *     all 4 rows, the right 2 cols stack Activity → Streak → Heatmap
+ *     all 4 rows, the right 2 cols stack Activity → Streak → Coverage
  *     → Inspo (one cell per row). Same visual the scaffold shipped
  *     with — implemented via `md:col-start` + `md:row-start` so the
  *     mobile reorder doesn't bleed into desktop.
@@ -27,7 +27,7 @@ import { PlannerStreakCell } from "./PlannerStreakCell";
  *     smallest + most reward-loaded — the painter sees their number
  *     before they scroll. Activity next so the freshest action is
  *     immediately readable. Calendar third (it's tall + interactive
- *     — fine to live below the fold). Heatmap + Inspo close the
+ *     — fine to live below the fold). Coverage + Inspo close the
  *     scroll.
  *
  * Every cell is a sibling component the P14.3–7 widget builders can
@@ -72,10 +72,10 @@ export async function PlannerSection({ calYear, calMonth }: Props = {}) {
         <div className="order-2 md:order-none md:col-span-2 md:col-start-4 md:row-start-1">
           <PlannerActivityCell />
         </div>
-        {/* Heatmap — mobile order 4, desktop row 3 of the right
-            column. */}
+        {/* Coverage grid (P16.3 HeatSink) — mobile order 4, desktop
+            row 3 of the right column. Replaced the activity heatmap. */}
         <div className="order-4 md:order-none md:col-span-2 md:col-start-4 md:row-start-3">
-          <PlannerHeatmapCell />
+          <HeatSinkGridCell />
         </div>
         {/* Inspo — mobile order 5, desktop row 4 of the right column. */}
         <div className="order-5 md:order-none md:col-span-2 md:col-start-4 md:row-start-4">

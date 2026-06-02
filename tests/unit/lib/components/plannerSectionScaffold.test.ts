@@ -56,7 +56,7 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
         "PlannerCalendarCell",
         "PlannerActivityCell",
         "PlannerStreakCell",
-        "PlannerHeatmapCell",
+        "HeatSinkGridCell",
         "PlannerInspoCell",
       ]) {
         expect(section).toContain(cell);
@@ -72,12 +72,12 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       expect(section).toContain("md:col-span-2");
     });
 
-    test("P14.8 — mobile reorder: Streak > Activity > Calendar > Heatmap > Inspo", () => {
+    test("P14.8 — mobile reorder: Streak > Activity > Calendar > Coverage > Inspo", () => {
       // Each cell wrapper carries an explicit `order-N` class that
       // controls the mobile (<md) stacking order. The brief locks
       // Streak first (smallest + most reward-loaded), Activity second
       // (freshest action), Calendar third (tall + interactive),
-      // Heatmap + Inspo close the scroll.
+      // Coverage (P16.3) + Inspo close the scroll.
       const streakIdx = section.indexOf("order-1");
       const activityIdx = section.indexOf("order-2");
       const calendarIdx = section.indexOf("order-3");
@@ -100,14 +100,14 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       orderMatch("PlannerStreakCell", 1);
       orderMatch("PlannerActivityCell", 2);
       orderMatch("PlannerCalendarCell", 3);
-      orderMatch("PlannerHeatmapCell", 4);
+      orderMatch("HeatSinkGridCell", 4);
       orderMatch("PlannerInspoCell", 5);
     });
 
     test("P14.8 — desktop order preserved via md:row-start", () => {
       // On md+ each right-column cell pins its grid row so the mobile
       // reorder doesn't bleed into the desktop visual. Activity =
-      // row 1 (top of right stack), Streak = row 2, Heatmap = row 3,
+      // row 1 (top of right stack), Streak = row 2, Coverage = row 3,
       // Inspo = row 4. Calendar spans all four rows on the left.
       expect(section).toContain("md:row-start-1");
       expect(section).toContain("md:row-start-2");
@@ -136,14 +136,14 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       expect(src).toMatch(/days/i);
     });
 
-    test("Heatmap cell renders a grid + last-90-days microcopy", () => {
-      // P14.6 - the placeholder 30-day strip was swapped for the
-      // real 90-day grid + tooltip + intensity-binned cells. The
-      // scaffold test now pins the surrounding shape (Card, grid,
-      // last-N-days copy) rather than the specific 30-cell strip.
-      const src = read("src/components/planner/PlannerHeatmapCell.tsx");
-      expect(src).toContain("HEATMAP");
-      expect(src).toMatch(/last \d+ days/i);
+    test("Coverage cell renders the spectrum grid + collection microcopy", () => {
+      // P16.3 - the activity heatmap was retired and replaced by the
+      // HeatSink coverage grid: the painter's catalog as a hue-sorted
+      // spectrum, borders flagging owned / wanted. The scaffold test
+      // pins the surrounding shape (Card title, grid, collection copy).
+      const src = read("src/components/planner/HeatSinkGridCell.tsx");
+      expect(src).toContain("COVERAGE");
+      expect(src).toMatch(/hue-sorted spectrum/i);
     });
 
     test("Inspo cell shows the locked paste-only copy", () => {
@@ -159,7 +159,7 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       "src/components/planner/PlannerCalendarCell.tsx",
       "src/components/planner/PlannerActivityCell.tsx",
       "src/components/planner/PlannerStreakCell.tsx",
-      "src/components/planner/PlannerHeatmapCell.tsx",
+      "src/components/planner/HeatSinkGridCell.tsx",
       "src/components/planner/PlannerInspoCell.tsx",
     ];
 

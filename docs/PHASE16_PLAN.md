@@ -118,7 +118,24 @@ Catalog cached per export timestamp (mirrors `getPaintMetaMap`).
 - Integration tests: user with 0 inventory → all "none"; user with mixed owned
   + wishlisted → correct buckets + summary.
 
-### P16.3 — HeatSinkGrid cell + PLANNER swap
+### P16.3 — HeatSinkGrid cell + PLANNER swap ✅
+
+**Shipped** 2026-06-02 — `src/components/planner/HeatSinkGridCell.tsx` (async
+server component, fetches its own `getCoverageGrid(currentUserId())`) +
+`heatSinkHelpers.ts` (border-token map + header readout). Renders the catalog
+as a tight hue-sorted spectrum: fill = paint hex, border = coverage state via
+`@theme` tokens (green owned / amber wanted / transparent none — no raw hex, no
+cyan). Mono-caps header "owned / total owned · wanted" + thin coverage bar;
+`content-visibility:auto` on the grid (the one cheap P16.4-adjacent hint).
+Swapped `<PlannerHeatmapCell />` → `<HeatSinkGridCell />` in PLANNER
+`md:row-start-3`; Streak / Activity / Calendar / Inspo untouched. Retired the
+activity heatmap (`PlannerHeatmapCell.tsx`, `plannerHeatmapHelpers.ts` + their
+tests — grep-confirmed heatmap-only). +19 view tests (helpers + cell render);
+net suite green at 1680 passing / 1 skipped. `tsc` clean for planner scope.
+**Concurrency note:** a parallel agent's in-flight per-paint-notes work
+(`focus/**`, `schema.ts`, `projects/page.tsx`, `paintNotes.*`) is uncommitted in
+the shared tree and has its own pre-existing `focusPanel.test.ts` type errors —
+out of P16.3 scope, not committed here.
 
 - New `src/components/planner/HeatSinkGridCell.tsx` (async server component) +
   `src/components/planner/heatSinkHelpers.ts` if any view-pure logic spills out.

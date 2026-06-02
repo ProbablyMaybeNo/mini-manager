@@ -93,29 +93,10 @@ describe("UX-1105 — Calendar day aria-labels are screen-reader prose", () => {
   });
 });
 
-describe("UX-1106 — Heatmap footer copy addresses mobile (no hover)", () => {
-  const src = read("src/components/planner/PlannerHeatmapCell.tsx");
-
-  test("footer copy reads 'Hover or tap', not just 'Hover'", () => {
-    // Touch devices have no hover; the heatmap cell `title` attribute
-    // doubles as the tap-fallback. The copy must tell the painter.
-    expect(src).toContain("Hover or tap");
-    expect(src).not.toMatch(/Hover a cell for the count\./);
-  });
-});
-
-describe("UX-1107 — Heatmap tooltip vocabulary aligns with dashboard", () => {
-  const helpers = read("src/components/planner/plannerHeatmapHelpers.ts");
-
-  test("tooltip uses 'activity' / 'activities', not 'action' / 'actions'", () => {
-    // The rest of the dashboard speaks in "activity" — ACTIVITY widget,
-    // activity_log schema, getActivityByDay. The heatmap tooltip now
-    // matches.
-    expect(helpers).toContain('"activity"');
-    expect(helpers).toContain('"activities"');
-    expect(helpers).not.toMatch(/cell\.count === 1 \? "action"/);
-  });
-});
+// UX-1106 + UX-1107 retired in P16.3: both guarded copy/vocabulary on
+// the activity heatmap (PlannerHeatmapCell + plannerHeatmapHelpers),
+// which was deleted when the HeatSink coverage grid replaced it. The
+// regressions they pinned can no longer recur — the files are gone.
 
 describe("UX-1108 — Inspo drag-handle tap target", () => {
   const src = read("src/components/planner/ManageInspoModal.tsx");

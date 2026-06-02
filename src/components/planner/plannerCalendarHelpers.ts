@@ -4,7 +4,7 @@
  *
  * Lives outside PlannerCalendarCell.tsx so unit tests can import it
  * in the node env without next-auth (same pattern as
- * plannerStreakHelpers.ts + plannerHeatmapHelpers.ts).
+ * plannerStreakHelpers.ts + heatSinkHelpers.ts).
  */
 
 /**
