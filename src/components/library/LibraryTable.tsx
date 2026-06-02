@@ -111,12 +111,19 @@ function TableHeader() {
 
 /**
  * Mobile collapses to swatch / brand / name / type / hex / owned /
- * wishlisted — Line + SKU are visually hidden via `hidden md:inline`
+ * wanted — Line + SKU are visually hidden via `hidden md:inline`
  * and so don't occupy mobile grid cells. Desktop restores the full
  * 9-col layout.
+ *
+ * UX-910 — Mobile (<md) brand was fixed at 90px which crowded long
+ * paint names like "507a Admiralty Dark Grey" out to "507a Admiralty…".
+ * Rebalanced so NAME gets ~1.5× the share of BRAND via fr-based
+ * minmax columns; BRAND is allowed to wrap to 2 lines (line-clamp-2)
+ * within the fixed 40px row. NAME still truncates because there's
+ * always only one row to show it in.
  */
 const GRID_CLASS =
-  "grid-cols-[24px_90px_minmax(0,1fr)_24px_60px_36px_28px] md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]";
+  "grid-cols-[24px_minmax(0,1fr)_minmax(0,1.5fr)_24px_60px_36px_28px] md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]";
 
 function PaintRow({
   paint,
@@ -176,7 +183,17 @@ function PaintRow({
         )}
         style={{ background: paint.hex }}
       />
-      <span role="gridcell" aria-colindex={2} className="truncate text-[var(--color-fg-muted)]">{paint.brand}</span>
+      {/* UX-910 — Brand wraps to 2 lines on mobile to give NAME more
+          width; desktop keeps the single-line truncate. The fixed
+          40px row + leading-tight keeps two short lines (e.g. "Two
+          Thin Coats") inside the row without breaking virtualisation. */}
+      <span
+        role="gridcell"
+        aria-colindex={2}
+        className="text-[var(--color-fg-muted)] line-clamp-2 leading-tight md:line-clamp-none md:truncate md:leading-normal"
+      >
+        {paint.brand}
+      </span>
       <span role="gridcell" aria-colindex={3} className="hidden md:inline truncate text-[var(--color-fg-subtle)]">
         {paint.line ?? "—"}
       </span>
