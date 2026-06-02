@@ -151,7 +151,7 @@ export function StepRow({
         aria-expanded={notesExpanded}
         title={notes.length > 0 ? "Has notes" : "Add notes"}
         className={clsx(
-          "lg:hidden tap-target px-2 font-mono text-xs",
+          "lg:hidden shrink-0 inline-flex items-center justify-center tap-target px-2 font-mono text-xs",
           notes.length > 0
             ? "text-[var(--color-cyan)]"
             : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg-muted)]",
@@ -228,7 +228,12 @@ export function StepRow({
         type="button"
         onClick={handleDelete}
         disabled={isPending}
-        className="text-xs font-mono text-[var(--color-fg-subtle)] hover:text-[var(--color-red)] tap-target px-2"
+        // UX-1311 — the × delete previously had no shrink-0, so under tight
+        // mobile widths it could be pushed to overlap the paint-swatch
+        // trigger's 44px tap box (measured 25px collision). shrink-0 +
+        // justify-center give it its own non-overlapping 44px box; the
+        // parent gap-2 keeps a clear gutter between the two hit areas.
+        className="shrink-0 inline-flex items-center justify-center text-xs font-mono text-[var(--color-fg-subtle)] hover:text-[var(--color-red)] tap-target px-2"
         aria-label="Delete step"
       >
         ×

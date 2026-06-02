@@ -14,6 +14,20 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
+describe("UX-1311 — recipe step swatch/delete hit boxes no longer overlap", () => {
+  const src = read("src/components/recipes/StepRow.tsx");
+
+  test("the × delete has its own non-overlapping 44px box (shrink-0 + tap-target)", () => {
+    expect(src).toContain(
+      'className="shrink-0 inline-flex items-center justify-center text-xs font-mono text-[var(--color-fg-subtle)] hover:text-[var(--color-red)] tap-target px-2"',
+    );
+  });
+
+  test("the notes toggle is shrink-0 so the trailing cluster can't compress", () => {
+    expect(src).toContain("lg:hidden shrink-0 inline-flex items-center justify-center tap-target");
+  });
+});
+
 describe("UX-1310 — DELETE PROJECT drops to a red outline (quieter)", () => {
   test("the detail-page trigger uses variant=danger + tone=outline", () => {
     const src = read("src/components/projects/DeleteProjectButton.tsx");

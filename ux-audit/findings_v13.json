@@ -163,7 +163,8 @@
     "fix": "Lay the step-row trailing controls out with explicit gaps so their hit boxes don't overlap (flex with gap ≥8px, or wrap the swatch + delete onto a second line on narrow widths). Ensure the × delete has its own non-overlapping 44px box.",
     "effort": "small",
     "confidence": 0.82,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1312",
