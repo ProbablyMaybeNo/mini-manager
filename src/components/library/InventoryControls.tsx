@@ -20,14 +20,26 @@ const ZERO: InventoryState = { ownedCount: 0, isWishlisted: false };
 
 /**
  * Inventory controls. The `compact` mode renders two icon toggles for
- * the library table row (✓ for owned, ★ for wishlisted). The full mode
- * renders a bottle stepper + the wishlist toggle — used in the detail
+ * the library table row (✓ for owned, ★ for wanted). The full mode
+ * renders a bottle stepper + the wanted toggle — used in the detail
  * panel. NB-3: the redundant "Just bought +1" quick action was removed
  * in favour of the +/- stepper which already increments and revalidates.
+ *
+ * UX-1001 — the star is now labelled "Mark as wanted" / "Unmark", not
+ * "Add to wishlist". The data path remains `isWishlistedPaint` (column
+ * rename would be a migration; not worth it). The label change exists to
+ * disambiguate from the `/wishlist` page, which tracks kit/box/manual
+ * adds — a parallel pipeline that confused recruits sharing the name.
  *
  * Uses optimistic local state during the server-action round-trip;
  * reverts if the action returns `{ ok: false }`.
  */
+
+/** UX-1001 — tooltip copy for the wanted-star toggle. The two-system
+ *  naming clash was the issue: the library star and the /wishlist page
+ *  both spoke "wishlist" but tracked disjoint data. Exported for tests. */
+export const WANTED_TOOLTIP =
+  "Different from the Wishlist page, which tracks kit/box purchases.";
 export function InventoryControls({
   paintId,
   initial = ZERO,
@@ -60,8 +72,8 @@ export function InventoryControls({
       () => toggleWishlistedPaint({ paintId }),
       () =>
         next
-          ? toast.success("Added to wishlist")
-          : toast.info("Removed from wishlist"),
+          ? toast.success("Marked as wanted")
+          : toast.info("Unmarked"),
     );
   }
 
@@ -121,7 +133,8 @@ export function InventoryControls({
             toggleWish();
           }}
           aria-pressed={state.isWishlisted}
-          aria-label={state.isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-label={state.isWishlisted ? "Unmark" : "Mark as wanted"}
+          title={WANTED_TOOLTIP}
           className={clsx(
             "inline-flex justify-center items-center font-mono text-xs min-h-[24px] py-1",
             state.isWishlisted
@@ -180,12 +193,16 @@ export function InventoryControls({
           +
         </button>
       </div>
-      {/* Add-to-wishlist — P13.10: routed through the Button primitive.
-          `variant="warning"` is the canonical wishlist CTA after P13.1.
-          When active we ship the solid pastel-yellow fill (the new
-          default tone); when inactive we drop to `tone="outline"` so
-          the inert state reads as low-emphasis without losing the
-          yellow palette anchor. */}
+      {/* Mark-as-wanted — P13.10: routed through the Button primitive.
+          `variant="warning"` is the canonical wanted-star CTA after
+          P13.1. When active we ship the solid pastel-yellow fill (the
+          new default tone); when inactive we drop to `tone="outline"`
+          so the inert state reads as low-emphasis without losing the
+          yellow palette anchor.
+
+          UX-1001 — label was "Add to wishlist" / "Wishlisted" which
+          collided with the /wishlist page (kit/box adds). Renamed to
+          "Mark as wanted" / "Wanted"; tooltip disambiguates. */}
       <div>
         <Button
           type="button"
@@ -195,9 +212,10 @@ export function InventoryControls({
           size="sm"
           tone={state.isWishlisted ? "solid" : "outline"}
           aria-pressed={state.isWishlisted}
+          title={WANTED_TOOLTIP}
         >
           <span aria-hidden>{state.isWishlisted ? "★" : "☆"}</span>
-          <span>{state.isWishlisted ? "Wishlisted" : "Add to wishlist"}</span>
+          <span>{state.isWishlisted ? "Wanted" : "Mark as wanted"}</span>
         </Button>
       </div>
       {error ? (

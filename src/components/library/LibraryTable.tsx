@@ -102,7 +102,7 @@ function TableHeader() {
       <span role="columnheader" aria-colindex={8} className="text-center" aria-label="Owned">
         Own
       </span>
-      <span role="columnheader" aria-colindex={9} className="text-center" aria-label="Wishlisted">
+      <span role="columnheader" aria-colindex={9} className="text-center" aria-label="Wanted">
         ★
       </span>
     </div>

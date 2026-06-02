@@ -85,8 +85,17 @@ describe("Library inventory toggle — clear hover affordance (P11.6)", () => {
   test("each toggle exposes a descriptive aria-label that flips by state", () => {
     expect(src).toContain('"Mark as not owned"');
     expect(src).toContain('"Mark as owned"');
-    expect(src).toContain('"Add to wishlist"');
-    expect(src).toContain('"Remove from wishlist"');
+    // UX-1001 — renamed from "Add to wishlist" / "Remove from wishlist"
+    // to disambiguate from the /wishlist page (kit/box purchase queue).
+    expect(src).toContain('"Mark as wanted"');
+    expect(src).toContain('"Unmark"');
+  });
+
+  test("UX-1001: wanted-star toggle exposes the disambiguation tooltip", () => {
+    // The two-system naming clash was the source of confusion: the
+    // library star and the /wishlist page both spoke "wishlist" but
+    // tracked disjoint data. The tooltip locks the explanation.
+    expect(src).toContain("Different from the Wishlist page");
   });
 });
 
