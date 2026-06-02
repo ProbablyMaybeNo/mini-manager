@@ -147,15 +147,51 @@ export function condensedCells(
 }
 
 /**
- * Default density for a painter: Condensed once their collection
- * (owned + wanted) clears `CONDENSED_DEFAULT_THRESHOLD`, else Full so a
- * near-empty collection still shows something to fill. Driven by the
- * summary so it costs nothing extra.
+ * Default density for a painter.
+ *
+ * On a coarse pointer / narrow viewport (`isMobile`), the grid ALWAYS
+ * defaults to Condensed regardless of collection size: Full mode packs
+ * the 7,144-paint catalog into ~12px cells, which is half the WCAG 2.5.8
+ * 24px target floor and the first thing a brand-new mobile recruit (0
+ * owned paints) meets (UX-1302). Condensed is the tappable density, so a
+ * phone always lands there. (A near-empty collection renders an empty
+ * Condensed spectrum with the "switch to Full" hint — better than a wall
+ * of sub-target cells.)
+ *
+ * On a fine pointer (desktop), Condensed kicks in only once the
+ * collection (owned + wanted) clears `CONDENSED_DEFAULT_THRESHOLD`, else
+ * Full so a near-empty collection still shows the whole catalog to fill.
+ * Driven by the summary so it costs nothing extra.
  */
-export function pickDefaultDensity(summary: CoverageSummary): GridDensity {
+export function pickDefaultDensity(
+  summary: CoverageSummary,
+  isMobile: boolean = false,
+): GridDensity {
+  if (isMobile) return "condensed";
   return summary.owned + summary.wanted >= CONDENSED_DEFAULT_THRESHOLD
     ? "condensed"
     : "full";
+}
+
+/**
+ * Whether the current client is a coarse pointer or a narrow (< md, i.e.
+ * < 768px) viewport — the "mobile" gate for the grid's tappable defaults
+ * (Condensed default, UX-1302) and the gap-fill bottom sheet (UX-1301).
+ *
+ * Pure + SSR-safe: returns `false` when `window` is undefined so the
+ * server render matches a desktop-first first paint, and the client
+ * re-derives it in an effect. `md` = 768px to mirror the Tailwind
+ * breakpoint the sheet styles branch on.
+ */
+export const MOBILE_MAX_WIDTH_PX = 768;
+
+export function detectMobileViewport(): boolean {
+  if (typeof window === "undefined") return false;
+  const coarse =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches;
+  const narrow = window.innerWidth < MOBILE_MAX_WIDTH_PX;
+  return coarse || narrow;
 }
 
 /* ============================================================
@@ -183,13 +219,15 @@ export function pickDefaultDensity(summary: CoverageSummary): GridDensity {
 
 /**
  * Minimum cell edge (px) per density. Condensed leads with a tappable
- * 28px floor (clears the 24px WCAG minimum with margin); Full keeps the
- * catalog dense but lifts to 12px so taps land closer than the old 7px.
- * The `1fr` companion column lets cells grow past the floor to fill width.
+ * 28px floor (clears the 24px WCAG minimum with margin); Full floors at
+ * 20px on coarse pointers so even the dense catalog overview never drops
+ * below a near-target tap size (UX-1302) — the `auto-fill` columns just
+ * reflow to fewer columns. The `1fr` companion column lets cells grow
+ * past the floor to fill width.
  */
 export const CELL_MIN_PX: Record<GridDensity, number> = {
   condensed: 28,
-  full: 12,
+  full: 20,
 };
 
 /**

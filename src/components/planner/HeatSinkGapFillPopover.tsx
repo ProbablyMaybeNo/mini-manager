@@ -64,6 +64,11 @@ interface Props {
   /** Every catalog cell — candidates rank against the full set so a near
    *  match that the painter doesn't own yet still surfaces. */
   allCells: readonly CoverageCell[];
+  /** Coarse-pointer / narrow-viewport gate from the grid client. When
+   *  true the popover renders as a TRUE viewport-bottom sheet decoupled
+   *  from the cell anchor (UX-1301); when false it's the desktop
+   *  cell-anchored / flip-above popover. */
+  isMobile: boolean;
   /** Local coverage state for a paint id, reflecting any optimistic flips
    *  this session so the popover re-tags candidates after a "Mark as
    *  wanted" without a refetch. Falls back to the cell's own state. */
@@ -78,6 +83,7 @@ interface Props {
 export function HeatSinkGapFillPopover({
   cell,
   allCells,
+  isMobile,
   stateForPaint,
   onClose,
   onMarkedWanted,
@@ -94,6 +100,11 @@ export function HeatSinkGapFillPopover({
   // flip happens before paint (no visible jump).
   const [placement, setPlacement] = useState<Placement>("below");
   useLayoutEffect(() => {
+    // Mobile is a fixed bottom sheet — no cell-anchored measurement, so
+    // the flip logic must NOT run (it's the desktop branch only). This
+    // also keeps the bottom sheet's top pinned to `auto` with nothing
+    // measuring/clobbering it (UX-1301).
+    if (isMobile) return;
     const el = rootRef.current;
     const anchor = el?.parentElement;
     if (!el || !anchor) return;
@@ -106,7 +117,7 @@ export function HeatSinkGapFillPopover({
     setPlacement(
       spaceBelow < popoverHeight && spaceAbove > spaceBelow ? "above" : "below",
     );
-  }, []);
+  }, [isMobile]);
 
   // Escape + click-outside dismiss — matches the popover primitives.
   useEffect(() => {
@@ -152,24 +163,39 @@ export function HeatSinkGapFillPopover({
       aria-label={
         cell.paint.brand + " " + cell.paint.name + " — fill this gap"
       }
-      data-placement={placement}
+      data-placement={isMobile ? "sheet" : placement}
+      data-sheet={isMobile ? "" : undefined}
+      // UX-1301: on mobile, FORCE `top: auto` via an inline style so the
+      // bottom sheet can never inherit / be overridden by the desktop
+      // cell-anchored top (the regression where an inline `top:-359px`
+      // pushed the header + × close button above y=0, off-screen). Inline
+      // style is the highest-specificity layer short of `!important`, and
+      // since we render the mobile branch with NO anchored top at all,
+      // nothing competes with it. Desktop leaves positioning to classes.
+      style={isMobile ? { top: "auto" } : undefined}
       className={clsx(
         "z-50 frame-strong bg-[var(--color-bg-panel)] shadow-xl",
         "flex flex-col overflow-hidden",
-        // Mobile (< md): a fixed bottom SHEET, clear of the bottom tab
-        // bar (its 56px height + safe-area inset), body scrolls inside its
-        // own max-height so the action buttons are always reachable
-        // thumb-only (UX-1203).
-        "fixed left-1/2 -translate-x-1/2 w-[calc(100vw-1.5rem)] max-w-[360px]",
-        "bottom-[calc(60px+env(safe-area-inset-bottom,0px))] top-auto",
-        "max-h-[70vh]",
-        // Desktop (>= md): anchored to the cell, flipping above when there
-        // isn't room below. Clamped to viewport height.
-        "md:absolute md:left-1/2 md:-translate-x-1/2 md:w-[280px]",
-        "md:max-w-[calc(100vw-1.5rem)] md:max-h-[80vh]",
-        placement === "above"
-          ? "md:bottom-full md:top-auto md:mb-1 md:mt-0"
-          : "md:top-full md:bottom-auto md:mt-1 md:mb-0",
+        isMobile
+          ? clsx(
+              // Mobile: a TRUE viewport-bottom sheet, fully decoupled from
+              // the cell anchor — `fixed` to the viewport, pinned above the
+              // bottom tab bar (60px + safe-area inset), the BODY scrolls
+              // inside a 70vh clamp so the header + × close + WANT actions
+              // are always on-screen and reachable thumb-only (UX-1301).
+              "fixed left-2 right-2 -translate-x-0",
+              "bottom-[calc(60px+env(safe-area-inset-bottom,0px))]",
+              "w-auto max-w-[480px] mx-auto max-h-[70vh]",
+            )
+          : clsx(
+              // Desktop: anchored to the cell, flipping above when there
+              // isn't room below. Clamped to viewport height.
+              "absolute left-1/2 -translate-x-1/2 w-[280px]",
+              "max-w-[calc(100vw-1.5rem)] max-h-[80vh]",
+              placement === "above"
+                ? "bottom-full top-auto mb-1 mt-0"
+                : "top-full bottom-auto mt-1 mb-0",
+            ),
       )}
       onMouseDown={(e) => e.stopPropagation()}
     >

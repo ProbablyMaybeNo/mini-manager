@@ -7,13 +7,14 @@
  * pick (Condensed once the collection is big enough to read). All pure,
  * unit-tested here; the client (HeatSinkGridClient) just composes them.
  */
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import {
   CELLS_PER_ROW_GROUP,
   CELL_MIN_PX,
   CONDENSED_DEFAULT_THRESHOLD,
   chunkCells,
   condensedCells,
+  detectMobileViewport,
   filterCellsByBrands,
   gridColumnsFor,
   intrinsicRowSizeFor,
@@ -174,6 +175,66 @@ describe("pickDefaultDensity (P16.4 default density)", () => {
   test("empty collection → Full (something to fill)", () => {
     expect(pickDefaultDensity(summary(0, 0))).toBe("full");
   });
+
+  // UX-1302 — a coarse-pointer / narrow client must NEVER default to Full
+  // (a wall of ~12px sub-target cells). It always lands on Condensed,
+  // regardless of collection size, including a brand-new 0-owned recruit.
+  test("mobile always defaults to Condensed regardless of collection", () => {
+    expect(pickDefaultDensity(summary(0, 0), true)).toBe("condensed");
+    expect(pickDefaultDensity(summary(10, 5), true)).toBe("condensed");
+    expect(
+      pickDefaultDensity(summary(CONDENSED_DEFAULT_THRESHOLD + 100, 0), true),
+    ).toBe("condensed");
+  });
+
+  test("desktop (isMobile=false) keeps the threshold behaviour", () => {
+    expect(pickDefaultDensity(summary(0, 0), false)).toBe("full");
+    expect(
+      pickDefaultDensity(summary(CONDENSED_DEFAULT_THRESHOLD, 0), false),
+    ).toBe("condensed");
+  });
+});
+
+describe("detectMobileViewport (UX-1301/1302 mobile gate)", () => {
+  // The unit project runs in Node (no `window`). We install a fake
+  // `globalThis.window` per case to exercise the coarse-pointer / narrow
+  // branches, then tear it down so SSR-safety (the `undefined window`
+  // path) is also covered.
+  const hadWindow = "window" in globalThis;
+
+  afterEach(() => {
+    if (!hadWindow) delete (globalThis as { window?: unknown }).window;
+  });
+
+  const stub = (opts: { coarse: boolean; width: number }) => {
+    (globalThis as { window?: unknown }).window = {
+      innerWidth: opts.width,
+      matchMedia: (query: string) => ({
+        matches: query.includes("coarse") ? opts.coarse : false,
+        media: query,
+      }),
+    };
+  };
+
+  test("returns false when window is undefined (SSR-safe)", () => {
+    delete (globalThis as { window?: unknown }).window;
+    expect(detectMobileViewport()).toBe(false);
+  });
+
+  test("coarse pointer → mobile even on a wide viewport", () => {
+    stub({ coarse: true, width: 1024 });
+    expect(detectMobileViewport()).toBe(true);
+  });
+
+  test("narrow viewport → mobile even with a fine pointer", () => {
+    stub({ coarse: false, width: 375 });
+    expect(detectMobileViewport()).toBe(true);
+  });
+
+  test("fine pointer on a wide viewport → desktop", () => {
+    stub({ coarse: false, width: 1280 });
+    expect(detectMobileViewport()).toBe(false);
+  });
 });
 
 /* ============================================================
@@ -191,10 +252,11 @@ describe("CELL_MIN_PX (P16.6 mobile cell sizing)", () => {
     expect(CELL_MIN_PX.condensed).toBeGreaterThan(CELL_MIN_PX.full);
   });
 
-  test("Full cells lift off the old 7px floor toward tappability", () => {
-    // Full is the dense catalog overview, but even there cells beat the
-    // old 7px floor so taps land closer.
-    expect(CELL_MIN_PX.full).toBeGreaterThan(7);
+  test("Full cells floor at >=20px (UX-1302 near-target overview)", () => {
+    // UX-1302: even the dense catalog overview never drops below a 20px
+    // near-target floor on coarse pointers — the auto-fill columns just
+    // reflow to fewer columns. Well clear of the old 7px / 12.6px walls.
+    expect(CELL_MIN_PX.full).toBeGreaterThanOrEqual(20);
   });
 });
 

@@ -11,7 +11,8 @@
     "fix": "On mobile (pointer:coarse or <768px) render the gap-fill dialog as a TRUE viewport-bottom sheet decoupled from the cell anchor: set `top: auto !important` (do not apply the cell-anchored inline top on mobile), `bottom: calc(60px + env(safe-area-inset-bottom))`, `left/right: 8px`, `max-height: 70vh`, with the dialog BODY (not the whole sheet) scrolling internally so the header + × close + WANT actions are always on-screen. The desktop anchored/flip-above popover should be branched off behind the same media query, not merged with the mobile sheet styles.",
     "effort": "small",
     "confidence": 0.95,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1302",
@@ -25,7 +26,8 @@
     "fix": "Default the coverage grid to Condensed (the tappable density) on coarse-pointer / <768px, and/or have Full mode enforce a cell `minmax(>=20px,1fr)` floor on mobile (reducing column count) so even the dense overview never drops below the 24px target. Full can stay the desktop default. Persist the user's density choice.",
     "effort": "small",
     "confidence": 0.92,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed"
   },
   {
     "id": "UX-1303",
@@ -210,6 +212,8 @@
     "fix": "Add a subtle resting border or background tint to the planner brand chips so they read as chips (Jakob's Law), and raise the /tools/match brand-filter rows to a 44px touch height on coarse pointers. Low priority — these are usable, just under-styled.",
     "effort": "small",
     "confidence": 0.7,
-    "needs_human": false
+    "needs_human": false,
+    "status": "fixed-planner",
+    "status_note": "Planner brand chips now have a resting border-strong + 8% fg-muted tint fill with a distinct solid-amber active state; the planner density toggle keeps its visible filled-active state. The /tools/match brand rows are a non-planner surface outside this agent's scope fence (parallel agent owns non-planner findings)."
   }
 ]

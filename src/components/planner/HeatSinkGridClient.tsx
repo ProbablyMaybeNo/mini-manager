@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { clsx } from "clsx";
 import type { CoverageGrid } from "@/db/queries/paintCoverage";
 import type { CoverageState } from "@/lib/paints/coverage";
@@ -10,6 +10,7 @@ import {
   chunkCells,
   condensedCells,
   coverageReadout,
+  detectMobileViewport,
   filterCellsByBrands,
   formatCount,
   gridColumnsFor,
@@ -69,9 +70,39 @@ export function HeatSinkGridClient({
     defaultBrandFilter === null ? null : new Set(defaultBrandFilter),
   );
 
+  // Coarse-pointer / narrow-viewport gate. SSR-safe: false on the server
+  // and first paint (desktop-first), re-derived client-side in the effect
+  // below. Drives the mobile-only Condensed default (UX-1302) and the
+  // gap-fill bottom sheet (UX-1301).
+  const [isMobile, setIsMobile] = useState(false);
+
   const [density, setDensity] = useState<GridDensity>(() =>
     pickDefaultDensity(summary),
   );
+
+  // On mount (client only), detect mobile and — unless the painter has
+  // already touched the toggle — snap a mobile client to Condensed (the
+  // tappable density). `userPickedDensity` guards against stomping an
+  // explicit choice. Re-checks on resize so a rotate/resize across the
+  // breakpoint keeps the default honest until the user overrides it.
+  const [userPickedDensity, setUserPickedDensity] = useState(false);
+  useEffect(() => {
+    const sync = () => {
+      const mobile = detectMobileViewport();
+      setIsMobile(mobile);
+      setDensity((prev) =>
+        userPickedDensity ? prev : pickDefaultDensity(summary, mobile),
+      );
+    };
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, [summary, userPickedDensity]);
+
+  const chooseDensity = useCallback((next: GridDensity) => {
+    setUserPickedDensity(true);
+    setDensity(next);
+  }, []);
 
   // P16.5 — gap-fill. `openPaintId` is the cell whose popover is open
   // (null = none). `wantedOverrides` holds paint ids optimistically
@@ -179,12 +210,12 @@ export function HeatSinkGridClient({
       >
         <DensityButton
           active={density === "condensed"}
-          onClick={() => setDensity("condensed")}
+          onClick={() => chooseDensity("condensed")}
           label="Condensed"
         />
         <DensityButton
           active={density === "full"}
-          onClick={() => setDensity("full")}
+          onClick={() => chooseDensity("full")}
           label="Full"
         />
       </div>
@@ -288,6 +319,7 @@ export function HeatSinkGridClient({
                       <HeatSinkGapFillPopover
                         cell={cell}
                         allCells={cells}
+                        isMobile={isMobile}
                         stateForPaint={stateForPaint}
                         onClose={() => setOpenPaintId(null)}
                         onMarkedWanted={markWanted}
@@ -358,13 +390,18 @@ function BrandChip({
         // cleanly inside (`whitespace-normal text-left`) instead of
         // clipping at the right edge, and there's no fixed max-width to
         // truncate it. Reads as a chip, not prose.
+        // UX-1315: a clear resting affordance — a solid border + a faint
+        // panel-tint fill so each chip reads as a discrete tappable chip,
+        // not a wrapping prose list. The active chip flips to the solid
+        // amber fill (distinct selected state); inactive keeps the tinted
+        // resting fill with a stronger border so it still looks pressable.
         "tap-target inline-flex items-center justify-center px-2.5 py-1.5",
         "font-mono text-2xs uppercase tracking-[0.04em] leading-tight",
         "whitespace-normal text-center break-words",
         "border rounded-sm transition-colors",
         active
-          ? "bg-[var(--color-amber)] text-[var(--color-bg)] border-[var(--color-amber)]"
-          : "text-[var(--color-fg-muted)] border-[var(--color-border)] hover:border-[var(--color-amber)] hover:text-[var(--color-fg)]",
+          ? "bg-[var(--color-amber)] text-[var(--color-bg)] border-[var(--color-amber)] font-bold"
+          : "bg-[color-mix(in_srgb,var(--color-fg-muted)_8%,transparent)] text-[var(--color-fg-muted)] border-[var(--color-border-strong)] hover:border-[var(--color-amber)] hover:text-[var(--color-fg)]",
       )}
     >
       {label}

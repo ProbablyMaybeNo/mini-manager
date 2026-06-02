@@ -244,12 +244,46 @@ describe("HeatSinkGapFillPopover — mobile containment (UX-1203)", () => {
 
   test("flips above the cell on desktop when there's no room below", () => {
     // Collision-aware placement measured in a layout effect; the `above`
-    // branch anchors the popover to the cell's top edge.
+    // branch anchors the popover to the cell's top edge. Desktop is the
+    // JS-gated (`!isMobile`) branch, so the anchor classes are bare (no
+    // `md:` prefix) — the mobile sheet is a separate branch entirely.
     expect(src).toContain("useLayoutEffect");
     expect(src).toContain("getBoundingClientRect");
     expect(src).toMatch(/placement === "above"/);
-    expect(src).toContain("md:bottom-full");
-    expect(src).toContain("md:top-full");
+    expect(src).toContain("bottom-full top-auto");
+    expect(src).toContain("top-full bottom-auto");
+  });
+
+  // UX-1301 — the launch-gating regression. The mobile sheet must be a
+  // TRUE viewport-bottom sheet that the desktop cell-anchor can never
+  // override (the old bug: an inline `top:-359px` pushed the header + ×
+  // off the top of the screen).
+  test("UX-1301: mobile branch is JS-gated, not just a CSS media query", () => {
+    // The placement is decided by the `isMobile` prop the grid passes,
+    // so the desktop anchored top is NEVER applied on a mobile client —
+    // there's no shared style for an inline top to win against.
+    expect(src).toContain("isMobile");
+    expect(src).toMatch(/isMobile\s*\?/);
+  });
+
+  test("UX-1301: mobile forces top:auto inline so nothing can override it", () => {
+    // Inline style is the highest-specificity layer; on mobile we pin
+    // top:auto so no cell-anchored top (inline or class) can clip the
+    // sheet above the viewport top.
+    expect(src).toMatch(/style=\{isMobile \? \{ top: "auto" \}/);
+  });
+
+  test("UX-1301: the flip-above measurement is skipped on mobile", () => {
+    // The layout-effect bails early when isMobile, so it never measures
+    // the cell anchor or sets a placement that could move the sheet.
+    expect(src).toMatch(/if \(isMobile\) return;/);
+  });
+
+  test("UX-1301: mobile sheet pins left/right gutters + a max-height clamp", () => {
+    // left-2 / right-2 = 8px gutters; the 70vh clamp + scrolling body keep
+    // the header + × close + WANT actions on-screen.
+    expect(src).toContain("left-2 right-2");
+    expect(src).toMatch(/max-h-\[70vh\]/);
   });
 
   test("flip decision compares space below vs popover height", () => {
@@ -300,5 +334,48 @@ describe("HeatSinkGridClient — mobile cell sizing + chips (UX-1202 / UX-1210)"
   test("brand chip row keeps a gap and a right gutter (no edge clipping)", () => {
     expect(src).toMatch(/aria-label="Filter by brand"[\s\S]*gap-1\.5/);
     expect(src).toMatch(/aria-label="Filter by brand"[\s\S]*pr-1/);
+  });
+
+  // UX-1302 — the launch-gating density-default regression. A mobile
+  // client must default to Condensed (the tappable density), never Full
+  // (the ~12px sub-target wall), no matter the collection size.
+  test("UX-1302: grid passes the mobile gate into pickDefaultDensity", () => {
+    expect(src).toContain("detectMobileViewport");
+    expect(src).toMatch(/pickDefaultDensity\(summary, mobile\)/);
+  });
+
+  test("UX-1302: density re-syncs to the mobile default until the user picks", () => {
+    // chooseDensity sets userPickedDensity so an explicit choice is never
+    // stomped, but before that a mobile client snaps to Condensed.
+    expect(src).toContain("userPickedDensity");
+    expect(src).toContain("chooseDensity");
+  });
+
+  test("UX-1302: the gap-fill popover receives the same mobile gate", () => {
+    expect(src).toMatch(/isMobile=\{isMobile\}/);
+  });
+
+  // UX-1315 — chip affordance. Brand chips get a resting border + tint so
+  // they read as chips (not prose), with a distinct active fill.
+  test("UX-1315: brand chips have a resting fill + strong border affordance", () => {
+    expect(src).toContain("border-[var(--color-border-strong)]");
+    expect(src).toMatch(
+      /bg-\[color-mix\(in_srgb,var\(--color-fg-muted\)_8%,transparent\)\]/,
+    );
+  });
+
+  test("UX-1315: the active brand chip flips to the solid amber fill", () => {
+    expect(src).toMatch(
+      /bg-\[var\(--color-amber\)\] text-\[var\(--color-bg\)\] border-\[var\(--color-amber\)\]/,
+    );
+  });
+
+  test("UX-1315: the density toggle has a visible active (filled) state", () => {
+    // Active = solid green fill, inactive = outlined — a clear local
+    // selected state (this is the planner-local toggle, not the shared
+    // segmented primitive).
+    expect(src).toMatch(
+      /active[\s\S]*bg-\[var\(--color-green\)\] text-\[var\(--color-bg\)\]/,
+    );
   });
 });
