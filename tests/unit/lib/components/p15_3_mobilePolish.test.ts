@@ -83,3 +83,27 @@ describe("UX-1207 — eyedropper empty-state copy is layout-agnostic", () => {
     expect(src).toContain("No image yet — drop or choose one to extract colours.");
   });
 });
+
+describe("UX-1205 — /user FREE caps match the /pricing locked truth", () => {
+  const user = read("src/app/user/page.tsx");
+
+  test("/user FREE feature list states the real caps", () => {
+    expect(user).toContain('"1 project"');
+    expect(user).toContain('"1 recipe"');
+    expect(user).toContain('"3 wishlist items"');
+  });
+
+  test("/user no longer claims unlimited / no-caps for FREE", () => {
+    expect(user).not.toContain("Every feature, no caps");
+    expect(user).not.toContain("Free covers every feature");
+    // Unlimited projects belongs to the paid tiers (on /pricing), not Free.
+    expect(user).not.toMatch(/FREE:\s*\[[\s\S]*?Unlimited projects/);
+  });
+
+  test("/pricing FREE caps are the unchanged source of truth", () => {
+    const pricing = read("src/app/pricing/page.tsx");
+    expect(pricing).toContain('"1 project"');
+    expect(pricing).toContain('"1 recipe"');
+    expect(pricing).toContain('"3 wishlist items"');
+  });
+});

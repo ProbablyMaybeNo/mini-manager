@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
  * into a richer block with the locked pricing Ross resolved from
  * PHASE10_PLAN.md:
  *
- *   FREE         $0       — everything works, no caps
+ *   FREE         $0       — tasting menu: 1 project / 1 recipe / 3 wishlist
  *   PRO_MONTHLY  $4/mo    — subscription
  *   PRO_LIFETIME $36      — one-time, full Pro forever (3 free months vs monthly)
  *   FOUNDER      $26      — early supporter slot (locked-in lifetime)
@@ -51,17 +51,19 @@ const PLAN_PRICE: Readonly<Record<PlanTier, string>> = {
   FOUNDER: "$26 one-time",
 };
 const PLAN_BLURB: Readonly<Record<PlanTier, string>> = {
-  FREE: "Every feature, no caps. The default seat.",
+  FREE: "The tasting menu — 1 project, 1 recipe, 3 wishlist items.",
   PRO_MONTHLY: "Sync + multi-device, billed monthly. Cancel anytime.",
   PRO_LIFETIME: "Sync + multi-device, paid once. Full Pro forever.",
   FOUNDER: "Early supporter slot — locked-in lifetime access at $26.",
 };
 const PLAN_FEATURES: Readonly<Record<PlanTier, ReadonlyArray<string>>> = {
   FREE: [
-    "Unlimited projects, units, models",
+    "1 project",
+    "1 recipe",
+    "3 wishlist items",
     "Cross-brand paint library",
-    "Recipes + palettes",
-    "Local export to JSON",
+    "Match + Gradient + Wheel tools",
+    "JSON export of your data",
   ],
   PRO_MONTHLY: [
     "Everything in Free",
@@ -126,9 +128,9 @@ export default async function UserPage() {
 
       <Card title="Plan" ariaLabel="Plan tier">
         <p className="text-xs font-sans text-[var(--color-fg-subtle)] mb-3 leading-snug">
-          Your account tier. Free covers every feature; Pro and Founder
-          unlock cloud sync + early-supporter benefits when Stripe
-          ships.
+          Your account tier. Free is a capped taster (1 project, 1 recipe,
+          3 wishlist items); Pro and Founder lift the caps and unlock cloud
+          sync + early-supporter benefits when Stripe ships.
         </p>
         <div className="flex items-center gap-3 flex-wrap mb-4">
           <StatusPill status={PLAN_PILL[planTier]}>
