@@ -26,8 +26,31 @@
  *     cached because it may be authed)
  */
 
-const SHELL_CACHE = "mm-shell-v1";
-const DATA_CACHE = "mm-data-v1";
+/*
+ * UX-1505 — cache-versioning. The shell cache name used to be a fixed
+ * `mm-shell-v1` literal that NEVER changed across deploys, so returning
+ * users kept being served the OLD precached shell (manifest/icons) and the
+ * prior stale build stranded the whole Round-13 batch behind a cache that
+ * would only self-invalidate by chance (this caused the only React #418
+ * hydration mismatch: old cached shell vs new JS bundle).
+ *
+ * The fix: derive every cache name from a per-deploy BUILD_ID. The
+ * `__BUILD_ID__` token is stamped at build time by
+ * `scripts/stamp-sw-build-id.mjs` (the `postbuild` npm hook) with the
+ * Vercel commit SHA / a timestamp fallback, so each deploy gets brand-new
+ * cache names. On `activate` every cache NOT in KEEP_CACHES (i.e. every
+ * cache from a previous BUILD_ID) is deleted, and skipWaiting() +
+ * clients.claim() make the new worker take over immediately — a fresh
+ * deploy now reaches returning users WITHOUT a manual cache clear.
+ *
+ * The literal token must stay exactly `__BUILD_ID__` so the stamp script's
+ * replace finds it; in dev (unstamped) it falls back to "dev", which still
+ * produces valid, namespaced cache names.
+ */
+const BUILD_ID = "__BUILD_ID__".startsWith("__") ? "dev" : "__BUILD_ID__";
+
+const SHELL_CACHE = `mm-shell-${BUILD_ID}`;
+const DATA_CACHE = `mm-data-${BUILD_ID}`;
 const KEEP_CACHES = [SHELL_CACHE, DATA_CACHE];
 
 const SHELL_URLS = [

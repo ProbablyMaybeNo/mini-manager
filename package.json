@@ -7,6 +7,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/migrate-or-skip.mjs",
     "build": "next build",
+    "postbuild": "node scripts/stamp-sw-build-id.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",

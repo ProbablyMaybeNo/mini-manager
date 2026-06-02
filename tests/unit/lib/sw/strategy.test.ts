@@ -178,4 +178,27 @@ describe("public/sw.js mirrors the strategy contract", () => {
     expect(swSrc).toContain("offlineNavigationResponse");
     expect(swSrc).toContain('request.mode === "navigate"');
   });
+
+  // UX-1505 — cache-versioning so a new deploy reaches returning users
+  // without a manual cache clear (this is what stranded the Round-13 batch
+  // behind the never-bumped `mm-shell-v1` cache + the only React #418).
+  test("sw.js derives every cache name from a per-deploy BUILD_ID token", () => {
+    // The build-time placeholder the postbuild stamp script replaces.
+    expect(swSrc).toContain("__BUILD_ID__");
+    // Cache names are templated off BUILD_ID, not a fixed literal.
+    expect(swSrc).toContain("`mm-shell-${BUILD_ID}`");
+    expect(swSrc).toContain("`mm-data-${BUILD_ID}`");
+    // The old never-bumped literal is gone.
+    expect(swSrc).not.toContain('"mm-shell-v1"');
+  });
+
+  test("sw.js takes over immediately: skipWaiting on install, claim on activate", () => {
+    expect(swSrc).toContain("self.skipWaiting()");
+    expect(swSrc).toContain("self.clients.claim()");
+  });
+
+  test("sw.js deletes caches from a prior BUILD_ID on activate", () => {
+    expect(swSrc).toContain("KEEP_CACHES");
+    expect(swSrc).toContain("caches.delete(key)");
+  });
 });

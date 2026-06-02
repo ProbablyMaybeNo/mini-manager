@@ -63,6 +63,7 @@
   },
   {
     "id": "UX-1505",
+    "fixed": true,
     "round13_ref": "UX-1309 / service worker",
     "verdict": "FAIL (stale SW) / PASS (new build itself)",
     "severity": "high",
