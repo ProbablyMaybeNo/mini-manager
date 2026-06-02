@@ -29,6 +29,7 @@
   },
   {
     "id": "UX-1303",
+    "fixed": true,
     "severity": "high",
     "category": "accessibility",
     "principle": "WCAG 2.2 §2.5.8 Target Size (Minimum, 24px); Apple HIG 44pt; Material 48dp; Fitts's Law",

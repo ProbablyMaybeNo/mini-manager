@@ -120,7 +120,11 @@ export function InventoryControls({
             // UX-1204 — fill the grid cell so the hit area spans the full
             // 40px row height + full column width rather than just the
             // glyph. The visual ✓/○ stays centered and unchanged.
-            "inline-flex justify-center items-center font-mono text-xs w-full h-full min-h-[40px]",
+            // UX-1303 — in the mobile card layout the parent is a flex
+            // cluster (not a grid cell), so `w-full` collapsed to the
+            // glyph width (~7.6px). `tap-target` floors the hit area to
+            // 44px on touch (32px desktop) regardless of container.
+            "tap-target inline-flex justify-center items-center font-mono text-xs w-full h-full min-h-[40px]",
             state.ownedCount > 0
               ? "text-[var(--color-green)]"
               : "text-[var(--color-fg-subtle)] hover:text-[var(--color-green)]",
@@ -142,7 +146,9 @@ export function InventoryControls({
             // UX-1204 — fill the grid cell (full row height + column width)
             // so the favourite toggle's hit area is the whole cell, not the
             // ~24px glyph. Visual ★/☆ unchanged.
-            "inline-flex justify-center items-center font-mono text-xs w-full h-full min-h-[40px]",
+            // UX-1303 — `tap-target` floors width/height to 44px on touch
+            // so the card-layout flex cluster no longer shrinks to glyph.
+            "tap-target inline-flex justify-center items-center font-mono text-xs w-full h-full min-h-[40px]",
             state.isWishlisted
               ? "text-[var(--color-yellow)]"
               : "text-[var(--color-fg-subtle)] hover:text-[var(--color-yellow)]",
