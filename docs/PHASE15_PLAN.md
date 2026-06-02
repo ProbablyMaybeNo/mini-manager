@@ -29,13 +29,14 @@ Close the gap between the FOCUS panel we shipped (recipe + notes + stopwatch + m
 - **Acceptance:** painter at the bench can tick steps as they apply paint, see their progress, and bump stage counters without scrolling away from FOCUS.
 - **Shipped 2026-06-02 (P15.0 feature commit).** 1587 → 1618 passing (+31), 1 skipped, typecheck clean. Surface: `recipe_step_completion` table + migration `0014_gifted_omega_flight.sql` (per-painter done-state keyed `(user_id, step_id)`, FK-cascade on user + step), `src/db/queries/stepCompletion.ts` (`getCompletedStepIds`), `src/lib/actions/stepCompletion.ts` (`setStepCompletion` toggle + `advanceSlot` bulk-complete-and-advance — owner-gated, Zod-validated), `src/lib/focus/rollup.ts` (`projectStatePill` + `recipeCompletionPercent` pure helpers), `FocusQuickActions` (+Paint / +Prime via shared `bumpCounter` / Advance slot — solid success+warning, no cyan), `SlotActivator` (writes `?focusSlot`), `StepCompletionCheckbox` (optimistic per-step toggle), `FocusPanel` (active-slot outline + ▶ WORKING ON label, per-step checkbox in active slot, done-step muting + NEXT tag, project-state pill, thin completion progress bar). Active slot persists via `?focusSlot`, falls back to first slot with an undone step.
 
-### P15.1 — PWA install (manifest + service worker + icons)
+### P15.1 — PWA install (manifest + service worker + icons) ✅
 
 - `public/manifest.json` with name, short_name="Mini Manager", start_url=/projects, display=standalone, theme color, background color.
 - App icons (192×192, 512×512, 180×180 apple-touch). Generate from existing wordmark or paint-can glyph.
 - Service worker registration in root layout: cache app shell for offline.
 - iOS "Add to Home Screen" meta tags + apple-touch-icon.
 - Lighthouse PWA audit should pass installability check.
+- **Shipped 2026-06-02 (P15.1 feature commit).** 1618 → 1629 passing (+11), 1 skipped, typecheck clean. Surface: `public/manifest.json` (name/short_name="Mini Manager", start_url=/projects, display=standalone, theme_color #050607 = layout viewport, background_color #0a0a0a = --color-bg; 192/512 "any" + 512 maskable icons), real PNG rasters under `public/icons/**` generated from `public/brand/logo.png` via extended `scripts/gen-icons.mjs` (sharp, no new dep — also emits a 10%-safe-zone maskable variant), minimal `public/sw.js` (app-shell precache + network-first navigations w/ offline fallback; passes through all non-GET + cross-origin + authed-data requests — offline reads deferred to P15.4), `ServiceWorkerRegistrar` client component (prod-only, registers /sw.js after load), root layout `metadata` (manifest + appleWebApp.capable + apple-touch-icon) wiring. Icons are real committed rasters — no follow-up rasterize step needed.
 
 ### P15.2 — Touch-target sweep app-wide
 

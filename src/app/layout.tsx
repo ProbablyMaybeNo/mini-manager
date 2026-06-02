@@ -6,6 +6,7 @@ import { BottomTabBar } from "@/components/BottomTabBar";
 import { MobileHeader } from "@/components/MobileHeader";
 import { StatusBar } from "@/components/StatusBar";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { ToastProvider } from "@/components/ui/Toast";
 import { auth } from "@/auth";
 import "./globals.css";
@@ -29,6 +30,15 @@ export const metadata: Metadata = {
   description:
     "A wargaming + painting companion. Plan armies, track every model from wishlist to complete, build paint recipes from a cross-brand library.",
   applicationName: "Mini Manager",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Mini Manager",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -63,6 +73,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${plexMono.variable} ${plexSans.variable}`}>
       <body>
+        <ServiceWorkerRegistrar />
         <ToastProvider>
           {isAuthed ? <StatusBar /> : null}
           {isAuthed ? <MobileHeader user={user} /> : null}
