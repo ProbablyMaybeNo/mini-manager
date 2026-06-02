@@ -18,6 +18,7 @@
   },
   {
     "id": "UX-1502",
+    "fixed": true,
     "round13_ref": "UX-1311",
     "verdict": "FAIL",
     "severity": "high",

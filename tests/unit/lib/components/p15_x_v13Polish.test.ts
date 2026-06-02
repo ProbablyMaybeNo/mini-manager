@@ -55,6 +55,22 @@ describe("UX-1311 — recipe step swatch/delete hit boxes no longer overlap", ()
   test("the notes toggle is shrink-0 so the trailing cluster can't compress", () => {
     expect(src).toContain("lg:hidden shrink-0 inline-flex items-center justify-center tap-target");
   });
+
+  // UX-1502 (Round 15) — the rigid `min-w-[130px]` technique select couldn't
+  // shrink, so at 375px the row overflowed and the swatch + × tap boxes
+  // collided. The select now shrinks below lg (min-w-0, capped width) so the
+  // paint slot + × keep their gap-2 gutter; lg+ restores the 130px floor.
+  test("the technique select shrinks below lg so the row can't overflow into the × (UX-1502)", () => {
+    expect(src).toContain("shrink min-w-0 max-w-[120px] lg:max-w-none lg:min-w-[130px]");
+    // The un-shrinkable rigid floor is gone.
+    expect(src).not.toContain(
+      'frame focus:border-[var(--color-accent)] min-w-[130px]"',
+    );
+  });
+
+  test("the paint slot stays flex-1 min-w-0 so it absorbs slack, not the ×", () => {
+    expect(src).toContain('ref={slotRef} className="relative min-w-0 flex-1"');
+  });
 });
 
 describe("UX-1310 — DELETE PROJECT drops to a red outline (quieter)", () => {

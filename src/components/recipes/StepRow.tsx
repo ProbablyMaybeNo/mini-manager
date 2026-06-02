@@ -135,7 +135,13 @@ export function StepRow({
         onChange={(event) =>
           handleTechniqueChange(event.target.value as TechniqueKey)
         }
-        className="px-2 py-1 font-mono text-2xs uppercase tracking-wider bg-[var(--color-bg)] frame focus:border-[var(--color-accent)] min-w-[130px]"
+        // UX-1502 — the technique select used a rigid `min-w-[130px]` that
+        // couldn't shrink, so at 375px the row overflowed and the paint
+        // swatch button + × delete tap boxes collided (measured 25px
+        // overlap). Below lg the select shrinks (min-w-0, capped width) so
+        // the paint slot and × always keep their own gap-2 gutter; lg+
+        // restores the comfortable 130px floor.
+        className="shrink min-w-0 max-w-[120px] lg:max-w-none lg:min-w-[130px] px-2 py-1 font-mono text-2xs uppercase tracking-wider bg-[var(--color-bg)] frame focus:border-[var(--color-accent)]"
       >
         {techniqueKeys.map((key) => (
           <option key={key} value={key}>
