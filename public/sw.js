@@ -1,22 +1,35 @@
 /*
- * Mini Manager service worker — P15.1 (PWA installability + app-shell offline).
+ * Mini Manager service worker.
  *
- * SCOPE (deliberately minimal): register + precache a tiny static app shell so
- * the app is installable and the start_url responds offline. This worker does
- * NOT cache authed data (project/library JSON, API routes) — offline reads are
- * P15.4 and will add a dedicated cache-then-network strategy there. Caching
- * authed responses here would risk serving one user's data to another, so we
- * explicitly pass those through to the network.
+ * P15.1 (PWA installability + app-shell offline) shipped the precache + the
+ * network-first navigation handler. P15.4 (offline reads) adds a
+ * stale-while-revalidate cache for the public, static paint catalog so the
+ * /library works offline, while keeping every authed / mutating / cross-origin
+ * request strictly pass-through.
  *
- * Strategy:
- *   - install:  precache the manifest + icons (the install-prompt assets).
- *   - activate: drop old caches when CACHE_VERSION bumps.
- *   - fetch:    same-origin GET navigations → network-first, fall back to the
- *               cached /projects shell when offline. Everything else (POST,
- *               cross-origin, API/data) → straight to the network, untouched.
+ * The routing decision is mirrored from `src/lib/sw/strategy.ts`
+ * (`routeRequest`), which is unit-tested. Keep the two in lock-step — the rule
+ * ordering below matches that function exactly.
+ *
+ * What we cache:
+ *   - static shell assets (manifest + icons)          → cache-first
+ *   - /data/paints.json (public static catalog)       → stale-while-revalidate
+ * What we NEVER cache (always pass through to network):
+ *   - any non-GET (POST/PUT/PATCH/DELETE — writes/mutations)
+ *   - cross-origin requests
+ *   - Range requests (206 partials — would poison the cache; the paint loader
+ *     Range-peeks the catalog header)
+ *   - requests carrying an Authorization header
+ *   - /api/** (authed data, session, mutations) — conservative, avoids any
+ *     chance of serving one user's data to another
+ *   - page navigations' HTML (network-first, offline fallback, response not
+ *     cached because it may be authed)
  */
 
-const CACHE_VERSION = "mm-shell-v1";
+const SHELL_CACHE = "mm-shell-v1";
+const DATA_CACHE = "mm-data-v1";
+const KEEP_CACHES = [SHELL_CACHE, DATA_CACHE];
+
 const SHELL_URLS = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -25,10 +38,13 @@ const SHELL_URLS = [
   "/icons/apple-touch-icon.png",
 ];
 
+// Public, static, cross-user-identical reads that are safe to cache offline.
+const SWR_PATHS = ["/data/paints.json"];
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
-      .open(CACHE_VERSION)
+      .open(SHELL_CACHE)
       .then((cache) => cache.addAll(SHELL_URLS))
       .then(() => self.skipWaiting()),
   );
@@ -41,7 +57,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_VERSION)
+            .filter((key) => !KEEP_CACHES.includes(key))
             .map((key) => caches.delete(key)),
         ),
       )
@@ -52,14 +68,28 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // Only ever touch same-origin GETs. Leave POST/PUT (write actions),
-  // cross-origin, and non-GET requests entirely alone.
+  // 1. Only ever touch GETs. Writes pass straight through, never cached.
   if (request.method !== "GET") return;
 
-  const url = new URL(request.url);
+  // 2. Same-origin only.
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return;
+  }
   if (url.origin !== self.location.origin) return;
 
-  // Cache-first for the precached static shell assets.
+  // 3. Range requests (206 partials) — never cache.
+  if (request.headers.has("range")) return;
+
+  // 4. Authorization header marks a per-user request — never cache.
+  if (request.headers.has("authorization")) return;
+
+  // 5. API + auth routes: authed data / session / mutations — pass through.
+  if (url.pathname.startsWith("/api/")) return;
+
+  // 6. Precached static shell assets: cache-first.
   if (SHELL_URLS.includes(url.pathname)) {
     event.respondWith(
       caches.match(request).then((cached) => cached || fetch(request)),
@@ -67,26 +97,56 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navigations: network-first so authed pages are always fresh online,
-  // but fall back to a cached shell when the network is gone. We do NOT
-  // cache the navigation response itself (it may contain authed HTML).
+  // 7. Public static catalog: stale-while-revalidate. Serve the cached copy
+  //    instantly (offline reads), kick off a background refresh, and fall back
+  //    to the network on a cold cache.
+  if (SWR_PATHS.includes(url.pathname)) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // 8. Navigations: network-first, offline HTML fallback. Response NOT cached.
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() =>
-        caches.match("/manifest.json").then(
-          () =>
-            new Response(
-              "<!doctype html><meta charset=utf-8><title>Offline</title>" +
-                "<body style=\"font-family:monospace;background:#0a0a0a;color:#f5f5f5;" +
-                "display:grid;place-items:center;height:100vh;margin:0\">" +
-                "<p>OFFLINE — reconnect to load Mini Manager.</p>",
-              { headers: { "Content-Type": "text/html; charset=utf-8" } },
-            ),
-        ),
-      ),
+      fetch(request).catch(() => offlineNavigationResponse()),
     );
     return;
   }
 
-  // Everything else (API/data fetches): pass through, no caching here.
+  // 9. Everything else: pass through, no caching.
 });
+
+/**
+ * Stale-while-revalidate: respond from cache immediately if present, while
+ * always firing a network fetch that refreshes the cache for next time. On a
+ * cold cache (first visit / never fetched) we await the network. Only cache
+ * a successful, full (status 200, non-partial) response.
+ */
+function staleWhileRevalidate(request) {
+  return caches.open(DATA_CACHE).then((cache) =>
+    cache.match(request).then((cached) => {
+      const network = fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            cache.put(request, response.clone());
+          }
+          return response;
+        })
+        .catch(() => cached);
+
+      // Cached hit → serve instantly, revalidate in the background.
+      // Cold cache → wait for the network.
+      return cached || network;
+    }),
+  );
+}
+
+function offlineNavigationResponse() {
+  return new Response(
+    "<!doctype html><meta charset=utf-8><title>Offline</title>" +
+      "<body style=\"font-family:monospace;background:#0a0a0a;color:#f5f5f5;" +
+      "display:grid;place-items:center;height:100vh;margin:0\">" +
+      "<p>OFFLINE — reconnect to load Mini Manager.</p>",
+    { headers: { "Content-Type": "text/html; charset=utf-8" } },
+  );
+}

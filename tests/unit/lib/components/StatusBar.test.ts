@@ -3,6 +3,8 @@ import {
   CLOCK_PLACEHOLDER,
   formatTime,
   LAG_THRESHOLD_MS,
+  NET_LABEL,
+  NET_TONE,
   NET_TOOLTIP,
   SSR_NET_STATUS,
   TONE_COLOR,
@@ -76,6 +78,13 @@ describe("NET_TOOLTIP (UX-911)", () => {
     expect(NET_TOOLTIP.OFF.toLowerCase()).toContain("won't save");
   });
 
+  test("OFF tooltip leads with the P15.4 'OFFLINE — cached data' framing", () => {
+    // Offline reads are live — going offline is degraded-but-usable, so the
+    // copy must tell the user cached data is still there, not just that
+    // writes are blocked.
+    expect(NET_TOOLTIP.OFF).toContain("OFFLINE — cached data");
+  });
+
   test("ON tooltip describes normal connectivity", () => {
     expect(NET_TOOLTIP.ON.toLowerCase()).toContain("normally");
   });
@@ -101,6 +110,63 @@ describe("LAG_THRESHOLD_MS (UX-1002)", () => {
   test("threshold is a finite positive number", () => {
     expect(Number.isFinite(LAG_THRESHOLD_MS)).toBe(true);
     expect(LAG_THRESHOLD_MS).toBeGreaterThan(0);
+  });
+});
+
+describe("NET offline indicator (P15.4)", () => {
+  // The offline indicator is the NET dot turning amber with an
+  // "OFFLINE — cached data" tooltip. Lock the tone + label mapping so the
+  // amber-not-red decision can't silently regress.
+  test("OFF maps to the amber 'warning' tone, not red 'danger'", () => {
+    // With offline reads live, offline is degraded-but-usable → amber.
+    expect(NET_TONE.OFF).toBe("warning");
+    expect(NET_TONE.OFF).not.toBe("danger");
+  });
+
+  test("warning tone resolves to the amber status-warning token", () => {
+    expect(TONE_COLOR[NET_TONE.OFF]).toContain("--status-warning");
+  });
+
+  test("ON stays the green 'ok' tone", () => {
+    expect(NET_TONE.ON).toBe("ok");
+    expect(TONE_COLOR[NET_TONE.ON]).toContain("--status-ok");
+  });
+
+  test("LAG stays amber 'warning'", () => {
+    expect(NET_TONE.LAG).toBe("warning");
+  });
+
+  test("OFF renders the fuller 'OFFLINE' label, not the terse 'OFF'", () => {
+    expect(NET_LABEL.OFF).toBe("OFFLINE");
+  });
+
+  test("ON/LAG labels are unchanged", () => {
+    expect(NET_LABEL.ON).toBe("ON");
+    expect(NET_LABEL.LAG).toBe("LAG");
+  });
+
+  test("every NET state has a tone and a label", () => {
+    for (const state of ["ON", "LAG", "OFF"] as const) {
+      expect(NET_TONE[state]).toBeDefined();
+      expect(NET_LABEL[state].length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("StatusBar source — offline indicator reuses the status-dot pattern", () => {
+  const src = require("node:fs").readFileSync(
+    require("node:path").resolve(__dirname, "../../../../", "src/components/StatusBar.tsx"),
+    "utf-8",
+  ) as string;
+
+  test("NET segment is driven by the NET_TONE / NET_LABEL maps, not an inline ternary", () => {
+    expect(src).toContain("NET_TONE[net]");
+    expect(src).toContain("value={NET_LABEL[net]}");
+  });
+
+  test("no raw hex colours introduced — amber comes from a theme token", () => {
+    // Offline amber must be the --status-warning token, never a literal hex.
+    expect(src).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 });
 

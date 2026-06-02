@@ -52,12 +52,13 @@ Close the gap between the FOCUS panel we shipped (recipe + notes + stopwatch + m
 - Findings → focused commits per surface. Tests INTO each commit.
 - Driven by data from a fresh ux-auditor mobile-only run.
 
-### P15.4 — Offline reads via service worker
+### P15.4 — Offline reads via service worker ✅
 
 - Service worker intercepts library JSON + project read endpoints.
 - Cache-then-network strategy: serve cached data immediately, refresh in background.
 - "Offline mode" indicator in the StatusBar (NET·ON dot turns amber with "OFFLINE — cached data" tooltip).
 - Write actions queue locally and replay on reconnect (stretch — could defer to Phase 19 if too involved).
+- **Shipped 2026-06-02 (P15.4 feature commit).** 1744 → 1775 passing (+31), 1 skipped, typecheck clean. **What gets cached vs passed through:** the offline read is the public, static, cross-user-identical paint catalog `/data/paints.json` (stale-while-revalidate — serve the cached copy instantly, refresh in the background, only ever store a full `200`). **Everything else stays pass-through** (P15.1 safety preserved + extended): non-GET writes, cross-origin, `Range` requests (206 partials — caching them would poison the cache and the loader Range-peeks the catalog header), `Authorization`-bearing requests, and all `/api/**` (authed data / session / mutations). Authed **project/dashboard reads render as HTML navigations** → kept network-first with an offline fallback and **never cached** (would risk leaking one user's authed HTML). No safe cross-user authed JSON read endpoint exists to SWR-cache, so we deliberately cache only the public catalog — conservative by design. **Write-queue + replay deferred** (stretch, out of scope per this milestone; revisit Phase 19). Surface: `public/sw.js` extended (2 caches — `mm-shell-v1` + `mm-data-v1`; `staleWhileRevalidate` helper; rule-ordered fetch handler), `src/lib/sw/strategy.ts` (pure, unit-tested `routeRequest` decision table the SW mirrors at runtime), `StatusBar` offline indicator (NET `OFF` tone flipped red→**amber** `--status-warning` via new `NET_TONE`/`NET_LABEL` maps — offline is degraded-but-usable, not a dead-end; label reads "OFFLINE", tooltip "OFFLINE — cached data … changes won't save until you reconnect"). Tests: 19 SW routing/safety assertions (`tests/unit/lib/sw/strategy.test.ts`) + StatusBar offline-state + no-raw-hex sentinels. `ServiceWorkerRegistrar` unchanged — registration already correct.
 
 ### P15.5 — Mobile Round 12 audit
 

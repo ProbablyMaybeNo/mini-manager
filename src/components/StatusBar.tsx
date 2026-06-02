@@ -22,6 +22,28 @@ import { clsx } from "clsx";
 
 type NetStatus = "ON" | "LAG" | "OFF";
 
+/**
+ * P15.4 — semantic tone + label for each NET state. Exported (with the
+ * tooltip + value helpers) so the contract is unit-testable without a DOM.
+ *
+ * OFF is intentionally `warning` (amber), NOT `danger` (red): with the
+ * service-worker offline-reads cache live, going offline is a degraded-but-
+ * usable state (cached library/catalog still readable), not a hard failure.
+ * Amber matches the "OFFLINE — cached data" framing in the plan.
+ */
+export const NET_TONE: Record<NetStatus, "ok" | "warning" | "danger"> = {
+  ON: "ok",
+  LAG: "warning",
+  OFF: "warning",
+};
+
+/** Display label per NET state. OFF reads as the fuller "OFFLINE". */
+export const NET_LABEL: Record<NetStatus, string> = {
+  ON: "ON",
+  LAG: "LAG",
+  OFF: "OFFLINE",
+};
+
 /** Ping interval in ms. Keep it low-cost — just HEAD the origin. */
 const PING_INTERVAL = 15_000;
 
@@ -142,12 +164,18 @@ export const TONE_COLOR: Record<SegmentProps["tone"], string> = {
  * UX-911 — Tooltip copy for each NET state. Recruits seeing NET LAG
  * flash amber would worry their save just failed; the tooltip
  * explicitly reassures them that the request is still in-flight.
+ *
+ * P15.4 — the offline (OFF) copy now leads with "OFFLINE — cached data":
+ * with the service-worker offline-reads cache live, the library/catalog stay
+ * readable while disconnected, so OFF is no longer a dead-end. We still warn
+ * that writes won't save until reconnect.
+ *
  * Exported for unit-testing.
  */
 export const NET_TOOLTIP: Record<NetStatus, string> = {
   ON: "Connected — server responding normally.",
   LAG: "Server's responding slower than usual. Your work is still saving.",
-  OFF: "Browser reports you're offline. Changes won't save until you reconnect.",
+  OFF: "OFFLINE — cached data. You can still browse what's loaded; changes won't save until you reconnect.",
 };
 
 function Segment({ label, value, tone, tooltip }: SegmentProps) {
@@ -183,8 +211,7 @@ export function StatusBar() {
   const net = useNetStatus();
   const time = useClock();
 
-  const netTone: SegmentProps["tone"] =
-    net === "ON" ? "ok" : net === "LAG" ? "warning" : "danger";
+  const netTone: SegmentProps["tone"] = NET_TONE[net];
 
   return (
     <div
@@ -205,7 +232,7 @@ export function StatusBar() {
       <Divider />
       <Segment
         label="NET"
-        value={net}
+        value={NET_LABEL[net]}
         tone={netTone}
         tooltip={NET_TOOLTIP[net]}
       />
