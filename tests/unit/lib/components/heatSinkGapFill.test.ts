@@ -259,6 +259,17 @@ describe("HeatSinkGapFillPopover — mobile bottom sheet via explicit CSS (UX-13
     expect(css).toMatch(/\.gap-fill-sheet\s*\{[\s\S]*?max-height:\s*70vh\s*!important/);
   });
 
+  test("UX-1301: the mobile sheet portals to document.body (escapes the contained ancestor)", () => {
+    // Root cause: the P16.4 grid row-groups use content-visibility/contain,
+    // which makes them the containing block for position:fixed descendants —
+    // so the sheet could never be viewport-relative until it left the subtree.
+    // The fix portals to body below 768px (matchMedia-gated, mounted-safe).
+    expect(src).toContain('from "react-dom"');
+    expect(src).toContain("createPortal");
+    expect(src).toContain('matchMedia("(max-width: 767px)")');
+    expect(src).toMatch(/sheetToBody\s*\?\s*createPortal\(dialog,\s*document\.body\)\s*:\s*dialog/);
+  });
+
   test("UX-1301: max-md: positioning utilities no longer steer the sheet", () => {
     // The load-bearing applied classes (max-md:fixed / max-md:bottom-… ) are
     // gone from the className — placement is the globals.css rule now. (The

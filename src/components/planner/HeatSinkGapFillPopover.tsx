@@ -7,6 +7,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { toggleWishlistedPaint } from "@/lib/actions/inventory";
@@ -109,6 +110,27 @@ export function HeatSinkGapFillPopover({
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // UX-1301 (root cause, 3rd diagnosis): the P16.4 grid row-groups carry
+  // `content-visibility:auto` + `contain`, which per spec makes that
+  // ancestor the CONTAINING BLOCK for `position:fixed` descendants. So the
+  // sheet's `fixed` was never viewport-relative — it was trapped inside the
+  // contained row-group, and `top`/`bottom`/`max-height` (utility OR explicit
+  // !important) all resolved against that box, pushing the header off-screen.
+  // No styling can escape a containing block; the element must leave the DOM
+  // subtree. So below 768px we PORTAL the sheet to document.body, where
+  // `fixed` is genuinely viewport-relative and the `.gap-fill-sheet` bottom-
+  // sheet rule finally takes effect. Desktop (>= 768px) stays in place so it
+  // can anchor to its cell. matchMedia is read after mount (the popover only
+  // mounts on a tap, client-side, so there's no SSR/first-paint concern).
+  const [sheetToBody, setSheetToBody] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setSheetToBody(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   // Desktop (>= 768px) placement only: anchored below the cell by default,
   // flipped above when the measured space below can't fit the popover.
   // `placement` toggles `md:`-scoped utility classes EXCLUSIVELY — below
@@ -173,7 +195,7 @@ export function HeatSinkGapFillPopover({
     });
   };
 
-  return (
+  const dialog = (
     <div
       ref={rootRef}
       role="dialog"
@@ -327,6 +349,12 @@ export function HeatSinkGapFillPopover({
       </div>
     </div>
   );
+
+  // Below 768px: portal to body so `position:fixed` escapes the grid's
+  // contained (content-visibility/contain) row-group ancestor and becomes
+  // truly viewport-relative — the only way the bottom sheet can sit on-screen
+  // (UX-1301). Desktop renders in place to anchor to its cell.
+  return sheetToBody ? createPortal(dialog, document.body) : dialog;
 }
 
 /**
