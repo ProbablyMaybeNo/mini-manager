@@ -183,7 +183,8 @@ describe("public/sw.js mirrors the strategy contract", () => {
   // without a manual cache clear (this is what stranded the Round-13 batch
   // behind the never-bumped `mm-shell-v1` cache + the only React #418).
   test("sw.js derives every cache name from a per-deploy BUILD_ID token", () => {
-    // The build-time placeholder the postbuild stamp script replaces.
+    // The build-time placeholder the prebuild stamp script replaces (must
+    // run before `next build` snapshots /public — UX-1505 / Round 18).
     expect(swSrc).toContain("__BUILD_ID__");
     // Cache names are templated off BUILD_ID, not a fixed literal.
     expect(swSrc).toContain("`mm-shell-${BUILD_ID}`");

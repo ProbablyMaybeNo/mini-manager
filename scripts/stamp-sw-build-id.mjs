@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 /**
- * Postbuild hook (UX-1505) — stamp a per-deploy BUILD_ID into the service
+ * Prebuild hook (UX-1505) — stamp a per-deploy BUILD_ID into the service
  * worker so its cache names change on every deploy.
+ *
+ * MUST run BEFORE `next build`, not after: `next build` copies /public into
+ * the build output during the build, so a postbuild stamp modifies the
+ * source sw.js too late — Vercel serves the already-snapshotted, unstamped
+ * copy (Round 18 found the deployed /sw.js still carried `__BUILD_ID__`).
+ * Chained into `prebuild` after the migrate step so the stamped file is on
+ * disk when Next snapshots /public.
  *
  * `public/sw.js` ships with a `__BUILD_ID__` placeholder token. Each deploy
  * we replace it with a stable-per-build identifier:

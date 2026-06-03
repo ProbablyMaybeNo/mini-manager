@@ -5,9 +5,8 @@
   "description": "Mini Manager — wargaming + painting companion. Plans armies, tracks models from wishlist to complete, builds recipes from a cross-brand paint library.",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/migrate-or-skip.mjs",
+    "prebuild": "node scripts/migrate-or-skip.mjs && node scripts/stamp-sw-build-id.mjs",
     "build": "next build",
-    "postbuild": "node scripts/stamp-sw-build-id.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
