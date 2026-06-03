@@ -36,6 +36,11 @@ export interface ZoneListItem {
    *  slot's swatch overlay chip renders this; the side-panel layer
    *  selector defaults to it. Null when the slot has no step yet. */
   firstStepTechnique: TechniqueKey | null;
+  /** B1 — the pinned paint's display name (e.g. "Macragge Blue"). When
+   *  set, it becomes the slot's main label instead of the zone name
+   *  ("Slot N"). Null/undefined when the slot uses a custom hex, has no
+   *  paint, or the consumer hasn't resolved the catalog label. */
+  firstStepPaintLabel?: string | null;
 }
 
 /** True when `key` is one of Ross's Phase-12 layer names. Legacy
@@ -192,7 +197,7 @@ export function ZoneList({
   return (
     <>
       <Card
-        title={`Color slots · ${localZones.length}`}
+        title={`Recipe slots · ${localZones.length}`}
         headerActions={
           localZones.length > 1 ? (
             <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider normal-case">
@@ -531,6 +536,11 @@ function ColorSlotCell({
   // Pick dark or light text against the swatch for max readability.
   const textColor = filled ? readableTextOn(zone.swatchHex!) : "var(--color-fg)";
 
+  // B1 — a filled slot leads with the pinned paint's NAME (slot numbers
+  // are noise per Ross). Falls back to the zone name when no catalog
+  // paint resolved (custom hex / mid-edit empty step).
+  const slotLabel = zone.firstStepPaintLabel ?? zone.name;
+
   return (
     <div
       draggable
@@ -548,8 +558,8 @@ function ColorSlotCell({
         type="button"
         onClick={onSelect}
         aria-pressed={selected}
-        aria-label={`${filled ? "Edit" : "Configure"} colour slot ${zone.name}`}
-        title={`${zone.name} · ${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}`}
+        aria-label={`${filled ? "Edit" : "Configure"} colour slot ${slotLabel}`}
+        title={`${slotLabel} · ${zone.stepCount} step${zone.stepCount === 1 ? "" : "s"}`}
         className={clsx(
           "w-full aspect-square flex flex-col items-stretch justify-between rounded-sm transition-all cursor-pointer p-2",
           selected && "shadow-[0_0_0_2px_var(--color-cyan)]",
@@ -582,7 +592,7 @@ function ColorSlotCell({
           )}
           style={filled ? { color: textColor } : undefined}
         >
-          {zone.name}
+          {slotLabel}
         </span>
         {/* P12.3 — layer chip overlaid in the bottom band of the slot.
             Renders the assigned Phase-12 layer name in tiny caps when

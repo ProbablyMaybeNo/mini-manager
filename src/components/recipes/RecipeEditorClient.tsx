@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { clsx } from "clsx";
 import type { Recipe } from "@/db/schema";
 import {
@@ -44,6 +44,24 @@ export function RecipeEditorClient({
   );
   const [activePane, setActivePane] = useState<Pane>("zones");
 
+  // B1 — surface the pinned paint's name as each slot's label. The
+  // first step's resolved paintLabel already lives in stepsByZoneId
+  // (computed server-side from the catalog map), so we fold it onto the
+  // ZoneListItem here rather than re-fetching the catalog client-side.
+  // Custom-hex-only slots have no catalog label → falls back to name.
+  const zonesWithPaintLabel = useMemo(
+    () =>
+      zones.map((zone) => {
+        const firstStep = stepsByZoneId.get(zone.id)?.[0];
+        return {
+          ...zone,
+          firstStepPaintLabel:
+            firstStep?.paintId ? firstStep.paintLabel ?? null : null,
+        };
+      }),
+    [zones, stepsByZoneId],
+  );
+
   return (
     <div className="space-y-4">
       <MobilePaneTabs active={activePane} onChange={setActivePane} />
@@ -58,7 +76,7 @@ export function RecipeEditorClient({
           <ZoneList
             recipeId={recipe.id}
             bodyType={recipe.bodyType}
-            zones={zones}
+            zones={zonesWithPaintLabel}
             selectedZoneId={selectedZoneId}
             onSelectZone={setSelectedZoneId}
           />

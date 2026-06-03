@@ -48,7 +48,7 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
 
   return (
     <Card
-      title="Notes"
+      title="Recipe notes"
       headerActions={
         <span
           className={clsx(
@@ -70,7 +70,7 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
         onChange={(event) => setValue(event.target.value)}
         rows={14}
         spellCheck
-        placeholder="Markdown notes — paint ratios, mix recipes, brush tips…"
+        placeholder="Take recipe notes — write down techniques, painting guides, paint ratios, brush tips…"
         className={clsx(
           "block w-full px-3 py-2.5 font-mono text-xs",
           "bg-[var(--color-bg)] frame focus:border-[var(--color-cyan)]",

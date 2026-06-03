@@ -89,9 +89,15 @@ describe("R7-006 — ADD / SAVE / ATTACH buttons flipped to success (green)", ()
     expect(src).toMatch(/variant="success"[\s\S]*?Mark bought/);
   });
 
-  test("PaintSlotPicker 'Use hex' uses success", () => {
+  test("PaintSlotPicker custom-hex add path removed (B2)", () => {
+    // B2 — a recipe slot can only take a catalog paint, so the custom-hex
+    // "Use hex" add button + its mode toggle were removed entirely. The
+    // old r7 sweep pinned this Button's success variant; it no longer
+    // exists, so we instead assert the add path is gone.
     const src = read("src/components/recipes/PaintSlotPicker.tsx");
-    expect(src).toMatch(/variant="success"[\s\S]*?Use hex/);
+    expect(src).not.toContain("Use hex");
+    expect(src).not.toContain("handleConfirmHex");
+    expect(src).not.toContain('"Custom hex"');
   });
 
   test("projects/[id] '+ Add unit' uses success", () => {

@@ -28,8 +28,12 @@ function read(rel: string): string {
 describe("ZoneList — UI strings flipped to 'colour slot' (P11.3 + P12.2)", () => {
   const src = read("src/components/recipes/ZoneList.tsx");
 
-  test("Card title uses 'Color slots ·' instead of 'Zones ·'", () => {
-    expect(src).toContain("Color slots · ");
+  test("Card title uses 'Recipe slots ·' (B4) — not 'Color slots' or 'Zones'", () => {
+    // B4 — Ross renamed the section heading from "COLOR SLOTS" to
+    // "RECIPE SLOTS". The data layer keeps "zone"; only the visible
+    // title flips.
+    expect(src).toContain("Recipe slots · ");
+    expect(src).not.toContain("Color slots · ");
     expect(src).not.toContain("title={`Zones · ");
   });
 
@@ -137,5 +141,98 @@ describe("Recipe surfaces — concrete-over-abstract sweep (P11.3)", () => {
     const src = read("src/components/tools/SendToRecipeModal.tsx");
     expect(src).toContain("Colour slot");
     expect(src).toContain("Add new slot");
+  });
+});
+
+describe("B1 — slot label leads with the pinned paint name", () => {
+  const src = read("src/components/recipes/ZoneList.tsx");
+
+  test("ZoneListItem carries an optional firstStepPaintLabel", () => {
+    expect(src).toMatch(/firstStepPaintLabel\?:\s*string \| null/);
+  });
+
+  test("the slot's main label prefers the paint name over the zone name", () => {
+    // slotLabel = firstStepPaintLabel ?? zone.name, then the visible
+    // label span renders {slotLabel} (not {zone.name}).
+    expect(src).toContain("zone.firstStepPaintLabel ?? zone.name");
+    expect(src).toContain("{slotLabel}");
+    expect(src).not.toContain("{zone.name}\n        </span>");
+  });
+
+  test("the layer/technique chip still renders at the bottom of the slot", () => {
+    // B1 keeps the layer text at the bottom band — the chip wiring is
+    // untouched.
+    expect(src).toContain("phase12LayerLabel[zone.firstStepTechnique]");
+  });
+
+  test("RecipeEditorClient folds the first step's paintLabel onto the slot", () => {
+    const editor = read("src/components/recipes/RecipeEditorClient.tsx");
+    expect(editor).toContain("firstStepPaintLabel");
+    expect(editor).toContain("zonesWithPaintLabel");
+    expect(editor).toContain("firstStep.paintLabel");
+  });
+});
+
+describe("B2 — only catalog paints are addable to a slot", () => {
+  const src = read("src/components/recipes/PaintSlotPicker.tsx");
+
+  test("the custom-hex mode toggle is gone", () => {
+    expect(src).not.toContain('setMode("hex")');
+    expect(src).not.toContain('"library" | "hex"');
+  });
+
+  test("the hex confirm handler + draft state are removed", () => {
+    expect(src).not.toContain("handleConfirmHex");
+    expect(src).not.toContain("hexDraft");
+    expect(src).not.toContain("Use hex");
+  });
+
+  test("paints are still pickable via updateStep with a paintId", () => {
+    expect(src).toContain("handlePickPaint");
+    expect(src).toContain("paintId: paint.id");
+  });
+});
+
+describe("B3 — brand filter chips in the paint picker", () => {
+  const src = read("src/components/recipes/PaintSlotPicker.tsx");
+
+  test("reuses the FilterChip primitive", () => {
+    expect(src).toContain('from "@/components/ui/FilterChip"');
+    expect(src).toContain("<FilterChip");
+  });
+
+  test("renders an All chip plus one chip per brand", () => {
+    expect(src).toContain("brands.map");
+    expect(src).toContain('active={brand === ""}');
+    expect(src).toContain("active={brand === b}");
+  });
+
+  test("the old brand <select> dropdown is gone", () => {
+    expect(src).not.toContain("All brands");
+  });
+});
+
+describe("B5 — notes consolidated into a single 'Recipe notes' box", () => {
+  test("RecipeNotes card title reads 'Recipe notes'", () => {
+    const src = read("src/components/recipes/RecipeNotes.tsx");
+    expect(src).toContain('title="Recipe notes"');
+    expect(src).not.toContain('title="Notes"');
+  });
+
+  test("RecipeNotes placeholder is the new recipe-notes copy", () => {
+    const src = read("src/components/recipes/RecipeNotes.tsx");
+    expect(src).toContain("Take recipe notes");
+  });
+
+  test("there is exactly one notes surface (single RecipeNotes mount)", () => {
+    const editor = read("src/components/recipes/RecipeEditorClient.tsx");
+    const matches = editor.match(/<RecipeNotes/g) ?? [];
+    expect(matches.length).toBe(1);
+  });
+
+  test("the mobile pane toggle stays mobile-only (md:hidden)", () => {
+    const editor = read("src/components/recipes/RecipeEditorClient.tsx");
+    expect(editor).toContain("md:hidden");
+    expect(editor).toContain("MobilePaneTabs");
   });
 });
