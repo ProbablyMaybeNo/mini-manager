@@ -9,6 +9,7 @@ import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { ToastProvider } from "@/components/ui/Toast";
 import { auth } from "@/auth";
+import { DENSITY_BOOTSTRAP_SCRIPT } from "@/lib/hooks/useDensity";
 import "./globals.css";
 
 const plexMono = IBM_Plex_Mono({
@@ -83,6 +84,10 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${plexMono.variable} ${plexSans.variable}`}>
       <body>
+        {/* D1 — apply the stored Comfortable/Compact density to <html>
+            before first paint so there is no comfortable→compact flash
+            on reload. Runs synchronously ahead of the body content. */}
+        <script dangerouslySetInnerHTML={{ __html: DENSITY_BOOTSTRAP_SCRIPT }} />
         <ServiceWorkerRegistrar />
         <ToastProvider>
           {isAuthed ? <StatusBar /> : null}

@@ -9,13 +9,17 @@
 > **HALT and report** at any `⚠ DECISION` item (write a short proposal, do not build it), on test
 > failure, or on a shared build flagged `🔗 SHARED`.
 
-No desktop work has started yet.
+**D1 ✅** (crash-recovered). Remaining: D2–D8.
 
 ---
 
-- [ ] **D1 — Desktop shell & layout foundations** · M · Impact 4 · `DESKTOP §D1`
+- [x] **D1 — Desktop shell & layout foundations** · M · Impact 4 · `DESKTOP §D1`
       Width caps + breakpoints; global Comfortable/Compact **density toggle**; focus-ring pass on the
       CRT surface; `aria-sort` on sortable headers. **This is the independent substrate — build it first.**
+      Done: `--content-cap` token + `.content-cap`; density tokens + `useDensity` hook + no-FOUC layout
+      bootstrap + `DensityCard` on `/user`; `.mm-density-rows` row-height wiring; focus-ring/scroll-padding
+      pass; `aria-sort` moved onto the Projects `<th>` (was on the inner button → ignored by AT). The
+      `/projects` workspace-grid replacement of `max-w-7xl` is deferred to D2 per the plan.
 
 - [ ] **D2 — `/projects` master-detail workspace** · L · Impact 5 · `DESKTOP §D2`
       🔗 SHARED with **M4 + D6** · ⚠ DECISION

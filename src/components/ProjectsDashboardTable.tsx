@@ -284,7 +284,10 @@ export function ProjectsDashboardTable({
           stacked-card mobile layout, which destroyed cross-record
           comparison [BP §7, §14]. */}
       <div className="frame overflow-x-auto hidden md:block">
-        <table className="w-full text-xs font-mono">
+        {/* D1 — mm-density-rows: desktop row height tracks the global
+            Comfortable/Compact lever (--density-row-h). D3's library
+            table opts in the same way. */}
+        <table className="mm-density-rows w-full text-xs font-mono">
           <thead>
             <tr
               className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
@@ -501,7 +504,15 @@ function Th({
   onClick: () => void;
 }) {
   return (
-    <th scope="col" className="px-3 py-2 text-left">
+    // D1 [D §9, §14] — aria-sort belongs on the column header
+    // (role=columnheader → the <th>), not the inner button. On a button
+    // it is ignored by assistive tech; here a screen reader announces the
+    // current sort state when navigating the header.
+    <th
+      scope="col"
+      className="px-3 py-2 text-left"
+      aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
+    >
       <button
         type="button"
         onClick={onClick}
@@ -514,9 +525,6 @@ function Th({
             ? "text-[var(--color-cyan)]"
             : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
         )}
-        aria-sort={
-          active ? (dir === "asc" ? "ascending" : "descending") : "none"
-        }
       >
         {label}
         {active ? (
