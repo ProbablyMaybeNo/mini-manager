@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
@@ -270,9 +278,11 @@ export function ProjectsDashboardTable({
 
   return (
     <>
-      {/* UX-901 — desktop table (md+). Hidden on phones; the stacked-
-          card layout below covers the mobile viewport per WCAG 2.2
-          §1.4.10 (no horizontal scrolling at 320-414px). */}
+      {/* UX-901 / M3 — desktop table (md+). Hidden on phones; the mobile
+          comparison table below (frozen-first-column, horizontally-
+          scrollable) covers the sub-md viewport. M3 replaced the prior
+          stacked-card mobile layout, which destroyed cross-record
+          comparison [BP §7, §14]. */}
       <div className="frame overflow-x-auto hidden md:block">
         <table className="w-full text-xs font-mono">
           <thead>
@@ -340,34 +350,83 @@ export function ProjectsDashboardTable({
         </table>
       </div>
 
-      {/* UX-901 — mobile stack-card layout. One <article> per project,
-          stacked vertically. All the same fields the table carries
-          (name, type, recipes, status, priority, completion, delete)
-          but reflowed so nothing clips at 320-414px. Sort controls live
-          in the header above the list since the table's column-header
-          buttons aren't visible on this layout. */}
+      {/* M3 — mobile comparison table (sub-md). Replaces the prior
+          stacked card layout, which destroyed cross-record comparison
+          [BP §7, §14]. The list is restored as a true table with a
+          FROZEN first column (project Name — the human-readable
+          identifier [BP §7 task 1]) and the denser Type / Recipes /
+          Status / Priority / Completion columns scrolling horizontally
+          inside this bounded, labelled region. WCAG 2.2 §1.4.10 forbids
+          horizontal scroll of the PAGE, not inside a bounded data region.
+          Header row is frozen too; zebra + press-highlight (.mm-cmp-table
+          in globals.css) hold the eye across rows. Row editing moves to a
+          nonmodal bottom sheet (RowEditSheet) so the trigger never clips
+          at the scrolled edge the way InlineCellPopover did. */}
       <div className="md:hidden space-y-3">
         <MobileSortBar
           sortKey={sortKey}
           sortDir={sortDir}
           onChangeKey={(k) => handleSort(k)}
         />
-        <ul className="space-y-3" role="list" aria-label="Projects">
-          {renderRows.map((row) => {
-            const hasChildren = (childrenByParent.get(row.id) ?? []).length > 0;
-            return (
-              <DashboardCard
-                key={row.id}
-                row={row}
-                hasChildren={hasChildren}
-                expanded={expanded.has(row.id)}
-                onToggleExpand={() => toggleExpanded(row.id)}
-                ownedRecipes={ownedRecipes}
-                projectNameById={projectNameById}
-              />
-            );
-          })}
-        </ul>
+        <div
+          className="frame overflow-x-auto"
+          role="region"
+          aria-label="Projects comparison table"
+          tabIndex={0}
+        >
+          <table className="mm-cmp-table w-full text-xs font-mono">
+            <thead>
+              <tr
+                className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
+                style={{ borderBottom: "1px solid var(--color-border-strong)" }}
+              >
+                <th
+                  scope="col"
+                  className="mm-cmp-freeze px-3 py-2 min-w-[8.5rem]"
+                >
+                  Name
+                </th>
+                <th scope="col" className="px-3 py-2 whitespace-nowrap">
+                  Type
+                </th>
+                <th scope="col" className="px-3 py-2 whitespace-nowrap">
+                  Recipes
+                </th>
+                <th scope="col" className="px-3 py-2 whitespace-nowrap">
+                  Status
+                </th>
+                <th scope="col" className="px-3 py-2 whitespace-nowrap">
+                  Priority
+                </th>
+                <th scope="col" className="px-3 py-2 whitespace-nowrap">
+                  Completion
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-right whitespace-nowrap"
+                  aria-label="Row actions"
+                />
+              </tr>
+            </thead>
+            <tbody>
+              {renderRows.map((row) => {
+                const hasChildren =
+                  (childrenByParent.get(row.id) ?? []).length > 0;
+                return (
+                  <MobileCompRow
+                    key={row.id}
+                    row={row}
+                    hasChildren={hasChildren}
+                    expanded={expanded.has(row.id)}
+                    onToggleExpand={() => toggleExpanded(row.id)}
+                    ownedRecipes={ownedRecipes}
+                    projectNameById={projectNameById}
+                  />
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   );
@@ -729,24 +788,27 @@ function DashboardRow({
 }
 
 /**
- * UX-901 — Stacked card layout for the projects dashboard on mobile.
+ * M3 — mobile comparison-table row.
  *
- * Mirrors DashboardRow's behaviour (inline edits via InlineCellPopover,
- * recipe-cell tap routes to /recipes/<id> or opens AttachRecipeModal,
- * delete via DeleteProjectButton) but reflows the fields so nothing
- * clips at 320-414px viewport widths. Layout per backlog:
+ * Replaces the prior `DashboardCard` stack (which destroyed cross-record
+ * comparison [BP §7, §14]). One `<tr>` per project inside the frozen-
+ * first-column, horizontally-scrollable `.mm-cmp-table`:
  *
- *   Header line: chevron (if has children) · Name link · Type chip
- *   Faction (when set) below name
- *   Palette strip + recipes cell
- *   Status pill + Priority pill (inline row)
- *   Completion progress bar — full-width
- *   Delete link bottom-right
+ *   FROZEN col: chevron (if has children) + Name link (+ faction)
+ *   Scroll cols: Type chip · Recipes strip · Status pill · Priority ·
+ *                Completion bar · Delete
  *
- * Indent + tree-connector use the same depth-based offset as the
- * table row so a sub-project still reads as nested.
+ * Inline edits keep the same server actions as the desktop row. Type +
+ * Recipes stay as the existing `InlineCellPopover` / AttachRecipeModal
+ * (they live in the left/early columns where the popover can't clip).
+ * Status + Priority — the cells most likely to sit at the scrolled right
+ * edge where `InlineCellPopover` edge-clipped — open a NONMODAL bottom
+ * sheet (`RowEditSheet`) instead, keeping the table visible behind it
+ * [MOBILE §M3 step 4, BP §6, §7 task 3]. Drill-down + sessionStorage
+ * expansion are shared with the desktop row via the parent's
+ * `toggleExpanded`.
  */
-function DashboardCard({
+function MobileCompRow({
   row,
   hasChildren,
   expanded,
@@ -766,13 +828,17 @@ function DashboardCard({
   projectNameById: Readonly<Record<string, string>>;
 }) {
   const typeChipClass = TYPE_CHIP[row.type];
-  // Mobile indent is shallower than the table (8px per level) so the
-  // card content doesn't get pinched at 320px.
+  // Mobile indent is shallower than the desktop table (8px per level) so
+  // the frozen name column doesn't get pinched at 320px.
   const indentPx = row.depth * 8;
 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [attachOpen, setAttachOpen] = useState(false);
+  // Which field the row-edit bottom sheet is editing (null = closed).
+  const [sheetField, setSheetField] = useState<"status" | "priority" | null>(
+    null,
+  );
 
   const attachCandidates: ReadonlyArray<RecipeOption> = useMemo(() => {
     return ownedRecipes
@@ -790,6 +856,7 @@ function DashboardCard({
       const result = await bumpProjectStatus({ id: row.id, status: next });
       if (result.ok) router.refresh();
     });
+    setSheetField(null);
   };
 
   const handleType = (next: ProjectType) => {
@@ -804,6 +871,7 @@ function DashboardCard({
       const result = await updateProjectPriority({ id: row.id, priority: next });
       if (result.ok) router.refresh();
     });
+    setSheetField(null);
   };
 
   const handleRecipeCellClick = () => {
@@ -815,89 +883,86 @@ function DashboardCard({
   };
 
   return (
-    <li
-      className={clsx(
-        "frame p-3 space-y-3",
-        pending && "opacity-70",
-      )}
+    <tr
+      className={clsx("transition-colors", pending && "opacity-70")}
+      style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
-      style={{ marginLeft: indentPx ? `${indentPx}px` : undefined }}
     >
-      {/* Header: chevron + name + type chip */}
-      <div className="flex items-start gap-2">
-        {hasChildren ? (
-          <button
-            type="button"
-            onClick={onToggleExpand}
-            aria-expanded={expanded}
-            aria-label={
-              expanded ? `Collapse ${row.name}` : `Expand ${row.name}`
-            }
-            className="tap-target shrink-0 inline-flex items-center justify-center w-9 h-9 -ml-1 text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors transition-transform motion-reduce:transition-none rounded-sm"
-          >
-            <span
-              aria-hidden
-              className={clsx(
-                "inline-block leading-none transition-transform",
-                "motion-reduce:transition-none",
-                expanded ? "rotate-90" : "rotate-0",
-              )}
+      {/* FROZEN — chevron + name. Sticky-left so it stays put while the
+          remaining columns scroll horizontally. */}
+      <td
+        className="mm-cmp-freeze px-3 py-2 align-top min-w-[8.5rem]"
+        style={{ paddingLeft: indentPx ? `${12 + indentPx}px` : undefined }}
+      >
+        <div className="flex items-start gap-1.5">
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              aria-expanded={expanded}
+              aria-label={
+                expanded ? `Collapse ${row.name}` : `Expand ${row.name}`
+              }
+              className="tap-target shrink-0 inline-flex items-center justify-center w-8 h-8 -ml-1 text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors transition-transform motion-reduce:transition-none rounded-sm"
             >
-              ▸
-            </span>
-          </button>
-        ) : null}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+              <span
+                aria-hidden
+                className={clsx(
+                  "inline-block leading-none transition-transform",
+                  "motion-reduce:transition-none",
+                  expanded ? "rotate-90" : "rotate-0",
+                )}
+              >
+                ▸
+              </span>
+            </button>
+          ) : row.depth > 0 ? (
+            <span aria-hidden className="block w-3 shrink-0" />
+          ) : null}
+          <span className="min-w-0">
             <Link
               href={`/projects/${row.id}`}
-              className="text-sm font-mono text-[var(--color-cyan)] hover:underline truncate"
+              className="block text-xs font-mono text-[var(--color-cyan)] hover:underline truncate"
             >
               {row.name}
             </Link>
-            <InlineCellPopover
-              triggerLabel={`Type · ${row.type}`}
-              trigger={
-                <span className={clsx("type-chip", typeChipClass)}>
-                  {row.type}
-                </span>
-              }
-            >
-              {(row.parentId ? (["Unit"] as const) : projectTypes).map((t) => (
-                <InlineCellPopoverItem
-                  key={t}
-                  active={t === row.type}
-                  onClick={() => handleType(t)}
-                >
-                  {t}
-                </InlineCellPopoverItem>
-              ))}
-            </InlineCellPopover>
-          </div>
-          {row.faction ? (
-            <p className="mt-1 text-2xs font-mono text-[var(--color-fg-muted)] truncate">
-              {row.faction}
-            </p>
-          ) : null}
+            {row.faction ? (
+              <span className="block text-2xs font-mono text-[var(--color-fg-muted)] truncate">
+                {row.faction}
+              </span>
+            ) : null}
+          </span>
         </div>
-      </div>
+      </td>
 
-      {/* Recipes row */}
-      <div className="flex items-center gap-2">
-        <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] w-20 shrink-0">
-          Recipes
-        </span>
+      {/* Type — InlineCellPopover (early column, no edge-clip risk). */}
+      <td className="px-3 py-2 align-top whitespace-nowrap">
+        <InlineCellPopover
+          triggerLabel={`Type · ${row.type}`}
+          trigger={
+            <span className={clsx("type-chip", typeChipClass)}>{row.type}</span>
+          }
+        >
+          {(row.parentId ? (["Unit"] as const) : projectTypes).map((t) => (
+            <InlineCellPopoverItem
+              key={t}
+              active={t === row.type}
+              onClick={() => handleType(t)}
+            >
+              {t}
+            </InlineCellPopoverItem>
+          ))}
+        </InlineCellPopover>
+      </td>
+
+      {/* Recipes — palette strip / + attach. */}
+      <td className="px-3 py-2 align-top whitespace-nowrap">
         <button
           type="button"
           onClick={handleRecipeCellClick}
-          // P15.2 — inline recipe-cell trigger had no min hit-box; the
-          // palette strip / "+ attach" label are short. tap-target floors
-          // the touch area without changing the strip's own footprint.
           className="tap-target inline-flex items-center text-left cursor-pointer hover:opacity-80 transition-opacity"
           aria-label={
-            row.firstAttachedRecipeId
-              ? "Open attached recipe"
-              : "Attach a recipe"
+            row.firstAttachedRecipeId ? "Open attached recipe" : "Attach a recipe"
           }
         >
           {row.paletteHexes.length > 0 ? (
@@ -915,67 +980,50 @@ function DashboardCard({
           onClose={() => setAttachOpen(false)}
           candidates={attachCandidates}
         />
-      </div>
+      </td>
 
-      {/* Status + priority row */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <InlineCellPopover
-          triggerLabel={`Status · ${row.status}`}
-          trigger={
-            <StatusPill status={STATUS_PILL[row.status]}>
-              {row.status}
-            </StatusPill>
-          }
+      {/* Status — opens the nonmodal bottom sheet (no edge-clip). */}
+      <td className="px-3 py-2 align-top whitespace-nowrap">
+        <button
+          type="button"
+          onClick={() => setSheetField("status")}
+          aria-haspopup="dialog"
+          aria-expanded={sheetField === "status"}
+          aria-label={`Edit status · ${row.status}`}
+          className="tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
-          {STATUS_ORDER.map((s) => (
-            <InlineCellPopoverItem
-              key={s}
-              active={s === row.status}
-              onClick={() => handleStatus(s)}
-            >
-              {s}
-            </InlineCellPopoverItem>
-          ))}
-        </InlineCellPopover>
-        <InlineCellPopover
-          triggerLabel={`Priority · ${row.priority ?? "Unset"}`}
-          trigger={
-            <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] frame px-2 py-0.5">
-              {row.priority ?? "—"}
-            </span>
-          }
+          <StatusPill status={STATUS_PILL[row.status]}>{row.status}</StatusPill>
+        </button>
+      </td>
+
+      {/* Priority — opens the nonmodal bottom sheet. */}
+      <td className="px-3 py-2 align-top whitespace-nowrap">
+        <button
+          type="button"
+          onClick={() => setSheetField("priority")}
+          aria-haspopup="dialog"
+          aria-expanded={sheetField === "priority"}
+          aria-label={`Edit priority · ${row.priority ?? "Unset"}`}
+          className="tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
-          {priorities.map((p) => (
-            <InlineCellPopoverItem
-              key={p}
-              active={p === row.priority}
-              onClick={() => handlePriority(p)}
-            >
-              {p}
-            </InlineCellPopoverItem>
-          ))}
-          <InlineCellPopoverItem
-            destructive
-            onClick={() => handlePriority(null)}
-          >
-            Clear
-          </InlineCellPopoverItem>
-        </InlineCellPopover>
-      </div>
+          <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] frame px-2 py-0.5">
+            {row.priority ?? "—"}
+          </span>
+        </button>
+      </td>
 
-      {/* Completion bar — full width */}
-      <div className="flex items-center gap-2">
-        <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] w-20 shrink-0">
-          Done
+      {/* Completion bar. */}
+      <td className="px-3 py-2 align-top whitespace-nowrap">
+        <span className="inline-flex items-center gap-2">
+          <ProgressBar percent={row.progressPercent} width={22} />
+          <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
+            {row.progressPercent}%
+          </span>
         </span>
-        <ProgressBar percent={row.progressPercent} width={28} />
-        <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
-          {row.progressPercent}%
-        </span>
-      </div>
+      </td>
 
-      {/* Delete pinned bottom-right */}
-      <div className="flex justify-end">
+      {/* Delete. */}
+      <td className="px-3 py-2 align-top text-right whitespace-nowrap">
         <DeleteProjectButton
           projectId={row.id}
           projectName={row.name}
@@ -983,8 +1031,185 @@ function DashboardCard({
           inline
           label="Delete"
         />
+      </td>
+
+      {/* Nonmodal row-edit bottom sheet — keeps the table visible behind
+          it; mounted lazily only when a Status/Priority cell is tapped. */}
+      {sheetField !== null ? (
+        <RowEditSheet
+          projectName={row.name}
+          field={sheetField}
+          currentStatus={row.status}
+          currentPriority={row.priority}
+          onSelectStatus={handleStatus}
+          onSelectPriority={handlePriority}
+          onClose={() => setSheetField(null)}
+        />
+      ) : null}
+    </tr>
+  );
+}
+
+/**
+ * M3 — nonmodal row-edit bottom sheet for the mobile comparison table.
+ *
+ * Tapping a row's Status or Priority cell opens this sheet pinned to the
+ * viewport bottom (clear of the fixed tab bar) with a visible Close (×)
+ * and Escape/click-outside/Back dismissal — it does NOT clip at the
+ * scrolled right edge the way the absolute-positioned `InlineCellPopover`
+ * did [MOBILE §M3 step 4]. It is NONMODAL: no backdrop, the table stays
+ * readable behind it [BP §7 task 3 "a nonmodal side panel keeps the table
+ * visible"].
+ *
+ * Robustness pattern is the one the gap-fill sheet proved (UX-1301):
+ * portal to document.body so `position:fixed` is genuinely viewport-
+ * relative, and place it via the explicit `.row-edit-sheet` `@media`
+ * `!important` rule in globals.css rather than a Tailwind `max-md:`
+ * variant (Tailwind v4 drops the important-prefix form, which let the
+ * gap-fill sheet clip its header off-screen — twice).
+ */
+function RowEditSheet({
+  projectName,
+  field,
+  currentStatus,
+  currentPriority,
+  onSelectStatus,
+  onSelectPriority,
+  onClose,
+}: {
+  projectName: string;
+  field: "status" | "priority";
+  currentStatus: DisplayStatus;
+  currentPriority: Priority | null;
+  onSelectStatus: (next: DisplayStatus) => void;
+  onSelectPriority: (next: Priority | null) => void;
+  onClose: () => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Escape + click-outside dismiss — same contract as the gap-fill sheet.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    const onDocClick = (e: MouseEvent) => {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target as Node)) onClose();
+    };
+    // Back button (popstate) also dismisses so Android Back closes the
+    // sheet rather than navigating away [BP §6 bottom-sheets/Back].
+    const onPop = () => onClose();
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDocClick);
+    window.addEventListener("popstate", onPop);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDocClick);
+      window.removeEventListener("popstate", onPop);
+    };
+  }, [onClose]);
+
+  const heading =
+    field === "status"
+      ? `Status · ${projectName}`
+      : `Priority · ${projectName}`;
+
+  const sheet = (
+    <div
+      ref={rootRef}
+      role="dialog"
+      aria-modal="false"
+      aria-label={heading}
+      className={clsx(
+        "row-edit-sheet z-50 frame-strong bg-[var(--color-bg-panel)] shadow-xl",
+        "flex flex-col overflow-hidden",
+      )}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-[var(--color-border)]">
+        <p className="flex-1 min-w-0 truncate text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+          {heading}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close row editor"
+          className="tap-target inline-flex items-center justify-center text-sm font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] px-1"
+        >
+          ×
+        </button>
       </div>
-    </li>
+
+      <div className="flex-1 overflow-y-auto p-1" role="menu" aria-label={heading}>
+        {field === "status"
+          ? STATUS_ORDER.map((s) => (
+              <RowEditOption
+                key={s}
+                active={s === currentStatus}
+                onClick={() => onSelectStatus(s)}
+              >
+                {s}
+              </RowEditOption>
+            ))
+          : (
+            <>
+              {priorities.map((p) => (
+                <RowEditOption
+                  key={p}
+                  active={p === currentPriority}
+                  onClick={() => onSelectPriority(p)}
+                >
+                  {p}
+                </RowEditOption>
+              ))}
+              <RowEditOption destructive onClick={() => onSelectPriority(null)}>
+                Clear
+              </RowEditOption>
+            </>
+          )}
+      </div>
+    </div>
+  );
+
+  // Portal to body so `position:fixed` escapes any contained ancestor and
+  // the `.row-edit-sheet` media rule resolves against the viewport.
+  if (typeof document === "undefined") return sheet;
+  return createPortal(sheet, document.body);
+}
+
+/** Menu row inside RowEditSheet — mirrors InlineCellPopoverItem's
+ *  typography + active/destructive states but floored to a 44px touch
+ *  target for the sheet context. */
+function RowEditOption({
+  active,
+  destructive,
+  onClick,
+  children,
+}: {
+  active?: boolean;
+  destructive?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      aria-current={active || undefined}
+      className={clsx(
+        "tap-target w-full text-left px-3 py-2 flex items-center font-mono text-xs uppercase tracking-wider transition-colors",
+        destructive
+          ? "text-[var(--color-red)] hover:bg-[color-mix(in_srgb,var(--color-red)_12%,transparent)]"
+          : "text-[var(--color-fg)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        active && !destructive && "text-[var(--color-cyan)]",
+      )}
+    >
+      <span aria-hidden className="mr-1">
+        {active ? "▸" : " "}
+      </span>
+      {children}
+    </button>
   );
 }
 

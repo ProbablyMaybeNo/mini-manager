@@ -890,6 +890,88 @@ select.frame-strong {
   }
 }
 
+/* M3 — projects-table row-edit bottom sheet (mobile).
+   The dense project list is restored as a frozen-first-column,
+   horizontally-scrollable comparison table on phones (replacing the
+   prior card stack). Inline cell editing via `InlineCellPopover`
+   edge-clipped when a Status/Priority cell sat at the right edge of the
+   horizontally-scrolled table, so row editing on mobile moves to a
+   NONMODAL bottom sheet that keeps the table visible behind it
+   [MOBILE §M3 step 4, BP §6 bottom-sheets, §7 task 3].
+
+   Same robust pattern the gap-fill sheet proved (UX-1301): the sheet is
+   portalled to document.body and placed by an explicit `@media`
+   `!important` rule — not a Tailwind `max-md:` variant (Tailwind v4 drops
+   the important-prefix form) — so the header + Close are always
+   on-screen, pinned clear of the fixed bottom tab bar, body scrolling
+   inside the height clamp. Nonmodal: no backdrop, the table stays
+   readable behind it. */
+@media (max-width: 767px) {
+  .row-edit-sheet {
+    position: fixed !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    top: auto !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: 480px;
+    margin-inline: auto !important;
+    max-height: 70vh !important;
+  }
+}
+
+/* M3 — frozen-first-column scrollable comparison table (mobile).
+   The Name column (the human-readable identifier [BP §7 task 1]) and
+   the matching header cell stay pinned to the left edge while the
+   denser Type / Recipes / Status / Priority / Completion columns scroll
+   horizontally inside the bounded, labelled region. WCAG 2.2 §1.4.10
+   forbids horizontal scroll of the PAGE, not inside a bounded data
+   region — [BP §7] explicitly endorses a frozen-header/column table.
+   `position: sticky` on the first cell of each row + the header keeps
+   them in place; the zebra + press-highlight are applied via the
+   component's row classes. */
+.mm-cmp-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.mm-cmp-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-bg-panel);
+}
+.mm-cmp-table .mm-cmp-freeze {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-bg);
+}
+.mm-cmp-table thead th.mm-cmp-freeze {
+  z-index: 3;
+  background: var(--color-bg-panel);
+}
+/* Zebra: odd body rows take a faint panel tint. The frozen cell carries
+   its own opaque background (above) so the sticky column never shows the
+   scrolled cells bleeding under it — re-tint it to match the zebra row. */
+.mm-cmp-table tbody tr:nth-child(odd) td {
+  background: color-mix(in srgb, var(--color-bg-panel) 40%, transparent);
+}
+.mm-cmp-table tbody tr:nth-child(odd) .mm-cmp-freeze {
+  background: color-mix(in srgb, var(--color-bg-panel) 40%, var(--color-bg));
+}
+/* Press-highlight — holds the eye on the active row across the scroll
+   [BP §7 task 2]. Pointer-fine devices also get it on hover. */
+.mm-cmp-table tbody tr:active td,
+.mm-cmp-table tbody tr:active .mm-cmp-freeze {
+  background: color-mix(in srgb, var(--color-cyan) 10%, var(--color-bg));
+}
+@media (hover: hover) {
+  .mm-cmp-table tbody tr:hover td,
+  .mm-cmp-table tbody tr:hover .mm-cmp-freeze {
+    background: color-mix(in srgb, var(--color-cyan) 8%, var(--color-bg));
+  }
+}
+
 /* ============================================================
    Landing page (/) — CRT boot reveal + terminal cursor
    ============================================================

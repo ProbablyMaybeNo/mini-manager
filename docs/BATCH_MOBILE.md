@@ -9,11 +9,11 @@
 > **HALT and report** at any `⚠ DECISION` item (write a short proposal, do not build it), on test
 > failure, or on a shared build flagged `🔗 SHARED`.
 
-Done already (shipped + pushed): **M1 ✅**, **M2 ✅**.
+Done already (shipped + pushed): **M1 ✅**, **M2 ✅**, **M3 ✅** (crash-recovered).
 
 ---
 
-- [ ] **M3 — Restore the comparison table (mobile)** · L · Impact 5 · `MOBILE §M3`
+- [x] **M3 — Restore the comparison table (mobile)** · L · Impact 5 · `MOBILE §M3`
       Replace the mobile card stack in `ProjectsDashboardTable` with a frozen-first-column,
       horizontally-scrollable table; zebra + press-highlight; expand chevron in the frozen column;
       row-edit → nonmodal bottom sheet (fixes `InlineCellPopover` edge-clip). Feedback-batch precondition
