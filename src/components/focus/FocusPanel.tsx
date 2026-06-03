@@ -470,7 +470,9 @@ function PaintNoteEditor({ step }: { step: FocusStepView }) {
         onChange={(e) => setNote(e.target.value)}
         onBlur={persist}
         className={clsx(
-          "w-full px-2 py-1 font-mono text-2xs leading-snug",
+          // M1 — editable fields floored to ≥14px (text-sm). 11px chrome
+          // is reserved for caps labels only; a typed note is body content.
+          "w-full px-2 py-1 font-mono text-sm leading-snug",
           "bg-[var(--color-bg)] text-[var(--color-fg-muted)]",
           "border border-dashed border-[var(--color-border-strong)] rounded-sm",
           "focus:outline-2 focus:outline-[var(--color-fg-subtle)]",

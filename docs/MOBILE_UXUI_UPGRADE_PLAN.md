@@ -426,7 +426,9 @@ largely independent and can start immediately.
 
 ---
 
-### M1 — Foundations: tokens, type scale, density, target audit  · Effort M · Impact 4
+### M1 — Foundations: tokens, type scale, density, target audit  · Effort M · Impact 4 ✅ SHIPPED
+
+> **Shipped 2026-06-03:** FocusPanel paint-note textarea floored to ≥14px (was 11px); verified the named sub-24px controls (FOCUS step-done checkbox, library inventory toggles, view toggle, calendar cells) already carry `.tap-target`/≥44px floors from prior sweeps; added `targetSizeAudit.test.ts` regression net (type-floor + tap-target guards). Card-padding 8/4 rhythm already enforced in `globals.css` `.card`.
 
 The substrate every later phase relies on. No IA change — pure systemic hygiene.
 
