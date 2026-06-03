@@ -100,9 +100,12 @@ describe("R7-006 — ADD / SAVE / ATTACH buttons flipped to success (green)", ()
     expect(src).not.toContain('"Custom hex"');
   });
 
-  test("projects/[id] '+ Add unit' uses success", () => {
+  test("projects/[id] child-add CTA uses success", () => {
+    // C1 (2026-06-03): the label is now level-aware via childAddLabel()
+    // ("+ Unit" / "+ Model") instead of the literal "Add unit", but the
+    // child-add button must still be the green success variant.
     const src = read("src/app/projects/[id]/page.tsx");
-    expect(src).toMatch(/variant="success"[\s\S]*?Add unit/);
+    expect(src).toMatch(/variant="success"[\s\S]*?childAddLabel\(project\.type\)/);
   });
 
   test("AttachRecipeModal 'Move attachment' uses success", () => {
