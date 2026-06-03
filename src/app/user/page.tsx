@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { ChangePasswordCard } from "@/components/user/ChangePasswordCard";
+import { DensityCard } from "@/components/user/DensityCard";
 import { ExportButton } from "@/components/user/ExportButton";
 import { LibraryBrandFilterCard } from "@/components/user/LibraryBrandFilterCard";
 import { RecoveryEmailCard } from "@/components/user/RecoveryEmailCard";
@@ -206,6 +207,8 @@ export default async function UserPage() {
         availableBrands={availableBrands}
         initial={initialBrands}
       />
+
+      <DensityCard />
 
       <Card title="Backup & export" ariaLabel="Backup and export">
         <p className="text-sm font-sans text-[var(--color-fg)] leading-snug">

@@ -123,6 +123,45 @@
   --radius-none: 0;
   --radius-sm: 2px;
   --radius-md: 4px;
+
+  /* ----- Desktop layout caps + density (D1, DESKTOP §6/§7) -----
+     A single content-width cap so wide pages don't sprawl into
+     200-char lines on a 1920px monitor (line length 45–75ch [D §6]).
+     ~1312px is the [D §7] desktop content ceiling; margins absorb the
+     excess and the cap centres. Pages opt in via `.content-cap`. The
+     re-architected /projects workspace (D2) sets its own grid and does
+     NOT use this token. */
+  --content-cap: 1312px;
+
+  /* Density tokens — the global Comfortable/Compact lever [D §6, §9].
+     Defaults are Comfortable; `<html data-density="compact">` tightens
+     them. Row height drives dense tables; card padding drives panels.
+     Consumers read the vars (CSS) rather than branching in JS so the
+     toggle is one source of truth. */
+  --density-row-h: 40px;
+  --density-card-pad-y: 14px;
+  --density-card-pad-x: 14px;
+}
+
+/* Compact density — set on <html> by the density toggle (D1). Tightens
+   the row-height + card-padding tokens app-wide; pointer precision on
+   desktop makes the denser target acceptable [D §2, §6]. */
+html[data-density="compact"] {
+  --density-row-h: 32px;
+  --density-card-pad-y: 10px;
+  --density-card-pad-x: 12px;
+}
+
+/* D1 — dense data-table rows track the density lever. `height` on a
+   table row acts as a minimum, so Compact (32px) visibly tightens vs
+   Comfortable (40px) while the cell padding keeps content from touching
+   the row edges. Desktop-only: touch density on mobile is a separate,
+   fixed concern. Opt a table in with `.mm-density-rows`; D3's library
+   table reuses this. */
+@media (min-width: 768px) {
+  .mm-density-rows tbody tr {
+    height: var(--density-row-h);
+  }
 }
 
 /* ============================================================
@@ -271,10 +310,31 @@ hr { border: 0; border-top: 1px solid var(--color-border); }
 
 /* Focus rings — visible always, never default browser blue.
    Form fields get the cyan ring as a coordinated box-shadow so the
-   border-radius is respected (outline draws square corners). */
+   border-radius is respected (outline draws square corners).
+
+   D1 focus-ring pass [D §3, §14]: the ring is 2px solid cyan
+   (#7dd3fc) with a 2px offset. Against the dark CRT surface (#0a0a0a)
+   that is ~11.8:1 — far past the WCAG 2.2 §1.4.11 3:1 non-text floor,
+   and the offset lifts it clear of any same-coloured border so the
+   focus indicator is never obscured by the control's own outline. */
 :focus-visible {
   outline: 2px solid var(--color-cyan);
   outline-offset: 2px;
+}
+
+/* D1 [D §3, §14] — when keyboard focus moves to a control, anchor it
+   clear of the fixed chrome so the focus ring is never hidden behind
+   the 24px StatusBar (desktop) or the 48px MobileHeader. scroll-margin
+   on focus targets is the robust per-element guard; the html-level
+   scroll-padding covers programmatic scroll-into-view. */
+html {
+  scroll-padding-top: 28px;
+}
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: 52px;
+    scroll-padding-bottom: 64px;
+  }
 }
 
 input:focus-visible,
@@ -310,6 +370,15 @@ select.frame-strong {
 /* ============================================================
    Utility classes
    ============================================================ */
+
+/* Content-width cap (D1, DESKTOP §6/§7). Centres a page's content and
+   caps it at --content-cap so prose/tables never stretch to 200-char
+   lines on an ultrawide monitor. Apply to a page's outer wrapper; the
+   page keeps its own padding. */
+.content-cap {
+  max-width: var(--content-cap);
+  margin-inline: auto;
+}
 
 /* ASCII single-line frame around a section. Use sparingly. */
 .frame {
@@ -416,7 +485,10 @@ select.frame-strong {
   flex-shrink: 0;
 }
 .card-body {
-  padding: 14px;
+  /* Density-driven on desktop (D1): the Comfortable/Compact toggle
+     tightens the body padding via --density-card-pad-*. Mobile keeps a
+     fixed 12px below (touch density is a separate, fixed concern). */
+  padding: var(--density-card-pad-y) var(--density-card-pad-x);
 }
 @media (max-width: 767px) {
   .card-header { padding: 10px 12px; }
