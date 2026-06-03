@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
@@ -126,7 +126,17 @@ export function CalendarMonthGrid({ events, year, monthIndex }: Props) {
     return out;
   }, [events]);
 
-  const today = todayUtcKey();
+  // UX-1508 — `today` must NOT be computed during render: this is a client
+  // component, so it SSRs too, and `new Date()` at request-time vs
+  // client-hydration-time can land on different UTC days (near midnight or
+  // with clock skew), flipping `aria-current` / the today class on a cell →
+  // React #418 hydration mismatch on cold load. Compute it only after mount
+  // so the first client render matches the server (no highlight), then the
+  // highlight appears a tick later — imperceptible, and never a mismatch.
+  const [today, setToday] = useState<string | null>(null);
+  useEffect(() => {
+    setToday(todayUtcKey());
+  }, []);
 
   // Build the day cells for the focused month.
   // We pad the leading week with cells from the previous month so the

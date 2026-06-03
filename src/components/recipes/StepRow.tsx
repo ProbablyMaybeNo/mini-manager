@@ -121,10 +121,10 @@ export function StepRow({
       role="listitem"
       aria-label={`Step ${position + 1}`}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0">
       <span
         aria-hidden
-        className="font-mono text-xs text-[var(--color-fg-subtle)] cursor-grab select-none px-1"
+        className="shrink-0 font-mono text-xs text-[var(--color-fg-subtle)] cursor-grab select-none px-1"
         title="Drag to reorder"
       >
         ≡
@@ -141,7 +141,7 @@ export function StepRow({
         // overlap). Below lg the select shrinks (min-w-0, capped width) so
         // the paint slot and × always keep their own gap-2 gutter; lg+
         // restores the comfortable 130px floor.
-        className="shrink min-w-0 max-w-[120px] lg:max-w-none lg:min-w-[130px] px-2 py-1 font-mono text-2xs uppercase tracking-wider bg-[var(--color-bg)] frame focus:border-[var(--color-accent)]"
+        className="shrink min-w-0 max-w-[96px] lg:max-w-none lg:min-w-[130px] px-2 py-1 font-mono text-2xs uppercase tracking-wider bg-[var(--color-bg)] frame focus:border-[var(--color-accent)]"
       >
         {techniqueKeys.map((key) => (
           <option key={key} value={key}>

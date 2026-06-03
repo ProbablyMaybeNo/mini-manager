@@ -155,7 +155,15 @@ export function LibraryPageClient({
         </>
       ) : null}
 
-      <div className="flex-1 min-h-0 flex flex-col">
+      {/* UX-1506 — min-w-0 is load-bearing: as a flex child in the row
+          flex above, the column's default `min-width:auto` refuses to
+          shrink below the table's intrinsic content width, so the dense
+          grid (and the mobile card's 44px toggle cluster) pushed the
+          column past the viewport and the DOCUMENT scrolled sideways —
+          even though the inner scroll div is overflow-x-hidden. min-w-0
+          lets the column collapse to the viewport so the table's own
+          truncation/clip can take effect. */}
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
           <span className="font-mono text-2xs uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
             View

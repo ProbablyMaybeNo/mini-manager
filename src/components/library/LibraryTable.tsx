@@ -283,9 +283,14 @@ function PaintRow({
         <span className="truncate">{paint.hex.slice(1)}</span>
       </span>
 
-      {/* Inventory toggles — pinned right on the card (ml-auto), own two
-          grid cells at md+. shrink-0 so they never compress to the glyph. */}
-      <div className="flex items-center gap-1 shrink-0 ml-auto md:ml-0 md:contents">
+      {/* Inventory toggles. UX-1506 — the cluster is flex-none (never
+          grows, never shrinks) and we DROP ml-auto on mobile: with the
+          card body above as flex-1 min-w-0 truncate, the text already
+          eats the slack, so ml-auto only risked nudging the 44px toggles
+          past the row's clip box. flex-none keeps the ○/★ pair at its
+          intrinsic ~92px and on-screen. At md+ it dissolves into two
+          dense grid cells (md:contents). */}
+      <div className="flex items-center gap-1 flex-none md:contents">
         <InventoryControls
           paintId={paint.id}
           initial={inventory}
@@ -298,7 +303,7 @@ function PaintRow({
 
 function TableFooter({ total }: { total: number }) {
   return (
-    <div className="px-3 py-1.5 border-t border-[var(--color-border)] text-2xs font-mono text-[var(--color-fg-muted)] bg-[var(--color-bg-elevated)]">
+    <div className="w-full max-w-full px-3 py-1.5 border-t border-[var(--color-border)] text-2xs font-mono text-[var(--color-fg-muted)] bg-[var(--color-bg-elevated)]">
       {total.toLocaleString()} paint{total === 1 ? "" : "s"}
     </div>
   );

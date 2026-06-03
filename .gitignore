@@ -45,6 +45,7 @@ test-results/
 
 # stray dev-server output
 .dev-server.log
+dev-server.log
 
 # ux-audit run artifacts — keep findings_*.json as the record, drop
 # the screenshots (incl. per-round subfolders) + the playwright-mcp cache

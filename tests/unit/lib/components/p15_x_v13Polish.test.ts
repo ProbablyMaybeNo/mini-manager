@@ -61,7 +61,7 @@ describe("UX-1311 — recipe step swatch/delete hit boxes no longer overlap", ()
   // collided. The select now shrinks below lg (min-w-0, capped width) so the
   // paint slot + × keep their gap-2 gutter; lg+ restores the 130px floor.
   test("the technique select shrinks below lg so the row can't overflow into the × (UX-1502)", () => {
-    expect(src).toContain("shrink min-w-0 max-w-[120px] lg:max-w-none lg:min-w-[130px]");
+    expect(src).toContain("shrink min-w-0 max-w-[96px] lg:max-w-none lg:min-w-[130px]");
     // The un-shrinkable rigid floor is gone.
     expect(src).not.toContain(
       'frame focus:border-[var(--color-accent)] min-w-[130px]"',
