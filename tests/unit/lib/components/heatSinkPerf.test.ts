@@ -17,12 +17,14 @@ import {
   CELL_MIN_PX,
   DOT_RING_PX,
   DOT_SIZE_PX,
+  OVERLAY_SAMPLE_STRIDE,
   chunkCells,
   detectMobileViewport,
   filterCellsByBrands,
   gridColumnsFor,
   intrinsicRowSize,
   rowGroupCount,
+  showsOverlayDot,
 } from "@/components/planner/heatSinkHelpers";
 import type { CoverageCell } from "@/db/queries/paintCoverage";
 import type { CoverageState } from "@/lib/paints/coverage";
@@ -193,25 +195,55 @@ describe("detectMobileViewport (UX-1301 mobile gate)", () => {
 });
 
 /* ============================================================
-   P17 — pixel-field cell sizing (one fixed tiny edge, no density)
+   P17 / A1 — pixel-field cell sizing (one fixed tiny edge, no density)
    ============================================================ */
 
-describe("CELL_MIN_PX (P17 fixed pixel size)", () => {
+describe("CELL_MIN_PX (A1 literally-pixel-sized edge)", () => {
   test("is a single fixed number, not a per-density record", () => {
     expect(typeof CELL_MIN_PX).toBe("number");
   });
 
-  test("is a tiny pixel edge so ~7,144 cells read as a colour field", () => {
-    // Small enough to be a pixel field, not a wall of chunky squares.
-    expect(CELL_MIN_PX).toBeLessThanOrEqual(12);
+  test("is literally pixel-sized (~3-4px) so the whole library packs into a compact square", () => {
+    // A1 (Ross 2026-06-03): 9px was still too big. The cell must be
+    // pixel-sized so all ~7,144 paints fit into a compact square.
+    expect(CELL_MIN_PX).toBeLessThanOrEqual(4);
     expect(CELL_MIN_PX).toBeGreaterThan(0);
   });
 
-  test("leaves room for the overlay dot + its near-black ring to read", () => {
-    // The dot (DOT_SIZE_PX) plus a ring (DOT_RING_PX each side) must fit
-    // inside the cell edge so the ownership marker stays legible.
-    expect(DOT_SIZE_PX + DOT_RING_PX * 2).toBeLessThanOrEqual(CELL_MIN_PX);
+  test("A2: the overlay dot is larger than the cell — an approximate, legible marker", () => {
+    // At ~4px a dot CONFINED to one cell would be invisible. The A2
+    // overlay dot is deliberately larger than the cell (it estimates
+    // where the collection falls, it is not a pixel-precise tag) so it
+    // stays legible. The dot + ring intentionally EXCEEDS the cell edge.
+    expect(DOT_SIZE_PX + DOT_RING_PX * 2).toBeGreaterThan(CELL_MIN_PX);
     expect(DOT_SIZE_PX).toBeGreaterThan(0);
+    expect(DOT_RING_PX).toBeGreaterThan(0);
+  });
+});
+
+describe("showsOverlayDot (A2 sparse approximate overlay)", () => {
+  test("the first marked cell always shows so a tiny collection isn't invisible", () => {
+    expect(showsOverlayDot(0)).toBe(true);
+  });
+
+  test("samples every OVERLAY_SAMPLE_STRIDE-th marked cell", () => {
+    expect(OVERLAY_SAMPLE_STRIDE).toBeGreaterThan(1);
+    expect(showsOverlayDot(0)).toBe(true);
+    expect(showsOverlayDot(1)).toBe(false);
+    expect(showsOverlayDot(OVERLAY_SAMPLE_STRIDE)).toBe(true);
+    expect(showsOverlayDot(OVERLAY_SAMPLE_STRIDE - 1)).toBe(false);
+    expect(showsOverlayDot(OVERLAY_SAMPLE_STRIDE * 2)).toBe(true);
+  });
+
+  test("a custom stride controls the sparseness", () => {
+    expect(showsOverlayDot(2, 2)).toBe(true);
+    expect(showsOverlayDot(3, 2)).toBe(false);
+    // stride 1 = a dot on every marked cell.
+    expect(showsOverlayDot(5, 1)).toBe(true);
+  });
+
+  test("throws on a non-positive stride", () => {
+    expect(() => showsOverlayDot(0, 0)).toThrow();
   });
 });
 

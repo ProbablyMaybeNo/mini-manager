@@ -14,11 +14,12 @@ import {
   formatCount,
   gridColumnsFor,
   intrinsicRowSize,
+  showsOverlayDot,
 } from "./heatSinkHelpers";
 import { HeatSinkGapFillPopover } from "./HeatSinkGapFillPopover";
 
 /**
- * P16.4 / P17 — client wrapper for the heat-sink coverage MAP.
+ * P16.4 / P17 / A — client wrapper for the heat-sink COLLECTION map.
  *
  * The server cell (`HeatSinkGridCell`) fetches the composed grid + brand
  * list + the painter's saved brand-filter default once and hands them
@@ -33,14 +34,20 @@ import { HeatSinkGapFillPopover } from "./HeatSinkGapFillPopover";
  *     the ~7,144-node render; the brand filter stacks on top to shrink the
  *     set further.
  *
- * P17 redesign — the grid is a colour-space coverage MAP, not a square
- * grid. EVERY catalog paint (modulo the brand filter) renders as ONE TINY
- * hue-sorted pixel, forming a smooth spectrum FIELD: the unowned pixels
- * ARE the map of the full gamut. Owned + wishlisted paints get an OVERLAID
- * DOT (green for owned, yellow for wishlist, each with a near-black ring)
- * so the painter's collection pops against the field. There is no density
- * toggle and no ownership border any more — the field always shows the
- * whole gamut.
+ * P17 redesign — the grid is a colour-space COLLECTION map, not a square
+ * grid. EVERY catalog paint (modulo the brand filter) renders as ONE
+ * literally-pixel-sized (~4px) hue-sorted cell, forming a smooth spectrum
+ * FIELD: the unowned pixels ARE the map of the full gamut. The whole
+ * ~7,144-paint library packs into a compact square that fits the
+ * calendar's footprint (A1).
+ *
+ * A2 — owned + wishlisted paints are marked by a SPARSE, APPROXIMATE
+ * overlay of dots (green for owned, yellow for wishlist, each with a
+ * near-black ring). At 4px a dot per marked cell would smear into noise,
+ * so only every Nth marked cell (in hue order) gets a dot, and the dot is
+ * allowed to be larger than its cell — it estimates WHERE the collection
+ * falls, not which exact pixel. The painter sees their collection + holes
+ * at a glance. There is no density toggle and no ownership border.
  *
  * No raw hex (pixel fills come from each paint's stored hex via inline
  * style, which is data, not a design token); the overlay dots + their ring
@@ -130,6 +137,24 @@ export function HeatSinkGridClient({
     [visibleCells],
   );
 
+  // A2 — sparse approximate overlay. Walk the visible cells in hue order,
+  // counting the owned / wishlisted ones, and keep only every Nth marked
+  // cell's id so the dots stay sparse + legible at the ~4px cell size. The
+  // dot is an at-a-glance estimate of where the collection falls, not a
+  // pixel-precise tag. Recomputed when the visible set or an optimistic
+  // wishlist flip changes.
+  const overlayDotIds = useMemo(() => {
+    const ids = new Set<string>();
+    let markedIndex = 0;
+    for (const cell of visibleCells) {
+      const effective = stateForPaint(cell.paint.id, cell.state);
+      if (effective === "none") continue;
+      if (showsOverlayDot(markedIndex)) ids.add(cell.paint.id);
+      markedIndex += 1;
+    }
+    return ids;
+  }, [visibleCells, stateForPaint]);
+
   const toggleBrand = (brand: string) => {
     setSelectedBrands((prev) => {
       // From "all" → start an explicit set seeded with every brand, then
@@ -148,12 +173,12 @@ export function HeatSinkGridClient({
     selectedBrands === null || selectedBrands.size === brands.length;
 
   return (
-    <div className="frame p-3 space-y-2">
+    <div className="frame p-3 space-y-2 md:h-full md:flex md:flex-col md:min-h-0">
       {/* Header readout — mono-caps, tabular for the counts. */}
       <p
         className="text-xs font-sans uppercase tracking-wide tabular-nums text-[var(--color-fg-muted)]"
         aria-label={
-          "Paint coverage: " +
+          "Paint collection: " +
           formatCount(summary.owned) +
           " of " +
           formatCount(summary.total) +
@@ -230,13 +255,13 @@ export function HeatSinkGridClient({
       <div
         role="grid"
         aria-label={
-          "Paint coverage spectrum, " +
+          "Paint collection spectrum, " +
           formatCount(visibleCells.length) +
           " paints, hue-sorted"
         }
         data-cell-count={visibleCells.length}
         data-row-group-count={rowGroups.length}
-        className="space-y-[1px]"
+        className="space-y-[1px] md:flex-1 md:min-h-0 md:overflow-y-auto"
       >
         {rowGroups.length === 0 ? (
           <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug py-2">
@@ -260,7 +285,11 @@ export function HeatSinkGridClient({
                   cell.paint.id,
                   cell.state,
                 );
-                const dotClass = dotClassFor(effectiveState);
+                // A2 — only the sparse sampled subset of marked cells
+                // carries a dot, so the overlay stays legible at ~4px.
+                const dotClass = overlayDotIds.has(cell.paint.id)
+                  ? dotClassFor(effectiveState)
+                  : null;
                 const isOpen = openPaintId === cell.paint.id;
                 return (
                   <span
@@ -293,17 +322,22 @@ export function HeatSinkGridClient({
                       )}
                       style={{ backgroundColor: cell.paint.hex }}
                     >
-                      {/* Ownership marker: a centered dot (green owned /
-                          yellow wishlist) with a 1px near-black ring so it
-                          stays legible against any pixel colour. Unowned
-                          pixels render no dot — they ARE the gamut map. */}
+                      {/* Ownership marker (A2): a SPARSE sampled overlay —
+                          only every Nth marked cell carries a centered dot
+                          (green owned / yellow wishlist) with a 1px near-
+                          black ring so it stays legible against any pixel.
+                          Unowned pixels render no dot — they ARE the gamut
+                          map. */}
                       {dotClass ? (
                         <span
                           aria-hidden
                           data-dot={effectiveState}
                           className={clsx(
-                            "pointer-events-none absolute left-1/2 top-1/2",
-                            "h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
+                            // A2: a ~7px disc — intentionally larger than
+                            // the 4px cell — centered + overflowing so the
+                            // sparse marker stays legible against any pixel.
+                            "pointer-events-none absolute left-1/2 top-1/2 z-10",
+                            "h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full",
                             "shadow-[0_0_0_1px_var(--color-bg)]",
                             dotClass,
                           )}
@@ -329,8 +363,9 @@ export function HeatSinkGridClient({
       </div>
 
       <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
-        Your library as a hue-sorted spectrum — the whole gamut, every
-        paint a pixel. Green dot = owned · yellow dot = wishlisted.
+        Your COLLECTION as a hue-sorted spectrum — the whole gamut, every
+        paint a pixel. Green dots ≈ owned · yellow dots ≈ wishlisted (a
+        sparse at-a-glance overlay, not pixel-precise).
       </p>
     </div>
   );

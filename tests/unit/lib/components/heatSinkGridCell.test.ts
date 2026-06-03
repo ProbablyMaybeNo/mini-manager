@@ -99,11 +99,11 @@ describe("HeatSinkGridCell server seam (P16.4)", () => {
     expect(client?.props.defaultBrandFilter).toEqual(["Citadel"]);
   });
 
-  test("renders inside the COVERAGE card", async () => {
+  test("renders inside the COLLECTION card (A4 rename)", async () => {
     const tree = await renderCell(view);
     const cards = findAll(
       tree,
-      (n) => n.props?.title === "COVERAGE" && n.props?.accentColor === "green",
+      (n) => n.props?.title === "COLLECTION" && n.props?.accentColor === "green",
     );
     expect(cards).toHaveLength(1);
   });

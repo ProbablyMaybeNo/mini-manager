@@ -72,21 +72,21 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       expect(section).toContain("md:col-span-2");
     });
 
-    test("P14.8 — mobile reorder: Streak > Activity > Calendar > Coverage > Inspo", () => {
+    test("A3 — mobile reorder: Streak > Activity > Collection > Calendar > Inspo", () => {
       // Each cell wrapper carries an explicit `order-N` class that
-      // controls the mobile (<md) stacking order. The brief locks
+      // controls the mobile (<md) stacking order. A3 swapped the hero:
       // Streak first (smallest + most reward-loaded), Activity second
-      // (freshest action), Calendar third (tall + interactive),
-      // Coverage (P16.3) + Inspo close the scroll.
+      // (freshest action), the COLLECTION square third (the hero),
+      // Calendar fourth (now a small widget), Inspo closes the scroll.
       const streakIdx = section.indexOf("order-1");
       const activityIdx = section.indexOf("order-2");
-      const calendarIdx = section.indexOf("order-3");
-      const heatmapIdx = section.indexOf("order-4");
+      const collectionIdx = section.indexOf("order-3");
+      const calendarIdx = section.indexOf("order-4");
       const inspoIdx = section.indexOf("order-5");
       expect(streakIdx).toBeGreaterThan(-1);
       expect(activityIdx).toBeGreaterThan(-1);
+      expect(collectionIdx).toBeGreaterThan(-1);
       expect(calendarIdx).toBeGreaterThan(-1);
-      expect(heatmapIdx).toBeGreaterThan(-1);
       expect(inspoIdx).toBeGreaterThan(-1);
 
       // Tie each order-N class to the right cell by checking the
@@ -99,21 +99,30 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       };
       orderMatch("PlannerStreakCell", 1);
       orderMatch("PlannerActivityCell", 2);
-      orderMatch("PlannerCalendarCell", 3);
-      orderMatch("HeatSinkGridCell", 4);
+      orderMatch("HeatSinkGridCell", 3);
+      orderMatch("PlannerCalendarCell", 4);
       orderMatch("PlannerInspoCell", 5);
     });
 
-    test("P14.8 — desktop order preserved via md:row-start", () => {
+    test("A3 — desktop order preserved via md:row-start", () => {
       // On md+ each right-column cell pins its grid row so the mobile
       // reorder doesn't bleed into the desktop visual. Activity =
-      // row 1 (top of right stack), Streak = row 2, Coverage = row 3,
-      // Inspo = row 4. Calendar spans all four rows on the left.
+      // row 1 (top of right stack), Streak = row 2, Calendar = row 3
+      // (the demoted small widget), Inspo = row 4. The COLLECTION square
+      // spans all four rows on the left.
       expect(section).toContain("md:row-start-1");
       expect(section).toContain("md:row-start-2");
       expect(section).toContain("md:row-start-3");
       expect(section).toContain("md:row-start-4");
       expect(section).toContain("md:row-span-4");
+    });
+
+    test("A3 — the COLLECTION square is the big left cell, square-aspect", () => {
+      // The HeatSink COLLECTION map now occupies the big left cell where
+      // the calendar used to live, spanning 3 cols × 4 rows and rendered
+      // square-aspect on md+.
+      const re = /md:col-span-3[^"]*md:row-span-4[^"]*md:aspect-square"[\s\S]{0,200}?<HeatSinkGridCell/;
+      expect(section).toMatch(re);
     });
   });
 
@@ -136,13 +145,13 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       expect(src).toMatch(/days/i);
     });
 
-    test("Coverage cell renders the spectrum grid + collection microcopy", () => {
-      // P16.3 - the activity heatmap was retired and replaced by the
-      // HeatSink coverage grid: the painter's catalog as a hue-sorted
-      // spectrum, borders flagging owned / wanted. The scaffold test
-      // pins the surrounding shape (Card title, grid, collection copy).
+    test("COLLECTION cell renders the spectrum grid + collection microcopy", () => {
+      // P16.3 retired the activity heatmap for the HeatSink map; A4
+      // renamed its user-visible label "Coverage" → "COLLECTION". The
+      // scaffold test pins the surrounding shape (Card title, the
+      // hue-sorted spectrum copy).
       const src = read("src/components/planner/HeatSinkGridCell.tsx");
-      expect(src).toContain("COVERAGE");
+      expect(src).toContain("COLLECTION");
       expect(src).toMatch(/hue-sorted spectrum/i);
     });
 

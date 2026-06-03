@@ -159,19 +159,28 @@ export function detectMobileViewport(): boolean {
 }
 
 /* ============================================================
-   P17 — pixel-field cell sizing.
+   P17 / A1 — pixel-field cell sizing.
 
-   The grid is now a colour-space coverage MAP: every catalog paint is one
-   tiny hue-sorted pixel forming a smooth spectrum field, with owned /
-   wishlisted paints marked by an overlaid dot. There is no density mode —
-   one fixed tiny-cell size for the whole field.
+   The grid is a colour-space COLLECTION map: every catalog paint is one
+   literally-pixel-sized hue-sorted cell forming a smooth spectrum field,
+   with owned / wishlisted paints marked by a SPARSE overlay dot. There is
+   no density mode — one fixed tiny-cell size for the whole field.
 
-   The cell edge is small enough that ~7,144 pixels read as a dense
-   colour field, yet large enough that the overlaid dot (a ~6px disc + a
-   1px near-black ring) fits and stays legible. ~9px clears that bar: the
-   dot reads at a glance without the field dissolving into chunky squares.
+   A1 (Ross 2026-06-03): BrushForge packs a whole library into a colour
+   wheel; we pack ours into a compact SQUARE that fits the calendar's old
+   footprint. The cell edge is now ~4px — literally pixel-sized — so all
+   ~7,144 paints read as one dense gamut field rather than a wall of chunky
+   squares. The previous 9px was still too big.
 
-   The number is a CSS-grid column floor fed to
+   Because the cell is now smaller than a legible dot, the ownership marker
+   is NO LONGER one dot per owned/wishlisted pixel (that would smear into an
+   unreadable mush at 4px). Instead A2 renders a SPARSE, APPROXIMATE overlay
+   — a sampled subset of the owned / wishlisted cells get a dot that is
+   allowed to be LARGER than its cell (it's an at-a-glance estimate of where
+   the collection falls, not a pixel-precise tag). So the dot size is decic-
+   oupled from the cell edge and intentionally exceeds it.
+
+   The cell number is a CSS-grid column floor fed to
    `repeat(auto-fill, minmax(<floor>, 1fr))` — the `1fr` makes every
    column grow to consume leftover width, so a wider viewport packs more
    pixels rather than leaving side margin.
@@ -179,15 +188,56 @@ export function detectMobileViewport(): boolean {
 
 /**
  * The fixed pixel cell edge (px). One value for the whole field — no
- * density branch. ~9px keeps the spectrum dense (~7,144 pixels read as a
- * smooth gamut) while leaving room for the ~6px overlay dot + 1px ring to
- * stay legible.
+ * density branch. ~4px is literally pixel-sized so the full ~7,144-paint
+ * library packs into a compact square that fits the calendar's footprint
+ * (A1). Owned / wishlisted paints are marked by a SPARSE overlay dot
+ * (A2), so the cell no longer has to be wide enough to hold a per-cell
+ * dot.
  */
-export const CELL_MIN_PX = 9;
+export const CELL_MIN_PX = 4;
 
-/** The overlay-dot diameter (px) and its near-black ring width (px). */
-export const DOT_SIZE_PX = 6;
+/**
+ * The overlay-dot diameter (px) and its near-black ring width (px). A2:
+ * the dot is an APPROXIMATE, at-a-glance marker, deliberately larger than
+ * the 4px cell so it stays legible — it estimates where owned / wishlisted
+ * colours fall, it does not pixel-precisely tag one cell.
+ */
+export const DOT_SIZE_PX = 7;
 export const DOT_RING_PX = 1;
+
+/* ============================================================
+   A2 — sparse approximate ownership overlay.
+
+   At 4px a dot per owned/wishlisted cell would smear into noise. Instead
+   we render a SPARSE sample: every Nth owned / wishlisted cell in hue
+   order gets a dot. The painter sees the SHAPE of their collection (where
+   the greens/yellows cluster + where the holes are) at a glance, which is
+   all the brief asks — "density/precision secondary to small + legible".
+   ============================================================ */
+
+/**
+ * Render one overlay dot per this many owned / wishlisted cells (in hue
+ * order). 1 = a dot on every owned/wishlisted cell; higher = sparser.
+ * Tuned for "at-a-glance estimate", not pixel precision.
+ */
+export const OVERLAY_SAMPLE_STRIDE = 8;
+
+/**
+ * Whether a given owned / wishlisted cell should carry an overlay dot,
+ * sampling every `OVERLAY_SAMPLE_STRIDE`-th marked cell so the overlay
+ * stays sparse + legible. `markedIndex` is the running count of marked
+ * (owned OR wishlisted) cells seen so far in hue order — the FIRST marked
+ * cell (index 0) always shows so a tiny collection isn't invisible.
+ * Unowned cells never get a dot (they are the gamut map) and should not be
+ * counted into `markedIndex` by the caller.
+ */
+export function showsOverlayDot(
+  markedIndex: number,
+  stride: number = OVERLAY_SAMPLE_STRIDE,
+): boolean {
+  if (stride <= 0) throw new Error("stride must be positive");
+  return markedIndex % stride === 0;
+}
 
 /**
  * The `grid-template-columns` value for the pixel field — `auto-fill`
