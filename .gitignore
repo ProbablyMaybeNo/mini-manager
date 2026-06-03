@@ -56,3 +56,8 @@ ux-audit/**/*.png
 # PNGs live at the repo root (app icons are under public/ and src/app/),
 # so ignore them all to stop them leaking into commits.
 /*.png
+
+# UX research: keep the SYNTHESIZED reports (our original, cited work) but
+# NOT the raw cleaned third-party guides (Apple/Google/NN/g excerpts) — this
+# repo is public, so don't republish copyrighted source content.
+docs/research/sources/
