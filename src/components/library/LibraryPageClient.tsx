@@ -93,8 +93,11 @@ export function LibraryPageClient({
 
   return (
     <div className="flex flex-1 min-h-0">
-      {/* Desktop rail */}
-      <div className="hidden md:flex">
+      {/* Desktop rail — UX-1506: gated at lg (1024), not md (768). At md
+          the rail + table together exceeded the 768 viewport (922px), so
+          iPad-portrait scrolled sideways. Below lg the filters live in the
+          bottom-sheet drawer and the table gets the full width. */}
+      <div className="hidden lg:flex">
         <FilterRail paints={paints} filter={filter} />
       </div>
 
@@ -109,7 +112,7 @@ export function LibraryPageClient({
         onClick={() => setMobileFilterOpen(true)}
         variant="secondary"
         size="sm"
-        className="md:hidden xl:hidden fixed top-14 right-3 z-30"
+        className="lg:hidden fixed top-14 right-3 z-30"
         aria-label="Open filters"
         aria-expanded={mobileFilterOpen}
       >
@@ -123,10 +126,10 @@ export function LibraryPageClient({
             type="button"
             aria-label="Close filters"
             onClick={() => setMobileFilterOpen(false)}
-            className="md:hidden fixed inset-0 z-40 bg-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
+            className="lg:hidden fixed inset-0 z-40 bg-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
           />
           <aside
-            className="md:hidden fixed inset-x-0 bottom-0 z-50 max-h-[80vh] flex flex-col border-t border-[var(--color-border-strong)] bg-[var(--color-bg-panel)] shadow-2xl"
+            className="lg:hidden fixed inset-x-0 bottom-0 z-50 max-h-[80vh] flex flex-col border-t border-[var(--color-border-strong)] bg-[var(--color-bg-panel)] shadow-2xl"
             style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}
             aria-label="Library filters drawer"
           >

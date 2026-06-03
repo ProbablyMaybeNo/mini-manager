@@ -57,11 +57,11 @@ describe("Library mobile filter trigger", () => {
   const src = read("src/components/library/LibraryPageClient.tsx");
 
   test("the mobile-only Filters button exists and is hidden on desktop", () => {
-    // md:hidden + aria-label="Open filters" + setMobileFilterOpen(true).
-    // R7-5 added xl:hidden as a defensive belt-and-braces against
-    // breakpoint drift, so both must appear on the trigger element.
+    // UX-1506: the rail/drawer switch moved from md (768) to lg (1024) so
+    // iPad-portrait (768) keeps the full-width table + drawer instead of
+    // overflowing with the desktop rail. The trigger is now lg:hidden.
     expect(src).toContain('aria-label="Open filters"');
-    expect(src).toContain("md:hidden xl:hidden fixed top-14 right-3");
+    expect(src).toContain("lg:hidden fixed top-14 right-3");
     expect(src).toContain("setMobileFilterOpen(true)");
   });
 
