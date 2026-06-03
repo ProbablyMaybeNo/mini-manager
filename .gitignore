@@ -52,7 +52,7 @@ dev-server.log
 .playwright-mcp/
 ux-audit/*.png
 ux-audit/**/*.png
-# stray audit screenshots the auditor sometimes drops in the repo root
-finding-*.png
-v1*-*.png
-r1*-*.png
+# stray audit screenshots the auditor drops in the repo root — no legit
+# PNGs live at the repo root (app icons are under public/ and src/app/),
+# so ignore them all to stop them leaking into commits.
+/*.png
