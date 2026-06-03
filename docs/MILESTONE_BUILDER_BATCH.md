@@ -1,5 +1,9 @@
 # Mini Manager — Milestone Builder Batch (UX/UI Overhaul)
 
+> **Split for parallel execution:** the two batch agents work from `docs/BATCH_MOBILE.md` (M3–M7) and
+> `docs/BATCH_DESKTOP.md` (D1–D8), each on its own branch (`batch/mobile-uxui` / `batch/desktop-uxui`).
+> This file remains the combined overview + shared-build coordination reference.
+>
 > Execution manifest for `milestone-builder` / `/next-milestone`. Assembled 2026-06-03 after a
 > Cursor crash to recover and continue the mobile + desktop UX/UI overhaul.
 > **Source of truth for each item is its plan section** — this file is the *running order*, not a
