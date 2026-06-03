@@ -1,10 +1,19 @@
 /**
- * P16.3 — view-pure helpers for the HeatSink coverage grid cell.
+ * P16.3 / P17 — view-pure helpers for the HeatSink coverage grid cell.
  *
  * No React, no DB — unit-tested in isolation. Two jobs:
- *   - map a `CoverageState` to its border-token class (green / amber /
- *     transparent — `@theme` tokens only, no raw hex, no cyan), and
+ *   - map a `CoverageState` to its OVERLAY-DOT colour-token class (owned →
+ *     green dot, wanted → yellow dot, none → no dot — `@theme` tokens only,
+ *     no raw hex, no cyan), and
  *   - format the header readout ("1,204 / 7,144 owned · 312 wanted").
+ *
+ * P17 redesign: the grid is a colour-space coverage MAP. EVERY catalog
+ * paint (modulo the brand filter) renders as one tiny hue-sorted pixel,
+ * forming a smooth spectrum field — the unowned pixels ARE the map of the
+ * full gamut. Owned + wishlisted paints get an overlaid dot (green /
+ * yellow, each with a near-black ring) so the painter's collection pops
+ * against the field. There is no ownership BORDER and no density mode any
+ * more — the field always shows the whole gamut.
  *
  * The hue-sort + coverage join itself lives in the server read layer
  * (`@/db/queries/paintCoverage`); the cell only consumes its output.
@@ -16,18 +25,22 @@ import type { CoverageCell } from "@/db/queries/paintCoverage";
 import type { Paint } from "@/lib/paints/types";
 
 /**
- * Border colour for a cell, keyed by coverage state. Owned → green,
- * wanted → amber, none → transparent. `@theme` tokens only so the
- * border tracks the palette; never a raw hex, never cyan.
+ * Overlay-dot colour for a cell, keyed by coverage state. Owned → green
+ * dot, wanted → yellow dot, none → no dot (the bare spectrum pixel). The
+ * dot fill is a `@theme` token (never a raw hex, never cyan); a near-black
+ * ring (`var(--color-bg)`) is applied at the call-site so the dot stays
+ * legible against any underlying pixel colour. `null` means "render no
+ * dot" — the pixel is just the paint's hue.
  */
-export const COVERAGE_BORDER_CLASS: Record<CoverageState, string> = {
-  owned: "border-[var(--color-green)]",
-  wanted: "border-[var(--color-amber)]",
-  none: "border-transparent",
+export const COVERAGE_DOT_CLASS: Record<CoverageState, string | null> = {
+  owned: "bg-[var(--color-green)]",
+  wanted: "bg-[var(--color-yellow)]",
+  none: null,
 };
 
-export function borderClassFor(state: CoverageState): string {
-  return COVERAGE_BORDER_CLASS[state];
+/** The dot fill class for a coverage state, or null for unowned (no dot). */
+export function dotClassFor(state: CoverageState): string | null {
+  return COVERAGE_DOT_CLASS[state];
 }
 
 /** Thousands-separated count, locale-stable ("1204" → "1,204"). */
@@ -51,24 +64,23 @@ export function coverageReadout(summary: CoverageSummary): string {
 }
 
 /* ============================================================
-   P16.4 — performance-pass view helpers.
+   P16.4 / P17 — performance-pass view helpers.
 
-   The catalog is ~7,144 bordered cells. A single flat CSS grid of
-   7,144 nodes pays full layout + paint up-front and on every scroll.
-   We mitigate, in order of cheapness, with:
+   The catalog is ~7,144 pixel cells. A single flat CSS grid of 7,144
+   nodes pays full layout + paint up-front and on every scroll. We
+   mitigate, in order of cheapness, with:
 
      1. row-chunking (`chunkCells`) so the browser can skip off-screen
         groups via `content-visibility:auto` + `contain-intrinsic-size`,
-     2. a brand filter (`filterCellsByBrands`) to cut the working set,
-     3. a condensed/full mode (`condensedCells` + `pickDefaultDensity`)
-        that defaults to the painter's own collection when it's big
-        enough to read as a spectrum.
+     2. a brand filter (`filterCellsByBrands`) to cut the working set.
+
+   P17 removed the condensed/full density mode entirely: the field ALWAYS
+   shows every catalog paint (modulo the brand filter), because the
+   unowned pixels are the map of the full gamut. The collection pops via
+   overlaid dots, not by hiding the gaps.
 
    These are pure + unit-tested; the client wrapper composes them.
    ============================================================ */
-
-/** Density mode for the grid. */
-export type GridDensity = "condensed" | "full";
 
 /**
  * Cells per row group. Each group becomes one
@@ -79,16 +91,6 @@ export type GridDensity = "condensed" | "full";
  * client + tests share one constant.
  */
 export const CELLS_PER_ROW_GROUP = 100;
-
-/**
- * Below this many owned+wanted paints, the painter's collection is too
- * sparse to read as a spectrum, so the grid defaults to Full (the whole
- * catalog). At or above it, Condensed (collection-only) is the more
- * useful default. Threshold = 60 owned/wanted paints — roughly two
- * starter sets — which is where the condensed spectrum starts to look
- * like a colour field rather than a scatter of squares.
- */
-export const CONDENSED_DEFAULT_THRESHOLD = 60;
 
 /**
  * Split an ordered cell list into fixed-size row groups. The last group
@@ -136,47 +138,9 @@ export function filterCellsByBrands(
 }
 
 /**
- * Condensed view: only the painter's actual collection — owned + wanted
- * cells — rendered as a spectrum. "none" cells (the gaps) drop out.
- * Order preserved so the kept cells still ramp through the hue sort.
- */
-export function condensedCells(
-  cells: readonly CoverageCell[],
-): CoverageCell[] {
-  return cells.filter((c) => c.state !== "none");
-}
-
-/**
- * Default density for a painter.
- *
- * On a coarse pointer / narrow viewport (`isMobile`), the grid ALWAYS
- * defaults to Condensed regardless of collection size: Full mode packs
- * the 7,144-paint catalog into ~12px cells, which is half the WCAG 2.5.8
- * 24px target floor and the first thing a brand-new mobile recruit (0
- * owned paints) meets (UX-1302). Condensed is the tappable density, so a
- * phone always lands there. (A near-empty collection renders an empty
- * Condensed spectrum with the "switch to Full" hint — better than a wall
- * of sub-target cells.)
- *
- * On a fine pointer (desktop), Condensed kicks in only once the
- * collection (owned + wanted) clears `CONDENSED_DEFAULT_THRESHOLD`, else
- * Full so a near-empty collection still shows the whole catalog to fill.
- * Driven by the summary so it costs nothing extra.
- */
-export function pickDefaultDensity(
-  summary: CoverageSummary,
-  isMobile: boolean = false,
-): GridDensity {
-  if (isMobile) return "condensed";
-  return summary.owned + summary.wanted >= CONDENSED_DEFAULT_THRESHOLD
-    ? "condensed"
-    : "full";
-}
-
-/**
  * Whether the current client is a coarse pointer or a narrow (< md, i.e.
- * < 768px) viewport — the "mobile" gate for the grid's tappable defaults
- * (Condensed default, UX-1302) and the gap-fill bottom sheet (UX-1301).
+ * < 768px) viewport — the "mobile" gate for the gap-fill bottom sheet
+ * (UX-1301).
  *
  * Pure + SSR-safe: returns `false` when `window` is undefined so the
  * server render matches a desktop-first first paint, and the client
@@ -195,59 +159,54 @@ export function detectMobileViewport(): boolean {
 }
 
 /* ============================================================
-   P16.6 — mobile cell sizing.
+   P17 — pixel-field cell sizing.
 
-   The Round-12 audit (UX-1202) measured grid cells at 16-21px (≤7px in
-   Full), well below the WCAG 2.5.8 24px target floor, with extra viewport
-   width wasted as side margin rather than enlarging the cells. The fix:
-   give each density its own minimum cell size so the `auto-fill` columns
-   reflow to fill the full width with tappable cells.
+   The grid is now a colour-space coverage MAP: every catalog paint is one
+   tiny hue-sorted pixel forming a smooth spectrum field, with owned /
+   wishlisted paints marked by an overlaid dot. There is no density mode —
+   one fixed tiny-cell size for the whole field.
 
-     - **Condensed** (the painter's collection — the default once their
-       collection clears the threshold) gets a TAPPABLE floor: cells are
-       big enough to thumb without mis-hitting. This is the surface a
-       painter actually pokes at, so it leads with reach over density.
-     - **Full** (the whole catalog) stays the dense colour-field overview
-       but lifts off the 7px floor to a still-tappable-enough minimum so
-       the spectrum reads as a field yet taps land closer.
+   The cell edge is small enough that ~7,144 pixels read as a dense
+   colour field, yet large enough that the overlaid dot (a ~6px disc + a
+   1px near-black ring) fits and stays legible. ~9px clears that bar: the
+   dot reads at a glance without the field dissolving into chunky squares.
 
-   The numbers are CSS-grid column floors fed to
+   The number is a CSS-grid column floor fed to
    `repeat(auto-fill, minmax(<floor>, 1fr))` — the `1fr` makes every
-   column grow to consume leftover width, so a 414px phone enlarges cells
-   instead of growing the margin.
+   column grow to consume leftover width, so a wider viewport packs more
+   pixels rather than leaving side margin.
    ============================================================ */
 
 /**
- * Minimum cell edge (px) per density. Condensed leads with a tappable
- * 28px floor (clears the 24px WCAG minimum with margin); Full floors at
- * 20px on coarse pointers so even the dense catalog overview never drops
- * below a near-target tap size (UX-1302) — the `auto-fill` columns just
- * reflow to fewer columns. The `1fr` companion column lets cells grow
- * past the floor to fill width.
+ * The fixed pixel cell edge (px). One value for the whole field — no
+ * density branch. ~9px keeps the spectrum dense (~7,144 pixels read as a
+ * smooth gamut) while leaving room for the ~6px overlay dot + 1px ring to
+ * stay legible.
  */
-export const CELL_MIN_PX: Record<GridDensity, number> = {
-  condensed: 28,
-  full: 20,
-};
+export const CELL_MIN_PX = 9;
+
+/** The overlay-dot diameter (px) and its near-black ring width (px). */
+export const DOT_SIZE_PX = 6;
+export const DOT_RING_PX = 1;
 
 /**
- * The `grid-template-columns` value for a density — `auto-fill` columns
- * with the density's min cell edge, each growing to `1fr` so the row
+ * The `grid-template-columns` value for the pixel field — `auto-fill`
+ * columns at the fixed cell edge, each growing to `1fr` so the row
  * consumes the full width (no wasted side margin). Returned as a string
  * for the inline grid style.
  */
-export function gridColumnsFor(density: GridDensity): string {
-  return "repeat(auto-fill, minmax(" + CELL_MIN_PX[density] + "px, 1fr))";
+export function gridColumnsFor(): string {
+  return "repeat(auto-fill, minmax(" + CELL_MIN_PX + "px, 1fr))";
 }
 
 /**
  * The `contain-intrinsic-size` placeholder height (px) for an off-screen
- * row group at a given density — the browser reserves this while the group
- * is skipped so scroll position stays stable. Tracks the cell min edge so
- * the reserved space is in the right ballpark for the real rendered height.
+ * row group — the browser reserves this while the group is skipped so
+ * scroll position stays stable. Tracks the fixed cell edge so the reserved
+ * space is in the right ballpark for the real rendered height.
  */
-export function intrinsicRowSizeFor(density: GridDensity): number {
-  return CELL_MIN_PX[density];
+export function intrinsicRowSize(): number {
+  return CELL_MIN_PX;
 }
 
 /* ============================================================

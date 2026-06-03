@@ -1,24 +1,27 @@
 /**
- * P16.4 — performance-pass pure helpers for the heat-sink grid.
+ * P16.4 / P17 — performance-pass pure helpers for the heat-sink grid.
  *
  * These back the client wrapper's render: row-chunking (so off-screen
  * groups skip layout/paint), the brand filter (narrow the working set),
- * the Condensed view (collection-only spectrum), and the default-density
- * pick (Condensed once the collection is big enough to read). All pure,
+ * and the fixed tiny-pixel sizing for the spectrum field. All pure,
  * unit-tested here; the client (HeatSinkGridClient) just composes them.
+ *
+ * P17 removed the condensed/full density mode entirely — the field always
+ * shows every catalog paint (modulo the brand filter), because the unowned
+ * pixels are the map of the full gamut. There is no `condensedCells`,
+ * `pickDefaultDensity`, `GridDensity`, or per-density sizing any more.
  */
 import { afterEach, describe, expect, test } from "vitest";
 import {
   CELLS_PER_ROW_GROUP,
   CELL_MIN_PX,
-  CONDENSED_DEFAULT_THRESHOLD,
+  DOT_RING_PX,
+  DOT_SIZE_PX,
   chunkCells,
-  condensedCells,
   detectMobileViewport,
   filterCellsByBrands,
   gridColumnsFor,
-  intrinsicRowSizeFor,
-  pickDefaultDensity,
+  intrinsicRowSize,
   rowGroupCount,
 } from "@/components/planner/heatSinkHelpers";
 import type { CoverageCell } from "@/db/queries/paintCoverage";
@@ -123,7 +126,11 @@ describe("filterCellsByBrands (P16.4 brand filter)", () => {
   });
 });
 
-describe("condensedCells (P16.4 condensed view)", () => {
+describe("P17 — the field shows every paint (no density filtering)", () => {
+  // The unowned pixels ARE the map of the gamut, so the cell set is NEVER
+  // narrowed by ownership — only the brand filter cuts cells. This pins
+  // that there is no collection-only "condensed" pass any more: an owned +
+  // wanted + none mix all survive into the rendered field.
   const cells = [
     cell("a", "Citadel", "owned"),
     cell("b", "Citadel", "none"),
@@ -131,71 +138,19 @@ describe("condensedCells (P16.4 condensed view)", () => {
     cell("d", "Citadel", "none"),
   ];
 
-  test("keeps only owned + wanted (the collection), drops gaps", () => {
-    const out = condensedCells(cells);
-    expect(out.map((c) => c.paint.id)).toEqual(["a", "c"]);
+  test("the brand-unfiltered set keeps every cell, gaps included", () => {
+    const out = filterCellsByBrands(cells, null);
+    expect(out.map((c) => c.paint.id)).toEqual(["a", "b", "c", "d"]);
   });
 
-  test("full set has more cells than condensed when gaps exist", () => {
-    expect(condensedCells(cells).length).toBeLessThan(cells.length);
-  });
-
-  test("collection with no gaps is unchanged in length", () => {
-    const allOwned = [cell("a", "Citadel", "owned"), cell("b", "Citadel", "wanted")];
-    expect(condensedCells(allOwned)).toHaveLength(2);
+  test("'none' (unowned) cells are never dropped — they are the map", () => {
+    const out = filterCellsByBrands(cells, null);
+    expect(out.some((c) => c.state === "none")).toBe(true);
+    expect(out.filter((c) => c.state === "none")).toHaveLength(2);
   });
 });
 
-describe("pickDefaultDensity (P16.4 default density)", () => {
-  const summary = (owned: number, wanted: number) => ({
-    owned,
-    wanted,
-    total: 7144,
-    ownedPct: 0,
-  });
-
-  test("Full when the collection is below the threshold", () => {
-    expect(pickDefaultDensity(summary(10, 5))).toBe("full");
-  });
-
-  test("Condensed at the threshold", () => {
-    expect(pickDefaultDensity(summary(CONDENSED_DEFAULT_THRESHOLD, 0))).toBe(
-      "condensed",
-    );
-  });
-
-  test("Condensed above the threshold, counting owned + wanted", () => {
-    expect(
-      pickDefaultDensity(
-        summary(CONDENSED_DEFAULT_THRESHOLD - 10, 10),
-      ),
-    ).toBe("condensed");
-  });
-
-  test("empty collection → Full (something to fill)", () => {
-    expect(pickDefaultDensity(summary(0, 0))).toBe("full");
-  });
-
-  // UX-1302 — a coarse-pointer / narrow client must NEVER default to Full
-  // (a wall of ~12px sub-target cells). It always lands on Condensed,
-  // regardless of collection size, including a brand-new 0-owned recruit.
-  test("mobile always defaults to Condensed regardless of collection", () => {
-    expect(pickDefaultDensity(summary(0, 0), true)).toBe("condensed");
-    expect(pickDefaultDensity(summary(10, 5), true)).toBe("condensed");
-    expect(
-      pickDefaultDensity(summary(CONDENSED_DEFAULT_THRESHOLD + 100, 0), true),
-    ).toBe("condensed");
-  });
-
-  test("desktop (isMobile=false) keeps the threshold behaviour", () => {
-    expect(pickDefaultDensity(summary(0, 0), false)).toBe("full");
-    expect(
-      pickDefaultDensity(summary(CONDENSED_DEFAULT_THRESHOLD, 0), false),
-    ).toBe("condensed");
-  });
-});
-
-describe("detectMobileViewport (UX-1301/1302 mobile gate)", () => {
+describe("detectMobileViewport (UX-1301 mobile gate)", () => {
   // The unit project runs in Node (no `window`). We install a fake
   // `globalThis.window` per case to exercise the coarse-pointer / narrow
   // branches, then tear it down so SSR-safety (the `undefined window`
@@ -238,53 +193,44 @@ describe("detectMobileViewport (UX-1301/1302 mobile gate)", () => {
 });
 
 /* ============================================================
-   P16.6 — mobile cell sizing (UX-1202)
+   P17 — pixel-field cell sizing (one fixed tiny edge, no density)
    ============================================================ */
 
-describe("CELL_MIN_PX (P16.6 mobile cell sizing)", () => {
-  test("Condensed cells clear the 24px WCAG 2.5.8 target floor", () => {
-    // Condensed is the default once a collection clears the threshold and
-    // the surface the painter actually taps — it must be tappable.
-    expect(CELL_MIN_PX.condensed).toBeGreaterThanOrEqual(24);
+describe("CELL_MIN_PX (P17 fixed pixel size)", () => {
+  test("is a single fixed number, not a per-density record", () => {
+    expect(typeof CELL_MIN_PX).toBe("number");
   });
 
-  test("Condensed cells are bigger than Full (reach over density)", () => {
-    expect(CELL_MIN_PX.condensed).toBeGreaterThan(CELL_MIN_PX.full);
+  test("is a tiny pixel edge so ~7,144 cells read as a colour field", () => {
+    // Small enough to be a pixel field, not a wall of chunky squares.
+    expect(CELL_MIN_PX).toBeLessThanOrEqual(12);
+    expect(CELL_MIN_PX).toBeGreaterThan(0);
   });
 
-  test("Full cells floor at >=20px (UX-1302 near-target overview)", () => {
-    // UX-1302: even the dense catalog overview never drops below a 20px
-    // near-target floor on coarse pointers — the auto-fill columns just
-    // reflow to fewer columns. Well clear of the old 7px / 12.6px walls.
-    expect(CELL_MIN_PX.full).toBeGreaterThanOrEqual(20);
+  test("leaves room for the overlay dot + its near-black ring to read", () => {
+    // The dot (DOT_SIZE_PX) plus a ring (DOT_RING_PX each side) must fit
+    // inside the cell edge so the ownership marker stays legible.
+    expect(DOT_SIZE_PX + DOT_RING_PX * 2).toBeLessThanOrEqual(CELL_MIN_PX);
+    expect(DOT_SIZE_PX).toBeGreaterThan(0);
   });
 });
 
-describe("gridColumnsFor (P16.6 reflow to full width)", () => {
-  test("uses auto-fill with the density's min cell edge and a 1fr companion", () => {
+describe("gridColumnsFor (P17 reflow to full width)", () => {
+  test("uses auto-fill with the fixed cell edge and a 1fr companion", () => {
     // `1fr` makes columns grow past the floor to consume leftover width,
-    // so a wider phone enlarges cells instead of growing side margin.
-    expect(gridColumnsFor("condensed")).toBe(
-      "repeat(auto-fill, minmax(" + CELL_MIN_PX.condensed + "px, 1fr))",
-    );
-    expect(gridColumnsFor("full")).toBe(
-      "repeat(auto-fill, minmax(" + CELL_MIN_PX.full + "px, 1fr))",
+    // so a wider viewport packs more pixels instead of growing side margin.
+    expect(gridColumnsFor()).toBe(
+      "repeat(auto-fill, minmax(" + CELL_MIN_PX + "px, 1fr))",
     );
   });
 
-  test("Condensed columns request a wider min than Full", () => {
-    // A crude but stable assertion that the Condensed template is the
-    // tappable one.
-    expect(gridColumnsFor("condensed")).toContain(
-      CELL_MIN_PX.condensed + "px",
-    );
-    expect(gridColumnsFor("full")).toContain(CELL_MIN_PX.full + "px");
+  test("takes no density argument", () => {
+    expect(gridColumnsFor.length).toBe(0);
   });
 });
 
-describe("intrinsicRowSizeFor (P16.6 scroll stability)", () => {
-  test("tracks the density's cell min edge so reserved space matches", () => {
-    expect(intrinsicRowSizeFor("condensed")).toBe(CELL_MIN_PX.condensed);
-    expect(intrinsicRowSizeFor("full")).toBe(CELL_MIN_PX.full);
+describe("intrinsicRowSize (P17 scroll stability)", () => {
+  test("tracks the fixed cell edge so reserved space matches", () => {
+    expect(intrinsicRowSize()).toBe(CELL_MIN_PX);
   });
 });

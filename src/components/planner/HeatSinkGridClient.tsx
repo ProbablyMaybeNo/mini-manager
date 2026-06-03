@@ -6,44 +6,46 @@ import type { CoverageGrid } from "@/db/queries/paintCoverage";
 import type { CoverageState } from "@/lib/paints/coverage";
 import {
   CELLS_PER_ROW_GROUP,
-  borderClassFor,
   chunkCells,
-  condensedCells,
   coverageReadout,
   detectMobileViewport,
+  dotClassFor,
   filterCellsByBrands,
   formatCount,
   gridColumnsFor,
-  intrinsicRowSizeFor,
-  pickDefaultDensity,
-  type GridDensity,
+  intrinsicRowSize,
 } from "./heatSinkHelpers";
 import { HeatSinkGapFillPopover } from "./HeatSinkGapFillPopover";
 
 /**
- * P16.4 — performance-pass client wrapper for the heat-sink grid.
+ * P16.4 / P17 — client wrapper for the heat-sink coverage MAP.
  *
- * The server cell (`HeatSinkGridCell`) fetches the composed grid +
- * brand list + the painter's saved brand-filter default once and hands
- * them down here. This piece owns the interaction:
+ * The server cell (`HeatSinkGridCell`) fetches the composed grid + brand
+ * list + the painter's saved brand-filter default once and hands them
+ * down here. This piece owns the interaction:
  *
- *   - **Brand filter** chip row — narrows the working set to the
- *     selected brands. Defaults to the painter's saved
- *     `library_brand_filter` (null = all). Cuts the node count.
- *   - **Condensed / Full toggle** — Condensed renders only owned+wanted
- *     cells (the painter's collection as a spectrum); Full renders the
- *     whole catalog. Default density is chosen from the summary so a
- *     painter with a real collection lands on Condensed.
- *   - **Row-chunking** — the visible set is split into row groups, each
- *     a `content-visibility:auto` + `contain-intrinsic-size` container
- *     so off-screen groups skip layout + paint. This is the headline
- *     fix for the 7,144-node render; the brand filter + condensed mode
- *     stack on top to shrink the set further.
+ *   - **Brand filter** chip row — narrows the working set to the selected
+ *     brands. Defaults to the painter's saved `library_brand_filter`
+ *     (null = all). Cuts the node count.
+ *   - **Row-chunking** — the visible set is split into row groups, each a
+ *     `content-visibility:auto` + `contain-intrinsic-size` container so
+ *     off-screen groups skip layout + paint. This is the headline fix for
+ *     the ~7,144-node render; the brand filter stacks on top to shrink the
+ *     set further.
  *
- * No raw hex (fills come from each paint's stored hex via inline style,
- * which is data, not a design token); borders use `@theme` tokens via
- * `borderClassFor`. The density toggle follows solid-fill Button
- * discipline — filled active chip, no `[ ]` brackets, no cyan.
+ * P17 redesign — the grid is a colour-space coverage MAP, not a square
+ * grid. EVERY catalog paint (modulo the brand filter) renders as ONE TINY
+ * hue-sorted pixel, forming a smooth spectrum FIELD: the unowned pixels
+ * ARE the map of the full gamut. Owned + wishlisted paints get an OVERLAID
+ * DOT (green for owned, yellow for wishlist, each with a near-black ring)
+ * so the painter's collection pops against the field. There is no density
+ * toggle and no ownership border any more — the field always shows the
+ * whole gamut.
+ *
+ * No raw hex (pixel fills come from each paint's stored hex via inline
+ * style, which is data, not a design token); the overlay dots + their ring
+ * use `@theme` tokens (`--color-green` / `--color-yellow` / `--color-bg`).
+ * No cyan.
  */
 
 interface Props {
@@ -61,8 +63,8 @@ export function HeatSinkGridClient({
 }: Props) {
   const { cells, summary } = grid;
 
-  // Brand selection. null = "all brands" (no narrowing). A Set drives
-  // the chip toggles; null and "every brand selected" both render as
+  // Brand selection. null = "all brands" (no narrowing). A Set drives the
+  // chip toggles; null and "every brand selected" both render as
   // unfiltered.
   const [selectedBrands, setSelectedBrands] = useState<ReadonlySet<
     string
@@ -72,42 +74,19 @@ export function HeatSinkGridClient({
 
   // Coarse-pointer / narrow-viewport gate. SSR-safe: false on the server
   // and first paint (desktop-first), re-derived client-side in the effect
-  // below. Drives the mobile-only Condensed default (UX-1302) and the
-  // gap-fill bottom sheet (UX-1301).
+  // below. Drives the gap-fill bottom sheet (UX-1301).
   const [isMobile, setIsMobile] = useState(false);
-
-  const [density, setDensity] = useState<GridDensity>(() =>
-    pickDefaultDensity(summary),
-  );
-
-  // On mount (client only), detect mobile and — unless the painter has
-  // already touched the toggle — snap a mobile client to Condensed (the
-  // tappable density). `userPickedDensity` guards against stomping an
-  // explicit choice. Re-checks on resize so a rotate/resize across the
-  // breakpoint keeps the default honest until the user overrides it.
-  const [userPickedDensity, setUserPickedDensity] = useState(false);
   useEffect(() => {
-    const sync = () => {
-      const mobile = detectMobileViewport();
-      setIsMobile(mobile);
-      setDensity((prev) =>
-        userPickedDensity ? prev : pickDefaultDensity(summary, mobile),
-      );
-    };
+    const sync = () => setIsMobile(detectMobileViewport());
     sync();
     window.addEventListener("resize", sync);
     return () => window.removeEventListener("resize", sync);
-  }, [summary, userPickedDensity]);
-
-  const chooseDensity = useCallback((next: GridDensity) => {
-    setUserPickedDensity(true);
-    setDensity(next);
   }, []);
 
   // P16.5 — gap-fill. `openPaintId` is the cell whose popover is open
   // (null = none). `wantedOverrides` holds paint ids optimistically
-  // flipped to "wanted" this session so their border turns amber without
-  // a server refetch; it's read back when re-tagging cells + candidates.
+  // flipped to "wanted" this session so their dot appears yellow without a
+  // server refetch; it's read back when re-tagging cells + candidates.
   const [openPaintId, setOpenPaintId] = useState<string | null>(null);
   const [wantedOverrides, setWantedOverrides] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -115,7 +94,7 @@ export function HeatSinkGridClient({
 
   // Effective coverage state for a paint: an optimistic "wanted" flip wins
   // over the original (unless the painter already owned it). Drives both
-  // the border colour and the popover's candidate tags.
+  // the overlay dot and the popover's candidate tags.
   const stateForPaint = useCallback(
     (paintId: string, fallback: CoverageState): CoverageState => {
       if (fallback === "owned") return "owned";
@@ -139,12 +118,12 @@ export function HeatSinkGridClient({
     return Array.from(selectedBrands);
   }, [selectedBrands, brands.length]);
 
-  // Compose the visible set: density first (collection vs catalog),
-  // then the brand filter. Memoized so toggling re-derives once.
-  const visibleCells = useMemo(() => {
-    const byDensity = density === "condensed" ? condensedCells(cells) : cells;
-    return filterCellsByBrands(byDensity, brandFilterArray);
-  }, [cells, density, brandFilterArray]);
+  // Compose the visible set: the whole gamut, narrowed only by the brand
+  // filter. Every catalog paint is a pixel — the unowned ones are the map.
+  const visibleCells = useMemo(
+    () => filterCellsByBrands(cells, brandFilterArray),
+    [cells, brandFilterArray],
+  );
 
   const rowGroups = useMemo(
     () => chunkCells(visibleCells, CELLS_PER_ROW_GROUP),
@@ -153,8 +132,8 @@ export function HeatSinkGridClient({
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands((prev) => {
-      // From "all" → start an explicit set seeded with every brand,
-      // then drop the toggled one so the first click narrows.
+      // From "all" → start an explicit set seeded with every brand, then
+      // drop the toggled one so the first click narrows.
       const base = prev === null ? new Set(brands) : new Set(prev);
       if (base.has(brand)) base.delete(brand);
       else base.add(brand);
@@ -200,28 +179,29 @@ export function HeatSinkGridClient({
         />
       </div>
 
-      {/* Density toggle — Condensed (collection only) vs Full (catalog).
-          Solid-fill discipline: active chip filled, inactive outlined.
-          No cyan, no brackets. */}
-      <div
-        role="group"
-        aria-label="Grid density"
-        className="inline-flex items-center gap-2"
+      {/* Legend — what the dots mean against the spectrum field. */}
+      <p
+        className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-sans text-[var(--color-fg-muted)]"
+        aria-label="Legend: green dot is owned, yellow dot is wishlisted"
       >
-        <DensityButton
-          active={density === "condensed"}
-          onClick={() => chooseDensity("condensed")}
-          label="Condensed"
-        />
-        <DensityButton
-          active={density === "full"}
-          onClick={() => chooseDensity("full")}
-          label="Full"
-        />
-      </div>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--color-green)] shadow-[0_0_0_1px_var(--color-bg)]"
+          />
+          owned
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--color-yellow)] shadow-[0_0_0_1px_var(--color-bg)]"
+          />
+          wishlisted
+        </span>
+      </p>
 
-      {/* Brand-filter chip row — narrows the working set. "All" resets
-          to the unfiltered seat; each brand chip toggles on/off. */}
+      {/* Brand-filter chip row — narrows the working set. "All" resets to
+          the unfiltered seat; each brand chip toggles on/off. */}
       <div
         role="group"
         aria-label="Filter by brand"
@@ -242,10 +222,11 @@ export function HeatSinkGridClient({
         ))}
       </div>
 
-      {/* The spectrum grid — split into row groups so off-screen groups
-          skip layout/paint via content-visibility + contain-intrinsic-
-          size. Each group is its own CSS grid; the auto-fill columns
-          keep the spectrum packed at any width. */}
+      {/* The spectrum field — every paint a tiny hue-sorted pixel, split
+          into row groups so off-screen groups skip layout/paint via
+          content-visibility + contain-intrinsic-size. Each group is its
+          own CSS grid; the auto-fill columns keep the field packed at any
+          width. Owned / wishlisted pixels carry an overlaid dot. */}
       <div
         role="grid"
         aria-label={
@@ -255,13 +236,11 @@ export function HeatSinkGridClient({
         }
         data-cell-count={visibleCells.length}
         data-row-group-count={rowGroups.length}
-        data-density={density}
         className="space-y-[1px]"
       >
         {rowGroups.length === 0 ? (
           <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug py-2">
-            No paints match this filter. Re-add a brand or switch to Full
-            to see the whole catalog.
+            No paints match this filter. Re-add a brand to see the spectrum.
           </p>
         ) : (
           rowGroups.map((group, groupIndex) => (
@@ -269,12 +248,11 @@ export function HeatSinkGridClient({
               key={groupIndex}
               role="row"
               data-row-group=""
-              data-cell-min={intrinsicRowSizeFor(density)}
+              data-cell-min={intrinsicRowSize()}
               className="grid gap-[1px] [content-visibility:auto]"
               style={{
-                gridTemplateColumns: gridColumnsFor(density),
-                containIntrinsicSize:
-                  "auto " + intrinsicRowSizeFor(density) + "px",
+                gridTemplateColumns: gridColumnsFor(),
+                containIntrinsicSize: "auto " + intrinsicRowSize() + "px",
               }}
             >
               {group.map((cell) => {
@@ -282,6 +260,7 @@ export function HeatSinkGridClient({
                   cell.paint.id,
                   cell.state,
                 );
+                const dotClass = dotClassFor(effectiveState);
                 const isOpen = openPaintId === cell.paint.id;
                 return (
                   <span
@@ -309,12 +288,28 @@ export function HeatSinkGridClient({
                         )
                       }
                       className={clsx(
-                        "block h-full w-full rounded-[1px] border cursor-pointer",
+                        "relative block h-full w-full rounded-[1px] cursor-pointer",
                         "hover:outline hover:outline-1 hover:outline-[var(--color-fg-muted)]",
-                        borderClassFor(effectiveState),
                       )}
                       style={{ backgroundColor: cell.paint.hex }}
-                    />
+                    >
+                      {/* Ownership marker: a centered dot (green owned /
+                          yellow wishlist) with a 1px near-black ring so it
+                          stays legible against any pixel colour. Unowned
+                          pixels render no dot — they ARE the gamut map. */}
+                      {dotClass ? (
+                        <span
+                          aria-hidden
+                          data-dot={effectiveState}
+                          className={clsx(
+                            "pointer-events-none absolute left-1/2 top-1/2",
+                            "h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
+                            "shadow-[0_0_0_1px_var(--color-bg)]",
+                            dotClass,
+                          )}
+                        />
+                      ) : null}
+                    </button>
                     {isOpen ? (
                       <HeatSinkGapFillPopover
                         cell={cell}
@@ -334,39 +329,10 @@ export function HeatSinkGridClient({
       </div>
 
       <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
-        Your paint collection as a hue-sorted spectrum. Green borders are
-        owned, amber are on your wishlist. Condensed shows only your
-        collection; Full shows the whole catalog.
+        Your library as a hue-sorted spectrum — the whole gamut, every
+        paint a pixel. Green dot = owned · yellow dot = wishlisted.
       </p>
     </div>
-  );
-}
-
-function DensityButton({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={clsx(
-        "tap-target inline-flex items-center justify-center px-3 py-1",
-        "font-mono text-2xs font-bold uppercase tracking-[0.08em]",
-        "border rounded-sm transition-colors",
-        active
-          ? "bg-[var(--color-green)] text-[var(--color-bg)] border-[var(--color-green)]"
-          : "text-[var(--color-green)] border-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_14%,transparent)]",
-      )}
-    >
-      {label}
-    </button>
   );
 }
 

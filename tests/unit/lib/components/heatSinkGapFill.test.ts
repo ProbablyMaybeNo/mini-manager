@@ -205,7 +205,7 @@ describe("HeatSinkGridClient — tap opens popover + optimistic border (P16.5)",
 
   test("optimistic wanted override flips a none cell's state to wanted", () => {
     // markWanted adds to wantedOverrides; stateForPaint reads it back so a
-    // not-owned cell renders wanted (amber) without a refetch.
+    // not-owned cell renders a yellow wishlist dot without a refetch.
     expect(src).toContain("wantedOverrides");
     expect(src).toMatch(/stateForPaint[\s\S]*wantedOverrides\.has/);
   });
@@ -214,9 +214,16 @@ describe("HeatSinkGridClient — tap opens popover + optimistic border (P16.5)",
     expect(src).toMatch(/fallback === "owned"\)\s*return "owned"/);
   });
 
-  test("the cell border uses the effective (optimistic) state, not the raw one", () => {
+  test("the overlay dot uses the effective (optimistic) state, not the raw one", () => {
+    // P17: ownership is an overlaid dot keyed off the effective state, not
+    // a coloured border. dotClassFor(effectiveState) drives the dot fill.
     expect(src).toContain("stateForPaint(");
-    expect(src).toMatch(/borderClassFor\(effectiveState\)/);
+    expect(src).toMatch(/dotClassFor\(effectiveState\)/);
+  });
+
+  test("P17: no coloured-border ownership indicator on the cell", () => {
+    // The old border-based marker is gone — ownership is a dot overlay.
+    expect(src).not.toContain("borderClassFor");
   });
 
   test("candidates rank against the full catalog cells the client holds", () => {
@@ -316,26 +323,74 @@ describe("HeatSinkGapFillPopover — mobile bottom sheet via explicit CSS (UX-13
   });
 });
 
-describe("HeatSinkGridClient — mobile cell sizing + chips (UX-1202 / UX-1210)", () => {
+describe("HeatSinkGridClient — pixel field + overlay dots (P17)", () => {
   const src = read("src/components/planner/HeatSinkGridClient.tsx");
 
-  test("the grid columns reflow per density via the sizing helper", () => {
-    // gridColumnsFor(density) drives auto-fill columns so cells fill the
-    // width and grow with the viewport instead of leaving margin.
-    expect(src).toContain("gridColumnsFor(density)");
-    expect(src).toContain("gridTemplateColumns: gridColumnsFor(density)");
+  test("the grid columns reflow via the fixed-size helper (no density arg)", () => {
+    // gridColumnsFor() drives auto-fill columns at the fixed tiny edge so
+    // pixels fill the width and pack more with the viewport.
+    expect(src).toContain("gridColumnsFor()");
+    expect(src).toContain("gridTemplateColumns: gridColumnsFor()");
+    expect(src).not.toContain("gridColumnsFor(density)");
   });
 
-  test("off-screen row groups reserve the density-correct intrinsic size", () => {
-    expect(src).toContain("intrinsicRowSizeFor(density)");
+  test("off-screen row groups reserve the fixed intrinsic size", () => {
+    expect(src).toContain("intrinsicRowSize()");
     expect(src).toContain("containIntrinsicSize");
     expect(src).toContain("[content-visibility:auto]");
+    expect(src).not.toContain("intrinsicRowSizeFor");
   });
 
-  test("no leftover hard-coded 7px column floor", () => {
-    // The old `minmax(7px, 1fr)` is gone — sizing is delegated to the
-    // helper so density controls the floor.
-    expect(src).not.toContain("minmax(7px, 1fr)");
+  test("P17: every paint is a pixel — the cell set is NOT density-filtered", () => {
+    // The visible set is the full catalog narrowed only by the brand
+    // filter; the unowned 'none' pixels stay (they are the gamut map).
+    expect(src).toMatch(/filterCellsByBrands\(cells, brandFilterArray\)/);
+    expect(src).not.toContain("condensedCells");
+    expect(src).not.toContain("pickDefaultDensity");
+  });
+
+  test("P17: owned/wishlist render an overlay dot via dotClassFor", () => {
+    expect(src).toContain("dotClassFor(effectiveState)");
+    // The dot only renders for owned/wishlist (dotClass truthy); unowned
+    // pixels render no dot.
+    expect(src).toMatch(/dotClass \?/);
+  });
+
+  test("P17: the dot carries a near-black ring (legible over any pixel)", () => {
+    // box-shadow ring using the near-black bg token so the dot reads on
+    // any underlying spectrum colour.
+    expect(src).toContain("shadow-[0_0_0_1px_var(--color-bg)]");
+  });
+
+  test("P17: dots use the green/yellow tokens, never amber or cyan", () => {
+    // dotClassFor maps owned→green, wishlist→yellow; the legend swatches
+    // mirror that. No amber ownership marker, no cyan anywhere.
+    expect(src).toContain("bg-[var(--color-green)]");
+    expect(src).toContain("bg-[var(--color-yellow)]");
+    expect(src).not.toContain("--color-cyan");
+  });
+
+  test("P17: no coloured-border ownership indicator remains", () => {
+    expect(src).not.toContain("borderClassFor");
+  });
+
+  test("P17: the density toggle is gone entirely", () => {
+    expect(src).not.toContain("DensityButton");
+    expect(src).not.toContain('density === "condensed"');
+    expect(src).not.toContain("GridDensity");
+    expect(src).not.toContain("Condensed");
+  });
+
+  test("P17: legend copy names the green-owned / yellow-wishlist dots", () => {
+    expect(src).toMatch(/green.*owned/i);
+    expect(src).toMatch(/yellow.*wishlist/i);
+    // The old condensed/full microcopy is gone.
+    expect(src).not.toMatch(/Condensed shows only your collection/i);
+  });
+
+  test("P17: copy frames the field as a hue-sorted spectrum / whole gamut", () => {
+    expect(src).toMatch(/hue-sorted spectrum/i);
+    expect(src).toMatch(/gamut|whole gamut|every paint a pixel/i);
   });
 
   test("brand chips are real ≥44px-tappable chips that wrap, not prose", () => {
@@ -350,22 +405,8 @@ describe("HeatSinkGridClient — mobile cell sizing + chips (UX-1202 / UX-1210)"
     expect(src).toMatch(/aria-label="Filter by brand"[\s\S]*pr-1/);
   });
 
-  // UX-1302 — the launch-gating density-default regression. A mobile
-  // client must default to Condensed (the tappable density), never Full
-  // (the ~12px sub-target wall), no matter the collection size.
-  test("UX-1302: grid passes the mobile gate into pickDefaultDensity", () => {
+  test("the gap-fill popover still receives the mobile gate (UX-1301)", () => {
     expect(src).toContain("detectMobileViewport");
-    expect(src).toMatch(/pickDefaultDensity\(summary, mobile\)/);
-  });
-
-  test("UX-1302: density re-syncs to the mobile default until the user picks", () => {
-    // chooseDensity sets userPickedDensity so an explicit choice is never
-    // stomped, but before that a mobile client snaps to Condensed.
-    expect(src).toContain("userPickedDensity");
-    expect(src).toContain("chooseDensity");
-  });
-
-  test("UX-1302: the gap-fill popover receives the same mobile gate", () => {
     expect(src).toMatch(/isMobile=\{isMobile\}/);
   });
 
@@ -381,15 +422,6 @@ describe("HeatSinkGridClient — mobile cell sizing + chips (UX-1202 / UX-1210)"
   test("UX-1315: the active brand chip flips to the solid amber fill", () => {
     expect(src).toMatch(
       /bg-\[var\(--color-amber\)\] text-\[var\(--color-bg\)\] border-\[var\(--color-amber\)\]/,
-    );
-  });
-
-  test("UX-1315: the density toggle has a visible active (filled) state", () => {
-    // Active = solid green fill, inactive = outlined — a clear local
-    // selected state (this is the planner-local toggle, not the shared
-    // segmented primitive).
-    expect(src).toMatch(
-      /active[\s\S]*bg-\[var\(--color-green\)\] text-\[var\(--color-bg\)\]/,
     );
   });
 });
