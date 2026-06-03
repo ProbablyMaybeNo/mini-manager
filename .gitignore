@@ -52,3 +52,7 @@ dev-server.log
 .playwright-mcp/
 ux-audit/*.png
 ux-audit/**/*.png
+# stray audit screenshots the auditor sometimes drops in the repo root
+finding-*.png
+v1*-*.png
+r1*-*.png
