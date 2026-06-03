@@ -1,4 +1,23 @@
-import type { Project } from "@/db/schema";
+import type { Project, ProjectType } from "@/db/schema";
+
+/**
+ * Label for the "add a child project" CTA, based on the PARENT's type.
+ * Army / Warband contain Units; a Unit contains Models (a "model" is a
+ * 1-model Unit sub-project per the P13.4 fold). Ross 2026-06-03: adding
+ * "units to a unit" read as confusing — the CTA now reflects the level.
+ */
+export function childAddLabel(parentType: ProjectType): string {
+  return parentType === "Unit" ? "+ Model" : "+ Unit";
+}
+
+/**
+ * Singular/plural noun for a child of `parentType` — "Model" under a
+ * Unit, "Unit" under an Army/Warband. Used in empty-state copy + headings.
+ */
+export function childNoun(parentType: ProjectType, plural = false): string {
+  const base = parentType === "Unit" ? "Model" : "Unit";
+  return plural ? `${base}s` : base;
+}
 
 /**
  * Per-unit progress percentage.

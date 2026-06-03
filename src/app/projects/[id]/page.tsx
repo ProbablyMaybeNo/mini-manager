@@ -13,6 +13,8 @@ import { ProjectTree } from "@/components/ProjectTree";
 import { AggregateCountersDisplay } from "@/components/AggregateCountersDisplay";
 import {
   aggregateCounters,
+  childAddLabel,
+  childNoun,
   displayStatus,
   isLeafProject,
   progressPercent,
@@ -253,7 +255,7 @@ export default async function ProjectDetailPage({
           variant="success"
           size="sm"
         >
-          + Add unit
+          {childAddLabel(project.type)}
         </Button>
       ) : null}
       <Button
@@ -262,7 +264,7 @@ export default async function ProjectDetailPage({
         variant="warning"
         size="sm"
       >
-        + Wishlist
+        Shop for this →
       </Button>
     </div>
   );
@@ -325,7 +327,7 @@ export default async function ProjectDetailPage({
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6">
           <div className="order-2 md:order-1">
             <Card
-              title={`Sub-projects · ${children.length}`}
+              title={`${childNoun(project.type, true)} · ${children.length}`}
               headerActions={
                 <Button
                   as="a"
@@ -333,14 +335,15 @@ export default async function ProjectDetailPage({
                   variant="success"
                   size="sm"
                 >
-                  + Add unit
+                  {childAddLabel(project.type)}
                 </Button>
               }
             >
               {children.length === 0 ? (
                 <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-relaxed">
-                  Add Units under this {project.type.toLowerCase()} to track them.
-                  Each child's stage counters roll up into the aggregated view on the right.
+                  Add {childNoun(project.type, true)} under this{" "}
+                  {project.type.toLowerCase()} to track them. Each child's stage
+                  counters roll up into the aggregated view on the right.
                 </p>
               ) : (
                 <ProjectTree projects={children} />

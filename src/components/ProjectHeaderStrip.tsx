@@ -5,6 +5,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
 import { EditableProjectTitle } from "@/components/EditableProjectTitle";
+import { childAddLabel } from "@/lib/progress";
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
@@ -24,13 +25,6 @@ const TYPE_CHIP: Readonly<Record<ProjectType, string>> = {
   "Terrain Piece": "type-chip-green",
   Diorama: "type-chip-purple",
 };
-
-/** P13.4 — every parent type that can host a sub-project hosts Units
- *  only, so the CTA always reads "+ Add unit". Terrain Piece / Diorama
- *  are leaf-only; they never render the CTA. */
-function addChildCtaLabel(_type: ProjectType): string {
-  return "+ Add unit";
-}
 
 interface Props {
   projectId: string;
@@ -92,7 +86,7 @@ export function ProjectHeaderStrip({
             size="sm"
             className="ml-auto"
           >
-            {addChildCtaLabel(type)}
+            {childAddLabel(type)}
           </Button>
         ) : null}
       </div>
