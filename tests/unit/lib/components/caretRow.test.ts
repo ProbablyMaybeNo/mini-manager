@@ -46,8 +46,11 @@ describe(".caret-row CSS utility", () => {
 
   test("transition is gated on prefers-reduced-motion", () => {
     expect(css).toContain("prefers-reduced-motion: reduce");
-    // The block after the media query should set transition: none on caret-row.
-    const reducedMotionIdx = css.lastIndexOf("prefers-reduced-motion: reduce");
+    // A reduced-motion block sets transition: none on caret-row. Search from
+    // the FIRST reduced-motion query (not the last) — globals.css has several
+    // such blocks (h1 glow, glow utilities, toast, the landing boot reveal),
+    // and only caret-row's needs to follow one of them.
+    const reducedMotionIdx = css.indexOf("prefers-reduced-motion: reduce");
     const caretNoneIdx = css.indexOf(".caret-row::before", reducedMotionIdx);
     expect(caretNoneIdx).toBeGreaterThan(reducedMotionIdx);
   });
