@@ -7,7 +7,7 @@ import { PanelLeftClose, Filter } from "lucide-react";
 
 import type { Paint, PaintFilter, PaintType } from "@/lib/paints/types";
 import { paintTypes } from "@/lib/paints/types";
-import { HUE_BANDS } from "@/lib/paints/filters";
+import { HUE_BANDS, countActiveFilters } from "@/lib/paints/filters";
 import { writeFilterToParams } from "@/lib/paints/filterUrl";
 import { useFilterRailCollapsed } from "@/lib/hooks/useFilterRailCollapsed";
 import { TypeIcon } from "./TypeIcon";
@@ -353,18 +353,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function hasActiveFilter(f: PaintFilter): boolean {
   return countActiveFilters(f) > 0;
-}
-
-function countActiveFilters(f: PaintFilter): number {
-  return (
-    f.brands.length +
-    f.lines.length +
-    f.types.length +
-    f.hueBands.length +
-    (f.hexQuery.length > 0 ? 1 : 0) +
-    (f.textQuery.length > 0 ? 1 : 0) +
-    (f.ownedOnly ? 1 : 0)
-  );
 }
 
 function withHash(s: string): string {

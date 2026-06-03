@@ -459,7 +459,9 @@ The substrate every later phase relies on. No IA change — pure systemic hygien
 
 ---
 
-### M2 — Navigation & IA: mobile search + filter disclosure + header  · Effort M · Impact 5
+### M2 — Navigation & IA: mobile search + filter disclosure + header  · Effort M · Impact 5 ✅ SHIPPED
+
+> **Shipped 2026-06-03:** Mobile search trigger added to `MobileHeader` (dispatches `mm:open-search`; GlobalSearch now listens for it — keyboard `/`+⌘K unchanged); removed the near-zero-value "● ON" pill to reclaim width. Always-visible Library search field (writes shared `q` param). Library mobile FILTERS button reskinned cyan→ghost-outline with an amber active-count badge. Wishlist STATUS/CATEGORY/VENDOR + the /user ~40-brand list collapsed behind mobile disclosures with selected-count badges. `countActiveFilters` promoted to a shared `filters.ts` export (FilterRail dedup'd). ViewModeToggle was already yellow/aria-pressed (no cyan). +11 tests.
 
 Restores recognition-over-recall and content-over-chrome.
 

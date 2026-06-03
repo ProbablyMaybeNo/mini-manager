@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import { OPEN_SEARCH_EVENT } from "@/components/search/GlobalSearch";
 
 export interface MobileHeaderUser {
   name: string | null;
@@ -48,20 +49,34 @@ export function MobileHeader({
       </Link>
 
       <span className="inline-flex items-center gap-2">
-        <span
-          className="inline-flex items-center gap-1 font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"
-          aria-label="Online"
+        {/* M2 — first-class mobile search trigger. Opens the existing
+            GlobalSearch overlay (keyboard-only on desktop) via a window
+            event so recall-from-anywhere works by tap on a phone. The
+            near-zero-value "● ON" status pill was removed to reclaim the
+            scarce header width (content over chrome). */}
+        <button
+          type="button"
+          aria-label="Search"
+          onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))}
+          className={clsx(
+            "tap-target inline-flex items-center justify-center",
+            "h-8 w-8 rounded-sm border font-mono",
+            "border-[var(--color-border-strong)] text-[var(--color-fg-muted)]",
+            "hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]"
+          )}
         >
-          <span
+          <svg
             aria-hidden
-            className="inline-block h-2 w-2 rounded-full bg-[var(--color-green)]"
-            style={{
-              boxShadow:
-                "0 0 6px color-mix(in srgb, var(--color-green) 60%, transparent)",
-            }}
-          />
-          ON
-        </span>
+            viewBox="0 0 16 16"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          >
+            <circle cx="7" cy="7" r="4.5" />
+            <line x1="10.5" y1="10.5" x2="14" y2="14" strokeLinecap="round" />
+          </svg>
+        </button>
         <Link
           href="/user"
           aria-current={userActive ? "page" : undefined}

@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 import type { Paint } from "@/lib/paints/types";
-import { applyAllFilters } from "@/lib/paints/filters";
+import { applyAllFilters, countActiveFilters } from "@/lib/paints/filters";
 import { sortPaints } from "@/lib/paints/sort";
 import {
   filterFromSearchParams,
@@ -56,6 +56,7 @@ export function LibraryPageClient({
   }, [sp, defaultBrands]);
   const sortMode = useMemo(() => sortFromSearchParams(sp), [sp]);
   const selectedId = useMemo(() => selectedPaintFromSearchParams(sp), [sp]);
+  const activeFilterCount = useMemo(() => countActiveFilters(filter), [filter]);
 
   const ownedCounts = useMemo(() => {
     const out = new Map<string, number>();
@@ -107,16 +108,35 @@ export function LibraryPageClient({
           right corner. Now hidden anywhere ≥ md (the rail's breakpoint)
           AND anywhere ≥ xl (defence-in-depth against future breakpoint
           drift). */}
+      {/* M2 — no cyan on the filter trigger. Was variant="secondary"
+          (solid cyan fill, reading as a primary CTA); flipped to a ghost
+          outline so it reads as a disclosure affordance, not the page's
+          main action. The active-filter count surfaces selection state by
+          label, not hue. */}
       <Button
         type="button"
         onClick={() => setMobileFilterOpen(true)}
-        variant="secondary"
+        variant="ghost"
+        tone="outline"
         size="sm"
         className="lg:hidden fixed top-14 right-3 z-30"
         aria-label="Open filters"
         aria-expanded={mobileFilterOpen}
       >
         Filters
+        {activeFilterCount > 0 ? (
+          <span
+            className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-sm bg-[var(--color-amber)] text-[var(--color-bg)] font-mono text-2xs leading-none"
+            aria-hidden
+          >
+            {activeFilterCount}
+          </span>
+        ) : null}
+        <span className="sr-only">
+          {activeFilterCount > 0
+            ? `, ${activeFilterCount} active`
+            : ""}
+        </span>
       </Button>
 
       {/* Mobile bottom-sheet drawer */}
@@ -167,10 +187,13 @@ export function LibraryPageClient({
           lets the column collapse to the viewport so the table's own
           truncation/clip can take effect. */}
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-        <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
-          <span className="font-mono text-2xs uppercase tracking-[0.12em] text-[var(--color-fg-muted)]">
-            View
-          </span>
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
+          {/* M2 — always-visible Library search field. Typing a known
+              paint name is faster than chip-hunting (recognition over
+              recall on a 7,144-paint catalog). Writes the same `q` URL
+              param the FilterRail's search box uses, so the two stay in
+              sync. The View toggle sits to the right. */}
+          <LibrarySearchField initial={filter.textQuery} />
           <ViewModeToggle mode={viewMode} onChange={setViewMode} />
         </div>
         {viewMode === "list" ? (
@@ -194,6 +217,53 @@ export function LibraryPageClient({
         allPaints={paints}
       />
     </div>
+  );
+}
+
+/**
+ * M2 — always-visible Library search input. Debounced; writes the shared
+ * `q` URL param (the same one `FilterRail`'s free-text box uses) so the
+ * list filters by paint name/brand/sku without opening the filter sheet.
+ */
+function LibrarySearchField({ initial }: { initial: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const sp = useSearchParams();
+  const [local, setLocal] = useState(initial);
+
+  // Keep in sync when the URL changes from elsewhere (e.g. the filter
+  // sheet's own search box, or a global-search deep-link).
+  useEffect(() => {
+    setLocal(initial);
+  }, [initial]);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (local === initial) return;
+      const params = new URLSearchParams(sp?.toString() ?? "");
+      if (local.trim()) params.set("q", local);
+      else params.delete("q");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }, 200);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [local]);
+
+  return (
+    <input
+      type="search"
+      value={local}
+      onChange={(e) => setLocal(e.target.value)}
+      placeholder="Search paints…"
+      aria-label="Search the paint catalog"
+      className={
+        "flex-1 min-w-0 px-3 py-1.5 rounded-sm font-mono text-sm " +
+        "bg-[var(--color-bg-panel)] text-[var(--color-fg)] frame " +
+        "placeholder:text-[var(--color-fg-muted)] " +
+        "focus:outline-2 focus:outline-[var(--color-accent)]"
+      }
+    />
   );
 }
 

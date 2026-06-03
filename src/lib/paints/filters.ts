@@ -163,5 +163,23 @@ export function applyAllFilters(
   return out;
 }
 
+/**
+ * Count the active dimensions of a PaintFilter — drives the
+ * active-filter badge on the FilterRail collapsed chip AND the M2
+ * always-visible mobile "Filters" disclosure button. Shared so the two
+ * badges can never drift apart.
+ */
+export function countActiveFilters(f: PaintFilter): number {
+  return (
+    f.brands.length +
+    f.lines.length +
+    f.types.length +
+    f.hueBands.length +
+    (f.hexQuery.length > 0 ? 1 : 0) +
+    (f.textQuery.length > 0 ? 1 : 0) +
+    (f.ownedOnly ? 1 : 0)
+  );
+}
+
 // Exported for downstream components (detail panel harmonies, etc).
 export const _internal = { parseHex, rgbToHue };

@@ -35,6 +35,11 @@ export function LibraryBrandFilterCard({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
+  // M2 — the ~40-brand checkbox list shipped fully expanded (a
+  // progressive-disclosure miss on a long settings page). Collapse it
+  // behind a "Brands (N selected)" toggle; the count stays visible so
+  // the painter knows the state without expanding.
+  const [listOpen, setListOpen] = useState(false);
 
   const toggle = (brand: string) => {
     setSelected((prev) => {
@@ -78,6 +83,23 @@ export function LibraryBrandFilterCard({
         sessions — the /library page reads this filter on every load
         and uses it as the initial state.
       </p>
+      <Button
+        type="button"
+        variant="ghost"
+        tone="outline"
+        size="sm"
+        className="mb-3"
+        aria-expanded={listOpen}
+        aria-controls="brand-filter-list"
+        onClick={() => setListOpen((v) => !v)}
+      >
+        {listOpen ? "Hide brands" : "Brands"}
+        <span className="ml-1.5 inline-flex items-center justify-center px-1 rounded-sm bg-[var(--color-amber)] text-[var(--color-bg)] font-mono text-2xs leading-none">
+          {selectedCount}/{availableBrands.length}
+        </span>
+      </Button>
+      {listOpen ? (
+        <>
       <div className="flex items-center gap-3 mb-3 flex-wrap">
         <Button
           type="button"
@@ -102,6 +124,7 @@ export function LibraryBrandFilterCard({
         </span>
       </div>
       <ul
+        id="brand-filter-list"
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 mb-3"
         role="list"
         aria-label="Brands"
@@ -134,6 +157,8 @@ export function LibraryBrandFilterCard({
           );
         })}
       </ul>
+        </>
+      ) : null}
       {error ? (
         <p role="alert" className="text-2xs font-mono text-[var(--color-red)] mb-2">
           {error}

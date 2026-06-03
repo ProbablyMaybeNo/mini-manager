@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { clsx } from "clsx";
 
 import {
   wishlistCategories,
@@ -9,6 +10,7 @@ import {
   type WishlistStatus,
 } from "@/db/schema";
 import { FilterChip } from "@/components/ui/FilterChip";
+import { Button } from "@/components/ui/Button";
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: WishlistStatus | "All"; label: string }> = [
   { value: "WISHLIST", label: "Wishlist" },
@@ -32,6 +34,18 @@ export function WishlistFilters({
   const pathname = usePathname();
   const sp = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  // M2 — filter disclosure parity with Library: the STATUS/CATEGORY/
+  // VENDOR block is collapsed behind a FILTERS button on mobile so the
+  // list is the first thing on screen (it used to eat the whole first
+  // viewport). Expanded inline on lg+ where there's room.
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Active-filter count for the disclosure badge. Default status
+  // (WISHLIST) + no category + no vendor = 0 active.
+  const activeCount =
+    (status !== "WISHLIST" ? 1 : 0) +
+    (category !== null ? 1 : 0) +
+    (selectedVendor ? 1 : 0);
 
   function setParam(key: string, value: string | null) {
     const params = new URLSearchParams(sp?.toString() ?? "");
@@ -44,10 +58,40 @@ export function WishlistFilters({
   }
 
   return (
-    <div
-      className="flex flex-wrap items-center gap-2"
-      data-pending={isPending ? "true" : undefined}
-    >
+    <div data-pending={isPending ? "true" : undefined}>
+      {/* Mobile disclosure trigger — ghost outline, no cyan fill. */}
+      <Button
+        type="button"
+        variant="ghost"
+        tone="outline"
+        size="sm"
+        className="lg:hidden"
+        aria-expanded={mobileOpen}
+        aria-controls="wishlist-filter-body"
+        onClick={() => setMobileOpen((v) => !v)}
+      >
+        Filters
+        {activeCount > 0 ? (
+          <span
+            className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-sm bg-[var(--color-amber)] text-[var(--color-bg)] font-mono text-2xs leading-none"
+            aria-hidden
+          >
+            {activeCount}
+          </span>
+        ) : null}
+        <span className="sr-only">
+          {activeCount > 0 ? `, ${activeCount} active` : ""}
+        </span>
+      </Button>
+
+      <div
+        id="wishlist-filter-body"
+        className={clsx(
+          "flex-wrap items-center gap-2 mt-2 lg:mt-0",
+          mobileOpen ? "flex" : "hidden",
+          "lg:flex",
+        )}
+      >
       <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] mr-1">
         Status
       </span>
@@ -102,6 +146,7 @@ export function WishlistFilters({
           </label>
         </>
       ) : null}
+      </div>
     </div>
   );
 }

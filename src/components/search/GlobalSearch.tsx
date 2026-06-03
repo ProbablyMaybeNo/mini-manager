@@ -22,7 +22,13 @@ interface FlatHit {
  * root layout. Paints come from the Dexie loader; wishlist from a tiny
  * route handler. Both populate on first open — there's no point paying
  * for them on every page load.
+ *
+ * M2 — also opened by tap on touch: any control can dispatch the
+ * `mm:open-search` window event (the mobile header search button + the
+ * Library page trigger do) to surface the same overlay where `/` and
+ * ⌘K are unreachable. Keyboard parity is unchanged.
  */
+export const OPEN_SEARCH_EVENT = "mm:open-search";
 export function GlobalSearch() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -56,6 +62,17 @@ export function GlobalSearch() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
+
+  // M2 — tap-to-open bridge. The mobile header search button + the
+  // Library trigger dispatch `mm:open-search` so the overlay is reachable
+  // by touch (where `/` and ⌘K can't be pressed).
+  useEffect(() => {
+    function onOpen() {
+      setOpen(true);
+    }
+    window.addEventListener(OPEN_SEARCH_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SEARCH_EVENT, onOpen);
+  }, []);
 
   // Focus the input each time the popover opens; lazy-load data once.
   useEffect(() => {
