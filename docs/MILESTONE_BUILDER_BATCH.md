@@ -1,0 +1,116 @@
+# Mini Manager — Milestone Builder Batch (UX/UI Overhaul)
+
+> Execution manifest for `milestone-builder` / `/next-milestone`. Assembled 2026-06-03 after a
+> Cursor crash to recover and continue the mobile + desktop UX/UI overhaul.
+> **Source of truth for each item is its plan section** — this file is the *running order*, not a
+> re-spec. Read the cited section before building.
+>
+> - Mobile plan: `docs/MOBILE_UXUI_UPGRADE_PLAN.md` (milestones **M1–M7**)
+> - Desktop plan: `docs/DESKTOP_UXUI_UPGRADE_PLAN.md` (milestones **D1–D8**)
+>
+> **Per-item gate (every item):** `npm run typecheck` clean **and** `npm test` green before commit.
+> Commit style: `feat(mN|dN): …` / `fix(mN|dN): …`, one commit per milestone, push on green.
+> **HALT and surface to lead** if an item is flagged `⚠ DECISION` or tests fail.
+
+---
+
+## Status after crash recovery
+
+- **Done & committed locally (⚠ were unpushed when Cursor crashed — push these first):**
+  - `70390dc` **M1** foundations (type floor + target-size audit net)
+  - `54ea719` desktop plan doc (D1–D8)
+  - `16f5e7c` **M2** mobile search + filter disclosure + header reclaim
+- **On GitHub (origin/main):** everything through `afa38a7` (mobile plan doc) + the A/B/C feedback
+  batch (`9eb8465` planner A1–A4, `17f9b51` recipes B1–B5, `d813015` projects C1/C3/C4).
+- **Remaining (this batch):** Mobile **M3, M4, M5, M6, M7** · Desktop **D1–D8**. No D-work has started.
+
+> The A/B/C feedback batch has landed, so the "sequence after the feedback batch" precondition for
+> **M3 / M4 / M5** is already satisfied.
+
+---
+
+## Build order
+
+Mobile and desktop are responsive treatments of the **same code** on shared breakpoints, so several
+items are *shared builds* (build once, render per breakpoint). Build top-to-bottom; items in the
+same group with no dependency between them may run in parallel.
+
+### Group 0 — recover (do first, not code)
+- [ ] **PUSH** the 3 unpushed commits to `origin/main` (`git push`). Recovers the crash; unblocks nothing technical but stops the work being lost.
+
+### Group 1 — foundations
+- [ ] **D1 — Desktop shell & layout foundations** · M · Impact 4 · `DESKTOP §D1`
+      Width caps + breakpoints, global Comfortable/Compact **density toggle**, focus-ring pass on the
+      CRT surface, `aria-sort` on sortable headers. Substrate for every desktop pane/table below.
+      *(Mobile M1 foundations already shipped — this is its desktop counterpart.)*
+
+### Group 2 — the headline re-architecture (SHARED — coordinate, build the shared route once)
+- [ ] **M4 + D2 + D6 (shared core) — `/projects` re-architecture, `/planner` route, glanceable collection grid**
+      · L · Impact 5 · `MOBILE §M4` + `DESKTOP §D2` + `DESKTOP §D6` ⚠ DECISION
+      The single biggest move and the most entangled. Build the shared pieces once:
+      - **Collection grid → one glanceable element** (static canvas/CSS gradient + sparse owned/wishlist
+        dots), replacing the ~7,144 `<button aria-haspopup="dialog">` cells. (Mobile M4.2 ≡ Desktop D6.2.)
+      - **`/planner` route** — built once; rendered single-pane on mobile, single-screen dashboard on desktop.
+      - **`/projects` split:** mobile → `/projects` + `/focus` + `/planner` routes (one pane);
+        desktop → master-detail workspace (project list left + FOCUS inspector right), only PLANNER leaves.
+      - **Gap-fill:** mobile bottom sheet · desktop persistent right side panel.
+      - Calendar cell hit-region ≥44 (mobile) / ≥24 (desktop).
+      **⚠ DECISION before starting:** confirm the routes-vs-workspace split and whether FOCUS stays
+      in-pane on desktop. This re-architecture spans `app/projects`, new `app/focus` + `app/planner`,
+      `PlannerSection`, `HeatSinkGridClient`, `FocusPanel`. Acceptance: `/projects` interactive nodes
+      drop >90% (target <300, re-measure).
+
+### Group 3 — data tables (M3 depends only on Group-1 density tokens; D3 independent of D2)
+- [ ] **M3 — Mobile comparison table (restore the table)** · L · Impact 5 · `MOBILE §M3`
+      Replace the mobile card stack in `ProjectsDashboardTable` with a frozen-first-column,
+      horizontally-scrollable table; zebra + press-highlight; expand chevron in frozen column;
+      row-edit → nonmodal bottom sheet (fixes `InlineCellPopover` edge-clip).
+- [ ] **D3 — Library full data table** · L · Impact 5 · `DESKTOP §D3`
+      Name-first columns; sortable headers + `aria-sort`; density toggle wired to row height; bulk
+      select (checkbox + 3-state Select-All + batch bar); right-click context menu; zebra; floor Own/★.
+
+### Group 4 — flows, action discipline, shared slot (SHARED — M5 ≡ D5 overlap heavily)
+- [ ] **M5 + D5 — Recipe/project flows, shared RecipeSlot, action discipline, hierarchy** · L · Impact 4
+      · `MOBILE §M5` + `DESKTOP §D5` ⚠ DECISION (B6 schema)
+      Shared `RecipeSlot` (swatch + paint-name + layer), used in recipe editor **and** project
+      ColorSchemeBox; paints-only (no custom-hex add). Reduce recipe editor to ≤1 prominent CTA;
+      Assign/Share → overflow/ghost; **Delete → danger-outline at bottom**; demote project DELETE.
+      Context-aware add-child ("+ Model" on Unit); breadcrumb keeps parent visible; fix "1 slots/steps".
+      Mobile reflows the step row to two lines; desktop keeps the single-line row + adds project-detail
+      two-pane tree. **⚠ Do NOT collapse the Steps-vs-Slots schema (B6) blind — separate design call.**
+
+### Group 5 — desktop power layer (desktop-only)
+- [ ] **D4 — Command palette & keyboard layer** · M · Impact 5 · `DESKTOP §D4`
+      Cmd/Ctrl+K opens the existing GlobalSearch (keep `/` alias); extend into a command palette with a
+      Commands section (navigation + actions) showing inline `<kbd>`; visible NavRail trigger; Ctrl+Z /
+      Ctrl+F. *(Depends on D3 context menus for inline-shortcut parity.)*
+
+### Group 6 — forms, feedback, secondary surfaces
+- [ ] **M6 — Forms & feedback** · M · Impact 3 · `MOBILE §M6`
+      Input optimization (type/inputmode/autocomplete/labels/inline errors) across auth + add forms;
+      touch-first eyedropper copy; press-states + progress readouts + Undo toasts; **StageCounter**
+      polish (space − / +, long-press repeat, tap-number-to-type).
+- [ ] **D7 — Wishlist & user as desktop layouts** · M · Impact 3 · `DESKTOP §D7`
+      Wishlist persistent left filter rail + sortable dense table + bulk "Mark purchased"; two-column
+      `/user` settings + collapse brand filter; pricing multi-column + width cap.
+
+### Group 7 — accessibility & polish (last; depends on everything above existing)
+- [ ] **M7 — Accessibility & polish (mobile)** · M · Impact 3 · `MOBILE §M7`
+      Contrast pass; never-color-alone audit; sheet/overlay close + back-dismiss; de-buttoned grid SR
+      summary; reduced-motion + 200/400% reflow; focus-visible on new controls.
+- [ ] **D8 — Pointer affordances, feedback & a11y polish (desktop)** · M · Impact 3 · `DESKTOP §D8`
+      Tooltips (0.5s, kbd+mouse); cursor signifiers on canvas tools; right-click parity; Undo-over-
+      confirmation; never-color-alone; OK-first dialog button order; reduced-motion on hover/drag/CRT.
+
+---
+
+## Notes for the builder agent
+
+- **Shared items (Group 2, Group 4)** must be built as one unit — do not build the mobile and desktop
+  halves as separate commits or the shared route/component will be built twice and diverge.
+- **`⚠ DECISION` items** (M4/D2/D6 re-architecture; M5/D5's B6 schema) require a lead sign-off before
+  coding — halt and surface the specific decision rather than guessing.
+- Every item is acceptance-gated in its plan section; treat that section's **Acceptance** bullets as
+  the definition of done. Verify with `npm run typecheck && npm test` before each commit; push on green.
+- "Strengths to preserve / do not regress" lists in each plan's §2 are guardrails — the audit nets in
+  `tests/unit/lib/components/targetSizeAudit.test.ts` and `mobileSearchAndDisclosure.test.ts` must stay green.
