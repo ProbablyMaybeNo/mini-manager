@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
+  BILLING_ENFORCED,
   FREE_TIER_LIMIT_ERROR,
   PLAN_LIMITS,
   getPlanForUser,
   isWithinLimit,
+  isWithinPlanLimit,
   type PlanRelevantUser,
 } from "@/lib/billing/plans";
 
@@ -33,33 +35,49 @@ describe("PLAN_LIMITS", () => {
   });
 });
 
-describe("isWithinLimit — free tier", () => {
+// The free-tier CAP MATH is tested via `isWithinPlanLimit` (which ignores
+// the BILLING_ENFORCED gate) so coverage survives while enforcement is
+// relaxed pre-Stripe. The runtime gate itself is covered separately below.
+describe("isWithinPlanLimit — free tier cap math", () => {
   test("allows the first project on a fresh account", () => {
-    expect(isWithinLimit("free", "projects", 0)).toBe(true);
+    expect(isWithinPlanLimit("free", "projects", 0)).toBe(true);
   });
 
   test("blocks the second project (exactly at the cap)", () => {
-    expect(isWithinLimit("free", "projects", 1)).toBe(false);
+    expect(isWithinPlanLimit("free", "projects", 1)).toBe(false);
   });
 
   test("blocks past-cap counts (defensive)", () => {
-    expect(isWithinLimit("free", "projects", 99)).toBe(false);
+    expect(isWithinPlanLimit("free", "projects", 99)).toBe(false);
   });
 
   test("recipes cap is 1 — first allowed, second blocked", () => {
-    expect(isWithinLimit("free", "recipes", 0)).toBe(true);
-    expect(isWithinLimit("free", "recipes", 1)).toBe(false);
+    expect(isWithinPlanLimit("free", "recipes", 0)).toBe(true);
+    expect(isWithinPlanLimit("free", "recipes", 1)).toBe(false);
   });
 
   test("wishlist cap is 3 — first three allowed, fourth blocked", () => {
-    expect(isWithinLimit("free", "wishlist", 0)).toBe(true);
-    expect(isWithinLimit("free", "wishlist", 1)).toBe(true);
-    expect(isWithinLimit("free", "wishlist", 2)).toBe(true);
-    expect(isWithinLimit("free", "wishlist", 3)).toBe(false);
+    expect(isWithinPlanLimit("free", "wishlist", 0)).toBe(true);
+    expect(isWithinPlanLimit("free", "wishlist", 1)).toBe(true);
+    expect(isWithinPlanLimit("free", "wishlist", 2)).toBe(true);
+    expect(isWithinPlanLimit("free", "wishlist", 3)).toBe(false);
   });
 
   test("negative currentCount is treated as 0", () => {
-    expect(isWithinLimit("free", "projects", -5)).toBe(true);
+    expect(isWithinPlanLimit("free", "projects", -5)).toBe(true);
+  });
+});
+
+// Until Stripe is live, BILLING_ENFORCED is false → isWithinLimit never
+// blocks (no upgrade path exists). When the flag flips, isWithinLimit
+// defers to isWithinPlanLimit (covered above).
+describe("isWithinLimit — enforcement gate (BILLING_ENFORCED)", () => {
+  test("caps are NOT enforced while billing is off", () => {
+    expect(BILLING_ENFORCED).toBe(false);
+    // Past every free cap, still allowed — there's no way to upgrade yet.
+    expect(isWithinLimit("free", "projects", 99)).toBe(true);
+    expect(isWithinLimit("free", "recipes", 99)).toBe(true);
+    expect(isWithinLimit("free", "wishlist", 99)).toBe(true);
   });
 });
 
@@ -84,8 +102,11 @@ describe("isWithinLimit — paid tiers", () => {
 describe("isWithinLimit — user-row input", () => {
   test("resolves a free user from a user row", () => {
     const u = user({ plan: "free" });
-    expect(isWithinLimit(u, "projects", 0)).toBe(true);
-    expect(isWithinLimit(u, "projects", 1)).toBe(false);
+    // Cap math (gate-independent) blocks the 2nd; the live gate currently
+    // allows it because BILLING_ENFORCED is off.
+    expect(isWithinPlanLimit(u, "projects", 0)).toBe(true);
+    expect(isWithinPlanLimit(u, "projects", 1)).toBe(false);
+    expect(isWithinLimit(u, "projects", 1)).toBe(true);
   });
 
   test("resolves a founder from founderClaimedAt", () => {

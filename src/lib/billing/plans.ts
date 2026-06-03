@@ -21,6 +21,21 @@
 
 import type { User } from "@/db/schema";
 
+/**
+ * Whether free-tier caps are actually ENFORCED at the action layer.
+ *
+ * Temporarily `false` until Stripe checkout is live (P10.4–P10.8): with no
+ * way to upgrade past the wall, enforcing the caps would make the product
+ * untestable for free users — including the recruit beta, who can't pay yet.
+ * So enforcement is gated off and every user is effectively unlimited.
+ *
+ * `PLAN_LIMITS` below stays at the real advertised caps (1/1/3) so the
+ * /pricing + /user pages keep showing what the free tier WILL be — only the
+ * runtime gate in `isWithinLimit` is relaxed. Flip this to `true` in the
+ * Stripe wire-up so the caps bite again the moment upgrading is possible.
+ */
+export const BILLING_ENFORCED = false;
+
 /** The four plan tiers. Free + the three paid identities. */
 export type PlanTier = "free" | "pro_monthly" | "pro_lifetime" | "founder";
 
@@ -139,6 +154,24 @@ function resolvePlan(input: PlanInput): PlanTier {
  *     happen in practice but stays consistent under a buggy caller).
  */
 export function isWithinLimit(
+  user: PlanInput,
+  resource: LimitedResource,
+  currentCount: number,
+): boolean {
+  // Until billing is live there's no way to upgrade past a cap, so caps
+  // aren't enforced — every user is unlimited (see BILLING_ENFORCED). Once
+  // Stripe ships, flip the flag and this defers to the real plan caps.
+  if (!BILLING_ENFORCED) return true;
+  return isWithinPlanLimit(user, resource, currentCount);
+}
+
+/**
+ * Pure cap check — does the (plan, resource) allow one more, IGNORING the
+ * BILLING_ENFORCED gate? Exported so the cap math stays under test while
+ * enforcement is relaxed, and so the Stripe wire-up (P10.4–P10.8) can rely
+ * on it directly. `isWithinLimit` is what server actions call.
+ */
+export function isWithinPlanLimit(
   user: PlanInput,
   resource: LimitedResource,
   currentCount: number,

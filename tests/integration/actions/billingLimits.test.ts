@@ -8,6 +8,14 @@ import {
   users,
   wishlistItems,
 } from "@/db/schema";
+import { BILLING_ENFORCED } from "@/lib/billing/plans";
+
+// Free-tier ENFORCEMENT is gated off until Stripe is live (BILLING_ENFORCED
+// = false) — with no upgrade path, the caps can't bite or the beta is
+// untestable. The four "is blocked" tests below assert enforcement, so they
+// skip while it's off and run again the moment the Stripe wire-up flips the
+// flag. The cap MATH stays covered in plans.test.ts via isWithinPlanLimit.
+const itWhenEnforced = test.skipIf(!BILLING_ENFORCED);
 
 /**
  * P10.2 — integration tests for the free-tier server-action gates.
@@ -114,7 +122,7 @@ describe("createProject — free tier cap (1 project)", () => {
     expect(vi.mocked(redirect)).toHaveBeenCalled();
   });
 
-  test("second project is blocked with the free-tier error + upgrade URL", async () => {
+  itWhenEnforced("second project is blocked with the free-tier error + upgrade URL", async () => {
     await seedProjectsForUser(1);
     const result = await createProject({
       name: "Second",
@@ -131,6 +139,16 @@ describe("createProject — free tier cap (1 project)", () => {
     // Redirect must NOT have fired (we rejected before the success path).
     expect(vi.mocked(redirect)).not.toHaveBeenCalled();
   });
+
+  test.skipIf(BILLING_ENFORCED)(
+    "second project IS allowed while billing is off (caps lifted pre-Stripe)",
+    async () => {
+      await seedProjectsForUser(1);
+      await createProject({ name: "Second", type: "Unit", count: 1 });
+      const rows = await state.db!.select().from(projects);
+      expect(rows).toHaveLength(2);
+    },
+  );
 });
 
 describe("createProject — paid tiers unlimited", () => {
@@ -170,7 +188,7 @@ describe("createRecipe — free tier cap (1 recipe)", () => {
     expect(rows).toHaveLength(1);
   });
 
-  test("second recipe is blocked with the free-tier error + upgrade URL", async () => {
+  itWhenEnforced("second recipe is blocked with the free-tier error + upgrade URL", async () => {
     await seedRecipesForUser(1);
     const result = await createRecipe({ name: "Second" });
     expect(result.ok).toBe(false);
@@ -207,7 +225,7 @@ describe("createWishlistItem — free tier cap (3 items)", () => {
     expect(rows).toHaveLength(3);
   });
 
-  test("fourth item is blocked with the free-tier error + upgrade URL", async () => {
+  itWhenEnforced("fourth item is blocked with the free-tier error + upgrade URL", async () => {
     await seedWishlistForUser(3);
     const result = await createWishlistItem({ title: "Fourth" });
     expect(result.ok).toBe(false);
@@ -218,7 +236,7 @@ describe("createWishlistItem — free tier cap (3 items)", () => {
     expect(rows).toHaveLength(3);
   });
 
-  test("scrape path enforces the same cap (gate fires BEFORE the scrape)", async () => {
+  itWhenEnforced("scrape path enforces the same cap (gate fires BEFORE the scrape)", async () => {
     await seedWishlistForUser(3);
     // The URL doesn't matter — the gate should reject before any HTTP work.
     const result = await scrapeAndCreateWishlistItem({
