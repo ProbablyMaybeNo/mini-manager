@@ -33,8 +33,8 @@ export async function generateMetadata({
 
   const description = recipe.notesMd
     ? recipe.notesMd.slice(0, 200)
-    : `A paint recipe shared via Mini Manager — ${recipe.zones.length} zone${
-        recipe.zones.length === 1 ? "" : "s"
+    : `A paint recipe shared via Mini Manager — ${recipe.slots.length} slot${
+        recipe.slots.length === 1 ? "" : "s"
       }, ${recipe.bodyType}.`;
 
   return {

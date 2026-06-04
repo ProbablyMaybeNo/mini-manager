@@ -5,16 +5,15 @@ import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
 import {
   getPaintMetaMap,
-  getRecipeWithZones,
+  getRecipeWithSlots,
 } from "@/db/queries/recipes";
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { projects } from "@/db/schema";
 import { RecipeHeader } from "@/components/recipes/RecipeHeader";
 import { RecipeEditorClient } from "@/components/recipes/RecipeEditorClient";
 import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
-import type { ZoneListItem } from "@/components/recipes/ZoneList";
-import type { StepRowData } from "@/components/recipes/StepRow";
-import type { MarkdownInput, MarkdownZone } from "@/lib/recipes/markdown";
+import type { SlotListItem } from "@/components/recipes/SlotList";
+import type { MarkdownInput, MarkdownSlot } from "@/lib/recipes/markdown";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +49,7 @@ export default async function RecipeEditorPage({
 }) {
   const { id } = await params;
   const userId = await currentUserId();
-  const recipe = await getRecipeWithZones(userId, id);
+  const recipe = await getRecipeWithSlots(userId, id);
   if (!recipe) notFound();
 
   const [paintMeta, attachment, inventoryEntries, assignProjects] =
@@ -81,93 +80,57 @@ export default async function RecipeEditorPage({
       type: p.type,
     }));
 
-  // Slim the nested shape to what each client component actually needs.
-  const zoneItems: ZoneListItem[] = recipe.zones.map((z) => {
-    const firstStep = z.steps[0];
-    const swatchHex =
-      firstStep?.customColorHex ??
-      (firstStep?.paintId
-        ? paintMeta.get(firstStep.paintId)?.hex ?? null
-        : null);
+  // Slim the flat slot list to what the editor client needs.
+  const slotItems: SlotListItem[] = recipe.slots.map((slot) => {
+    const meta = slot.paintId ? paintMeta.get(slot.paintId) : null;
     return {
-      id: z.id,
-      name: z.name,
-      silhouetteZoneId: z.silhouetteZoneId,
-      stepCount: z.steps.length,
-      swatchHex,
-      // P12.2 — the ColorPicker side panel needs this to call
-      // updateStep when the painter swaps the paint on an already-
-      // filled slot. null when the slot has no step yet (rare; can
-      // happen mid-edit if a step was deleted but the zone wasn't).
-      firstStepId: firstStep?.id ?? null,
-      // P12.3 — the slot's layer chip (top-right corner) renders this
-      // and the side-panel layer selector defaults to it. The picker
-      // surfaces the locked Phase-12 layer set; this technique is
-      // typed widely (full TechniqueKey union) so legacy values from
-      // older recipes still display.
-      firstStepTechnique: firstStep?.technique ?? null,
+      id: slot.id,
+      paintId: slot.paintId,
+      customColorHex: slot.customColorHex,
+      swatchHex: slot.customColorHex ?? meta?.hex ?? null,
+      paintLabel: meta?.label ?? null,
+      technique: slot.technique,
     };
   });
-
-  const stepsByZoneId = new Map<string, StepRowData[]>();
-  for (const z of recipe.zones) {
-    const rows: StepRowData[] = z.steps.map((s) => {
-      const meta = s.paintId ? paintMeta.get(s.paintId) : null;
-      return {
-        id: s.id,
-        technique: s.technique,
-        paintId: s.paintId,
-        customColorHex: s.customColorHex,
-        swatchHex: s.customColorHex ?? meta?.hex ?? null,
-        paintLabel: meta?.label ?? null,
-        notesMd: s.notesMd,
-      };
-    });
-    stepsByZoneId.set(z.id, rows);
-  }
 
   const ownedPaintIds = new Set<string>();
   inventoryEntries.forEach((entry, paintId) => {
     if (entry.ownedCount > 0) ownedPaintIds.add(paintId);
   });
 
-  const initialSelectedZoneId = zoneItems[0]?.id ?? null;
-
   // Build a MarkdownInput for the share modal — resolves paint name + hex
-  // server-side so the client doesn't need the catalog map.
-  const markdownZones: MarkdownZone[] = recipe.zones.map((z) => ({
-    name: z.name,
-    steps: z.steps.map((s) => {
-      const meta = s.paintId ? paintMeta.get(s.paintId) : undefined;
-      let paintBrand: string | null = null;
-      let paintName: string | null = null;
-      if (meta?.label) {
-        // `meta.label` is `"<Brand> <Name>"` (see getPaintMetaMap). Split on
-        // the first space so the markdown can show "Brand Name `#HEX`".
-        const idx = meta.label.indexOf(" ");
-        if (idx > 0) {
-          paintBrand = meta.label.slice(0, idx);
-          paintName = meta.label.slice(idx + 1);
-        } else {
-          paintName = meta.label;
-        }
+  // server-side so the client doesn't need the catalog map. Pure-flat:
+  // one section, one entry per slot.
+  const markdownSlots: MarkdownSlot[] = recipe.slots.map((slot) => {
+    const meta = slot.paintId ? paintMeta.get(slot.paintId) : undefined;
+    let paintBrand: string | null = null;
+    let paintName: string | null = null;
+    if (meta?.label) {
+      // `meta.label` is `"<Brand> <Name>"` (see getPaintMetaMap). Split on
+      // the first space so the markdown can show "Brand Name `#HEX`".
+      const idx = meta.label.indexOf(" ");
+      if (idx > 0) {
+        paintBrand = meta.label.slice(0, idx);
+        paintName = meta.label.slice(idx + 1);
+      } else {
+        paintName = meta.label;
       }
-      return {
-        technique: s.technique,
-        paintName,
-        paintBrand,
-        hex: s.customColorHex ?? meta?.hex ?? null,
-        notesMd: s.notesMd,
-      };
-    }),
-  }));
+    }
+    return {
+      technique: slot.technique,
+      paintName,
+      paintBrand,
+      hex: slot.customColorHex ?? meta?.hex ?? null,
+      notesMd: slot.notesMd,
+    };
+  });
   const markdownInput: MarkdownInput = {
     recipe: {
       name: recipe.name,
       bodyType: recipe.bodyType,
       notesMd: recipe.notesMd,
     },
-    zones: markdownZones,
+    slots: markdownSlots,
   };
 
   return (
@@ -187,21 +150,17 @@ export default async function RecipeEditorPage({
         share={{
           markdown: markdownInput,
           jsonPayload: {
-            __exportVersion: 1,
+            __exportVersion: 2,
             recipe: {
               id: recipe.id,
               name: recipe.name,
               bodyType: recipe.bodyType,
               notesMd: recipe.notesMd,
-              zones: recipe.zones.map((z) => ({
-                name: z.name,
-                silhouetteZoneId: z.silhouetteZoneId,
-                steps: z.steps.map((s) => ({
-                  technique: s.technique,
-                  paintId: s.paintId,
-                  customColorHex: s.customColorHex,
-                  notesMd: s.notesMd,
-                })),
+              slots: recipe.slots.map((slot) => ({
+                technique: slot.technique,
+                paintId: slot.paintId,
+                customColorHex: slot.customColorHex,
+                notesMd: slot.notesMd,
               })),
             },
           },
@@ -210,9 +169,7 @@ export default async function RecipeEditorPage({
 
       <RecipeEditorClient
         recipe={recipe}
-        zones={zoneItems}
-        initialSelectedZoneId={initialSelectedZoneId}
-        stepsByZoneId={stepsByZoneId}
+        slots={slotItems}
         ownedPaintIds={ownedPaintIds}
       />
     </div>

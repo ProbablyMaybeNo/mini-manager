@@ -6,8 +6,7 @@ import {
   palettes,
   projects,
   recipes,
-  recipeSteps,
-  recipeZones,
+  recipeSlots,
   wishlistItems,
 } from "@/db/schema";
 
@@ -50,17 +49,10 @@ async function seedFullUser(userId: string) {
     attachedProjectId: projectId,
   });
 
-  const zoneId = nanoid(16);
-  await state.db!.insert(recipeZones).values({
-    id: zoneId,
+  const slotId = nanoid(16);
+  await state.db!.insert(recipeSlots).values({
+    id: slotId,
     recipeId,
-    position: 0,
-    name: "Armor",
-    silhouetteZoneId: "armor-primary",
-  });
-  await state.db!.insert(recipeSteps).values({
-    id: nanoid(16),
-    zoneId,
     position: 0,
     technique: "basecoat",
     paintId: "citadel-caliban-green",
@@ -89,7 +81,7 @@ async function seedFullUser(userId: string) {
     category: "Other",
   });
 
-  return { projectId, recipeId, zoneId };
+  return { projectId, recipeId, slotId };
 }
 
 beforeEach(async () => {
@@ -112,13 +104,12 @@ describe("exportAllUserData", () => {
     if (!res.ok) return;
 
     const payload = res.data;
-    // P13.4 bumped the export schema to v2 (named_model dropped).
-    expect(payload.__exportVersion).toBe(2);
+    // 2026-06-04 unify bumped the export schema to v3 (flat recipe_slot).
+    expect(payload.__exportVersion).toBe(3);
     expect(typeof payload.__exportedAt).toBe("string");
     expect(payload.projects).toHaveLength(1);
     expect(payload.recipes).toHaveLength(1);
-    expect(payload.recipeZones).toHaveLength(1);
-    expect(payload.recipeSteps).toHaveLength(1);
+    expect(payload.recipeSlots).toHaveLength(1);
     expect(payload.palettes).toHaveLength(1);
     expect(payload.inventoryEntries).toHaveLength(1);
     expect(payload.wishlistItems).toHaveLength(1);

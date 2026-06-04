@@ -43,33 +43,20 @@ describe("UX-1312 — gradient colour-picker button label is meaningful", () => 
   });
 });
 
-describe("UX-1311 — recipe step swatch/delete hit boxes no longer overlap", () => {
-  const src = read("src/components/recipes/StepRow.tsx");
+describe("UX-1311 — recipe slot delete affordance has its own corner hit box", () => {
+  // 2026-06-04 flatten: the two-level StepRow (with its technique select +
+  // notes toggle + × overlap risk) is gone. A slot is a single cell; its ×
+  // delete lives in the top-right corner, separate from the main click
+  // surface, so the overlap class of bug can't recur.
+  const src = read("src/components/recipes/SlotList.tsx");
 
-  test("the × delete has its own non-overlapping 44px box (shrink-0 + tap-target)", () => {
-    expect(src).toContain(
-      'className="shrink-0 inline-flex items-center justify-center text-xs font-mono text-[var(--color-fg-subtle)] hover:text-[var(--color-red)] tap-target px-2"',
-    );
+  test("the slot × delete sits in its own absolutely-positioned corner", () => {
+    expect(src).toContain('aria-label={`Delete slot ${slotLabel}`}');
+    expect(src).toContain("absolute top-1 right-1");
   });
 
-  test("the notes toggle is shrink-0 so the trailing cluster can't compress", () => {
-    expect(src).toContain("lg:hidden shrink-0 inline-flex items-center justify-center tap-target");
-  });
-
-  // UX-1502 (Round 15) — the rigid `min-w-[130px]` technique select couldn't
-  // shrink, so at 375px the row overflowed and the swatch + × tap boxes
-  // collided. The select now shrinks below lg (min-w-0, capped width) so the
-  // paint slot + × keep their gap-2 gutter; lg+ restores the 130px floor.
-  test("the technique select shrinks below lg so the row can't overflow into the × (UX-1502)", () => {
-    expect(src).toContain("shrink min-w-0 max-w-[96px] lg:max-w-none lg:min-w-[130px]");
-    // The un-shrinkable rigid floor is gone.
-    expect(src).not.toContain(
-      'frame focus:border-[var(--color-accent)] min-w-[130px]"',
-    );
-  });
-
-  test("the paint slot stays flex-1 min-w-0 so it absorbs slack, not the ×", () => {
-    expect(src).toContain('ref={slotRef} className="relative min-w-0 flex-1"');
+  test("the slot's main click surface is a separate full-cell button", () => {
+    expect(src).toContain('aria-label={`Edit slot ${slotLabel}`}');
   });
 });
 
@@ -221,10 +208,13 @@ describe("UX-1306 — shared SegmentedControl gives the active segment a solid f
     expect(src).not.toContain("function TabButton");
   });
 
-  test("recipe editor pane switch uses the shared SegmentedControl", () => {
+  // 2026-06-04 flatten: the recipe editor's SLOTS/NOTES pane switch was
+  // removed — the flat editor renders the slot grid + notes side-by-side
+  // with no segmented control. (The shared SegmentedControl primitive +
+  // its other consumers are still covered above.)
+  test("recipe editor no longer has a pane-switch SegmentedControl", () => {
     const src = read("src/components/recipes/RecipeEditorClient.tsx");
-    expect(src).toContain("import { SegmentedControl }");
-    expect(src).toContain("<SegmentedControl<Pane>");
+    expect(src).not.toContain("SegmentedControl");
   });
 });
 

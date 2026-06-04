@@ -32,21 +32,20 @@ describe("UX-1506 — /library no longer overflows (both views)", () => {
   });
 });
 
-describe("UX-1502 — recipe step row can't collide swatch + × at 375", () => {
-  const src = read("src/components/recipes/StepRow.tsx");
+describe("UX-1502 — recipe slot grid is a responsive auto-fill grid", () => {
+  // 2026-06-04 flatten: the cramped two-level StepRow (technique select +
+  // swatch + × in one flex line) is gone. Slots are an auto-fill grid of
+  // square cells, so the 375px swatch/× collision can't recur.
+  const src = read("src/components/recipes/SlotList.tsx");
 
-  test("the row flex container can shrink (min-w-0)", () => {
-    expect(src).toContain('<div className="flex items-center gap-2 min-w-0">');
-  });
-
-  test("the drag handle is shrink-0 so it can't skew the flex math", () => {
+  test("slots render in an auto-fill grid of min-112px cells", () => {
     expect(src).toContain(
-      'className="shrink-0 font-mono text-xs text-[var(--color-fg-subtle)] cursor-grab select-none px-1"',
+      "grid gap-2 grid-cols-[repeat(auto-fill,minmax(112px,1fr))]",
     );
   });
 
-  test("the technique select shrinks to a tighter mobile cap (96px)", () => {
-    expect(src).toContain("shrink min-w-0 max-w-[96px] lg:max-w-none lg:min-w-[130px]");
+  test("each cell is a square with its own click + delete surfaces", () => {
+    expect(src).toContain("w-full aspect-square");
   });
 });
 

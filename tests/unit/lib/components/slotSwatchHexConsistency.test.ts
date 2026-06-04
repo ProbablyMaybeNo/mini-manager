@@ -39,17 +39,11 @@ function read(rel: string): string {
 }
 
 describe("UX-912 — slot swatch bg matches stored hex (no transform)", () => {
-  test("ZoneList slot button uses raw zone.swatchHex as background", () => {
-    const src = read("src/components/recipes/ZoneList.tsx");
+  test("SlotList slot button uses raw slot.swatchHex as background", () => {
+    const src = read("src/components/recipes/SlotList.tsx");
     // The slot's bg is the swatch hex verbatim — no color-mix, no
-    // hsl() / hsla() wrapping, no lightness adjustment. If a future
-    // refactor ever wraps the bg in a transform this match breaks.
-    expect(src).toMatch(/background:\s*filled\s*\?\s*zone\.swatchHex!?\s*:\s*"transparent"/);
-  });
-
-  test("StepRow swatch bg is the raw step.swatchHex", () => {
-    const src = read("src/components/recipes/StepRow.tsx");
-    expect(src).toMatch(/background:\s*step\.swatchHex\s*\?\?\s*"transparent"/);
+    // hsl() / hsla() wrapping, no lightness adjustment.
+    expect(src).toMatch(/background:\s*filled\s*\?\s*slot\.swatchHex!?\s*:\s*"transparent"/);
   });
 
   test("ProjectColorSchemeBox FilledBox bg is the raw hex prop", () => {
@@ -59,24 +53,22 @@ describe("UX-912 — slot swatch bg matches stored hex (no transform)", () => {
 
   test("recipes/[id] page resolves swatchHex with no lightness adjustment", () => {
     const src = read("src/app/recipes/[id]/page.tsx");
-    // The resolve expression is `customColorHex ?? paintMeta.get(paintId)?.hex ?? null`.
+    // The resolve expression is `customColorHex ?? meta?.hex ?? null`.
     // No call to lighten / darken / mix / shift / hsl-transform helpers.
-    expect(src).toContain("firstStep?.customColorHex");
+    expect(src).toContain("slot.customColorHex ?? meta?.hex");
     expect(src).not.toMatch(/lighten\(|darken\(|adjustHsl|shiftLightness/);
   });
 
-  test("projects/[id] page resolves the COLOR SCHEME box hex with no transform", () => {
+  test("projects/[id] page resolves the Recipe box hex with no transform", () => {
     const src = read("src/app/projects/[id]/page.tsx");
-    expect(src).toContain("firstStep?.customColorHex");
+    expect(src).toContain("slot.customColorHex ?? meta?.hex");
     expect(src).not.toMatch(/lighten\(|darken\(|adjustHsl|shiftLightness/);
   });
 
-  test("StepRow label echoes step.customColorHex verbatim (no transform)", () => {
-    const src = read("src/components/recipes/StepRow.tsx");
-    // The label reads `Custom · ${step.customColorHex}` — same source
-    // field the swatch bg resolves from. Lock this so a future tweak
-    // that pre-processes the displayed hex (e.g. .toUpperCase()) doesn't
-    // accidentally introduce a label-vs-swatch divergence.
-    expect(src).toContain("`Custom · ${step.customColorHex}`");
+  test("SlotList label echoes slot.customColorHex verbatim (no transform)", () => {
+    const src = read("src/components/recipes/SlotList.tsx");
+    // A custom-hex slot's label reads `Custom · ${slot.customColorHex}` —
+    // the same source field the swatch bg resolves from.
+    expect(src).toContain("`Custom · ${slot.customColorHex}`");
   });
 });

@@ -57,12 +57,11 @@ describe("Phase 11 — concrete vocabulary survives (P11.1 / P11.3 / P11.4)", ()
   });
 
   test("Recipe slot vocabulary survives — no `>Add zone<` strings", () => {
-    // P12.2 replaced the free-text "+ Add color" Button with an
-    // AddSlotTile (still labelled "Add color") that opens the
-    // ColorPicker side panel. The locked vocabulary survives.
-    const src = read("src/components/recipes/ZoneList.tsx");
+    // 2026-06-04 flatten: the SlotList AddSlotTile is labelled "Add
+    // paint" and opens the paints-only picker. No zone vocabulary.
+    const src = read("src/components/recipes/SlotList.tsx");
     expect(src).not.toContain(">Add zone<");
-    expect(src).toContain("Add color");
+    expect(src).toContain("Add paint");
   });
 
   // P13.2 — ShoppingForThisPanel.tsx removed (workspace simplification).
@@ -135,15 +134,12 @@ describe("Phase 11 — microcopy persisted (P11.12)", () => {
     );
   });
 
-  test("ZoneList colour-slot inline help persists (P12.2 / R7-002 microcopy)", () => {
-    // P12.2 replaced the "Each colour slot is one part of the model"
-    // copy from P11.12 with a click-to-pick affordance pointer. The
-    // recipe is now about COLOUR + PAINTS, not model parts. R7-002
-    // sharpened the verbs (ADD vs REPLACE) to fix the auditor's
-    // "edit-slot ambiguity" finding.
-    const src = read("src/components/recipes/ZoneList.tsx");
-    expect(src).toContain("Click any");
-    expect(src).toContain("slot to ADD a new colour");
+  test("SlotList flat-slot inline help persists (2026-06-04 flatten)", () => {
+    // The flat editor's inline help points at the + Add paint tile +
+    // the click-to-swap path. A slot is one paint + its layer.
+    const src = read("src/components/recipes/SlotList.tsx");
+    expect(src).toContain("Each slot is one paint and the layer");
+    expect(src).toContain("+ Add paint");
   });
 
   test("Tools H1 subheadings stay painter-vocab", () => {

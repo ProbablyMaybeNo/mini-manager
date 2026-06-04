@@ -18,7 +18,7 @@ import {
   filterByText,
   filterByType,
 } from "@/lib/paints/filters";
-import { updateStep } from "@/lib/actions/recipeSteps";
+import { updateSlot } from "@/lib/actions/recipeSlots";
 import { FilterChip } from "@/components/ui/FilterChip";
 
 interface OwnedSet {
@@ -27,24 +27,20 @@ interface OwnedSet {
 }
 
 interface Props {
-  stepId: string;
-  /** Currently selected paint id (null if step is using a custom hex). */
+  /** The slot being edited. Null when the host owns the write (add path)
+   *  and just wants the picked paint id via `onPick`. */
+  slotId: string | null;
+  /** Currently selected paint id (null when none / custom hex). */
   currentPaintId: string | null;
-  /** Currently selected custom hex (null if step is using a paint).
-   *  B2 — kept on the props so the caller (StepRow) can keep passing
-   *  the legacy step's hex, but custom hex is no longer ADDABLE from
-   *  this picker — a recipe slot only takes a catalog paint. */
-  currentHex?: string | null;
-  /** Anchor — popover positions itself relative to this. */
-  anchorClassName?: string;
   /** Called after a successful save so the parent can close. */
   onClose: () => void;
-  /** Optimistic patch fired before the server confirms. */
-  onPatchPreview?: (patch: {
-    paintId: string | null;
-    customColorHex: string | null;
-    swatchHex: string | null;
-  }) => void;
+  /** When set, the host handles persistence: the picker fires `onPick`
+   *  with the chosen paint id instead of calling `updateSlot` itself.
+   *  Used by the add-slot path and the slot editor side panel. */
+  onPick?: (paintId: string) => void;
+  /** Render inline (inside a host drawer) rather than as an absolute
+   *  popover. */
+  embedded?: boolean;
   inventory?: OwnedSet;
 }
 
@@ -61,10 +57,11 @@ const MAX_RESULTS = 200;
  * DISPLAY on legacy steps elsewhere, but they can't be ADDED here.
  */
 export function PaintSlotPicker({
-  stepId,
+  slotId,
   currentPaintId,
   onClose,
-  onPatchPreview,
+  onPick,
+  embedded = false,
   inventory,
 }: Props) {
   const id = useId();
@@ -125,16 +122,21 @@ export function PaintSlotPicker({
   }, [paints, brand, types, query, ownedOnly, inventory]);
 
   const handlePickPaint = (paint: Paint) => {
-    onPatchPreview?.({
-      paintId: paint.id,
-      customColorHex: null,
-      swatchHex: paint.hex,
-    });
+    // Host-owned write path (add slot / editor side panel): hand the
+    // chosen paint id up and let the host call the action.
+    if (onPick) {
+      onPick(paint.id);
+      return;
+    }
+    // Self-owned write path: persist directly to the slot.
+    if (!slotId) {
+      setError("No slot to update.");
+      return;
+    }
     startTransition(async () => {
-      const result = await updateStep({
-        id: stepId,
+      const result = await updateSlot({
+        id: slotId,
         paintId: paint.id,
-        customColorHex: null,
       });
       if (result.ok) {
         onClose();
@@ -158,7 +160,12 @@ export function PaintSlotPicker({
       ref={containerRef}
       role="dialog"
       aria-label="Pick paint"
-      className="absolute z-50 mt-2 w-[360px] max-w-[calc(100vw-1.5rem)] frame-strong bg-[var(--color-bg-panel)] shadow-xl"
+      className={clsx(
+        "frame-strong bg-[var(--color-bg-panel)] shadow-xl",
+        embedded
+          ? "w-full"
+          : "absolute z-50 mt-2 w-[360px] max-w-[calc(100vw-1.5rem)]",
+      )}
       onMouseDown={(event) => event.stopPropagation()}
     >
       <div className="flex items-center gap-1 px-3 py-2 border-b border-[var(--color-border)]">

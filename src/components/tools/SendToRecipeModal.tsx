@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
@@ -34,8 +34,8 @@ const TOOL_LABEL: Record<ToolId, string> = {
 
 /**
  * Two-tab modal that hands a palette to either an existing recipe or a
- * brand-new standalone one. Reuses the existing recipe / zone / step
- * actions transparently via `sendPaletteToRecipe`.
+ * brand-new standalone one. The palette is appended as a flat run of
+ * slots via `sendPaletteToRecipe`.
  */
 export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
   const headingId = useId();
@@ -44,8 +44,6 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
   const [recipes, setRecipes] = useState<ReadonlyArray<SendToRecipeOption>>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [selectedRecipeId, setSelectedRecipeId] = useState("");
-  const [selectedZoneId, setSelectedZoneId] = useState<string>("__new__");
-  const [newZoneName, setNewZoneName] = useState(TOOL_LABEL[toolId]);
   const [newRecipeName, setNewRecipeName] = useState(
     `${TOOL_LABEL[toolId]} palette`,
   );
@@ -68,7 +66,6 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
             const first = res.data[0];
             if (first) {
               setSelectedRecipeId(first.id);
-              setSelectedZoneId(first.zones[0]?.id ?? "__new__");
             }
           } else {
             // No recipes yet → flip to the "new" tab so the painter sees
@@ -97,11 +94,6 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  const selectedRecipe = useMemo(
-    () => recipes.find((r) => r.id === selectedRecipeId),
-    [recipes, selectedRecipeId],
-  );
-
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -126,14 +118,10 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
           ? await sendPaletteToRecipe({
               swatches: baseSwatches,
               newRecipeName: newRecipeName.trim(),
-              zoneName: newZoneName.trim() || TOOL_LABEL[toolId],
             })
           : await sendPaletteToRecipe({
               swatches: baseSwatches,
               targetRecipeId: selectedRecipeId,
-              targetZoneId:
-                selectedZoneId === "__new__" ? undefined : selectedZoneId,
-              zoneName: newZoneName.trim() || TOOL_LABEL[toolId],
             });
       if (result.ok) {
         setSuccess({ recipeId: result.data.recipeId });
@@ -217,11 +205,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                     </label>
                     <select
                       value={selectedRecipeId}
-                      onChange={(e) => {
-                        setSelectedRecipeId(e.target.value);
-                        const r = recipes.find((x) => x.id === e.target.value);
-                        setSelectedZoneId(r?.zones[0]?.id ?? "__new__");
-                      }}
+                      onChange={(e) => setSelectedRecipeId(e.target.value)}
                       className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
                     >
                       {recipes.map((r) => (
@@ -230,67 +214,25 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                         </option>
                       ))}
                     </select>
+                    <p className="text-2xs font-mono text-[var(--color-fg-muted)]">
+                      The palette is appended as a run of slots.
+                    </p>
                   </div>
-                  <div className="space-y-1">
-                    <label className="block section-title mb-0 pb-0 border-0">
-                      Colour slot
-                    </label>
-                    <select
-                      value={selectedZoneId}
-                      onChange={(e) => setSelectedZoneId(e.target.value)}
-                      className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-                    >
-                      <option value="__new__">+ Add new slot…</option>
-                      {selectedRecipe?.zones.map((z) => (
-                        <option key={z.id} value={z.id}>
-                          {z.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {selectedZoneId === "__new__" ? (
-                    <div className="space-y-1">
-                      <label className="block section-title mb-0 pb-0 border-0">
-                        New slot name
-                      </label>
-                      <input
-                        type="text"
-                        value={newZoneName}
-                        onChange={(e) => setNewZoneName(e.target.value)}
-                        maxLength={80}
-                        className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-                      />
-                    </div>
-                  ) : null}
                 </>
               )
             ) : (
-              <>
-                <div className="space-y-1">
-                  <label className="block section-title mb-0 pb-0 border-0">
-                    New recipe name
-                  </label>
-                  <input
-                    type="text"
-                    value={newRecipeName}
-                    onChange={(e) => setNewRecipeName(e.target.value)}
-                    maxLength={120}
-                    className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="block section-title mb-0 pb-0 border-0">
-                    Zone name
-                  </label>
-                  <input
-                    type="text"
-                    value={newZoneName}
-                    onChange={(e) => setNewZoneName(e.target.value)}
-                    maxLength={80}
-                    className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-                  />
-                </div>
-              </>
+              <div className="space-y-1">
+                <label className="block section-title mb-0 pb-0 border-0">
+                  New recipe name
+                </label>
+                <input
+                  type="text"
+                  value={newRecipeName}
+                  onChange={(e) => setNewRecipeName(e.target.value)}
+                  maxLength={120}
+                  className="block w-full px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
+                />
+              </div>
             )}
 
             {error ? (
@@ -308,7 +250,7 @@ export function SendToRecipeModal({ open, onClose, swatches, toolId }: Props) {
                   role="status"
                   className="text-2xs font-mono text-[var(--color-green)]"
                 >
-                  ✓ Palette sent. {swatchCount} step
+                  ✓ Palette sent. {swatchCount} slot
                   {swatchCount === 1 ? "" : "s"} added.
                 </p>
                 <Button

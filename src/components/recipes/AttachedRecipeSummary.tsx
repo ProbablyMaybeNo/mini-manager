@@ -9,17 +9,16 @@ import type { Recipe } from "@/db/schema";
 import { detachRecipe } from "@/lib/actions/recipes";
 import { Button } from "@/components/ui/Button";
 
-interface ZoneSlim {
+interface SlotSlim {
   id: string;
+  /** Slot label (paint name, or "Slot N"). */
   name: string;
-  silhouetteZoneId: string | null;
-  stepCount: number;
   swatchHex: string | null;
 }
 
 interface Props {
   recipe: Recipe;
-  zones: ReadonlyArray<ZoneSlim>;
+  slots: ReadonlyArray<SlotSlim>;
   editHref: Route;
 }
 
@@ -29,7 +28,7 @@ interface Props {
  * clears the attachment (the recipe itself survives — goes back to
  * standalone) and Edit that links to the editor.
  */
-export function AttachedRecipeSummary({ recipe, zones, editHref }: Props) {
+export function AttachedRecipeSummary({ recipe, slots, editHref }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -82,27 +81,24 @@ export function AttachedRecipeSummary({ recipe, zones, editHref }: Props) {
         </span>
       </div>
 
-      {zones.length === 0 ? (
+      {slots.length === 0 ? (
         <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
-          No colour slots yet. <Link href={editHref} className="hover:underline text-[var(--color-cyan)]">Open the editor</Link> to start building.
+          No slots yet. <Link href={editHref} className="hover:underline text-[var(--color-cyan)]">Open the editor</Link> to start building.
         </p>
       ) : (
         <ul role="list" className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-          {zones.map((z) => (
-            <li key={z.id} className="flex items-center gap-2">
+          {slots.map((slot) => (
+            <li key={slot.id} className="flex items-center gap-2">
               <span
                 aria-hidden
                 className="inline-block w-3.5 h-3.5 rounded-sm border shrink-0"
                 style={{
-                  background: z.swatchHex ?? "transparent",
+                  background: slot.swatchHex ?? "transparent",
                   borderColor: "var(--color-border-strong)",
                 }}
               />
               <span className="text-2xs font-mono truncate text-[var(--color-fg)]">
-                {z.name}
-              </span>
-              <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider">
-                · {z.stepCount}
+                {slot.name}
               </span>
             </li>
           ))}

@@ -1,12 +1,11 @@
-import Link from "next/link";
 import { getPaintMetaMap } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
 import { AutoCloneOnMount, CloneButton } from "@/components/recipes/CloneButton";
-import type { RecipeWithZones } from "@/lib/recipes/types";
+import type { RecipeWithSlots } from "@/lib/recipes/types";
 import { Button } from "@/components/ui/Button";
 
 interface Props {
-  recipe: RecipeWithZones;
+  recipe: RecipeWithSlots;
   /** Slug is passed in so the clone CTA / footer can reference the URL. */
   slug: string;
   /** True when the visitor is also the owner — clone button becomes a
@@ -43,90 +42,66 @@ export async function PublicRecipeView({
           </span>
           <span aria-hidden>·</span>
           <span>
-            {recipe.zones.length} colour slot
-            {recipe.zones.length === 1 ? "" : "s"}
+            {recipe.slots.length} slot
+            {recipe.slots.length === 1 ? "" : "s"}
           </span>
         </div>
-        {/* palette strip removed — same hex shown in each step row (UX-028) */}
+        {/* palette strip removed — same hex shown in each slot row (UX-028) */}
       </header>
 
-      {recipe.bodyType !== "infantry" ? (
-        <p className="font-mono text-xs text-[var(--color-fg-muted)] italic">
-          (Read-only view of a {recipe.bodyType} recipe — full silhouette
-          editor in the app.)
-        </p>
-      ) : null}
-
-      {recipe.zones.length === 0 ? (
+      {recipe.slots.length === 0 ? (
         <p className="font-mono text-sm text-[var(--color-fg-muted)] italic">
-          This recipe has no colour slots yet.
+          This recipe has no slots yet.
         </p>
       ) : (
-        <section className="space-y-6">
-          {recipe.zones.map((zone) => (
-            <div
-              key={zone.id}
-              className="frame bg-[var(--color-bg-elevated)] p-4 md:p-5 space-y-3"
-            >
-              <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-[var(--color-cyan)]">
-                {zone.name}
-              </h2>
-              {zone.steps.length === 0 ? (
-                <p className="text-xs font-mono text-[var(--color-fg-subtle)] italic">
-                  No steps recorded.
-                </p>
-              ) : (
-                <ol className="space-y-2">
-                  {zone.steps.map((step) => {
-                    const meta = step.paintId
-                      ? paintMeta.get(step.paintId) ?? null
-                      : null;
-                    const swatchHex =
-                      step.customColorHex ?? meta?.hex ?? null;
-                    return (
-                      <li
-                        key={step.id}
-                        className="flex items-start gap-3 px-2 py-2 border border-[var(--color-border)] bg-[var(--color-bg-panel)]"
-                      >
-                        <span
-                          aria-hidden
-                          className="inline-block w-4 h-4 mt-0.5 border shrink-0"
-                          style={{
-                            background: swatchHex ?? "transparent",
-                            borderColor: "var(--color-border-strong)",
-                          }}
-                        />
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex flex-wrap items-baseline gap-x-2 font-mono text-xs">
-                            <span className="uppercase tracking-wider text-[var(--color-fg)]">
-                              {techniqueLabel(step.technique)}
-                            </span>
-                            <span className="text-[var(--color-fg-muted)]">
-                              {meta?.label
-                                ? meta.label
-                                : step.customColorHex
-                                  ? "Custom mix"
-                                  : "—"}
-                            </span>
-                            {swatchHex ? (
-                              <span className="text-[var(--color-fg-subtle)]">
-                                {swatchHex.toUpperCase()}
-                              </span>
-                            ) : null}
-                          </div>
-                          {step.notesMd ? (
-                            <p className="text-xs font-mono italic text-[var(--color-fg-muted)] whitespace-pre-wrap">
-                              {step.notesMd}
-                            </p>
-                          ) : null}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
-            </div>
-          ))}
+        <section className="frame bg-[var(--color-bg-elevated)] p-4 md:p-5">
+          <ol className="space-y-2">
+            {recipe.slots.map((slot) => {
+              const meta = slot.paintId
+                ? paintMeta.get(slot.paintId) ?? null
+                : null;
+              const swatchHex = slot.customColorHex ?? meta?.hex ?? null;
+              return (
+                <li
+                  key={slot.id}
+                  className="flex items-start gap-3 px-2 py-2 border border-[var(--color-border)] bg-[var(--color-bg-panel)]"
+                >
+                  <span
+                    aria-hidden
+                    className="inline-block w-4 h-4 mt-0.5 border shrink-0"
+                    style={{
+                      background: swatchHex ?? "transparent",
+                      borderColor: "var(--color-border-strong)",
+                    }}
+                  />
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-baseline gap-x-2 font-mono text-xs">
+                      <span className="uppercase tracking-wider text-[var(--color-fg)]">
+                        {techniqueLabel(slot.technique)}
+                      </span>
+                      <span className="text-[var(--color-fg-muted)]">
+                        {meta?.label
+                          ? meta.label
+                          : slot.customColorHex
+                            ? "Custom mix"
+                            : "—"}
+                      </span>
+                      {swatchHex ? (
+                        <span className="text-[var(--color-fg-subtle)]">
+                          {swatchHex.toUpperCase()}
+                        </span>
+                      ) : null}
+                    </div>
+                    {slot.notesMd ? (
+                      <p className="text-xs font-mono italic text-[var(--color-fg-muted)] whitespace-pre-wrap">
+                        {slot.notesMd}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
         </section>
       )}
 

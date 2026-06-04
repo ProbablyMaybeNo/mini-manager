@@ -50,8 +50,9 @@ describe("RecipesTable component surface", () => {
     expect(src).toContain('"name"');
     expect(src).toContain('"bodyType"');
     expect(src).toContain('"slotCount"');
-    expect(src).toContain('"stepCount"');
     expect(src).toContain('"updatedAt"');
+    // Flat model: no separate step count column / sort.
+    expect(src).not.toContain('"stepCount"');
   });
 
   test("default sort = updatedAt desc", () => {
@@ -77,14 +78,15 @@ describe("RecipesTable component surface", () => {
 describe("RecipesTable — Ross's locked column set", () => {
   const src = read("src/components/recipes/RecipesTable.tsx");
 
-  test("columns: Name / Body / Palette / Slots / Steps / Attached / Updated / Actions", () => {
+  test("columns: Name / Body / Palette / Slots / Attached / Updated / Actions", () => {
     // Sortable columns pass label= prop to <Th>; non-sortable
     // columns render the text directly inside <th>.
     expect(src).toContain('label="Name"');
     expect(src).toContain('label="Body"');
     expect(src).toContain("Palette");
     expect(src).toContain('label="Slots"');
-    expect(src).toContain('label="Steps"');
+    // Flat model: the separate Steps column is gone.
+    expect(src).not.toContain('label="Steps"');
     expect(src).toContain("Attached to");
     expect(src).toContain('label="Updated"');
     expect(src).toContain("Actions");

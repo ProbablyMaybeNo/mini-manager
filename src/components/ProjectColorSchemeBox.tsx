@@ -10,26 +10,20 @@ import {
   AttachRecipeModal,
   type RecipeOption,
 } from "@/components/recipes/AttachRecipeModal";
-import {
-  addSlotWithPaint,
-  deleteZone,
-} from "@/lib/actions/recipeZones";
-import { updateStep } from "@/lib/actions/recipeSteps";
+import { addSlot, deleteSlot, updateSlot } from "@/lib/actions/recipeSlots";
 import type {
   ColorPickerMode,
   ColorPickerSelection,
 } from "@/lib/colorPicker/types";
 
 export interface ColorSchemeSlot {
-  /** Recipe-zone id for this slot. Used to call updateStep when the
-   *  painter clicks a filled box. */
-  zoneId: string;
-  /** First-step id of the slot — the step the picker swaps. */
-  firstStepId: string | null;
-  /** Resolved hex (either the step's customColorHex or the catalog
-   *  hex for paintId). Null when the slot has no first step yet. */
+  /** Recipe-slot id. Used to call updateSlot/deleteSlot when the painter
+   *  clicks a filled box. */
+  slotId: string;
+  /** Resolved hex (the slot's customColorHex or the catalog hex for its
+   *  paintId). Null when the slot has no colour resolved. */
   hex: string | null;
-  /** User-facing slot name (e.g. "Slot 1"). */
+  /** User-facing slot label (paint name, or "Slot N"). */
   name: string;
 }
 
@@ -55,23 +49,23 @@ interface Props {
 }
 
 /**
- * P12.9 — Project detail "Color Scheme" box.
+ * Project detail "Recipe" box (2026-06-04 unify — the project-side
+ * "colour scheme" is just a Recipe rendered in the project workspace).
  *
- * Renders a horizontal row of swatches:
- *   - When an attached recipe exists, fills the boxes with its
+ * Renders a horizontal row of slot swatches:
+ *   - When an attached recipe exists, fills the boxes with its slot
  *     palette and shows the recipe name above.
- *   - When no recipe is attached, shows 3 empty `+` starter boxes
- *     and a "Create recipe" CTA so the painter can spin up one
- *     inline.
- *   - The trailing "+ Add paint" button always renders (when a
- *     recipe exists) to extend the slot row.
+ *   - When no recipe is attached, shows 3 empty `+` starter boxes that
+ *     open the AttachRecipeModal (pick existing / create new).
+ *   - The trailing add-paint button always renders (when a recipe
+ *     exists) to append a slot.
  *
  * Clicking any box opens the ColorPicker side panel:
- *   - empty + → addSlotWithPaint
- *   - filled  → updateStep on the slot's first step
+ *   - empty + → addSlot (paints-only)
+ *   - filled  → updateSlot (swap the paint)
  *
- * The same primitive used by the recipe editor (P12.2) — the slot
- * picker UI is unchanged; only the host context is different.
+ * The same flat slot model as the recipe editor — only the host context
+ * differs.
  */
 export function ProjectColorSchemeBox({
   projectId,
@@ -101,12 +95,18 @@ export function ProjectColorSchemeBox({
       setPickerError("Attach or create a recipe before picking colours.");
       return;
     }
+    // Paints-only: a slot must be backed by a catalog paint. Raw-hex
+    // selections (wheel / eyedropper) are rejected on the ADD/SWAP path.
+    if (!selection.paintId) {
+      setPickerError("Pick a paint from the library to fill this slot.");
+      return;
+    }
+    const paintId = selection.paintId;
     startSaveTransition(async () => {
       if (pickerTarget?.kind === "new") {
-        const result = await addSlotWithPaint({
+        const result = await addSlot({
           recipeId: attachedRecipeId,
-          paintId: selection.paintId ?? null,
-          customColorHex: selection.paintId ? null : selection.hex,
+          paintId,
         });
         if (!result.ok) {
           setPickerError(result.error);
@@ -116,15 +116,11 @@ export function ProjectColorSchemeBox({
         router.refresh();
       } else if (pickerTarget?.kind === "edit") {
         const slot = slots[pickerTarget.slotIndex];
-        if (!slot?.firstStepId) {
-          setPickerError("This slot has no step to update.");
+        if (!slot) {
+          setPickerError("This slot no longer exists.");
           return;
         }
-        const result = await updateStep({
-          id: slot.firstStepId,
-          paintId: selection.paintId ?? null,
-          customColorHex: selection.paintId ? null : selection.hex,
-        });
+        const result = await updateSlot({ id: slot.slotId, paintId });
         if (!result.ok) {
           setPickerError(result.error);
           return;
@@ -135,15 +131,15 @@ export function ProjectColorSchemeBox({
     });
   };
 
-  const handleDeleteSlot = (zoneId: string, name: string) => {
+  const handleDeleteSlot = (slotId: string, name: string) => {
     if (
       typeof window !== "undefined" &&
-      !window.confirm(`Remove "${name}" from this scheme?`)
+      !window.confirm(`Remove "${name}" from this recipe?`)
     ) {
       return;
     }
     startSaveTransition(async () => {
-      const result = await deleteZone({ id: zoneId });
+      const result = await deleteSlot({ id: slotId });
       if (!result.ok) setPickerError(result.error);
       else router.refresh();
     });
@@ -167,9 +163,7 @@ export function ProjectColorSchemeBox({
     <>
       <Card
         title={
-          attachedRecipeName
-            ? `Color scheme · ${attachedRecipeName}`
-            : "Color scheme"
+          attachedRecipeName ? `Recipe · ${attachedRecipeName}` : "Recipe"
         }
         accentColor="cyan"
       >
@@ -195,7 +189,7 @@ export function ProjectColorSchemeBox({
           <div
             className="flex flex-wrap items-center gap-2"
             role="list"
-            aria-label="Color scheme swatches"
+            aria-label="Recipe swatches"
           >
             {displayBoxes.map((box, idx) =>
               "ghost" in box ? (
@@ -210,11 +204,11 @@ export function ProjectColorSchemeBox({
                 />
               ) : (
                 <FilledBox
-                  key={box.zoneId}
+                  key={box.slotId}
                   hex={box.hex}
                   name={box.name}
                   onSelect={() => setPickerTarget({ kind: "edit", slotIndex: idx })}
-                  onDelete={() => handleDeleteSlot(box.zoneId, box.name)}
+                  onDelete={() => handleDeleteSlot(box.slotId, box.name)}
                 />
               ),
             )}
@@ -245,7 +239,7 @@ export function ProjectColorSchemeBox({
         <ColorPickerSidePanel
           contextLabel={
             pickerTarget.kind === "new"
-              ? "Add a colour to this scheme"
+              ? "Add a paint to this recipe"
               : `Swap slot · ${slots[pickerTarget.slotIndex]?.name ?? ""}`
           }
           mode={pickerTarget.kind === "new" ? "add-slot" : "edit-slot"}
@@ -287,7 +281,7 @@ function GhostBox({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-label="Add a colour to the scheme"
+      aria-label="Add a paint to the recipe"
       className="w-14 h-14 flex items-center justify-center rounded-sm text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors disabled:opacity-50 cursor-pointer"
       style={{ border: "2px dashed var(--color-border-strong)" }}
     >

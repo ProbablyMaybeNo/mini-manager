@@ -7,44 +7,34 @@ const sample = {
     bodyType: "infantry",
     notesMd: "Two thin coats on the basecoat.",
   },
-  zones: [
+  slots: [
     {
-      name: "Power Armor",
-      steps: [
-        {
-          technique: "basecoat" as const,
-          paintName: "Caliban Green",
-          paintBrand: "Citadel",
-          hex: "#0F4A33",
-          notesMd: null,
-        },
-        {
-          technique: "wash" as const,
-          paintName: "Strong Tone",
-          paintBrand: "Army Painter",
-          hex: "#3A2618",
-          notesMd: "Recess shade only.",
-        },
-      ],
+      technique: "basecoat" as const,
+      paintName: "Caliban Green",
+      paintBrand: "Citadel",
+      hex: "#0F4A33",
+      notesMd: null,
     },
     {
-      name: "Trim",
-      steps: [
-        {
-          technique: "basecoat" as const,
-          paintName: "Retributor Gold",
-          paintBrand: "Citadel",
-          hex: "#9C7B2A",
-          notesMd: null,
-        },
-        {
-          technique: "glaze" as const,
-          paintName: null,
-          paintBrand: null,
-          hex: "#FF66CC",
-          notesMd: null,
-        },
-      ],
+      technique: "wash" as const,
+      paintName: "Strong Tone",
+      paintBrand: "Army Painter",
+      hex: "#3A2618",
+      notesMd: "Recess shade only.",
+    },
+    {
+      technique: "basecoat" as const,
+      paintName: "Retributor Gold",
+      paintBrand: "Citadel",
+      hex: "#9C7B2A",
+      notesMd: null,
+    },
+    {
+      technique: "glaze" as const,
+      paintName: null,
+      paintBrand: null,
+      hex: "#FF66CC",
+      notesMd: null,
     },
   ],
   publicUrl: "https://miniaturemanager.app/r/abc123",
@@ -57,16 +47,13 @@ describe("recipeToMarkdown", () => {
 
       *A Mini Manager recipe*
 
-      ## Power Armor
+      ## Slots
 
       1. **Basecoat** — Citadel Caliban Green \`#0F4A33\`
       2. **Wash** — Army Painter Strong Tone \`#3A2618\`
          *Recess shade only.*
-
-      ## Trim
-
-      1. **Basecoat** — Citadel Retributor Gold \`#9C7B2A\`
-      2. **Glaze** — Custom mix \`#FF66CC\`
+      3. **Basecoat** — Citadel Retributor Gold \`#9C7B2A\`
+      4. **Glaze** — Custom mix \`#FF66CC\`
 
       ## Notes
 
@@ -80,18 +67,13 @@ describe("recipeToMarkdown", () => {
   test("omits the footer link when publicUrl is missing", () => {
     const out = recipeToMarkdown({
       recipe: { name: "Unpublished", bodyType: "infantry", notesMd: null },
-      zones: [
+      slots: [
         {
-          name: "Body",
-          steps: [
-            {
-              technique: "basecoat",
-              paintName: "Mournfang Brown",
-              paintBrand: "Citadel",
-              hex: "#5d3618",
-              notesMd: null,
-            },
-          ],
+          technique: "basecoat",
+          paintName: "Mournfang Brown",
+          paintBrand: "Citadel",
+          hex: "#5d3618",
+          notesMd: null,
         },
       ],
     });
@@ -101,30 +83,25 @@ describe("recipeToMarkdown", () => {
     expect(out).toContain("`#5D3618`");
   });
 
-  test("renders empty-zone fallback when no steps are recorded", () => {
+  test("renders empty fallback when no slots are recorded", () => {
     const out = recipeToMarkdown({
       recipe: { name: "Bare", bodyType: "infantry", notesMd: null },
-      zones: [{ name: "Empty", steps: [] }],
+      slots: [],
     });
-    expect(out).toContain("## Empty");
-    expect(out).toContain("_(no steps recorded)_");
+    expect(out).toContain("## Slots");
+    expect(out).toContain("_(no slots recorded)_");
   });
 
   test("paint with a name but no brand renders without a brand prefix", () => {
     const out = recipeToMarkdown({
       recipe: { name: "Brandless", bodyType: "infantry", notesMd: null },
-      zones: [
+      slots: [
         {
-          name: "Zone",
-          steps: [
-            {
-              technique: "basecoat",
-              paintName: "My Custom Green",
-              paintBrand: null,
-              hex: "#1f8044",
-              notesMd: null,
-            },
-          ],
+          technique: "basecoat",
+          paintName: "My Custom Green",
+          paintBrand: null,
+          hex: "#1f8044",
+          notesMd: null,
         },
       ],
     });
@@ -135,39 +112,29 @@ describe("recipeToMarkdown", () => {
   test("whitespace-only hex is treated as no hex", () => {
     const out = recipeToMarkdown({
       recipe: { name: "Blank hex", bodyType: "infantry", notesMd: null },
-      zones: [
+      slots: [
         {
-          name: "Zone",
-          steps: [
-            {
-              technique: "glaze",
-              paintName: null,
-              paintBrand: null,
-              hex: "   ",
-              notesMd: null,
-            },
-          ],
+          technique: "glaze",
+          paintName: null,
+          paintBrand: null,
+          hex: "   ",
+          notesMd: null,
         },
       ],
     });
     expect(out).toContain("**Glaze** — _(no paint chosen)_");
   });
 
-  test("step with no paint and no hex renders a placeholder", () => {
+  test("slot with no paint and no hex renders a placeholder", () => {
     const out = recipeToMarkdown({
       recipe: { name: "WIP", bodyType: "infantry", notesMd: null },
-      zones: [
+      slots: [
         {
-          name: "Zone",
-          steps: [
-            {
-              technique: "layer",
-              paintName: null,
-              paintBrand: null,
-              hex: null,
-              notesMd: null,
-            },
-          ],
+          technique: "layer",
+          paintName: null,
+          paintBrand: null,
+          hex: null,
+          notesMd: null,
         },
       ],
     });

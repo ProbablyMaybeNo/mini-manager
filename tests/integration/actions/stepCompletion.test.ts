@@ -1,16 +1,20 @@
 /**
- * P15.0 — Recipe step-completion server actions + query helper.
+ * P15.0 / 2026-06-04 flatten — recipe slot-completion server actions +
+ * query helper.
  *
  * Covers:
  *   1. setStepCompletion — inserts / deletes a recipe_step_completion
- *      row keyed by (user_id, step_id); ownership-gated; idempotent.
- *   2. advanceSlot — bulk-completes a slot's steps + resolves the next
- *      slot with outstanding work.
+ *      row keyed by (user_id, slot_id); ownership-gated; idempotent.
+ *      (slot_id == the old step_id, preserved by the migration; the
+ *      `stepId` field name is kept on the action contract.)
+ *   2. advanceSlot — completes a slot + resolves the next undone slot.
  *   3. getCompletedStepIds — reads the painter's done-set for a list of
- *      step ids.
+ *      slot ids.
  *
- * Uses the in-memory libsql test DB so the new migration + FK cascade
- * exercise the production path. Auth + revalidatePath are mocked.
+ * Uses the in-memory libsql test DB so the migration exercises the
+ * production path. Auth + revalidatePath are mocked. (The completion FK
+ * re-point + cascade lives with Stage 4; the test DB runs FKs OFF by
+ * default so slot-id completion rows insert cleanly here.)
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
@@ -20,6 +24,7 @@ import {
   projects,
   recipes,
   recipeStepCompletion,
+  recipeSlots,
   recipeSteps,
   recipeZones,
 } from "@/db/schema";
@@ -48,18 +53,16 @@ const actions = await import("@/lib/actions/stepCompletion");
 const queries = await import("@/db/queries/stepCompletion");
 
 /**
- * Seed a project + attached recipe with `zoneCount` zones, each holding
- * `stepsPerZone` steps. Returns the ids in slot/step order so tests can
- * tick + assert deterministically.
+ * Seed a project + attached recipe with `slotCount` flat slots. Returns
+ * the slot ids in position order so tests can tick + assert
+ * deterministically.
  */
 async function seedRecipe(opts: {
   ownerId?: string;
-  zoneCount?: number;
-  stepsPerZone?: number;
+  slotCount?: number;
 } = {}) {
   const ownerId = opts.ownerId ?? state.userId;
-  const zoneCount = opts.zoneCount ?? 2;
-  const stepsPerZone = opts.stepsPerZone ?? 2;
+  const slotCount = opts.slotCount ?? 4;
 
   const projectId = nanoid(16);
   await state.db!.insert(projects).values({
@@ -79,41 +82,50 @@ async function seedRecipe(opts: {
     bodyType: "infantry",
   });
 
-  const zones: { id: string; steps: string[] }[] = [];
-  for (let z = 0; z < zoneCount; z++) {
-    const zoneId = nanoid(16);
-    await state.db!.insert(recipeZones).values({
-      id: zoneId,
-      recipeId,
-      position: z,
-      name: `Zone ${z}`,
+  // Stage 1 invariant: slot.id == the old step.id (preserved by the
+  // migration). The completion FK still references recipe_step until
+  // Stage 4 re-points it, so we seed a matching zone+step per slot with
+  // the SAME id — exactly the production state a real recipe has after
+  // the backfill. (The step seed is removed in Stage 4.)
+  const zoneId = nanoid(16);
+  await state.db!.insert(recipeZones).values({
+    id: zoneId,
+    recipeId,
+    position: 0,
+    name: "Zone",
+  });
+
+  const slots: string[] = [];
+  for (let i = 0; i < slotCount; i++) {
+    const id = nanoid(16);
+    await state.db!.insert(recipeSteps).values({
+      id,
+      zoneId,
+      position: i,
+      technique: "basecoat",
+      customColorHex: "#aabbcc",
     });
-    const steps: string[] = [];
-    for (let s = 0; s < stepsPerZone; s++) {
-      const stepId = nanoid(16);
-      await state.db!.insert(recipeSteps).values({
-        id: stepId,
-        zoneId,
-        position: s,
-        technique: "basecoat",
-        customColorHex: "#aabbcc",
-      });
-      steps.push(stepId);
-    }
-    zones.push({ id: zoneId, steps });
+    await state.db!.insert(recipeSlots).values({
+      id,
+      recipeId,
+      position: i,
+      technique: "basecoat",
+      customColorHex: "#aabbcc",
+    });
+    slots.push(id);
   }
 
-  return { projectId, recipeId, zones };
+  return { projectId, recipeId, slots };
 }
 
-async function isDone(userId: string, stepId: string): Promise<boolean> {
+async function isDone(userId: string, slotId: string): Promise<boolean> {
   const rows = await state
     .db!.select({ id: recipeStepCompletion.id })
     .from(recipeStepCompletion)
     .where(
       and(
         eq(recipeStepCompletion.userId, userId),
-        eq(recipeStepCompletion.stepId, stepId),
+        eq(recipeStepCompletion.stepId, slotId),
       ),
     );
   return rows.length > 0;
@@ -131,142 +143,124 @@ afterEach(() => {
 });
 
 describe("setStepCompletion — per-painter done toggle", () => {
-  test("ticking a step inserts a completion row", async () => {
-    const { zones } = await seedRecipe();
-    const stepId = zones[0]!.steps[0]!;
+  test("ticking a slot inserts a completion row", async () => {
+    const { slots } = await seedRecipe();
+    const slotId = slots[0]!;
 
-    const res = await actions.setStepCompletion({ stepId, done: true });
+    const res = await actions.setStepCompletion({ stepId: slotId, done: true });
     expect(res.ok).toBe(true);
-    expect(await isDone(state.userId, stepId)).toBe(true);
+    expect(await isDone(state.userId, slotId)).toBe(true);
   });
 
-  test("un-ticking a step deletes the completion row", async () => {
-    const { zones } = await seedRecipe();
-    const stepId = zones[0]!.steps[0]!;
-    await actions.setStepCompletion({ stepId, done: true });
+  test("un-ticking a slot deletes the completion row", async () => {
+    const { slots } = await seedRecipe();
+    const slotId = slots[0]!;
+    await actions.setStepCompletion({ stepId: slotId, done: true });
 
-    const res = await actions.setStepCompletion({ stepId, done: false });
+    const res = await actions.setStepCompletion({ stepId: slotId, done: false });
     expect(res.ok).toBe(true);
-    expect(await isDone(state.userId, stepId)).toBe(false);
+    expect(await isDone(state.userId, slotId)).toBe(false);
   });
 
   test("ticking is idempotent — no duplicate rows", async () => {
-    const { zones } = await seedRecipe();
-    const stepId = zones[0]!.steps[0]!;
-    await actions.setStepCompletion({ stepId, done: true });
-    await actions.setStepCompletion({ stepId, done: true });
+    const { slots } = await seedRecipe();
+    const slotId = slots[0]!;
+    await actions.setStepCompletion({ stepId: slotId, done: true });
+    await actions.setStepCompletion({ stepId: slotId, done: true });
 
     const rows = await state
       .db!.select()
       .from(recipeStepCompletion)
-      .where(eq(recipeStepCompletion.stepId, stepId));
+      .where(eq(recipeStepCompletion.stepId, slotId));
     expect(rows).toHaveLength(1);
   });
 
   test("done-state is per-painter — one painter ticking does not affect another", async () => {
-    const { zones } = await seedRecipe();
-    const stepId = zones[0]!.steps[0]!;
+    const { slots } = await seedRecipe();
+    const slotId = slots[0]!;
     const other = await seedExtraUser(state.db!, "co-painter");
 
-    await actions.setStepCompletion({ stepId, done: true });
-    expect(await isDone(state.userId, stepId)).toBe(true);
-    expect(await isDone(other, stepId)).toBe(false);
+    await actions.setStepCompletion({ stepId: slotId, done: true });
+    expect(await isDone(state.userId, slotId)).toBe(true);
+    expect(await isDone(other, slotId)).toBe(false);
   });
 
-  test("rejects a step owned via another user's recipe", async () => {
+  test("rejects a slot owned via another user's recipe", async () => {
     const otherId = await seedExtraUser(state.db!, "rival");
-    const { zones } = await seedRecipe({ ownerId: otherId });
-    const stepId = zones[0]!.steps[0]!;
+    const { slots } = await seedRecipe({ ownerId: otherId });
+    const slotId = slots[0]!;
 
-    const res = await actions.setStepCompletion({ stepId, done: true });
+    const res = await actions.setStepCompletion({ stepId: slotId, done: true });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/not found/i);
-    expect(await isDone(state.userId, stepId)).toBe(false);
+    expect(await isDone(state.userId, slotId)).toBe(false);
   });
 
-  test("rejects an unknown step id", async () => {
+  test("rejects an unknown slot id", async () => {
     const res = await actions.setStepCompletion({
       stepId: "nope",
       done: true,
     });
     expect(res.ok).toBe(false);
   });
-
-  test("FK cascade — deleting the step removes its completion mark", async () => {
-    const { zones } = await seedRecipe();
-    const stepId = zones[0]!.steps[0]!;
-    await actions.setStepCompletion({ stepId, done: true });
-
-    await state.db!.run("PRAGMA foreign_keys = ON");
-    await state.db!.delete(recipeSteps).where(eq(recipeSteps.id, stepId));
-
-    const rows = await state
-      .db!.select()
-      .from(recipeStepCompletion)
-      .where(eq(recipeStepCompletion.stepId, stepId));
-    expect(rows).toHaveLength(0);
-  });
 });
 
-describe("advanceSlot — bulk-complete + advance to next undone slot", () => {
-  test("marks every step in the slot done", async () => {
-    const { zones } = await seedRecipe({ zoneCount: 2, stepsPerZone: 3 });
-    const res = await actions.advanceSlot({ zoneId: zones[0]!.id });
+describe("advanceSlot — complete + advance to next undone slot", () => {
+  test("marks the slot done", async () => {
+    const { slots } = await seedRecipe({ slotCount: 3 });
+    const res = await actions.advanceSlot({ zoneId: slots[0]! });
     expect(res.ok).toBe(true);
-
-    for (const stepId of zones[0]!.steps) {
-      expect(await isDone(state.userId, stepId)).toBe(true);
-    }
+    expect(await isDone(state.userId, slots[0]!)).toBe(true);
   });
 
-  test("returns the next slot with an undone step", async () => {
-    const { zones } = await seedRecipe({ zoneCount: 3, stepsPerZone: 1 });
-    const res = await actions.advanceSlot({ zoneId: zones[0]!.id });
+  test("returns the next undone slot", async () => {
+    const { slots } = await seedRecipe({ slotCount: 3 });
+    const res = await actions.advanceSlot({ zoneId: slots[0]! });
     expect(res.ok).toBe(true);
-    if (res.ok) expect(res.data.nextSlotId).toBe(zones[1]!.id);
+    if (res.ok) expect(res.data.nextSlotId).toBe(slots[1]!);
   });
 
   test("skips already-complete slots when finding the next slot", async () => {
-    const { zones } = await seedRecipe({ zoneCount: 3, stepsPerZone: 1 });
+    const { slots } = await seedRecipe({ slotCount: 3 });
     // Pre-complete the middle slot.
-    await actions.setStepCompletion({ stepId: zones[1]!.steps[0]!, done: true });
+    await actions.setStepCompletion({ stepId: slots[1]!, done: true });
 
-    const res = await actions.advanceSlot({ zoneId: zones[0]!.id });
+    const res = await actions.advanceSlot({ zoneId: slots[0]! });
     expect(res.ok).toBe(true);
-    // z1 is fully done already → next undone is z2.
-    if (res.ok) expect(res.data.nextSlotId).toBe(zones[2]!.id);
+    // slots[1] is already done → next undone is slots[2].
+    if (res.ok) expect(res.data.nextSlotId).toBe(slots[2]!);
   });
 
   test("returns null next slot when the whole recipe is now complete", async () => {
-    const { zones } = await seedRecipe({ zoneCount: 1, stepsPerZone: 2 });
-    const res = await actions.advanceSlot({ zoneId: zones[0]!.id });
+    const { slots } = await seedRecipe({ slotCount: 1 });
+    const res = await actions.advanceSlot({ zoneId: slots[0]! });
     expect(res.ok).toBe(true);
     if (res.ok) expect(res.data.nextSlotId).toBeNull();
   });
 
-  test("does not duplicate completion rows for already-done steps", async () => {
-    const { zones } = await seedRecipe({ zoneCount: 1, stepsPerZone: 2 });
-    await actions.setStepCompletion({ stepId: zones[0]!.steps[0]!, done: true });
+  test("does not duplicate completion rows for an already-done slot", async () => {
+    const { slots } = await seedRecipe({ slotCount: 2 });
+    await actions.setStepCompletion({ stepId: slots[0]!, done: true });
 
-    const res = await actions.advanceSlot({ zoneId: zones[0]!.id });
+    const res = await actions.advanceSlot({ zoneId: slots[0]! });
     expect(res.ok).toBe(true);
 
     const rows = await state.db!.select().from(recipeStepCompletion);
-    expect(rows).toHaveLength(2); // not 3
+    expect(rows).toHaveLength(1); // not 2
   });
 
   test("rejects a slot owned via another user's recipe", async () => {
     const otherId = await seedExtraUser(state.db!, "rival");
-    const { zones } = await seedRecipe({ ownerId: otherId });
-    const res = await actions.advanceSlot({ zoneId: zones[0]!.id });
+    const { slots } = await seedRecipe({ ownerId: otherId });
+    const res = await actions.advanceSlot({ zoneId: slots[0]! });
     expect(res.ok).toBe(false);
   });
 });
 
 describe("getCompletedStepIds — read the painter's done-set", () => {
-  test("returns only the painter's completed step ids within the list", async () => {
-    const { zones } = await seedRecipe({ zoneCount: 1, stepsPerZone: 3 });
-    const [a, b, c] = zones[0]!.steps as [string, string, string];
+  test("returns only the painter's completed slot ids within the list", async () => {
+    const { slots } = await seedRecipe({ slotCount: 3 });
+    const [a, b, c] = slots as [string, string, string];
     await actions.setStepCompletion({ stepId: a, done: true });
     await actions.setStepCompletion({ stepId: c, done: true });
 
@@ -276,31 +270,25 @@ describe("getCompletedStepIds — read the painter's done-set", () => {
     expect(done.has(c)).toBe(true);
   });
 
-  test("empty step-id list short-circuits to an empty set", async () => {
+  test("empty slot-id list short-circuits to an empty set", async () => {
     const done = await queries.getCompletedStepIds(state.userId, []);
     expect(done.size).toBe(0);
   });
 
   test("user-scoped — one painter's mark is invisible to another", async () => {
-    // The completion table is keyed (user_id, step_id). Two painters can
-    // each hold their own mark on the same step. Seed both rows directly
-    // (the toggle action is owner-gated, which is orthogonal to the
-    // query's user-scoping — that's what's under test here).
-    const { zones } = await seedRecipe({ zoneCount: 1, stepsPerZone: 1 });
-    const stepId = zones[0]!.steps[0]!;
+    const { slots } = await seedRecipe({ slotCount: 1 });
+    const slotId = slots[0]!;
     const mine = state.userId;
     const other = await seedExtraUser(state.db!, "co-painter");
 
     await state.db!
       .insert(recipeStepCompletion)
-      .values({ userId: other, stepId });
+      .values({ userId: other, stepId: slotId });
 
-    // The OTHER painter's row exists for them…
-    const otherDone = await queries.getCompletedStepIds(other, [stepId]);
-    expect(otherDone.has(stepId)).toBe(true);
+    const otherDone = await queries.getCompletedStepIds(other, [slotId]);
+    expect(otherDone.has(slotId)).toBe(true);
 
-    // …but the original painter's done-set is empty.
-    const myDone = await queries.getCompletedStepIds(mine, [stepId]);
-    expect(myDone.has(stepId)).toBe(false);
+    const myDone = await queries.getCompletedStepIds(mine, [slotId]);
+    expect(myDone.has(slotId)).toBe(false);
   });
 });

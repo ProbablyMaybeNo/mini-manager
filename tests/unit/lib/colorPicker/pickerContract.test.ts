@@ -99,24 +99,17 @@ describe("ColorPicker — R7-002 mode prop", () => {
   });
 });
 
-describe("ZoneList — R7-002 passes the right mode through", () => {
-  const src = read("src/components/recipes/ZoneList.tsx");
+describe("SlotList — flat-slot editor surface", () => {
+  const src = read("src/components/recipes/SlotList.tsx");
 
-  test("'new' picker target maps to add-slot, 'edit' to edit-slot", () => {
-    expect(src).toContain(
-      'mode={pickerTarget.kind === "new" ? "add-slot" : "edit-slot"}',
-    );
+  test("hosts the paints-only PaintSlotPicker for add + swap", () => {
+    expect(src).toContain("PaintSlotPicker");
+    expect(src).toContain("onPickPaint");
   });
 
-  test("the inner ColorPickerSidePanel forwards mode to ColorPicker", () => {
-    expect(src).toContain("mode: ColorPickerMode;");
-    expect(src).toContain("mode={mode}");
-  });
-
-  test("help microcopy disambiguates ADD vs REPLACE vs layer", () => {
-    expect(src).toContain("slot to ADD a new colour");
-    expect(src).toContain("REPLACE its");
-    expect(src).toContain("+ Add step");
+  test("help microcopy disambiguates Add paint vs swap/layer", () => {
+    expect(src).toContain("+ Add paint");
+    expect(src).toContain("swap its paint or change the");
   });
 });
 

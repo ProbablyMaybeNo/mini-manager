@@ -216,8 +216,8 @@ describe("UX-1215 — library switches to card layout below 768px", () => {
 });
 
 describe("UX-1216 — recipe colour picker is a bottom sheet on mobile", () => {
-  test("ZoneList picker stacks as a bottom sheet on mobile, right drawer on desktop", () => {
-    const src = read("src/components/recipes/ZoneList.tsx");
+  test("SlotList picker stacks as a bottom sheet on mobile, right drawer on desktop", () => {
+    const src = read("src/components/recipes/SlotList.tsx");
     expect(src).toContain("fixed inset-0 z-50 flex flex-col md:flex-row");
     expect(src).toContain("w-full max-h-[88vh] md:max-h-none md:w-[480px]");
     expect(src).toContain("env(safe-area-inset-bottom");

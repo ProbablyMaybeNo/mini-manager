@@ -7,20 +7,18 @@ import {
   palettes,
   projects,
   recipes,
-  recipeSteps,
-  recipeZones,
+  recipeSlots,
   wishlistItems,
 } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
 
 interface ExportPayload {
-  __exportVersion: 2;
+  __exportVersion: 3;
   __exportedAt: string;
   projects: Array<Record<string, unknown>>;
   recipes: Array<Record<string, unknown>>;
-  recipeZones: Array<Record<string, unknown>>;
-  recipeSteps: Array<Record<string, unknown>>;
+  recipeSlots: Array<Record<string, unknown>>;
   palettes: Array<Record<string, unknown>>;
   inventoryEntries: Array<Record<string, unknown>>;
   wishlistItems: Array<Record<string, unknown>>;
@@ -52,14 +50,13 @@ function normaliseAll(
 
 /**
  * One-shot JSON export of everything the current user owns. Includes
- * projects, recipes (+ zones + steps), palettes, inventory entries,
- * and wishlist items. NextAuth tables (user / session / account /
- * verificationToken) are deliberately excluded — they're auth
- * internals, not user data.
+ * projects, recipes (+ slots), palettes, inventory entries, and wishlist
+ * items. NextAuth tables (user / session / account / verificationToken)
+ * are deliberately excluded — they're auth internals, not user data.
  *
- * P13.4 bumped the schema version to 2 (named_model dropped; previous
- * export v1 records can still be parsed but the `namedModels` key
- * is no longer emitted).
+ * P13.4 bumped the schema version to 2 (named_model dropped). The
+ * 2026-06-04 unify bumps it to 3: the two-level recipe_zone/recipe_step
+ * export is replaced by a flat `recipeSlots` array.
  *
  * Returns the payload to the caller; the client component handles the
  * actual `Blob` + download trigger.
@@ -86,33 +83,24 @@ export async function exportAllUserData(): Promise<
       db.select().from(wishlistItems).where(eq(wishlistItems.ownerId, userId)),
     ]);
 
-    // Zones, and steps are owner-scoped via their parent recipes —
-    // pull them after the parents resolve so we can scope the queries
-    // by recipe id and avoid cross-user bleed.
+    // Slots are owner-scoped via their parent recipes — pull them after
+    // the parents resolve so we can scope the query by recipe id and
+    // avoid cross-user bleed.
     const recipeIds = recipeRows.map((r) => r.id);
 
-    const zoneRows = recipeIds.length
+    const slotRows = recipeIds.length
       ? await db
           .select()
-          .from(recipeZones)
-          .where(inArray(recipeZones.recipeId, recipeIds))
-      : [];
-
-    const zoneIds = zoneRows.map((z) => z.id);
-    const stepRows = zoneIds.length
-      ? await db
-          .select()
-          .from(recipeSteps)
-          .where(inArray(recipeSteps.zoneId, zoneIds))
+          .from(recipeSlots)
+          .where(inArray(recipeSlots.recipeId, recipeIds))
       : [];
 
     const payload: ExportPayload = {
-      __exportVersion: 2,
+      __exportVersion: 3,
       __exportedAt: new Date().toISOString(),
       projects: normaliseAll(projectRows),
       recipes: normaliseAll(recipeRows),
-      recipeZones: normaliseAll(zoneRows),
-      recipeSteps: normaliseAll(stepRows),
+      recipeSlots: normaliseAll(slotRows),
       palettes: normaliseAll(paletteRows),
       inventoryEntries: normaliseAll(inventoryRows),
       wishlistItems: normaliseAll(wishlistRows),

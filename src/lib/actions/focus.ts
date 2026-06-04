@@ -4,19 +4,13 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { projects, recipeSteps, users } from "@/db/schema";
+import { projects, users } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
-import { getStepWithOwnerCheck } from "@/db/queries/recipes";
 import type { ActionResult } from "@/lib/actions/projects";
 
 const projectIdSchema = z.string().min(1).max(32);
-const stepIdSchema = z.string().min(1).max(64);
 
 const setSchema = z.object({ projectId: projectIdSchema });
-const updateNotesSchema = z.object({
-  stepId: stepIdSchema,
-  notes: z.string().max(2_000).nullable(),
-});
 
 /**
  * P13.11 — Pin a project as the painter's current "focus". The dashboard
@@ -83,51 +77,4 @@ export async function clearFocusProject(): Promise<
   }
   revalidatePath("/projects");
   return { ok: true, data: { cleared: true } };
-}
-
-/**
- * P13.11 — Auto-save per-step painting notes from the FOCUS panel
- * textarea. Called on blur from the client. Distinct from `updateStep`
- * (which patches paint/technique/notesMd) — this writes the new
- * `recipe_step.notes` column reserved for the painter's working notes.
- *
- * Passing `notes: null` (or empty trimmed string normalised to null in
- * the action) clears the painter's note. The recipe stays intact.
- */
-export async function updateStepNotes(
-  raw: z.infer<typeof updateNotesSchema>,
-): Promise<ActionResult<{ stepId: string }>> {
-  const parsed = updateNotesSchema.safeParse(raw);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: parsed.error.issues[0]?.message ?? "Invalid notes update",
-    };
-  }
-  const { stepId, notes } = parsed.data;
-  const userId = await currentUserId();
-
-  const owned = await getStepWithOwnerCheck(userId, stepId);
-  if (!owned) return { ok: false, error: "Step not found" };
-
-  // Normalise empty / whitespace-only strings to NULL so the column
-  // stays clean instead of accumulating empty rows on every blur.
-  const trimmed = notes == null ? null : notes.trim();
-  const next = trimmed === null || trimmed === "" ? null : trimmed;
-
-  try {
-    await db
-      .update(recipeSteps)
-      .set({ notes: next })
-      .where(eq(recipeSteps.id, stepId));
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "Failed to save notes",
-    };
-  }
-
-  revalidatePath("/projects");
-  revalidatePath(`/recipes/${owned.recipeId}`);
-  return { ok: true, data: { stepId } };
 }

@@ -74,15 +74,12 @@ describe("Section microcopy under primary headings (P11.12)", () => {
     expect(src).toMatch(/account, plan, and data tools/);
   });
 
-  test("Recipe ZoneList carries the colour-slot inline help", () => {
-    // P12.2 replaced "Each colour slot is one part of the model" with
-    // a click-to-pick affordance pointer (recipes are about COLOR,
-    // not model parts, per Ross's locked brief). R7-002 then sharpened
-    // the copy: ADD on +, REPLACE on filled, layer via the Steps
-    // panel.
-    const src = read("src/components/recipes/ZoneList.tsx");
-    expect(src).toContain("Click any");
-    expect(src).toContain("slot to ADD a new colour");
+  test("Recipe SlotList carries the flat-slot inline help", () => {
+    // 2026-06-04 flatten: a slot is one paint + its layer. The inline
+    // help points at the + Add paint tile + the click-to-swap path.
+    const src = read("src/components/recipes/SlotList.tsx");
+    expect(src).toContain("Each slot is one paint and the layer");
+    expect(src).toContain("+ Add paint");
   });
 
   test("StageCounter renders the cascade explainer microcopy", () => {

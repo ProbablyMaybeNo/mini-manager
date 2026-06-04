@@ -16,11 +16,7 @@ import {
   type RecipeZone,
 } from "@/db/schema";
 import type { Paint, PaintCatalog } from "@/lib/paints/types";
-import type {
-  RecipeWithSlots,
-  RecipeWithZones,
-  RecipeZoneWithSteps,
-} from "@/lib/recipes/types";
+import type { RecipeWithSlots } from "@/lib/recipes/types";
 
 /* ============================================================
    Recipe lookups
@@ -70,12 +66,11 @@ export async function getRecipeById(
  * Public read path — looks up a recipe by its `publicSlug` with no owner
  * filter. This is the ONLY query that bypasses owner-scope, intentionally:
  * anyone with a slug URL can view the recipe (P5.2 public view). Returns
- * the same nested shape as `getRecipeWithZones`, or null if the slug isn't
- * minted on any recipe.
+ * the flat slot shape, or null if the slug isn't minted on any recipe.
  */
 export async function getRecipeBySlug(
   slug: string,
-): Promise<RecipeWithZones | null> {
+): Promise<RecipeWithSlots | null> {
   const recipeRows = await db
     .select()
     .from(recipes)
@@ -84,43 +79,20 @@ export async function getRecipeBySlug(
   const recipe = recipeRows[0];
   if (!recipe) return null;
 
-  const zoneRows = await db
+  const slots = await db
     .select()
-    .from(recipeZones)
-    .where(eq(recipeZones.recipeId, recipe.id))
-    .orderBy(asc(recipeZones.position));
+    .from(recipeSlots)
+    .where(eq(recipeSlots.recipeId, recipe.id))
+    .orderBy(asc(recipeSlots.position));
 
-  if (zoneRows.length === 0) {
-    return { ...recipe, zones: [] };
-  }
-
-  const zoneIds = zoneRows.map((z) => z.id);
-  const stepRows = await db
-    .select()
-    .from(recipeSteps)
-    .where(inArray(recipeSteps.zoneId, zoneIds))
-    .orderBy(asc(recipeSteps.position));
-
-  const stepsByZone = new Map<string, RecipeStep[]>();
-  for (const s of stepRows) {
-    const arr = stepsByZone.get(s.zoneId) ?? [];
-    arr.push(s);
-    stepsByZone.set(s.zoneId, arr);
-  }
-
-  const zones: RecipeZoneWithSteps[] = zoneRows.map((z) => ({
-    ...z,
-    steps: stepsByZone.get(z.id) ?? [],
-  }));
-
-  return { ...recipe, zones };
+  return { ...recipe, slots };
 }
 
 /**
  * Full FLAT recipe shape (2026-06-04 unify) — the recipe + its slots
  * ordered by position. Ownership-checked; returns null when the recipe is
  * missing OR owned by another user (the two cases are not distinguished).
- * The slot-era counterpart to `getRecipeWithZones`.
+ * The single canonical full-detail recipe reader.
  */
 export async function getRecipeWithSlots(
   userId: string,
@@ -136,51 +108,6 @@ export async function getRecipeWithSlots(
     .orderBy(asc(recipeSlots.position));
 
   return { ...recipe, slots };
-}
-
-/**
- * Full nested recipe shape — zones ordered by position, steps within
- * each zone ordered by position. Ownership-checked. Returns null when
- * the recipe is missing OR owned by another user (do NOT distinguish
- * the two cases to the caller).
- */
-export async function getRecipeWithZones(
-  userId: string,
-  recipeId: string,
-): Promise<RecipeWithZones | null> {
-  const recipe = await getRecipeById(userId, recipeId);
-  if (!recipe) return null;
-
-  const zoneRows = await db
-    .select()
-    .from(recipeZones)
-    .where(eq(recipeZones.recipeId, recipe.id))
-    .orderBy(asc(recipeZones.position));
-
-  if (zoneRows.length === 0) {
-    return { ...recipe, zones: [] };
-  }
-
-  const zoneIds = zoneRows.map((z) => z.id);
-  const stepRows = await db
-    .select()
-    .from(recipeSteps)
-    .where(inArray(recipeSteps.zoneId, zoneIds))
-    .orderBy(asc(recipeSteps.position));
-
-  const stepsByZone = new Map<string, RecipeStep[]>();
-  for (const s of stepRows) {
-    const arr = stepsByZone.get(s.zoneId) ?? [];
-    arr.push(s);
-    stepsByZone.set(s.zoneId, arr);
-  }
-
-  const zones: RecipeZoneWithSteps[] = zoneRows.map((z) => ({
-    ...z,
-    steps: stepsByZone.get(z.id) ?? [],
-  }));
-
-  return { ...recipe, zones };
 }
 
 export interface RecipesGrouped {
@@ -228,11 +155,10 @@ export async function listAllRecipesGrouped(
 
 /**
  * P12.5 — Flat table-shape view of every recipe owned by the user,
- * with each recipe's palette swatches + step count + attachment
+ * with each recipe's palette swatches + slot count + attachment
  * label already resolved server-side.
  *
- * One read pass each over `recipes`, `recipe_zone`, `recipe_step` —
- * O(R+Z+S) instead of the N+1 the card-per-recipe page used to do.
+ * One read pass each over `recipes` and `recipe_slot` — O(R+S) flat.
  */
 
 export interface RecipeTableRow {
@@ -243,11 +169,9 @@ export interface RecipeTableRow {
   /** Optional attachment label (project name) resolved by the caller —
    *  left null here so this stays pure-data. */
   attachedProjectId: string | null;
-  /** Up to 8 hexes in zone-position order — the palette strip. */
+  /** Up to 8 hexes in slot-position order — the palette strip. */
   paletteHexes: string[];
-  /** Total step count across every zone. */
-  stepCount: number;
-  /** Total slot count (== zone count). */
+  /** Total slot count (one paint + layer per slot). */
   slotCount: number;
   /** ms-timestamps so the table can sort. */
   createdAt: number;
@@ -267,51 +191,30 @@ export async function listRecipesForTable(
   if (recipeRows.length === 0) return [];
 
   const recipeIds = recipeRows.map((r) => r.id);
-  const zoneRows = await db
+  const slotRows = await db
     .select()
-    .from(recipeZones)
-    .where(inArray(recipeZones.recipeId, recipeIds))
-    .orderBy(asc(recipeZones.recipeId), asc(recipeZones.position));
+    .from(recipeSlots)
+    .where(inArray(recipeSlots.recipeId, recipeIds))
+    .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position));
 
-  const zoneIds = zoneRows.map((z) => z.id);
-  const stepRows =
-    zoneIds.length > 0
-      ? await db
-          .select()
-          .from(recipeSteps)
-          .where(inArray(recipeSteps.zoneId, zoneIds))
-          .orderBy(asc(recipeSteps.zoneId), asc(recipeSteps.position))
-      : [];
-
-  const stepsByZoneId = new Map<string, RecipeStep[]>();
-  for (const s of stepRows) {
-    const arr = stepsByZoneId.get(s.zoneId) ?? [];
+  const slotsByRecipeId = new Map<string, RecipeSlot[]>();
+  for (const s of slotRows) {
+    const arr = slotsByRecipeId.get(s.recipeId) ?? [];
     arr.push(s);
-    stepsByZoneId.set(s.zoneId, arr);
-  }
-
-  const zonesByRecipeId = new Map<string, RecipeZone[]>();
-  for (const z of zoneRows) {
-    const arr = zonesByRecipeId.get(z.recipeId) ?? [];
-    arr.push(z);
-    zonesByRecipeId.set(z.recipeId, arr);
+    slotsByRecipeId.set(s.recipeId, arr);
   }
 
   const paintHex = await getPaintHexMap();
 
   const out: RecipeTableRow[] = [];
   for (const r of recipeRows) {
-    const zones = zonesByRecipeId.get(r.id) ?? [];
-    let stepCount = 0;
+    const slots = slotsByRecipeId.get(r.id) ?? [];
     const paletteHexes: string[] = [];
-    for (const z of zones) {
-      const steps = stepsByZoneId.get(z.id) ?? [];
-      stepCount += steps.length;
-      const first = steps[0];
-      if (first?.customColorHex) {
-        paletteHexes.push(first.customColorHex);
-      } else if (first?.paintId) {
-        const hex = paintHex.get(first.paintId);
+    for (const slot of slots) {
+      if (slot.customColorHex) {
+        paletteHexes.push(slot.customColorHex);
+      } else if (slot.paintId) {
+        const hex = paintHex.get(slot.paintId);
         if (hex) paletteHexes.push(hex);
       }
       if (paletteHexes.length >= 8) break;
@@ -326,8 +229,7 @@ export async function listRecipesForTable(
       attachmentKind,
       attachedProjectId: r.attachedProjectId,
       paletteHexes,
-      stepCount,
-      slotCount: zones.length,
+      slotCount: slots.length,
       createdAt: r.createdAt.getTime(),
       updatedAt: r.updatedAt.getTime(),
       publicSlug: r.publicSlug,
@@ -424,41 +326,25 @@ export async function getProjectPalettesMap(
 
   if (allRecipeIds.length === 0) return new Map();
 
-  const zoneRows = await db
+  const slotRows = await db
     .select({
-      id: recipeZones.id,
-      recipeId: recipeZones.recipeId,
-      position: recipeZones.position,
+      recipeId: recipeSlots.recipeId,
+      position: recipeSlots.position,
+      paintId: recipeSlots.paintId,
+      customColorHex: recipeSlots.customColorHex,
     })
-    .from(recipeZones)
-    .where(inArray(recipeZones.recipeId, allRecipeIds))
-    .orderBy(asc(recipeZones.recipeId), asc(recipeZones.position));
+    .from(recipeSlots)
+    .where(inArray(recipeSlots.recipeId, allRecipeIds))
+    .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position));
 
-  const zoneIds = zoneRows.map((z) => z.id);
-  const stepRows = zoneIds.length
-    ? await db
-        .select({
-          zoneId: recipeSteps.zoneId,
-          position: recipeSteps.position,
-          paintId: recipeSteps.paintId,
-          customColorHex: recipeSteps.customColorHex,
-        })
-        .from(recipeSteps)
-        .where(inArray(recipeSteps.zoneId, zoneIds))
-        .orderBy(asc(recipeSteps.zoneId), asc(recipeSteps.position))
-    : [];
-
-  // First step per zone — that's the slot's representative paint.
-  const firstStepByZoneId = new Map<
+  const slotsByRecipeId = new Map<
     string,
-    { paintId: string | null; customColorHex: string | null }
+    Array<{ paintId: string | null; customColorHex: string | null }>
   >();
-  for (const s of stepRows) {
-    if (firstStepByZoneId.has(s.zoneId)) continue;
-    firstStepByZoneId.set(s.zoneId, {
-      paintId: s.paintId,
-      customColorHex: s.customColorHex,
-    });
+  for (const s of slotRows) {
+    const arr = slotsByRecipeId.get(s.recipeId) ?? [];
+    arr.push({ paintId: s.paintId, customColorHex: s.customColorHex });
+    slotsByRecipeId.set(s.recipeId, arr);
   }
 
   const paintHex = await getPaintHexMap();
@@ -466,14 +352,12 @@ export async function getProjectPalettesMap(
   for (const [projectId, recipeIds] of recipesByProject) {
     const hexes: string[] = [];
     for (const rid of recipeIds) {
-      const recipeZonesForR = zoneRows.filter((z) => z.recipeId === rid);
-      for (const z of recipeZonesForR) {
-        const first = firstStepByZoneId.get(z.id);
-        if (!first) continue;
-        if (first.customColorHex) {
-          hexes.push(first.customColorHex);
-        } else if (first.paintId) {
-          const hex = paintHex.get(first.paintId);
+      const slots = slotsByRecipeId.get(rid) ?? [];
+      for (const slot of slots) {
+        if (slot.customColorHex) {
+          hexes.push(slot.customColorHex);
+        } else if (slot.paintId) {
+          const hex = paintHex.get(slot.paintId);
           if (hex) hexes.push(hex);
         }
         if (hexes.length >= 8) break;
@@ -553,38 +437,33 @@ async function getPaintHexMap(): Promise<Map<string, string>> {
 }
 
 /**
- * Derive the dominant swatch hex for each zone — the first step's
- * paint hex OR customColorHex. Used by the silhouette + palette strip.
+ * Derive the dominant swatch hex for each slot — the slot's paint hex OR
+ * customColorHex. Used by the public OG image + palette strips.
  *
- * Returns a map keyed by either the zone's `silhouetteZoneId` (when
- * present) or its `id` (so custom-named zones still resolve). The
- * silhouette consumer keys by silhouette ids; palette strips just
- * walk values.
+ * Returns a map keyed by the slot's `id`; consumers just walk the values
+ * for an ordered palette strip.
  */
 export async function paletteForRecipe(
-  recipe: RecipeWithZones,
+  recipe: RecipeWithSlots,
 ): Promise<Map<string, string>> {
   const paintHex = await getPaintHexMap();
   const out = new Map<string, string>();
-  for (const zone of recipe.zones) {
-    const firstStep = zone.steps[0];
-    if (!firstStep) continue;
+  for (const slot of recipe.slots) {
     let hex: string | null = null;
-    if (firstStep.customColorHex) {
-      hex = firstStep.customColorHex;
-    } else if (firstStep.paintId) {
-      hex = paintHex.get(firstStep.paintId) ?? null;
+    if (slot.customColorHex) {
+      hex = slot.customColorHex;
+    } else if (slot.paintId) {
+      hex = paintHex.get(slot.paintId) ?? null;
     }
     if (!hex) continue;
-    const key = zone.silhouetteZoneId ?? zone.id;
-    out.set(key, hex);
+    out.set(slot.id, hex);
   }
   return out;
 }
 
 /**
- * Compact palette strip — up to `limit` swatch hexes in zone order.
- * Skips zones with no resolved colour. Used by `RecipeCard` +
+ * Compact palette strip — up to `limit` swatch hexes in slot order.
+ * Skips slots with no resolved colour. Used by `RecipeCard` +
  * `ProjectRow` to render a tiny strip without loading the full recipe.
  */
 export async function paletteStripForRecipe(
@@ -592,18 +471,17 @@ export async function paletteStripForRecipe(
   recipeId: string,
   limit = 8,
 ): Promise<ReadonlyArray<string>> {
-  const recipe = await getRecipeWithZones(userId, recipeId);
+  const recipe = await getRecipeWithSlots(userId, recipeId);
   if (!recipe) return [];
   const map = await paletteForRecipe(recipe);
   return Array.from(map.values()).slice(0, limit);
 }
 
 /**
- * Bulk palette strips for many recipes in 3 SQL queries total — owner
- * check on the recipes (1 query), zones (1 query keyed by recipe), and
- * steps (1 query keyed by zone). Avoids the N+1 explosion the per-card
- * `paletteStripForRecipe` would cause when the projects list renders
- * a strip per project.
+ * Bulk palette strips for many recipes in 2 SQL queries total — owner
+ * check on the recipes (1 query) + slots (1 query keyed by recipe).
+ * Avoids the N+1 explosion the per-card `paletteStripForRecipe` would
+ * cause when the projects list renders a strip per project.
  *
  * Returns a Map<recipeId, hex[]>. Recipes not owned by the caller are
  * silently dropped so a hostile id list can't probe other users.
@@ -628,43 +506,27 @@ export async function paletteStripsForRecipes(
   const ownedIds = ownedRows.map((r) => r.id);
   if (ownedIds.length === 0) return out;
 
-  const zoneRows = await db
+  const slotRows = await db
     .select()
-    .from(recipeZones)
-    .where(inArray(recipeZones.recipeId, ownedIds))
-    .orderBy(asc(recipeZones.position));
-  if (zoneRows.length === 0) {
-    for (const id of ownedIds) out.set(id, []);
-    return out;
-  }
-
-  const zoneIds = zoneRows.map((z) => z.id);
-  const stepRows = await db
-    .select()
-    .from(recipeSteps)
-    .where(inArray(recipeSteps.zoneId, zoneIds))
-    .orderBy(asc(recipeSteps.position));
-
-  const firstStepByZone = new Map<string, RecipeStep>();
-  for (const s of stepRows) {
-    if (!firstStepByZone.has(s.zoneId)) firstStepByZone.set(s.zoneId, s);
-  }
+    .from(recipeSlots)
+    .where(inArray(recipeSlots.recipeId, ownedIds))
+    .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position));
 
   const paintHex = await getPaintHexMap();
-  const zonesByRecipe = new Map<string, RecipeZone[]>();
-  for (const z of zoneRows) {
-    const arr = zonesByRecipe.get(z.recipeId) ?? [];
-    arr.push(z);
-    zonesByRecipe.set(z.recipeId, arr);
+  const slotsByRecipe = new Map<string, RecipeSlot[]>();
+  for (const s of slotRows) {
+    const arr = slotsByRecipe.get(s.recipeId) ?? [];
+    arr.push(s);
+    slotsByRecipe.set(s.recipeId, arr);
   }
 
   for (const id of ownedIds) {
-    const zones = zonesByRecipe.get(id) ?? [];
+    const slots = slotsByRecipe.get(id) ?? [];
     const swatches: string[] = [];
-    for (const z of zones) {
-      const step = firstStepByZone.get(z.id);
-      if (!step) continue;
-      const hex = step.customColorHex ?? (step.paintId ? paintHex.get(step.paintId) ?? null : null);
+    for (const slot of slots) {
+      const hex =
+        slot.customColorHex ??
+        (slot.paintId ? paintHex.get(slot.paintId) ?? null : null);
       if (hex) swatches.push(hex);
       if (swatches.length >= limit) break;
     }
@@ -678,28 +540,26 @@ export async function paletteStripsForRecipes(
    ============================================================ */
 
 export interface RecipeSummary {
-  zoneCount: number;
-  stepCount: number;
+  slotCount: number;
 }
 
 export async function summarizeRecipe(
   userId: string,
   recipeId: string,
 ): Promise<RecipeSummary> {
-  const recipe = await getRecipeWithZones(userId, recipeId);
-  if (!recipe) return { zoneCount: 0, stepCount: 0 };
-  let stepCount = 0;
-  for (const z of recipe.zones) stepCount += z.steps.length;
-  return { zoneCount: recipe.zones.length, stepCount };
+  const recipe = await getRecipeWithSlots(userId, recipeId);
+  if (!recipe) return { slotCount: 0 };
+  return { slotCount: recipe.slots.length };
 }
 
 /* ============================================================
-   Zone / step internal lookups (used by mutations)
+   Slot internal lookups (used by mutations)
    ============================================================ */
 
 /**
- * Verify a zone exists and is owned via its parent recipe. Returns the
- * zone row + the parent recipeId on success.
+ * Verify a zone exists and is owned via its parent recipe. Retained for
+ * the legacy zone/step actions (recipeZones.ts / recipeSteps.ts) until
+ * those are removed in Stage 4. New code uses getSlotWithOwnerCheck.
  */
 export async function getZoneWithOwnerCheck(
   userId: string,
@@ -718,7 +578,7 @@ export async function getZoneWithOwnerCheck(
 
 /**
  * Verify a step exists and is owned via its zone's parent recipe.
- * Returns the step row + ids needed for revalidation on success.
+ * Retained for the legacy zone/step actions until Stage 4.
  */
 export async function getStepWithOwnerCheck(
   userId: string,
@@ -747,8 +607,7 @@ export async function getStepWithOwnerCheck(
 
 /**
  * Verify a slot exists and is owned via its parent recipe (2026-06-04
- * unify). Returns the slot row + the parent recipeId on success — the
- * flat-model counterpart to getZoneWithOwnerCheck / getStepWithOwnerCheck.
+ * unify). Returns the slot row + the parent recipeId on success.
  */
 export async function getSlotWithOwnerCheck(
   userId: string,

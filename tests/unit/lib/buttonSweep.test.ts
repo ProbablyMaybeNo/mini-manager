@@ -51,10 +51,10 @@ const ADD_CREATE_NEW_SUCCESS: ReadonlyArray<VariantExpectation> = [
     signature: '"Creating…" : "Create project"',
   },
   {
-    label: "StepList (Add step)",
-    file: "src/components/recipes/StepList.tsx",
+    label: "ProjectColorSchemeBox (+ Add paint)",
+    file: "src/components/ProjectColorSchemeBox.tsx",
     expected: "success",
-    signature: '"Adding…" : "Add step"',
+    signature: "+ Add paint",
   },
   {
     label: "CloneButton",

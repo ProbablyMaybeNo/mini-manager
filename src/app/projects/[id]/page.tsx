@@ -34,7 +34,7 @@ import {
 import {
   getPaintMetaMap,
   getProjectPalettesMap,
-  getRecipeWithZones,
+  getRecipeWithSlots,
   listOwnedRecipesLean,
   listRecipesForProject,
 } from "@/db/queries/recipes";
@@ -168,7 +168,7 @@ export default async function ProjectDetailPage({
 
   const showInteractiveCounters = isLeafProject(project);
 
-  // P12.9 — Color Scheme box. If a recipe is attached, surface its
+  // Recipe box. If a recipe is attached, surface its
   // slot palette so the box can pre-fill. We pick the first attached
   // recipe (a project typically has one scheme — multiple attachments
   // exist for the "unit override" pattern but the box reads top-
@@ -222,21 +222,16 @@ export default async function ProjectDetailPage({
     null;
   let colorSchemeSlots: ColorSchemeSlot[] = [];
   if (attachedRecipe) {
-    const full = await getRecipeWithZones(userId, attachedRecipe.id);
+    const full = await getRecipeWithSlots(userId, attachedRecipe.id);
     if (full) {
       const paintMeta = await getPaintMetaMap();
-      colorSchemeSlots = full.zones.map((z) => {
-        const firstStep = z.steps[0];
-        const hex =
-          firstStep?.customColorHex ??
-          (firstStep?.paintId
-            ? paintMeta.get(firstStep.paintId)?.hex ?? null
-            : null);
+      colorSchemeSlots = full.slots.map((slot, idx) => {
+        const meta = slot.paintId ? paintMeta.get(slot.paintId) : null;
+        const hex = slot.customColorHex ?? meta?.hex ?? null;
         return {
-          zoneId: z.id,
-          firstStepId: firstStep?.id ?? null,
+          slotId: slot.id,
           hex,
-          name: z.name,
+          name: meta?.label ?? `Slot ${idx + 1}`,
         };
       });
     }

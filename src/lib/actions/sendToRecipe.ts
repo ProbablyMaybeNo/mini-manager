@@ -1,29 +1,24 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, asc, desc, eq, inArray, max } from "drizzle-orm";
+import { and, desc, eq, max } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import {
-  recipes,
-  recipeSteps,
-  recipeZones,
-  type Recipe,
-} from "@/db/schema";
+import { recipes, recipeSlots, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
 import { validatePaletteColors } from "@/lib/palettes/cascade";
 
 /* ============================================================
    listRecipesForSendTo — lightweight read action surfaced to the
-   client modal. Returns the painter's recipes + zones in a single
-   round-trip so the modal renders without a chained `useEffect`.
+   client modal. Returns the painter's recipes so the modal renders
+   without a chained `useEffect`. Flat model: the palette appends as a
+   run of slots, so there's no per-recipe zone list to pick from.
    ============================================================ */
 
 export interface SendToRecipeOption {
   id: string;
   name: string;
-  zones: ReadonlyArray<{ id: string; name: string; position: number }>;
 }
 
 export async function listRecipesForSendTo(): Promise<
@@ -36,33 +31,9 @@ export async function listRecipesForSendTo(): Promise<
       .from(recipes)
       .where(eq(recipes.ownerId, userId))
       .orderBy(desc(recipes.updatedAt));
-    if (recipeRows.length === 0) {
-      return { ok: true, data: [] };
-    }
-    const recipeIds = recipeRows.map((r) => r.id);
-    const zoneRows = await db
-      .select({
-        id: recipeZones.id,
-        recipeId: recipeZones.recipeId,
-        name: recipeZones.name,
-        position: recipeZones.position,
-      })
-      .from(recipeZones)
-      .where(inArray(recipeZones.recipeId, recipeIds))
-      .orderBy(asc(recipeZones.position));
-    const zonesByRecipe = new Map<
-      string,
-      Array<{ id: string; name: string; position: number }>
-    >();
-    for (const z of zoneRows) {
-      const arr = zonesByRecipe.get(z.recipeId) ?? [];
-      arr.push({ id: z.id, name: z.name, position: z.position });
-      zonesByRecipe.set(z.recipeId, arr);
-    }
     const out: SendToRecipeOption[] = recipeRows.map((r) => ({
       id: r.id,
       name: r.name,
-      zones: zonesByRecipe.get(r.id) ?? [],
     }));
     return { ok: true, data: out };
   } catch (err) {
@@ -84,34 +55,23 @@ const swatchSchema = z.object({
 const sendSchema = z
   .object({
     swatches: z.array(swatchSchema).min(1, "Palette has no swatches"),
-    /** Existing-recipe target: pick a recipe + an optional zone. When
-     *  the zone is omitted, a new zone named after the source tool is
-     *  created. */
+    /** Existing-recipe target — appends the palette as a run of slots. */
     targetRecipeId: z.string().min(1).max(64).optional(),
-    targetZoneId: z.string().min(1).max(64).optional(),
     /** Create-new-recipe target: ignored if targetRecipeId is set. */
     newRecipeName: z.string().trim().min(1).max(120).optional(),
-    /** Optional: the name of the zone we'd create if the user picked
-     *  "new zone" from the modal (or when creating a new recipe). */
-    zoneName: z.string().trim().min(1).max(80).optional(),
   })
   .refine(
     (d) => Boolean(d.targetRecipeId) !== Boolean(d.newRecipeName),
     {
       message: "Send to recipe needs either targetRecipeId OR newRecipeName.",
     },
-  )
-  .refine(
-    (d) => !(d.targetZoneId && d.newRecipeName),
-    { message: "Cannot pick a zone when creating a new recipe." },
   );
 
 export type SendPaletteInput = z.input<typeof sendSchema>;
 
 export interface SendPaletteResult {
   recipeId: string;
-  zoneId: string;
-  insertedStepIds: ReadonlyArray<string>;
+  insertedSlotIds: ReadonlyArray<string>;
 }
 
 /* ============================================================
@@ -150,7 +110,6 @@ export async function sendPaletteToRecipe(
     return createRecipeFromPalette({
       userId,
       name: d.newRecipeName,
-      zoneName: d.zoneName ?? "Palette",
       hexes: normalisedHexes,
       paintIds: d.swatches.map((s) => s.paintId ?? null),
     });
@@ -164,8 +123,6 @@ export async function sendPaletteToRecipe(
   return appendPaletteToRecipe({
     userId,
     recipeId: d.targetRecipeId,
-    zoneId: d.targetZoneId ?? null,
-    zoneName: d.zoneName ?? "Palette",
     hexes: normalisedHexes,
     paintIds: d.swatches.map((s) => s.paintId ?? null),
   });
@@ -178,7 +135,6 @@ export async function sendPaletteToRecipe(
 interface CreateArgs {
   userId: string;
   name: string;
-  zoneName: string;
   hexes: ReadonlyArray<string>;
   paintIds: ReadonlyArray<string | null>;
 }
@@ -199,20 +155,8 @@ async function createRecipeFromPalette(
     const recipe = recipeRows[0];
     if (!recipe) return { ok: false, error: "Recipe insert returned no row" };
 
-    const zoneRows = await db
-      .insert(recipeZones)
-      .values({
-        recipeId: recipe.id,
-        name: args.zoneName,
-        position: 0,
-        silhouetteZoneId: null,
-      })
-      .returning();
-    const zone = zoneRows[0];
-    if (!zone) return { ok: false, error: "Zone insert returned no row" };
-
-    const inserted = await insertStepsForPalette({
-      zoneId: zone.id,
+    const inserted = await insertSlotsForPalette({
+      recipeId: recipe.id,
       startPosition: 0,
       hexes: args.hexes,
       paintIds: args.paintIds,
@@ -224,8 +168,7 @@ async function createRecipeFromPalette(
       ok: true,
       data: {
         recipeId: recipe.id,
-        zoneId: zone.id,
-        insertedStepIds: inserted,
+        insertedSlotIds: inserted,
       },
     };
   } catch (err) {
@@ -239,8 +182,6 @@ async function createRecipeFromPalette(
 interface AppendArgs {
   userId: string;
   recipeId: string;
-  zoneId: string | null;
-  zoneName: string;
   hexes: ReadonlyArray<string>;
   paintIds: ReadonlyArray<string | null>;
 }
@@ -259,52 +200,17 @@ async function appendPaletteToRecipe(
   const recipe: Recipe | undefined = recipeRows[0];
   if (!recipe) return { ok: false, error: "Recipe not found" };
 
-  // Resolve the target zone — either the one supplied, or a brand-new
-  // zone appended to the recipe.
-  let zoneId: string;
-  if (args.zoneId) {
-    const zoneRows = await db
-      .select({ id: recipeZones.id, recipeId: recipeZones.recipeId })
-      .from(recipeZones)
-      .where(eq(recipeZones.id, args.zoneId))
-      .limit(1);
-    const zone = zoneRows[0];
-    if (!zone || zone.recipeId !== recipe.id) {
-      return { ok: false, error: "Zone not found in this recipe" };
-    }
-    zoneId = zone.id;
-  } else {
-    const positionRows = await db
-      .select({ maxPos: max(recipeZones.position) })
-      .from(recipeZones)
-      .where(eq(recipeZones.recipeId, recipe.id));
-    const currentMax = positionRows[0]?.maxPos ?? null;
-    const nextPosition = currentMax === null ? 0 : currentMax + 1;
-    const inserted = await db
-      .insert(recipeZones)
-      .values({
-        recipeId: recipe.id,
-        name: args.zoneName,
-        position: nextPosition,
-        silhouetteZoneId: null,
-      })
-      .returning({ id: recipeZones.id });
-    const newZone = inserted[0];
-    if (!newZone) return { ok: false, error: "Zone insert returned no row" };
-    zoneId = newZone.id;
-  }
-
-  // Next position for the appended steps.
+  // Next position for the appended slots.
   const positionRows = await db
-    .select({ maxPos: max(recipeSteps.position) })
-    .from(recipeSteps)
-    .where(eq(recipeSteps.zoneId, zoneId));
+    .select({ maxPos: max(recipeSlots.position) })
+    .from(recipeSlots)
+    .where(eq(recipeSlots.recipeId, recipe.id));
   const currentMax = positionRows[0]?.maxPos ?? null;
   const startPosition = currentMax === null ? 0 : currentMax + 1;
 
   try {
-    const insertedStepIds = await insertStepsForPalette({
-      zoneId,
+    const insertedSlotIds = await insertSlotsForPalette({
+      recipeId: recipe.id,
       startPosition,
       hexes: args.hexes,
       paintIds: args.paintIds,
@@ -313,7 +219,7 @@ async function appendPaletteToRecipe(
     revalidatePath(`/recipes/${recipe.id}`);
     return {
       ok: true,
-      data: { recipeId: recipe.id, zoneId, insertedStepIds },
+      data: { recipeId: recipe.id, insertedSlotIds },
     };
   } catch (err) {
     return {
@@ -323,15 +229,15 @@ async function appendPaletteToRecipe(
   }
 }
 
-interface InsertStepsArgs {
-  zoneId: string;
+interface InsertSlotsArgs {
+  recipeId: string;
   startPosition: number;
   hexes: ReadonlyArray<string>;
   paintIds: ReadonlyArray<string | null>;
 }
 
-async function insertStepsForPalette(
-  args: InsertStepsArgs,
+async function insertSlotsForPalette(
+  args: InsertSlotsArgs,
 ): Promise<string[]> {
   const ids: string[] = [];
   for (let i = 0; i < args.hexes.length; i++) {
@@ -339,15 +245,15 @@ async function insertStepsForPalette(
     const paintId = args.paintIds[i] ?? null;
     if (!hex) continue;
     const row = await db
-      .insert(recipeSteps)
+      .insert(recipeSlots)
       .values({
-        zoneId: args.zoneId,
+        recipeId: args.recipeId,
         position: args.startPosition + i,
         technique: "basecoat",
         paintId: paintId,
         customColorHex: paintId ? null : hex,
       })
-      .returning({ id: recipeSteps.id });
+      .returning({ id: recipeSlots.id });
     const id = row[0]?.id;
     if (id) ids.push(id);
   }

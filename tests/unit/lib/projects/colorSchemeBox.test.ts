@@ -21,9 +21,8 @@ describe("ProjectColorSchemeBox component surface", () => {
   const src = read("src/components/ProjectColorSchemeBox.tsx");
 
   test("Card title shows the recipe name when one is attached", () => {
-    expect(src).toContain(
-      "`Color scheme · ${attachedRecipeName}`",
-    );
+    expect(src).toContain("`Recipe · ${attachedRecipeName}`");
+    expect(src).not.toContain("Color scheme ·");
   });
 
   test("3 ghost boxes render when no recipe is attached", () => {
@@ -44,17 +43,18 @@ describe("ProjectColorSchemeBox component surface", () => {
     expect(src).not.toContain("handleCreateRecipeAndOpenPicker");
   });
 
-  test("clicking a + box with a recipe attached calls addSlotWithPaint", () => {
-    expect(src).toContain("addSlotWithPaint");
+  test("clicking a + box with a recipe attached calls addSlot", () => {
+    expect(src).toContain("addSlot({");
+    expect(src).not.toContain("addSlotWithPaint");
   });
 
   test("clicking a filled box opens the picker in edit mode", () => {
     expect(src).toContain('{ kind: "edit"; slotIndex: number }');
-    expect(src).toContain("updateStep");
+    expect(src).toContain("updateSlot");
   });
 
-  test("delete (x) on a filled box calls deleteZone", () => {
-    expect(src).toContain("deleteZone");
+  test("delete (x) on a filled box calls deleteSlot", () => {
+    expect(src).toContain("deleteSlot");
     expect(src).toContain("handleDeleteSlot");
   });
 

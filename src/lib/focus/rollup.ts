@@ -1,8 +1,5 @@
-import type { Project, RecipeStep, RecipeZone } from "@/db/schema";
-import type {
-  FocusStepView,
-  FocusZoneView,
-} from "@/components/focus/FocusPanel";
+import type { Project, RecipeSlot } from "@/db/schema";
+import type { FocusSlotView } from "@/components/focus/FocusPanel";
 
 /**
  * P15.0 — FOCUS header project-state pill rollup.
@@ -53,80 +50,63 @@ export function projectStatePillText(
 /**
  * P15.0 — Recipe completion percentage.
  *
- * `done / total` across every step in the recipe, as an integer 0–100.
- * A recipe with zero steps reports 0% (nothing to complete yet) rather
+ * `done / total` across every slot in the recipe, as an integer 0–100.
+ * A recipe with zero slots reports 0% (nothing to complete yet) rather
  * than dividing by zero. Done-count is clamped to total so a stale
- * completion row (step deleted out from under a mark — shouldn't happen
+ * completion row (slot deleted out from under a mark — shouldn't happen
  * given the FK cascade, but defensive) can't push the bar past 100%.
  */
 export function recipeCompletionPercent(
-  doneSteps: number,
-  totalSteps: number,
+  doneSlots: number,
+  totalSlots: number,
 ): number {
-  if (totalSteps <= 0) return 0;
-  const clamped = Math.max(0, Math.min(doneSteps, totalSteps));
-  return Math.round((clamped / totalSteps) * 100);
+  if (totalSlots <= 0) return 0;
+  const clamped = Math.max(0, Math.min(doneSlots, totalSlots));
+  return Math.round((clamped / totalSlots) * 100);
 }
 
-/** Minimal paint-catalog meta the FOCUS view model resolves per step. */
+/** Minimal paint-catalog meta the FOCUS view model resolves per slot. */
 export interface FocusPaintMeta {
   hex: string;
   label: string;
 }
 
-/** The zone+step shape `getFocusedRecipeBundle` returns. */
-export type FocusBundleZone = RecipeZone & {
-  steps: ReadonlyArray<RecipeStep>;
-};
-
 /**
- * P15.x — Build the FocusPanel's zone/step view model from the focused
+ * P15.x — Build the FocusPanel's flat slot view model from the focused
  * recipe bundle plus the resolved side-data maps. Pure (no DB / no I/O)
  * so the dashboard's data-threading is unit-testable:
  *
- *   - paintMeta   resolves a step's paintId → brand+name label + hex
- *   - completedStepIds is the per-painter done-set (keyed on step id)
- *   - paintNotes  resolves a step's paintId → the paint's GLOBAL note
- *                 (per-paint, so every step pinning the same paint gets
+ *   - paintMeta   resolves a slot's paintId → brand+name label + hex
+ *   - completedSlotIds is the per-painter done-set (keyed on slot id;
+ *                 slot.id == the old step.id, so completion rows carry
+ *                 across the flatten)
+ *   - paintNotes  resolves a slot's paintId → the paint's GLOBAL note
+ *                 (per-paint, so every slot pinning the same paint gets
  *                 the same note threaded in)
  *
- * A custom-mix step (no paintId, only a hex) carries a null paintId +
+ * A custom-mix slot (no paintId, only a hex) carries a null paintId +
  * null paintNote — the panel suppresses the per-paint editor for it.
  */
-export function buildFocusZones(
-  zones: ReadonlyArray<FocusBundleZone>,
+export function buildFocusSlots(
+  slots: ReadonlyArray<RecipeSlot>,
   paintMeta: ReadonlyMap<string, FocusPaintMeta>,
-  completedStepIds: ReadonlySet<string>,
+  completedSlotIds: ReadonlySet<string>,
   paintNotes: ReadonlyMap<string, string>,
-): FocusZoneView[] {
-  return zones.map((z) => {
-    const steps: FocusStepView[] = z.steps.map((s) => {
-      const meta = s.paintId ? paintMeta.get(s.paintId) ?? null : null;
-      const hex = s.customColorHex ?? meta?.hex ?? null;
-      const label = meta?.label ?? null;
-      const paintNote = s.paintId ? paintNotes.get(s.paintId) ?? null : null;
-      return {
-        id: s.id,
-        zoneId: s.zoneId,
-        position: s.position,
-        technique: s.technique,
-        paintHex: hex,
-        paintLabel: label,
-        paintId: s.paintId,
-        paintNote,
-        done: completedStepIds.has(s.id),
-      };
-    });
-    const firstStep = z.steps[0];
-    const swatchHex =
-      firstStep?.customColorHex ??
-      (firstStep?.paintId ? paintMeta.get(firstStep.paintId)?.hex ?? null : null);
+): FocusSlotView[] {
+  return slots.map((slot) => {
+    const meta = slot.paintId ? paintMeta.get(slot.paintId) ?? null : null;
+    const hex = slot.customColorHex ?? meta?.hex ?? null;
+    const label = meta?.label ?? null;
+    const paintNote = slot.paintId ? paintNotes.get(slot.paintId) ?? null : null;
     return {
-      id: z.id,
-      name: z.name,
-      position: z.position,
-      swatchHex,
-      steps,
+      id: slot.id,
+      position: slot.position,
+      technique: slot.technique,
+      paintHex: hex,
+      paintLabel: label,
+      paintId: slot.paintId,
+      paintNote,
+      done: completedSlotIds.has(slot.id),
     };
   });
 }

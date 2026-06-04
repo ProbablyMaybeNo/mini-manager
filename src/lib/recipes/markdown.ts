@@ -1,17 +1,12 @@
 import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
 import type { TechniqueKey } from "@/db/schema";
 
-export interface MarkdownStep {
+export interface MarkdownSlot {
   technique: TechniqueKey;
   paintName?: string | null;
   paintBrand?: string | null;
   hex?: string | null;
   notesMd: string | null;
-}
-
-export interface MarkdownZone {
-  name: string;
-  steps: ReadonlyArray<MarkdownStep>;
 }
 
 export interface MarkdownInput {
@@ -20,7 +15,8 @@ export interface MarkdownInput {
     bodyType: string;
     notesMd: string | null;
   };
-  zones: ReadonlyArray<MarkdownZone>;
+  /** Flat ordered slot list (2026-06-04 unify). */
+  slots: ReadonlyArray<MarkdownSlot>;
   /** When set, appended as a "Made with Mini Manager" footer link. */
   publicUrl?: string;
 }
@@ -32,13 +28,13 @@ function normaliseHex(hex: string | null | undefined): string | null {
   return trimmed.toUpperCase();
 }
 
-function renderStep(step: MarkdownStep, index: number): string {
-  const label = techniqueLabel(step.technique);
-  const hex = normaliseHex(step.hex);
+function renderSlot(slot: MarkdownSlot, index: number): string {
+  const label = techniqueLabel(slot.technique);
+  const hex = normaliseHex(slot.hex);
   let body = "";
-  if (step.paintName) {
-    const brand = step.paintBrand ? `${step.paintBrand} ` : "";
-    body = `${brand}${step.paintName}`;
+  if (slot.paintName) {
+    const brand = slot.paintBrand ? `${slot.paintBrand} ` : "";
+    body = `${brand}${slot.paintName}`;
     if (hex) body += ` \`${hex}\``;
   } else if (hex) {
     body = `Custom mix \`${hex}\``;
@@ -46,8 +42,8 @@ function renderStep(step: MarkdownStep, index: number): string {
     body = "_(no paint chosen)_";
   }
   let out = `${index + 1}. **${label}** — ${body}`;
-  if (step.notesMd && step.notesMd.trim().length > 0) {
-    out += `\n   *${step.notesMd.trim()}*`;
+  if (slot.notesMd && slot.notesMd.trim().length > 0) {
+    out += `\n   *${slot.notesMd.trim()}*`;
   }
   return out;
 }
@@ -59,13 +55,10 @@ function renderStep(step: MarkdownStep, index: number): string {
  *
  *     *A Mini Manager recipe*
  *
- *     ## Zone 1
+ *     ## Slots
  *
  *     1. **Basecoat** — Citadel Caliban Green `#0F4A33`
  *     2. **Wash** — Army Painter Strong Tone `#3A2618`
- *     ...
- *
- *     ## Zone 2
  *     ...
  *
  *     ---
@@ -81,18 +74,16 @@ export function recipeToMarkdown(input: MarkdownInput): string {
   parts.push("*A Mini Manager recipe*");
   parts.push("");
 
-  for (const zone of input.zones) {
-    parts.push(`## ${zone.name}`);
-    parts.push("");
-    if (zone.steps.length === 0) {
-      parts.push("_(no steps recorded)_");
-    } else {
-      zone.steps.forEach((step, idx) => {
-        parts.push(renderStep(step, idx));
-      });
-    }
-    parts.push("");
+  parts.push("## Slots");
+  parts.push("");
+  if (input.slots.length === 0) {
+    parts.push("_(no slots recorded)_");
+  } else {
+    input.slots.forEach((slot, idx) => {
+      parts.push(renderSlot(slot, idx));
+    });
   }
+  parts.push("");
 
   if (input.recipe.notesMd && input.recipe.notesMd.trim().length > 0) {
     parts.push("## Notes");

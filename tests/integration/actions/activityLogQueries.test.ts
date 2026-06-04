@@ -21,7 +21,7 @@ import {
   activityLog,
   projects,
   recipes,
-  recipeZones,
+  recipeSlots,
   wishlistItems,
 } from "@/db/schema";
 
@@ -68,13 +68,14 @@ async function seedRecipe(name: string): Promise<string> {
   return id;
 }
 
-async function seedZone(recipeId: string, name: string): Promise<string> {
+async function seedSlot(recipeId: string): Promise<string> {
   const id = nanoid(16);
-  await state.db!.insert(recipeZones).values({
+  await state.db!.insert(recipeSlots).values({
     id,
     recipeId,
     position: 0,
-    name,
+    technique: "basecoat",
+    customColorHex: "#aabbcc",
   });
   return id;
 }
@@ -192,13 +193,15 @@ describe("getRecentActivity (P14.4)", () => {
     expect(rows[0]!.displayName).toBe("Bone White");
   });
 
-  test("resolves slot_added refId to the zone name + parent recipe name", async () => {
+  test("resolves slot_added refId to the parent recipe name (flat slots have no name)", async () => {
     const recipeId = await seedRecipe("Test Scheme");
-    const zoneId = await seedZone(recipeId, "Armor");
-    await seedActivity("slot_added", zoneId, new Date());
+    const slotId = await seedSlot(recipeId);
+    await seedActivity("slot_added", slotId, new Date());
     const rows = await getRecentActivity(state.userId);
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.displayName).toBe("Armor");
+    // Flat slots carry no per-slot name; the row resolves the parent
+    // recipe name so the stream reads "Added slot to <recipe>".
+    expect(rows[0]!.displayName).toBeNull();
     expect(rows[0]!.parentRecipeName).toBe("Test Scheme");
   });
 
@@ -257,12 +260,12 @@ describe("getRecentActivity (P14.4)", () => {
     const now = Date.now();
     const projectId = await seedProject("Salamanders");
     const recipeId = await seedRecipe("Crimson Fists");
-    const zoneId = await seedZone(recipeId, "Armor");
+    const slotId = await seedSlot(recipeId);
     const itemId = await seedWishlistItem("Boltgun Metal", projectId);
 
     await seedActivity("project_created", projectId, new Date(now - 5_000));
     await seedActivity("recipe_created", recipeId, new Date(now - 4_000));
-    await seedActivity("slot_added", zoneId, new Date(now - 3_000));
+    await seedActivity("slot_added", slotId, new Date(now - 3_000));
     await seedActivity("paint_added", itemId, new Date(now - 2_000));
     await seedActivity("stage_bump", projectId, new Date(now - 1_000));
 
@@ -274,7 +277,7 @@ describe("getRecentActivity (P14.4)", () => {
     expect(rows[1]!.kind).toBe("paint_added");
     expect(rows[1]!.displayName).toBe("Salamanders");
     expect(rows[2]!.kind).toBe("slot_added");
-    expect(rows[2]!.displayName).toBe("Armor");
+    expect(rows[2]!.displayName).toBeNull();
     expect(rows[2]!.parentRecipeName).toBe("Crimson Fists");
     expect(rows[3]!.kind).toBe("recipe_created");
     expect(rows[3]!.displayName).toBe("Crimson Fists");

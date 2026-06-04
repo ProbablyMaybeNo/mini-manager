@@ -52,7 +52,7 @@ interface Props {
  * P12.10 — Project detail "Progress" table.
  *
  * One row per child (sub-project / named-model). Columns Ross's
- * Q2 locked: Name · Type · Count (± steppers) · Color scheme ·
+ * Q2 locked: Name · Type · Count (± steppers) · Recipe ·
  * Status bar. ADD CTAs above the table (success-green per the
  * P12.23 button discipline).
  *
@@ -144,7 +144,7 @@ export function ProjectProgressTable({
               <th scope="col" className="px-3 py-2">Name</th>
               <th scope="col" className="px-3 py-2">Type</th>
               <th scope="col" className="px-3 py-2 text-right">Count</th>
-              <th scope="col" className="px-3 py-2">Color scheme</th>
+              <th scope="col" className="px-3 py-2">Recipe</th>
               <th scope="col" className="px-3 py-2">Status</th>
               <th scope="col" className="px-3 py-2">Progress</th>
             </tr>

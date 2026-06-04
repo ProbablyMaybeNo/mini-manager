@@ -1,12 +1,11 @@
 /**
  * P13.11 — Focus widget server actions + query helpers.
  *
- * Covers the four pieces of the dashboard FOCUS feature:
+ * Covers the dashboard FOCUS feature (2026-06-04 flatten):
  *   1. setFocusProject — persists user.focus_project_id
  *   2. clearFocusProject — nulls it
- *   3. updateStepNotes — writes recipe_step.notes on blur
- *   4. listFocusCandidates / getFocusedRecipeBundle / getFocusProjectId
- *      query helpers used by the dashboard page
+ *   3. listFocusCandidates / getFocusedRecipeBundle / getFocusProjectId
+ *      query helpers used by the dashboard page (flat slot bundle)
  *
  * Tests use the in-memory libsql test DB so the migration + FK actions
  * exercise the production code path; the auth helper and revalidatePath
@@ -19,8 +18,7 @@ import { makeTestDb, seedExtraUser, type TestDb } from "../_helpers/testDb";
 import {
   projects,
   recipes,
-  recipeSteps,
-  recipeZones,
+  recipeSlots,
   users,
 } from "@/db/schema";
 
@@ -51,7 +49,7 @@ async function seedProjectWithRecipe(opts: {
   ownerId?: string;
   projectName?: string;
   recipeName?: string;
-  withZone?: boolean;
+  withSlot?: boolean;
 } = {}) {
   const ownerId = opts.ownerId ?? state.userId;
   const projectId = nanoid(16);
@@ -78,27 +76,19 @@ async function seedProjectWithRecipe(opts: {
     bodyType: "infantry",
   });
 
-  let zoneId: string | null = null;
-  let stepId: string | null = null;
-  if (opts.withZone) {
-    zoneId = nanoid(16);
-    await state.db!.insert(recipeZones).values({
-      id: zoneId,
+  let slotId: string | null = null;
+  if (opts.withSlot) {
+    slotId = nanoid(16);
+    await state.db!.insert(recipeSlots).values({
+      id: slotId,
       recipeId,
-      position: 0,
-      name: "Armor",
-    });
-    stepId = nanoid(16);
-    await state.db!.insert(recipeSteps).values({
-      id: stepId,
-      zoneId,
       position: 0,
       technique: "basecoat",
       customColorHex: "#aabbcc",
     });
   }
 
-  return { projectId, recipeId, zoneId, stepId };
+  return { projectId, recipeId, slotId };
 }
 
 beforeEach(async () => {
@@ -168,95 +158,6 @@ describe("clearFocusProject — nulls the focus", () => {
   });
 });
 
-describe("updateStepNotes — persists per-step painting notes", () => {
-  test("writes a new note onto an owned step", async () => {
-    const { stepId } = await seedProjectWithRecipe({ withZone: true });
-    const res = await focusActions.updateStepNotes({
-      stepId: stepId!,
-      notes: "two thin coats, wet blend the edge",
-    });
-    expect(res.ok).toBe(true);
-
-    const [row] = await state
-      .db!.select({ notes: recipeSteps.notes })
-      .from(recipeSteps)
-      .where(eq(recipeSteps.id, stepId!));
-    expect(row?.notes).toBe("two thin coats, wet blend the edge");
-  });
-
-  test("empty/whitespace-only notes normalise to NULL", async () => {
-    const { stepId } = await seedProjectWithRecipe({ withZone: true });
-    // Seed an existing note then blank it.
-    await focusActions.updateStepNotes({ stepId: stepId!, notes: "old" });
-
-    const blanked = await focusActions.updateStepNotes({
-      stepId: stepId!,
-      notes: "   ",
-    });
-    expect(blanked.ok).toBe(true);
-
-    const [row] = await state
-      .db!.select({ notes: recipeSteps.notes })
-      .from(recipeSteps)
-      .where(eq(recipeSteps.id, stepId!));
-    expect(row?.notes).toBeNull();
-  });
-
-  test("explicit null clears the note", async () => {
-    const { stepId } = await seedProjectWithRecipe({ withZone: true });
-    await focusActions.updateStepNotes({ stepId: stepId!, notes: "old" });
-    const cleared = await focusActions.updateStepNotes({
-      stepId: stepId!,
-      notes: null,
-    });
-    expect(cleared.ok).toBe(true);
-
-    const [row] = await state
-      .db!.select({ notes: recipeSteps.notes })
-      .from(recipeSteps)
-      .where(eq(recipeSteps.id, stepId!));
-    expect(row?.notes).toBeNull();
-  });
-
-  test("rejects an unknown step id", async () => {
-    const res = await focusActions.updateStepNotes({
-      stepId: "doesnotexist",
-      notes: "x",
-    });
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/not found/i);
-  });
-
-  test("rejects a step owned via another user's recipe", async () => {
-    const otherId = await seedExtraUser(state.db!, "rival");
-    const { stepId } = await seedProjectWithRecipe({
-      ownerId: otherId,
-      withZone: true,
-    });
-    const res = await focusActions.updateStepNotes({
-      stepId: stepId!,
-      notes: "should not land",
-    });
-    expect(res.ok).toBe(false);
-
-    const [row] = await state
-      .db!.select({ notes: recipeSteps.notes })
-      .from(recipeSteps)
-      .where(eq(recipeSteps.id, stepId!));
-    expect(row?.notes).toBeNull();
-  });
-
-  test("rejects notes that exceed the 2000-char cap", async () => {
-    const { stepId } = await seedProjectWithRecipe({ withZone: true });
-    const big = "x".repeat(2001);
-    const res = await focusActions.updateStepNotes({
-      stepId: stepId!,
-      notes: big,
-    });
-    expect(res.ok).toBe(false);
-  });
-});
-
 describe("query helpers (P13.11)", () => {
   test("listFocusCandidates returns only projects with attached recipes", async () => {
     const { projectId: projectWithRecipe } = await seedProjectWithRecipe({
@@ -312,15 +213,15 @@ describe("query helpers (P13.11)", () => {
     expect(bundle).toBeNull();
   });
 
-  test("getFocusedRecipeBundle returns project + recipe + zones when focus is set", async () => {
-    const { projectId } = await seedProjectWithRecipe({ withZone: true });
+  test("getFocusedRecipeBundle returns project + recipe + slots when focus is set", async () => {
+    const { projectId } = await seedProjectWithRecipe({ withSlot: true });
     await focusActions.setFocusProject({ projectId });
 
     const bundle = await focusQueries.getFocusedRecipeBundle(state.userId);
     expect(bundle).not.toBeNull();
     expect(bundle!.project.id).toBe(projectId);
-    expect(bundle!.zones).toHaveLength(1);
-    expect(bundle!.zones[0]?.steps).toHaveLength(1);
+    expect(bundle!.slots).toHaveLength(1);
+    expect(bundle!.slots[0]?.technique).toBe("basecoat");
     // UX-907 — bundle reports the full attached-recipe list so the tab
     // strip has the data it needs without an extra round-trip.
     expect(bundle!.allRecipes).toHaveLength(1);

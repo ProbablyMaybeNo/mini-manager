@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { asc, eq } from "drizzle-orm";
 import { makeTestDb, seedExtraUser, type TestDb } from "../_helpers/testDb";
-import { recipes, recipeSteps, recipeZones } from "@/db/schema";
+import { recipes, recipeSlots } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -23,14 +23,13 @@ const { sendPaletteToRecipe, listRecipesForSendTo } = await import(
   "@/lib/actions/sendToRecipe"
 );
 const { createRecipe } = await import("@/lib/actions/recipes");
-const { addZone } = await import("@/lib/actions/recipeZones");
 
-async function stepsFor(zoneId: string) {
+async function slotsFor(recipeId: string) {
   return state.db!
     .select()
-    .from(recipeSteps)
-    .where(eq(recipeSteps.zoneId, zoneId))
-    .orderBy(asc(recipeSteps.position));
+    .from(recipeSlots)
+    .where(eq(recipeSlots.recipeId, recipeId))
+    .orderBy(asc(recipeSlots.position));
 }
 
 beforeEach(async () => {
@@ -45,14 +44,14 @@ afterEach(() => {
 });
 
 describe("sendPaletteToRecipe — new recipe (the ship criterion)", () => {
-  test("creates a standalone recipe with a Palette zone and one step per colour", async () => {
+  test("creates a standalone recipe with one slot per colour", async () => {
     const res = await sendPaletteToRecipe({
       swatches: [{ hex: "#0e4a8a" }, { hex: "#33ff66" }, { hex: "#ffaa00" }],
       newRecipeName: "Triadic Scheme",
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(res.data.insertedStepIds).toHaveLength(3);
+    expect(res.data.insertedSlotIds).toHaveLength(3);
 
     const [recipe] = await state.db!
       .select()
@@ -61,20 +60,14 @@ describe("sendPaletteToRecipe — new recipe (the ship criterion)", () => {
     expect(recipe!.name).toBe("Triadic Scheme");
     expect(recipe!.isStandalone).toBe(true);
 
-    const [zone] = await state.db!
-      .select()
-      .from(recipeZones)
-      .where(eq(recipeZones.id, res.data.zoneId));
-    expect(zone!.name).toBe("Palette");
-
-    const steps = await stepsFor(res.data.zoneId);
-    expect(steps.map((s) => s.customColorHex)).toEqual([
+    const slots = await slotsFor(res.data.recipeId);
+    expect(slots.map((s) => s.customColorHex)).toEqual([
       "#0E4A8A",
       "#33FF66",
       "#FFAA00",
     ]);
-    expect(steps.every((s) => s.paintId === null)).toBe(true);
-    expect(steps.every((s) => s.technique === "basecoat")).toBe(true);
+    expect(slots.every((s) => s.paintId === null)).toBe(true);
+    expect(slots.every((s) => s.technique === "basecoat")).toBe(true);
   });
 
   test("a swatch carrying a paintId pins the paint and clears the custom hex", async () => {
@@ -84,70 +77,50 @@ describe("sendPaletteToRecipe — new recipe (the ship criterion)", () => {
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    const steps = await stepsFor(res.data.zoneId);
-    expect(steps[0]!.paintId).toBe("citadel-macragge-blue");
-    expect(steps[0]!.customColorHex).toBeNull();
+    const slots = await slotsFor(res.data.recipeId);
+    expect(slots[0]!.paintId).toBe("citadel-macragge-blue");
+    expect(slots[0]!.customColorHex).toBeNull();
   });
 });
 
 describe("sendPaletteToRecipe — append to existing", () => {
-  async function seedRecipeWithZone(): Promise<{
-    recipeId: string;
-    zoneId: string;
-  }> {
+  async function seedRecipe(): Promise<{ recipeId: string }> {
     const recipe = await createRecipe({ name: "Host", bodyType: "infantry" });
     if (!recipe.ok) throw new Error("recipe seed failed");
-    const zone = await addZone({ recipeId: recipe.data.id, name: "Armor" });
-    if (!zone.ok) throw new Error("zone seed failed");
-    return { recipeId: recipe.data.id, zoneId: zone.data.id };
+    return { recipeId: recipe.data.id };
   }
 
-  test("appends steps into an existing zone", async () => {
-    const { recipeId, zoneId } = await seedRecipeWithZone();
+  test("appends slots onto an existing recipe", async () => {
+    const { recipeId } = await seedRecipe();
     const res = await sendPaletteToRecipe({
       swatches: [{ hex: "#111111" }, { hex: "#222222" }],
       targetRecipeId: recipeId,
-      targetZoneId: zoneId,
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(res.data.zoneId).toBe(zoneId);
-    const steps = await stepsFor(zoneId);
-    expect(steps.map((s) => s.customColorHex)).toEqual(["#111111", "#222222"]);
+    expect(res.data.recipeId).toBe(recipeId);
+    const slots = await slotsFor(recipeId);
+    expect(slots.map((s) => s.customColorHex)).toEqual(["#111111", "#222222"]);
   });
 
-  test("creates a new zone when no target zone is supplied", async () => {
-    const { recipeId } = await seedRecipeWithZone();
-    const res = await sendPaletteToRecipe({
-      swatches: [{ hex: "#abcdef" }],
+  test("appends after any existing slots, preserving position order", async () => {
+    const { recipeId } = await seedRecipe();
+    await sendPaletteToRecipe({
+      swatches: [{ hex: "#aaaaaa" }],
       targetRecipeId: recipeId,
-      zoneName: "From Eyedropper",
+    });
+    const res = await sendPaletteToRecipe({
+      swatches: [{ hex: "#bbbbbb" }],
+      targetRecipeId: recipeId,
     });
     expect(res.ok).toBe(true);
-    if (!res.ok) return;
-    const zones = await state.db!
-      .select()
-      .from(recipeZones)
-      .where(eq(recipeZones.recipeId, recipeId))
-      .orderBy(asc(recipeZones.position));
-    expect(zones).toHaveLength(2);
-    expect(zones[1]!.name).toBe("From Eyedropper");
-  });
-
-  test("rejects a zone that belongs to a different recipe", async () => {
-    const a = await seedRecipeWithZone();
-    const b = await seedRecipeWithZone();
-    const res = await sendPaletteToRecipe({
-      swatches: [{ hex: "#000000" }],
-      targetRecipeId: a.recipeId,
-      targetZoneId: b.zoneId,
-    });
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/Zone not found in this recipe/);
+    const slots = await slotsFor(recipeId);
+    expect(slots.map((s) => s.customColorHex)).toEqual(["#AAAAAA", "#BBBBBB"]);
+    expect(slots.map((s) => s.position)).toEqual([0, 1]);
   });
 
   test("cannot append to another user's recipe", async () => {
-    const { recipeId } = await seedRecipeWithZone();
+    const { recipeId } = await seedRecipe();
     state.userId = await seedExtraUser(state.db!);
     const res = await sendPaletteToRecipe({
       swatches: [{ hex: "#000000" }],
@@ -198,18 +171,15 @@ describe("listRecipesForSendTo", () => {
     expect(res.data).toEqual([]);
   });
 
-  test("returns the user's recipes with their zones", async () => {
+  test("returns the user's recipes", async () => {
     const recipe = await createRecipe({ name: "Listed", bodyType: "infantry" });
     if (!recipe.ok) throw new Error("seed failed");
-    await addZone({ recipeId: recipe.data.id, name: "Z1" });
-    await addZone({ recipeId: recipe.data.id, name: "Z2" });
 
     const res = await listRecipesForSendTo();
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.data).toHaveLength(1);
     expect(res.data[0]!.name).toBe("Listed");
-    expect(res.data[0]!.zones.map((z) => z.name)).toEqual(["Z1", "Z2"]);
   });
 
   test("does not surface another user's recipes", async () => {

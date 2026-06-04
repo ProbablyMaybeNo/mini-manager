@@ -122,10 +122,10 @@ describe("P15.2 — Match results swatch is a 44px hit-box over a 20px chip", ()
   });
 });
 
-describe("P15.2 — recipe StepRow + PaintDetailPanel inline triggers", () => {
-  test("StepRow paint-slot trigger carries tap-target", () => {
-    const src = read("src/components/recipes/StepRow.tsx");
-    expect(src).toContain("tap-target w-full flex items-center gap-2 px-2 py-1 frame");
+describe("P15.2 — recipe PaintSlotPicker + PaintDetailPanel inline triggers", () => {
+  test("PaintSlotPicker paint rows carry tap-target", () => {
+    const src = read("src/components/recipes/PaintSlotPicker.tsx");
+    expect(src).toContain("text-left tap-target");
   });
 
   test("PaintDetailPanel copy-hex + harmony swatches carry tap-target", () => {

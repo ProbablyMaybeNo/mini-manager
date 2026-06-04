@@ -1,15 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, asc, eq, inArray, like } from "drizzle-orm";
+import { and, asc, eq, like } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import {
-  recipes,
-  recipeSteps,
-  recipeZones,
-  type Recipe,
-} from "@/db/schema";
+import { recipes, recipeSlots, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { generatePublicSlug } from "@/lib/recipes/slug";
 import type { ActionResult } from "@/lib/actions/projects";
@@ -204,21 +199,11 @@ export async function cloneRecipeFromSlug(
     return { ok: false, error: "This is already your recipe" };
   }
 
-  const sourceZones = await db
+  const sourceSlots = await db
     .select()
-    .from(recipeZones)
-    .where(eq(recipeZones.recipeId, source.id))
-    .orderBy(asc(recipeZones.position));
-
-  const zoneIds = sourceZones.map((z) => z.id);
-  const sourceSteps =
-    zoneIds.length === 0
-      ? []
-      : await db
-          .select()
-          .from(recipeSteps)
-          .where(inArray(recipeSteps.zoneId, zoneIds))
-          .orderBy(asc(recipeSteps.position));
+    .from(recipeSlots)
+    .where(eq(recipeSlots.recipeId, source.id))
+    .orderBy(asc(recipeSlots.position));
 
   const cloneName = await resolveCloneName(userId, source.name);
 
@@ -226,7 +211,7 @@ export async function cloneRecipeFromSlug(
   // `db.transaction()`, which breaks the per-test connection model used
   // throughout this project. So we run inserts sequentially and roll
   // back manually on any error — deleting the parent recipe cascades
-  // to its zones and steps via FK ON DELETE CASCADE.
+  // to its slots via FK ON DELETE CASCADE.
   let newRecipeId: string | null = null;
   try {
     const insertedRecipe = await db
@@ -244,32 +229,15 @@ export async function cloneRecipeFromSlug(
     newRecipeId = insertedRecipe[0]?.id ?? null;
     if (!newRecipeId) throw new Error("Clone insert returned no row");
 
-    const zoneIdMap = new Map<string, string>();
-    for (const z of sourceZones) {
-      const insertedZone = await db
-        .insert(recipeZones)
-        .values({
-          recipeId: newRecipeId,
-          position: z.position,
-          name: z.name,
-          silhouetteZoneId: z.silhouetteZoneId,
-        })
-        .returning({ id: recipeZones.id });
-      const newZoneId = insertedZone[0]?.id;
-      if (!newZoneId) throw new Error("Clone zone insert returned no row");
-      zoneIdMap.set(z.id, newZoneId);
-    }
-
-    for (const s of sourceSteps) {
-      const targetZoneId = zoneIdMap.get(s.zoneId);
-      if (!targetZoneId) continue;
-      await db.insert(recipeSteps).values({
-        zoneId: targetZoneId,
-        position: s.position,
-        technique: s.technique,
-        paintId: s.paintId,
-        customColorHex: s.customColorHex,
-        notesMd: s.notesMd,
+    for (const slot of sourceSlots) {
+      await db.insert(recipeSlots).values({
+        recipeId: newRecipeId,
+        position: slot.position,
+        technique: slot.technique,
+        paintId: slot.paintId,
+        customColorHex: slot.customColorHex,
+        notesMd: slot.notesMd,
+        notes: slot.notes,
       });
     }
 
@@ -277,9 +245,9 @@ export async function cloneRecipeFromSlug(
     revalidatePath(`/recipes/${newRecipeId}`);
     return { ok: true, data: { id: newRecipeId } };
   } catch (err) {
-    // Roll back any partial state — deleting the recipe cascades zones
-    // and steps. Swallow secondary failures during cleanup so the
-    // original error surfaces.
+    // Roll back any partial state — deleting the recipe cascades slots.
+    // Swallow secondary failures during cleanup so the original error
+    // surfaces.
     if (newRecipeId) {
       try {
         await db.delete(recipes).where(eq(recipes.id, newRecipeId));

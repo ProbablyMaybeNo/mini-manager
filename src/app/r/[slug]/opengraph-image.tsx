@@ -26,8 +26,8 @@ export default async function OpengraphImage({
 
   const name = recipe?.name ?? "Mini Manager";
   const subtitle = recipe
-    ? `Paint recipe · ${recipe.zones.length} zone${
-        recipe.zones.length === 1 ? "" : "s"
+    ? `Paint recipe · ${recipe.slots.length} slot${
+        recipe.slots.length === 1 ? "" : "s"
       }`
     : "Paint recipe";
   const swatches = recipe ? await paletteHexes(recipe) : [];

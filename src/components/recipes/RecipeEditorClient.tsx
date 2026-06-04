@@ -1,158 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { clsx } from "clsx";
 import type { Recipe } from "@/db/schema";
-import {
-  ZoneList,
-  type ZoneListItem,
-} from "@/components/recipes/ZoneList";
+import { SlotList, type SlotListItem } from "@/components/recipes/SlotList";
 import { RecipeNotes } from "@/components/recipes/RecipeNotes";
-import { StepList } from "@/components/recipes/StepList";
-import type { StepRowData } from "@/components/recipes/StepRow";
-import { Card } from "@/components/ui/Card";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 interface Props {
   recipe: Recipe;
-  zones: ReadonlyArray<ZoneListItem>;
-  initialSelectedZoneId: string | null;
-  stepsByZoneId: ReadonlyMap<string, ReadonlyArray<StepRowData>>;
+  slots: ReadonlyArray<SlotListItem>;
   ownedPaintIds?: ReadonlySet<string>;
 }
-
-type Pane = "zones" | "notes";
 
 /**
- * Two-pane recipe editor. Zones + steps live in the main column;
- * notes hang on the right (or stack as a tab on mobile).
+ * Flat recipe editor (2026-06-04 unify + flatten).
  *
- * The silhouette mechanic was dropped — zones are pure text rows with
- * an optional starter-preset for the recipe's bodyType (handled inside
- * `<ZoneList />`). bodyType stays on the recipe row as a metadata tag
- * for the /recipes filter.
+ * A recipe is one ordered list of slots — each slot = one paint + its
+ * layer. There are no zones, no separate Steps box, and no SLOTS/NOTES
+ * segmented control. The slot grid is the main column; notes hang on the
+ * right (and stack below on mobile).
  */
-export function RecipeEditorClient({
-  recipe,
-  zones,
-  initialSelectedZoneId,
-  stepsByZoneId,
-  ownedPaintIds,
-}: Props) {
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(
-    initialSelectedZoneId,
-  );
-  const [activePane, setActivePane] = useState<Pane>("zones");
-
-  // B1 — surface the pinned paint's name as each slot's label. The
-  // first step's resolved paintLabel already lives in stepsByZoneId
-  // (computed server-side from the catalog map), so we fold it onto the
-  // ZoneListItem here rather than re-fetching the catalog client-side.
-  // Custom-hex-only slots have no catalog label → falls back to name.
-  const zonesWithPaintLabel = useMemo(
-    () =>
-      zones.map((zone) => {
-        const firstStep = stepsByZoneId.get(zone.id)?.[0];
-        return {
-          ...zone,
-          firstStepPaintLabel:
-            firstStep?.paintId ? firstStep.paintLabel ?? null : null,
-        };
-      }),
-    [zones, stepsByZoneId],
-  );
-
+export function RecipeEditorClient({ recipe, slots, ownedPaintIds }: Props) {
   return (
-    <div className="space-y-4">
-      <MobilePaneTabs active={activePane} onChange={setActivePane} />
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px] gap-6">
+      <section className="space-y-3">
+        <SlotList
+          recipeId={recipe.id}
+          slots={slots}
+          ownedPaintIds={ownedPaintIds}
+        />
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px] gap-6">
-        <section
-          className={clsx(
-            "space-y-3",
-            activePane === "zones" ? "block" : "hidden md:block",
-          )}
-        >
-          <ZoneList
-            recipeId={recipe.id}
-            bodyType={recipe.bodyType}
-            zones={zonesWithPaintLabel}
-            selectedZoneId={selectedZoneId}
-            onSelectZone={setSelectedZoneId}
-          />
-          <SelectedZoneSteps
-            zones={zones}
-            selectedZoneId={selectedZoneId}
-            stepsByZoneId={stepsByZoneId}
-            ownedPaintIds={ownedPaintIds}
-          />
-        </section>
-
-        <section
-          className={clsx(
-            "space-y-3",
-            activePane === "notes" ? "block" : "hidden md:block",
-          )}
-        >
-          <RecipeNotes
-            recipeId={recipe.id}
-            initialNotes={recipe.notesMd ?? ""}
-          />
-        </section>
-      </div>
+      <section className="space-y-3">
+        <RecipeNotes recipeId={recipe.id} initialNotes={recipe.notesMd ?? ""} />
+      </section>
     </div>
-  );
-}
-
-function MobilePaneTabs({
-  active,
-  onChange,
-}: {
-  active: Pane;
-  onChange: (p: Pane) => void;
-}) {
-  return (
-    <SegmentedControl<Pane>
-      ariaLabel="Editor panes"
-      options={[
-        { value: "zones", label: "Slots" },
-        { value: "notes", label: "Notes" },
-      ]}
-      value={active}
-      onChange={onChange}
-      fill
-      className="md:hidden"
-    />
-  );
-}
-
-function SelectedZoneSteps({
-  zones,
-  selectedZoneId,
-  stepsByZoneId,
-  ownedPaintIds,
-}: {
-  zones: ReadonlyArray<ZoneListItem>;
-  selectedZoneId: string | null;
-  stepsByZoneId: ReadonlyMap<string, ReadonlyArray<StepRowData>>;
-  ownedPaintIds?: ReadonlySet<string>;
-}) {
-  if (!selectedZoneId) {
-    return (
-      <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-        Select a colour slot to view its steps.
-      </p>
-    );
-  }
-  const zone = zones.find((z) => z.id === selectedZoneId);
-  if (!zone) return null;
-  const steps = stepsByZoneId.get(selectedZoneId) ?? [];
-  return (
-    <StepList
-      zoneId={selectedZoneId}
-      zoneName={zone.name}
-      steps={steps}
-      ownedPaintIds={ownedPaintIds}
-    />
   );
 }

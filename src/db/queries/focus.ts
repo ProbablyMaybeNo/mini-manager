@@ -1,17 +1,15 @@
 import "server-only";
 
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   projects,
   recipes,
-  recipeSteps,
-  recipeZones,
+  recipeSlots,
   users,
   type Project,
   type Recipe,
-  type RecipeStep,
-  type RecipeZone,
+  type RecipeSlot,
 } from "@/db/schema";
 
 /**
@@ -86,8 +84,8 @@ export async function listFocusCandidates(
 }
 
 /**
- * P13.11 — Full nested shape of the focused project's selected attached
- * recipe — project meta + recipe + zones + steps in display order, plus
+ * P13.11 — Full flat shape of the focused project's selected attached
+ * recipe — project meta + recipe + slots in display order, plus
  * (UX-907) the *full list* of attached recipes so the FocusPanel can
  * render a tab strip when 2+ are attached.
  *
@@ -110,7 +108,7 @@ export async function listFocusCandidates(
 export interface FocusRecipeBundle {
   project: Project;
   recipe: Recipe;
-  zones: ReadonlyArray<RecipeZone & { steps: ReadonlyArray<RecipeStep> }>;
+  slots: ReadonlyArray<RecipeSlot>;
   /** UX-907 — every attached recipe in tab order (most-recently-updated
    *  first). When length >= 2 the FocusPanel renders a tab strip; with
    *  length 1 the strip is suppressed and current behaviour is preserved. */
@@ -154,34 +152,11 @@ export async function getFocusedRecipeBundle(
       ? recipeRows.find((r) => r.id === preferredRecipeId)
       : null) ?? recipeRows[0]!;
 
-  const zoneRows = await db
+  const slots = await db
     .select()
-    .from(recipeZones)
-    .where(eq(recipeZones.recipeId, recipe.id))
-    .orderBy(asc(recipeZones.position));
+    .from(recipeSlots)
+    .where(eq(recipeSlots.recipeId, recipe.id))
+    .orderBy(asc(recipeSlots.position));
 
-  if (zoneRows.length === 0) {
-    return { project, recipe, zones: [], allRecipes };
-  }
-
-  const zoneIds = zoneRows.map((z) => z.id);
-  const stepRows = await db
-    .select()
-    .from(recipeSteps)
-    .where(inArray(recipeSteps.zoneId, zoneIds))
-    .orderBy(asc(recipeSteps.position));
-
-  const stepsByZone = new Map<string, RecipeStep[]>();
-  for (const s of stepRows) {
-    const arr = stepsByZone.get(s.zoneId) ?? [];
-    arr.push(s);
-    stepsByZone.set(s.zoneId, arr);
-  }
-
-  return {
-    project,
-    recipe,
-    zones: zoneRows.map((z) => ({ ...z, steps: stepsByZone.get(z.id) ?? [] })),
-    allRecipes,
-  };
+  return { project, recipe, slots, allRecipes };
 }

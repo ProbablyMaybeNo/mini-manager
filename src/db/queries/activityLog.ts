@@ -6,7 +6,7 @@ import {
   activityLog,
   projects,
   recipes,
-  recipeZones,
+  recipeSlots,
   wishlistItems,
   type ActivityLogKind,
 } from "@/db/schema";
@@ -50,9 +50,9 @@ export interface ActivityStreamRow {
   refId: string | null;
   createdAt: Date;
   displayName: string | null;
-  /** When the ref points at a recipe zone, this resolves the zone's
+  /** When the ref points at a recipe slot, this resolves the slot's
    *  parent recipe name (slot_added rows show "Added slot to <recipe
-   *  name>"). null for non-zone refs. */
+   *  name>"). null for non-slot refs. */
   parentRecipeName: string | null;
 }
 
@@ -89,7 +89,7 @@ export async function getRecentActivity(
 
   const projectIds = new Set<string>();
   const recipeIds = new Set<string>();
-  const zoneIds = new Set<string>();
+  const slotIds = new Set<string>();
   const wishlistIds = new Set<string>();
 
   for (const r of rows) {
@@ -103,7 +103,7 @@ export async function getRecentActivity(
         recipeIds.add(r.refId);
         break;
       case "slot_added":
-        zoneIds.add(r.refId);
+        slotIds.add(r.refId);
         break;
       case "paint_added":
         wishlistIds.add(r.refId);
@@ -111,7 +111,7 @@ export async function getRecentActivity(
     }
   }
 
-  const [projectRows, recipeRows, zoneRows, wishlistRows] = await Promise.all([
+  const [projectRows, recipeRows, slotRows, wishlistRows] = await Promise.all([
     projectIds.size > 0
       ? db
           .select({ id: projects.id, name: projects.name })
@@ -134,26 +134,24 @@ export async function getRecentActivity(
             ),
           )
       : Promise.resolve([] as Array<{ id: string; name: string }>),
-    zoneIds.size > 0
+    slotIds.size > 0
       ? db
           .select({
-            id: recipeZones.id,
-            name: recipeZones.name,
+            id: recipeSlots.id,
             recipeName: recipes.name,
             recipeOwnerId: recipes.ownerId,
           })
-          .from(recipeZones)
-          .innerJoin(recipes, eq(recipeZones.recipeId, recipes.id))
+          .from(recipeSlots)
+          .innerJoin(recipes, eq(recipeSlots.recipeId, recipes.id))
           .where(
             and(
               eq(recipes.ownerId, userId),
-              inArray(recipeZones.id, [...zoneIds]),
+              inArray(recipeSlots.id, [...slotIds]),
             ),
           )
       : Promise.resolve(
           [] as Array<{
             id: string;
-            name: string;
             recipeName: string;
             recipeOwnerId: string;
           }>,
@@ -207,12 +205,9 @@ export async function getRecentActivity(
   }
   const recipeNameById = new Map<string, string>();
   for (const r of recipeRows) recipeNameById.set(r.id, r.name);
-  const zoneById = new Map<
-    string,
-    { name: string; recipeName: string }
-  >();
-  for (const z of zoneRows) {
-    zoneById.set(z.id, { name: z.name, recipeName: z.recipeName });
+  const slotById = new Map<string, { recipeName: string }>();
+  for (const s of slotRows) {
+    slotById.set(s.id, { recipeName: s.recipeName });
   }
   const wishlistById = new Map<
     string,
@@ -235,10 +230,9 @@ export async function getRecentActivity(
           displayName = recipeNameById.get(r.refId) ?? null;
           break;
         case "slot_added": {
-          const zone = zoneById.get(r.refId);
-          if (zone) {
-            displayName = zone.name;
-            parentRecipeName = zone.recipeName;
+          const slot = slotById.get(r.refId);
+          if (slot) {
+            parentRecipeName = slot.recipeName;
           }
           break;
         }

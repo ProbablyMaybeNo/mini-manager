@@ -95,8 +95,8 @@ describe("Phase-12 layer set (schema)", () => {
   });
 });
 
-describe("ZoneList — LayerSelector + chip wiring", () => {
-  const src = read("src/components/recipes/ZoneList.tsx");
+describe("SlotList — LayerSelector + chip wiring (flat model)", () => {
+  const src = read("src/components/recipes/SlotList.tsx");
 
   test("imports the phase12 layer set from the schema", () => {
     expect(src).toContain("phase12LayerKeys");
@@ -104,33 +104,31 @@ describe("ZoneList — LayerSelector + chip wiring", () => {
   });
 
   test("LayerSelector enumerates phase12LayerKeys (not techniqueKeys)", () => {
-    // The selector must iterate the locked 8 — not the full
-    // techniqueKeys union which still carries legacy values.
     expect(src).toMatch(/phase12LayerKeys\.map/);
   });
 
-  test("the slot cell renders the layer name via the layer chip overlay", () => {
-    // The visible chip uses phase12LayerLabel[…] when the firstStep
-    // technique is in the locked set; legacy values fall back to
-    // the raw key (with underscores stripped) so older recipes still
-    // read.
-    expect(src).toContain("phase12LayerLabel[zone.firstStepTechnique]");
+  test("the slot cell renders the layer name via layerDisplay", () => {
+    // The visible chip uses phase12LayerLabel[…] when the slot's
+    // technique is in the locked set; legacy values fall back to the
+    // raw key (with underscores stripped) so older recipes still read.
+    expect(src).toContain("phase12LayerLabel[key]");
     expect(src).toContain("isPhase12Layer");
+    expect(src).toContain("layerDisplay(slot.technique)");
   });
 
-  test("ZoneListItem carries firstStepTechnique", () => {
-    expect(src).toMatch(/firstStepTechnique:\s*TechniqueKey \| null/);
+  test("SlotListItem carries the slot technique", () => {
+    expect(src).toMatch(/technique:\s*TechniqueKey/);
   });
 
-  test("LayerSelector wires updateStep with the new technique", () => {
+  test("LayerSelector wires updateSlot with the new technique", () => {
     expect(src).toContain("handleLayerSelect");
     expect(src).toContain("technique: layer");
   });
 });
 
-describe("Recipe editor page maps firstStepTechnique into ZoneListItem", () => {
-  test("the page wires technique into the ZoneListItem", () => {
+describe("Recipe editor page maps the slot technique into SlotListItem", () => {
+  test("the page wires technique into the SlotListItem", () => {
     const src = read("src/app/recipes/[id]/page.tsx");
-    expect(src).toContain("firstStepTechnique: firstStep?.technique");
+    expect(src).toContain("technique: slot.technique");
   });
 });

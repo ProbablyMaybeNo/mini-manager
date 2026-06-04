@@ -23,11 +23,12 @@ function read(rel: string): string {
 describe("ProjectProgressTable component surface", () => {
   const src = read("src/components/ProjectProgressTable.tsx");
 
-  test("locked column set: Name / Type / Count / Color scheme / Status / Progress", () => {
+  test("locked column set: Name / Type / Count / Recipe / Status / Progress", () => {
     expect(src).toContain(">Name</th>");
     expect(src).toContain(">Type</th>");
     expect(src).toContain(">Count</th>");
-    expect(src).toContain(">Color scheme</th>");
+    expect(src).toContain(">Recipe</th>");
+    expect(src).not.toContain(">Color scheme</th>");
     expect(src).toContain(">Status</th>");
     expect(src).toContain(">Progress</th>");
   });

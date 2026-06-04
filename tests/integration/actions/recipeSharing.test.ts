@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { makeTestDb, seedExtraUser, type TestDb } from "../_helpers/testDb";
-import { recipes, recipeSteps, recipeZones } from "@/db/schema";
+import { recipes, recipeSlots } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -40,17 +40,9 @@ async function seedRecipe(overrides: Partial<typeof recipes.$inferInsert> = {}) 
 
 async function seedRecipeWithContent(): Promise<string> {
   const recipeId = await seedRecipe({ name: "Loaded Recipe" });
-  const zoneId = nanoid(16);
-  await state.db!.insert(recipeZones).values({
-    id: zoneId,
-    recipeId,
-    position: 0,
-    name: "Power Armor",
-    silhouetteZoneId: "armor-primary",
-  });
-  await state.db!.insert(recipeSteps).values({
+  await state.db!.insert(recipeSlots).values({
     id: nanoid(16),
-    zoneId,
+    recipeId,
     position: 0,
     technique: "basecoat",
     paintId: "citadel-caliban-green",
@@ -136,7 +128,7 @@ describe("unpublishRecipe", () => {
 });
 
 describe("getRecipeBySlug", () => {
-  test("round-trips a published recipe with its zones and steps", async () => {
+  test("round-trips a published recipe with its slots", async () => {
     const recipeId = await seedRecipeWithContent();
     const pub = await publishRecipe({ recipeId });
     expect(pub.ok).toBe(true);
@@ -146,9 +138,9 @@ describe("getRecipeBySlug", () => {
     expect(fetched).not.toBeNull();
     expect(fetched?.id).toBe(recipeId);
     expect(fetched?.name).toBe("Loaded Recipe");
-    expect(fetched?.zones).toHaveLength(1);
-    expect(fetched?.zones[0]?.steps).toHaveLength(1);
-    expect(fetched?.zones[0]?.steps[0]?.technique).toBe("basecoat");
+    expect(fetched?.slots).toHaveLength(1);
+    expect(fetched?.slots[0]?.technique).toBe("basecoat");
+    expect(fetched?.slots[0]?.paintId).toBe("citadel-caliban-green");
   });
 
   test("returns null for an unknown slug", async () => {
@@ -167,7 +159,7 @@ describe("getRecipeBySlug", () => {
 });
 
 describe("cloneRecipeFromSlug", () => {
-  test("deep-copies a recipe including zones and steps under the caller", async () => {
+  test("deep-copies a recipe including slots under the caller", async () => {
     // Alice owns + publishes the source.
     const aliceId = state.userId;
     const sourceId = await seedRecipeWithContent();
@@ -205,22 +197,14 @@ describe("cloneRecipeFromSlug", () => {
     expect(cloneRow.isStandalone).toBe(true);
     expect(cloneRow.attachedProjectId).toBeNull();
 
-    // Zones + steps replicated 1:1 under fresh ids.
-    const zones = await state
+    // Slots replicated 1:1 under fresh ids.
+    const slots = await state
       .db!.select()
-      .from(recipeZones)
-      .where(eq(recipeZones.recipeId, clone.data.id));
-    expect(zones).toHaveLength(1);
-    expect(zones[0]?.name).toBe("Power Armor");
-    expect(zones[0]?.silhouetteZoneId).toBe("armor-primary");
-
-    const steps = await state
-      .db!.select()
-      .from(recipeSteps)
-      .where(eq(recipeSteps.zoneId, zones[0]!.id));
-    expect(steps).toHaveLength(1);
-    expect(steps[0]?.technique).toBe("basecoat");
-    expect(steps[0]?.paintId).toBe("citadel-caliban-green");
+      .from(recipeSlots)
+      .where(eq(recipeSlots.recipeId, clone.data.id));
+    expect(slots).toHaveLength(1);
+    expect(slots[0]?.technique).toBe("basecoat");
+    expect(slots[0]?.paintId).toBe("citadel-caliban-green");
   });
 
   test("rejects cloning a recipe you already own", async () => {

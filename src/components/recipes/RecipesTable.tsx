@@ -13,14 +13,13 @@ export interface RecipeRowVm {
   attachmentKind: "standalone" | "project";
   attachmentLabel: string | null;
   paletteHexes: string[];
-  stepCount: number;
   slotCount: number;
   createdAt: number;
   updatedAt: number;
   publicSlug: string | null;
 }
 
-type SortKey = "name" | "bodyType" | "slotCount" | "stepCount" | "createdAt" | "updatedAt";
+type SortKey = "name" | "bodyType" | "slotCount" | "createdAt" | "updatedAt";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -35,8 +34,8 @@ interface Props {
  * Columns:
  *   Name              click → /recipes/<id> editor
  *   Body type         coloured chip
- *   Palette           up to 8 swatches (zone-position order)
- *   Slots / Steps     compact count summary
+ *   Palette           up to 8 swatches (slot-position order)
+ *   Slots             slot count (one paint + layer per slot)
  *   Attached to       chip linking to the project/model (when any)
  *   Updated           short ISO-ish date
  *   Actions           Assign ▾ (cyan/primary) + Share (warning/yellow)
@@ -110,13 +109,6 @@ export function RecipesTable({ rows }: Props) {
               dir={sortDir}
               onClick={() => handleSort("slotCount")}
             />
-            <Th
-              label="Steps"
-              align="right"
-              active={sortKey === "stepCount"}
-              dir={sortDir}
-              onClick={() => handleSort("stepCount")}
-            />
             <th scope="col" className="px-3 py-2">
               Attached to
             </th>
@@ -161,9 +153,9 @@ function RecipeCardRow({ row }: { row: RecipeRowVm }) {
       </div>
       <PaletteStrip hexes={row.paletteHexes} />
       <div className="flex items-center gap-3 text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
-        <span>{row.slotCount} slots</span>
-        <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
-        <span>{row.stepCount} steps</span>
+        <span>
+          {row.slotCount} slot{row.slotCount === 1 ? "" : "s"}
+        </span>
         <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
         <span className="truncate">{row.attachmentLabel ?? "standalone"}</span>
       </div>
@@ -255,7 +247,6 @@ function RecipeRow({ row }: { row: RecipeRowVm }) {
         <PaletteStrip hexes={row.paletteHexes} />
       </td>
       <td className="px-3 py-2 text-right tabular-nums">{row.slotCount}</td>
-      <td className="px-3 py-2 text-right tabular-nums">{row.stepCount}</td>
       <td className="px-3 py-2 text-[var(--color-fg-muted)]">
         {row.attachmentLabel ?? (
           <span className="opacity-50">standalone</span>

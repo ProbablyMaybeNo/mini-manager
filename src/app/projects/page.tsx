@@ -24,9 +24,9 @@ import { Button } from "@/components/ui/Button";
 import { FocusPicker } from "@/components/focus/FocusPicker";
 import {
   FocusPanel,
-  type FocusZoneView,
+  type FocusSlotView,
 } from "@/components/focus/FocusPanel";
-import { buildFocusZones } from "@/lib/focus/rollup";
+import { buildFocusSlots } from "@/lib/focus/rollup";
 import { Stopwatch } from "@/components/focus/Stopwatch";
 import { PlannerSection } from "@/components/planner/PlannerSection";
 import { ProjectsWorkspace } from "@/components/projects/ProjectsWorkspace";
@@ -109,56 +109,53 @@ export default async function ProjectsPage({
 
   const isEmpty = allProjects.length === 0;
 
-  // P15.0 — resolve which of the focused recipe's steps the painter has
-  // marked done, scoped to this recipe's step ids so the lookup stays
-  // bounded. Done-state is per-painter (keyed on user + step).
-  const focusStepIds = focusBundle
-    ? focusBundle.zones.flatMap((z) => z.steps.map((s) => s.id))
+  // P15.0 — resolve which of the focused recipe's slots the painter has
+  // marked done, scoped to this recipe's slot ids so the lookup stays
+  // bounded. Done-state is per-painter (keyed on user + slot; slot.id ==
+  // the old step.id so completion rows carry across the flatten).
+  const focusSlotIds = focusBundle
+    ? focusBundle.slots.map((s) => s.id)
     : [];
   // P15.x — distinct paint ids across the focused recipe's paint-backed
-  // steps. Per-paint notes are keyed on the paint, so we fetch the note
-  // map bounded by these ids and thread the same note into every step
+  // slots. Per-paint notes are keyed on the paint, so we fetch the note
+  // map bounded by these ids and thread the same note into every slot
   // that pins the paint.
   const focusPaintIds = focusBundle
     ? Array.from(
         new Set(
-          focusBundle.zones.flatMap((z) =>
-            z.steps.flatMap((s) => (s.paintId ? [s.paintId] : [])),
-          ),
+          focusBundle.slots.flatMap((s) => (s.paintId ? [s.paintId] : [])),
         ),
       )
     : [];
-  const [completedStepIds, paintNotesMap] = await Promise.all([
-    getCompletedStepIds(userId, focusStepIds),
+  const [completedSlotIds, paintNotesMap] = await Promise.all([
+    getCompletedStepIds(userId, focusSlotIds),
     getPaintNotesMap(userId, focusPaintIds),
   ]);
 
-  // P13.11 / P15.x — Build the FocusPanel's view model from the bundle.
-  // Resolves paintId to brand+name+hex via the cached paint catalog and
-  // threads each step's per-painter done-state + the paint's global note.
-  const focusZones: FocusZoneView[] = focusBundle
-    ? buildFocusZones(
-        focusBundle.zones,
+  // P13.11 / P15.x — Build the FocusPanel's flat view model from the
+  // bundle. Resolves paintId to brand+name+hex via the cached paint
+  // catalog and threads each slot's per-painter done-state + the paint's
+  // global note.
+  const focusSlots: FocusSlotView[] = focusBundle
+    ? buildFocusSlots(
+        focusBundle.slots,
         paintMeta,
-        completedStepIds,
+        completedSlotIds,
         paintNotesMap,
       )
     : [];
 
   // P15.0 — resolve the active slot. Honour `?focusSlot` when it points
   // at a real slot in the focused recipe; otherwise default to the first
-  // slot that still has an undone step (the slot the painter would
-  // naturally pick up next), falling back to the first slot when the
-  // recipe is fully done.
+  // undone slot (the one the painter would naturally pick up next),
+  // falling back to the first slot when the recipe is fully done.
   const activeSlotId: string | null = (() => {
-    if (focusZones.length === 0) return null;
-    if (focusSlotParam && focusZones.some((z) => z.id === focusSlotParam)) {
+    if (focusSlots.length === 0) return null;
+    if (focusSlotParam && focusSlots.some((s) => s.id === focusSlotParam)) {
       return focusSlotParam;
     }
-    const firstUndone = focusZones.find((z) =>
-      z.steps.some((s) => !s.done),
-    );
-    return firstUndone?.id ?? focusZones[0]!.id;
+    const firstUndone = focusSlots.find((s) => !s.done);
+    return firstUndone?.id ?? focusSlots[0]!.id;
   })();
 
   // Build name lookup so the inline AttachRecipeModal can label
@@ -219,7 +216,7 @@ export default async function ProjectsPage({
           projectId={focusBundle.project.id}
           projectName={focusBundle.project.name}
           recipeName={focusBundle.recipe.name}
-          zones={focusZones}
+          slots={focusSlots}
           recipes={focusBundle.allRecipes}
           activeRecipeId={focusBundle.recipe.id}
           activeSlotId={activeSlotId}
@@ -341,7 +338,7 @@ function FocusEmptyState({ hasCandidates }: { hasCandidates: boolean }) {
         ) : (
           <>
             Attach a recipe from any project workspace first (open a project
-            → tap a swatch in the Color scheme box). Then it&apos;ll show up
+            → tap a swatch in the Recipe box). Then it&apos;ll show up
             here as a focus target.
           </>
         )}

@@ -133,7 +133,7 @@ Built in **reviewable stages** (schema migration = one-way, so staged + gated):
       flatten 0-based per recipe; `step.id` preserved as `slot.id`; old tables kept). Validated.
 - [x] **Stage 2** (`c88781d`) — slot API: `getRecipeWithSlots`, `getSlotWithOwnerCheck`; actions
       `addSlot`/`updateSlot`/`deleteSlot`/`reorderSlots` (recipeSlots.ts). 16 integration tests.
-- [ ] **Stage 3** — component cutover: `ZoneList` + `StepList`/`StepRow` → one `SlotList`; simplify
+- [x] **Stage 3** — component cutover: `ZoneList` + `StepList`/`StepRow` → one `SlotList`; simplify
       `RecipeEditorClient` (no zones/steps, no Steps box); `ProjectColorSchemeBox` renders the same flat
       slot list; share page + FOCUS panel read slots; retire "color scheme" labels → "Recipe". Read via
       `getRecipeWithSlots`; mutate via the recipeSlots actions. Paints-only (no custom-hex add path).
