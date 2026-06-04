@@ -7,14 +7,17 @@ import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   recipes,
+  recipeSlots,
   recipeSteps,
   recipeZones,
   type Recipe,
+  type RecipeSlot,
   type RecipeStep,
   type RecipeZone,
 } from "@/db/schema";
 import type { Paint, PaintCatalog } from "@/lib/paints/types";
 import type {
+  RecipeWithSlots,
   RecipeWithZones,
   RecipeZoneWithSteps,
 } from "@/lib/recipes/types";
@@ -111,6 +114,28 @@ export async function getRecipeBySlug(
   }));
 
   return { ...recipe, zones };
+}
+
+/**
+ * Full FLAT recipe shape (2026-06-04 unify) — the recipe + its slots
+ * ordered by position. Ownership-checked; returns null when the recipe is
+ * missing OR owned by another user (the two cases are not distinguished).
+ * The slot-era counterpart to `getRecipeWithZones`.
+ */
+export async function getRecipeWithSlots(
+  userId: string,
+  recipeId: string,
+): Promise<RecipeWithSlots | null> {
+  const recipe = await getRecipeById(userId, recipeId);
+  if (!recipe) return null;
+
+  const slots = await db
+    .select()
+    .from(recipeSlots)
+    .where(eq(recipeSlots.recipeId, recipe.id))
+    .orderBy(asc(recipeSlots.position));
+
+  return { ...recipe, slots };
 }
 
 /**
@@ -718,4 +743,24 @@ export async function getStepWithOwnerCheck(
   const row = rows[0];
   if (!row) return null;
   return { step: row.step, zoneId: row.zoneId, recipeId: row.recipeId };
+}
+
+/**
+ * Verify a slot exists and is owned via its parent recipe (2026-06-04
+ * unify). Returns the slot row + the parent recipeId on success — the
+ * flat-model counterpart to getZoneWithOwnerCheck / getStepWithOwnerCheck.
+ */
+export async function getSlotWithOwnerCheck(
+  userId: string,
+  slotId: string,
+): Promise<{ slot: RecipeSlot; recipeId: string } | null> {
+  const rows = await db
+    .select({ slot: recipeSlots, ownerId: recipes.ownerId })
+    .from(recipeSlots)
+    .innerJoin(recipes, eq(recipes.id, recipeSlots.recipeId))
+    .where(and(eq(recipeSlots.id, slotId), eq(recipes.ownerId, userId)))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return { slot: row.slot, recipeId: row.slot.recipeId };
 }

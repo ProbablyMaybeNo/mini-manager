@@ -11,12 +11,13 @@
 import type {
   BodyType,
   Recipe,
+  RecipeSlot,
   RecipeStep,
   RecipeZone,
   TechniqueKey,
 } from "@/db/schema";
 
-export type { BodyType, Recipe, RecipeStep, RecipeZone, TechniqueKey };
+export type { BodyType, Recipe, RecipeSlot, RecipeStep, RecipeZone, TechniqueKey };
 
 export type RecipeZoneWithSteps = RecipeZone & {
   steps: ReadonlyArray<RecipeStep>;
@@ -24,4 +25,14 @@ export type RecipeZoneWithSteps = RecipeZone & {
 
 export type RecipeWithZones = Recipe & {
   zones: ReadonlyArray<RecipeZoneWithSteps>;
+};
+
+/**
+ * The unified FLAT recipe shape (2026-06-04): a recipe is an ordered list
+ * of slots, each = one paint (paintId | customColorHex) + its layer
+ * (`technique`). Replaces RecipeWithZones as the canonical full-detail
+ * shape once all surfaces have cut over.
+ */
+export type RecipeWithSlots = Recipe & {
+  slots: ReadonlyArray<RecipeSlot>;
 };

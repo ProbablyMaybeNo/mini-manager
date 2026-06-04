@@ -885,6 +885,9 @@ export type NewRecipeZone = typeof recipeZones.$inferInsert;
 export type RecipeStep = typeof recipeSteps.$inferSelect;
 export type NewRecipeStep = typeof recipeSteps.$inferInsert;
 
+export type RecipeSlot = typeof recipeSlots.$inferSelect;
+export type NewRecipeSlot = typeof recipeSlots.$inferInsert;
+
 export type Palette = typeof palettes.$inferSelect;
 export type NewPalette = typeof palettes.$inferInsert;
 
