@@ -7,7 +7,6 @@ import { clsx } from "clsx";
 import type { Priority, ProjectType } from "@/db/schema";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
-import { Button } from "@/components/ui/Button";
 import { updateProjectCount } from "@/lib/actions/projects";
 import type { DisplayStatus } from "@/lib/progress";
 
@@ -42,9 +41,8 @@ const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
 };
 
 interface Props {
-  /** Parent project type — drives the "+ Add X" CTA labels. */
+  /** Parent project type — drives the empty-state copy. */
   parentType: ProjectType;
-  parentId: string;
   rows: ReadonlyArray<ProgressRow>;
 }
 
@@ -53,8 +51,12 @@ interface Props {
  *
  * One row per child (sub-project / named-model). Columns Ross's
  * Q2 locked: Name · Type · Count (± steppers) · Recipe ·
- * Status bar. ADD CTAs above the table (success-green per the
- * P12.23 button discipline).
+ * Status bar.
+ *
+ * Item 1 (batch/army-project-page) — the per-table ADD CTAs were
+ * removed. The single "+ Add ▾" menu in the header strip is now the
+ * only add entry point; the empty state points there instead of
+ * duplicating add buttons.
  *
  * Inline edits supported in v1:
  *   - Count (± steppers) on sub-project rows (updateProjectCount)
@@ -68,43 +70,26 @@ interface Props {
  */
 export function ProjectProgressTable({
   parentType,
-  parentId,
   rows,
 }: Props) {
-  // P13.4 — Army / Warband / Unit parents host Units only.
-  const addLabel = "+ ADD UNIT";
-  const showTerrainCta = parentType === "Army" || parentType === "Warband";
-
   if (rows.length === 0) {
+    // Item 1 — the add affordances moved to the single "+ Add ▾" menu in
+    // the header strip. The empty state now points the painter at that
+    // one control instead of duplicating add buttons here.
     return (
       <section
         className="frame p-6 text-center space-y-3"
         aria-label="Progress (empty)"
       >
         <p className="text-sm font-sans text-[var(--color-fg-muted)]">
-          No children yet. Add a unit, model, or piece of terrain to start
-          tracking progress for this {parentType.toLowerCase()}.
+          No children yet. Use the{" "}
+          <span className="font-mono text-[var(--color-green)]">+ Add</span>{" "}
+          menu at the top of the page to add a unit
+          {parentType === "Army" || parentType === "Warband"
+            ? " or terrain"
+            : ""}{" "}
+          and start tracking progress for this {parentType.toLowerCase()}.
         </p>
-        <div className="flex justify-center gap-3 flex-wrap">
-          <Button
-            as="a"
-            href={`/projects/new?parent=${parentId}&type=Unit`}
-            variant="success"
-            size="sm"
-          >
-            {addLabel}
-          </Button>
-          {showTerrainCta ? (
-            <Button
-              as="a"
-              href={`/projects/new?parent=${parentId}&type=Terrain Piece`}
-              variant="success"
-              size="sm"
-            >
-              + ADD TERRAIN
-            </Button>
-          ) : null}
-        </div>
       </section>
     );
   }
@@ -113,26 +98,6 @@ export function ProjectProgressTable({
     <section className="space-y-3" aria-label="Progress">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="section-title">Progress · {rows.length}</h2>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            as="a"
-            href={`/projects/new?parent=${parentId}&type=Unit`}
-            variant="success"
-            size="sm"
-          >
-            {addLabel}
-          </Button>
-          {showTerrainCta ? (
-            <Button
-              as="a"
-              href={`/projects/new?parent=${parentId}&type=Terrain Piece`}
-              variant="success"
-              size="sm"
-            >
-              + ADD TERRAIN
-            </Button>
-          ) : null}
-        </div>
       </div>
       <div className="frame overflow-x-auto">
         <table className="w-full text-xs font-mono">

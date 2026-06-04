@@ -33,15 +33,19 @@ describe("ProjectProgressTable component surface", () => {
     expect(src).toContain(">Progress</th>");
   });
 
-  test("ADD CTAs use the success variant (P12.23 button discipline)", () => {
-    // Three add buttons (above table + empty-state CTA) all green.
-    const greenCount = (src.match(/variant="success"/g) ?? []).length;
-    expect(greenCount).toBeGreaterThanOrEqual(2);
+  test("Item 1 — the per-table ADD CTAs are gone (single header menu)", () => {
+    // Item 1 (batch/army-project-page) removed the duplicated add
+    // buttons from the table. The header strip's "+ Add ▾" menu is now
+    // the only add entry point, so the table renders no add Buttons.
+    expect(src).not.toContain("+ ADD UNIT");
+    expect(src).not.toContain("+ ADD TERRAIN");
+    expect(src).not.toContain('variant="success"');
+    expect(src).not.toContain('"@/components/ui/Button"');
   });
 
-  test("CTA label is + ADD UNIT for all parent types (P13.4 sub-project rule)", () => {
-    expect(src).toContain("+ ADD UNIT");
-    expect(src).toContain("+ ADD TERRAIN");
+  test("Item 1 — empty state points at the top + Add menu", () => {
+    expect(src).toContain("+ Add");
+    expect(src).toContain("menu at the top of the page");
   });
 
   test("every row carries ± steppers (P13.4 — named-model rows removed)", () => {

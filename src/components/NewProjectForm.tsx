@@ -71,9 +71,14 @@ void _allTypesCovered;
 export function NewProjectForm({
   parents,
   initialParentId,
+  initialType,
 }: {
   parents: ReadonlyArray<ParentOption>;
   initialParentId?: string;
+  /** Item 1 — the unified "+ Add" menu pre-selects the project type
+   *  via `?type=`. Ignored when a parent is present (nested children are
+   *  Unit-only). Defaults to Unit. */
+  initialType?: ProjectType;
 }) {
   // P13.4 — when a parent is pre-selected, the only legal child is Unit.
   const hasInitialParent = Boolean(initialParentId);
@@ -83,7 +88,7 @@ export function NewProjectForm({
   );
 
   const [type, setType] = useState<ProjectType>(
-    hasInitialParent ? "Unit" : "Unit",
+    hasInitialParent ? "Unit" : initialType ?? "Unit",
   );
   const initialMeta = TYPE_META_BY_TYPE[type];
   const [name, setName] = useState("");
