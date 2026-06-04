@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 import type { Paint } from "@/lib/paints/types";
+import type { CoverageCell } from "@/db/queries/paintCoverage";
+import type { CoverageSummary } from "@/lib/paints/coverage";
 import { applyAllFilters, countActiveFilters } from "@/lib/paints/filters";
 import { sortPaints } from "@/lib/paints/sort";
 import {
@@ -16,6 +18,8 @@ import { LibraryTable } from "./LibraryTable";
 import { LibraryGrid } from "./LibraryGrid";
 import { PaintDetailPanel } from "./PaintDetailPanel";
 import { ViewModeToggle } from "./ViewModeToggle";
+import { CollectionPanel } from "./CollectionPanel";
+import { InventoryOverridesProvider } from "./inventoryOverrides";
 import { useLibraryViewMode } from "@/lib/hooks/useLibraryViewMode";
 import { Button } from "@/components/ui/Button";
 
@@ -33,6 +37,9 @@ export function LibraryPageClient({
   paints,
   inventory,
   defaultBrands,
+  coverageCells,
+  coverageSummary,
+  brands,
 }: {
   paints: ReadonlyArray<Paint>;
   inventory: ReadonlyMap<string, InventorySnapshot>;
@@ -41,6 +48,12 @@ export function LibraryPageClient({
    *  card writes this through users.libraryBrandFilter. Empty array
    *  OR undefined both mean "all brands visible". */
   defaultBrands?: ReadonlyArray<string>;
+  /** LIB-COLORMAP — hue-sorted coverage cells for the right-hand map. */
+  coverageCells?: ReadonlyArray<CoverageCell>;
+  /** LIB-COLORMAP — catalog-wide owned/wanted summary for the map header. */
+  coverageSummary?: CoverageSummary;
+  /** LIB-COLORMAP — all catalog brands, sorted, for the map's chip row. */
+  brands?: ReadonlyArray<string>;
 }) {
   const sp = useSearchParams();
 
@@ -83,6 +96,26 @@ export function LibraryPageClient({
 
   const [viewMode, setViewMode] = useLibraryViewMode();
 
+  // LIB-COLORMAP — the colour-map's "scroll the list to this hue" target.
+  // The nonce bumps on every map click so repeat clicks on the same paint
+  // re-fire the scroll + flash in the (memoised) table/grid effect.
+  const [scrollTarget, setScrollTarget] = useState<{
+    paintId: string;
+    nonce: number;
+  } | null>(null);
+
+  const onScrollToPaint = useCallback((paintId: string) => {
+    setScrollTarget((prev) => ({ paintId, nonce: (prev?.nonce ?? 0) + 1 }));
+  }, []);
+
+  const scrollTargetPaint = useMemo(
+    () =>
+      scrollTarget
+        ? paints.find((p) => p.id === scrollTarget.paintId) ?? null
+        : null,
+    [scrollTarget, paints],
+  );
+
   // Mobile-only state: bottom-sheet drawer for the filter rail.
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
@@ -93,6 +126,7 @@ export function LibraryPageClient({
   }, [filter]);
 
   return (
+    <InventoryOverridesProvider>
     <div className="flex flex-1 min-h-0">
       {/* Desktop rail — UX-1506: gated at lg (1024), not md (768). At md
           the rail + table together exceeded the 768 viewport (922px), so
@@ -201,15 +235,45 @@ export function LibraryPageClient({
             paints={filtered}
             selectedPaintId={selectedId}
             inventoryByPaint={inventory}
+            scrollToPaintId={scrollTarget?.paintId ?? null}
+            scrollToPaint={scrollTargetPaint}
+            scrollNonce={scrollTarget?.nonce}
           />
         ) : (
           <LibraryGrid
             paints={filtered}
             selectedPaintId={selectedId}
             inventoryByPaint={inventory}
+            scrollToPaintId={scrollTarget?.paintId ?? null}
+            scrollToPaint={scrollTargetPaint}
+            scrollNonce={scrollTarget?.nonce}
           />
         )}
       </div>
+
+      {/* LIB-COLORMAP — persistent right-hand colour map (lg+ only).
+          Map = navigator: clicking a region scrolls the list to that hue.
+          Mounted only when no paint is selected; when a paint IS selected
+          the PaintDetailPanel (fixed inset-y-0 right-0) overlays + covers
+          it — that's "the map gets replaced by the detail slide-out". The
+          mobile library layout is intentionally unchanged. */}
+      {selectedId === null &&
+      coverageCells &&
+      coverageSummary &&
+      brands ? (
+        <aside
+          className="hidden lg:flex w-[320px] shrink-0 border-l border-[var(--color-border)] p-2 min-h-0"
+          aria-label="Collection colour map"
+        >
+          <CollectionPanel
+            cells={coverageCells}
+            summary={coverageSummary}
+            brands={brands}
+            onScrollToPaint={onScrollToPaint}
+          />
+        </aside>
+      ) : null}
+
       <PaintDetailPanel
         paint={selected}
         similarInOtherBrands={similar}
@@ -217,6 +281,7 @@ export function LibraryPageClient({
         allPaints={paints}
       />
     </div>
+    </InventoryOverridesProvider>
   );
 }
 

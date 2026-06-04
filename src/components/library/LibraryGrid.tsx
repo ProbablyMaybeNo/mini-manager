@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
 import type { Paint } from "@/lib/paints/types";
+import { nearestVisibleIndex } from "@/lib/library/scrollTarget";
 
 /**
  * Dense wall-of-color view. Each cell is a pure swatch; identification
@@ -20,14 +22,49 @@ export function LibraryGrid({
   paints,
   selectedPaintId,
   inventoryByPaint,
+  scrollToPaintId,
+  scrollToPaint,
+  scrollNonce,
 }: {
   paints: ReadonlyArray<Paint>;
   selectedPaintId: string | null;
   inventoryByPaint: ReadonlyMap<string, { ownedCount: number; isWishlisted: boolean }>;
+  /** LIB-COLORMAP — colour-map scroll target (see LibraryTable). */
+  scrollToPaintId?: string | null;
+  scrollToPaint?: Paint | null;
+  scrollNonce?: number;
 }) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [flashPaintId, setFlashPaintId] = useState<string | null>(null);
+
+  // LIB-COLORMAP — scroll the swatch wall to a colour-map pick. The grid
+  // isn't virtualised (content-visibility per cell), so we resolve the
+  // target paint (exact, or nearest in-list by hue) and scroll its swatch
+  // into view via its data-paint-id, then flash it.
+  useEffect(() => {
+    if (!scrollToPaintId || scrollNonce == null) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    const targetIndex = nearestVisibleIndex(paints, scrollToPaintId, scrollToPaint);
+    if (targetIndex < 0) return;
+    const target = paints[targetIndex];
+    if (!target) return;
+    const el = container.querySelector<HTMLElement>(
+      `[data-paint-id="${cssAttrEscape(target.id)}"]`,
+    );
+    if (el) {
+      el.scrollIntoView({ block: "center", behavior: "auto" });
+    }
+    setFlashPaintId(target.id);
+    const timer = setTimeout(() => setFlashPaintId(null), 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollNonce]);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div
+        ref={scrollRef}
         className="flex-1 min-h-0 overflow-y-auto p-2"
         role="grid"
         aria-rowcount={Math.ceil(paints.length / 8)}
@@ -50,6 +87,7 @@ export function LibraryGrid({
                 key={paint.id}
                 paint={paint}
                 active={paint.id === selectedPaintId}
+                flash={paint.id === flashPaintId}
                 inventory={inventoryByPaint.get(paint.id)}
               />
             ))}
@@ -64,10 +102,13 @@ export function LibraryGrid({
 function SwatchCell({
   paint,
   active,
+  flash,
   inventory,
 }: {
   paint: Paint;
   active: boolean;
+  /** LIB-COLORMAP — transient highlight after a colour-map scroll-to. */
+  flash: boolean;
   inventory: { ownedCount: number; isWishlisted: boolean } | undefined;
 }) {
   const router = useRouter();
@@ -93,6 +134,7 @@ function SwatchCell({
   return (
     <button
       type="button"
+      data-paint-id={paint.id}
       onClick={openDetail}
       onKeyDown={onKeyDown}
       role="gridcell"
@@ -105,6 +147,9 @@ function SwatchCell({
         active
           ? "border-[var(--color-accent)] shadow-[0_0_0_2px_var(--color-accent)]"
           : "border-[var(--color-border)] hover:border-[var(--color-accent)] hover:scale-[1.06] hover:z-10",
+        // LIB-COLORMAP — transient flash when the colour map scrolls here.
+        flash &&
+          "animate-[pulse_0.6s_ease-in-out_2] ring-2 ring-[var(--color-amber)] z-10 motion-reduce:animate-none",
       )}
       style={{
         background: paint.hex,
@@ -134,6 +179,12 @@ function SwatchCell({
       ) : null}
     </button>
   );
+}
+
+/** Escape a paint id for safe use inside a [data-paint-id="..."] selector.
+ *  Paint ids are slug-like but we quote-escape defensively. */
+function cssAttrEscape(value: string): string {
+  return value.replace(/["\\]/g, "\\$&");
 }
 
 function GridFooter({ total }: { total: number }) {

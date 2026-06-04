@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { LogTag } from "@/components/ui/LogTag";
 import { useToast } from "@/components/ui/Toast";
+import { useInventoryOverrides } from "./inventoryOverrides";
 
 interface InventoryState {
   ownedCount: number;
@@ -53,6 +54,11 @@ export function InventoryControls({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const toast = useToast();
+  // LIB-COLORMAP — optional shared store. When mounted (library page), the
+  // optimistic toggle mirrors into it so the colour-map dots update live.
+  // null on every other page → the .set() calls are skipped (no behaviour
+  // change).
+  const overrides = useInventoryOverrides();
 
   function bumpOwned(delta: 1 | -1) {
     const next = Math.max(0, state.ownedCount + delta);
@@ -84,12 +90,18 @@ export function InventoryControls({
   ) {
     setError(null);
     const prev = state;
-    setState({ ...state, ...patch });
+    const next = { ...state, ...patch };
+    setState(next);
+    // LIB-COLORMAP — mirror the optimistic snapshot into the shared store
+    // so the colour-map dots update before the server confirms.
+    overrides?.set(paintId, next);
     startTransition(async () => {
       const result = await call();
       if (result.ok === false) {
         setError(result.error);
         setState(prev);
+        // Revert the shared store too so the dots track the rollback.
+        overrides?.set(paintId, prev);
         toast.error(result.error);
       } else {
         onSuccess?.();

@@ -13,6 +13,7 @@ import { clsx } from "clsx";
 
 import type { Paint } from "@/lib/paints/types";
 import type { SortMode } from "@/lib/paints/sort";
+import { nearestVisibleIndex } from "@/lib/library/scrollTarget";
 import { TypeIcon } from "./TypeIcon";
 import { HexConfidenceDot } from "./HexConfidenceDot";
 import { InventoryControls } from "./InventoryControls";
@@ -79,14 +80,26 @@ export function LibraryTable({
   paints,
   selectedPaintId,
   inventoryByPaint,
+  scrollToPaintId,
+  scrollToPaint,
+  scrollNonce,
 }: {
   paints: ReadonlyArray<Paint>;
   selectedPaintId: string | null;
   inventoryByPaint: ReadonlyMap<string, { ownedCount: number; isWishlisted: boolean }>;
+  /** LIB-COLORMAP — paint to scroll the list to when the colour map is
+   *  clicked. The nonce bumps on every map click so repeat clicks on the
+   *  same hue re-trigger the scroll + flash. `scrollToPaint` is the full
+   *  Paint (when known) so a filtered-out pick can fall back to the
+   *  nearest in-list paint by hue. */
+  scrollToPaintId?: string | null;
+  scrollToPaint?: Paint | null;
+  scrollNonce?: number;
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewport, setViewport] = useState(0);
+  const [flashPaintId, setFlashPaintId] = useState<string | null>(null);
   const isMobile = useIsMobileLibrary();
   const [density] = useDensity();
   const router = useRouter();
@@ -178,6 +191,31 @@ export function LibraryTable({
     return () => ro.disconnect();
   }, []);
 
+  // LIB-COLORMAP — scroll the virtualised list to a colour-map pick.
+  // On nonce change, find the paint's index in the CURRENT (filtered)
+  // `paints` array; if it's filtered out, fall back to the nearest in-list
+  // paint by hue so the list still jumps to the right neighbourhood rather
+  // than no-opping silently. Set scrollTop = index * rowHeight, then flash
+  // the row briefly. The flash key drives a transient highlight class.
+  useEffect(() => {
+    if (!scrollToPaintId || scrollNonce == null) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const targetIndex = nearestVisibleIndex(paints, scrollToPaintId, scrollToPaint);
+    if (targetIndex < 0) return;
+    const target = paints[targetIndex];
+    if (!target) return;
+    // Centre the row in the viewport where possible.
+    const desired =
+      targetIndex * rowHeight - Math.max(0, (el.clientHeight - rowHeight) / 2);
+    el.scrollTop = Math.max(0, desired);
+    setScrollTop(el.scrollTop);
+    setFlashPaintId(target.id);
+    const timer = setTimeout(() => setFlashPaintId(null), 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollNonce]);
+
   const totalHeight = paints.length * rowHeight;
   const visibleCount = Math.ceil(viewport / rowHeight) + OVERSCAN * 2;
   const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - OVERSCAN);
@@ -245,6 +283,7 @@ export function LibraryTable({
                   rowIndex={startIndex + i}
                   active={p.id === selectedPaintId}
                   selected={selected.has(p.id)}
+                  flash={p.id === flashPaintId}
                   onToggleSelect={() => toggleSelect(p.id)}
                   onContextMenu={(x, y) => setMenu({ paint: p, x, y })}
                   inventory={inventoryByPaint.get(p.id)}
@@ -564,6 +603,7 @@ function PaintRow({
   rowIndex,
   active,
   selected,
+  flash,
   onToggleSelect,
   onContextMenu,
   inventory,
@@ -573,6 +613,8 @@ function PaintRow({
   rowIndex: number;
   active: boolean;
   selected: boolean;
+  /** LIB-COLORMAP — transient highlight after a colour-map scroll-to. */
+  flash: boolean;
   onToggleSelect: () => void;
   onContextMenu: (x: number, y: number) => void;
   inventory: { ownedCount: number; isWishlisted: boolean } | undefined;
@@ -603,6 +645,7 @@ function PaintRow({
     <div
       role="row"
       tabIndex={0}
+      data-paint-id={paint.id}
       onClick={openDetail}
       onKeyDown={onRowKeyDown}
       onContextMenu={(e) => {
@@ -623,6 +666,10 @@ function PaintRow({
         active && "bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]",
         selected &&
           "bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]",
+        // LIB-COLORMAP — transient flash when the colour map scrolls here.
+        // Token-based amber wash + ring; respects reduced motion.
+        flash &&
+          "animate-[pulse_0.6s_ease-in-out_2] bg-[color-mix(in_srgb,var(--color-amber)_18%,transparent)] ring-1 ring-inset ring-[var(--color-amber)] motion-reduce:animate-none",
         GRID_CLASS,
       )}
       style={{ height: rowHeight }}

@@ -15,6 +15,8 @@ import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { decodeLibraryBrandFilter } from "@/lib/libraryBrandFilter/decode";
+import { composeCoverageGrid } from "@/db/queries/paintCoverage";
+import type { InventoryByPaintId } from "@/lib/paints/coverage";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +58,19 @@ export default async function LibraryPage() {
     });
   });
 
+  // LIB-COLORMAP — compose the hue-sorted coverage cells for the library's
+  // right-hand colour map. The InventoryByPaintId map shares the
+  // {ownedCount, isWishlisted} shape with `inventory`, so we reuse it.
+  const inventoryByPaintId: InventoryByPaintId = inventory;
+  const { cells: coverageCells, summary: coverageSummary } = composeCoverageGrid(
+    catalog.paints,
+    inventoryByPaintId,
+  );
+  // Distinct catalog brands, sorted — the map's brand-chip row.
+  const brands = Array.from(
+    new Set(catalog.paints.map((p) => p.brand)),
+  ).sort((a, b) => a.localeCompare(b));
+
   return (
     <div className="flex flex-col h-[calc(100dvh-3rem-5rem)] md:h-screen">
       <header className="relative overflow-hidden px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-[var(--color-border)]">
@@ -76,6 +91,9 @@ export default async function LibraryPage() {
           paints={catalog.paints}
           inventory={inventory}
           defaultBrands={defaultBrands ?? undefined}
+          coverageCells={coverageCells}
+          coverageSummary={coverageSummary}
+          brands={brands}
         />
       </Suspense>
     </div>
