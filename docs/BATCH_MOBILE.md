@@ -33,11 +33,12 @@ Done already (shipped + pushed): **M1 ✅**, **M2 ✅**, **M3 ✅** (crash-recov
       **bottom sheet** (searchable paint list, mark owned/wanted; keep brand chips + count + bar). Build the
       collection canvas + planner widgets as **shared components** with D6.
 
-- [ ] **M5 — Recipe/project flows, shared RecipeSlot, action discipline** · L · Impact 4 · `MOBILE §M5`
-      🔗 SHARED with **D5** · ⚠ DECISION (B6 schema)
-      Shared `RecipeSlot`, ≤1 prominent CTA, demote DELETE, "+ Model" on Unit, two-line step row,
-      breadcrumb parent, fix "1 slots/steps". **HALT:** the shared `RecipeSlot` component overlaps D5;
-      B6 Steps-vs-Slots schema must NOT be collapsed blind. Propose, then stop.
+- [ ] **M5 — Recipe/project flows, flat RecipeSlot, action discipline** · L · Impact 4 · `MOBILE §M5`
+      🔗 SHARED with **D5** · ✅ **DECIDED — UNIFY + FLATTEN** (see `MILESTONE_BUILDER_BATCH.md` › Group 4)
+      One concept "Recipe"; flat slot = paint + layer (no zone name, no Steps box). Stages 1–2 (schema +
+      slot API) shipped (`380ba20`, `c88781d`). Remaining = Stage 3 (component cutover incl. a flat
+      `SlotList`, ≤1 prominent CTA, demote DELETE, "+ Model" on Unit, breadcrumb parent, fix
+      "1 slots/steps") + Stage 4 (drop old tables + D5 leftovers). Build per the Group-4 stage list.
 
 - [x] **M6 — Forms & feedback (mobile)** · M · Impact 3 · `MOBILE §M6` — **done**
       Input optimization on the recovery-email form (type/inputmode/autocomplete email + visible

@@ -121,15 +121,27 @@ same group with no dependency between them may run in parallel.
       (40/32); bulk select (per-row checkbox + 3-state Select-All + batch bar); right-click context
       menu (Mark owned/wanted/Copy hex); zebra. Off cyan (amber). "Add to recipe" deferred to M5/D5.
 
-### Group 4 — flows, action discipline, shared slot (SHARED — M5 ≡ D5 overlap heavily)
-- [ ] **M5 + D5 — Recipe/project flows, shared RecipeSlot, action discipline, hierarchy** · L · Impact 4
-      · `MOBILE §M5` + `DESKTOP §D5` ⚠ DECISION (B6 schema)
-      Shared `RecipeSlot` (swatch + paint-name + layer), used in recipe editor **and** project
-      ColorSchemeBox; paints-only (no custom-hex add). Reduce recipe editor to ≤1 prominent CTA;
-      Assign/Share → overflow/ghost; **Delete → danger-outline at bottom**; demote project DELETE.
-      Context-aware add-child ("+ Model" on Unit); breadcrumb keeps parent visible; fix "1 slots/steps".
-      Mobile reflows the step row to two lines; desktop keeps the single-line row + adds project-detail
-      two-pane tree. **⚠ Do NOT collapse the Steps-vs-Slots schema (B6) blind — separate design call.**
+### Group 4 — flows, action discipline, shared slot (SHARED — M5 ≡ D5)
+✅ **B6 DECIDED 2026-06-04 (Ross): UNIFY + FLATTEN.** One concept = **"Recipe"** (the project-side
+"color scheme" is just a Recipe rendered in the project box — retire the separate label). A recipe is a
+**flat ordered list of slots**; each slot = **ONE paint (paintId | customColorHex) + its layer
+(`technique`)** — **pure-flat, no zone/area name, no separate Steps box**. This supersedes the old
+two-level zone→step model.
+
+Built in **reviewable stages** (schema migration = one-way, so staged + gated):
+- [x] **Stage 1** (`380ba20`) — flat `recipe_slot` table + migration 0016 (backfill from zone⋈step,
+      flatten 0-based per recipe; `step.id` preserved as `slot.id`; old tables kept). Validated.
+- [x] **Stage 2** (`c88781d`) — slot API: `getRecipeWithSlots`, `getSlotWithOwnerCheck`; actions
+      `addSlot`/`updateSlot`/`deleteSlot`/`reorderSlots` (recipeSlots.ts). 16 integration tests.
+- [ ] **Stage 3** — component cutover: `ZoneList` + `StepList`/`StepRow` → one `SlotList`; simplify
+      `RecipeEditorClient` (no zones/steps, no Steps box); `ProjectColorSchemeBox` renders the same flat
+      slot list; share page + FOCUS panel read slots; retire "color scheme" labels → "Recipe". Read via
+      `getRecipeWithSlots`; mutate via the recipeSlots actions. Paints-only (no custom-hex add path).
+- [ ] **Stage 4** — cleanup + D5 leftovers: re-point `recipe_step_completion` → `recipe_slot`
+      (slot.id == old step.id, preserved), drop `recipe_zone`/`recipe_step` + dead zone/step
+      queries/actions (migration 0017). Then the D5 polish: ≤1 prominent recipe CTA (Assign/Share →
+      overflow/ghost; Delete → danger-outline at bottom), demote project DELETE, "+ Model" on Unit,
+      breadcrumb keeps parent, fix "1 slots/steps" pluralization, wire the deferred Ctrl+Z/undo store.
 
 ### Group 5 — desktop power layer (desktop-only)
 - [x] **D4 — Command palette & keyboard layer** · M · Impact 5 · `DESKTOP §D4` — **done**

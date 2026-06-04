@@ -52,10 +52,11 @@ HARD STOP — unresolved B6 Steps-vs-Slots schema decision; NOT built.
       palette search; Ctrl+Z fires the `mm:undo` event (D5 owns the stage-undo store/handler).
 
 - [ ] **D5 — Project flows, recipe action discipline, hierarchy** · L · Impact 4 · `DESKTOP §D5`
-      🔗 SHARED with **M5** · ⚠ DECISION (B6 schema)
-      Project-detail two-pane tree; demote DELETE; ≤1 prominent recipe CTA; drop SLOTS/NOTES segmented
-      control on ≥1024; context-aware empty-state; StageCounter click-to-type + arrows. **HALT:** shared
-      `RecipeSlot` overlaps M5; B6 schema must NOT be collapsed blind. Propose, then stop.
+      🔗 SHARED with **M5** · ✅ **DECIDED — UNIFY + FLATTEN** (see `MILESTONE_BUILDER_BATCH.md` › Group 4)
+      One concept "Recipe"; flat slot = paint + layer (no zone name, no Steps box; drop the SLOTS/NOTES
+      segmented control). Stages 1–2 shipped (`380ba20`, `c88781d`). Remaining = Stage 3 (component
+      cutover incl. flat `SlotList`, ≤1 prominent recipe CTA, demote project DELETE, context-aware
+      empty-state, StageCounter click-to-type + arrows) + Stage 4 (drop old tables + D5 leftovers).
 
 - [x] **D6 — `/planner` single-screen dashboard + glanceable grid** · L · Impact 5 · `DESKTOP §D6` — **done**
       New `app/planner` route + NavRail link shipped; renders the shared `PlannerSection` cluster,
