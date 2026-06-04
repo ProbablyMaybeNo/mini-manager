@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_PASTE_CHARS = 20_000;
-const ACCEPTED_EXTS = [".pdf", ".ros", ".rosz"] as const;
+const ACCEPTED_EXTS = [".pdf", ".ros", ".rosz", ".json"] as const;
 
 type Mode = "drop" | "paste";
 
@@ -221,8 +221,8 @@ export function ImportClient() {
           onDrop={onDrop}
         >
           <p className="text-sm font-mono mb-2">
-            Drop a <strong>.pdf</strong>, <strong>.ros</strong>, or{" "}
-            <strong>.rosz</strong> file here
+            Drop a <strong>.pdf</strong>, <strong>.ros</strong>,{" "}
+            <strong>.rosz</strong>, or <strong>.json</strong> file here
           </p>
           <p className="text-xs text-[var(--color-fg-muted)] font-sans mb-6">
             Up to 5 MB. We parse it server-side; nothing leaves to a third

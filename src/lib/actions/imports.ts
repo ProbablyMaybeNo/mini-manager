@@ -15,6 +15,7 @@ import {
 import { extractPdfText } from "@/lib/imports/pdfExtractor";
 import { parseWithLlm } from "@/lib/imports/llmFallbackParser";
 import { parseTextList } from "@/lib/imports/textParser";
+import { parseJsonList } from "@/lib/imports/jsonParser";
 import type {
   ImportedTree,
   ImportedUnit,
@@ -132,7 +133,7 @@ export async function createFileImport(
 
   const ext = filename.toLowerCase().split(".").pop() ?? "";
   let sourceFormat: ImportSourceFormat;
-  let parserUsed: "pdf" | "battlescribe";
+  let parserUsed: "pdf" | "battlescribe" | "json";
   let result: TextParseResult;
   let sourceTextPreview: string | null = null;
 
@@ -166,10 +167,16 @@ export async function createFileImport(
       sourceFormat = "battlescribe-rosz";
       parserUsed = "battlescribe";
       result = await parseBattleScribeRosz(buffer);
+    } else if (ext === "json") {
+      sourceFormat = "json";
+      parserUsed = "json";
+      const json = new TextDecoder("utf-8").decode(buffer);
+      sourceTextPreview = json.slice(0, SOURCE_TEXT_PREVIEW_CHARS);
+      result = parseJsonList(json);
     } else {
       return {
         ok: false,
-        error: `Unsupported file type ".${ext}". Use .pdf, .ros, or .rosz.`,
+        error: `Unsupported file type ".${ext}". Use .pdf, .ros, .rosz, or .json.`,
       };
     }
   } catch (err) {
@@ -309,7 +316,7 @@ interface PersistInput {
   sourceFormat: ImportSourceFormat;
   sourceTextPreview: string | null;
   sourceFileSize: number;
-  parserUsed: "text" | "pdf" | "battlescribe" | "llm-fallback";
+  parserUsed: "text" | "pdf" | "battlescribe" | "llm-fallback" | "json";
   result: TextParseResult;
 }
 

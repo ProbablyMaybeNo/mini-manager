@@ -21,9 +21,12 @@ vi.mock("@/lib/auth-stub", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { getImport, listImports } = await import("@/db/queries/imports");
-const { applyImport, createTextImport, fetchImportForPreview } = await import(
-  "@/lib/actions/imports"
-);
+const {
+  applyImport,
+  createFileImport,
+  createTextImport,
+  fetchImportForPreview,
+} = await import("@/lib/actions/imports");
 
 beforeEach(async () => {
   const { db, userId } = await makeTestDb();
@@ -113,6 +116,42 @@ Captain - 105pts
     expect(tree.armyName).toBe("Ultramarines Strike Force");
     expect(tree.faction).toBe("Adeptus Astartes");
     expect(tree.units.length).toBeGreaterThanOrEqual(3);
+  });
+
+  test("createFileImport parses a .json list via the json parser", async () => {
+    const list = JSON.stringify({
+      name: "JSON Strike Force",
+      faction: "Adeptus Astartes",
+      totalPoints: 2000,
+      units: [
+        { name: "Intercessors", models: 10, points: 200 },
+        { name: "Captain", points: 105 },
+      ],
+    });
+    const base64 = Buffer.from(list, "utf-8").toString("base64");
+    const res = await createFileImport({
+      filename: "army.json",
+      base64,
+      size: list.length,
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const row = await getImport(state.userId, res.data.importId);
+    expect(row).not.toBeNull();
+    expect(row!.sourceFormat).toBe("json");
+    expect(row!.parserUsed).toBe("json");
+    expect(row!.status).toBe("parsed");
+    expect(row!.sourceTextPreview).toContain("JSON Strike Force");
+
+    const tree = JSON.parse(row!.parsedTree!) as ImportedTree;
+    expect(tree.armyName).toBe("JSON Strike Force");
+    expect(tree.faction).toBe("Adeptus Astartes");
+    expect(tree.totalPoints).toBe(2000);
+    expect(tree.units).toEqual([
+      { name: "Intercessors", count: 10, points: 200 },
+      { name: "Captain", count: 1, points: 105 },
+    ]);
   });
 
   test("createTextImport rejects empty input via the Zod schema", async () => {

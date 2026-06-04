@@ -554,13 +554,14 @@ export const importSourceFormats = [
   "pdf",
   "battlescribe-ros",
   "battlescribe-rosz",
+  "json",
 ] as const;
 export type ImportSourceFormat = (typeof importSourceFormats)[number];
 
 export const importStatuses = ["pending", "parsed", "applied", "failed"] as const;
 export type ImportStatus = (typeof importStatuses)[number];
 
-export const importParsers = ["text", "pdf", "battlescribe", "llm-fallback"] as const;
+export const importParsers = ["text", "pdf", "battlescribe", "llm-fallback", "json"] as const;
 export type ImportParser = (typeof importParsers)[number];
 
 export const imports = sqliteTable(
