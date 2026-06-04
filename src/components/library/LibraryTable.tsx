@@ -405,8 +405,11 @@ function SortableHeader({
       <button
         type="button"
         onClick={() => onSort(mode)}
+        // D8 — tooltip explains the sort affordance (mouse + keyboard
+        // hover); cursor:pointer is implicit on the button.
+        title={active ? `Sorted by ${label}` : `Sort by ${label}`}
         className={clsx(
-          "tap-target inline-flex items-center gap-1 uppercase tracking-wider transition-colors",
+          "tap-target inline-flex items-center gap-1 uppercase tracking-wider transition-colors motion-reduce:transition-none",
           active
             ? "text-[var(--color-amber)]"
             : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
@@ -482,21 +485,21 @@ function BatchActionBar({
       <button
         type="button"
         onClick={onMarkOwned}
-        className="tap-target font-mono text-2xs uppercase tracking-wider px-2 py-1 rounded-sm border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)] transition-colors"
+        className="tap-target font-mono text-2xs uppercase tracking-wider px-2 py-1 rounded-sm border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)] transition-colors motion-reduce:transition-none"
       >
         Mark owned
       </button>
       <button
         type="button"
         onClick={onMarkWanted}
-        className="tap-target font-mono text-2xs uppercase tracking-wider px-2 py-1 rounded-sm border border-[var(--color-amber)] text-[var(--color-amber)] hover:bg-[color-mix(in_srgb,var(--color-amber)_12%,transparent)] transition-colors"
+        className="tap-target font-mono text-2xs uppercase tracking-wider px-2 py-1 rounded-sm border border-[var(--color-amber)] text-[var(--color-amber)] hover:bg-[color-mix(in_srgb,var(--color-amber)_12%,transparent)] transition-colors motion-reduce:transition-none"
       >
         Mark wanted
       </button>
       <button
         type="button"
         onClick={onClear}
-        className="tap-target ml-auto font-mono text-2xs uppercase tracking-wider px-2 py-1 text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors"
+        className="tap-target ml-auto font-mono text-2xs uppercase tracking-wider px-2 py-1 text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors motion-reduce:transition-none"
       >
         Clear
       </button>
@@ -549,7 +552,7 @@ function ContextMenuItem({
       type="button"
       role="menuitem"
       onClick={onClick}
-      className="tap-target w-full text-left px-3 py-2 font-mono text-xs uppercase tracking-wider text-[var(--color-fg)] hover:bg-[color-mix(in_srgb,var(--color-amber)_12%,transparent)] transition-colors"
+      className="tap-target w-full text-left px-3 py-2 font-mono text-xs uppercase tracking-wider text-[var(--color-fg)] hover:bg-[color-mix(in_srgb,var(--color-amber)_12%,transparent)] transition-colors motion-reduce:transition-none"
     >
       {children}
     </button>

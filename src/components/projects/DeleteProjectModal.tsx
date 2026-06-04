@@ -147,16 +147,12 @@ export function DeleteProjectModal({
         ) : null}
       </div>
 
-      <footer className="flex items-center justify-end gap-2 p-4 border-t border-[var(--color-border)]">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          disabled={isPending}
-        >
-          Cancel
-        </Button>
+      {/* D8 — OK-first dialog button order: the affirmative/verb action
+          leads (a verb label, not "OK") [D §3]. The danger styling + the
+          "cannot be undone" copy guard the destructive default; this is an
+          irreversible deletion so it stays a blocking modal (D8 step 4).
+          justify-start so the primary action reads first. */}
+      <footer className="flex items-center justify-start gap-2 p-4 border-t border-[var(--color-border)]">
         <Button
           type="button"
           variant="danger"
@@ -165,6 +161,15 @@ export function DeleteProjectModal({
           disabled={isPending}
         >
           {isPending ? "Deleting…" : "Delete forever"}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          disabled={isPending}
+        >
+          Cancel
         </Button>
       </footer>
     </dialog>

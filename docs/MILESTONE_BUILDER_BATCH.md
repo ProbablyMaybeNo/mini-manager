@@ -152,9 +152,10 @@ same group with no dependency between them may run in parallel.
       Command palette: visible Close (×) + Back-dismiss (+ click-outside/Esc); collection canvas SR
       summary verified (role=img + aria-label); reduced-motion on the disclosure chevron; focus-visible
       rings on the new controls (NavRail search, inspector tabs, disclosure toggle, palette Close).
-- [ ] **D8 — Pointer affordances, feedback & a11y polish (desktop)** · M · Impact 3 · `DESKTOP §D8`
-      Tooltips (0.5s, kbd+mouse); cursor signifiers on canvas tools; right-click parity; Undo-over-
-      confirmation; never-color-alone; OK-first dialog button order; reduced-motion on hover/drag/CRT.
+- [x] **D8 — Pointer affordances, feedback & a11y polish (desktop)** · M · Impact 3 · `DESKTOP §D8` — **done**
+      Sortable-header tooltips; canvas crosshair (verified); context-menu keyboard parity; never-color-
+      alone (% label + StatusPill); OK-first verb-labelled confirm modal; reduced-motion on new hovers.
+      **Deferred:** Undo-over-confirmation snackbar for reversible deletes (pairs with D4 `mm:undo`).
 
 ---
 

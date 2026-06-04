@@ -9,7 +9,9 @@
 > **HALT and report** at any `⚠ DECISION` item (write a short proposal, do not build it), on test
 > failure, or on a shared build flagged `🔗 SHARED`.
 
-**D1 ✅** (crash-recovered). Remaining: D2–D8.
+**D1 ✅** (crash-recovered). **D2–D8 ✅ shipped on `batch/uxui-overhaul`** (D7 mostly done — wishlist
+bulk "Mark purchased" deferred; D8 — Undo-over-confirmation snackbar deferred). Group 4 (D5) is a
+HARD STOP — unresolved B6 Steps-vs-Slots schema decision; NOT built.
 
 ---
 
@@ -75,6 +77,10 @@
       **Deferred:** wishlist bulk "Mark purchased" — mirrors the D3 bulk pattern but needs a
       wishlist-specific batch action; the per-row MarkBoughtModal already covers single rows.
 
-- [ ] **D8 — Pointer affordances, feedback & a11y polish (desktop)** · M · Impact 3 · `DESKTOP §D8`
-      Tooltips (0.5s, kbd+mouse); cursor signifiers on canvas tools; right-click parity; Undo-over-
-      confirmation; never-color-alone; OK-first dialog button order; reduced-motion on hover/drag/CRT.
+- [x] **D8 — Pointer affordances, feedback & a11y polish (desktop)** · M · Impact 3 · `DESKTOP §D8` — **done**
+      Tooltips on the D3 sortable headers; crosshair cursor signifier on the collection canvas (already
+      shipped, verified); D3 context-menu commands have keyboard/batch-bar parity; never-color-alone
+      (inspector completion bar carries a % label; StatusPill labels); OK-first dialog button order +
+      verb label on the confirm modal (irreversible project delete stays a blocking modal per step 4);
+      reduced-motion guards on the new hover transitions. **Deferred:** Undo-over-confirmation snackbar
+      for reversible deletes (pairs with the D4 `mm:undo` event + a restore action) — noted.
