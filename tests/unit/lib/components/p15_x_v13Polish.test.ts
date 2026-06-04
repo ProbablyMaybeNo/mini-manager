@@ -82,10 +82,12 @@ describe("UX-1310 — DELETE PROJECT drops to a red outline (quieter)", () => {
 
   test("the confirm modal keeps the SOLID red 'Delete forever' (no outline)", () => {
     const src = read("src/components/projects/DeleteProjectModal.tsx");
-    const idx = src.indexOf("Delete forever");
-    const block = src.slice(Math.max(0, idx - 400), idx);
-    expect(block).toContain('variant="danger"');
-    expect(block).not.toContain('tone="outline"');
+    // Scope to the <footer> so docstring/comment mentions don't shadow the
+    // real button: the confirm action is a SOLID danger button (no outline).
+    const footer = src.match(/<footer[\s\S]*?<\/footer>/)?.[0] ?? "";
+    expect(footer).toContain("Delete forever");
+    expect(footer).toContain('variant="danger"');
+    expect(footer).not.toContain('tone="outline"');
   });
 });
 

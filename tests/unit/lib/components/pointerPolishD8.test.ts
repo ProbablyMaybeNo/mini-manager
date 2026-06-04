@@ -45,17 +45,23 @@ describe("D8 — never-color-alone", () => {
   });
 });
 
-describe("D8 — dialog button order (OK-first + verb label)", () => {
+describe("D8 — destructive dialog: safe default + verb label", () => {
   const src = read("src/components/projects/DeleteProjectModal.tsx");
 
-  test("the affirmative verb action leads (justify-start, danger first)", () => {
-    expect(src).toMatch(/justify-start/);
-    // The danger (verb) Button appears before the Cancel ghost Button.
-    const dangerIdx = src.indexOf('variant="danger"');
-    const cancelIdx = src.indexOf('variant="ghost"');
-    expect(dangerIdx).toBeGreaterThan(-1);
+  test("the SAFE action (Cancel) leads; the destructive button is de-emphasised", () => {
+    // This is an IRREVERSIBLE delete. D §3 ("never make destructive
+    // prominent") governs over plain OK-first ordering: Cancel stays the
+    // easy default and reads first, so the modal can't become a one-misclick
+    // path to deletion. Scope to the <footer> so docstring/comment mentions
+    // of the variants can't shadow the real buttons; the ghost (Cancel)
+    // Button must appear before the danger (Delete forever) Button.
+    const footer = src.match(/<footer[\s\S]*?<\/footer>/)?.[0] ?? "";
+    expect(footer, "<footer> not found").toBeTruthy();
+    const cancelIdx = footer.indexOf('variant="ghost"');
+    const dangerIdx = footer.indexOf('variant="danger"');
     expect(cancelIdx).toBeGreaterThan(-1);
-    expect(dangerIdx).toBeLessThan(cancelIdx);
+    expect(dangerIdx).toBeGreaterThan(-1);
+    expect(cancelIdx).toBeLessThan(dangerIdx);
   });
 
   test("uses a verb label, not a generic OK", () => {
