@@ -98,9 +98,15 @@ describe("P15.2 — segmented controls clear the touch floor", () => {
     expect(src).not.toContain("min-h-[28px]");
   });
 
-  test("ImportClient mode tabs use tap-target", () => {
+  test("ImportClient actions route through the Button primitive (no bespoke tab buttons)", () => {
     const src = read("src/components/imports/ImportClient.tsx");
-    expect(src).toContain("tap-target px-4 py-2 font-mono text-sm uppercase");
+    // The segmented mode tabs were removed in favour of always-visible
+    // drop-file + paste sections; the remaining actions (Choose file /
+    // Parse list) use the <Button> primitive whose .btn-sm floors to a
+    // 44px tap-target on mobile via globals.css.
+    expect(src).not.toContain('role="tab"');
+    expect(src).toContain('{isPending ? "Parsing…" : "Choose file"}');
+    expect(src).toContain('{isPending ? "Parsing…" : "Parse list"}');
   });
 });
 

@@ -35,11 +35,8 @@ test.describe("M7 — Imports", () => {
       page.getByRole("heading", { name: /IMPORT ARMY LIST/i }),
     ).toBeVisible();
 
-    // Switch to paste mode and feed in the list.
-    await page.getByRole("tab", { name: /Paste text/i }).click();
-    await page
-      .getByLabel(/Paste your list/i)
-      .fill(SAMPLE_LIST);
+    // Paste the list into the standalone "Paste list" section.
+    await page.getByLabel(/Paste list/i).fill(SAMPLE_LIST);
     await page.getByRole("button", { name: /Parse list/i }).click();
 
     // Land on the preview screen.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { createFileImport, createTextImport } from "@/lib/actions/imports";
 import { Button } from "@/components/ui/Button";
@@ -10,86 +10,13 @@ const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_PASTE_CHARS = 20_000;
 const ACCEPTED_EXTS = [".pdf", ".ros", ".rosz", ".json"] as const;
 
-type Mode = "drop" | "paste";
-
-interface SampleList {
-  label: string;
-  hint: string;
-  body: string;
-}
-
-const SAMPLE_LISTS: ReadonlyArray<SampleList> = [
-  {
-    label: "Sample · 40k Marines (WTC)",
-    hint: "Tournament-style export, 10 units",
-    body: `## Ultramarines Strike Force
-Faction: Adeptus Astartes
-Points Limit: 2000
-
-Captain in Terminator Armour - 105pts
-Lieutenant - 65pts
-10x Intercessors - 200pts
-10x Assault Intercessors - 200pts
-5x Terminators - 185pts
-10x Tactical Marines - 135pts
-Redemptor Dreadnought - 210pts
-Repulsor Executioner - 220pts
-3x Eradicators - 100pts
-5x Sternguard Veterans - 130pts
-`,
-  },
-  {
-    label: "Sample · AoS Stormcast",
-    hint: "NewRecruit-style export, 11 units",
-    body: `# Hammers of Sigmar
-Total: 2000pts
-
-* Lord-Imperatant (185)
-* Knight-Arcanum (130)
-* Liberators x10 — 200pts
-* Liberators x10 — 200pts
-* Vindictors x10 — 200pts
-* Praetors x3 — 220pts
-* Annihilators x3 — 250pts
-* Vanquishers x5 — 130pts
-* Stormstrike Chariot (155)
-`,
-  },
-  {
-    label: "Sample · Orks",
-    hint: "Goonhammer-style with bracket points",
-    body: `**Goff Waaagh!**
-Faction: Orks
-1990pts
-
-- Warboss [80]
-- Big Mek with Shokk Attack Gun [100]
-- 20 Boyz [180]
-- 20 Boyz [180]
-- 10 Beast Snagga Boyz [110]
-- 5 Nobz [125]
-- 6 Meganobz [240]
-- 3 Killa Kans [135]
-`,
-  },
-];
-
 export function ImportClient() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("drop");
   const [pasted, setPasted] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const onSampleSelect = useCallback((label: string) => {
-    const found = SAMPLE_LISTS.find((s) => s.label === label);
-    if (!found) return;
-    setMode("paste");
-    setPasted(found.body);
-    setError(null);
-  }, []);
 
   const onSubmitPaste = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -165,50 +92,12 @@ export function ImportClient() {
 
   return (
     <div className="space-y-6">
-      <div role="tablist" aria-label="Import method" className="flex gap-2 text-xs font-mono uppercase tracking-wider">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "drop"}
-          onClick={() => {
-            setMode("drop");
-            setError(null);
-          }}
-          className={clsx(
-            // P15.2 — segmented tab sub-buttons floored via tap-target
-            // (44px mobile / 32px desktop) for the touch HIG target.
-            "tap-target px-4 py-2 font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
-            mode === "drop"
-              ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
-              : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]",
-          )}
-        >
+      {/* Drop-file section */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
           Drop file
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "paste"}
-          onClick={() => {
-            setMode("paste");
-            setError(null);
-          }}
-          className={clsx(
-            // P15.2 — segmented tab sub-buttons floored via tap-target
-            // (44px mobile / 32px desktop) for the touch HIG target.
-            "tap-target px-4 py-2 font-mono text-sm uppercase tracking-[0.04em] rounded-sm border transition-colors",
-            mode === "paste"
-              ? "border-[var(--color-cyan)] text-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
-              : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]",
-          )}
-        >
-          Paste text
-        </button>
-      </div>
-
-      {mode === "drop" ? (
+        </h2>
         <div
-          role="tabpanel"
           className={clsx(
             "frame-strong p-8 text-center transition-colors",
             dragging && "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]",
@@ -250,24 +139,23 @@ export function ImportClient() {
             {isPending ? "Parsing…" : "Choose file"}
           </Button>
         </div>
-      ) : (
-        <form
-          role="tabpanel"
-          className="space-y-3"
-          onSubmit={onSubmitPaste}
-        >
-          <label
-            htmlFor="paste-list"
-            className="block text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]"
-          >
-            Paste your list
+      </section>
+
+      {/* Paste-list section — standalone, always visible below drop-file */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+          Paste list
+        </h2>
+        <form className="space-y-3" onSubmit={onSubmitPaste}>
+          <label htmlFor="paste-list" className="sr-only">
+            Paste list
           </label>
           <textarea
             id="paste-list"
             value={pasted}
             onChange={(e) => setPasted(e.target.value)}
             placeholder={`## My Army\n10x Intercessors - 200pts\n5x Terminators - 185pts\nCaptain - 105pts`}
-            rows={14}
+            rows={12}
             maxLength={MAX_PASTE_CHARS}
             className="w-full p-3 frame font-mono text-xs bg-transparent text-[var(--color-fg)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           />
@@ -285,26 +173,7 @@ export function ImportClient() {
             </Button>
           </div>
         </form>
-      )}
-
-      <div>
-        <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] mb-2">
-          Try a sample
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {SAMPLE_LISTS.map((s) => (
-            <button
-              key={s.label}
-              type="button"
-              onClick={() => onSampleSelect(s.label)}
-              className="px-3 py-1.5 frame tap-target text-xs font-mono hover:text-[var(--color-cyan)]"
-              title={s.hint}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      </section>
 
       {error ? (
         <p
