@@ -88,8 +88,11 @@ same group with no dependency between them may run in parallel.
          field + sparse owned/wishlist dots) replacing the ~7,144 `<button aria-haspopup="dialog">` cells;
          tap → gap-fill (bottom sheet mobile / right panel desktop) with searchable Want/Own list.
          (Mobile M4.2 ≡ Desktop D6.2.) Collection-widget nodes ~7,144 → ~2.
-      2. **Planner widget cluster** (shared components) — collection canvas + calendar + streak +
-         activity + inspo. Calendar cell hit-region ≥44 (mobile) / ≥24 (desktop).
+      2. ✅ **Planner widget cluster** (shared components, verified) — collection canvas + calendar +
+         streak + activity + inspo. `PlannerSection` self-fetches via its child cells, threads only
+         `calYear`/`calMonth`, and is breakpoint-responsive on its own, so it mounts unchanged in both
+         the mobile collapsed disclosure (M4) and the desktop `/planner` route (D6). Calendar cell
+         hit-region ≥44 (mobile) / ≥24 (desktop).
       3. **Mobile M4** — collapse `▸ FOCUS` + `▸ PLANNER` into progressive-disclosure sections on the
          single `/projects` page. No `app/focus` / `app/planner` for mobile.
       4. **Desktop D6** — new **`app/planner`** route (NavRail link) = single-screen dashboard rendering
