@@ -688,9 +688,18 @@ function DashboardRow({
         ) : null}
         <Link
           href={`/projects/${row.id}`}
-          className="text-[var(--color-cyan)] hover:underline"
+          className="group inline-flex items-center gap-1 text-[var(--color-cyan)] hover:underline"
+          title={`Open ${row.name}`}
         >
           {row.name}
+          {/* UX (2026-06) — ↗ signals the Name (and the row) opens the
+              project page. Muted by default, brightens on hover. */}
+          <span
+            aria-hidden
+            className="text-2xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-cyan)] transition-colors"
+          >
+            ↗
+          </span>
         </Link>
         {row.faction ? (
           <span className="ml-2 text-2xs text-[var(--color-fg-muted)]">
@@ -959,9 +968,17 @@ function MobileCompRow({
           <span className="min-w-0">
             <Link
               href={`/projects/${row.id}`}
-              className="block text-xs font-mono text-[var(--color-cyan)] hover:underline truncate"
+              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-cyan)] hover:underline"
+              title={`Open ${row.name}`}
             >
-              {row.name}
+              <span className="truncate">{row.name}</span>
+              {/* UX (2026-06) — ↗ open-project affordance (matches desktop). */}
+              <span
+                aria-hidden
+                className="shrink-0 text-2xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-cyan)] transition-colors"
+              >
+                ↗
+              </span>
             </Link>
             {row.faction ? (
               <span className="block text-2xs font-mono text-[var(--color-fg-muted)] truncate">
