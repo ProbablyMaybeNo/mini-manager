@@ -2,12 +2,14 @@
  * D2 — `/projects` master-detail workspace.
  *
  * Static source-scan net (mirrors densityFoundations / plannerRouteD6)
- * for the D2 acceptance under the locked Decisions (2026-06-03 §2):
+ * for the D2 shell + the 2026-06 walkthrough UX refinement:
  *
- *   - Two-pane master-detail at ≥1024: left = filter + project table;
- *     right = project-detail inspector with a Detail / Focus tab.
- *   - Selecting a project swaps the inspector WITHOUT navigation (the
- *     table's Name becomes a select button, the workspace owns selectedId).
+ *   - Two-pane workspace at ≥1024: left = filter + project table; right =
+ *     project-detail inspector with a Detail / Focus tab.
+ *   - UX (2026-06 walkthrough): clicking a project ROW navigates to
+ *     `/projects/[id]`. Select-to-swap was removed (the painter found it
+ *     unintuitive); the inspector is now a LIGHT SECONDARY SUMMARY of the
+ *     seed project, not a row-driven detail pane.
  *   - The FOCUS bench is the inspector's Focus tab, NOT the default home
  *     state (Detail is default).
  *   - PLANNER is NOT on desktop /projects — it leaves to the /planner
@@ -28,9 +30,8 @@ function read(rel: string): string {
 describe("D2 — ProjectsWorkspace master-detail", () => {
   const workspace = read("src/components/projects/ProjectsWorkspace.tsx");
 
-  test("is a client component owning selection + filter state", () => {
+  test("is a client component owning filter state", () => {
     expect(workspace).toMatch(/^"use client";/);
-    expect(workspace).toMatch(/useState<string \| null>/); // selectedId
     expect(workspace).toMatch(/useState\(""\)/); // filter query
   });
 
@@ -40,9 +41,12 @@ describe("D2 — ProjectsWorkspace master-detail", () => {
     expect(workspace).toContain("ProjectInspector");
   });
 
-  test("table is selectable on desktop (select-to-swap without navigation)", () => {
-    expect(workspace).toMatch(/selectedId=\{selectedId\}/);
-    expect(workspace).toMatch(/onSelectProject=\{setSelectedId\}/);
+  test("inspector summarises the seed project (no row-driven selection)", () => {
+    // Select-to-swap was removed; the inspector is fed the seed project's
+    // row, not a row-click-driven selectedId.
+    expect(workspace).toMatch(/selected=\{summaryRow\}/);
+    expect(workspace).not.toContain("onSelectProject");
+    expect(workspace).not.toContain("setSelectedId");
   });
 
   test("single owner: the table is conditionally mounted, never double-rendered via CSS hidden", () => {
@@ -51,12 +55,11 @@ describe("D2 — ProjectsWorkspace master-detail", () => {
     expect(workspace).toMatch(/if \(isDesktop\) \{/);
   });
 
-  test("mobile single-pane: table only is selection-free (Name navigates)", () => {
-    // The mobile <ProjectsDashboardTable> omits selectedId/onSelectProject
-    // so the Name stays a link. Assert the desktop branch is the only one
-    // wiring selection by counting onSelectProject usages = 1.
-    const selectMatches = workspace.match(/onSelectProject=/g) ?? [];
-    expect(selectMatches.length).toBe(1);
+  test("both layouts render the same selection-free table (rows navigate)", () => {
+    // No layout wires selection props anymore; the table owns row
+    // navigation itself.
+    expect(workspace).not.toMatch(/onSelectProject=/);
+    expect(workspace).not.toMatch(/selectedId=/);
   });
 
   test("PLANNER is NOT in the desktop branch — only the mobile collapsed pane", () => {
@@ -102,21 +105,31 @@ describe("D2 — ProjectInspector (Detail / Focus tab)", () => {
   });
 });
 
-describe("D2 — table selection plumbing", () => {
+describe("UX 2026-06 — table rows navigate to the project page", () => {
   const table = read("src/components/ProjectsDashboardTable.tsx");
 
-  test("table accepts optional selectedId + onSelectProject props", () => {
-    expect(table).toMatch(/selectedId\?:\s*string \| null/);
-    expect(table).toMatch(/onSelectProject\?:\s*\(id: string\) => void/);
+  test("select-to-swap plumbing is fully removed from the table", () => {
+    expect(table).not.toContain("onSelectProject");
+    expect(table).not.toMatch(/selectedId/);
+    expect(table).not.toMatch(/aria-selected/);
   });
 
-  test("desktop Name becomes a select button when onSelectProject is set", () => {
-    expect(table).toMatch(/onClick=\{\(\) => onSelectProject\(row\.id\)\}/);
+  test("row click navigates to /projects/[id] (guarded against controls)", () => {
+    // Both DashboardRow (desktop) and MobileCompRow share the guarded
+    // row-click handler that pushes the project route.
+    expect(table).toMatch(/router\.push\(`\/projects\/\$\{row\.id\}`\)/);
+    expect(table).toContain("isInteractiveTarget");
   });
 
-  test("selected row is highlighted off cyan (amber tint), aria-selected set", () => {
-    expect(table).toMatch(/var\(--color-amber\)_10%/);
-    expect(table).toMatch(/aria-selected=\{onSelectProject \? selected : undefined\}/);
+  test("the row-nav guard ignores interactive descendants", () => {
+    // Clicks on links / buttons / inputs / popover menus must NOT trigger
+    // navigation, so inline edits + the Name link + Delete keep working.
+    expect(table).toMatch(/a, button, input, select, textarea/);
+    expect(table).toMatch(/role="menu"/);
+  });
+
+  test("project Name stays a real link to /projects/[id]", () => {
+    expect(table).toMatch(/href=\{`\/projects\/\$\{row\.id\}`\}/);
   });
 });
 
