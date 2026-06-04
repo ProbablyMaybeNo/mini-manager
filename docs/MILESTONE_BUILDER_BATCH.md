@@ -95,8 +95,11 @@ same group with no dependency between them may run in parallel.
          hit-region ≥44 (mobile) / ≥24 (desktop).
       3. **Mobile M4** — collapse `▸ FOCUS` + `▸ PLANNER` into progressive-disclosure sections on the
          single `/projects` page. No `app/focus` / `app/planner` for mobile.
-      4. **Desktop D6** — new **`app/planner`** route (NavRail link) = single-screen dashboard rendering
-         the widget cluster; gap-fill as the right side panel.
+      4. ✅ **Desktop D6** — new **`app/planner`** route (NavRail link) = single-screen dashboard
+         rendering the shared widget cluster, width-capped with `.content-cap`, threading
+         `?calYear`/`?calMonth` as `/projects` does; gap-fill = the persistent right side panel
+         (already in `HeatSinkGridClient`). Mobile is desktop-only-by-NavRail; the BottomTabBar is
+         untouched (mobile reaches the widgets via M4's collapsed section).
       5. **Desktop D2** — master-detail `/projects`: project list/table left; **project-detail
          inspector** right with a Detail / Focus tab; select-to-swap without navigation. PLANNER leaves
          to `/planner`.

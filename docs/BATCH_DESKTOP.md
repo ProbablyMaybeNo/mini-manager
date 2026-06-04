@@ -44,7 +44,10 @@
       control on ≥1024; context-aware empty-state; StageCounter click-to-type + arrows. **HALT:** shared
       `RecipeSlot` overlaps M5; B6 schema must NOT be collapsed blind. Propose, then stop.
 
-- [ ] **D6 — `/planner` single-screen dashboard + glanceable grid** · L · Impact 5 · `DESKTOP §D6`
+- [x] **D6 — `/planner` single-screen dashboard + glanceable grid** · L · Impact 5 · `DESKTOP §D6` — **done**
+      New `app/planner` route + NavRail link shipped; renders the shared `PlannerSection` cluster,
+      width-capped with `.content-cap`, threading `?calYear`/`?calMonth` exactly as `/projects`.
+      Glanceable canvas + gap-fill right panel landed earlier in `e7251eb`.
       🔗 SHARED with **M4 + D2** · ✅ **DECIDED** (see `MILESTONE_BUILDER_BATCH.md` › Decisions 2026-06-03)
       New **`app/planner`** route (NavRail link), **desktop-only** — single-screen 12-col dashboard
       rendering the shared planner widget cluster (collection canvas + calendar + streak + activity +

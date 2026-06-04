@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   Folder,
+  CalendarDays,
   Palette,
   FlaskConical,
   Wrench,
@@ -25,6 +26,10 @@ type NavItem = {
 
 const PRIMARY: readonly NavItem[] = [
   { href: "/projects", Icon: Folder,       label: "Projects" },
+  // D6 — desktop-surfaced PLANNER route (mobile reaches the same widgets
+  // via the collapsed PLANNER disclosure on /projects). Sits next to
+  // Projects: planning is the projects-adjacent surface.
+  { href: "/planner",  Icon: CalendarDays, label: "Planner"  },
   { href: "/library",  Icon: Palette,      label: "Library"  },
   { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
   { href: "/tools",    Icon: Wrench,       label: "Tools"    },
