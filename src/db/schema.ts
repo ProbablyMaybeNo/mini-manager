@@ -516,6 +516,54 @@ export const recipeSteps = sqliteTable(
   }),
 );
 
+/**
+ * Recipe slot — the unified, FLAT recipe model (2026-06-04 decision).
+ *
+ * A recipe is now a flat ordered list of slots; each slot = ONE paint
+ * (paintId OR customColorHex, exactly one) + its assigned layer
+ * (`technique`). This collapses the old two-level recipe_zone → recipe_step
+ * structure into a single table and retires the separate "Steps box" and
+ * the project-side "color scheme" as a distinct concept — there is one
+ * concept (a Recipe) rendered identically in the recipe editor and the
+ * project box.
+ *
+ * Migration 0016 backfills this table from recipe_zone ⋈ recipe_step,
+ * flattening per recipe by (zone.position, step.position); zone NAMES are
+ * intentionally dropped (pure-flat: slots are identified by their paint).
+ * The old recipe_zone / recipe_step tables are kept for now and removed in a
+ * later migration once all code has cut over.
+ */
+export const recipeSlots = sqliteTable(
+  "recipe_slot",
+  {
+    id: id(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    technique: text("technique", { enum: techniqueKeys }).notNull(),
+    /** References paints.json by id — no SQL FK (static catalog asset),
+     *  mirroring recipe_step.paint_id. Exactly one of paintId /
+     *  customColorHex is set (validated in the action layer). */
+    paintId: text("paint_id"),
+    customColorHex: text("custom_color_hex"),
+    /** Recipe-author description (legacy `notesMd`), carried from steps. */
+    notesMd: text("notes_md"),
+    /** Painter's working notes for this paint (P13.11), carried from steps. */
+    notes: text("notes"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    recipeIdx: index("recipe_slot_recipe_idx").on(t.recipeId),
+    recipePositionUq: uniqueIndex("recipe_slot_recipe_position").on(
+      t.recipeId,
+      t.position,
+    ),
+  }),
+);
+
 /* ============================================================
    Domain — Palettes (P4.4)
    Free-floating saved colour sets. Tools (Wheel / Match /
