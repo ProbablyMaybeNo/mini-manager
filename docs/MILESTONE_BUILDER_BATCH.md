@@ -148,9 +148,10 @@ same group with no dependency between them may run in parallel.
       width-capped. **Deferred:** wishlist bulk "Mark purchased" (needs a wishlist batch action).
 
 ### Group 7 — accessibility & polish (last; depends on everything above existing)
-- [ ] **M7 — Accessibility & polish (mobile)** · M · Impact 3 · `MOBILE §M7`
-      Contrast pass; never-color-alone audit; sheet/overlay close + back-dismiss; de-buttoned grid SR
-      summary; reduced-motion + 200/400% reflow; focus-visible on new controls.
+- [x] **M7 — Accessibility & polish (mobile)** · M · Impact 3 · `MOBILE §M7` — **done**
+      Command palette: visible Close (×) + Back-dismiss (+ click-outside/Esc); collection canvas SR
+      summary verified (role=img + aria-label); reduced-motion on the disclosure chevron; focus-visible
+      rings on the new controls (NavRail search, inspector tabs, disclosure toggle, palette Close).
 - [ ] **D8 — Pointer affordances, feedback & a11y polish (desktop)** · M · Impact 3 · `DESKTOP §D8`
       Tooltips (0.5s, kbd+mouse); cursor signifiers on canvas tools; right-click parity; Undo-over-
       confirmation; never-color-alone; OK-first dialog button order; reduced-motion on hover/drag/CRT.

@@ -94,6 +94,8 @@ export function CollapsibleSection({
         className={clsx(
           "w-full flex items-center gap-2.5 px-3 py-2.5 text-left",
           "border-b border-[var(--color-border)]",
+          // M7 — visible focus ring on the disclosure toggle.
+          "focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] focus-visible:-outline-offset-2",
           collapsible
             ? "tap-target cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
             : "cursor-default md:cursor-default",
@@ -120,7 +122,7 @@ export function CollapsibleSection({
           size={16}
           strokeWidth={2}
           className={clsx(
-            "ml-auto shrink-0 text-[var(--color-fg-muted)] transition-transform duration-150 md:hidden",
+            "ml-auto shrink-0 text-[var(--color-fg-muted)] transition-transform duration-150 motion-reduce:transition-none md:hidden",
             open ? "rotate-90" : "rotate-0",
           )}
         />

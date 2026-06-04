@@ -129,6 +129,8 @@ function InspectorTabButton({
       className={clsx(
         "tap-target px-4 py-2 font-mono text-xs uppercase tracking-wider transition-colors",
         "border-b-2 -mb-px",
+        // M7 — visible focus ring on the inspector tab control.
+        "focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]",
         active
           ? "border-[var(--color-amber)] text-[var(--color-amber)]"
           : "border-transparent text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",

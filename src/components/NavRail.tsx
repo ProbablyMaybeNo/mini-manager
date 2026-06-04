@@ -185,6 +185,8 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
           "group flex items-center gap-3 rounded-sm text-sm tap-target mb-1",
           "border border-[var(--color-border-strong)] transition-colors duration-150",
           "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:border-[var(--color-fg-muted)]",
+          // M7 — visible focus ring (≥2px, 3:1) on the new control.
+          "focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]",
           collapsed ? "px-2 py-2 justify-center" : "px-3 py-2",
         )}
       >

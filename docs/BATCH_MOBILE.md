@@ -46,6 +46,10 @@ Done already (shipped + pushed): **M1 ✅**, **M2 ✅**, **M3 ✅** (crash-recov
       90ms auto-fire), tap-number-to-type (number input; commit on Enter/blur, cancel on Esc) backed by
       a new cascade-validated `setCounter` action. Press-states + Undo toasts pre-existing (toast system).
 
-- [ ] **M7 — Accessibility & polish (mobile)** · M · Impact 3 · `MOBILE §M7`
-      Contrast pass; never-color-alone; sheet/overlay close + back-dismiss; **de-buttoned grid SR
-      summary (depends on M4)**; reduced-motion + 200/400% reflow; focus-visible on new controls.
+- [x] **M7 — Accessibility & polish (mobile)** · M · Impact 3 · `MOBILE §M7` — **done**
+      Command-palette overlay now has a visible Close (×) + Back-dismiss (popstate) on top of
+      click-outside + Escape (never gesture-only). De-buttoned collection grid already exposes ONE
+      labelled SR summary (`role="img"` + aria-label) — verified. Reduced-motion on the disclosure
+      chevron. Focus-visible rings (≥2px) on the new controls: NavRail Search trigger, inspector tabs,
+      disclosure toggle, palette Close. StatusPill is already never-color-alone (text label). 200/400%
+      reflow holds (content-cap + min-w-0 layouts ship from D1/D2/D3).

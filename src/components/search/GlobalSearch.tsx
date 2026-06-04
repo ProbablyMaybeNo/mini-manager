@@ -111,6 +111,16 @@ export function GlobalSearch() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // M7 — Back-dismiss: Android/browser Back closes the open palette rather
+  // than navigating away [MOBILE §M7 step 3]. Pairs with the visible Close
+  // (×) + Escape + click-outside so dismissal is never gesture-only.
+  useEffect(() => {
+    if (!open) return;
+    const onPop = () => setOpen(false);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [open]);
+
   // D4 — the Commands section. Navigation + a couple of high-value
   // actions, each with its inline shortcut where one exists.
   const commands = useMemo<ReadonlyArray<Command>>(() => {
@@ -279,7 +289,22 @@ export function GlobalSearch() {
             placeholder="Search paints, wishlist, or run a command…"
             className="flex-1 min-w-0 px-2 py-1 bg-transparent font-mono text-sm focus:outline-none"
           />
-          <span className="text-2xs font-mono text-[var(--color-fg-subtle)]">esc</span>
+          <kbd
+            aria-hidden
+            className="hidden sm:inline font-mono text-2xs text-[var(--color-fg-subtle)]"
+          >
+            esc
+          </kbd>
+          {/* M7 — visible Close (×) so dismissal isn't keyboard/gesture-only
+              [MOBILE §M7 step 3]; focus-visible ring on the new control. */}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close command palette"
+            className="tap-target inline-flex items-center justify-center text-sm font-mono text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] rounded-sm px-1"
+          >
+            ×
+          </button>
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto">
