@@ -125,16 +125,33 @@ export function RecoveryEmailCard({
           </div>
         </div>
       ) : (
-        <form onSubmit={onAdd} className="flex flex-col sm:flex-row gap-2 pt-3">
-          <input
-            type="email"
-            required
-            placeholder="you@example.com"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="flex-1 px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
-          />
-          <div className="flex gap-2">
+        <form onSubmit={onAdd} className="flex flex-col gap-2 pt-3">
+          {/* M6 — input optimization: visible label-above-field, the email
+              keyboard (type + inputmode), autocomplete, and an inline
+              field-level error (aria-invalid + aria-describedby) instead of
+              banner-only [MOBILE §M6 step 1]. */}
+          <label htmlFor="recovery-email" className="block text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+            Email address
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              id="recovery-email"
+              name="recoveryEmail"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              required
+              placeholder="you@example.com"
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                if (error) setError(null);
+              }}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "recovery-email-error" : undefined}
+              className="flex-1 px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
+            />
+            <div className="flex gap-2">
             <Button
               type="submit"
               variant="success"
@@ -158,7 +175,19 @@ export function RecoveryEmailCard({
                 Cancel
               </Button>
             ) : null}
+            </div>
           </div>
+          {/* M6 — inline field-level error, adjacent to the input, wired
+              via aria-describedby. */}
+          {error ? (
+            <p
+              id="recovery-email-error"
+              role="alert"
+              className="text-2xs font-mono text-[var(--color-red)]"
+            >
+              {error}
+            </p>
+          ) : null}
         </form>
       )}
 
@@ -167,7 +196,10 @@ export function RecoveryEmailCard({
           {feedback}
         </p>
       ) : null}
-      {error ? (
+      {/* When NOT editing (e.g. resend/remove paths), surface errors as the
+          card-level pill — the inline error above only fires while the form
+          is open. */}
+      {error && !editing ? (
         <div role="alert" className="pt-2">
           <StatusPill status="danger">{error}</StatusPill>
         </div>

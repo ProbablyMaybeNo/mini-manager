@@ -138,10 +138,10 @@ same group with no dependency between them may run in parallel.
       Ctrl+Z fires `mm:undo` (D5 owns the undo store).
 
 ### Group 6 — forms, feedback, secondary surfaces
-- [ ] **M6 — Forms & feedback** · M · Impact 3 · `MOBILE §M6`
-      Input optimization (type/inputmode/autocomplete/labels/inline errors) across auth + add forms;
-      touch-first eyedropper copy; press-states + progress readouts + Undo toasts; **StageCounter**
-      polish (space − / +, long-press repeat, tap-number-to-type).
+- [x] **M6 — Forms & feedback** · M · Impact 3 · `MOBILE §M6` — **done**
+      Recovery-email input optimization (email type/inputmode/autocomplete + label-above + inline
+      aria-described error); **StageCounter** polish: − / + at opposite ends, long-press repeat,
+      tap-number-to-type via a new cascade-validated `setCounter` action. Toast/press-states pre-existing.
 - [ ] **D7 — Wishlist & user as desktop layouts** · M · Impact 3 · `DESKTOP §D7`
       Wishlist persistent left filter rail + sortable dense table + bulk "Mark purchased"; two-column
       `/user` settings + collapse brand filter; pricing multi-column + width cap.

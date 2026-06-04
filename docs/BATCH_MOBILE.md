@@ -39,10 +39,12 @@ Done already (shipped + pushed): **M1 ✅**, **M2 ✅**, **M3 ✅** (crash-recov
       breadcrumb parent, fix "1 slots/steps". **HALT:** the shared `RecipeSlot` component overlaps D5;
       B6 Steps-vs-Slots schema must NOT be collapsed blind. Propose, then stop.
 
-- [ ] **M6 — Forms & feedback (mobile)** · M · Impact 3 · `MOBILE §M6`
-      Input optimization (type/inputmode/autocomplete/labels/inline errors); touch-first eyedropper
-      copy; press-states + progress readouts + Undo toasts; `StageCounter` polish (space − / +,
-      long-press repeat, tap-number-to-type). Note `StageCounter` overlaps D8 — commit on this branch.
+- [x] **M6 — Forms & feedback (mobile)** · M · Impact 3 · `MOBILE §M6` — **done**
+      Input optimization on the recovery-email form (type/inputmode/autocomplete email + visible
+      label-above + inline field-level error via aria-invalid/aria-describedby, clears as you type).
+      `StageCounter` polish: − / + at opposite ends (justify-between), long-press repeat (400ms hold →
+      90ms auto-fire), tap-number-to-type (number input; commit on Enter/blur, cancel on Esc) backed by
+      a new cascade-validated `setCounter` action. Press-states + Undo toasts pre-existing (toast system).
 
 - [ ] **M7 — Accessibility & polish (mobile)** · M · Impact 3 · `MOBILE §M7`
       Contrast pass; never-color-alone; sheet/overlay close + back-dismiss; **de-buttoned grid SR

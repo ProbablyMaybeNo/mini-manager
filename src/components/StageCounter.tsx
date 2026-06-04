@@ -11,7 +11,7 @@ import {
   STAGE_TONE,
   type PanelStage,
 } from "@/components/stageCounterLabels";
-import { bumpCounter } from "@/lib/actions/counters";
+import { bumpCounter, setCounter } from "@/lib/actions/counters";
 import { validateBump } from "@/lib/counters/cascade";
 
 /**
@@ -135,6 +135,28 @@ export function StageCounter({ snapshot }: { snapshot: StagePanelSnapshot }) {
     });
   }, []);
 
+  // M6 — tap-number-to-type: set a stage to an absolute value (fast for
+  // large counts vs. holding +). Optimistic, with the same revert-on-error
+  // contract as onBump.
+  const onSet = useCallback((stage: PanelStage, value: number) => {
+    const current = snapRef.current;
+    const col: keyof StagePanelSnapshot = `${stage}Count`;
+    if (current[col] === value) return;
+    setError(null);
+    const prev = current;
+    const optimistic = { ...prev, [col]: value };
+    setSnap(optimistic);
+    snapRef.current = optimistic;
+    startTransition(async () => {
+      const result = await setCounter({ projectId: current.id, stage, value });
+      if (!result.ok) {
+        setSnap(prev);
+        snapRef.current = prev;
+        setError(result.error);
+      }
+    });
+  }, []);
+
   // Page-level keyboard shortcuts. Bound once; reads fresh state
   // via snapRef inside onBump.
   useEffect(() => {
@@ -179,6 +201,7 @@ export function StageCounter({ snapshot }: { snapshot: StagePanelSnapshot }) {
             canDecrement={validateBump(snap, stage, -1).ok}
             isPending={isPending}
             onBump={(d) => onBump(stage, d)}
+            onSet={(v) => onSet(stage, v)}
           />
         ))}
       </ul>
@@ -206,6 +229,7 @@ function StageRow({
   canDecrement,
   isPending,
   onBump,
+  onSet,
 }: {
   stage: PanelStage;
   value: number;
@@ -215,6 +239,7 @@ function StageRow({
   canDecrement: boolean;
   isPending: boolean;
   onBump: (delta: 1 | -1) => void;
+  onSet: (value: number) => void;
 }) {
   const percent = total > 0 ? Math.round((value / total) * 100) : 0;
   // The lead stage gets the full per-stage colour treatment; other rows
@@ -256,17 +281,27 @@ function StageRow({
 
       <span className="min-w-0 flex items-center gap-2">
         <ProgressBar percent={percent} width={20} tone={STAGE_BAR_TONE[stage]} />
-        <span className="font-mono text-xs text-[var(--color-fg-muted)] whitespace-nowrap">
-          {value} / {total}
-        </span>
+        {/* M6 — tap the value to type a large count directly instead of
+            holding +. */}
+        <ValueEditor
+          stage={stage}
+          value={value}
+          total={total}
+          onSet={onSet}
+        />
       </span>
 
-      <span className="col-span-3 sm:col-span-2 flex items-center justify-end gap-2">
+      {/* M6 — − and + sit at OPPOSITE ENDS of the controls cluster
+          (justify-between) so a thumb never fat-fingers the wrong one
+          [MOBILE §M6 step 4]. The value editor + bar live in the middle
+          column above. */}
+      <span className="col-span-3 sm:col-span-2 flex items-center justify-between gap-2">
         <CounterButton
           label={`Decrement ${STAGE_LABEL[stage]}`}
           glyph="−"
           disabled={!canDecrement}
           onClick={() => onBump(-1)}
+          repeat
         />
         <CounterButton
           label={`Increment ${STAGE_LABEL[stage]}`}
@@ -274,6 +309,7 @@ function StageRow({
           disabled={!canIncrement}
           onClick={() => onBump(1)}
           title={incBlockerHint}
+          repeat
         />
       </span>
     </li>
@@ -308,6 +344,7 @@ export function CounterButton({
   disabled,
   onClick,
   title,
+  repeat = false,
 }: {
   label: string;
   glyph: string;
@@ -317,11 +354,48 @@ export function CounterButton({
   disabled: boolean;
   onClick: () => void;
   title?: string;
+  /** M6 — long-press to repeat (auto-fire on hold for fast bulk bumps
+   *  [MOBILE §M6 step 4]). Accelerates after the initial delay. */
+  repeat?: boolean;
 }) {
+  // M6 — long-press repeat. Hold begins after a 400ms delay, then fires
+  // every 90ms while held. Cleared on pointer-up / leave / cancel. A plain
+  // click still fires onClick once (the held timers are extra).
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const repeatTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onClickRef = useRef(onClick);
+  useEffect(() => {
+    onClickRef.current = onClick;
+  }, [onClick]);
+
+  const stopHold = useCallback(() => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+    if (repeatTimer.current) {
+      clearInterval(repeatTimer.current);
+      repeatTimer.current = null;
+    }
+  }, []);
+
+  useEffect(() => stopHold, [stopHold]);
+
+  const startHold = useCallback(() => {
+    if (!repeat || disabled) return;
+    holdTimer.current = setTimeout(() => {
+      repeatTimer.current = setInterval(() => onClickRef.current(), 90);
+    }, 400);
+  }, [repeat, disabled, stopHold]);
+
   return (
     <button
       type="button"
       onClick={onClick}
+      onPointerDown={startHold}
+      onPointerUp={stopHold}
+      onPointerLeave={stopHold}
+      onPointerCancel={stopHold}
       // UX-902 — keep the button clickable on a capped attempt so
       // onClick still fires and the parent's validateBump surfaces
       // the cascade error in the inline red alert. AT users see the
@@ -332,13 +406,87 @@ export function CounterButton({
       title={title}
       className={clsx(
         "tap-target inline-flex items-center justify-center px-3 py-1.5",
-        "frame-strong font-mono text-sm leading-none select-none",
+        "frame-strong font-mono text-sm leading-none select-none touch-none",
         disabled
           ? "opacity-40 cursor-not-allowed text-[var(--color-fg-subtle)]"
           : "hover:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] hover:text-[var(--color-accent)] active:bg-[color-mix(in_srgb,var(--color-green)_14%,transparent)]",
       )}
     >
       {glyph}
+    </button>
+  );
+}
+
+/**
+ * M6 — tap-number-to-type value editor. Renders the `value / total`
+ * readout as a button; tapping swaps in a numeric input (type="number",
+ * inputmode="numeric") seeded with the current value. Enter / blur commits
+ * via onSet; Escape cancels. Faster than holding + for large model counts
+ * [MOBILE §M6 step 4].
+ */
+function ValueEditor({
+  stage,
+  value,
+  total,
+  onSet,
+}: {
+  stage: PanelStage;
+  value: number;
+  total: number;
+  onSet: (value: number) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(String(value));
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing, value]);
+
+  function commit() {
+    const n = Number.parseInt(draft, 10);
+    setEditing(false);
+    if (Number.isFinite(n) && n !== value) onSet(Math.max(0, n));
+  }
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        inputMode="numeric"
+        min={0}
+        max={total}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            setEditing(false);
+          }
+        }}
+        aria-label={`Set ${STAGE_LABEL[stage]} count`}
+        className="tap-target w-16 px-1 py-0.5 frame bg-[var(--color-bg)] font-mono text-xs text-[var(--color-fg)] tabular-nums focus:outline-2 focus:outline-[var(--color-accent)]"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      aria-label={`${STAGE_LABEL[stage]}: ${value} of ${total}. Tap to type a value.`}
+      className="tap-target font-mono text-xs text-[var(--color-fg-muted)] whitespace-nowrap hover:text-[var(--color-fg)] underline decoration-dotted decoration-[var(--color-fg-subtle)] underline-offset-2 transition-colors"
+    >
+      {value} / {total}
     </button>
   );
 }
