@@ -17,7 +17,6 @@ import {
   getSessionRollups,
 } from "@/db/queries/paintSessions";
 import { QuickAddBar } from "@/components/QuickAddBar";
-import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { Button } from "@/components/ui/Button";
@@ -44,9 +43,9 @@ export const dynamic = "force-dynamic";
  *   Name · Type · Recipes (palette squares) · Status · Priority ·
  *   Completion (bar with red < 25% / yellow 25-75% / green >= 75%)
  *
- * The TopWishesPanel + RecentlyBoughtLine sit below the table so the
- * dashboard stays both queueable (paint shopping) and trackable
- * (paint history).
+ * UX (2026-06 walkthrough): the Top Wishes section was removed — /projects
+ * is the project workspace, not a dashboard. The lightweight
+ * RecentlyBoughtLine remains below the table as a passive spend readout.
  */
 interface ProjectsPageProps {
   /** P14.3 — calendar prev/next nav writes `?calYear` + `?calMonth`
@@ -304,12 +303,7 @@ export default async function ProjectsPage({
           plannerSection={
             <PlannerSection calYear={calYear} calMonth={calMonth} bare />
           }
-          belowTable={
-            <>
-              <TopWishesPanel />
-              <RecentlyBoughtLine />
-            </>
-          }
+          belowTable={<RecentlyBoughtLine />}
         />
       )}
     </div>
