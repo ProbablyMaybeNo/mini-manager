@@ -52,40 +52,42 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
     });
 
     test("mounts every cell component the widget builders will replace", () => {
+      // LIB-COLORMAP — the COLLECTION colour map moved to /library; the
+      // PLANNER no longer mounts HeatSinkGridCell.
       for (const cell of [
         "PlannerCalendarCell",
         "PlannerActivityCell",
         "PlannerStreakCell",
-        "HeatSinkGridCell",
         "PlannerInspoCell",
       ]) {
         expect(section).toContain(cell);
       }
     });
 
-    test("uses a responsive two-column grid (single stack on mobile, 5-col on md+)", () => {
-      // Single-column on mobile, 5 cols on md+ with calendar taking 3
-      // and the right column 2.
-      expect(section).toContain("grid-cols-1");
-      expect(section).toContain("md:grid-cols-5");
-      expect(section).toContain("md:col-span-3");
-      expect(section).toContain("md:col-span-2");
+    test("LIB-COLORMAP — the COLLECTION map cell is gone from the planner", () => {
+      expect(section).not.toContain("HeatSinkGridCell");
     });
 
-    test("A3 — mobile reorder: Streak > Activity > Collection > Calendar > Inspo", () => {
+    test("uses a responsive grid (single stack on mobile, 2-col on md+)", () => {
+      // LIB-COLORMAP — with the COLLECTION hero gone the grid rebalances
+      // to a 2-column desktop layout (4 cells), single stack on mobile.
+      expect(section).toContain("grid-cols-1");
+      expect(section).toContain("md:grid-cols-2");
+      expect(section).toContain("md:col-start-1");
+      expect(section).toContain("md:col-start-2");
+    });
+
+    test("mobile reorder: Streak > Activity > Calendar > Inspo", () => {
       // Each cell wrapper carries an explicit `order-N` class that
-      // controls the mobile (<md) stacking order. A3 swapped the hero:
-      // Streak first (smallest + most reward-loaded), Activity second
-      // (freshest action), the COLLECTION square third (the hero),
-      // Calendar fourth (now a small widget), Inspo closes the scroll.
+      // controls the mobile (<md) stacking order. Streak first (smallest +
+      // most reward-loaded), Activity second (freshest action), Calendar
+      // third (the small month widget), Inspo closes the scroll.
       const streakIdx = section.indexOf("order-1");
       const activityIdx = section.indexOf("order-2");
-      const collectionIdx = section.indexOf("order-3");
-      const calendarIdx = section.indexOf("order-4");
-      const inspoIdx = section.indexOf("order-5");
+      const calendarIdx = section.indexOf("order-3");
+      const inspoIdx = section.indexOf("order-4");
       expect(streakIdx).toBeGreaterThan(-1);
       expect(activityIdx).toBeGreaterThan(-1);
-      expect(collectionIdx).toBeGreaterThan(-1);
       expect(calendarIdx).toBeGreaterThan(-1);
       expect(inspoIdx).toBeGreaterThan(-1);
 
@@ -99,30 +101,15 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       };
       orderMatch("PlannerStreakCell", 1);
       orderMatch("PlannerActivityCell", 2);
-      orderMatch("HeatSinkGridCell", 3);
-      orderMatch("PlannerCalendarCell", 4);
-      orderMatch("PlannerInspoCell", 5);
+      orderMatch("PlannerCalendarCell", 3);
+      orderMatch("PlannerInspoCell", 4);
     });
 
-    test("A3 — desktop order preserved via md:row-start", () => {
-      // On md+ each right-column cell pins its grid row so the mobile
-      // reorder doesn't bleed into the desktop visual. Activity =
-      // row 1 (top of right stack), Streak = row 2, Calendar = row 3
-      // (the demoted small widget), Inspo = row 4. The COLLECTION square
-      // spans all four rows on the left.
+    test("desktop order preserved via md:row-start / md:col-start", () => {
+      // On md+ each cell pins its grid row + column so the mobile reorder
+      // doesn't bleed into the desktop visual. Two rows, two columns.
       expect(section).toContain("md:row-start-1");
       expect(section).toContain("md:row-start-2");
-      expect(section).toContain("md:row-start-3");
-      expect(section).toContain("md:row-start-4");
-      expect(section).toContain("md:row-span-4");
-    });
-
-    test("A3 — the COLLECTION square is the big left cell, square-aspect", () => {
-      // The HeatSink COLLECTION map now occupies the big left cell where
-      // the calendar used to live, spanning 3 cols × 4 rows and rendered
-      // square-aspect on md+.
-      const re = /md:col-span-3[^"]*md:row-span-4[^"]*md:aspect-square"[\s\S]{0,200}?<HeatSinkGridCell/;
-      expect(section).toMatch(re);
     });
   });
 
@@ -145,15 +132,9 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       expect(src).toMatch(/days/i);
     });
 
-    test("COLLECTION cell renders the spectrum grid + collection microcopy", () => {
-      // P16.3 retired the activity heatmap for the HeatSink map; A4
-      // renamed its user-visible label "Coverage" → "COLLECTION". The
-      // scaffold test pins the surrounding shape (Card title, the
-      // hue-sorted spectrum copy).
-      const src = read("src/components/planner/HeatSinkGridCell.tsx");
-      expect(src).toContain("COLLECTION");
-      expect(src).toMatch(/hue-sorted spectrum/i);
-    });
+    // LIB-COLORMAP — the COLLECTION colour-map cell moved to /library, so
+    // the planner no longer renders the spectrum grid. Its surface is now
+    // pinned by the CollectionPanel contract in libraryColorMap.test.ts.
 
     test("Inspo cell shows the locked paste-only copy", () => {
       const src = read("src/components/planner/PlannerInspoCell.tsx");
@@ -168,7 +149,6 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
       "src/components/planner/PlannerCalendarCell.tsx",
       "src/components/planner/PlannerActivityCell.tsx",
       "src/components/planner/PlannerStreakCell.tsx",
-      "src/components/planner/HeatSinkGridCell.tsx",
       "src/components/planner/PlannerInspoCell.tsx",
     ];
 

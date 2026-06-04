@@ -31,7 +31,7 @@ These both modify `src/components/focus/FocusPanel.tsx` and `src/components/focu
 
 ## Cluster C — Future features (post-overhaul)
 
-- [ ] **LIB-COLORMAP — Move the collection color-map from the dashboard to the Library page** (Ross idea, 2026-06-04). Deferred until the current UX/UI overhaul + recipe-unification jobs land.
+- [x] **LIB-COLORMAP — Move the collection color-map from the dashboard to the Library page** (Ross idea, 2026-06-04). Shipped on `batch/library-colormap` (2 commits, NOT merged — lead reconciles + runs `next build`). Map = navigator (click a hue → scroll + flash the list); list = workbench (toggle owned/wanted per row, dots update live via a shared overrides context); detail = on row-click (the existing PaintDetailPanel overlay covers the persistent lg+ map column). Mobile library layout unchanged. `CollectionCanvas` + `heatSinkHelpers` relocated planner→library; `HeatSinkGridClient`/`HeatSinkGridCell`/`CollectionGapFill` + their tests deleted; the COLLECTION cell removed from PlannerSection (grid rebalanced to 4 cells).
       **What:** remove the COLLECTION / "Coverage" map from the dashboard/PLANNER and make it a feature of `/library` instead, living in a **right-hand side panel**.
       **Reuse:** this is a relocation + extension of components already built — `CollectionCanvas` (the single `<canvas>`: full library, each paint a pixel, sparse owned/wishlist overlay dots) and `CollectionGapFill` (search + mark owned/wanted). Both currently in `src/components/planner/`; would move under `src/components/library/` (or shared).
       **New interactions:**

@@ -41,7 +41,9 @@ describe("Planner cluster is shared-ready (Group 2 step 2)", () => {
       /export async function PlannerSection\(\s*\{[^}]*\}\s*:\s*Props\s*=\s*\{\}\s*\)/,
     );
     // The cells self-fetch (no data passed down from the section).
-    expect(section).not.toMatch(/<HeatSinkGridCell\s+[^/>]*=/);
+    // LIB-COLORMAP — the COLLECTION map moved to /library; the planner no
+    // longer mounts HeatSinkGridCell at all.
+    expect(section).not.toContain("HeatSinkGridCell");
   });
 
   test("threads calYear / calMonth to the calendar cell only", () => {
@@ -55,6 +57,6 @@ describe("Planner cluster is shared-ready (Group 2 step 2)", () => {
     // responsive grid itself so it drops into a narrow mobile disclosure
     // and a wide desktop route unchanged.
     expect(section).toContain("grid-cols-1");
-    expect(section).toContain("md:grid-cols-5");
+    expect(section).toContain("md:grid-cols-2");
   });
 });

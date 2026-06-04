@@ -28,7 +28,7 @@ describe("D8 — tooltips + cursor signifiers", () => {
   });
 
   test("the collection canvas tool shows a crosshair cursor", () => {
-    const src = read("src/components/planner/CollectionCanvas.tsx");
+    const src = read("src/components/library/CollectionCanvas.tsx");
     expect(src).toMatch(/cursor: "crosshair"/);
   });
 });

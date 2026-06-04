@@ -10,7 +10,7 @@ import {
   cellRectAt,
   computeCanvasLayout,
   indexAtPoint,
-} from "@/components/planner/heatSinkHelpers";
+} from "@/components/library/heatSinkHelpers";
 
 /* ============================================================
    computeCanvasLayout

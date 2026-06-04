@@ -30,12 +30,12 @@ import { clsx } from "clsx";
 
 import type { CoverageCell } from "@/db/queries/paintCoverage";
 import type { CoverageState, CoverageSummary } from "@/lib/paints/coverage";
-import { CollectionCanvas } from "@/components/planner/CollectionCanvas";
+import { CollectionCanvas } from "./CollectionCanvas";
 import {
   coverageReadout,
   filterCellsByBrands,
   formatCount,
-} from "@/components/planner/heatSinkHelpers";
+} from "./heatSinkHelpers";
 import { useInventoryOverrides } from "./inventoryOverrides";
 
 interface Props {

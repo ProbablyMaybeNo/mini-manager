@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import { PlannerActivityCell } from "./PlannerActivityCell";
 import { PlannerCalendarCell } from "./PlannerCalendarCell";
-import { HeatSinkGridCell } from "./HeatSinkGridCell";
 import { PlannerInspoCell } from "./PlannerInspoCell";
 import { PlannerStreakCell } from "./PlannerStreakCell";
 
@@ -16,20 +15,19 @@ import { PlannerStreakCell } from "./PlannerStreakCell";
  * Ross signed off on — locked, do NOT rename to Campaign / Studio /
  * HQ etc.
  *
- * Layout (A3 — 2026-06-03 swap):
- *   - On `md+`: 5-column grid. The COLLECTION square takes the left 3
- *     cols across all 4 rows (square-aspect — it's the hero now), and
- *     the right 2 cols stack Activity → Streak → Calendar → Inspo (one
- *     cell per row). The calendar moved out of the big left cell into a
- *     MUCH smaller widget below the streak box. Implemented via
- *     `md:col-start` + `md:row-start` so the mobile reorder doesn't
- *     bleed into desktop.
+ * Layout (LIB-COLORMAP — 2026-06-04): the COLLECTION colour map moved to
+ * the /library right-hand panel, so the PLANNER drops to four cells —
+ * Activity, Streak, Calendar, Inspo.
+ *   - On `md+`: a balanced 2-column grid. Left column stacks Activity
+ *     (freshest action, top) → Calendar (the small month widget). Right
+ *     column stacks Streak (reward-loaded counter, top) → Inspo (the
+ *     reference board). Row pinning via `md:col-start` + `md:row-start`
+ *     keeps the mobile reorder from bleeding into desktop.
  *   - On `<md`: single-column stack, reordered to Streak → Activity →
- *     Collection → Calendar → Inspo. Streak first because it's the
- *     smallest + most reward-loaded — the painter sees their number
- *     before they scroll. Activity next so the freshest action is
- *     immediately readable. Collection third (the hero square). Calendar
- *     fourth (now a small widget). Inspo closes the scroll.
+ *     Calendar → Inspo. Streak first because it's the smallest + most
+ *     reward-loaded — the painter sees their number before they scroll.
+ *     Activity next so the freshest action is immediately readable.
+ *     Calendar third (the small month widget). Inspo closes the scroll.
  *
  * Every cell is a sibling component the P14.3–7 widget builders can
  * replace one at a time without touching this composite or
@@ -59,33 +57,25 @@ export async function PlannerSection({
   bare = false,
 }: Props = {}) {
   const grid = (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {/* COLLECTION square (P16.3 HeatSink) — A3: now the hero, in the
-            big left cell where the calendar used to live. Spans 3 cols ×
-            4 rows on the left and is square-aspect on md+ so the painter
-            reads their whole library as one compact gamut square. Mobile
-            order 3 (the hero, below the reward-loaded streak + activity). */}
-        <div className="order-3 md:order-none md:col-span-3 md:col-start-1 md:row-start-1 md:row-span-4 md:aspect-square">
-          <HeatSinkGridCell />
-        </div>
-        {/* Streak — mobile order 1 (smallest, most reward-loaded),
-            desktop row 2 of the right column. */}
-        <div className="order-1 md:order-none md:col-span-2 md:col-start-4 md:row-start-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Streak — mobile order 1 (smallest, most reward-loaded);
+            desktop right column, row 1. */}
+        <div className="order-1 md:order-none md:col-start-2 md:row-start-1">
           <PlannerStreakCell />
         </div>
-        {/* Activity — mobile order 2, desktop row 1 of the right
-            column (freshest action sits at the top of the stack). */}
-        <div className="order-2 md:order-none md:col-span-2 md:col-start-4 md:row-start-1">
+        {/* Activity — mobile order 2; desktop left column, row 1
+            (freshest action sits at the top of the stack). */}
+        <div className="order-2 md:order-none md:col-start-1 md:row-start-1">
           <PlannerActivityCell />
         </div>
-        {/* Calendar — A3: demoted from the big left cell to a MUCH
-            smaller widget below the streak box. Mobile order 4, desktop
-            row 3 of the right column. */}
-        <div className="order-4 md:order-none md:col-span-2 md:col-start-4 md:row-start-3">
+        {/* Calendar — the small month widget. Mobile order 3; desktop
+            left column, row 2. */}
+        <div className="order-3 md:order-none md:col-start-1 md:row-start-2">
           <PlannerCalendarCell calYear={calYear} calMonth={calMonth} />
         </div>
-        {/* Inspo — mobile order 5, desktop row 4 of the right column. */}
-        <div className="order-5 md:order-none md:col-span-2 md:col-start-4 md:row-start-4">
+        {/* Inspo — the reference board. Mobile order 4; desktop right
+            column, row 2. */}
+        <div className="order-4 md:order-none md:col-start-2 md:row-start-2">
           <PlannerInspoCell />
         </div>
     </div>

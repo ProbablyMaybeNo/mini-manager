@@ -39,7 +39,7 @@ describe("M7 step 3 — command palette overlay dismissal", () => {
 });
 
 describe("M7 step 4 — de-buttoned collection grid SR summary", () => {
-  const src = read("src/components/planner/CollectionCanvas.tsx");
+  const src = read("src/components/library/CollectionCanvas.tsx");
 
   test("the canvas is one role=img element with a labelled summary", () => {
     expect(src).toMatch(/role="img"/);

@@ -12,7 +12,7 @@ import { describe, expect, test } from "vitest";
 import {
   coverageReadout,
   formatCount,
-} from "@/components/planner/heatSinkHelpers";
+} from "@/components/library/heatSinkHelpers";
 import type { CoverageSummary } from "@/lib/paints/coverage";
 
 describe("formatCount (P16.3)", () => {

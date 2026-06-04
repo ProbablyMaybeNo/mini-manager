@@ -19,7 +19,7 @@ import {
   detectMobileViewport,
   filterCellsByBrands,
   showsOverlayDot,
-} from "@/components/planner/heatSinkHelpers";
+} from "@/components/library/heatSinkHelpers";
 import type { CoverageCell } from "@/db/queries/paintCoverage";
 import type { CoverageState } from "@/lib/paints/coverage";
 import type { Paint } from "@/lib/paints/types";

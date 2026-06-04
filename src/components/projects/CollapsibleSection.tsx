@@ -20,7 +20,7 @@ import { ChevronRight } from "lucide-react";
  * relocates FOCUS into the inspector + PLANNER to its own route, but
  * until then desktop keeps both inline and open).
  *
- * SSR-safe pattern (mirrors HeatSinkGridClient's `isMobile` /
+ * SSR-safe pattern (mirrors the library colour map's `isMobile` /
  * useDensity's bootstrap): the server + first client render are
  * desktop-first (`open = true`) so markup matches and there is no
  * hydration mismatch; an effect then reads `matchMedia` and collapses
