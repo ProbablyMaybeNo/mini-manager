@@ -67,9 +67,13 @@
       **persistent right side panel** (desktop divergence from mobile's bottom sheet). Hover tooltips for
       precise values; calendar cell ≥24px hit region.
 
-- [ ] **D7 — Wishlist & user as desktop layouts** · M · Impact 3 · `DESKTOP §D7`
-      Wishlist persistent filter rail + sortable dense table + bulk "Mark purchased"; two-column `/user`;
-      pricing multi-column + width cap.
+- [x] **D7 — Wishlist & user as desktop layouts** · M · Impact 3 · `DESKTOP §D7` — **mostly done**
+      Wishlist now a desktop two-column: persistent left filter rail (≥1024; `WishlistFilters layout=
+      "rail"` stacks vertically) + the tables on the right; mobile keeps the header filter disclosure.
+      `/user` width-capped (`.content-cap`) with a two-column settings grid at ≥1024; brand filter
+      already collapsible (M2). Pricing width-capped with `.content-cap` (multi-column tiers retained).
+      **Deferred:** wishlist bulk "Mark purchased" — mirrors the D3 bulk pattern but needs a
+      wishlist-specific batch action; the per-row MarkBoughtModal already covers single rows.
 
 - [ ] **D8 — Pointer affordances, feedback & a11y polish (desktop)** · M · Impact 3 · `DESKTOP §D8`
       Tooltips (0.5s, kbd+mouse); cursor signifiers on canvas tools; right-click parity; Undo-over-

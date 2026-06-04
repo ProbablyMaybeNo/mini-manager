@@ -121,7 +121,9 @@ export default async function PricingPage() {
   );
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+    // D7 — width-cap the pricing tiers with the shared .content-cap so the
+    // multi-column tier row doesn't sprawl on an ultrawide [D §7, §10].
+    <div className="content-cap p-6 md:p-8 space-y-8">
       <header className="space-y-2 text-center max-w-2xl mx-auto">
         <h1 className="text-3xl md:text-4xl tracking-wide">PRICING</h1>
         <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-relaxed">

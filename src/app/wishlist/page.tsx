@@ -89,7 +89,7 @@ export default async function WishlistPage({
 
   return (
     <div className="flex flex-col h-screen">
-      <header className="px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)] space-y-4">
+      <header className="px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)]">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
           <div>
             <h1 className="text-3xl tracking-wide">WISHLIST</h1>
@@ -101,48 +101,70 @@ export default async function WishlistPage({
           </div>
           <QuickAddBar />
         </div>
-        <WishlistFilters
-          status={status}
-          category={category}
-          vendors={vendors}
-          selectedVendor={vendor}
-        />
+        {/* D7 — on mobile the filters live in the header disclosure (the
+            component renders its own Filters trigger < lg). On desktop they
+            move to the persistent left rail below, so hide the header copy
+            there. */}
+        <div className="lg:hidden mt-4">
+          <WishlistFilters
+            status={status}
+            category={category}
+            vendors={vendors}
+            selectedVendor={vendor}
+          />
+        </div>
       </header>
 
-      <main className="flex-1 min-h-0 overflow-y-auto p-6 md:p-8 space-y-8">
-        <section aria-label="Models" className="space-y-2">
-          <h2 className="section-title">Models · {modelItems.length}</h2>
-          {modelItems.length === 0 ? (
-            <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-              No model rows match. Add a kit, box, or unit from a vendor URL
-              and it&apos;ll land here.
-            </p>
-          ) : (
-            <WishlistTable
-              items={modelItems}
-              projects={projectOptions}
-              hasActiveFilters={hasActiveFilters}
-            />
-          )}
-        </section>
+      {/* D7 — desktop two-column: persistent left filter rail + the tables
+          on the right. Below lg it collapses to a single column (the rail
+          is hidden; the header disclosure covers filtering). */}
+      <div className="flex-1 min-h-0 flex">
+        <aside className="hidden lg:block w-[220px] shrink-0 border-r border-[var(--color-border)] overflow-y-auto p-4">
+          <h2 className="section-title mb-3">Filters</h2>
+          <WishlistFilters
+            status={status}
+            category={category}
+            vendors={vendors}
+            selectedVendor={vendor}
+            layout="rail"
+          />
+        </aside>
 
-        <section aria-label="Paints" className="space-y-2">
-          <h2 className="section-title">Paints · {paintItems.length}</h2>
-          {paintItems.length === 0 ? (
-            <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-              No paint rows match. Match a hex with the Match tool and add
-              it to your wishlist to see it here.
-            </p>
-          ) : (
-            <WishlistTable
-              items={paintItems}
-              projects={projectOptions}
-              hasActiveFilters={hasActiveFilters}
-              showTools
-            />
-          )}
-        </section>
-      </main>
+        <main className="flex-1 min-h-0 overflow-y-auto p-6 md:p-8 space-y-8">
+          <section aria-label="Models" className="space-y-2">
+            <h2 className="section-title">Models · {modelItems.length}</h2>
+            {modelItems.length === 0 ? (
+              <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
+                No model rows match. Add a kit, box, or unit from a vendor URL
+                and it&apos;ll land here.
+              </p>
+            ) : (
+              <WishlistTable
+                items={modelItems}
+                projects={projectOptions}
+                hasActiveFilters={hasActiveFilters}
+              />
+            )}
+          </section>
+
+          <section aria-label="Paints" className="space-y-2">
+            <h2 className="section-title">Paints · {paintItems.length}</h2>
+            {paintItems.length === 0 ? (
+              <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
+                No paint rows match. Match a hex with the Match tool and add
+                it to your wishlist to see it here.
+              </p>
+            ) : (
+              <WishlistTable
+                items={paintItems}
+                projects={projectOptions}
+                hasActiveFilters={hasActiveFilters}
+                showTools
+              />
+            )}
+          </section>
+        </main>
+      </div>
 
       <PriceFooter count={totals.count} totalByCurrency={totals.totalByCurrency} />
     </div>

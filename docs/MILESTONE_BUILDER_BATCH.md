@@ -142,9 +142,10 @@ same group with no dependency between them may run in parallel.
       Recovery-email input optimization (email type/inputmode/autocomplete + label-above + inline
       aria-described error); **StageCounter** polish: − / + at opposite ends, long-press repeat,
       tap-number-to-type via a new cascade-validated `setCounter` action. Toast/press-states pre-existing.
-- [ ] **D7 — Wishlist & user as desktop layouts** · M · Impact 3 · `DESKTOP §D7`
-      Wishlist persistent left filter rail + sortable dense table + bulk "Mark purchased"; two-column
-      `/user` settings + collapse brand filter; pricing multi-column + width cap.
+- [x] **D7 — Wishlist & user as desktop layouts** · M · Impact 3 · `DESKTOP §D7` — **mostly done**
+      Wishlist persistent left filter rail (≥1024, `layout="rail"`) + tables right; two-column `/user`
+      settings (`.content-cap` + `lg:grid-cols-2`, brand filter already collapsible); pricing
+      width-capped. **Deferred:** wishlist bulk "Mark purchased" (needs a wishlist batch action).
 
 ### Group 7 — accessibility & polish (last; depends on everything above existing)
 - [ ] **M7 — Accessibility & polish (mobile)** · M · Impact 3 · `MOBILE §M7`

@@ -118,7 +118,11 @@ export default async function UserPage() {
   const planTier: PlanTier = "FREE";
 
   return (
-    <div className="p-6 md:p-8 max-w-3xl space-y-8">
+    // D7 — desktop settings layout: width-capped (.content-cap) with a
+    // two-column card grid at ≥1024 so the cards flow side-by-side instead
+    // of one long single-column scroll [D §13]. The Plan card spans the
+    // full width as the header block; the rest pack into two columns.
+    <div className="content-cap p-6 md:p-8 space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl tracking-wide">USER</h1>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans leading-snug">
@@ -196,39 +200,43 @@ export default async function UserPage() {
         </div>
       </Card>
 
-      <RecoveryEmailCard
-        initialEmail={initialEmail}
-        initialVerified={initialVerified}
-      />
+      {/* D7 — two-column settings grid at ≥1024; single column below. Each
+          card is self-contained so the masonry-style flow is fine. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <RecoveryEmailCard
+          initialEmail={initialEmail}
+          initialVerified={initialVerified}
+        />
 
-      <ChangePasswordCard />
+        <ChangePasswordCard />
 
-      <LibraryBrandFilterCard
-        availableBrands={availableBrands}
-        initial={initialBrands}
-      />
+        <LibraryBrandFilterCard
+          availableBrands={availableBrands}
+          initial={initialBrands}
+        />
 
-      <DensityCard />
+        <DensityCard />
 
-      <Card title="Backup & export" ariaLabel="Backup and export">
-        <p className="text-sm font-sans text-[var(--color-fg)] leading-snug">
-          Downloads everything you own — projects, named models, recipes
-          (with colour slots and steps), palettes, inventory, and wishlist —
-          as a single JSON file. The schema is versioned so a future Mini
-          Manager can re-import it.
-        </p>
-        <div className="pt-3">
-          <ExportButton />
-        </div>
-      </Card>
+        <Card title="Backup & export" ariaLabel="Backup and export">
+          <p className="text-sm font-sans text-[var(--color-fg)] leading-snug">
+            Downloads everything you own — projects, named models, recipes
+            (with colour slots and steps), palettes, inventory, and wishlist —
+            as a single JSON file. The schema is versioned so a future Mini
+            Manager can re-import it.
+          </p>
+          <div className="pt-3">
+            <ExportButton />
+          </div>
+        </Card>
 
-      <Card title="Session" ariaLabel="Session">
-        <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-snug mb-3">
-          End your session on this device. You&apos;ll need to sign in again
-          to use Mini Manager.
-        </p>
-        <SignOutButton />
-      </Card>
+        <Card title="Session" ariaLabel="Session">
+          <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-snug mb-3">
+            End your session on this device. You&apos;ll need to sign in again
+            to use Mini Manager.
+          </p>
+          <SignOutButton />
+        </Card>
+      </div>
     </div>
   );
 }

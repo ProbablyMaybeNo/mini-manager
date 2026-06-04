@@ -24,11 +24,15 @@ export function WishlistFilters({
   category,
   vendors,
   selectedVendor,
+  layout = "bar",
 }: {
   status: WishlistStatus | "All";
   category: WishlistCategory | null;
   vendors: ReadonlyArray<string>;
   selectedVendor: string | null;
+  /** D7 — "rail" stacks the groups vertically for the persistent desktop
+   *  left filter rail; "bar" (default) is the horizontal header flow. */
+  layout?: "bar" | "rail";
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -87,9 +91,14 @@ export function WishlistFilters({
       <div
         id="wishlist-filter-body"
         className={clsx(
-          "flex-wrap items-center gap-2 mt-2 lg:mt-0",
+          "gap-2 mt-2 lg:mt-0",
           mobileOpen ? "flex" : "hidden",
           "lg:flex",
+          // D7 — rail layout stacks the groups vertically; bar wraps
+          // horizontally as before.
+          layout === "rail"
+            ? "lg:flex-col lg:items-start flex-wrap items-center"
+            : "flex-wrap items-center",
         )}
       >
       <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] mr-1">
