@@ -201,8 +201,11 @@ describe("UX-1215 — library switches to card layout below 768px", () => {
   const src = read("src/components/library/LibraryTable.tsx");
 
   test("rows size per breakpoint so the card can be taller on mobile", () => {
+    // D3 made the desktop branch density-aware (desktopRowHeight =
+    // Comfortable 40 / Compact 32); the mobile 64px card branch is
+    // unchanged.
     expect(src).toContain("ROW_HEIGHT_MOBILE = 64");
-    expect(src).toContain("isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP");
+    expect(src).toContain("isMobile ? ROW_HEIGHT_MOBILE : desktopRowHeight");
   });
 
   test("the mobile card gives NAME a full-width line (no ambiguous truncation)", () => {

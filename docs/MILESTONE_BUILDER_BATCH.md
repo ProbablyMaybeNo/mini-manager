@@ -116,9 +116,10 @@ same group with no dependency between them may run in parallel.
       Replace the mobile card stack in `ProjectsDashboardTable` with a frozen-first-column,
       horizontally-scrollable table; zebra + press-highlight; expand chevron in frozen column;
       row-edit → nonmodal bottom sheet (fixes `InlineCellPopover` edge-clip).
-- [ ] **D3 — Library full data table** · L · Impact 5 · `DESKTOP §D3`
-      Name-first columns; sortable headers + `aria-sort`; density toggle wired to row height; bulk
-      select (checkbox + 3-state Select-All + batch bar); right-click context menu; zebra; floor Own/★.
+- [x] **D3 — Library full data table** · L · Impact 5 · `DESKTOP §D3` — **done**
+      Name-first columns; sortable headers + `aria-sort` (name/brand/hue); density-driven row height
+      (40/32); bulk select (per-row checkbox + 3-state Select-All + batch bar); right-click context
+      menu (Mark owned/wanted/Copy hex); zebra. Off cyan (amber). "Add to recipe" deferred to M5/D5.
 
 ### Group 4 — flows, action discipline, shared slot (SHARED — M5 ≡ D5 overlap heavily)
 - [ ] **M5 + D5 — Recipe/project flows, shared RecipeSlot, action discipline, hierarchy** · L · Impact 4

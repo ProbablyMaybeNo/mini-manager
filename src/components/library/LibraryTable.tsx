@@ -1,21 +1,31 @@
 "use client";
 
-import { useRef, useState, useLayoutEffect, useEffect } from "react";
+import {
+  useRef,
+  useState,
+  useLayoutEffect,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
 import type { Paint } from "@/lib/paints/types";
+import type { SortMode } from "@/lib/paints/sort";
 import { TypeIcon } from "./TypeIcon";
 import { HexConfidenceDot } from "./HexConfidenceDot";
 import { InventoryControls } from "./InventoryControls";
+import { useDensity } from "@/lib/hooks/useDensity";
+import { setOwnedCount, toggleWishlistedPaint } from "@/lib/actions/inventory";
+import { useToast } from "@/components/ui/Toast";
 
-// UX-1215 — the dense 40px multi-column row truncated NAME to ambiguity
-// on phones ("3b Au …"). Below 768 each row grows to a 64px stacked card
-// (NAME on its own full-width line, then brand · type · hex beneath) so
-// adjacent paints stay distinguishable. Desktop keeps the dense table.
-// The virtualiser needs a single numeric height, so we pick one per
-// breakpoint via matchMedia rather than CSS alone.
-const ROW_HEIGHT_DESKTOP = 40;
+// UX-1215 — the dense multi-column row truncated NAME to ambiguity on
+// phones, so below 768 each row grows to a stacked card. Desktop keeps the
+// dense table. D3 — desktop row height now tracks the global density lever
+// (Comfortable 40 / Compact 32 [D §6, §9]); mobile stays the 64px card.
+const ROW_HEIGHT_DESKTOP_COMFORTABLE = 40;
+const ROW_HEIGHT_DESKTOP_COMPACT = 32;
 const ROW_HEIGHT_MOBILE = 64;
 const OVERSCAN = 8;
 
@@ -34,10 +44,36 @@ function useIsMobileLibrary(): boolean {
 }
 
 /**
+ * D3 — the desktop column order is identifier-first [D §9]: a checkbox,
+ * the swatch, then **NAME**, then Brand · Line · Type · Hex · Own · ★.
+ * (Before D3 the order led with Brand; the name is the human identifier so
+ * it now leads.) SKU was demoted off the primary table — it lives in the
+ * PaintDetailPanel — to keep the row scannable.
+ *
+ * 9 grid columns: select / swatch / name / brand / line / type / hex /
+ * own / wanted. Every flexible column is minmax(0,…) / min-w-0 so it
+ * shrinks instead of pushing siblings off (UX-1506).
+ */
+const GRID_CLASS =
+  "md:grid-cols-[28px_24px_minmax(0,2fr)_110px_minmax(0,1fr)_24px_72px_36px_28px]";
+
+/** D3 — which columns are sortable and the existing SortMode each maps to.
+ *  Name → name, Brand → brand, Hex → hue (colour-wheel walk). Line / Type /
+ *  Own have no underlying mode, so their headers are plain labels. */
+const COLUMN_SORT: Partial<Record<string, SortMode>> = {
+  name: "name",
+  brand: "brand",
+  hex: "hue",
+};
+
+/**
  * Dense library table with hand-rolled windowing. We render only the
  * visible row slice + a small overscan so 7k+ paints scroll on a phone.
- * No external windowing dep — the surface is simple enough to live
- * inline.
+ *
+ * D3 adds the desktop power layer: sortable headers (aria-sort, 3-state
+ * icon), a density-driven row height, bulk select (per-row checkbox +
+ * 3-state Select-All + a batch-action bar), a right-click context menu,
+ * and zebra striping — without losing the virtualisation.
  */
 export function LibraryTable({
   paints,
@@ -52,7 +88,86 @@ export function LibraryTable({
   const [scrollTop, setScrollTop] = useState(0);
   const [viewport, setViewport] = useState(0);
   const isMobile = useIsMobileLibrary();
-  const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP;
+  const [density] = useDensity();
+  const router = useRouter();
+  const pathname = usePathname();
+  const sp = useSearchParams();
+  const toast = useToast();
+
+  const desktopRowHeight =
+    density === "compact"
+      ? ROW_HEIGHT_DESKTOP_COMPACT
+      : ROW_HEIGHT_DESKTOP_COMFORTABLE;
+  const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : desktopRowHeight;
+
+  // D3 — current sort mode (from the URL `?sort=`). The header click
+  // writes the param; the page re-sorts via sortPaints.
+  const activeSort = (sp?.get("sort") ?? "brand") as SortMode;
+
+  const handleSort = useCallback(
+    (mode: SortMode) => {
+      const params = new URLSearchParams(sp?.toString() ?? "");
+      params.set("sort", mode);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [sp, pathname, router],
+  );
+
+  // D3 — bulk selection. A Set of paint ids; select-all operates over the
+  // currently-filtered `paints`. Cleared whenever the filtered set changes
+  // so a stale selection can't leak across filters.
+  const [selected, setSelected] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const paintIdsKey = useMemo(
+    () => paints.map((p) => p.id).join(","),
+    [paints],
+  );
+  useEffect(() => {
+    setSelected(new Set());
+  }, [paintIdsKey]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const allSelected = paints.length > 0 && selected.size === paints.length;
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleSelectAll = useCallback(() => {
+    setSelected((prev) =>
+      prev.size === paints.length ? new Set() : new Set(paints.map((p) => p.id)),
+    );
+  }, [paints]);
+
+  const clearSelection = useCallback(() => setSelected(new Set()), []);
+
+  // D3 — right-click context menu state (anchored at the cursor).
+  const [menu, setMenu] = useState<{
+    paint: Paint;
+    x: number;
+    y: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const close = () => setMenu(null);
+    document.addEventListener("click", close);
+    document.addEventListener("scroll", close, true);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", close);
+      document.removeEventListener("scroll", close, true);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menu]);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -72,7 +187,42 @@ export function LibraryTable({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <TableHeader />
+      {selected.size > 0 ? (
+        <BatchActionBar
+          count={selected.size}
+          onMarkOwned={async () => {
+            const ids = Array.from(selected);
+            await Promise.all(
+              ids.map((id) => setOwnedCount({ paintId: id, count: 1 })),
+            );
+            toast.success(`Marked ${ids.length} paint(s) owned`);
+            clearSelection();
+            router.refresh();
+          }}
+          onMarkWanted={async () => {
+            // toggleWishlistedPaint flips the flag, so only toggle paints
+            // that aren't already wanted — never accidentally un-want one.
+            const ids = Array.from(selected).filter(
+              (id) => !inventoryByPaint.get(id)?.isWishlisted,
+            );
+            await Promise.all(
+              ids.map((id) => toggleWishlistedPaint({ paintId: id })),
+            );
+            toast.success(`Marked ${ids.length} paint(s) wanted`);
+            clearSelection();
+            router.refresh();
+          }}
+          onClear={clearSelection}
+        />
+      ) : null}
+      <TableHeader
+        activeSort={activeSort}
+        onSort={handleSort}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        onToggleAll={toggleSelectAll}
+        rowCount={paints.length}
+      />
       <div
         ref={scrollRef}
         onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
@@ -94,74 +244,336 @@ export function LibraryTable({
                   paint={p}
                   rowIndex={startIndex + i}
                   active={p.id === selectedPaintId}
+                  selected={selected.has(p.id)}
+                  onToggleSelect={() => toggleSelect(p.id)}
+                  onContextMenu={(x, y) => setMenu({ paint: p, x, y })}
                   inventory={inventoryByPaint.get(p.id)}
                   rowHeight={rowHeight}
-                  isMobile={isMobile}
                 />
               ))}
             </div>
           </div>
         )}
       </div>
-      <TableFooter total={paints.length} />
+      <TableFooter total={paints.length} selectedCount={selected.size} />
+
+      {menu ? (
+        <RowContextMenu
+          paint={menu.paint}
+          x={menu.x}
+          y={menu.y}
+          onMarkOwned={async () => {
+            await setOwnedCount({ paintId: menu.paint.id, count: 1 });
+            toast.success(`Marked ${menu.paint.name} owned`);
+            setMenu(null);
+            router.refresh();
+          }}
+          onMarkWanted={async () => {
+            if (!inventoryByPaint.get(menu.paint.id)?.isWishlisted) {
+              await toggleWishlistedPaint({ paintId: menu.paint.id });
+            }
+            toast.success(`Marked ${menu.paint.name} wanted`);
+            setMenu(null);
+            router.refresh();
+          }}
+          onCopyHex={async () => {
+            try {
+              await navigator.clipboard.writeText(menu.paint.hex);
+              toast.success(`Copied ${menu.paint.hex}`);
+            } catch {
+              /* clipboard blocked — silent */
+            }
+            setMenu(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
 
-function TableHeader() {
+function TableHeader({
+  activeSort,
+  onSort,
+  allSelected,
+  someSelected,
+  onToggleAll,
+  rowCount,
+}: {
+  activeSort: SortMode;
+  onSort: (mode: SortMode) => void;
+  allSelected: boolean;
+  someSelected: boolean;
+  onToggleAll: () => void;
+  rowCount: number;
+}) {
   return (
     <div
       className={clsx(
         // UX-1215 — the column header only makes sense for the dense
-        // desktop table; the mobile card layout is self-labelling, so
-        // hide the header strip below md.
+        // desktop table; the mobile card layout is self-labelling.
         "hidden md:grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
         GRID_CLASS,
       )}
       role="row"
     >
-      <span role="columnheader" aria-colindex={1} aria-hidden />
-      <span role="columnheader" aria-colindex={2}>Brand</span>
-      <span role="columnheader" aria-colindex={3} className="hidden md:inline">Line</span>
-      <span role="columnheader" aria-colindex={4}>Name</span>
-      <span role="columnheader" aria-colindex={5} className="hidden md:inline">SKU</span>
-      <span role="columnheader" aria-colindex={6} aria-label="Type">T</span>
-      <span role="columnheader" aria-colindex={7}>Hex</span>
-      <span role="columnheader" aria-colindex={8} className="text-center" aria-label="Owned">
+      {/* D3 — 3-state Select-All checkbox. */}
+      <span role="columnheader" aria-colindex={1} className="flex items-center">
+        <SelectAllCheckbox
+          allSelected={allSelected}
+          someSelected={someSelected}
+          onToggle={onToggleAll}
+          rowCount={rowCount}
+        />
+      </span>
+      <span role="columnheader" aria-colindex={2} aria-hidden />
+      <SortableHeader
+        colIndex={3}
+        label="Name"
+        mode={COLUMN_SORT.name!}
+        activeSort={activeSort}
+        onSort={onSort}
+      />
+      <SortableHeader
+        colIndex={4}
+        label="Brand"
+        mode={COLUMN_SORT.brand!}
+        activeSort={activeSort}
+        onSort={onSort}
+      />
+      <span role="columnheader" aria-colindex={5} className="hidden md:inline">
+        Line
+      </span>
+      <span
+        role="columnheader"
+        aria-colindex={6}
+        aria-label="Type"
+      >
+        T
+      </span>
+      <SortableHeader
+        colIndex={7}
+        label="Hex"
+        mode={COLUMN_SORT.hex!}
+        activeSort={activeSort}
+        onSort={onSort}
+      />
+      <span
+        role="columnheader"
+        aria-colindex={8}
+        className="text-center"
+        aria-label="Owned"
+      >
         Own
       </span>
-      <span role="columnheader" aria-colindex={9} className="text-center" aria-label="Wanted">
+      <span
+        role="columnheader"
+        aria-colindex={9}
+        className="text-center"
+        aria-label="Wanted"
+      >
         ★
       </span>
     </div>
   );
 }
 
-/**
- * Desktop (≥md) dense 9-col grid: swatch / brand / line / name / sku /
- * type / hex / owned / wanted. Below md the LibraryTable renders the
- * stacked card layout (see PaintRow's `isMobile` branch — UX-1215), so
- * this grid only governs the desktop table now. UX-910's earlier
- * mobile-grid rebalance is superseded by the card layout, which gives
- * NAME a full line and removes the truncation-to-ambiguity entirely.
- */
-const GRID_CLASS =
-  "md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]";
+/** D3 — sortable column header. aria-sort lives on the columnheader span;
+ *  a 3-state icon (▲ active / ⇅ inactive) signifies sortability. The
+ *  underlying SortMode sorts ascending, so the active state announces
+ *  "ascending". */
+function SortableHeader({
+  colIndex,
+  label,
+  mode,
+  activeSort,
+  onSort,
+}: {
+  colIndex: number;
+  label: string;
+  mode: SortMode;
+  activeSort: SortMode;
+  onSort: (mode: SortMode) => void;
+}) {
+  const active = activeSort === mode;
+  return (
+    <span
+      role="columnheader"
+      aria-colindex={colIndex}
+      aria-sort={active ? "ascending" : "none"}
+      className="hidden md:inline"
+    >
+      <button
+        type="button"
+        onClick={() => onSort(mode)}
+        className={clsx(
+          "tap-target inline-flex items-center gap-1 uppercase tracking-wider transition-colors",
+          active
+            ? "text-[var(--color-amber)]"
+            : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
+        )}
+      >
+        {label}
+        <span aria-hidden className="text-2xs">
+          {active ? "▲" : "⇅"}
+        </span>
+      </button>
+    </span>
+  );
+}
+
+/** D3 — 3-state Select-All: unchecked / indeterminate (some) / checked
+ *  (all). Sets the native `indeterminate` property via a ref since it
+ *  isn't an attribute. */
+function SelectAllCheckbox({
+  allSelected,
+  someSelected,
+  onToggle,
+  rowCount,
+}: {
+  allSelected: boolean;
+  someSelected: boolean;
+  onToggle: () => void;
+  rowCount: number;
+}) {
+  const ref = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = someSelected;
+  }, [someSelected]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={allSelected}
+      onChange={onToggle}
+      aria-label={
+        allSelected
+          ? `Deselect all ${rowCount} paints`
+          : `Select all ${rowCount} paints`
+      }
+      className="accent-[var(--color-amber)] cursor-pointer"
+    />
+  );
+}
+
+/** D3 — batch-action bar. Appears when ≥1 row is selected [D §4, §9]. The
+ *  actions reuse the existing inventory server actions; "Add to recipe"
+ *  is deferred to the shared RecipeSlot work (M5/D5) and intentionally not
+ *  surfaced here yet. No cyan on the actions. */
+function BatchActionBar({
+  count,
+  onMarkOwned,
+  onMarkWanted,
+  onClear,
+}: {
+  count: number;
+  onMarkOwned: () => void;
+  onMarkWanted: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <div
+      role="region"
+      aria-label="Batch actions"
+      className="flex items-center gap-3 px-3 py-2 border-b border-[var(--color-border-strong)] bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]"
+    >
+      <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg)] tabular-nums">
+        {count} selected
+      </span>
+      <button
+        type="button"
+        onClick={onMarkOwned}
+        className="tap-target font-mono text-2xs uppercase tracking-wider px-2 py-1 rounded-sm border border-[var(--color-green)] text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)] transition-colors"
+      >
+        Mark owned
+      </button>
+      <button
+        type="button"
+        onClick={onMarkWanted}
+        className="tap-target font-mono text-2xs uppercase tracking-wider px-2 py-1 rounded-sm border border-[var(--color-amber)] text-[var(--color-amber)] hover:bg-[color-mix(in_srgb,var(--color-amber)_12%,transparent)] transition-colors"
+      >
+        Mark wanted
+      </button>
+      <button
+        type="button"
+        onClick={onClear}
+        className="tap-target ml-auto font-mono text-2xs uppercase tracking-wider px-2 py-1 text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors"
+      >
+        Clear
+      </button>
+    </div>
+  );
+}
+
+/** D3 — right-click context menu (frequency-ordered, <12 items, also
+ *  reachable via the toggles / batch bar) [D §4]. Fixed-positioned at the
+ *  cursor; closes on outside click / Escape / scroll. */
+function RowContextMenu({
+  paint,
+  x,
+  y,
+  onMarkOwned,
+  onMarkWanted,
+  onCopyHex,
+}: {
+  paint: Paint;
+  x: number;
+  y: number;
+  onMarkOwned: () => void;
+  onMarkWanted: () => void;
+  onCopyHex: () => void;
+}) {
+  return (
+    <div
+      role="menu"
+      aria-label={`Actions for ${paint.name}`}
+      className="fixed z-50 min-w-[160px] frame-strong bg-[var(--color-bg-panel)] shadow-xl py-1"
+      style={{ top: y, left: x }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <ContextMenuItem onClick={onMarkOwned}>Mark owned</ContextMenuItem>
+      <ContextMenuItem onClick={onMarkWanted}>Mark wanted</ContextMenuItem>
+      <ContextMenuItem onClick={onCopyHex}>Copy hex</ContextMenuItem>
+    </div>
+  );
+}
+
+function ContextMenuItem({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className="tap-target w-full text-left px-3 py-2 font-mono text-xs uppercase tracking-wider text-[var(--color-fg)] hover:bg-[color-mix(in_srgb,var(--color-amber)_12%,transparent)] transition-colors"
+    >
+      {children}
+    </button>
+  );
+}
 
 function PaintRow({
   paint,
   rowIndex,
   active,
+  selected,
+  onToggleSelect,
+  onContextMenu,
   inventory,
   rowHeight,
-  isMobile,
 }: {
   paint: Paint;
   rowIndex: number;
   active: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+  onContextMenu: (x: number, y: number) => void;
   inventory: { ownedCount: number; isWishlisted: boolean } | undefined;
   rowHeight: number;
-  isMobile: boolean;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -180,53 +592,66 @@ function PaintRow({
     }
   }
 
-  // UX-1506 (Round 15) — the layout used to be gated on the `isMobile` JS
-  // boolean, which starts false on SSR/first paint, so the dense desktop
-  // GRID_CLASS rendered on phones and overflowed (431px @ 375). The
-  // structural layout is now driven purely by WIDTH-based CSS
-  // (`max-md:`/`md:`) so it's correct on every viewport regardless of when
-  // (or whether) the JS breakpoint syncs. `isMobile` is kept only to size
-  // the virtualiser row height numerically — a brief mismatch there is just
-  // extra vertical whitespace, never horizontal overflow.
-  //
-  // - max-md (≤767): stacked CARD — swatch · {NAME line / brand·type·hex
-  //   line} · toggles. NAME gets its own full-width line (UX-1215).
-  // - md+ (≥768): dense 9-col grid (GRID_CLASS). Every flexible column is
-  //   min-w-0 / minmax(0,…) so it shrinks instead of pushing siblings off.
+  // UX-1506 — layout is WIDTH-gated CSS (max-md card / md grid), correct on
+  // every viewport regardless of when the JS breakpoint syncs.
+  // D3 — zebra striping: odd rows get a faint tint (alongside the always-on
+  // hover) so the eye tracks across a wide dense row [D §9].
   return (
     <div
       role="row"
       tabIndex={0}
       onClick={openDetail}
       onKeyDown={onRowKeyDown}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onContextMenu(e.clientX, e.clientY);
+      }}
       aria-rowindex={rowIndex + 1}
       aria-current={active ? "true" : undefined}
+      aria-selected={selected}
       className={clsx(
         "caret-row",
-        // Card (flex) below md, dense grid at md+. overflow-hidden is the
-        // belt-and-braces guarantee that a row can never push content past
-        // the viewport edge (UX-1506 §1.4.10 reflow).
         "w-full max-w-full overflow-hidden flex items-center md:grid gap-3 px-3 text-left font-mono text-xs cursor-pointer",
         "border-b border-[var(--color-border)]",
+        rowIndex % 2 === 1 &&
+          "bg-[color-mix(in_srgb,var(--color-fg)_2%,transparent)]",
         "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
         "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
         active && "bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]",
+        selected &&
+          "bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]",
         GRID_CLASS,
       )}
       style={{ height: rowHeight }}
     >
-      {/* Swatch — bigger on the card (8) so it anchors the stacked row,
-          5 in the dense grid. */}
+      {/* D3 — per-row select checkbox. Stops propagation so toggling
+          selection doesn't open the detail panel. Hidden visual weight on
+          the card layout (still present for selection). */}
       <span
         role="gridcell"
         aria-colindex={1}
+        className="flex items-center shrink-0"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          aria-label={`Select ${paint.name}`}
+          className="accent-[var(--color-amber)] cursor-pointer"
+        />
+      </span>
+
+      {/* Swatch. */}
+      <span
+        role="gridcell"
+        aria-colindex={2}
         aria-hidden
         className="h-8 w-8 md:h-5 md:w-5 shrink-0 rounded-sm border border-[var(--color-border)]"
         style={{ background: paint.hex }}
       />
 
-      {/* Card body (≤md only): NAME on its own line, brand·type·hex beneath.
-          Hidden at md+ where the dense columns take over. */}
+      {/* Card body (≤md only): NAME on its own line, brand·type·hex beneath. */}
       <div className="md:hidden flex-1 min-w-0">
         <div
           className={clsx(
@@ -250,21 +675,11 @@ function PaintRow({
         </div>
       </div>
 
-      {/* Dense columns (≥md only) — hidden on the card so the row doesn't
-          carry duplicate text. */}
+      {/* Dense columns (≥md only) — D3 name-first order: name / brand /
+          line / type / hex. */}
       <span
         role="gridcell"
-        aria-colindex={2}
-        className="hidden md:inline text-[var(--color-fg-muted)] truncate"
-      >
-        {paint.brand}
-      </span>
-      <span role="gridcell" aria-colindex={3} className="hidden md:inline truncate text-[var(--color-fg-subtle)]">
-        {paint.line ?? "—"}
-      </span>
-      <span
-        role="gridcell"
-        aria-colindex={4}
+        aria-colindex={3}
         className={clsx(
           "hidden md:inline truncate",
           active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]",
@@ -272,24 +687,33 @@ function PaintRow({
       >
         {paint.name}
       </span>
-      <span role="gridcell" aria-colindex={5} className="hidden md:inline truncate text-[var(--color-fg-subtle)] text-2xs">
-        {paint.sku ?? ""}
+      <span
+        role="gridcell"
+        aria-colindex={4}
+        className="hidden md:inline text-[var(--color-fg-muted)] truncate"
+      >
+        {paint.brand}
+      </span>
+      <span
+        role="gridcell"
+        aria-colindex={5}
+        className="hidden md:inline truncate text-[var(--color-fg-subtle)]"
+      >
+        {paint.line ?? "—"}
       </span>
       <span role="gridcell" aria-colindex={6} className="hidden md:inline">
         <TypeIcon type={paint.type} className="text-[var(--color-fg-muted)]" />
       </span>
-      <span role="gridcell" aria-colindex={7} className="hidden md:inline-flex items-center gap-1 uppercase text-[var(--color-fg-muted)] min-w-0">
+      <span
+        role="gridcell"
+        aria-colindex={7}
+        className="hidden md:inline-flex items-center gap-1 uppercase text-[var(--color-fg-muted)] min-w-0"
+      >
         <HexConfidenceDot confidence={paint.hexConfidence} source={paint.hexSource} />
         <span className="truncate">{paint.hex.slice(1)}</span>
       </span>
 
-      {/* Inventory toggles. UX-1506 — the cluster is flex-none (never
-          grows, never shrinks) and we DROP ml-auto on mobile: with the
-          card body above as flex-1 min-w-0 truncate, the text already
-          eats the slack, so ml-auto only risked nudging the 44px toggles
-          past the row's clip box. flex-none keeps the ○/★ pair at its
-          intrinsic ~92px and on-screen. At md+ it dissolves into two
-          dense grid cells (md:contents). */}
+      {/* Inventory toggles → two dense grid cells at md+ (md:contents). */}
       <div className="flex items-center gap-1 flex-none md:contents">
         <InventoryControls
           paintId={paint.id}
@@ -301,11 +725,23 @@ function PaintRow({
   );
 }
 
-function TableFooter({ total }: { total: number }) {
+function TableFooter({
+  total,
+  selectedCount,
+}: {
+  total: number;
+  selectedCount: number;
+}) {
   return (
-    <div className="w-full max-w-full px-3 py-1.5 border-t border-[var(--color-border)] text-2xs font-mono text-[var(--color-fg-muted)] bg-[var(--color-bg-elevated)]">
-      {total.toLocaleString()} paint{total === 1 ? "" : "s"}
+    <div className="w-full max-w-full px-3 py-1.5 border-t border-[var(--color-border)] text-2xs font-mono text-[var(--color-fg-muted)] bg-[var(--color-bg-elevated)] flex items-center gap-3">
+      <span>
+        {total.toLocaleString()} paint{total === 1 ? "" : "s"}
+      </span>
+      {selectedCount > 0 ? (
+        <span className="text-[var(--color-amber)] tabular-nums">
+          · {selectedCount} selected
+        </span>
+      ) : null}
     </div>
   );
 }
-

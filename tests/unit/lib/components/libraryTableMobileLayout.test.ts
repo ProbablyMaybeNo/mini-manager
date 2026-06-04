@@ -21,11 +21,14 @@ const SRC = fs.readFileSync(
 );
 
 describe("LibraryTable mobile card layout (UX-1215)", () => {
-  test("virtualiser sizes rows per breakpoint (40px desktop / 64px mobile)", () => {
-    expect(SRC).toContain("const ROW_HEIGHT_DESKTOP = 40");
+  test("virtualiser sizes rows per breakpoint + density (D3)", () => {
+    // D3 wired the desktop row height to the density lever (Comfortable 40
+    // / Compact 32); mobile stays the 64px card.
+    expect(SRC).toContain("const ROW_HEIGHT_DESKTOP_COMFORTABLE = 40");
+    expect(SRC).toContain("const ROW_HEIGHT_DESKTOP_COMPACT = 32");
     expect(SRC).toContain("const ROW_HEIGHT_MOBILE = 64");
     expect(SRC).toContain(
-      "const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP",
+      "const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : desktopRowHeight",
     );
   });
 
@@ -44,9 +47,12 @@ describe("LibraryTable mobile card layout (UX-1215)", () => {
     expect(SRC).not.toMatch(/if \(isMobile\) \{[\s\S]*?return \(/);
   });
 
-  test("desktop grid is unchanged (preserves the 9-col layout)", () => {
+  test("D3 — desktop grid is name-first with a leading select column", () => {
+    // D3 reordered to identifier-first (select / swatch / NAME / brand /
+    // line / type / hex / own / wanted) and dropped SKU from the primary
+    // table. Still 9 grid columns.
     expect(SRC).toContain(
-      "md:grid-cols-[24px_110px_minmax(0,1fr)_minmax(0,2fr)_80px_24px_72px_36px_28px]",
+      "md:grid-cols-[28px_24px_minmax(0,2fr)_110px_minmax(0,1fr)_24px_72px_36px_28px]",
     );
   });
 

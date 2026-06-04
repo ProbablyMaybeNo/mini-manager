@@ -35,10 +35,13 @@
       FOCUS-default recommendation). Select-to-swap **without navigation**. PLANNER moves to the new
       `/planner` route (D6). Collapse to mobile single-pane below `md`. Acceptance: node count <300.
 
-- [ ] **D3 — Library full data table** · L · Impact 5 · `DESKTOP §D3`
-      Name-first columns; sortable headers + `aria-sort`; density toggle wired to row height; bulk
-      select (checkbox + 3-state Select-All + batch bar); right-click context menu; zebra; floor Own/★.
-      Independent of D2 — can build after D1.
+- [x] **D3 — Library full data table** · L · Impact 5 · `DESKTOP §D3` — **done**
+      `LibraryTable` rewritten name-first (select / swatch / NAME / brand / line / type / hex / own /
+      ★; SKU demoted to the detail panel); sortable headers (aria-sort + 3-state ▲/⇅ icon) wired to the
+      existing `?sort=` name/brand/hue modes; desktop row height tracks the density lever (40/32); bulk
+      select (per-row checkbox + 3-state indeterminate Select-All + batch bar Mark owned/Mark wanted);
+      right-click context menu (Mark owned / Mark wanted / Copy hex; Esc/outside-click dismiss); zebra
+      striping. Off cyan throughout (amber). "Add to recipe" batch action deferred to M5/D5 RecipeSlot.
 
 - [ ] **D4 — Command palette & keyboard layer** · M · Impact 5 · `DESKTOP §D4`
       Cmd/Ctrl+K → command palette (keep `/` alias); Commands section + inline `<kbd>`; visible NavRail
