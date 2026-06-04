@@ -24,24 +24,24 @@ describe("Dashboard PLANNER section scaffold (P14.2)", () => {
 
   test("mounts the PlannerSection composite on /projects", () => {
     expect(page).toContain("PlannerSection");
-    // P14.3 — PlannerSection now takes optional `calYear` / `calMonth`
-    // search-param props so the calendar widget can switch months.
-    // The match accepts the bare scaffold OR the props-bearing form.
+    // P14.3 — PlannerSection takes optional `calYear` / `calMonth`
+    // search-param props. D2 — it is also passed `bare` so the mobile
+    // disclosure header owns the title. Accept either form.
     expect(page).toMatch(/<PlannerSection(\s+[^>]*)?\s*\/>/);
   });
 
-  test("dashboard order is FOCUS, then the project table, then PLANNER", () => {
-    // Ross 2026-06-02 reorder: the project table is the spine of the
-    // app and now sits directly under FOCUS — it had been buried below
-    // the entire PLANNER section. New order: FOCUS → table → PLANNER.
-    const focusIdx = page.indexOf('title="FOCUS"');
-    const tableIdx = page.indexOf("<ProjectsDashboardTable");
-    const plannerIdx = page.indexOf("<PlannerSection");
-    expect(focusIdx).toBeGreaterThan(-1);
+  test("D2 — the workspace orders the mobile pane table → FOCUS → PLANNER", () => {
+    // D2 moved the master-detail composition into ProjectsWorkspace; its
+    // mobile single-pane branch renders the table first, then the
+    // collapsed FOCUS + PLANNER disclosure sections.
+    const workspace = read("src/components/projects/ProjectsWorkspace.tsx");
+    const tableIdx = workspace.indexOf("<ProjectsDashboardTable");
+    const focusIdx = workspace.indexOf('title="FOCUS"');
+    const plannerIdx = workspace.indexOf('title="PLANNER"');
     expect(tableIdx).toBeGreaterThan(-1);
+    expect(focusIdx).toBeGreaterThan(-1);
     expect(plannerIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeLessThan(tableIdx);
-    expect(tableIdx).toBeLessThan(plannerIdx);
+    expect(focusIdx).toBeLessThan(plannerIdx);
   });
 
   describe("PlannerSection composite", () => {

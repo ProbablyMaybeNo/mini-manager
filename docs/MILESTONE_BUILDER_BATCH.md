@@ -81,7 +81,7 @@ same group with no dependency between them may run in parallel.
       *(Mobile M1 foundations already shipped — this is its desktop counterpart.)*
 
 ### Group 2 — the headline re-architecture (SHARED — decided, build per the Decisions block above)
-- [ ] **M4 + D2 + D6 (shared core) — `/projects` re-architecture, `/planner` (desktop) route, glanceable collection grid**
+- [x] **M4 + D2 + D6 (shared core) — `/projects` re-architecture, `/planner` (desktop) route, glanceable collection grid** — **done** (all 5 sub-steps)
       · L · Impact 5 · `MOBILE §M4` + `DESKTOP §D2` + `DESKTOP §D6` ✅ **DECIDED (see Decisions block)**
       The single biggest move. Suggested build order (shared pieces first):
       1. ✅ **Glanceable collection canvas + gap-fill** (shared, `e7251eb`) — single `<canvas>` (gradient
@@ -103,9 +103,11 @@ same group with no dependency between them may run in parallel.
          `?calYear`/`?calMonth` as `/projects` does; gap-fill = the persistent right side panel
          (already in `HeatSinkGridClient`). Mobile is desktop-only-by-NavRail; the BottomTabBar is
          untouched (mobile reaches the widgets via M4's collapsed section).
-      5. **Desktop D2** — master-detail `/projects`: project list/table left; **project-detail
-         inspector** right with a Detail / Focus tab; select-to-swap without navigation. PLANNER leaves
-         to `/planner`.
+      5. ✅ **Desktop D2** — master-detail `/projects` via `ProjectsWorkspace` (single owner of the
+         table; conditional mount per breakpoint): project list/table + filter left; **ProjectInspector**
+         right with a Detail (default) / Focus tab; select-to-swap without navigation (off-cyan amber
+         highlight). PLANNER absent on desktop (lives at `/planner`); mobile keeps collapsed sections.
+         Page width-capped with `.content-cap`.
       Spans `app/projects`, new `app/planner`, `PlannerSection`, `HeatSinkGridClient`, `FocusPanel`.
       Acceptance: `/projects` interactive nodes drop >90% (target <300, re-measure); `tsc`/tests green.
 

@@ -19,12 +19,8 @@ import {
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
-import {
-  ProjectsDashboardTable,
-  type ProjectDashboardRow,
-} from "@/components/ProjectsDashboardTable";
+import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { FocusPicker } from "@/components/focus/FocusPicker";
 import {
   FocusPanel,
@@ -33,7 +29,7 @@ import {
 import { buildFocusZones } from "@/lib/focus/rollup";
 import { Stopwatch } from "@/components/focus/Stopwatch";
 import { PlannerSection } from "@/components/planner/PlannerSection";
-import { CollapsibleSection } from "@/components/projects/CollapsibleSection";
+import { ProjectsWorkspace } from "@/components/projects/ProjectsWorkspace";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
 export const dynamic = "force-dynamic";
@@ -202,8 +198,65 @@ export default async function ProjectsPage({
     firstAttachedRecipeId: firstRecipeByProjectId.get(p.id) ?? null,
   }));
 
+  // D2 — the FOCUS bench, built once on the server and handed to the
+  // workspace. On desktop it is the inspector's Focus tab; on mobile it
+  // is the collapsed FOCUS disclosure section (M4). Recipe first (the
+  // painter should see what they're painting under the picker), then the
+  // stopwatch (a tool you start once).
+  const focusBench = (
+    <div className="space-y-4">
+      <FocusPicker
+        options={focusCandidates.map((c) => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          attachedRecipeName: c.attachedRecipeName,
+        }))}
+        currentFocusId={focusBundle?.project.id ?? null}
+      />
+      {focusBundle ? (
+        <FocusPanel
+          projectId={focusBundle.project.id}
+          projectName={focusBundle.project.name}
+          recipeName={focusBundle.recipe.name}
+          zones={focusZones}
+          recipes={focusBundle.allRecipes}
+          activeRecipeId={focusBundle.recipe.id}
+          activeSlotId={activeSlotId}
+          projectCounts={{
+            buildCount: focusBundle.project.buildCount,
+            primeCount: focusBundle.project.primeCount,
+            paintCount: focusBundle.project.paintCount,
+            completeCount: focusBundle.project.completeCount,
+          }}
+        />
+      ) : (
+        <FocusEmptyState hasCandidates={focusCandidates.length > 0} />
+      )}
+      {focusBundle ? (
+        <Stopwatch
+          projectId={focusBundle.project.id}
+          inProgressSession={
+            inProgressSession
+              ? {
+                  id: inProgressSession.id,
+                  projectId: inProgressSession.projectId,
+                  startedAt: inProgressSession.startedAt.getTime(),
+                  pausedMs: inProgressSession.pausedMs,
+                }
+              : null
+          }
+          todaySeconds={sessionRollups.todaySeconds}
+          weekSeconds={sessionRollups.weekSeconds}
+        />
+      ) : null}
+    </div>
+  );
+
   return (
-    <div className="p-6 md:p-8 max-w-7xl space-y-6">
+    // D1/D2 — content-cap replaces the ad-hoc max-w-7xl so the
+    // master-detail workspace centres + caps on ultrawide.
+    <div className="content-cap p-6 md:p-8 space-y-6">
       <header className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl tracking-wide">PROJECTS</h1>
@@ -240,110 +293,27 @@ export default async function ProjectsPage({
       {isEmpty ? (
         <EmptyState />
       ) : (
-        <>
-          {/* P13.11 / M4 — FOCUS section. Renders above the dashboard
-              table so the painter can sit at the desk and read the recipe
-              of the project they're working on without navigating away.
-              The section header reads "FOCUS" (locked label, Ross's call);
-              empty state nudges the painter to pick a project.
-
-              M4 (Decisions 2026-06-03 §1): on mobile this is a
-              collapsed-by-default progressive-disclosure section — its
-              body (FocusPanel + Stopwatch) doesn't mount until the painter
-              taps the header, so the first phone viewport is bench strip +
-              project table only. Desktop keeps it expanded inline. */}
-          <CollapsibleSection
-            title="FOCUS"
-            accentColor="green"
-            summary={
-              focusBundle
-                ? `Focused on ${focusBundle.project.name}`
-                : "Pick a project to paint"
-            }
-          >
-            <div className="space-y-4">
-              <FocusPicker
-                options={focusCandidates.map((c) => ({
-                  id: c.id,
-                  name: c.name,
-                  type: c.type,
-                  attachedRecipeName: c.attachedRecipeName,
-                }))}
-                currentFocusId={focusBundle?.project.id ?? null}
-              />
-              {/* Recipe first — the painter should see what they're
-                  painting right under the picker. The stopwatch is a
-                  tool you start once, so it sits below the recipe
-                  (Ross 2026-06-02: "I don't see the focus recipe" — it
-                  was buried under the stopwatch on mobile). */}
-              {focusBundle ? (
-                <FocusPanel
-                  projectId={focusBundle.project.id}
-                  projectName={focusBundle.project.name}
-                  recipeName={focusBundle.recipe.name}
-                  zones={focusZones}
-                  recipes={focusBundle.allRecipes}
-                  activeRecipeId={focusBundle.recipe.id}
-                  activeSlotId={activeSlotId}
-                  projectCounts={{
-                    buildCount: focusBundle.project.buildCount,
-                    primeCount: focusBundle.project.primeCount,
-                    paintCount: focusBundle.project.paintCount,
-                    completeCount: focusBundle.project.completeCount,
-                  }}
-                />
-              ) : (
-                <FocusEmptyState
-                  hasCandidates={focusCandidates.length > 0}
-                />
-              )}
-              {focusBundle ? (
-                <Stopwatch
-                  projectId={focusBundle.project.id}
-                  inProgressSession={
-                    inProgressSession
-                      ? {
-                          id: inProgressSession.id,
-                          projectId: inProgressSession.projectId,
-                          startedAt: inProgressSession.startedAt.getTime(),
-                          pausedMs: inProgressSession.pausedMs,
-                        }
-                      : null
-                  }
-                  todaySeconds={sessionRollups.todaySeconds}
-                  weekSeconds={sessionRollups.weekSeconds}
-                />
-              ) : null}
-            </div>
-          </CollapsibleSection>
-
-          {/* Dashboard order (Ross 2026-06-02): FOCUS → project table
-              → Top Wishes → PLANNER → recently bought. The project
-              table is the spine of the app, so it sits directly under
-              FOCUS — it had previously been buried below the entire
-              PLANNER section, which made projects feel "lost". */}
-          <ProjectsDashboardTable
-            rows={rows}
-            ownedRecipes={ownedRecipes}
-            projectNameById={projectNameById}
-          />
-
-          <TopWishesPanel />
-
-          {/* PLANNER section (P14) — calendar + activity + streak +
-              collection canvas + inspo. M4 (Decisions 2026-06-03 §1):
-              collapsed-by-default progressive-disclosure section on
-              mobile — the widget cluster doesn't mount until expanded,
-              keeping the first phone viewport light. `bare` so the
-              disclosure header owns the "PLANNER" title (no double Card).
-              Desktop keeps it expanded inline; the dedicated /planner
-              route (D6) is the desktop-surfaced twin. */}
-          <CollapsibleSection title="PLANNER" accentColor="amber">
+        <ProjectsWorkspace
+          rows={rows}
+          ownedRecipes={ownedRecipes}
+          projectNameById={projectNameById}
+          initialSelectedId={focusBundle?.project.id ?? null}
+          focusSummary={
+            focusBundle
+              ? `Focused on ${focusBundle.project.name}`
+              : "Pick a project to paint"
+          }
+          focusBench={focusBench}
+          plannerSection={
             <PlannerSection calYear={calYear} calMonth={calMonth} bare />
-          </CollapsibleSection>
-
-          <RecentlyBoughtLine />
-        </>
+          }
+          belowTable={
+            <>
+              <TopWishesPanel />
+              <RecentlyBoughtLine />
+            </>
+          }
+        />
       )}
     </div>
   );

@@ -21,8 +21,14 @@
       pass; `aria-sort` moved onto the Projects `<th>` (was on the inner button → ignored by AT). The
       `/projects` workspace-grid replacement of `max-w-7xl` is deferred to D2 per the plan.
 
-- [ ] **D2 — `/projects` master-detail workspace** · L · Impact 5 · `DESKTOP §D2`
+- [x] **D2 — `/projects` master-detail workspace** · L · Impact 5 · `DESKTOP §D2` — **done**
       🔗 SHARED with **M4 + D6** · ✅ **DECIDED** (see `MILESTONE_BUILDER_BATCH.md` › Decisions 2026-06-03)
+      New `ProjectsWorkspace` (single owner of the table; true conditional mount, not CSS-hidden, so the
+      inactive layout adds zero nodes): desktop ≥1024 = filter + selectable table (left) + new
+      `ProjectInspector` (right) with a Detail/Focus tab (Detail default; FOCUS bench = Focus tab).
+      Select-to-swap without navigation (table Name → select button, off-cyan amber highlight, aria-
+      selected). PLANNER absent on desktop (lives at `/planner`); mobile keeps the collapsed FOCUS +
+      PLANNER disclosures. Page width-capped with `.content-cap` (replaced `max-w-7xl`).
       Two-pane workspace at ≥1024: left = project list/table + QuickAdd + search/filter; right =
       **PROJECT-DETAIL inspector** (selected project's models/recipes/progress) with a **Detail / Focus
       tab** in the pane (FOCUS bench = the Focus tab, NOT the default home state — overrides the plan's

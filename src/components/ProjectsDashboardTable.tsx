@@ -160,6 +160,13 @@ interface Props {
   /** R7-1 — projectId → human name lookup so the AttachRecipeModal can
    *  show "currently attached to <X>" labels. */
   projectNameById: Readonly<Record<string, string>>;
+  /** D2 — master-detail selection (desktop ≥1024). When provided, the
+   *  desktop row's Name becomes a SELECT button (swaps the inspector
+   *  without navigation) instead of a link, and the selected row is
+   *  highlighted. Omitted (mobile / standalone) → Name stays a link to
+   *  `/projects/[id]` as before. */
+  selectedId?: string | null;
+  onSelectProject?: (id: string) => void;
 }
 
 /**
@@ -179,6 +186,8 @@ export function ProjectsDashboardTable({
   rows,
   ownedRecipes,
   projectNameById,
+  selectedId = null,
+  onSelectProject,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -346,6 +355,8 @@ export function ProjectsDashboardTable({
                   onToggleExpand={() => toggleExpanded(row.id)}
                   ownedRecipes={ownedRecipes}
                   projectNameById={projectNameById}
+                  selected={selectedId === row.id}
+                  onSelectProject={onSelectProject}
                 />
               );
             })}
@@ -544,6 +555,8 @@ function DashboardRow({
   onToggleExpand,
   ownedRecipes,
   projectNameById,
+  selected,
+  onSelectProject,
 }: {
   row: ProjectDashboardRow;
   hasChildren: boolean;
@@ -555,6 +568,12 @@ function DashboardRow({
     attachedProjectId: string | null;
   }>;
   projectNameById: Readonly<Record<string, string>>;
+  /** D2 — true when this row is the selected project in the
+   *  master-detail workspace (highlights the row). */
+  selected?: boolean;
+  /** D2 — when provided, the Name selects (swaps the inspector) instead
+   *  of navigating. Undefined → Name stays a link. */
+  onSelectProject?: (id: string) => void;
 }) {
   const typeChipClass = TYPE_CHIP[row.type];
   // Tree-connector indent — 16px per depth level. depth 0 = no indent.
@@ -607,11 +626,18 @@ function DashboardRow({
   return (
     <tr
       className={clsx(
-        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors",
+        "transition-colors",
+        // D2 — selected row gets a persistent amber-tinted highlight
+        // (off cyan per the locked palette); unselected rows keep the
+        // subtle hover. aria-selected exposes the master-detail state.
+        selected
+          ? "bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]"
+          : "hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)]",
         pending && "opacity-70",
       )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
+      aria-selected={onSelectProject ? selected : undefined}
     >
       <td className="px-2 py-2 w-10 text-center">
         {hasChildren ? (
@@ -664,12 +690,30 @@ function DashboardRow({
             }}
           />
         ) : null}
-        <Link
-          href={`/projects/${row.id}`}
-          className="text-[var(--color-cyan)] hover:underline"
-        >
-          {row.name}
-        </Link>
+        {onSelectProject ? (
+          // D2 — master-detail: Name SELECTS the project (swaps the
+          // inspector) without navigating. Off-cyan when selected.
+          <button
+            type="button"
+            onClick={() => onSelectProject(row.id)}
+            aria-pressed={selected}
+            className={clsx(
+              "tap-target inline-flex items-center text-left hover:underline",
+              selected
+                ? "text-[var(--color-amber)] font-bold"
+                : "text-[var(--color-cyan)]",
+            )}
+          >
+            {row.name}
+          </button>
+        ) : (
+          <Link
+            href={`/projects/${row.id}`}
+            className="text-[var(--color-cyan)] hover:underline"
+          >
+            {row.name}
+          </Link>
+        )}
         {row.faction ? (
           <span className="ml-2 text-2xs text-[var(--color-fg-muted)]">
             {row.faction}

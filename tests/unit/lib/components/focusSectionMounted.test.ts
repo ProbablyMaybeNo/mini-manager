@@ -15,26 +15,32 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(ROOT, rel), "utf-8");
 }
 
-describe("Dashboard FOCUS section (P13.11)", () => {
+describe("Dashboard FOCUS section (P13.11 / D2)", () => {
   const src = read("src/app/projects/page.tsx");
+  // D2 — FOCUS is now built once on the page as the `focusBench` node and
+  // handed to ProjectsWorkspace: the inspector's Focus tab on desktop, the
+  // collapsed FOCUS disclosure on mobile.
+  const workspace = read("src/components/projects/ProjectsWorkspace.tsx");
+  const inspector = read("src/components/projects/ProjectInspector.tsx");
 
-  test("mounts the FocusPicker + FocusPanel components", () => {
+  test("mounts the FocusPicker + FocusPanel components (focusBench node)", () => {
     expect(src).toContain("FocusPicker");
     expect(src).toContain("FocusPanel");
   });
 
-  test("renders a Card with the locked 'FOCUS' label", () => {
-    expect(src).toMatch(/title=["']FOCUS["']/);
+  test("the focusBench is wired into the workspace", () => {
+    expect(src).toMatch(/focusBench=\{focusBench\}/);
+    expect(workspace).toContain("focusBench");
   });
 
-  test("FOCUS section sits ABOVE the ProjectsDashboardTable", () => {
-    const focusIdx = src.indexOf('title="FOCUS"');
-    // Find the *JSX usage* of ProjectsDashboardTable (the `<` form),
-    // not the bare identifier in the import statement at the top.
-    const tableIdx = src.indexOf("<ProjectsDashboardTable");
-    expect(focusIdx).toBeGreaterThan(-1);
-    expect(tableIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeLessThan(tableIdx);
+  test("desktop: FOCUS bench is the inspector's Focus tab (not default)", () => {
+    // Detail is the default home state; Focus is the opt-in bench tab.
+    expect(inspector).toMatch(/useState<InspectorTab>\("detail"\)/);
+    expect(inspector).toMatch(/focusTab/);
+  });
+
+  test("mobile: FOCUS is a collapsed disclosure with the locked label", () => {
+    expect(workspace).toMatch(/<CollapsibleSection[^>]*title="FOCUS"/s);
   });
 
   test("reads focus state via the dedicated query helpers (not bespoke SQL)", () => {

@@ -65,16 +65,21 @@ describe("M4 — CollapsibleSection disclosure primitive", () => {
   });
 });
 
-describe("M4 — /projects wires FOCUS + PLANNER as collapsed sections", () => {
+describe("M4 — mobile pane wires FOCUS + PLANNER as collapsed sections", () => {
+  // D2 relocated the master-detail composition into ProjectsWorkspace; the
+  // mobile single-pane branch there owns the collapsed FOCUS + PLANNER
+  // disclosure sections (same behaviour, code moved out of the page).
+  const workspace = read("src/components/projects/ProjectsWorkspace.tsx");
   const page = read("src/app/projects/page.tsx");
 
-  test("FOCUS + PLANNER are wrapped in CollapsibleSection", () => {
-    expect(page).toContain("CollapsibleSection");
-    expect(page).toMatch(/<CollapsibleSection[^>]*title="FOCUS"/s);
-    expect(page).toMatch(/<CollapsibleSection title="PLANNER"/);
+  test("FOCUS + PLANNER are wrapped in CollapsibleSection (mobile branch)", () => {
+    expect(workspace).toContain("CollapsibleSection");
+    expect(workspace).toMatch(/<CollapsibleSection[^>]*title="FOCUS"/s);
+    expect(workspace).toMatch(/<CollapsibleSection title="PLANNER"/);
   });
 
   test("PLANNER mounts the shared cluster `bare` (disclosure owns the header)", () => {
+    // The bare cluster is built on the server page and passed in.
     expect(page).toMatch(/<PlannerSection calYear=\{calYear\} calMonth=\{calMonth\} bare \/>/);
   });
 
@@ -82,7 +87,7 @@ describe("M4 — /projects wires FOCUS + PLANNER as collapsed sections", () => {
     // The mobile path reaches FOCUS/PLANNER via the collapsed sections,
     // never via a dedicated mobile route push.
     expect(page).not.toMatch(/href="\/focus"/);
-    expect(page).not.toMatch(/router\.push\("\/planner"\)/);
+    expect(workspace).not.toMatch(/router\.push\("\/planner"\)/);
   });
 
   test("no dedicated app/focus route exists (Decisions §1)", () => {
@@ -90,15 +95,16 @@ describe("M4 — /projects wires FOCUS + PLANNER as collapsed sections", () => {
     expect(fs.existsSync(focusRoute)).toBe(false);
   });
 
-  test("order preserved: FOCUS section, then table, then PLANNER", () => {
-    const focusIdx = page.indexOf('title="FOCUS"');
-    const tableIdx = page.indexOf("<ProjectsDashboardTable");
-    const plannerIdx = page.indexOf('title="PLANNER"');
-    expect(focusIdx).toBeGreaterThan(-1);
+  test("mobile order preserved: table, then FOCUS, then PLANNER", () => {
+    // In the single-pane (mobile) branch the table comes first, then the
+    // collapsed FOCUS + PLANNER disclosures.
+    const tableIdx = workspace.indexOf("<ProjectsDashboardTable");
+    const focusIdx = workspace.indexOf('title="FOCUS"');
+    const plannerIdx = workspace.indexOf('title="PLANNER"');
     expect(tableIdx).toBeGreaterThan(-1);
+    expect(focusIdx).toBeGreaterThan(-1);
     expect(plannerIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeLessThan(tableIdx);
-    expect(tableIdx).toBeLessThan(plannerIdx);
+    expect(focusIdx).toBeLessThan(plannerIdx);
   });
 });
 
