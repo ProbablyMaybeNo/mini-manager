@@ -93,8 +93,11 @@ same group with no dependency between them may run in parallel.
          `calYear`/`calMonth`, and is breakpoint-responsive on its own, so it mounts unchanged in both
          the mobile collapsed disclosure (M4) and the desktop `/planner` route (D6). Calendar cell
          hit-region ≥44 (mobile) / ≥24 (desktop).
-      3. **Mobile M4** — collapse `▸ FOCUS` + `▸ PLANNER` into progressive-disclosure sections on the
-         single `/projects` page. No `app/focus` / `app/planner` for mobile.
+      3. ✅ **Mobile M4** — `▸ FOCUS` + `▸ PLANNER` collapse into `CollapsibleSection`
+         progressive-disclosure sections on the single `/projects` page (collapsed-by-default on
+         mobile; the body is unmounted while collapsed so the first phone viewport stays light;
+         desktop stays expanded inline). PLANNER mounts the shared cluster `bare`. No `app/focus` /
+         mobile `app/planner`.
       4. ✅ **Desktop D6** — new **`app/planner`** route (NavRail link) = single-screen dashboard
          rendering the shared widget cluster, width-capped with `.content-cap`, threading
          `?calYear`/`?calMonth` as `/projects` does; gap-fill = the persistent right side panel

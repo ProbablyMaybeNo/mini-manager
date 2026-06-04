@@ -45,19 +45,21 @@ interface Props {
    *  the calendar widget's prev / next month nav. */
   calYear?: string;
   calMonth?: string;
+  /** M4 — when the cluster is mounted inside a container that already
+   *  supplies its own "PLANNER" header (the mobile collapsed disclosure
+   *  on /projects), skip the wrapping Card so the header isn't drawn
+   *  twice. Defaults to false: the standalone /planner route + any
+   *  legacy mount keep the bordered Card chrome. */
+  bare?: boolean;
 }
 
-export async function PlannerSection({ calYear, calMonth }: Props = {}) {
-  return (
-    // P14.8 — tighter outer body padding on mobile so the nested
-    // Card-in-Card chrome doesn't eat all the calendar grid width.
-    // !-overrides beat the global .card-body media-query padding.
-    <Card
-      title="PLANNER"
-      accentColor="amber"
-      bodyClassName="!p-2 sm:!p-3.5"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+export async function PlannerSection({
+  calYear,
+  calMonth,
+  bare = false,
+}: Props = {}) {
+  const grid = (
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {/* COLLECTION square (P16.3 HeatSink) — A3: now the hero, in the
             big left cell where the calendar used to live. Spans 3 cols ×
             4 rows on the left and is square-aspect on md+ so the painter
@@ -86,7 +88,23 @@ export async function PlannerSection({ calYear, calMonth }: Props = {}) {
         <div className="order-5 md:order-none md:col-span-2 md:col-start-4 md:row-start-4">
           <PlannerInspoCell />
         </div>
-      </div>
+    </div>
+  );
+
+  // M4 — bare mount (inside the mobile collapsed disclosure): the
+  // container owns the "PLANNER" header, so render just the grid.
+  if (bare) return grid;
+
+  return (
+    // P14.8 — tighter outer body padding on mobile so the nested
+    // Card-in-Card chrome doesn't eat all the calendar grid width.
+    // !-overrides beat the global .card-body media-query padding.
+    <Card
+      title="PLANNER"
+      accentColor="amber"
+      bodyClassName="!p-2 sm:!p-3.5"
+    >
+      {grid}
     </Card>
   );
 }

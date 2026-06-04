@@ -33,6 +33,7 @@ import {
 import { buildFocusZones } from "@/lib/focus/rollup";
 import { Stopwatch } from "@/components/focus/Stopwatch";
 import { PlannerSection } from "@/components/planner/PlannerSection";
+import { CollapsibleSection } from "@/components/projects/CollapsibleSection";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
 export const dynamic = "force-dynamic";
@@ -240,12 +241,26 @@ export default async function ProjectsPage({
         <EmptyState />
       ) : (
         <>
-          {/* P13.11 — FOCUS section. Renders above the dashboard table
-              so the painter can sit at the desk and read the recipe of
-              the project they're working on without navigating away.
-              The section header reads "FOCUS" (locked label, Ross's
-              call); empty state nudges the painter to pick a project. */}
-          <Card title="FOCUS" accentColor="green">
+          {/* P13.11 / M4 — FOCUS section. Renders above the dashboard
+              table so the painter can sit at the desk and read the recipe
+              of the project they're working on without navigating away.
+              The section header reads "FOCUS" (locked label, Ross's call);
+              empty state nudges the painter to pick a project.
+
+              M4 (Decisions 2026-06-03 §1): on mobile this is a
+              collapsed-by-default progressive-disclosure section — its
+              body (FocusPanel + Stopwatch) doesn't mount until the painter
+              taps the header, so the first phone viewport is bench strip +
+              project table only. Desktop keeps it expanded inline. */}
+          <CollapsibleSection
+            title="FOCUS"
+            accentColor="green"
+            summary={
+              focusBundle
+                ? `Focused on ${focusBundle.project.name}`
+                : "Pick a project to paint"
+            }
+          >
             <div className="space-y-4">
               <FocusPicker
                 options={focusCandidates.map((c) => ({
@@ -300,7 +315,7 @@ export default async function ProjectsPage({
                 />
               ) : null}
             </div>
-          </Card>
+          </CollapsibleSection>
 
           {/* Dashboard order (Ross 2026-06-02): FOCUS → project table
               → Top Wishes → PLANNER → recently bought. The project
@@ -316,10 +331,16 @@ export default async function ProjectsPage({
           <TopWishesPanel />
 
           {/* PLANNER section (P14) — calendar + activity + streak +
-              heatmap + inspo. Now below the project table so the
-              painter sees their actual projects before the planning
-              widgets. */}
-          <PlannerSection calYear={calYear} calMonth={calMonth} />
+              collection canvas + inspo. M4 (Decisions 2026-06-03 §1):
+              collapsed-by-default progressive-disclosure section on
+              mobile — the widget cluster doesn't mount until expanded,
+              keeping the first phone viewport light. `bare` so the
+              disclosure header owns the "PLANNER" title (no double Card).
+              Desktop keeps it expanded inline; the dedicated /planner
+              route (D6) is the desktop-surfaced twin. */}
+          <CollapsibleSection title="PLANNER" accentColor="amber">
+            <PlannerSection calYear={calYear} calMonth={calMonth} bare />
+          </CollapsibleSection>
 
           <RecentlyBoughtLine />
         </>

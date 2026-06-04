@@ -19,8 +19,13 @@ Done already (shipped + pushed): **M1 ✅**, **M2 ✅**, **M3 ✅** (crash-recov
       row-edit → nonmodal bottom sheet (fixes `InlineCellPopover` edge-clip). Feedback-batch precondition
       is satisfied. **This is the one independent mobile item — build it first.**
 
-- [ ] **M4 — `/projects` collapsed sections + glanceable collection grid** · L · Impact 5 · `MOBILE §M4`
+- [x] **M4 — `/projects` collapsed sections + glanceable collection grid** · L · Impact 5 · `MOBILE §M4` — **done**
       🔗 SHARED with **D2 + D6** · ✅ **DECIDED** (see `MILESTONE_BUILDER_BATCH.md` › Decisions 2026-06-03)
+      FOCUS + PLANNER now collapse into `CollapsibleSection` progressive-disclosure sections on
+      `/projects`, collapsed-by-default on mobile; a collapsed section does NOT mount its body (children
+      gated behind `open`) so the first phone viewport is bench strip + table only. Desktop stays
+      expanded inline (chevron `md:hidden`). PLANNER mounts the shared cluster `bare`. No `app/focus`;
+      `/planner` stays desktop-only (D6). Glanceable canvas + gap-fill bottom sheet shipped in `e7251eb`.
       **One** `/projects` page: bench strip + search + project table (M3), then **`▸ FOCUS`** and
       **`▸ PLANNER`** as progressive-disclosure sections (collapsed by default). **Do NOT create
       `app/focus` / `app/planner` for mobile** (the plan's dedicated-routes recommendation is overridden).
