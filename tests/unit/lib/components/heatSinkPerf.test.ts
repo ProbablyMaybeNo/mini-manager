@@ -1,29 +1,23 @@
 /**
- * P16.4 / P17 — performance-pass pure helpers for the heat-sink grid.
+ * P16.4 / P17 / M4.2 — performance-pass pure helpers for the heat-sink grid.
  *
- * These back the client wrapper's render: row-chunking (so off-screen
- * groups skip layout/paint), the brand filter (narrow the working set),
- * and the fixed tiny-pixel sizing for the spectrum field. All pure,
- * unit-tested here; the client (HeatSinkGridClient) just composes them.
+ * These back the client wrapper's render: the brand filter (narrow the
+ * working set) and the fixed tiny-pixel sizing for the spectrum field.
+ * All pure, unit-tested here; the client (HeatSinkGridClient) composes them.
  *
- * P17 removed the condensed/full density mode entirely — the field always
- * shows every catalog paint (modulo the brand filter), because the unowned
- * pixels are the map of the full gamut. There is no `condensedCells`,
- * `pickDefaultDensity`, `GridDensity`, or per-density sizing any more.
+ * M4.2 / D6.2: the row-chunking DOM helpers (chunkCells, rowGroupCount,
+ * gridColumnsFor, intrinsicRowSize) and CSS-class dot helpers
+ * (COVERAGE_DOT_CLASS, dotClassFor) are deleted — tests removed accordingly.
+ * Canvas layout math is tested in collectionCanvasHelpers.test.ts.
  */
 import { afterEach, describe, expect, test } from "vitest";
 import {
-  CELLS_PER_ROW_GROUP,
   CELL_MIN_PX,
   DOT_RING_PX,
   DOT_SIZE_PX,
   OVERLAY_SAMPLE_STRIDE,
-  chunkCells,
   detectMobileViewport,
   filterCellsByBrands,
-  gridColumnsFor,
-  intrinsicRowSize,
-  rowGroupCount,
   showsOverlayDot,
 } from "@/components/planner/heatSinkHelpers";
 import type { CoverageCell } from "@/db/queries/paintCoverage";
@@ -52,52 +46,6 @@ const cell = (
 function many(n: number, brand = "Citadel", state: CoverageState = "none") {
   return Array.from({ length: n }, (_, i) => cell("c" + i, brand, state));
 }
-
-describe("chunkCells (P16.4 row-chunking)", () => {
-  test("splits into fixed-size groups, last group short", () => {
-    const groups = chunkCells(many(250), 100);
-    expect(groups).toHaveLength(3);
-    expect(groups[0]).toHaveLength(100);
-    expect(groups[1]).toHaveLength(100);
-    expect(groups[2]).toHaveLength(50);
-  });
-
-  test("default group size is CELLS_PER_ROW_GROUP", () => {
-    const groups = chunkCells(many(CELLS_PER_ROW_GROUP * 2 + 1));
-    expect(groups).toHaveLength(3);
-    expect(groups[0]).toHaveLength(CELLS_PER_ROW_GROUP);
-  });
-
-  test("7,144 cells chunk to the expected group count", () => {
-    const groups = chunkCells(many(7144), CELLS_PER_ROW_GROUP);
-    expect(groups).toHaveLength(Math.ceil(7144 / CELLS_PER_ROW_GROUP));
-    const total = groups.reduce((acc, g) => acc + g.length, 0);
-    expect(total).toBe(7144);
-  });
-
-  test("empty input → no groups (not one empty group)", () => {
-    expect(chunkCells([], 100)).toHaveLength(0);
-  });
-
-  test("preserves order across the split", () => {
-    const groups = chunkCells(many(5), 2);
-    const flat = groups.flat().map((c) => c.paint.id);
-    expect(flat).toEqual(["c0", "c1", "c2", "c3", "c4"]);
-  });
-
-  test("throws on non-positive group size", () => {
-    expect(() => chunkCells(many(3), 0)).toThrow();
-  });
-});
-
-describe("rowGroupCount (P16.4)", () => {
-  test("matches the chunk count without allocating", () => {
-    expect(rowGroupCount(250, 100)).toBe(3);
-    expect(rowGroupCount(0, 100)).toBe(0);
-    expect(rowGroupCount(100, 100)).toBe(1);
-    expect(rowGroupCount(101, 100)).toBe(2);
-  });
-});
 
 describe("filterCellsByBrands (P16.4 brand filter)", () => {
   const cells = [
@@ -129,10 +77,6 @@ describe("filterCellsByBrands (P16.4 brand filter)", () => {
 });
 
 describe("P17 — the field shows every paint (no density filtering)", () => {
-  // The unowned pixels ARE the map of the gamut, so the cell set is NEVER
-  // narrowed by ownership — only the brand filter cuts cells. This pins
-  // that there is no collection-only "condensed" pass any more: an owned +
-  // wanted + none mix all survive into the rendered field.
   const cells = [
     cell("a", "Citadel", "owned"),
     cell("b", "Citadel", "none"),
@@ -153,10 +97,6 @@ describe("P17 — the field shows every paint (no density filtering)", () => {
 });
 
 describe("detectMobileViewport (UX-1301 mobile gate)", () => {
-  // The unit project runs in Node (no `window`). We install a fake
-  // `globalThis.window` per case to exercise the coarse-pointer / narrow
-  // branches, then tear it down so SSR-safety (the `undefined window`
-  // path) is also covered.
   const hadWindow = "window" in globalThis;
 
   afterEach(() => {
@@ -204,17 +144,11 @@ describe("CELL_MIN_PX (A1 literally-pixel-sized edge)", () => {
   });
 
   test("is literally pixel-sized (~3-4px) so the whole library packs into a compact square", () => {
-    // A1 (Ross 2026-06-03): 9px was still too big. The cell must be
-    // pixel-sized so all ~7,144 paints fit into a compact square.
     expect(CELL_MIN_PX).toBeLessThanOrEqual(4);
     expect(CELL_MIN_PX).toBeGreaterThan(0);
   });
 
   test("A2: the overlay dot is larger than the cell — an approximate, legible marker", () => {
-    // At ~4px a dot CONFINED to one cell would be invisible. The A2
-    // overlay dot is deliberately larger than the cell (it estimates
-    // where the collection falls, it is not a pixel-precise tag) so it
-    // stays legible. The dot + ring intentionally EXCEEDS the cell edge.
     expect(DOT_SIZE_PX + DOT_RING_PX * 2).toBeGreaterThan(CELL_MIN_PX);
     expect(DOT_SIZE_PX).toBeGreaterThan(0);
     expect(DOT_RING_PX).toBeGreaterThan(0);
@@ -238,7 +172,6 @@ describe("showsOverlayDot (A2 sparse approximate overlay)", () => {
   test("a custom stride controls the sparseness", () => {
     expect(showsOverlayDot(2, 2)).toBe(true);
     expect(showsOverlayDot(3, 2)).toBe(false);
-    // stride 1 = a dot on every marked cell.
     expect(showsOverlayDot(5, 1)).toBe(true);
   });
 
@@ -247,22 +180,9 @@ describe("showsOverlayDot (A2 sparse approximate overlay)", () => {
   });
 });
 
-describe("gridColumnsFor (P17 reflow to full width)", () => {
-  test("uses auto-fill with the fixed cell edge and a 1fr companion", () => {
-    // `1fr` makes columns grow past the floor to consume leftover width,
-    // so a wider viewport packs more pixels instead of growing side margin.
-    expect(gridColumnsFor()).toBe(
-      "repeat(auto-fill, minmax(" + CELL_MIN_PX + "px, 1fr))",
-    );
-  });
-
-  test("takes no density argument", () => {
-    expect(gridColumnsFor.length).toBe(0);
-  });
-});
-
-describe("intrinsicRowSize (P17 scroll stability)", () => {
-  test("tracks the fixed cell edge so reserved space matches", () => {
-    expect(intrinsicRowSize()).toBe(CELL_MIN_PX);
+// Helpers for cell count assertions (no longer needing chunkCells).
+describe("cell count arithmetic (no chunking)", () => {
+  test("many() produces the requested count", () => {
+    expect(many(7144).length).toBe(7144);
   });
 });
