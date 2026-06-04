@@ -29,6 +29,19 @@ These both modify `src/components/focus/FocusPanel.tsx` and `src/components/focu
   - Time-spent rollup somewhere visible: "1h 47m today" / "8h 12m this week" / "47h painted in May" (stash trophy energy).
   - Stretch: pause/resume across reloads via the session row (started_at + cumulative paused-ms in metadata).
 
+## Cluster C — Future features (post-overhaul)
+
+- [ ] **LIB-COLORMAP — Move the collection color-map from the dashboard to the Library page** (Ross idea, 2026-06-04). Deferred until the current UX/UI overhaul + recipe-unification jobs land.
+      **What:** remove the COLLECTION / "Coverage" map from the dashboard/PLANNER and make it a feature of `/library` instead, living in a **right-hand side panel**.
+      **Reuse:** this is a relocation + extension of components already built — `CollectionCanvas` (the single `<canvas>`: full library, each paint a pixel, sparse owned/wishlist overlay dots) and `CollectionGapFill` (search + mark owned/wanted). Both currently in `src/components/planner/`; would move under `src/components/library/` (or shared).
+      **New interactions:**
+      1. The right panel shows the full-library pixel color-map with owned + wishlist indicators (the existing canvas).
+      2. **Click an area of the map → scroll/navigate the MAIN library list to that hue/section** (canvas hit-test → paint/hue → jump the list, e.g. anchor/scroll-to or `?sort=hue` + scroll).
+      3. **Add owned/wishlist indicators directly from the map** (the existing gap-fill mark owned/wanted, reflected live on the canvas dots).
+      4. **Clicking a paint in the main list replaces the color-map panel with the existing paint-details slide-out panel** (the right panel is a shared slot: color-map by default ⇄ paint detail on selection).
+      **Touches:** `src/app/library/page.tsx` + `LibraryPageClient`/`LibraryTable` (D3), the existing paint-detail slide-out, and the relocated canvas/gap-fill. Remove `HeatSinkGridCell`/the COLLECTION cell from `PlannerSection` once moved.
+      **Acceptance:** dashboard/planner no longer renders the collection map; `/library` right panel shows the map; clicking the map jumps the list; marking owned/wanted from the map updates both; selecting a list paint swaps the panel to the detail slide-out; `tsc`/tests green.
+
 ## Conventions
 
 - Land each item as its own commit. Tests INTO commit, no orphans.
