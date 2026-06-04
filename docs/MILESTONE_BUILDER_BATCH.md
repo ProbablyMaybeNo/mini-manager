@@ -33,39 +33,74 @@
 
 ---
 
+## Decisions locked — 2026-06-03 (Ross)
+
+These resolve the Group-2 `⚠ DECISION` flag and **override** the recommendations in `MOBILE §M4` /
+`DESKTOP §D2` / `DESKTOP §D6` where they differ. Build to these, not to the plan prose where it
+conflicts.
+
+1. **Mobile `/projects` = ONE page, collapsed sections** (NOT dedicated routes). Single `/projects`:
+   bench strip + search + project table (M3), then **`▸ FOCUS`** and **`▸ PLANNER`** as
+   progressive-disclosure sections (collapsed by default). **Do NOT create `app/focus` or
+   `app/planner` for mobile.** First-viewport node count stays low because collapsed sections aren't
+   rendered until expanded.
+2. **Desktop `/projects` = master-detail, PROJECT-DETAIL inspector.** Left = project list/table +
+   QuickAdd + search/filter; right = the **selected project's detail** (models/recipes/progress) with
+   a **Detail / Focus tab** in the pane (FOCUS bench is the "Focus" tab, not the default home state).
+   Selecting a project swaps the inspector **without navigation**.
+3. **PLANNER on desktop = its own `/planner` route** (NavRail link), rendered as the D6 single-screen
+   dashboard. The master-detail workspace has no pane for the planner widgets, so they get a route on
+   desktop. **`/planner` is desktop-only** — mobile reaches the same widgets via the collapsed PLANNER
+   section. Build the planner widgets (incl. the glanceable canvas) as **shared components** with two
+   containers (mobile collapsed section / desktop `/planner` route).
+4. **Collection grid → ONE glanceable canvas** (hue-sorted gradient field + sparse owned/wishlist dot
+   overlay), replacing the ~7,144 `<button aria-haspopup="dialog">` cells. Tap → **gap-fill**: bottom
+   sheet (mobile) / persistent right side panel (desktop) with a searchable paint list to mark
+   owned/wanted. Keep brand chips + owned/wanted count + length bar.
+
+**Net new routes:** `app/planner` only (desktop). **No `app/focus`.** **Shared components:** glanceable
+collection canvas + gap-fill, planner widget cluster, FocusPanel (mobile collapsed section + desktop
+inspector Focus tab).
+
+---
+
 ## Build order
 
 Mobile and desktop are responsive treatments of the **same code** on shared breakpoints, so several
 items are *shared builds* (build once, render per breakpoint). Build top-to-bottom; items in the
 same group with no dependency between them may run in parallel.
 
-### Group 0 — recover (do first, not code)
-- [ ] **PUSH** the 3 unpushed commits to `origin/main` (`git push`). Recovers the crash; unblocks nothing technical but stops the work being lost.
+### Group 0 — recover (done)
+- [x] **PUSH** the unpushed commits to `origin/main`. Done — `origin/main` at `dc33737` (M1/M2 already
+      pushed pre-crash; M3 + D1 recovered, committed, merged, and pushed 2026-06-03).
 
 ### Group 1 — foundations
-- [ ] **D1 — Desktop shell & layout foundations** · M · Impact 4 · `DESKTOP §D1`
+- [x] **D1 — Desktop shell & layout foundations** · M · Impact 4 · `DESKTOP §D1` — **done** (`c5eb42c`)
       Width caps + breakpoints, global Comfortable/Compact **density toggle**, focus-ring pass on the
       CRT surface, `aria-sort` on sortable headers. Substrate for every desktop pane/table below.
       *(Mobile M1 foundations already shipped — this is its desktop counterpart.)*
 
-### Group 2 — the headline re-architecture (SHARED — coordinate, build the shared route once)
-- [ ] **M4 + D2 + D6 (shared core) — `/projects` re-architecture, `/planner` route, glanceable collection grid**
-      · L · Impact 5 · `MOBILE §M4` + `DESKTOP §D2` + `DESKTOP §D6` ⚠ DECISION
-      The single biggest move and the most entangled. Build the shared pieces once:
-      - **Collection grid → one glanceable element** (static canvas/CSS gradient + sparse owned/wishlist
-        dots), replacing the ~7,144 `<button aria-haspopup="dialog">` cells. (Mobile M4.2 ≡ Desktop D6.2.)
-      - **`/planner` route** — built once; rendered single-pane on mobile, single-screen dashboard on desktop.
-      - **`/projects` split:** mobile → `/projects` + `/focus` + `/planner` routes (one pane);
-        desktop → master-detail workspace (project list left + FOCUS inspector right), only PLANNER leaves.
-      - **Gap-fill:** mobile bottom sheet · desktop persistent right side panel.
-      - Calendar cell hit-region ≥44 (mobile) / ≥24 (desktop).
-      **⚠ DECISION before starting:** confirm the routes-vs-workspace split and whether FOCUS stays
-      in-pane on desktop. This re-architecture spans `app/projects`, new `app/focus` + `app/planner`,
-      `PlannerSection`, `HeatSinkGridClient`, `FocusPanel`. Acceptance: `/projects` interactive nodes
-      drop >90% (target <300, re-measure).
+### Group 2 — the headline re-architecture (SHARED — decided, build per the Decisions block above)
+- [ ] **M4 + D2 + D6 (shared core) — `/projects` re-architecture, `/planner` (desktop) route, glanceable collection grid**
+      · L · Impact 5 · `MOBILE §M4` + `DESKTOP §D2` + `DESKTOP §D6` ✅ **DECIDED (see Decisions block)**
+      The single biggest move. Suggested build order (shared pieces first):
+      1. **Glanceable collection canvas + gap-fill** (shared) — gradient field + sparse owned/wishlist
+         dots, replacing the ~7,144 `<button aria-haspopup="dialog">` cells. Gap-fill = bottom sheet
+         (mobile) / right side panel (desktop). (Mobile M4.2 ≡ Desktop D6.2.) **Start here.**
+      2. **Planner widget cluster** (shared components) — collection canvas + calendar + streak +
+         activity + inspo. Calendar cell hit-region ≥44 (mobile) / ≥24 (desktop).
+      3. **Mobile M4** — collapse `▸ FOCUS` + `▸ PLANNER` into progressive-disclosure sections on the
+         single `/projects` page. No `app/focus` / `app/planner` for mobile.
+      4. **Desktop D6** — new **`app/planner`** route (NavRail link) = single-screen dashboard rendering
+         the widget cluster; gap-fill as the right side panel.
+      5. **Desktop D2** — master-detail `/projects`: project list/table left; **project-detail
+         inspector** right with a Detail / Focus tab; select-to-swap without navigation. PLANNER leaves
+         to `/planner`.
+      Spans `app/projects`, new `app/planner`, `PlannerSection`, `HeatSinkGridClient`, `FocusPanel`.
+      Acceptance: `/projects` interactive nodes drop >90% (target <300, re-measure); `tsc`/tests green.
 
 ### Group 3 — data tables (M3 depends only on Group-1 density tokens; D3 independent of D2)
-- [ ] **M3 — Mobile comparison table (restore the table)** · L · Impact 5 · `MOBILE §M3`
+- [x] **M3 — Mobile comparison table (restore the table)** · L · Impact 5 · `MOBILE §M3` — **done** (`7a30d94`)
       Replace the mobile card stack in `ProjectsDashboardTable` with a frozen-first-column,
       horizontally-scrollable table; zebra + press-highlight; expand chevron in frozen column;
       row-edit → nonmodal bottom sheet (fixes `InlineCellPopover` edge-clip).

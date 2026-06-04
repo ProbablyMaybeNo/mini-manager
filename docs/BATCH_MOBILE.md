@@ -19,12 +19,14 @@ Done already (shipped + pushed): **M1 ✅**, **M2 ✅**, **M3 ✅** (crash-recov
       row-edit → nonmodal bottom sheet (fixes `InlineCellPopover` edge-clip). Feedback-batch precondition
       is satisfied. **This is the one independent mobile item — build it first.**
 
-- [ ] **M4 — `/projects` split + glanceable collection grid** · L · Impact 5 · `MOBILE §M4`
-      🔗 SHARED with **D2 + D6** · ⚠ DECISION
-      Split `/projects` into `/projects` + `/focus` + `/planner` routes; collection grid → one
-      glanceable element (not ~7,144 buttons); gap-fill bottom sheet. **HALT:** the `/planner` route and
-      collection-grid rebuild are shared with desktop D6 and must be built once, jointly. Write a
-      proposal (the plan recommends dedicated routes) and stop.
+- [ ] **M4 — `/projects` collapsed sections + glanceable collection grid** · L · Impact 5 · `MOBILE §M4`
+      🔗 SHARED with **D2 + D6** · ✅ **DECIDED** (see `MILESTONE_BUILDER_BATCH.md` › Decisions 2026-06-03)
+      **One** `/projects` page: bench strip + search + project table (M3), then **`▸ FOCUS`** and
+      **`▸ PLANNER`** as progressive-disclosure sections (collapsed by default). **Do NOT create
+      `app/focus` / `app/planner` for mobile** (the plan's dedicated-routes recommendation is overridden).
+      Collection grid → one glanceable canvas (gradient + sparse dots, not ~7,144 buttons); tap → gap-fill
+      **bottom sheet** (searchable paint list, mark owned/wanted; keep brand chips + count + bar). Build the
+      collection canvas + planner widgets as **shared components** with D6.
 
 - [ ] **M5 — Recipe/project flows, shared RecipeSlot, action discipline** · L · Impact 4 · `MOBILE §M5`
       🔗 SHARED with **D5** · ⚠ DECISION (B6 schema)

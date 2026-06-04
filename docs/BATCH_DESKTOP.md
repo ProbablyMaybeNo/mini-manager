@@ -22,10 +22,12 @@
       `/projects` workspace-grid replacement of `max-w-7xl` is deferred to D2 per the plan.
 
 - [ ] **D2 — `/projects` master-detail workspace** · L · Impact 5 · `DESKTOP §D2`
-      🔗 SHARED with **M4 + D6** · ⚠ DECISION
-      List-left + FOCUS-inspector-right workspace; PLANNER moves to `/planner`. **HALT:** the `/projects`
-      re-architecture + `/planner` route are shared with mobile M4 / desktop D6 and must be built once,
-      jointly. Write a proposal (plan recommends master-detail with FOCUS in-pane) and stop.
+      🔗 SHARED with **M4 + D6** · ✅ **DECIDED** (see `MILESTONE_BUILDER_BATCH.md` › Decisions 2026-06-03)
+      Two-pane workspace at ≥1024: left = project list/table + QuickAdd + search/filter; right =
+      **PROJECT-DETAIL inspector** (selected project's models/recipes/progress) with a **Detail / Focus
+      tab** in the pane (FOCUS bench = the Focus tab, NOT the default home state — overrides the plan's
+      FOCUS-default recommendation). Select-to-swap **without navigation**. PLANNER moves to the new
+      `/planner` route (D6). Collapse to mobile single-pane below `md`. Acceptance: node count <300.
 
 - [ ] **D3 — Library full data table** · L · Impact 5 · `DESKTOP §D3`
       Name-first columns; sortable headers + `aria-sort`; density toggle wired to row height; bulk
@@ -43,9 +45,13 @@
       `RecipeSlot` overlaps M5; B6 schema must NOT be collapsed blind. Propose, then stop.
 
 - [ ] **D6 — `/planner` single-screen dashboard + glanceable grid** · L · Impact 5 · `DESKTOP §D6`
-      🔗 SHARED with **M4 + D2** · ⚠ DECISION
-      Built jointly with M4/D2 (shared `/planner` route + collection-grid rebuild; desktop renders the
-      gap-fill as a right side panel). HALT — joint build.
+      🔗 SHARED with **M4 + D2** · ✅ **DECIDED** (see `MILESTONE_BUILDER_BATCH.md` › Decisions 2026-06-03)
+      New **`app/planner`** route (NavRail link), **desktop-only** — single-screen 12-col dashboard
+      rendering the shared planner widget cluster (collection canvas + calendar + streak + activity +
+      inspo). Mobile reaches the same widgets via M4's collapsed PLANNER section, so the widgets are
+      shared components with two containers. Collection grid → one glanceable canvas; gap-fill = the
+      **persistent right side panel** (desktop divergence from mobile's bottom sheet). Hover tooltips for
+      precise values; calendar cell ≥24px hit region.
 
 - [ ] **D7 — Wishlist & user as desktop layouts** · M · Impact 3 · `DESKTOP §D7`
       Wishlist persistent filter rail + sortable dense table + bulk "Mark purchased"; two-column `/user`;
