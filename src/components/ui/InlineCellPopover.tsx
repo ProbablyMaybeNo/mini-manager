@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { clsx } from "clsx";
+
+/** useLayoutEffect warns on the server; fall back to useEffect there so
+ *  the SSR render stays quiet (the popover only ever opens client-side). */
+const useIsoLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 interface InlineCellPopoverProps {
   /** Rendered as the click target. Should look like a button — the
@@ -28,9 +40,17 @@ interface InlineCellPopoverProps {
  * click-outside, Escape, or when the body emits a click on any
  * `data-cell-popover-close` element.
  *
+ * UX (2026-06 walkthrough): the dropdown is PORTALLED to <body> and
+ * positioned `fixed` against the trigger's bounding box, so it can no
+ * longer be clipped by the table's `overflow-x-auto` scroll container
+ * (per the CSS spec, a non-visible overflow on one axis forces the other
+ * to clip too — which hid these menus inside the row). The menu flips
+ * above the trigger when there isn't room below, and tracks scroll /
+ * resize while open.
+ *
  * Visual style: tightly-cropped frame matching the existing dropdown
  * pattern used in QuickAddBar + WishlistFilters — bordered, padded,
- * mono caps inside. Animation gated on prefers-reduced-motion.
+ * mono caps inside.
  */
 export function InlineCellPopover({
   trigger,
@@ -40,34 +60,105 @@ export function InlineCellPopover({
   onClose,
 }: InlineCellPopoverProps) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{
+    left: number;
+    top: number;
+    placement: "below" | "above";
+  } | null>(null);
 
   const close = () => {
     setOpen(false);
     onClose?.();
   };
 
+  // Position the portalled menu against the trigger's viewport rect.
+  // Flip above when there isn't room below; clamp within the viewport.
+  const reposition = () => {
+    const trig = triggerRef.current;
+    if (!trig) return;
+    const r = trig.getBoundingClientRect();
+    const menuH = menuRef.current?.offsetHeight ?? 0;
+    const gap = 4;
+    const spaceBelow = window.innerHeight - r.bottom;
+    const placement: "below" | "above" =
+      menuH > 0 && spaceBelow < menuH + gap && r.top > spaceBelow
+        ? "above"
+        : "below";
+    const top =
+      placement === "below" ? r.bottom + gap : r.top - gap - menuH;
+    setPos({ left: r.left, top, placement });
+  };
+
+  // Measure synchronously after the menu mounts so it never paints in the
+  // wrong place for a frame.
+  useIsoLayoutEffect(() => {
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    reposition();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onDocClick = (e: MouseEvent) => {
-      if (!rootRef.current) return;
-      if (!rootRef.current.contains(e.target as Node)) close();
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      close();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
     };
+    const onReflow = () => reposition();
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onKey);
+    // capture:true so the table's inner scroll container also re-anchors
+    // the menu, not just the window.
+    window.addEventListener("scroll", onReflow, true);
+    window.addEventListener("resize", onReflow);
     return () => {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onReflow, true);
+      window.removeEventListener("resize", onReflow);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  const menu = open ? (
+    <div
+      ref={menuRef}
+      role="menu"
+      aria-label={triggerLabel}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest("[data-cell-popover-close]")) {
+          close();
+        }
+      }}
+      className="fixed z-50 min-w-[10rem] frame bg-[var(--color-bg-panel)] shadow-xl p-1 space-y-0.5"
+      style={{
+        // Until the layout-effect measures the trigger, render the menu
+        // off-paint (hidden) so it can be sized without flashing in the
+        // wrong place. Once positioned it becomes visible.
+        left: pos?.left ?? 0,
+        top: pos?.top ?? 0,
+        visibility: pos ? "visible" : "hidden",
+        border: "1px solid var(--color-border-strong)",
+      }}
+    >
+      {children}
+    </div>
+  ) : null;
+
   return (
-    <div ref={rootRef} className="relative inline-block">
+    <span className="inline-block">
       <button
+        ref={triggerRef}
         type="button"
         aria-label={triggerLabel}
         aria-haspopup="menu"
@@ -84,23 +175,13 @@ export function InlineCellPopover({
       >
         {trigger}
       </button>
-      {open ? (
-        <div
-          role="menu"
-          aria-label={triggerLabel}
-          onClick={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.closest("[data-cell-popover-close]")) {
-              close();
-            }
-          }}
-          className="absolute z-50 left-0 top-full mt-1 min-w-[10rem] frame bg-[var(--color-bg-panel)] shadow-xl p-1 space-y-0.5"
-          style={{ border: "1px solid var(--color-border-strong)" }}
-        >
-          {children}
-        </div>
-      ) : null}
-    </div>
+      {/* Portal to body so `fixed` escapes the table's overflow clip. The
+          initial render (before the layout-effect measures) mounts the
+          menu invisibly via pos===null → null, then positions it. */}
+      {typeof document !== "undefined" && menu
+        ? createPortal(menu, document.body)
+        : null}
+    </span>
   );
 }
 

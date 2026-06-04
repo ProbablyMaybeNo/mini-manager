@@ -12,19 +12,19 @@ import type { DisplayStatus } from "@/lib/progress";
  * D2 — project-detail inspector (right pane of the master-detail
  * `/projects` workspace, ≥1024).
  *
- * Decisions block (2026-06-03 §2): the right pane shows the SELECTED
- * project's detail (models / recipes / progress) with a **Detail / Focus
- * tab**. The FOCUS bench is the "Focus" tab — NOT the default home state.
- * Selecting a project in the left table swaps the inspector WITHOUT
- * navigation (the workspace owns the selected-id state; the Detail tab
- * renders from the already-loaded row VM, no refetch / no route change).
+ * UX (2026-06 walkthrough): the right pane is now a LIGHT SECONDARY
+ * SUMMARY of the seed project (the painter's focused project), with a
+ * **Detail / Focus tab**. The FOCUS bench is the "Focus" tab — NOT the
+ * default home state. The pane is no longer row-driven: clicking a
+ * project row in the left table NAVIGATES to `/projects/[id]` (the
+ * painter found select-to-swap unintuitive). The master-detail shell is
+ * kept (D2); the table is the primary nav surface.
  *
  * The Detail tab is a summary surface (name, type, status, completion,
  * palette, model count, attached-recipe state) drawn from the row data
- * the dashboard already has in memory — so swapping is instant and adds
- * no nodes. A persistent "Open full project →" link drops to
- * `/projects/[id]` for the deep model tree + colour-scheme editor when
- * the painter actually wants to drill in.
+ * the dashboard already has in memory. A persistent "Open full project →"
+ * link drops to `/projects/[id]` for the deep model tree + colour-scheme
+ * editor when the painter wants to drill in.
  *
  * The Focus tab is the existing FOCUS bench (FocusPicker + FocusPanel +
  * Stopwatch), passed in as `focusTab` so this pane stays a pure
@@ -241,11 +241,11 @@ function EmptyDetail() {
   return (
     <div className="frame p-4 text-center space-y-2">
       <p className="text-sm font-sans text-[var(--color-fg)]">
-        Select a project from the list to inspect it here.
+        No project to summarise yet.
       </p>
       <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-        Its status, completion, palette, and model count appear in this
-        pane — no navigation. Switch to the Focus tab to sit at the bench.
+        Click a project row to open it. Switch to the Focus tab to sit at
+        the bench.
       </p>
     </div>
   );

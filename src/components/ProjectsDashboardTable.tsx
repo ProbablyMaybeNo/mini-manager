@@ -160,13 +160,6 @@ interface Props {
   /** R7-1 — projectId → human name lookup so the AttachRecipeModal can
    *  show "currently attached to <X>" labels. */
   projectNameById: Readonly<Record<string, string>>;
-  /** D2 — master-detail selection (desktop ≥1024). When provided, the
-   *  desktop row's Name becomes a SELECT button (swaps the inspector
-   *  without navigation) instead of a link, and the selected row is
-   *  highlighted. Omitted (mobile / standalone) → Name stays a link to
-   *  `/projects/[id]` as before. */
-  selectedId?: string | null;
-  onSelectProject?: (id: string) => void;
 }
 
 /**
@@ -186,8 +179,6 @@ export function ProjectsDashboardTable({
   rows,
   ownedRecipes,
   projectNameById,
-  selectedId = null,
-  onSelectProject,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -355,8 +346,6 @@ export function ProjectsDashboardTable({
                   onToggleExpand={() => toggleExpanded(row.id)}
                   ownedRecipes={ownedRecipes}
                   projectNameById={projectNameById}
-                  selected={selectedId === row.id}
-                  onSelectProject={onSelectProject}
                 />
               );
             })}
@@ -548,6 +537,20 @@ function Th({
   );
 }
 
+/** UX (2026-06 walkthrough) — clicking anywhere on a row that isn't an
+ *  interactive control navigates to the project page. Guards against
+ *  descendant buttons / links / inputs / popover menus so inline edits,
+ *  the expand caret, the Name link and Delete still do their own thing. */
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  return Boolean(
+    el.closest(
+      'a, button, input, select, textarea, [role="menu"], [role="dialog"], [data-row-nav-ignore]',
+    ),
+  );
+}
+
 function DashboardRow({
   row,
   hasChildren,
@@ -555,8 +558,6 @@ function DashboardRow({
   onToggleExpand,
   ownedRecipes,
   projectNameById,
-  selected,
-  onSelectProject,
 }: {
   row: ProjectDashboardRow;
   hasChildren: boolean;
@@ -568,12 +569,6 @@ function DashboardRow({
     attachedProjectId: string | null;
   }>;
   projectNameById: Readonly<Record<string, string>>;
-  /** D2 — true when this row is the selected project in the
-   *  master-detail workspace (highlights the row). */
-  selected?: boolean;
-  /** D2 — when provided, the Name selects (swaps the inspector) instead
-   *  of navigating. Undefined → Name stays a link. */
-  onSelectProject?: (id: string) => void;
 }) {
   const typeChipClass = TYPE_CHIP[row.type];
   // Tree-connector indent — 16px per depth level. depth 0 = no indent.
@@ -625,19 +620,20 @@ function DashboardRow({
 
   return (
     <tr
+      onClick={(e) => {
+        // Whole-row navigation: clicking empty row space opens the
+        // project. Inline controls (caret, popovers, Name link, Delete)
+        // are excluded so they keep their own behaviour.
+        if (isInteractiveTarget(e.target)) return;
+        router.push(`/projects/${row.id}`);
+      }}
       className={clsx(
-        "transition-colors",
-        // D2 — selected row gets a persistent amber-tinted highlight
-        // (off cyan per the locked palette); unselected rows keep the
-        // subtle hover. aria-selected exposes the master-detail state.
-        selected
-          ? "bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]"
-          : "hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)]",
+        "transition-colors cursor-pointer",
+        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)]",
         pending && "opacity-70",
       )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
-      aria-selected={onSelectProject ? selected : undefined}
     >
       <td className="px-2 py-2 w-10 text-center">
         {hasChildren ? (
@@ -690,30 +686,21 @@ function DashboardRow({
             }}
           />
         ) : null}
-        {onSelectProject ? (
-          // D2 — master-detail: Name SELECTS the project (swaps the
-          // inspector) without navigating. Off-cyan when selected.
-          <button
-            type="button"
-            onClick={() => onSelectProject(row.id)}
-            aria-pressed={selected}
-            className={clsx(
-              "tap-target inline-flex items-center text-left hover:underline",
-              selected
-                ? "text-[var(--color-amber)] font-bold"
-                : "text-[var(--color-cyan)]",
-            )}
+        <Link
+          href={`/projects/${row.id}`}
+          className="group inline-flex items-center gap-1 text-[var(--color-cyan)] hover:underline"
+          title={`Open ${row.name}`}
+        >
+          {row.name}
+          {/* UX (2026-06) — ↗ signals the Name (and the row) opens the
+              project page. Muted by default, brightens on hover. */}
+          <span
+            aria-hidden
+            className="text-2xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-cyan)] transition-colors"
           >
-            {row.name}
-          </button>
-        ) : (
-          <Link
-            href={`/projects/${row.id}`}
-            className="text-[var(--color-cyan)] hover:underline"
-          >
-            {row.name}
-          </Link>
-        )}
+            ↗
+          </span>
+        </Link>
         {row.faction ? (
           <span className="ml-2 text-2xs text-[var(--color-fg-muted)]">
             {row.faction}
@@ -936,7 +923,14 @@ function MobileCompRow({
 
   return (
     <tr
-      className={clsx("transition-colors", pending && "opacity-70")}
+      onClick={(e) => {
+        if (isInteractiveTarget(e.target)) return;
+        router.push(`/projects/${row.id}`);
+      }}
+      className={clsx(
+        "transition-colors cursor-pointer",
+        pending && "opacity-70",
+      )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
     >
@@ -974,9 +968,17 @@ function MobileCompRow({
           <span className="min-w-0">
             <Link
               href={`/projects/${row.id}`}
-              className="block text-xs font-mono text-[var(--color-cyan)] hover:underline truncate"
+              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-cyan)] hover:underline"
+              title={`Open ${row.name}`}
             >
-              {row.name}
+              <span className="truncate">{row.name}</span>
+              {/* UX (2026-06) — ↗ open-project affordance (matches desktop). */}
+              <span
+                aria-hidden
+                className="shrink-0 text-2xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-cyan)] transition-colors"
+              >
+                ↗
+              </span>
             </Link>
             {row.faction ? (
               <span className="block text-2xs font-mono text-[var(--color-fg-muted)] truncate">

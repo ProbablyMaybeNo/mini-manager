@@ -261,7 +261,7 @@ export default async function ProjectDetailPage({
         variant="warning"
         size="sm"
       >
-        Shop for this →
+        + Wishlist
       </Button>
     </div>
   );

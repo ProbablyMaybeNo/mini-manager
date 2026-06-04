@@ -17,16 +17,21 @@ import { CollapsibleSection } from "@/components/projects/CollapsibleSection";
  * so the inactive layout adds zero DOM nodes (keeps the D2 <300
  * interactive-node budget after the 7,144-button grid left for /planner).
  *
- *   - Desktop ≥1024 (lg): two-pane master-detail. Left = filter + the
- *     project table (Name SELECTS, swapping the inspector WITHOUT
- *     navigation). Right = ProjectInspector with a Detail / Focus tab
- *     (Detail is the default home state; Focus is the FOCUS bench tab).
- *     PLANNER is NOT here on desktop — it lives at its own /planner route
- *     (D6). FOCUS is the inspector's Focus tab, not a stacked section.
+ *   - Desktop ≥1024 (lg): two-pane workspace. Left = filter + the project
+ *     table. Right = ProjectInspector with a Detail / Focus tab (Detail is
+ *     the default home state; Focus is the FOCUS bench tab). PLANNER is NOT
+ *     here on desktop — it lives at its own /planner route (D6).
+ *
+ *     UX (2026-06 walkthrough): clicking a project ROW navigates to
+ *     `/projects/[id]` — the painter found select-to-swap unintuitive
+ *     ("the info's already in the table"). The inspector is now a LIGHT
+ *     SECONDARY SUMMARY of the seed project (the painter's focused
+ *     project), not a row-driven detail pane. The master-detail shell is
+ *     kept (D2) but the table is the primary nav surface.
  *
  *   - Mobile <1024: single pane. The table, then the collapsed-by-default
  *     FOCUS + PLANNER progressive-disclosure sections (M4). No inspector;
- *     the painter taps a row Name to navigate to `/projects/[id]`.
+ *     tapping a row navigates to `/projects/[id]`.
  *
  * The FOCUS bench + PLANNER cluster are passed in as server-rendered
  * nodes (`focusBench`, `plannerSection`) so this client shell stays
@@ -34,8 +39,8 @@ import { CollapsibleSection } from "@/components/projects/CollapsibleSection";
  *
  * SSR-safe: starts desktop-first (`isDesktop = true`) so the server
  * markup === the first client render; an effect reads matchMedia and
- * flips to the mobile single-pane on narrow viewports. The selection +
- * filter state are client-only and don't affect hydration.
+ * flips to the mobile single-pane on narrow viewports. The filter state
+ * is client-only and doesn't affect hydration.
  */
 
 interface Props {
@@ -59,8 +64,9 @@ interface Props {
   /** Sits below the workspace in both layouts (Top Wishes + recently
    *  bought line). */
   belowTable: ReactNode;
-  /** The id of the painter's currently-focused project, used to seed the
-   *  desktop inspector selection so it opens on something useful. */
+  /** The id of the painter's currently-focused project. Seeds the
+   *  desktop inspector's light summary so it opens on something useful
+   *  (falls back to the first row). */
   initialSelectedId: string | null;
   /** Summary line for the collapsed mobile FOCUS section header. */
   focusSummary: string;
@@ -87,11 +93,10 @@ export function ProjectsWorkspace({
   }, []);
 
   const [query, setQuery] = useState("");
-  // Seed selection with the focused project (else first row) so the
-  // desktop inspector opens on something meaningful.
-  const [selectedId, setSelectedId] = useState<string | null>(
-    initialSelectedId ?? (rows.length > 0 ? rows[0]!.id : null),
-  );
+  // The inspector is a light secondary summary of the seed project (the
+  // painter's focused project, else the first row). It is no longer
+  // row-driven — clicking a row navigates to the project page instead.
+  const summaryId = initialSelectedId ?? (rows.length > 0 ? rows[0]!.id : null);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -105,9 +110,9 @@ export function ProjectsWorkspace({
     );
   }, [rows, query]);
 
-  const selectedRow = useMemo(
-    () => rows.find((r) => r.id === selectedId) ?? null,
-    [rows, selectedId],
+  const summaryRow = useMemo(
+    () => rows.find((r) => r.id === summaryId) ?? null,
+    [rows, summaryId],
   );
 
   const filterInput = (
@@ -130,7 +135,8 @@ export function ProjectsWorkspace({
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 items-start">
-          {/* Left — quick add + filter + selectable table. */}
+          {/* Left — quick add + filter + table. Rows navigate to the
+              project page (the painter's primary path). */}
           <div className="min-w-0 space-y-3">
             {quickAdd}
             {filterInput}
@@ -138,14 +144,13 @@ export function ProjectsWorkspace({
               rows={filteredRows}
               ownedRecipes={ownedRecipes}
               projectNameById={projectNameById}
-              selectedId={selectedId}
-              onSelectProject={setSelectedId}
             />
           </div>
-          {/* Right — project-detail inspector (Detail / Focus tab). Sticky
-              so it stays in view while the painter scrolls a long list. */}
+          {/* Right — light summary inspector (Detail / Focus tab) for the
+              seed project. Sticky so the Focus bench stays in view while
+              the painter scrolls a long list. */}
           <div className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]">
-            <ProjectInspector selected={selectedRow} focusTab={focusBench} />
+            <ProjectInspector selected={summaryRow} focusTab={focusBench} />
           </div>
         </div>
         {belowTable}

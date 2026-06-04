@@ -17,7 +17,6 @@ import {
   getSessionRollups,
 } from "@/db/queries/paintSessions";
 import { QuickAddBar } from "@/components/QuickAddBar";
-import { TopWishesPanel } from "@/components/wishlist/TopWishesPanel";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { Button } from "@/components/ui/Button";
@@ -44,9 +43,9 @@ export const dynamic = "force-dynamic";
  *   Name · Type · Recipes (palette squares) · Status · Priority ·
  *   Completion (bar with red < 25% / yellow 25-75% / green >= 75%)
  *
- * The TopWishesPanel + RecentlyBoughtLine sit below the table so the
- * dashboard stays both queueable (paint shopping) and trackable
- * (paint history).
+ * UX (2026-06 walkthrough): the Top Wishes section was removed — /projects
+ * is the project workspace, not a dashboard. The lightweight
+ * RecentlyBoughtLine remains below the table as a passive spend readout.
  */
 interface ProjectsPageProps {
   /** P14.3 — calendar prev/next nav writes `?calYear` + `?calMonth`
@@ -264,13 +263,17 @@ export default async function ProjectsPage({
         </div>
         <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
           <QuickAddBar />
-          <div className="flex gap-2 w-full md:w-auto md:self-end">
+          {/* UX (2026-06) — match the action row to the QuickAddBar's
+              420px width and split it evenly so the header reads balanced
+              (the buttons were content-width before, breaking the column
+              alignment with the search/text bar above). */}
+          <div className="flex gap-2 w-full md:w-[420px]">
             <Button
               as="a"
               href="/projects/import"
               variant="warning"
               size="sm"
-              className="flex-1 md:flex-none"
+              className="flex-1 justify-center"
             >
               Import army list
             </Button>
@@ -279,7 +282,7 @@ export default async function ProjectsPage({
               href="/projects/new"
               variant="success"
               size="sm"
-              className="flex-1 md:flex-none"
+              className="flex-1 justify-center"
             >
               New project
             </Button>
@@ -304,12 +307,7 @@ export default async function ProjectsPage({
           plannerSection={
             <PlannerSection calYear={calYear} calMonth={calMonth} bare />
           }
-          belowTable={
-            <>
-              <TopWishesPanel />
-              <RecentlyBoughtLine />
-            </>
-          }
+          belowTable={<RecentlyBoughtLine />}
         />
       )}
     </div>
