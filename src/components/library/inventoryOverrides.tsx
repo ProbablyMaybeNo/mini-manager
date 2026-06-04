@@ -26,6 +26,11 @@ export interface InventoryOverridesValue {
   get(paintId: string): InventoryOverrideSnapshot | undefined;
   /** Mirror a row's optimistic snapshot into the shared store. */
   set(paintId: string, snap: InventoryOverrideSnapshot): void;
+  /** Bumps on every `set()`. Included in the context value so the value
+   *  IDENTITY changes per mutation — without it, the stable get/set memo
+   *  would keep the value identity fixed and context consumers
+   *  (CollectionPanel → the live map dots) would never re-render. */
+  version: number;
 }
 
 const InventoryOverridesContext = createContext<InventoryOverridesValue | null>(
@@ -50,7 +55,7 @@ export function InventoryOverridesProvider({
   // the mutable Map mutates — the Map identity itself stays stable so we
   // don't churn allocations on every toggle.
   const [store] = useState(() => new Map<string, InventoryOverrideSnapshot>());
-  const [, setVersion] = useState(0);
+  const [version, setVersion] = useState(0);
 
   const get = useCallback(
     (paintId: string) => store.get(paintId),
@@ -66,8 +71,8 @@ export function InventoryOverridesProvider({
   );
 
   const value = useMemo<InventoryOverridesValue>(
-    () => ({ get, set }),
-    [get, set],
+    () => ({ get, set, version }),
+    [get, set, version],
   );
 
   return (
