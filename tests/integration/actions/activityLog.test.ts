@@ -6,7 +6,7 @@ import {
   activityLog,
   projects,
   recipes,
-  recipeZones,
+  recipeSlots,
   wishlistItems,
 } from "@/db/schema";
 
@@ -46,9 +46,7 @@ const { createProject, bumpProjectStatus } = await import(
 );
 const { bumpCounter } = await import("@/lib/actions/counters");
 const { createRecipe } = await import("@/lib/actions/recipes");
-const { addZone, addSlotWithPaint } = await import(
-  "@/lib/actions/recipeZones"
-);
+const { addSlot } = await import("@/lib/actions/recipeSlots");
 const { markBoughtAsExistingUnit, markBoughtAsNewProject } = await import(
   "@/lib/actions/markBought"
 );
@@ -187,9 +185,9 @@ describe("activity_log emit wiring (P14.1)", () => {
     expect(rows[0]!.refId).toBe(res.data.id);
   });
 
-  test("addZone emits 'slot_added' with the new zone id", async () => {
+  test("addSlot emits 'slot_added' with the new slot id", async () => {
     const recipeId = await seedRecipe();
-    const res = await addZone({ recipeId, name: "Armor" });
+    const res = await addSlot({ recipeId, customColorHex: "#abcdef" });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
 
@@ -197,28 +195,13 @@ describe("activity_log emit wiring (P14.1)", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]!.kind).toBe("slot_added");
     expect(rows[0]!.refId).toBe(res.data.id);
-  });
 
-  test("addSlotWithPaint emits 'slot_added' with the new zone id", async () => {
-    const recipeId = await seedRecipe();
-    const res = await addSlotWithPaint({
-      recipeId,
-      customColorHex: "#abcdef",
-    });
-    expect(res.ok).toBe(true);
-    if (!res.ok) return;
-
-    const rows = await fetchLatestActivity(state.userId);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]!.kind).toBe("slot_added");
-    expect(rows[0]!.refId).toBe(res.data.zoneId);
-
-    // Sanity: the zone we just created actually exists in the DB
-    const zoneRows = await state
+    // Sanity: the slot we just created actually exists in the DB.
+    const slotRows = await state
       .db!.select()
-      .from(recipeZones)
-      .where(eq(recipeZones.id, res.data.zoneId));
-    expect(zoneRows).toHaveLength(1);
+      .from(recipeSlots)
+      .where(eq(recipeSlots.id, res.data.id));
+    expect(slotRows).toHaveLength(1);
   });
 
   test("markBoughtAsNewProject emits 'paint_added' with the wishlist item id", async () => {

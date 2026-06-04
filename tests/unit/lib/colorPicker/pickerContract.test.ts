@@ -128,26 +128,24 @@ describe("ProjectColorSchemeBox — R7-002 passes the right mode through", () =>
   });
 });
 
-describe("Server actions — accept the {hex, paintId: null} shape (R7-001)", () => {
-  test("addSlotWithPaint schema accepts paintId=null + customColorHex=<hex>", () => {
+describe("Server actions — exactly-one paint|hex invariant (R7-001)", () => {
+  test("addSlot schema requires exactly one of paintId / customColorHex", () => {
     // The action's schema requires *exactly one* of paintId or
-    // customColorHex. The consumer (ZoneList / ProjectColorSchemeBox)
-    // translates a `paintId: null` selection into
-    // `{ paintId: null, customColorHex: selection.hex }`. Verify the
-    // schema's refine() allows this.
-    const src = read("src/lib/actions/recipeZones.ts");
+    // customColorHex (refine). Both fields are `.nullish()` so null
+    // passes Zod's first stage.
+    const src = read("src/lib/actions/recipeSlots.ts");
     expect(src).toContain(
       "Boolean(d.paintId) !== Boolean(d.customColorHex)",
     );
-    // Both fields are `.nullish()` so null passes Zod's first stage.
-    expect(src).toContain("paintId: z.string().min(1).max(64).nullish()");
-    expect(src).toContain("customColorHex: hexShape.nullish()");
-  });
-
-  test("updateStep accepts paintId=null + customColorHex=<hex>", () => {
-    const src = read("src/lib/actions/recipeSteps.ts");
     expect(src).toContain("paintId: z.string().min(1).max(64).nullish()");
     expect(src).toContain("customColorHex: hexSchema.nullish()");
+  });
+
+  test("updateSlot accepts paintId / customColorHex (at most one)", () => {
+    const src = read("src/lib/actions/recipeSlots.ts");
+    expect(src).toContain("paintId: z.string().min(1).max(64).nullish()");
+    expect(src).toContain("customColorHex: hexSchema.nullish()");
+    expect(src).toContain("!(d.paintId && d.customColorHex)");
   });
 });
 

@@ -25,8 +25,6 @@ import {
   recipes,
   recipeStepCompletion,
   recipeSlots,
-  recipeSteps,
-  recipeZones,
 } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
@@ -82,29 +80,11 @@ async function seedRecipe(opts: {
     bodyType: "infantry",
   });
 
-  // Stage 1 invariant: slot.id == the old step.id (preserved by the
-  // migration). The completion FK still references recipe_step until
-  // Stage 4 re-points it, so we seed a matching zone+step per slot with
-  // the SAME id — exactly the production state a real recipe has after
-  // the backfill. (The step seed is removed in Stage 4.)
-  const zoneId = nanoid(16);
-  await state.db!.insert(recipeZones).values({
-    id: zoneId,
-    recipeId,
-    position: 0,
-    name: "Zone",
-  });
-
+  // Stage 4: the completion FK references recipe_slot, so the slot seed
+  // alone satisfies it.
   const slots: string[] = [];
   for (let i = 0; i < slotCount; i++) {
     const id = nanoid(16);
-    await state.db!.insert(recipeSteps).values({
-      id,
-      zoneId,
-      position: i,
-      technique: "basecoat",
-      customColorHex: "#aabbcc",
-    });
     await state.db!.insert(recipeSlots).values({
       id,
       recipeId,
@@ -202,6 +182,21 @@ describe("setStepCompletion — per-painter done toggle", () => {
       done: true,
     });
     expect(res.ok).toBe(false);
+  });
+
+  test("FK cascade — deleting the slot removes its completion mark", async () => {
+    const { slots } = await seedRecipe();
+    const slotId = slots[0]!;
+    await actions.setStepCompletion({ stepId: slotId, done: true });
+
+    await state.db!.run("PRAGMA foreign_keys = ON");
+    await state.db!.delete(recipeSlots).where(eq(recipeSlots.id, slotId));
+
+    const rows = await state
+      .db!.select()
+      .from(recipeStepCompletion)
+      .where(eq(recipeStepCompletion.stepId, slotId));
+    expect(rows).toHaveLength(0);
   });
 });
 

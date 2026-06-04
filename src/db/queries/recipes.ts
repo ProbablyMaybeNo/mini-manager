@@ -8,12 +8,8 @@ import { db } from "@/db/client";
 import {
   recipes,
   recipeSlots,
-  recipeSteps,
-  recipeZones,
   type Recipe,
   type RecipeSlot,
-  type RecipeStep,
-  type RecipeZone,
 } from "@/db/schema";
 import type { Paint, PaintCatalog } from "@/lib/paints/types";
 import type { RecipeWithSlots } from "@/lib/recipes/types";
@@ -555,55 +551,6 @@ export async function summarizeRecipe(
 /* ============================================================
    Slot internal lookups (used by mutations)
    ============================================================ */
-
-/**
- * Verify a zone exists and is owned via its parent recipe. Retained for
- * the legacy zone/step actions (recipeZones.ts / recipeSteps.ts) until
- * those are removed in Stage 4. New code uses getSlotWithOwnerCheck.
- */
-export async function getZoneWithOwnerCheck(
-  userId: string,
-  zoneId: string,
-): Promise<{ zone: RecipeZone; recipeId: string } | null> {
-  const rows = await db
-    .select({ zone: recipeZones, ownerId: recipes.ownerId })
-    .from(recipeZones)
-    .innerJoin(recipes, eq(recipes.id, recipeZones.recipeId))
-    .where(and(eq(recipeZones.id, zoneId), eq(recipes.ownerId, userId)))
-    .limit(1);
-  const row = rows[0];
-  if (!row) return null;
-  return { zone: row.zone, recipeId: row.zone.recipeId };
-}
-
-/**
- * Verify a step exists and is owned via its zone's parent recipe.
- * Retained for the legacy zone/step actions until Stage 4.
- */
-export async function getStepWithOwnerCheck(
-  userId: string,
-  stepId: string,
-): Promise<{
-  step: RecipeStep;
-  zoneId: string;
-  recipeId: string;
-} | null> {
-  const rows = await db
-    .select({
-      step: recipeSteps,
-      zoneId: recipeZones.id,
-      recipeId: recipeZones.recipeId,
-      ownerId: recipes.ownerId,
-    })
-    .from(recipeSteps)
-    .innerJoin(recipeZones, eq(recipeZones.id, recipeSteps.zoneId))
-    .innerJoin(recipes, eq(recipes.id, recipeZones.recipeId))
-    .where(and(eq(recipeSteps.id, stepId), eq(recipes.ownerId, userId)))
-    .limit(1);
-  const row = rows[0];
-  if (!row) return null;
-  return { step: row.step, zoneId: row.zoneId, recipeId: row.recipeId };
-}
 
 /**
  * Verify a slot exists and is owned via its parent recipe (2026-06-04

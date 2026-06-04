@@ -348,7 +348,7 @@ export const bodyTypes = ["infantry", "vehicle", "monster", "terrain"] as const;
 export type BodyType = (typeof bodyTypes)[number];
 
 /**
- * `recipe_step.technique` enum.
+ * `recipe_slot.technique` enum.
  *
  * Phase 12 (P12.3) repurposes this column from "painting technique"
  * (basecoat / wash / drybrush / etc.) to "layer assignment in Ross's
@@ -450,88 +450,21 @@ export const recipes = sqliteTable(
   }),
 );
 
-export const recipeZones = sqliteTable(
-  "recipe_zone",
-  {
-    id: id(),
-    recipeId: text("recipe_id")
-      .notNull()
-      .references(() => recipes.id, { onDelete: "cascade" }),
-    position: integer("position").notNull(),
-    name: text("name").notNull(),
-    /** Maps to a silhouette JSON id (e.g. "armor-primary"). Nullable
-     *  because the painter can name a custom zone outside the
-     *  silhouette's preset list. */
-    silhouetteZoneId: text("silhouette_zone_id"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-  },
-  (t) => ({
-    recipeIdx: index("recipe_zone_recipe_idx").on(t.recipeId),
-    recipePositionUq: uniqueIndex("recipe_zone_recipe_position").on(
-      t.recipeId,
-      t.position,
-    ),
-  }),
-);
-
-export const recipeSteps = sqliteTable(
-  "recipe_step",
-  {
-    id: id(),
-    zoneId: text("zone_id")
-      .notNull()
-      .references(() => recipeZones.id, { onDelete: "cascade" }),
-    position: integer("position").notNull(),
-    technique: text("technique", { enum: techniqueKeys }).notNull(),
-    /** References paints.json by id — no SQL FK since the catalog
-     *  is a static asset. Same pattern as `inventory_entry.paint_id`. */
-    paintId: text("paint_id"),
-    /** For "this is a mix": stores the rendered hex of the result. */
-    customColorHex: text("custom_color_hex"),
-    notesMd: text("notes_md"),
-    /**
-     * P13.11 — Free-form per-step painting notes. Edited inline on
-     * the dashboard FOCUS panel so the painter can scribble "do two
-     * thin coats" / "wet blend on the edge" / "mixed with 2 parts
-     * Lahmian medium" against the actual paint they're using. Saved
-     * on blur via the `updateStepNotes` server action.
-     *
-     * Distinct from `notesMd` (which has historically been a recipe-
-     * author description field rendered on the public share page);
-     * this column is the painter's working notes during the paint.
-     */
-    notes: text("notes"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .$defaultFn(() => new Date()),
-  },
-  (t) => ({
-    zoneIdx: index("recipe_step_zone_idx").on(t.zoneId),
-    zonePositionUq: uniqueIndex("recipe_step_zone_position").on(
-      t.zoneId,
-      t.position,
-    ),
-  }),
-);
-
 /**
  * Recipe slot — the unified, FLAT recipe model (2026-06-04 decision).
  *
- * A recipe is now a flat ordered list of slots; each slot = ONE paint
+ * A recipe is a flat ordered list of slots; each slot = ONE paint
  * (paintId OR customColorHex, exactly one) + its assigned layer
- * (`technique`). This collapses the old two-level recipe_zone → recipe_step
- * structure into a single table and retires the separate "Steps box" and
- * the project-side "color scheme" as a distinct concept — there is one
- * concept (a Recipe) rendered identically in the recipe editor and the
- * project box.
+ * (`technique`). This is the single recipe-content table — it replaced
+ * the old two-level recipe_zone → recipe_step structure and retired the
+ * separate "Steps box" + the project-side "color scheme" as distinct
+ * concepts. There is one concept (a Recipe) rendered identically in the
+ * recipe editor and the project box.
  *
- * Migration 0016 backfills this table from recipe_zone ⋈ recipe_step,
- * flattening per recipe by (zone.position, step.position); zone NAMES are
- * intentionally dropped (pure-flat: slots are identified by their paint).
- * The old recipe_zone / recipe_step tables are kept for now and removed in a
- * later migration once all code has cut over.
+ * Migration 0016 created + backfilled this table from recipe_zone ⋈
+ * recipe_step (flattening per recipe; step.id preserved as slot.id);
+ * migration 0017 dropped recipe_zone / recipe_step and re-pointed the
+ * completion FK to recipe_slot.
  */
 export const recipeSlots = sqliteTable(
   "recipe_slot",
@@ -711,41 +644,38 @@ export const recipesRelations = relations(recipes, ({ one, many }) => ({
     references: [projects.id],
     relationName: "recipe_attached_project",
   }),
-  zones: many(recipeZones),
+  slots: many(recipeSlots),
 }));
 
-export const recipeZonesRelations = relations(recipeZones, ({ one, many }) => ({
+export const recipeSlotsRelations = relations(recipeSlots, ({ one, many }) => ({
   recipe: one(recipes, {
-    fields: [recipeZones.recipeId],
+    fields: [recipeSlots.recipeId],
     references: [recipes.id],
-  }),
-  steps: many(recipeSteps),
-}));
-
-export const recipeStepsRelations = relations(recipeSteps, ({ one, many }) => ({
-  zone: one(recipeZones, {
-    fields: [recipeSteps.zoneId],
-    references: [recipeZones.id],
   }),
   completions: many(recipeStepCompletion),
 }));
 
 /* ============================================================
-   Domain — Recipe step completion (P15.0)
+   Domain — Recipe slot completion (P15.0 / 2026-06-04 flatten)
    ============================================================
-   Per-painter "I've finished applying this step" marks. Keyed by
+   Per-painter "I've finished this slot" marks. Keyed by
    (user_id, step_id) so done-state is local to the painter who owns
    the recipe — never global. A row's existence IS the done flag;
-   un-ticking a step deletes the row rather than carrying a boolean,
-   so the table stays sparse (only done steps occupy space).
+   un-ticking deletes the row rather than carrying a boolean, so the
+   table stays sparse (only done slots occupy space).
 
-   The FOCUS panel renders a checkbox per step in the active slot;
-   ticking inserts a row, un-ticking removes it. The "Advance slot"
-   quick-action bulk-inserts every step in the current slot. Recipe
-   completion % is `count(rows for this recipe's steps) / total steps`.
+   The column is still named `step_id` for stability — its value is a
+   recipe_slot.id (== the old recipe_step.id, preserved by migration
+   0016's backfill). Migration 0017 re-points the FK from recipe_step
+   to recipe_slot; the stored values are unchanged.
+
+   The FOCUS panel renders a checkbox per slot; ticking inserts a row,
+   un-ticking removes it. "Advance slot" completes the slot + jumps to
+   the next undone one. Recipe completion % is
+   `count(done rows for this recipe's slots) / total slots`.
 
    Cascade-deletes on BOTH the owning user (account deletion) and the
-   step (recipe edit removes a step → its completion marks vanish).
+   slot (recipe edit removes a slot → its completion marks vanish).
    ============================================================ */
 
 export const recipeStepCompletion = sqliteTable(
@@ -757,20 +687,20 @@ export const recipeStepCompletion = sqliteTable(
       .references(() => users.id, { onDelete: "cascade" }),
     stepId: text("step_id")
       .notNull()
-      .references(() => recipeSteps.id, { onDelete: "cascade" }),
+      .references(() => recipeSlots.id, { onDelete: "cascade" }),
     completedAt: integer("completed_at", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),
   },
   (t) => ({
-    /** Hot path: "which steps has this user completed?" — the FOCUS
-     *  panel reads all completion rows for the active recipe's steps
+    /** Hot path: "which slots has this user completed?" — the FOCUS
+     *  panel reads all completion rows for the active recipe's slots
      *  scoped to the painter. */
     userStepIdx: index("recipe_step_completion_user_step_idx").on(
       t.userId,
       t.stepId,
     ),
-    /** A painter can only mark a given step done once. Re-ticking is a
+    /** A painter can only mark a given slot done once. Re-ticking is a
      *  no-op insert guarded by this unique index. */
     userStepUq: uniqueIndex("recipe_step_completion_user_step_unique").on(
       t.userId,
@@ -786,9 +716,9 @@ export const recipeStepCompletionRelations = relations(
       fields: [recipeStepCompletion.userId],
       references: [users.id],
     }),
-    step: one(recipeSteps, {
+    slot: one(recipeSlots, {
       fields: [recipeStepCompletion.stepId],
-      references: [recipeSteps.id],
+      references: [recipeSlots.id],
     }),
   }),
 );
@@ -878,12 +808,6 @@ export type NewWishlistItem = typeof wishlistItems.$inferInsert;
 
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
-
-export type RecipeZone = typeof recipeZones.$inferSelect;
-export type NewRecipeZone = typeof recipeZones.$inferInsert;
-
-export type RecipeStep = typeof recipeSteps.$inferSelect;
-export type NewRecipeStep = typeof recipeSteps.$inferInsert;
 
 export type RecipeSlot = typeof recipeSlots.$inferSelect;
 export type NewRecipeSlot = typeof recipeSlots.$inferInsert;
