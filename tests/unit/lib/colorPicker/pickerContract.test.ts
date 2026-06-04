@@ -102,9 +102,26 @@ describe("ColorPicker — R7-002 mode prop", () => {
 describe("SlotList — flat-slot editor surface", () => {
   const src = read("src/components/recipes/SlotList.tsx");
 
-  test("hosts the paints-only PaintSlotPicker for add + swap", () => {
-    expect(src).toContain("PaintSlotPicker");
-    expect(src).toContain("onPickPaint");
+  // v6-4 bug fix — the recipe slot side panel now hosts the FULL
+  // ColorPicker tool set (wheel + harmony, library, ΔE match,
+  // eyedropper) instead of the bare paints-only list, so the painter's
+  // colour tools are present and persist while adding / swapping a paint.
+  test("hosts the full ColorPicker (wheel/library/match/eyedropper) for add + swap", () => {
+    expect(src).toContain("ColorPicker");
+    expect(src).toContain("onPickColor");
+    // No longer the flat paints-only list.
+    expect(src).not.toContain("PaintSlotPicker");
+  });
+
+  test("the side panel forwards the add/edit mode to the picker", () => {
+    expect(src).toContain('mode="add-slot"');
+    expect(src).toContain('mode="edit-slot"');
+    expect(src).toContain("mode={mode}");
+  });
+
+  test("library paints persist via paintId, wheel/eyedropper hex via customColorHex", () => {
+    expect(src).toContain("paintId: selection.paintId");
+    expect(src).toContain("customColorHex: selection.hex");
   });
 
   test("help microcopy disambiguates Add paint vs swap/layer", () => {

@@ -56,9 +56,15 @@ describe("SlotList — flat slot UI strings", () => {
     expect(src).not.toContain("recipeSteps");
   });
 
-  test("paints-only — the add path takes a paint id", () => {
+  test("the add path persists a ColorPicker selection (paint id OR raw hex)", () => {
+    // v6-4 bug fix — the side panel now hosts the full ColorPicker, so a
+    // selection is either a library paint (paintId) or a raw hex from the
+    // wheel / harmony / eyedropper (customColorHex). Both flow through
+    // addSlot via the shared selectionPatch helper.
     expect(src).toContain("handleAddPaint");
-    expect(src).toContain("addSlot({ recipeId, paintId })");
+    expect(src).toContain("addSlot({ recipeId, ...selectionPatch(selection) })");
+    expect(src).toContain("paintId: selection.paintId");
+    expect(src).toContain("customColorHex: selection.hex");
   });
 });
 

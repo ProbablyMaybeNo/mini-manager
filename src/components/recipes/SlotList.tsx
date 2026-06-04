@@ -11,7 +11,11 @@ import {
 import { Card } from "@/components/ui/Card";
 import { LogTag } from "@/components/ui/LogTag";
 import { Button } from "@/components/ui/Button";
-import { PaintSlotPicker } from "@/components/recipes/PaintSlotPicker";
+import { ColorPicker } from "@/components/ui/ColorPicker";
+import type {
+  ColorPickerMode,
+  ColorPickerSelection,
+} from "@/lib/colorPicker/types";
 import {
   phase12LayerKeys,
   phase12LayerLabel,
@@ -66,7 +70,7 @@ interface Props {
  * Paints-only: new slots must be backed by a catalog paint. Existing
  * custom-hex slots (from older recipes) still render their swatch.
  */
-export function SlotList({ recipeId, slots, ownedPaintIds }: Props) {
+export function SlotList({ recipeId, slots }: Props) {
   const [localSlots, setLocalSlots] =
     useState<ReadonlyArray<SlotListItem>>(slots);
   const [reorderError, setReorderError] = useState<string | null>(null);
@@ -110,10 +114,21 @@ export function SlotList({ recipeId, slots, ownedPaintIds }: Props) {
     });
   };
 
-  const handleAddPaint = (paintId: string) => {
+  // A selection from the full ColorPicker is EITHER a library paint
+  // (paintId set) OR a raw hex from the wheel / harmony / eyedropper
+  // (paintId null). The flat-slot model + recipeSlots actions accept
+  // exactly one of paintId | customColorHex, so both paths persist.
+  const selectionPatch = (
+    selection: ColorPickerSelection,
+  ): { paintId: string } | { customColorHex: string } =>
+    selection.paintId
+      ? { paintId: selection.paintId }
+      : { customColorHex: selection.hex };
+
+  const handleAddPaint = (selection: ColorPickerSelection) => {
     setActionError(null);
     startSaveTransition(async () => {
-      const result = await addSlot({ recipeId, paintId });
+      const result = await addSlot({ recipeId, ...selectionPatch(selection) });
       if (!result.ok) {
         setActionError(result.error);
         return;
@@ -122,10 +137,16 @@ export function SlotList({ recipeId, slots, ownedPaintIds }: Props) {
     });
   };
 
-  const handleSwapPaint = (slotId: string, paintId: string) => {
+  const handleSwapPaint = (
+    slotId: string,
+    selection: ColorPickerSelection,
+  ) => {
     setActionError(null);
     startSaveTransition(async () => {
-      const result = await updateSlot({ id: slotId, paintId });
+      const result = await updateSlot({
+        id: slotId,
+        ...selectionPatch(selection),
+      });
       if (!result.ok) {
         setActionError(result.error);
         return;
@@ -250,13 +271,12 @@ export function SlotList({ recipeId, slots, ownedPaintIds }: Props) {
       {addOpen ? (
         <SlotEditorPanel
           contextLabel="Add a paint"
-          slotId={null}
-          currentPaintId={null}
+          mode="add-slot"
+          initialHex={null}
           currentLayer={null}
-          ownedPaintIds={ownedPaintIds}
           busy={isSaving}
           showLayerSelector={false}
-          onPickPaint={handleAddPaint}
+          onPickColor={handleAddPaint}
           onLayerSelect={() => {}}
           onClose={() => setAddOpen(false)}
         />
@@ -265,13 +285,12 @@ export function SlotList({ recipeId, slots, ownedPaintIds }: Props) {
       {editingSlot ? (
         <SlotEditorPanel
           contextLabel={`Edit slot · ${editingSlot.paintLabel ?? layerDisplay(editingSlot.technique)}`}
-          slotId={editingSlot.id}
-          currentPaintId={editingSlot.paintId}
+          mode="edit-slot"
+          initialHex={editingSlot.swatchHex}
           currentLayer={editingSlot.technique}
-          ownedPaintIds={ownedPaintIds}
           busy={isSaving}
           showLayerSelector
-          onPickPaint={(paintId) => handleSwapPaint(editingSlot.id, paintId)}
+          onPickColor={(selection) => handleSwapPaint(editingSlot.id, selection)}
           onLayerSelect={(layer) => handleLayerSelect(editingSlot.id, layer)}
           onClose={() => setEditingSlotId(null)}
         />
@@ -346,30 +365,40 @@ function LayerSelector({
 }
 
 /**
- * Slide-out side panel hosting the paint picker (paints-only) + an
+ * Slide-out side panel hosting the FULL colour-picker tool set + an
  * optional layer selector. Right-side drawer on desktop, bottom sheet on
  * mobile. Backdrop click / Esc closes.
+ *
+ * v6-4 bug fix — the panel previously hosted the bare paints-only flat
+ * list picker, so the painter's brief-mandated tools —
+ * the colour wheel + harmony, "pick from library", ΔE match, and the
+ * eyedropper / colour-drop — were entirely missing from the recipe slot
+ * side panel. Swapping in the shared ColorPicker primitive (the same one
+ * the project ColorSchemeBox uses) renders all four, and because they
+ * live in one always-mounted scrollable panel they PERSIST while adding
+ * or swapping a paint instead of vanishing once the panel opens. A
+ * library row emits a `paintId`; the wheel / harmony / eyedropper emit a
+ * raw hex — both persist via the recipeSlots actions' paint|hex slot
+ * invariant.
  */
 function SlotEditorPanel({
   contextLabel,
-  slotId,
-  currentPaintId,
+  mode,
+  initialHex,
   currentLayer,
-  ownedPaintIds,
   busy,
   showLayerSelector,
-  onPickPaint,
+  onPickColor,
   onLayerSelect,
   onClose,
 }: {
   contextLabel: string;
-  slotId: string | null;
-  currentPaintId: string | null;
+  mode: ColorPickerMode;
+  initialHex: string | null;
   currentLayer: TechniqueKey | null;
-  ownedPaintIds?: ReadonlySet<string>;
   busy: boolean;
   showLayerSelector: boolean;
-  onPickPaint: (paintId: string) => void;
+  onPickColor: (selection: ColorPickerSelection) => void;
   onLayerSelect: (layer: Phase12LayerKey) => void;
   onClose: () => void;
 }) {
@@ -414,21 +443,16 @@ function SlotEditorPanel({
             Close
           </Button>
         </header>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto">
           {showLayerSelector ? (
             <LayerSelector currentLayer={currentLayer} onSelect={onLayerSelect} />
           ) : null}
-          {/* Paints-only picker. Anchored inline inside the drawer. */}
-          <div className="relative">
-            <PaintSlotPicker
-              slotId={slotId}
-              currentPaintId={currentPaintId}
-              onClose={onClose}
-              onPick={onPickPaint}
-              inventory={ownedPaintIds ? { ownedIds: ownedPaintIds } : undefined}
-              embedded
-            />
-          </div>
+          {/* Full tool set: wheel + harmony, library, ΔE match, eyedropper. */}
+          <ColorPicker
+            value={initialHex ? { hex: initialHex } : null}
+            onSelect={onPickColor}
+            mode={mode}
+          />
         </div>
         {busy ? (
           <p className="m-3 text-2xs font-mono text-[var(--color-fg-muted)] text-center">
