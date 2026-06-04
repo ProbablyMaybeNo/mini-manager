@@ -84,9 +84,10 @@ same group with no dependency between them may run in parallel.
 - [ ] **M4 + D2 + D6 (shared core) — `/projects` re-architecture, `/planner` (desktop) route, glanceable collection grid**
       · L · Impact 5 · `MOBILE §M4` + `DESKTOP §D2` + `DESKTOP §D6` ✅ **DECIDED (see Decisions block)**
       The single biggest move. Suggested build order (shared pieces first):
-      1. **Glanceable collection canvas + gap-fill** (shared) — gradient field + sparse owned/wishlist
-         dots, replacing the ~7,144 `<button aria-haspopup="dialog">` cells. Gap-fill = bottom sheet
-         (mobile) / right side panel (desktop). (Mobile M4.2 ≡ Desktop D6.2.) **Start here.**
+      1. ✅ **Glanceable collection canvas + gap-fill** (shared, `e7251eb`) — single `<canvas>` (gradient
+         field + sparse owned/wishlist dots) replacing the ~7,144 `<button aria-haspopup="dialog">` cells;
+         tap → gap-fill (bottom sheet mobile / right panel desktop) with searchable Want/Own list.
+         (Mobile M4.2 ≡ Desktop D6.2.) Collection-widget nodes ~7,144 → ~2.
       2. **Planner widget cluster** (shared components) — collection canvas + calendar + streak +
          activity + inspo. Calendar cell hit-region ≥44 (mobile) / ≥24 (desktop).
       3. **Mobile M4** — collapse `▸ FOCUS` + `▸ PLANNER` into progressive-disclosure sections on the
