@@ -132,10 +132,10 @@ same group with no dependency between them may run in parallel.
       two-pane tree. **⚠ Do NOT collapse the Steps-vs-Slots schema (B6) blind — separate design call.**
 
 ### Group 5 — desktop power layer (desktop-only)
-- [ ] **D4 — Command palette & keyboard layer** · M · Impact 5 · `DESKTOP §D4`
-      Cmd/Ctrl+K opens the existing GlobalSearch (keep `/` alias); extend into a command palette with a
-      Commands section (navigation + actions) showing inline `<kbd>`; visible NavRail trigger; Ctrl+Z /
-      Ctrl+F. *(Depends on D3 context menus for inline-shortcut parity.)*
+- [x] **D4 — Command palette & keyboard layer** · M · Impact 5 · `DESKTOP §D4` — **done**
+      Cmd/Ctrl+K opens GlobalSearch (kept `/` alias); Commands section (nav + New project + Toggle
+      density) with inline `<kbd>`; visible NavRail Search trigger (⌘K); Ctrl+F focuses the palette;
+      Ctrl+Z fires `mm:undo` (D5 owns the undo store).
 
 ### Group 6 — forms, feedback, secondary surfaces
 - [ ] **M6 — Forms & feedback** · M · Impact 3 · `MOBILE §M6`

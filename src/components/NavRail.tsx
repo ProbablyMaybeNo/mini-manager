@@ -11,12 +11,14 @@ import {
   FlaskConical,
   Wrench,
   Heart,
+  Search,
   User as UserIcon,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
 } from "lucide-react";
 import { useNavRailCollapsed } from "@/lib/hooks/useNavRailCollapsed";
+import { OPEN_SEARCH_EVENT } from "@/components/search/GlobalSearch";
 
 type NavItem = {
   href: Route;
@@ -169,6 +171,38 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
           )}
         </button>
       </div>
+
+      {/* D4 — visible command-palette trigger. Opens the same overlay as
+          Cmd/Ctrl+K (the universal binding); the inline ⌘K kbd advertises
+          the shortcut so the power layer is discoverable, not hidden. */}
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))}
+        title={collapsed ? "Search · ⌘K" : undefined}
+        aria-label="Open command palette"
+        aria-keyshortcuts="Meta+K Control+K"
+        className={clsx(
+          "group flex items-center gap-3 rounded-sm text-sm tap-target mb-1",
+          "border border-[var(--color-border-strong)] transition-colors duration-150",
+          "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:border-[var(--color-fg-muted)]",
+          collapsed ? "px-2 py-2 justify-center" : "px-3 py-2",
+        )}
+      >
+        <span className="inline-flex w-6 justify-center" aria-hidden>
+          <Search size={18} strokeWidth={1.75} />
+        </span>
+        {collapsed ? null : (
+          <>
+            <span className="font-mono">Search</span>
+            <kbd
+              aria-hidden
+              className="ml-auto font-mono text-2xs text-[var(--color-fg-subtle)] px-1 py-0.5 frame"
+            >
+              ⌘K
+            </kbd>
+          </>
+        )}
+      </button>
 
       <nav className="flex flex-col gap-0.5">
         {PRIMARY.map((item) => (

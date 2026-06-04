@@ -43,9 +43,11 @@
       right-click context menu (Mark owned / Mark wanted / Copy hex; Esc/outside-click dismiss); zebra
       striping. Off cyan throughout (amber). "Add to recipe" batch action deferred to M5/D5 RecipeSlot.
 
-- [ ] **D4 — Command palette & keyboard layer** · M · Impact 5 · `DESKTOP §D4`
-      Cmd/Ctrl+K → command palette (keep `/` alias); Commands section + inline `<kbd>`; visible NavRail
-      trigger; Ctrl+Z / Ctrl+F. Pairs with D3 context menus for shortcut parity.
+- [x] **D4 — Command palette & keyboard layer** · M · Impact 5 · `DESKTOP §D4` — **done**
+      Cmd/Ctrl+K opens GlobalSearch (kept `/` alias); extended into a command palette with a Commands
+      section (nav: Projects/Planner/Library/Recipes/Tools/Wishlist + actions: New project, Toggle
+      density), inline `<kbd>`; visible NavRail Search trigger advertising ⌘K; Ctrl+F focuses the
+      palette search; Ctrl+Z fires the `mm:undo` event (D5 owns the stage-undo store/handler).
 
 - [ ] **D5 — Project flows, recipe action discipline, hierarchy** · L · Impact 4 · `DESKTOP §D5`
       🔗 SHARED with **M5** · ⚠ DECISION (B6 schema)
