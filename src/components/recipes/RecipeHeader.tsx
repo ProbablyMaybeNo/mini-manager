@@ -165,6 +165,10 @@ export function RecipeHeader({
           </div>
         </div>
 
+        {/* D5 — action discipline: Save is the one prominent CTA (inside
+            RecipeActionsBar); Assign + Share are secondary ghost actions.
+            DELETE is demoted out of this cluster to a danger-outline at the
+            bottom of the header (never a prominent slot). */}
         <div className="flex flex-col items-end gap-2">
           <RecipeActionsBar
             recipeId={recipe.id}
@@ -172,25 +176,13 @@ export function RecipeHeader({
             projects={assignProjects}
             currentlyAttachedProjectId={recipe.attachedProjectId}
           />
-          <div className="flex items-center gap-3">
-            <ShareButton
-              recipeId={recipe.id}
-              recipeName={recipe.name}
-              initialPublicSlug={recipe.publicSlug}
-              markdownInput={share.markdown}
-              jsonPayload={share.jsonPayload}
-            />
-            <Button
-              type="button"
-              onClick={openDelete}
-              disabled={isPending}
-              variant="danger"
-              size="sm"
-              title="Delete recipe"
-            >
-              Delete
-            </Button>
-          </div>
+          <ShareButton
+            recipeId={recipe.id}
+            recipeName={recipe.name}
+            initialPublicSlug={recipe.publicSlug}
+            markdownInput={share.markdown}
+            jsonPayload={share.jsonPayload}
+          />
         </div>
       </div>
 
@@ -203,6 +195,22 @@ export function RecipeHeader({
         </p>
       ) : null}
 
+      {/* D5 — demoted destructive action: danger-outline, bottom of the
+          header, left-aligned away from the primary CTA cluster. */}
+      <div className="pt-1">
+        <Button
+          type="button"
+          onClick={openDelete}
+          disabled={isPending}
+          variant="danger"
+          tone="outline"
+          size="sm"
+          title="Delete recipe"
+        >
+          Delete recipe
+        </Button>
+      </div>
+
       <dialog
         ref={dialogRef}
         className="frame-strong p-0 bg-[var(--color-bg-panel)] text-[var(--color-fg)] [&::backdrop]:bg-black/70 m-auto inset-0 max-h-[90vh] max-w-md"
@@ -213,8 +221,8 @@ export function RecipeHeader({
           </h2>
           <p className="text-sm font-sans text-[var(--color-fg-muted)]">
             This permanently removes <strong>{recipe.name}</strong> and every
-            colour slot + step it contains. If it&apos;s attached to a project or
-            unit the attachment will be cleared. This can&apos;t be undone.
+            slot it contains. If it&apos;s attached to a project or unit the
+            attachment will be cleared. This can&apos;t be undone.
           </p>
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button

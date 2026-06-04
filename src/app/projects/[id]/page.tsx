@@ -264,6 +264,25 @@ export default async function ProjectDetailPage({
     </div>
   );
 
+  // D5/M5 — breadcrumb keeps the parent chain visible. Walk parentId up
+  // from this project (Model → Unit → Army) so a nested node always shows
+  // where it lives, not just "Projects > <self>". Bounded by the 3-level
+  // cap; the in-memory walk over the user's own list is cheap.
+  const projectsById = new Map<string, Project>();
+  for (const p of allProjects) projectsById.set(p.id, p);
+  const ancestors: Project[] = [];
+  {
+    let pid = project.parentId;
+    let guard = 0;
+    while (pid && guard < 8) {
+      const parent = projectsById.get(pid);
+      if (!parent) break;
+      ancestors.unshift(parent);
+      pid = parent.parentId;
+      guard += 1;
+    }
+  }
+
   return (
     <div className="p-6 md:p-8 max-w-5xl space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)] flex items-center justify-between gap-3">
@@ -271,6 +290,17 @@ export default async function ProjectDetailPage({
           <Link href="/projects" className="hover:text-[var(--color-accent)]">
             ← Projects
           </Link>
+          {ancestors.map((a) => (
+            <span key={a.id}>
+              {" > "}
+              <Link
+                href={`/projects/${a.id}`}
+                className="hover:text-[var(--color-accent)]"
+              >
+                {a.name}
+              </Link>
+            </span>
+          ))}
           {" > "}
           <span className="text-[var(--color-fg)]">{project.name}</span>
         </span>

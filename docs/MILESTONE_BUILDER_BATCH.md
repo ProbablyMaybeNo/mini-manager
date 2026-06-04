@@ -137,7 +137,7 @@ Built in **reviewable stages** (schema migration = one-way, so staged + gated):
       `RecipeEditorClient` (no zones/steps, no Steps box); `ProjectColorSchemeBox` renders the same flat
       slot list; share page + FOCUS panel read slots; retire "color scheme" labels → "Recipe". Read via
       `getRecipeWithSlots`; mutate via the recipeSlots actions. Paints-only (no custom-hex add path).
-- [ ] **Stage 4** — cleanup + D5 leftovers: re-point `recipe_step_completion` → `recipe_slot`
+- [x] **Stage 4** — cleanup + D5 leftovers: re-point `recipe_step_completion` → `recipe_slot`
       (slot.id == old step.id, preserved), drop `recipe_zone`/`recipe_step` + dead zone/step
       queries/actions (migration 0017). Then the D5 polish: ≤1 prominent recipe CTA (Assign/Share →
       overflow/ghost; Delete → danger-outline at bottom), demote project DELETE, "+ Model" on Unit,

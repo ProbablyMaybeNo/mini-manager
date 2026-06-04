@@ -13,6 +13,8 @@ import {
 } from "@/components/stageCounterLabels";
 import { bumpCounter, setCounter } from "@/lib/actions/counters";
 import { validateBump } from "@/lib/counters/cascade";
+import { pushUndo, popUndo } from "@/lib/undo/store";
+import { UNDO_EVENT } from "@/components/search/GlobalSearch";
 
 /**
  * Snapshot of the project columns this panel cares about. We accept
@@ -104,57 +106,103 @@ export function StageCounter({ snapshot }: { snapshot: StagePanelSnapshot }) {
     snapRef.current = snap;
   }, [snap]);
 
-  const onBump = useCallback((stage: PanelStage, delta: 1 | -1) => {
-    const current = snapRef.current;
-    // Pre-validate to avoid a network round-trip on illegal bumps.
-    const check = validateBump(current, stage, delta);
-    if (!check.ok) {
-      setError(check.error);
-      return;
-    }
-    setError(null);
+  // True while an undo replay is in flight — so the inverse bump/set the
+  // undo fires doesn't itself get recorded onto the stack (which would
+  // make undo toggle the same change forever).
+  const replayingUndo = useRef(false);
 
-    // Optimistic update.
-    const col: keyof StagePanelSnapshot = `${stage}Count`;
-    const prev = current;
-    const optimistic = { ...prev, [col]: check.nextValue };
-    setSnap(optimistic);
-    snapRef.current = optimistic;
-
-    startTransition(async () => {
-      const result = await bumpCounter({
-        projectId: current.id,
-        stage,
-        delta,
-      });
-      if (!result.ok) {
-        setSnap(prev);
-        snapRef.current = prev;
-        setError(result.error);
+  const onBump = useCallback(
+    (stage: PanelStage, delta: 1 | -1, recordUndo = true) => {
+      const current = snapRef.current;
+      // Pre-validate to avoid a network round-trip on illegal bumps.
+      const check = validateBump(current, stage, delta);
+      if (!check.ok) {
+        setError(check.error);
+        return;
       }
-    });
-  }, []);
+      setError(null);
+
+      // Optimistic update.
+      const col: keyof StagePanelSnapshot = `${stage}Count`;
+      const prev = current;
+      const optimistic = { ...prev, [col]: check.nextValue };
+      setSnap(optimistic);
+      snapRef.current = optimistic;
+
+      startTransition(async () => {
+        const result = await bumpCounter({
+          projectId: current.id,
+          stage,
+          delta,
+        });
+        if (!result.ok) {
+          setSnap(prev);
+          snapRef.current = prev;
+          setError(result.error);
+          return;
+        }
+        // D5 — record the inverse bump so Ctrl+Z can take it back.
+        if (recordUndo && !replayingUndo.current) {
+          pushUndo({
+            label: `${STAGE_LABEL[stage]} ${delta > 0 ? "+1" : "−1"}`,
+            invert: () => onBump(stage, (delta === 1 ? -1 : 1) as 1 | -1, false),
+          });
+        }
+      });
+    },
+    [],
+  );
 
   // M6 — tap-number-to-type: set a stage to an absolute value (fast for
   // large counts vs. holding +). Optimistic, with the same revert-on-error
   // contract as onBump.
-  const onSet = useCallback((stage: PanelStage, value: number) => {
-    const current = snapRef.current;
-    const col: keyof StagePanelSnapshot = `${stage}Count`;
-    if (current[col] === value) return;
-    setError(null);
-    const prev = current;
-    const optimistic = { ...prev, [col]: value };
-    setSnap(optimistic);
-    snapRef.current = optimistic;
-    startTransition(async () => {
-      const result = await setCounter({ projectId: current.id, stage, value });
-      if (!result.ok) {
-        setSnap(prev);
-        snapRef.current = prev;
-        setError(result.error);
+  const onSet = useCallback(
+    (stage: PanelStage, value: number, recordUndo = true) => {
+      const current = snapRef.current;
+      const col: keyof StagePanelSnapshot = `${stage}Count`;
+      const prevValue = current[col];
+      if (prevValue === value) return;
+      setError(null);
+      const prev = current;
+      const optimistic = { ...prev, [col]: value };
+      setSnap(optimistic);
+      snapRef.current = optimistic;
+      startTransition(async () => {
+        const result = await setCounter({ projectId: current.id, stage, value });
+        if (!result.ok) {
+          setSnap(prev);
+          snapRef.current = prev;
+          setError(result.error);
+          return;
+        }
+        // D5 — record an inverse set back to the prior value.
+        if (recordUndo && !replayingUndo.current) {
+          pushUndo({
+            label: `${STAGE_LABEL[stage]} → ${value}`,
+            invert: () => onSet(stage, prevValue, false),
+          });
+        }
+      });
+    },
+    [],
+  );
+
+  // D5 — Ctrl/Cmd+Z (dispatched by the D4 keyboard layer) pops + replays
+  // the most-recent inverse. The replay flag stops the inverse from
+  // re-recording itself onto the stack.
+  useEffect(() => {
+    function onUndo() {
+      replayingUndo.current = true;
+      try {
+        popUndo();
+      } finally {
+        // Cleared after the optimistic apply; the transition's success
+        // branch reads it synchronously before this resets.
+        replayingUndo.current = false;
       }
-    });
+    }
+    window.addEventListener(UNDO_EVENT, onUndo);
+    return () => window.removeEventListener(UNDO_EVENT, onUndo);
   }, []);
 
   // Page-level keyboard shortcuts. Bound once; reads fresh state
