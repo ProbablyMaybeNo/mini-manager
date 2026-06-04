@@ -1,3 +1,5 @@
+"use client";
+
 import { clsx } from "clsx";
 import type { ProjectType } from "@/db/schema";
 import type { DisplayStatus } from "@/lib/progress";
@@ -5,6 +7,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
 import { EditableProjectTitle } from "@/components/EditableProjectTitle";
+import { useLiveProgressPercent } from "@/components/projects/StageProgressContext";
 import { childAddLabel } from "@/lib/progress";
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
@@ -60,10 +63,16 @@ export function ProjectHeaderStrip({
   type,
   faction,
   status,
-  percent,
+  percent: serverPercent,
   totalModels,
   showAddChild,
 }: Props) {
+  // v6-4 bug fix — the StageCounter publishes its optimistic percent into
+  // StageProgressContext on every bump, so the header bar tracks stage
+  // completion instantly instead of waiting for the revalidatePath
+  // round-trip. Falls back to the server `percent` when nothing has been
+  // published yet (or for container/aggregate views with no StageCounter).
+  const percent = useLiveProgressPercent(projectId, serverPercent);
   return (
     <header className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">

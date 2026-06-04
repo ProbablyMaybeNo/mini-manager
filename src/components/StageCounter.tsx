@@ -13,6 +13,8 @@ import {
 } from "@/components/stageCounterLabels";
 import { bumpCounter, setCounter } from "@/lib/actions/counters";
 import { validateBump } from "@/lib/counters/cascade";
+import { progressPercent } from "@/lib/progress";
+import { useStageProgressPublisher } from "@/components/projects/StageProgressContext";
 import { pushUndo, popUndo } from "@/lib/undo/store";
 import { UNDO_EVENT } from "@/components/search/GlobalSearch";
 
@@ -96,6 +98,20 @@ export function StageCounter({ snapshot }: { snapshot: StagePanelSnapshot }) {
   useEffect(() => {
     setSnap(snapshot);
   }, [snapshot]);
+
+  // v6-4 bug fix — publish the optimistic completion percent into
+  // StageProgressContext so the header progress bar at the top of the
+  // unit updates the instant a stage is bumped, instead of lagging until
+  // the revalidatePath round-trip lands. The published value re-syncs to
+  // the server snapshot when revalidation re-renders the page (the effect
+  // above resets `snap` to `snapshot`), so it can never drift.
+  const { publish, clear } = useStageProgressPublisher();
+  useEffect(() => {
+    publish(snap.id, progressPercent(snap));
+  }, [snap, publish]);
+  useEffect(() => {
+    return () => clear(snapshot.id);
+  }, [clear, snapshot.id]);
 
   const lead = useMemo(() => leadStage(snap), [snap]);
 

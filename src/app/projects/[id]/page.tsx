@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
 import { ProjectHeaderStrip } from "@/components/ProjectHeaderStrip";
+import { StageProgressProvider } from "@/components/projects/StageProgressContext";
 import {
   ProjectColorSchemeBox,
   type ColorSchemeSlot,
@@ -284,6 +285,7 @@ export default async function ProjectDetailPage({
   }
 
   return (
+    <StageProgressProvider>
     <div className="p-6 md:p-8 max-w-5xl space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)] flex items-center justify-between gap-3">
         <span className="min-w-0 truncate">
@@ -401,5 +403,6 @@ export default async function ProjectDetailPage({
         </div>
       )}
     </div>
+    </StageProgressProvider>
   );
 }

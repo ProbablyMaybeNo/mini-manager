@@ -71,6 +71,57 @@ describe("ProjectHeaderStrip component surface", () => {
     expect(src).toContain("absolute inset-0 flex items-center justify-center");
     expect(src).toContain("{percent}%");
   });
+
+  test("v6-4 — header bar reads the live optimistic percent from StageProgressContext", () => {
+    // The header bar must track stage bumps instantly instead of lagging
+    // behind the revalidatePath round-trip. It reads useLiveProgressPercent
+    // (server `percent` as the fallback) so a StageCounter bump moves the
+    // bar at once.
+    expect(src).toContain("useLiveProgressPercent");
+    expect(src).toContain("useLiveProgressPercent(projectId, serverPercent)");
+  });
+});
+
+describe("StageCounter — v6-4 publishes optimistic percent to the header", () => {
+  const src = read("src/components/StageCounter.tsx");
+
+  test("publishes progressPercent(snap) on each optimistic snapshot change", () => {
+    expect(src).toContain("useStageProgressPublisher");
+    expect(src).toContain("progressPercent");
+    expect(src).toContain("publish(snap.id, progressPercent(snap))");
+  });
+
+  test("clears its published value on unmount so it can't go stale", () => {
+    expect(src).toContain("return () => clear(snapshot.id)");
+  });
+});
+
+describe("StageProgressContext — provider + hooks contract", () => {
+  const src = read("src/components/projects/StageProgressContext.tsx");
+
+  test("exposes a provider, a reader hook, and a publisher hook", () => {
+    expect(src).toContain("export function StageProgressProvider");
+    expect(src).toContain("export function useLiveProgressPercent");
+    expect(src).toContain("export function useStageProgressPublisher");
+  });
+
+  test("reader falls back to the server percent when nothing is published", () => {
+    expect(src).toContain("return live ?? serverPercent");
+  });
+
+  test("hooks are no-ops outside a provider so consumers stay portable", () => {
+    expect(src).toContain("if (!ctx) return serverPercent");
+    expect(src).toContain("return { publish: () => {}, clear: () => {} }");
+  });
+});
+
+describe("Project detail page wraps the workspace in the progress provider", () => {
+  const src = read("src/app/projects/[id]/page.tsx");
+
+  test("imports + mounts StageProgressProvider around header + stages", () => {
+    expect(src).toContain("StageProgressProvider");
+    expect(src).toContain("<StageProgressProvider>");
+  });
 });
 
 describe("ProgressBar — stretch + height props (P12.8)", () => {
