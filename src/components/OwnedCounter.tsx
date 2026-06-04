@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { bumpCounter } from "@/lib/actions/counters";
 import { validateBump } from "@/lib/counters/cascade";
 import { CounterButton } from "@/components/StageCounter";
+import { useRosterPublisher } from "@/components/projects/RosterContext";
 
 /**
  * Slim snapshot — only the fields the owned row reads. Lets the
@@ -48,6 +49,18 @@ export function OwnedCounter({ snapshot }: { snapshot: OwnedSnapshot }) {
     setSnap(snapshot);
     snapRef.current = snapshot;
   }, [snapshot]);
+
+  // v6-4 bug fix — publish the optimistic OWNED count so the StageCounter
+  // (a separate card) validates the BUILD cascade against the live roster.
+  // Without this, assigning a stage right after filling the roster failed
+  // with "Build can't exceed Owned (0)" until the server round-trip landed.
+  const { publishOwned, clearOwned } = useRosterPublisher();
+  useEffect(() => {
+    publishOwned(snap.id, snap.ownedCount);
+  }, [snap.id, snap.ownedCount, publishOwned]);
+  useEffect(() => {
+    return () => clearOwned(snapshot.id);
+  }, [clearOwned, snapshot.id]);
 
   const onBump = useCallback((delta: 1 | -1) => {
     const current = snapRef.current;

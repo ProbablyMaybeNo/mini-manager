@@ -15,6 +15,7 @@ import { bumpCounter, setCounter } from "@/lib/actions/counters";
 import { validateBump } from "@/lib/counters/cascade";
 import { progressPercent } from "@/lib/progress";
 import { useStageProgressPublisher } from "@/components/projects/StageProgressContext";
+import { useLiveOwnedCount } from "@/components/projects/RosterContext";
 import { pushUndo, popUndo } from "@/lib/undo/store";
 import { UNDO_EVENT } from "@/components/search/GlobalSearch";
 
@@ -113,14 +114,30 @@ export function StageCounter({ snapshot }: { snapshot: StagePanelSnapshot }) {
     return () => clear(snapshot.id);
   }, [clear, snapshot.id]);
 
-  const lead = useMemo(() => leadStage(snap), [snap]);
+  // v6-4 bug fix — read the live OWNED count published by the OwnedCounter
+  // (the separate "Roster" card) so BUILD's cascade ceiling reflects a
+  // just-filled roster instead of the stale server `ownedCount`. Falls
+  // back to this panel's own snapshot when nothing is published.
+  const liveOwned = useLiveOwnedCount(snap.id, snap.ownedCount);
+
+  // The snapshot the cascade validates + the panel renders against. Its
+  // OWNED tier is the live roster value; the stage tiers stay the
+  // optimistic local values.
+  const effectiveSnap = useMemo<StagePanelSnapshot>(
+    () => (liveOwned === snap.ownedCount ? snap : { ...snap, ownedCount: liveOwned }),
+    [snap, liveOwned],
+  );
+
+  const lead = useMemo(() => leadStage(effectiveSnap), [effectiveSnap]);
 
   // The keyboard handler is bound once on mount; it reads the latest
   // snapshot through a ref so we don't churn listeners on every bump.
-  const snapRef = useRef(snap);
+  // The ref carries the live OWNED tier so a bump validates against the
+  // current roster even mid-transition.
+  const snapRef = useRef(effectiveSnap);
   useEffect(() => {
-    snapRef.current = snap;
-  }, [snap]);
+    snapRef.current = effectiveSnap;
+  }, [effectiveSnap]);
 
   // True while an undo replay is in flight — so the inverse bump/set the
   // undo fires doesn't itself get recorded onto the stack (which would
@@ -261,8 +278,8 @@ export function StageCounter({ snapshot }: { snapshot: StagePanelSnapshot }) {
             value={stageValue(snap, stage)}
             total={snap.count}
             isLead={lead === stage}
-            canIncrement={validateBump(snap, stage, 1).ok}
-            canDecrement={validateBump(snap, stage, -1).ok}
+            canIncrement={validateBump(effectiveSnap, stage, 1).ok}
+            canDecrement={validateBump(effectiveSnap, stage, -1).ok}
             isPending={isPending}
             onBump={(d) => onBump(stage, d)}
             onSet={(v) => onSet(stage, v)}
