@@ -307,7 +307,12 @@ export function FocusPanel({
                         </span>
                       ) : null}
                     </p>
-                    {slot.paintId ? <PaintNoteEditor slot={slot} /> : null}
+                    {slot.paintId ? (
+                      <PaintNoteDisclosure
+                        slot={slot}
+                        defaultOpen={isActiveSlot || isNext}
+                      />
+                    ) : null}
                   </div>
                 </li>
               );
@@ -316,6 +321,61 @@ export function FocusPanel({
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * Progressive disclosure of the per-paint note (doc §9 + §14 FOCUS).
+ *
+ * The note editor used to render inline for EVERY paint-backed slot — a
+ * wall of textareas that buried the glanceable "Next" tag + completion
+ * bar for long recipes. This collapses each note behind a native
+ * `<details>` so the panel stays scannable, revealing the editor only:
+ *   - automatically for the active / next slot (`defaultOpen`) — the one
+ *     the painter is working on, so no extra click in the common case;
+ *   - on click for any other slot.
+ *
+ * Native `<details>`/`<summary>` is SSR-safe (no hydration mismatch, no
+ * client open-state) and keyboard-accessible for free. The summary shows
+ * a "●" indicator when the paint already carries a note, so a collapsed
+ * slot still signals there's content to read. The editor inside keeps the
+ * existing optimistic save-on-blur + aria-live status pattern untouched.
+ */
+function PaintNoteDisclosure({
+  slot,
+  defaultOpen,
+}: {
+  slot: FocusSlotView;
+  defaultOpen: boolean;
+}) {
+  const hasNote = Boolean(slot.paintNote && slot.paintNote.trim().length > 0);
+  return (
+    <details className="group" open={defaultOpen} data-paint-note-disclosure>
+      <summary className="flex items-center gap-1 cursor-pointer select-none font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)] marker:content-['']">
+        <span
+          aria-hidden
+          className="inline-block transition-transform group-open:rotate-90"
+        >
+          ▸
+        </span>
+        Paint note
+        {hasNote ? (
+          <span
+            aria-hidden
+            className="text-[var(--color-green)]"
+            data-paint-note-indicator
+          >
+            ●
+          </span>
+        ) : null}
+        <span className="sr-only">
+          {hasNote ? " (has a note)" : " (empty)"}
+        </span>
+      </summary>
+      <div className="mt-1">
+        <PaintNoteEditor slot={slot} />
+      </div>
+    </details>
   );
 }
 

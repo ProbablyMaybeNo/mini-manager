@@ -212,10 +212,11 @@ describe("FocusPanel — notes consolidation (per-paint only, 2026-06-02)", () =
     ];
   }
 
-  // PaintNoteEditor is a hook-driven component the walker can't fully
-  // render, so we match its *element node* by the `slot` prop the panel
-  // passes it — a slot object carrying a non-null paintId.
-  const isPaintNoteEditor = (n: AnyNode) => {
+  // PaintNoteEditor + its PaintNoteDisclosure wrapper both receive the
+  // `slot` prop (a non-null paintId). The disclosure additionally carries
+  // a boolean `defaultOpen`; the editor does not — that distinguishes the
+  // two element nodes for the walker.
+  const hasPaintSlotProp = (n: AnyNode) => {
     const slot = n.props.slot as { paintId?: unknown } | undefined;
     return (
       slot != null &&
@@ -224,6 +225,10 @@ describe("FocusPanel — notes consolidation (per-paint only, 2026-06-02)", () =
       typeof slot.paintId === "string"
     );
   };
+  const isPaintNoteDisclosure = (n: AnyNode) =>
+    hasPaintSlotProp(n) && typeof n.props.defaultOpen === "boolean";
+  const isPaintNoteEditor = (n: AnyNode) =>
+    hasPaintSlotProp(n) && !("defaultOpen" in n.props);
 
   test("renders the per-paint note editor for a paint-backed slot", () => {
     const tree = render(paintBackedSlots());
@@ -244,6 +249,67 @@ describe("FocusPanel — notes consolidation (per-paint only, 2026-06-02)", () =
     const tree = render(basicSlots());
     expect(findAll(tree, isPaintNoteEditor)).toHaveLength(0);
     expect(JSON.stringify(tree)).not.toContain("Painting notes…");
+  });
+
+  describe("progressive disclosure (item 5, doc §9)", () => {
+    function threePaintSlots(): FocusSlotView[] {
+      return [0, 1, 2].map((i) => ({
+        id: `s${i + 1}`,
+        position: i,
+        technique: "basecoat",
+        paintHex: "#aa0033",
+        paintLabel: `Paint ${i + 1}`,
+        paintId: `paint-${i + 1}`,
+        paintNote: null,
+        done: false,
+      }));
+    }
+
+    test("each paint-backed slot wraps its editor in a disclosure", () => {
+      const tree = render(threePaintSlots());
+      // One disclosure + one editor per paint-backed slot.
+      expect(findAll(tree, isPaintNoteDisclosure)).toHaveLength(3);
+      expect(findAll(tree, isPaintNoteEditor)).toHaveLength(3);
+    });
+
+    test("only the active/next slot's disclosure defaults open", () => {
+      // No active slot pinned → the first undone slot (s1, the NEXT slot)
+      // is the only one open; the rest collapse to stay glanceable.
+      const tree = render(threePaintSlots());
+      const open = findAll(
+        tree,
+        (n) => isPaintNoteDisclosure(n) && n.props.defaultOpen === true,
+      );
+      expect(open).toHaveLength(1);
+      const slot = open[0]!.props.slot as { paintId: string };
+      expect(slot.paintId).toBe("paint-1");
+    });
+
+    test("the active slot's disclosure opens even when it isn't the NEXT slot", () => {
+      const slots = threePaintSlots();
+      slots[0]!.done = true; // s1 done → s2 becomes NEXT
+      const tree = render(slots, { activeSlotId: "s3" });
+      const open = findAll(
+        tree,
+        (n) => isPaintNoteDisclosure(n) && n.props.defaultOpen === true,
+      );
+      // Both the NEXT slot (s2) and the active slot (s3) open.
+      const openPaintIds = open
+        .map((n) => (n.props.slot as { paintId: string }).paintId)
+        .sort();
+      expect(openPaintIds).toEqual(["paint-2", "paint-3"]);
+    });
+
+    test("uses a native <details>/<summary> disclosure (SSR-safe)", () => {
+      const tree = render(threePaintSlots());
+      // The walker renders PaintNoteDisclosure, exposing the native
+      // <details> it returns. Match the element by its marker + tag.
+      const details = findAll(
+        tree,
+        (n) => n.type === "details" && "data-paint-note-disclosure" in n.props,
+      );
+      expect(details).toHaveLength(3);
+    });
   });
 });
 
