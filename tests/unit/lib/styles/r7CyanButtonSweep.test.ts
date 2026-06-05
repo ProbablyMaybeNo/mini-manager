@@ -116,9 +116,12 @@ describe("R7-006 — ADD / SAVE / ATTACH buttons flipped to success (green)", ()
     expect(src).toMatch(/variant="success"[\s\S]*?Move attachment/);
   });
 
-  test("RecipesTable 'Assign ▾' uses success", () => {
-    const src = read("src/components/recipes/RecipesTable.tsx");
-    expect(src).toMatch(/variant="success"[\s\S]{0,200}Assign ▾/);
+  test("AssignToProjectMenu 'Assign ▾' trigger uses success", () => {
+    // Item 1 (batch/recipe-page): the /recipes row ASSIGN action moved
+    // into the inline AssignToProjectMenu dropdown; the green success
+    // trigger lives there now.
+    const src = read("src/components/recipes/AssignToProjectMenu.tsx");
+    expect(src).toMatch(/variant="success"[\s\S]{0,400}Assign ▾/);
   });
 });
 

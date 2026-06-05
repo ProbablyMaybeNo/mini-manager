@@ -33,11 +33,25 @@ describe("RecipesTable component surface", () => {
     expect(src).toContain("`/recipes/${row.id}`");
   });
 
-  test("the Assign-row-action uses variant='success' (green) per R7-006", () => {
+  test("the row Assign action is the inline project dropdown (not a navigate)", () => {
+    // Item 1: the row's ASSIGN opens a dropdown of projects and attaches
+    // the recipe in place — it does NOT navigate to the recipe creator.
+    expect(src).toContain("AssignToProjectMenu");
+  });
+
+  test("the Assign-dropdown trigger uses variant='success' (green) per R7-006", () => {
     // R7-006 — ATTACH / ASSIGN actions flipped off cyan. Green is the
     // Round-7 semantic for ADD / ATTACH / ASSIGN; cyan stays for
     // auth and final-step confirms only.
-    expect(src).toMatch(/variant="success"[\s\S]{0,200}Assign/);
+    const menu = read("src/components/recipes/AssignToProjectMenu.tsx");
+    expect(menu).toMatch(/variant="success"[\s\S]{0,400}Assign/);
+  });
+
+  test("the Assign dropdown attaches via attachRecipeToProject (shared path)", () => {
+    const menu = read("src/components/recipes/AssignToProjectMenu.tsx");
+    expect(menu).toContain("attachRecipeToProject");
+    // It stays on the list (refresh) rather than navigating away.
+    expect(menu).toContain("router.refresh()");
   });
 
   test("the Share-row-action uses variant='warning' (pastel yellow)", () => {
@@ -60,14 +74,30 @@ describe("RecipesTable component surface", () => {
     expect(src).toContain('useState<SortDir>("desc")');
   });
 
-  test("PaletteStrip renders up to 8 swatches", () => {
-    expect(src).toContain("swatches.slice(0, 8)");
+  test("rows render creator-sized paint squares (w-12 h-12), not w-4 chips", () => {
+    // Item 1: /recipes is the primary recipe-access surface, so each row
+    // renders its paints at the SAME size as the recipe creator
+    // (w-12 h-12) with the paint name + layer, not a tiny w-4 strip.
+    expect(src).toContain("w-12 h-12");
+    expect(src).not.toContain("w-4 h-4");
   });
 
-  test("PaletteStrip hover label shows the paint name (not just the hex)", () => {
-    // Item 1: hovering a swatch shows the chosen paint's NAME (name
-    // primary, hex secondary). Custom-colour slots fall back to the hex.
-    expect(src).toContain("${sw.label} · ${sw.hex}");
+  test("each square shows the paint name + the layer label", () => {
+    expect(src).toContain("slot.paintLabel");
+    expect(src).toContain("slot.layerLabel");
+  });
+
+  test("a colour-only slot with no paint shows a + Assign Paint affordance", () => {
+    // Item 1: a slot that's just a colour with no catalog paint assigned
+    // renders a "+ Assign Paint" call to action (black/white per contrast)
+    // instead of a name.
+    expect(src).toContain("slot.needsPaint");
+    expect(src).toMatch(/\+ Assign/);
+    expect(src).toContain("readableTextOn");
+  });
+
+  test("clicking a paint square navigates to the recipe creator", () => {
+    expect(src).toMatch(/router\.push\(`\/recipes\/\$\{recipeId\}`\)/);
   });
 
   test("a recipe with no palette renders an explanatory hint", () => {

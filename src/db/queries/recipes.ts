@@ -179,6 +179,24 @@ export async function listAllRecipesGrouped(
  * One read pass each over `recipes` and `recipe_slot` — O(R+S) flat.
  */
 
+/** One rich paint square for the /recipes table row — same data the
+ *  recipe creator's slot cell renders (colour, paint name, layer) plus
+ *  ownership coverage for the green/yellow border, and a flag marking
+ *  a colour-only slot with no catalog paint assigned (renders the
+ *  "+ Assign Paint" affordance instead of a name). */
+export interface RecipeTableSlot {
+  hex: string;
+  /** Resolved "Brand Name" for catalog paints; null for a colour-only
+   *  slot with no paint assigned. */
+  paintLabel: string | null;
+  /** Human layer label (Basecoat / Highlight / …). */
+  layerLabel: string;
+  /** Ownership coverage — "none" for colour-only slots (no paint to own). */
+  coverage: CoverageState;
+  /** True when the slot is just a colour with no catalog paint assigned. */
+  needsPaint: boolean;
+}
+
 export interface RecipeTableRow {
   id: string;
   name: string;
@@ -193,6 +211,9 @@ export interface RecipeTableRow {
    *  plus a hover label: the paint's "Brand Name" for catalog slots, or
    *  the hex itself for custom-colour slots with no paint. */
   palette: { hex: string; label: string }[];
+  /** Rich per-slot squares (paint name + layer + coverage), creator-sized,
+   *  in slot-position order (bounded). */
+  slots: RecipeTableSlot[];
   /** Total slot count (one paint + layer per slot). */
   slotCount: number;
   /** ms-timestamps so the table can sort. */
@@ -203,6 +224,7 @@ export interface RecipeTableRow {
 
 export async function listRecipesForTable(
   userId: string,
+  perRecipeSlotCap = 12,
 ): Promise<ReadonlyArray<RecipeTableRow>> {
   const recipeRows = await db
     .select()
@@ -226,26 +248,54 @@ export async function listRecipesForTable(
     slotsByRecipeId.set(s.recipeId, arr);
   }
 
-  const paintMeta = await getPaintMetaMap();
+  const [paintMeta, inventory] = await Promise.all([
+    getPaintMetaMap(),
+    getInventoryByPaintId(userId),
+  ]);
 
   const out: RecipeTableRow[] = [];
   for (const r of recipeRows) {
     const slots = slotsByRecipeId.get(r.id) ?? [];
     const paletteHexes: string[] = [];
     const palette: { hex: string; label: string }[] = [];
+    const richSlots: RecipeTableSlot[] = [];
     for (const slot of slots) {
-      if (slot.customColorHex) {
-        paletteHexes.push(slot.customColorHex);
-        // No catalog paint — fall back to the hex as the hover label.
-        palette.push({ hex: slot.customColorHex, label: slot.customColorHex });
-      } else if (slot.paintId) {
+      if (slot.paintId) {
         const meta = paintMeta.get(slot.paintId);
         if (meta) {
-          paletteHexes.push(meta.hex);
-          palette.push({ hex: meta.hex, label: meta.label });
+          if (paletteHexes.length < 8) {
+            paletteHexes.push(meta.hex);
+            palette.push({ hex: meta.hex, label: meta.label });
+          }
+          if (richSlots.length < perRecipeSlotCap) {
+            richSlots.push({
+              hex: meta.hex,
+              paintLabel: meta.label,
+              layerLabel: layerLabelFor(slot.technique),
+              coverage: coverageFor(slot.paintId, inventory),
+              needsPaint: false,
+            });
+          }
+        }
+      } else if (slot.customColorHex) {
+        if (paletteHexes.length < 8) {
+          paletteHexes.push(slot.customColorHex);
+          // No catalog paint — fall back to the hex as the hover label.
+          palette.push({
+            hex: slot.customColorHex,
+            label: slot.customColorHex,
+          });
+        }
+        if (richSlots.length < perRecipeSlotCap) {
+          richSlots.push({
+            hex: slot.customColorHex,
+            paintLabel: null,
+            layerLabel: layerLabelFor(slot.technique),
+            coverage: "none",
+            needsPaint: true,
+          });
         }
       }
-      if (paletteHexes.length >= 8) break;
     }
     const attachmentKind: RecipeTableRow["attachmentKind"] = r.attachedProjectId
       ? "project"
@@ -258,6 +308,7 @@ export async function listRecipesForTable(
       attachedProjectId: r.attachedProjectId,
       paletteHexes,
       palette,
+      slots: richSlots,
       slotCount: slots.length,
       createdAt: r.createdAt.getTime(),
       updatedAt: r.updatedAt.getTime(),

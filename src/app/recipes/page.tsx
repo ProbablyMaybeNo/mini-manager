@@ -1,9 +1,10 @@
-import { eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
 import { listRecipesForTable } from "@/db/queries/recipes";
 import { projects } from "@/db/schema";
 import { NewRecipeButton } from "@/components/recipes/NewRecipeButton";
+import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
 import {
   RecipesTable,
   type RecipeRowVm,
@@ -42,32 +43,34 @@ export default async function RecipesPage() {
     );
   }
 
-  // Resolve attachment labels in one pass — project name.
-  const projectIds = Array.from(
-    new Set(
-      rows.flatMap((r) => (r.attachedProjectId ? [r.attachedProjectId] : [])),
-    ),
-  );
+  // Every non-archived project owned by the user — powers the per-row
+  // "Assign to project ▾" dropdown (reuses the recipe-editor data path:
+  // attachRecipeToProject) AND resolves the "attached to" labels. One read.
+  const projectRows = await db
+    .select({ id: projects.id, name: projects.name, type: projects.type })
+    .from(projects)
+    .where(and(eq(projects.ownerId, userId), isNull(projects.archivedAt)))
+    .orderBy(asc(projects.name));
 
   const projectNameById = new Map<string, string>();
-  if (projectIds.length > 0) {
-    const prows = await db
-      .select({ id: projects.id, name: projects.name })
-      .from(projects)
-      .where(eq(projects.ownerId, userId));
-    for (const p of prows) projectNameById.set(p.id, p.name);
-  }
+  for (const p of projectRows) projectNameById.set(p.id, p.name);
+
+  const assignProjects: ReadonlyArray<AssignProjectOption> = projectRows.map(
+    (p) => ({ id: p.id, name: p.name, type: p.type }),
+  );
 
   const vm: RecipeRowVm[] = rows.map((r) => ({
     id: r.id,
     name: r.name,
     bodyType: r.bodyType,
     attachmentKind: r.attachmentKind,
+    attachedProjectId: r.attachedProjectId,
     attachmentLabel: r.attachedProjectId
       ? projectNameById.get(r.attachedProjectId) ?? "Project"
       : null,
     paletteHexes: r.paletteHexes,
     palette: r.palette,
+    slots: r.slots,
     slotCount: r.slotCount,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
@@ -86,7 +89,7 @@ export default async function RecipesPage() {
         </div>
         <NewRecipeButton />
       </header>
-      <RecipesTable rows={vm} />
+      <RecipesTable rows={vm} assignProjects={assignProjects} />
     </div>
   );
 }

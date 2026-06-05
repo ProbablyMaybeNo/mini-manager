@@ -2,19 +2,37 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
+import { AssignToProjectMenu } from "@/components/recipes/AssignToProjectMenu";
+import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
+
+/** One creator-sized paint square on a /recipes row — colour, paint name,
+ *  layer, ownership coverage (green/yellow border), and whether it's a
+ *  colour-only slot that still needs a paint assigned. */
+export interface RecipeTableSlotVm {
+  hex: string;
+  paintLabel: string | null;
+  layerLabel: string;
+  coverage: "owned" | "wanted" | "none";
+  needsPaint: boolean;
+}
 
 export interface RecipeRowVm {
   id: string;
   name: string;
   bodyType: string;
   attachmentKind: "standalone" | "project";
+  /** Currently-attached project id so the Assign dropdown can mark it. */
+  attachedProjectId: string | null;
   attachmentLabel: string | null;
   paletteHexes: string[];
   /** Per-swatch colour + hover label (paint name, or hex for custom slots). */
   palette: { hex: string; label: string }[];
+  /** Creator-sized paint squares (paint name + layer) shown in the row. */
+  slots: RecipeTableSlotVm[];
   slotCount: number;
   createdAt: number;
   updatedAt: number;
@@ -50,6 +68,9 @@ export interface DashboardRecipeRowVm {
 
 interface Props {
   rows: ReadonlyArray<RecipeRowVm>;
+  /** Every non-archived project owned by the user — powers each row's
+   *  "Assign ▾" project dropdown (attach-to-project inline). */
+  assignProjects: ReadonlyArray<AssignProjectOption>;
 }
 
 /**
@@ -70,7 +91,7 @@ interface Props {
  * asc/desc. The Assign + Share row-actions defer to the existing
  * editor for the heavy lifting — they're shortcuts that navigate.
  */
-export function RecipesTable({ rows }: Props) {
+export function RecipesTable({ rows, assignProjects }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
@@ -103,7 +124,11 @@ export function RecipesTable({ rows }: Props) {
           on mobile and reserve the dense sortable table for md+. */}
       <div className="md:hidden flex flex-col gap-2">
         {sorted.map((row) => (
-          <RecipeCardRow key={row.id} row={row} />
+          <RecipeCardRow
+            key={row.id}
+            row={row}
+            assignProjects={assignProjects}
+          />
         ))}
       </div>
       <div className="hidden md:block frame overflow-x-auto">
@@ -151,7 +176,11 @@ export function RecipesTable({ rows }: Props) {
         </thead>
         <tbody>
           {sorted.map((row) => (
-            <RecipeRow key={row.id} row={row} />
+            <RecipeRow
+              key={row.id}
+              row={row}
+              assignProjects={assignProjects}
+            />
           ))}
         </tbody>
       </table>
@@ -165,7 +194,13 @@ export function RecipesTable({ rows }: Props) {
  * slot/step counts beneath, and the Assign/Share actions as full-width
  * buttons so they never scroll off the right edge.
  */
-function RecipeCardRow({ row }: { row: RecipeRowVm }) {
+function RecipeCardRow({
+  row,
+  assignProjects,
+}: {
+  row: RecipeRowVm;
+  assignProjects: ReadonlyArray<AssignProjectOption>;
+}) {
   return (
     <div className="frame px-3 py-3 flex flex-col gap-2 bg-[var(--color-bg-elevated)]">
       <div className="flex items-start justify-between gap-2">
@@ -177,7 +212,7 @@ function RecipeCardRow({ row }: { row: RecipeRowVm }) {
         </Link>
         <StatusPill status="neutral">{row.bodyType}</StatusPill>
       </div>
-      <PaletteStrip swatches={row.palette} />
+      <RecipeSlotSquares recipeId={row.id} slots={row.slots} />
       <div className="flex items-center gap-3 text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
         <span>
           {row.slotCount} slot{row.slotCount === 1 ? "" : "s"}
@@ -186,16 +221,12 @@ function RecipeCardRow({ row }: { row: RecipeRowVm }) {
         <span className="truncate">{row.attachmentLabel ?? "standalone"}</span>
       </div>
       <div className="flex items-center gap-2">
-        <Button
-          as="a"
-          href={`/recipes/${row.id}`}
-          variant="success"
-          size="sm"
-          className="flex-1"
-          title="Open editor + assign to a project"
-        >
-          Assign ▾
-        </Button>
+        <AssignToProjectMenu
+          recipeId={row.id}
+          projects={assignProjects}
+          currentlyAttachedProjectId={row.attachedProjectId}
+          block
+        />
         <Button
           as="a"
           href={row.publicSlug ? `/r/${row.publicSlug}` : `/recipes/${row.id}`}
@@ -252,13 +283,19 @@ function Th({
   );
 }
 
-function RecipeRow({ row }: { row: RecipeRowVm }) {
+function RecipeRow({
+  row,
+  assignProjects,
+}: {
+  row: RecipeRowVm;
+  assignProjects: ReadonlyArray<AssignProjectOption>;
+}) {
   return (
     <tr
-      className="hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors"
+      className="hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors align-top"
       style={{ borderBottom: "1px solid var(--color-border)" }}
     >
-      <td className="px-3 py-2">
+      <td className="px-3 py-3">
         <Link
           href={`/recipes/${row.id}`}
           className="text-[var(--color-cyan)] hover:underline"
@@ -266,32 +303,28 @@ function RecipeRow({ row }: { row: RecipeRowVm }) {
           {row.name}
         </Link>
       </td>
-      <td className="px-3 py-2">
+      <td className="px-3 py-3">
         <StatusPill status="neutral">{row.bodyType}</StatusPill>
       </td>
-      <td className="px-3 py-2">
-        <PaletteStrip swatches={row.palette} />
+      <td className="px-3 py-3">
+        <RecipeSlotSquares recipeId={row.id} slots={row.slots} />
       </td>
-      <td className="px-3 py-2 text-right tabular-nums">{row.slotCount}</td>
-      <td className="px-3 py-2 text-[var(--color-fg-muted)]">
+      <td className="px-3 py-3 text-right tabular-nums">{row.slotCount}</td>
+      <td className="px-3 py-3 text-[var(--color-fg-muted)]">
         {row.attachmentLabel ?? (
           <span className="opacity-50">standalone</span>
         )}
       </td>
-      <td className="px-3 py-2 text-[var(--color-fg-muted)] whitespace-nowrap">
+      <td className="px-3 py-3 text-[var(--color-fg-muted)] whitespace-nowrap">
         {formatDate(row.updatedAt)}
       </td>
-      <td className="px-3 py-2 text-right">
+      <td className="px-3 py-3 text-right">
         <div className="inline-flex items-center gap-2">
-          <Button
-            as="a"
-            href={`/recipes/${row.id}`}
-            variant="success"
-            size="sm"
-            title="Open editor + assign to a project"
-          >
-            Assign ▾
-          </Button>
+          <AssignToProjectMenu
+            recipeId={row.id}
+            projects={assignProjects}
+            currentlyAttachedProjectId={row.attachedProjectId}
+          />
           <Button
             as="a"
             href={
@@ -313,12 +346,23 @@ function RecipeRow({ row }: { row: RecipeRowVm }) {
   );
 }
 
-function PaletteStrip({
-  swatches,
+/**
+ * Item 1 — the row's paint squares, rendered at the SAME size the recipe
+ * creator uses (w-12 h-12) with the paint name + layer beneath, so
+ * /recipes reads as a full recipe at a glance. Clicking a square opens
+ * the creator (to assign / edit paints). A colour-only slot with no paint
+ * assigned shows a "+ Assign Paint" affordance — black or white text per
+ * the swatch's contrast — instead of a name.
+ */
+function RecipeSlotSquares({
+  recipeId,
+  slots,
 }: {
-  swatches: ReadonlyArray<{ hex: string; label: string }>;
+  recipeId: string;
+  slots: ReadonlyArray<RecipeTableSlotVm>;
 }) {
-  if (swatches.length === 0) {
+  const router = useRouter();
+  if (slots.length === 0) {
     return (
       <span className="text-2xs text-[var(--color-fg-muted)] opacity-50">
         no palette yet
@@ -326,34 +370,74 @@ function PaletteStrip({
     );
   }
   return (
-    <span
-      className="inline-flex items-center gap-1"
+    <ul
+      className="flex flex-wrap items-start gap-2"
       role="list"
-      aria-label={`Palette · ${swatches.length} swatch${swatches.length === 1 ? "" : "es"}`}
+      aria-label={`Palette · ${slots.length} paint${slots.length === 1 ? "" : "s"}`}
     >
-      {swatches.slice(0, 8).map((sw, i) => {
-        // Hover label: paint name primary, hex secondary when the label
-        // isn't already the hex (custom-colour slots use the hex itself).
-        const hover =
-          sw.label.toLowerCase() === sw.hex.toLowerCase()
-            ? sw.hex
-            : `${sw.label} · ${sw.hex}`;
+      {slots.map((slot, i) => {
+        const fg = readableTextOn(slot.hex);
+        const hover = slot.needsPaint
+          ? `Assign a paint · ${slot.hex} · ${slot.layerLabel}`
+          : `${slot.paintLabel} · ${slot.layerLabel}`;
         return (
-          <span
-            key={`${i}-${sw.hex}`}
+          <li
+            key={`${i}-${slot.hex}`}
             role="listitem"
-            aria-label={hover}
-            title={hover}
-            className="block w-4 h-4 rounded-sm"
-            style={{
-              background: sw.hex,
-              border: "1px solid var(--color-border-strong)",
-            }}
-          />
+            className="flex flex-col items-center gap-1 w-[4.5rem]"
+          >
+            <button
+              type="button"
+              onClick={() => router.push(`/recipes/${recipeId}`)}
+              title={hover}
+              aria-label={hover}
+              className="block w-12 h-12 rounded-sm transition-transform hover:scale-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+              style={{
+                background: slot.hex,
+                border: `2px solid ${coverageBorder(slot.coverage)}`,
+              }}
+            >
+              {slot.needsPaint ? (
+                <span
+                  aria-hidden
+                  className="font-mono text-2xs leading-none"
+                  style={{ color: fg }}
+                >
+                  + Assign
+                  <br />
+                  Paint
+                </span>
+              ) : null}
+            </button>
+            <span className="font-mono text-2xs text-[var(--color-fg)] text-center leading-tight line-clamp-2 break-words">
+              {slot.paintLabel ?? (
+                <span className="text-[var(--color-fg-muted)]">no paint</span>
+              )}
+            </span>
+            <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] text-center leading-tight">
+              {slot.layerLabel}
+            </span>
+          </li>
         );
       })}
-    </span>
+    </ul>
   );
+}
+
+/**
+ * Pick black or white text for a coloured swatch background. sRGB
+ * perceived-luminance threshold (~0.55) — the same trick the creator's
+ * SlotCell uses for its on-swatch labels.
+ */
+function readableTextOn(hex: string): string {
+  const clean = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (clean.length !== 6) return "#0a0a0a";
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  if ([r, g, b].some(Number.isNaN)) return "#0a0a0a";
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.55 ? "#0a0a0a" : "#f5f5f5";
 }
 
 function formatDate(ms: number): string {
