@@ -94,8 +94,18 @@ export default async function RecipeEditorPage({
   });
 
   const ownedPaintIds = new Set<string>();
+  // Item 2 — the slot side panel's WISHLIST / OWNED buttons need the
+  // currently-selected paint's full inventory state, not just ownership.
+  const inventoryByPaintId = new Map<
+    string,
+    { ownedCount: number; isWishlisted: boolean }
+  >();
   inventoryEntries.forEach((entry, paintId) => {
     if (entry.ownedCount > 0) ownedPaintIds.add(paintId);
+    inventoryByPaintId.set(paintId, {
+      ownedCount: entry.ownedCount,
+      isWishlisted: entry.isWishlisted,
+    });
   });
 
   // Build a MarkdownInput for the share modal — resolves paint name + hex
@@ -171,6 +181,7 @@ export default async function RecipeEditorPage({
         recipe={recipe}
         slots={slotItems}
         ownedPaintIds={ownedPaintIds}
+        inventoryByPaintId={inventoryByPaintId}
       />
     </div>
   );

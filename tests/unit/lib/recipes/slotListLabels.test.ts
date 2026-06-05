@@ -192,6 +192,35 @@ describe("B3 — brand filter chips in the paint picker", () => {
   });
 });
 
+describe("Item 2 — WISHLIST + OWNED buttons in the slot side panel", () => {
+  const buttons = read("src/components/recipes/RecipeInventoryButtons.tsx");
+  const slotList = read("src/components/recipes/SlotList.tsx");
+
+  test("WISHLIST button is the warning (yellow border + text) outline style", () => {
+    // Yellow border + yellow text, black fill == warning variant, outline
+    // tone when inactive. Mirrors the app's other WISHLIST CTAs.
+    expect(buttons).toMatch(/variant="warning"/);
+    expect(buttons).toContain("Wishlist");
+  });
+
+  test("OWNED button is the success (neon-green border + text) outline style", () => {
+    expect(buttons).toMatch(/variant="success"/);
+    expect(buttons).toContain("Mark owned");
+  });
+
+  test("toggles route through the shared inventory action path", () => {
+    // Reuses the exact server actions the library InventoryControls uses.
+    expect(buttons).toContain("toggleWishlistedPaint");
+    expect(buttons).toContain("setOwnedCount");
+  });
+
+  test("only renders for the slot's selected catalog paint", () => {
+    // No clear selected-paint context on the add path / custom-hex slots.
+    expect(slotList).toContain("selectedPaintId && selectedPaintInventory");
+    expect(slotList).toContain("<RecipeInventoryButtons");
+  });
+});
+
 describe("B5 — single 'Recipe notes' box", () => {
   test("RecipeNotes card title reads 'Recipe notes'", () => {
     const src = read("src/components/recipes/RecipeNotes.tsx");

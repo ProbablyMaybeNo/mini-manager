@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { LogTag } from "@/components/ui/LogTag";
 import { Button } from "@/components/ui/Button";
 import { ColorPicker } from "@/components/ui/ColorPicker";
+import { RecipeInventoryButtons } from "@/components/recipes/RecipeInventoryButtons";
 import type {
   ColorPickerMode,
   ColorPickerSelection,
@@ -57,10 +58,17 @@ function layerDisplay(key: TechniqueKey | null): string {
   return "basecoat";
 }
 
+interface PaintInventoryState {
+  ownedCount: number;
+  isWishlisted: boolean;
+}
+
 interface Props {
   recipeId: string;
   slots: ReadonlyArray<SlotListItem>;
   ownedPaintIds?: ReadonlySet<string>;
+  /** paintId → inventory state, powering the slot panel's WISHLIST/OWNED. */
+  inventoryByPaintId?: ReadonlyMap<string, PaintInventoryState>;
 }
 
 /**
@@ -77,7 +85,7 @@ interface Props {
  * Paints-only: new slots must be backed by a catalog paint. Existing
  * custom-hex slots (from older recipes) still render their swatch.
  */
-export function SlotList({ recipeId, slots }: Props) {
+export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
   const [localSlots, setLocalSlots] =
     useState<ReadonlyArray<SlotListItem>>(slots);
   const [reorderError, setReorderError] = useState<string | null>(null);
@@ -319,6 +327,8 @@ export function SlotList({ recipeId, slots }: Props) {
           currentLayer={null}
           busy={isSaving}
           showLayerSelector={false}
+          selectedPaintId={null}
+          selectedPaintInventory={null}
           onPickColor={handleAddPaint}
           onLayerSelect={() => {}}
           onClose={() => setAddOpen(false)}
@@ -333,6 +343,15 @@ export function SlotList({ recipeId, slots }: Props) {
           currentLayer={editingSlot.technique}
           busy={isSaving}
           showLayerSelector
+          selectedPaintId={editingSlot.paintId}
+          selectedPaintInventory={
+            editingSlot.paintId
+              ? inventoryByPaintId?.get(editingSlot.paintId) ?? {
+                  ownedCount: 0,
+                  isWishlisted: false,
+                }
+              : null
+          }
           onPickColor={(selection) => handleSwapPaint(editingSlot.id, selection)}
           onLayerSelect={(layer) => handleLayerSelect(editingSlot.id, layer)}
           onClose={() => setEditingSlotId(null)}
@@ -431,6 +450,8 @@ function SlotEditorPanel({
   currentLayer,
   busy,
   showLayerSelector,
+  selectedPaintId,
+  selectedPaintInventory,
   onPickColor,
   onLayerSelect,
   onClose,
@@ -441,6 +462,10 @@ function SlotEditorPanel({
   currentLayer: TechniqueKey | null;
   busy: boolean;
   showLayerSelector: boolean;
+  /** The catalog paint this slot currently holds (null for add / custom-hex). */
+  selectedPaintId: string | null;
+  /** That paint's inventory state — null when there's no catalog paint. */
+  selectedPaintInventory: PaintInventoryState | null;
   onPickColor: (selection: ColorPickerSelection) => void;
   onLayerSelect: (layer: Phase12LayerKey) => void;
   onClose: () => void;
@@ -487,6 +512,20 @@ function SlotEditorPanel({
           </Button>
         </header>
         <div className="flex-1 overflow-y-auto">
+          {/* Item 2 — WISHLIST + OWNED for the slot's selected catalog paint.
+              Only a catalog-paint slot has an inventory row to toggle; the
+              add path + custom-hex slots have no clear selected paint. */}
+          {selectedPaintId && selectedPaintInventory ? (
+            <div
+              className="px-4 py-3"
+              style={{ borderBottom: "1px solid var(--color-border)" }}
+            >
+              <RecipeInventoryButtons
+                paintId={selectedPaintId}
+                initial={selectedPaintInventory}
+              />
+            </div>
+          ) : null}
           {showLayerSelector ? (
             <LayerSelector currentLayer={currentLayer} onSelect={onLayerSelect} />
           ) : null}

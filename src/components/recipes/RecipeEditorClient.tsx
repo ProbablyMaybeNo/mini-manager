@@ -4,10 +4,17 @@ import type { Recipe } from "@/db/schema";
 import { SlotList, type SlotListItem } from "@/components/recipes/SlotList";
 import { RecipeNotes } from "@/components/recipes/RecipeNotes";
 
+export interface PaintInventoryState {
+  ownedCount: number;
+  isWishlisted: boolean;
+}
+
 interface Props {
   recipe: Recipe;
   slots: ReadonlyArray<SlotListItem>;
   ownedPaintIds?: ReadonlySet<string>;
+  /** paintId → inventory state, for the slot panel's WISHLIST/OWNED buttons. */
+  inventoryByPaintId?: ReadonlyMap<string, PaintInventoryState>;
 }
 
 /**
@@ -18,7 +25,12 @@ interface Props {
  * segmented control. The slot grid is the main column; notes hang on the
  * right (and stack below on mobile).
  */
-export function RecipeEditorClient({ recipe, slots, ownedPaintIds }: Props) {
+export function RecipeEditorClient({
+  recipe,
+  slots,
+  ownedPaintIds,
+  inventoryByPaintId,
+}: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px] gap-6">
       <section className="space-y-3">
@@ -26,6 +38,7 @@ export function RecipeEditorClient({ recipe, slots, ownedPaintIds }: Props) {
           recipeId={recipe.id}
           slots={slots}
           ownedPaintIds={ownedPaintIds}
+          inventoryByPaintId={inventoryByPaintId}
         />
       </section>
 
