@@ -158,14 +158,14 @@ export function CollectionPanel({
         <span className="inline-flex items-center gap-1.5">
           <span
             aria-hidden
-            className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--color-green)] shadow-[0_0_0_1px_var(--color-bg)]"
+            className="inline-block h-3 w-3 rounded-full bg-[var(--color-green)] shadow-[0_0_0_1.5px_var(--color-bg)]"
           />
           owned
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             aria-hidden
-            className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--color-yellow)] shadow-[0_0_0_1px_var(--color-bg)]"
+            className="inline-block h-3 w-3 rounded-full bg-[var(--color-yellow)] shadow-[0_0_0_1.5px_var(--color-bg)]"
           />
           wishlisted
         </span>

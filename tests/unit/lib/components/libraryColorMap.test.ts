@@ -154,6 +154,38 @@ describe("CollectionPanel — LIB-COLORMAP contract (source-scan)", () => {
     expect(src).toMatch(/selectedBrands === null/);
     expect(src).toContain("toggleBrand");
   });
+
+  test("LIB-COLORMAP-POLISH (3): legend dots carry a thicker black (--color-bg) ring", () => {
+    // Both legend swatches use a >=1.5px bg ring, mirroring the on-map dot.
+    expect(src).toContain("bg-[var(--color-green)] shadow-[0_0_0_1.5px_var(--color-bg)]");
+    expect(src).toContain("bg-[var(--color-yellow)] shadow-[0_0_0_1.5px_var(--color-bg)]");
+    expect(src).toContain("--color-green");
+    expect(src).toContain("--color-yellow");
+  });
+});
+
+describe("CollectionCanvas — LIB-COLORMAP-POLISH (3) legible dots (source-scan)", () => {
+  const src = read("src/components/library/CollectionCanvas.tsx");
+
+  test("the dot + ring scale with the cell via dotMetricsForCell", () => {
+    expect(src).toContain("dotMetricsForCell");
+    expect(src).toMatch(/dotMetricsForCell\(layout\.cellSize\)/);
+  });
+
+  test("the ring is a solid black (--color-bg) border, filled disc + crisp stroke", () => {
+    // The ring colour is the bg token (near-black), drawn as a backing disc
+    // and reinforced with a stroked outline so it reads on a same-hue pixel.
+    expect(src).toContain("--color-bg");
+    expect(src).toMatch(/fillStyle = colorBg/);
+    expect(src).toMatch(/strokeStyle = colorBg/);
+    expect(src).toContain("ctx.stroke()");
+  });
+
+  test("dots grow with the bigger desktop cells (no hardcoded DOT_SIZE_PX radius)", () => {
+    // The radius comes from the per-cell metric, not the fixed constant.
+    expect(src).toMatch(/dotRadius = dotMetrics\.size \/ 2/);
+    expect(src).not.toMatch(/dotRadius = DOT_SIZE_PX \/ 2/);
+  });
 });
 
 /* ============================================================

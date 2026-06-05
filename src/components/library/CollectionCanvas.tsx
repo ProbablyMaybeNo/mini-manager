@@ -151,7 +151,10 @@ export function CollectionCanvas({
         const cx = rect.x + rect.w / 2;
         const cy = rect.y + rect.h / 2;
 
-        // Ring (background colour so dot reads on any pixel).
+        // LIB-COLORMAP-POLISH (3) — solid black (--color-bg) border so the
+        // dot reads against a same-hue pixel underneath. A filled bg disc
+        // lays the outline, then a crisp stroke at the dot edge gives a
+        // hard, even border that doesn't blur into the fill.
         ctx.beginPath();
         ctx.arc(cx, cy, dotRadius + ringWidth, 0, Math.PI * 2);
         ctx.fillStyle = colorBg;
@@ -162,6 +165,15 @@ export function CollectionCanvas({
         ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
         ctx.fillStyle = effective === "owned" ? colorGreen : colorYellow;
         ctx.fill();
+
+        // Crisp outline stroke at the ring's OUTER edge — sharpens the
+        // black border against the pixel field without eating the coloured
+        // fill, so the marker stays legible at every cell size.
+        ctx.beginPath();
+        ctx.arc(cx, cy, dotRadius + ringWidth, 0, Math.PI * 2);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = colorBg;
+        ctx.stroke();
       }
       markedIndex += 1;
     }
