@@ -55,6 +55,36 @@ describe("createProject", () => {
     expect(vi.mocked(redirect)).toHaveBeenCalledWith(`/projects/${rows[0]!.id}`);
   });
 
+  test("Item 2 — persists faction + game when supplied", async () => {
+    await createProject({
+      name: "Salamanders 2k",
+      type: "Army",
+      count: 0,
+      faction: "Salamanders",
+      game: "Warhammer 40,000",
+    });
+
+    const rows = await state.db!.select().from(projects);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.faction).toBe("Salamanders");
+    expect(rows[0]!.game).toBe("Warhammer 40,000");
+  });
+
+  test("Item 2 — blank/omitted faction + game collapse to null", async () => {
+    await createProject({
+      name: "Bare Army",
+      type: "Army",
+      count: 0,
+      faction: "   ",
+      // game omitted entirely
+    });
+
+    const rows = await state.db!.select().from(projects);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.faction).toBeNull();
+    expect(rows[0]!.game).toBeNull();
+  });
+
   test("rejects empty name", async () => {
     const res = await createProject({ name: "  ", type: "Unit", count: 1 });
     expect(res.ok).toBe(false);

@@ -101,11 +101,14 @@ describe("R7-006 — ADD / SAVE / ATTACH buttons flipped to success (green)", ()
   });
 
   test("projects/[id] child-add CTA uses success", () => {
-    // C1 (2026-06-03): the label is now level-aware via childAddLabel()
-    // ("+ Unit" / "+ Model") instead of the literal "Add unit", but the
-    // child-add button must still be the green success variant.
-    const src = read("src/app/projects/[id]/page.tsx");
-    expect(src).toMatch(/variant="success"[\s\S]*?childAddLabel\(project\.type\)/);
+    // C1 (2026-06-03): the label was level-aware via childAddLabel().
+    // Item 1 (batch/army-project-page): every add affordance was
+    // consolidated into the single AddChildMenu, whose trigger keeps the
+    // green success variant (no cyan on the add action). Assert the menu
+    // owns the green CTA rather than the page.
+    const src = read("src/components/projects/AddChildMenu.tsx");
+    expect(src).toContain('variant="success"');
+    expect(src).not.toContain('variant="primary"');
   });
 
   test("AttachRecipeModal 'Move attachment' uses success", () => {

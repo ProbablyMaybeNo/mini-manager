@@ -5,10 +5,9 @@ import type { ProjectType } from "@/db/schema";
 import type { DisplayStatus } from "@/lib/progress";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
-import { Button } from "@/components/ui/Button";
 import { EditableProjectTitle } from "@/components/EditableProjectTitle";
 import { useLiveProgressPercent } from "@/components/projects/StageProgressContext";
-import { childAddLabel } from "@/lib/progress";
+import { AddChildMenu } from "@/components/projects/AddChildMenu";
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
@@ -37,9 +36,10 @@ interface Props {
   status: DisplayStatus;
   percent: number;
   totalModels: number;
-  /** When true the "+ Add unit" button shows + links to new-with-parent.
-   *  Hidden on Terrain Piece / Diorama (top-level leaves with no
-   *  children). */
+  /** When true the unified "+ Add ▾" menu shows (Add unit / Add terrain
+   *  / Add model). Hidden on Terrain Piece / Diorama (top-level leaves
+   *  with no children). Item 1 consolidated every add affordance behind
+   *  this single header control. */
   showAddChild: boolean;
 }
 
@@ -88,15 +88,7 @@ export function ProjectHeaderStrip({
         </span>
         <StatusPill status={STATUS_PILL[status]}>{status}</StatusPill>
         {showAddChild ? (
-          <Button
-            as="a"
-            href={`/projects/new?parent=${projectId}`}
-            variant="success"
-            size="sm"
-            className="ml-auto"
-          >
-            {childAddLabel(type)}
-          </Button>
+          <AddChildMenu projectId={projectId} parentType={type} />
         ) : null}
       </div>
       <div className="relative">

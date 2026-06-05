@@ -54,12 +54,17 @@ describe("ProjectHeaderStrip component surface", () => {
     }
   });
 
-  test("the + Add CTA uses variant='success' (locked button discipline)", () => {
-    expect(src).toMatch(/variant="success"/);
-  });
-
-  test("P13.4 — addChildCtaLabel always reads '+ Add unit' (sub-projects are Unit-only)", () => {
-    expect(src).toContain("+ Add unit");
+  test("Item 1 — the add affordance is the single unified AddChildMenu", () => {
+    // Item 1 (batch/army-project-page) consolidated every add control
+    // behind one "+ Add ▾" menu. The header strip no longer renders a
+    // bespoke add Button itself — it delegates to AddChildMenu, which
+    // owns the success-green trigger + the unit/terrain/model items.
+    expect(src).toContain("AddChildMenu");
+    expect(src).toContain(
+      "<AddChildMenu projectId={projectId} parentType={type} />",
+    );
+    // No standalone add Button left on the strip.
+    expect(src).not.toContain("childAddLabel");
   });
 
   test("the full-width progress bar uses stretch + height={14}", () => {
@@ -79,6 +84,41 @@ describe("ProjectHeaderStrip component surface", () => {
     // bar at once.
     expect(src).toContain("useLiveProgressPercent");
     expect(src).toContain("useLiveProgressPercent(projectId, serverPercent)");
+  });
+});
+
+describe("AddChildMenu — Item 1 single unified add control", () => {
+  const src = read("src/components/projects/AddChildMenu.tsx");
+
+  test("trigger uses the success variant (ADD/CREATE → green, no cyan)", () => {
+    expect(src).toContain('variant="success"');
+    expect(src).not.toContain('variant="primary"');
+  });
+
+  test("trigger is a real menu button (aria-haspopup + aria-expanded)", () => {
+    expect(src).toContain('aria-haspopup="menu"');
+    expect(src).toContain("aria-expanded={open}");
+  });
+
+  test("offers Add unit/model (nested under this project)", () => {
+    // childNoun drives the unit-vs-model wording; the nested child link
+    // always carries the parent + type=Unit (sub-projects are Unit-only).
+    expect(src).toContain("childNoun");
+    expect(src).toContain("`/projects/new?parent=${projectId}&type=Unit`");
+    expect(src).toContain("Add {childLabel.toLowerCase()}");
+  });
+
+  test("offers Add terrain (top-level, no parent) only for Army/Warband", () => {
+    expect(src).toContain(
+      'parentType === "Army" || parentType === "Warband"',
+    );
+    expect(src).toContain('href={`/projects/new?type=Terrain Piece`}');
+    expect(src).toContain("Add terrain");
+  });
+
+  test("closes on click-away and Escape (matches WishlistToolsMenu)", () => {
+    expect(src).toContain('document.addEventListener("mousedown"');
+    expect(src).toContain('e.key === "Escape"');
   });
 });
 

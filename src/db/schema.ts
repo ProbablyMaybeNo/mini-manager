@@ -182,6 +182,11 @@ export const projects = sqliteTable(
     isShelved: integer("is_shelved", { mode: "boolean" }).notNull().default(false),
 
     faction: text("faction"),
+    // Item 2 (batch/army-project-page) — free-text game/system the army
+    // is built for (e.g. "Warhammer 40,000", "Age of Sigmar", "Bolt
+    // Action"). Nullable free text — no curated enum, painters track all
+    // sorts of systems.
+    game: text("game"),
     priority: text("priority", { enum: priorities }).default("Medium"),
     targetDate: integer("target_date", { mode: "timestamp_ms" }),
     pointsValue: integer("points_value"),

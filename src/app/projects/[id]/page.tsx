@@ -13,7 +13,6 @@ import { ProjectTree } from "@/components/ProjectTree";
 import { AggregateCountersDisplay } from "@/components/AggregateCountersDisplay";
 import {
   aggregateCounters,
-  childAddLabel,
   childNoun,
   displayStatus,
   isLeafProject,
@@ -243,18 +242,13 @@ export default async function ProjectDetailPage({
   // workspaces. The `+ Wishlist` button replaces the removed
   // ShoppingForThisPanel; it deep-links to the filtered wishlist
   // page for this project.
+  //
+  // Item 1 — the add-child affordance was removed from this row. All
+  // "add unit / terrain / model" entry points now live in the single
+  // "+ Add ▾" menu in the header strip; this row keeps only the
+  // (lateral) "Shop for this" action.
   const actionButtonRow = (
     <div className="flex flex-wrap items-center gap-2">
-      {canHaveChildren ? (
-        <Button
-          as="a"
-          href={`/projects/new?parent=${project.id}`}
-          variant="success"
-          size="sm"
-        >
-          {childAddLabel(project.type)}
-        </Button>
-      ) : null}
       <Button
         as="a"
         href={`/wishlist?project=${project.id}`}
@@ -346,27 +340,13 @@ export default async function ProjectDetailPage({
         attachCandidates={attachCandidates}
       />
 
-      <ProjectProgressTable
-        parentType={project.type}
-        parentId={project.id}
-        rows={progressRows}
-      />
+      <ProjectProgressTable parentType={project.type} rows={progressRows} />
 
       {isContainer && aggregate ? (
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6">
           <div className="order-2 md:order-1">
             <Card
               title={`${childNoun(project.type, true)} · ${children.length}`}
-              headerActions={
-                <Button
-                  as="a"
-                  href={`/projects/new?parent=${project.id}`}
-                  variant="success"
-                  size="sm"
-                >
-                  {childAddLabel(project.type)}
-                </Button>
-              }
             >
               {children.length === 0 ? (
                 <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-relaxed">

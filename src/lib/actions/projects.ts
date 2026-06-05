@@ -38,9 +38,27 @@ const createProjectSchema = z.object({
   type: z.enum(projectTypes),
   count: z.number().int().min(0, "Count cannot be negative").max(9999, "Count is too large"),
   parentId: z.string().min(1).max(32).nullish(),
+  // Item 2 — optional faction + game/system the army is built for. Both
+  // free text, trimmed; empty strings collapse to null so we don't store
+  // blank rows. Length-capped to keep the columns sane.
+  faction: z
+    .string()
+    .trim()
+    .max(80, "Faction is too long")
+    .nullish()
+    .transform((v) => (v ? v : null)),
+  game: z
+    .string()
+    .trim()
+    .max(80, "Game is too long")
+    .nullish()
+    .transform((v) => (v ? v : null)),
 });
 
-export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+// Use the schema's INPUT type for the public action signature: faction
+// + game are optional on the wire (the .transform() normalises blank →
+// null on the OUTPUT side, but callers shouldn't be forced to pass them).
+export type CreateProjectInput = z.input<typeof createProjectSchema>;
 
 /**
  * Create a top-level or nested project. Validates the input, enforces
@@ -61,7 +79,7 @@ export async function createProject(
     const first = parsed.error.issues[0];
     return { ok: false, error: first?.message ?? "Invalid project" };
   }
-  const { name, type, count, parentId } = parsed.data;
+  const { name, type, count, parentId, faction, game } = parsed.data;
 
   const userId = await currentUserId();
 
@@ -132,6 +150,8 @@ export async function createProject(
       type,
       name,
       count,
+      faction,
+      game,
     })
     .returning({ id: projects.id });
 

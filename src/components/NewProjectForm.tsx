@@ -10,19 +10,34 @@ type ParentOption = Pick<Project, "id" | "name" | "type" | "faction">;
 
 type TypeMeta = {
   type: ProjectType;
+  /** Item 3 — user-facing label for the type option. Stored enum values
+   *  ("Terrain Piece", "Diorama") stay untouched; only the picker label
+   *  is friendlier. Defaults to `type` when omitted. */
+  label?: string;
   blurb: string;
   defaultCount: number;
   acceptsParent: boolean;
+  /** Item 3 — whether this type appears as a creatable option in the
+   *  new-project picker. Diorama is kept in the metadata map (so existing
+   *  Diorama-typed rows still resolve) but is no longer offered as a new
+   *  type — its terrain-display role is folded into the "TERRAIN" option.
+   *  Defaults to true. */
+  selectable?: boolean;
 };
 
 /**
  * P13.4 — Project type metadata.
  *
  * Sub-project type rule (locked): Army / Warband / Unit parents host
- * only Unit children. Terrain Piece + Diorama stay top-level only.
- * `acceptsParent` is the "can this type sit under an Army/Warband/Unit"
- * flag; when a parent is provided the picker hides anything that can't
- * legally nest.
+ * only Unit children. Terrain stays top-level only. `acceptsParent` is
+ * the "can this type sit under an Army/Warband/Unit" flag; when a parent
+ * is provided the picker hides anything that can't legally nest.
+ *
+ * Item 3 (batch/army-project-page) — the terrain leaf is now presented
+ * as a single "TERRAIN" option (stored value "Terrain Piece"). The old
+ * "Diorama" option is dropped from the picker (label-only change — the
+ * "Diorama" enum value is retained so existing rows render). VEHICLE was
+ * intentionally NOT added (Ross flagged it as undecided).
  */
 const TYPE_META: ReadonlyArray<TypeMeta> = [
   {
@@ -45,6 +60,7 @@ const TYPE_META: ReadonlyArray<TypeMeta> = [
   },
   {
     type: "Terrain Piece",
+    label: "Terrain",
     blurb: "Scenery — buildings, ruins, hills. Tracks the same five stages. Top-level only.",
     defaultCount: 1,
     acceptsParent: false,
@@ -54,6 +70,7 @@ const TYPE_META: ReadonlyArray<TypeMeta> = [
     blurb: "Display project. Counts as one composite piece by default. Top-level only.",
     defaultCount: 1,
     acceptsParent: false,
+    selectable: false,
   },
 ] as const;
 
@@ -71,23 +88,36 @@ void _allTypesCovered;
 export function NewProjectForm({
   parents,
   initialParentId,
+  initialType,
 }: {
   parents: ReadonlyArray<ParentOption>;
   initialParentId?: string;
+  /** Item 1 — the unified "+ Add" menu pre-selects the project type
+   *  via `?type=`. Ignored when a parent is present (nested children are
+   *  Unit-only). Defaults to Unit. */
+  initialType?: ProjectType;
 }) {
   // P13.4 — when a parent is pre-selected, the only legal child is Unit.
+  // Item 3 — non-selectable types (Diorama) are never offered in the
+  // picker; they live in the metadata map only so existing rows resolve.
   const hasInitialParent = Boolean(initialParentId);
   const availableTypes = useMemo<ReadonlyArray<TypeMeta>>(
-    () => (hasInitialParent ? TYPE_META.filter((m) => m.acceptsParent) : TYPE_META),
+    () =>
+      TYPE_META.filter(
+        (m) => m.selectable !== false && (!hasInitialParent || m.acceptsParent),
+      ),
     [hasInitialParent],
   );
 
   const [type, setType] = useState<ProjectType>(
-    hasInitialParent ? "Unit" : "Unit",
+    hasInitialParent ? "Unit" : initialType ?? "Unit",
   );
   const initialMeta = TYPE_META_BY_TYPE[type];
   const [name, setName] = useState("");
   const [count, setCount] = useState<number>(initialMeta.defaultCount);
+  // Item 2 — optional faction + game/system the army is built for.
+  const [faction, setFaction] = useState("");
+  const [game, setGame] = useState("");
   const [parentId, setParentId] = useState<string>(initialParentId ?? "");
   const [error, setError] = useState<string | null>(null);
   // P10.2 — when a server action rejects with a free-tier cap message,
@@ -128,6 +158,8 @@ export function NewProjectForm({
         type,
         count,
         parentId: parentId === "" ? null : parentId,
+        faction: faction.trim() === "" ? null : faction.trim(),
+        game: game.trim() === "" ? null : game.trim(),
       });
       // Success path throws via redirect; only reachable on failure.
       if (result && result.ok === false) {
@@ -180,7 +212,7 @@ export function NewProjectForm({
                       checked ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]",
                     )}
                   >
-                    {opt.type}
+                    {opt.label ?? opt.type}
                   </span>
                   <span className="block text-xs font-sans text-[var(--color-fg-muted)]">
                     {opt.blurb}
@@ -251,6 +283,44 @@ export function NewProjectForm({
             ? "0 means the parent has no rank-and-file of its own; counters come from child units."
             : "How many identical-scheme miniatures this project contains. Use 1 for a single character."}
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label
+            htmlFor={`${formId}-faction`}
+            className="block section-title mb-0"
+          >
+            Faction <span className="text-[var(--color-fg-muted)] normal-case">(optional)</span>
+          </label>
+          <input
+            id={`${formId}-faction`}
+            type="text"
+            value={faction}
+            onChange={(e) => setFaction(e.target.value)}
+            maxLength={80}
+            placeholder="e.g. Salamanders"
+            className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor={`${formId}-game`}
+            className="block section-title mb-0"
+          >
+            Game <span className="text-[var(--color-fg-muted)] normal-case">(optional)</span>
+          </label>
+          <input
+            id={`${formId}-game`}
+            type="text"
+            value={game}
+            onChange={(e) => setGame(e.target.value)}
+            maxLength={80}
+            placeholder="e.g. Warhammer 40,000"
+            className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
+          />
+        </div>
       </div>
 
       {showParentPicker ? (
