@@ -100,13 +100,19 @@ export async function addSlot(
   const d = parsed.data;
   const userId = await currentUserId();
 
-  const owned = await verifyRecipeOwnership(userId, d.recipeId);
+  // Perf (perf-lag fix): the ownership check and the max-position read are
+  // independent SELECTs. Production runs against a remote libsql, where
+  // each awaited query is a network round-trip — running them serially
+  // doubled the read latency before the insert. Fire both at once.
+  const [owned, positionRows] = await Promise.all([
+    verifyRecipeOwnership(userId, d.recipeId),
+    db
+      .select({ maxPos: max(recipeSlots.position) })
+      .from(recipeSlots)
+      .where(eq(recipeSlots.recipeId, d.recipeId)),
+  ]);
   if (!owned) return { ok: false, error: "Recipe not found" };
 
-  const positionRows = await db
-    .select({ maxPos: max(recipeSlots.position) })
-    .from(recipeSlots)
-    .where(eq(recipeSlots.recipeId, d.recipeId));
   const currentMax = positionRows[0]?.maxPos ?? null;
   const nextPosition = currentMax === null ? 0 : currentMax + 1;
 
