@@ -19,11 +19,14 @@ const read = (rel: string) => fs.readFileSync(path.resolve(ROOT, rel), "utf-8");
 
 describe("/projects mobile screenshot fixes (2026-06-02)", () => {
   const page = read("src/app/projects/page.tsx");
+  // FOCUS-DASH — the FOCUS bench moved to /planner; its panel/stopwatch
+  // order is pinned on the FOCUS page now.
+  const focusPage = read("src/app/planner/page.tsx");
   const picker = read("src/components/focus/FocusPicker.tsx");
 
   test("FOCUS recipe (FocusPanel) renders before the Stopwatch", () => {
-    const panelIdx = page.indexOf("<FocusPanel");
-    const stopwatchIdx = page.indexOf("<Stopwatch");
+    const panelIdx = focusPage.indexOf("<FocusPanel");
+    const stopwatchIdx = focusPage.indexOf("<Stopwatch");
     expect(panelIdx).toBeGreaterThan(-1);
     expect(stopwatchIdx).toBeGreaterThan(-1);
     expect(panelIdx).toBeLessThan(stopwatchIdx);

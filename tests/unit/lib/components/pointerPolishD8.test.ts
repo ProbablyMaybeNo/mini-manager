@@ -34,8 +34,11 @@ describe("D8 — tooltips + cursor signifiers", () => {
 });
 
 describe("D8 — never-color-alone", () => {
-  test("the inspector completion bar carries a % label, not hue alone", () => {
-    const src = read("src/components/projects/ProjectInspector.tsx");
+  test("the completion bar carries a % label, not hue alone", () => {
+    // FOCUS-DASH — the project-detail inspector was removed; the live
+    // completion bar now lives in the DASHBOARD table's Completion column,
+    // which renders the numeric % alongside the ProgressBar.
+    const src = read("src/components/ProjectsDashboardTable.tsx");
     expect(src).toMatch(/\{row\.progressPercent\}%/);
   });
 

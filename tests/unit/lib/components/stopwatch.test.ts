@@ -112,8 +112,9 @@ describe("Stopwatch — pure helpers", () => {
   });
 });
 
-describe("Dashboard page — Stopwatch wiring (Phase-14 spillover)", () => {
-  const src = read("src/app/projects/page.tsx");
+describe("FOCUS page — Stopwatch wiring (Phase-14 spillover)", () => {
+  // FOCUS-DASH — the Stopwatch moved with the FOCUS bench to /planner.
+  const src = read("src/app/planner/page.tsx");
 
   test("imports and mounts the Stopwatch", () => {
     expect(src).toContain('import { Stopwatch }');

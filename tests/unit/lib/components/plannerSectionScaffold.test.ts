@@ -19,97 +19,51 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(ROOT, rel), "utf-8");
 }
 
-describe("Dashboard PLANNER section scaffold (P14.2)", () => {
+describe("DASHBOARD planner-widget row (FOCUS-DASH)", () => {
   const page = read("src/app/projects/page.tsx");
+  const widgets = read("src/components/dashboard/DashboardWidgets.tsx");
 
-  test("mounts the PlannerSection composite on /projects", () => {
-    expect(page).toContain("PlannerSection");
-    // P14.3 — PlannerSection takes optional `calYear` / `calMonth`
-    // search-param props. D2 — it is also passed `bare` so the mobile
-    // disclosure header owns the title. Accept either form.
-    expect(page).toMatch(/<PlannerSection(\s+[^>]*)?\s*\/>/);
+  test("the DASHBOARD mounts the planner-widget row below the table", () => {
+    // FOCUS-DASH — the planner cells (activity/streak/calendar) MOVED from
+    // the FOCUS screen to the DASHBOARD, composed by DashboardWidgets.
+    expect(page).toContain("DashboardWidgets");
+    expect(page).toMatch(/<DashboardWidgets calYear=\{calYear\} calMonth=\{calMonth\}/);
   });
 
-  test("D2 — the workspace orders the mobile pane table → FOCUS → PLANNER", () => {
-    // D2 moved the master-detail composition into ProjectsWorkspace; its
-    // mobile single-pane branch renders the table first, then the
-    // collapsed FOCUS + PLANNER disclosure sections.
-    const workspace = read("src/components/projects/ProjectsWorkspace.tsx");
-    const tableIdx = workspace.indexOf("<ProjectsDashboardTable");
-    const focusIdx = workspace.indexOf('title="FOCUS"');
-    const plannerIdx = workspace.indexOf('title="PLANNER"');
+  test("the widget row mounts table → widgets → recipes (calendar after the table)", () => {
+    // Order by JSX usage, not import order.
+    const tableIdx = page.indexOf("<DashboardProjectsTable");
+    const widgetsIdx = page.indexOf("<DashboardWidgets");
+    const recipesIdx = page.indexOf("<DashboardRecipesTable");
     expect(tableIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeGreaterThan(-1);
-    expect(plannerIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeLessThan(plannerIdx);
+    expect(widgetsIdx).toBeGreaterThan(tableIdx);
+    expect(recipesIdx).toBeGreaterThan(widgetsIdx);
   });
 
-  describe("PlannerSection composite", () => {
-    const section = read("src/components/planner/PlannerSection.tsx");
-
-    test("renders a Card with the locked 'PLANNER' label", () => {
-      expect(section).toMatch(/title=["']PLANNER["']/);
-    });
-
-    test("mounts every cell component the widget builders will replace", () => {
-      // LIB-COLORMAP — the COLLECTION colour map moved to /library; the
-      // PLANNER no longer mounts HeatSinkGridCell.
+  describe("DashboardWidgets composite", () => {
+    test("reuses the three relocated planner cells (no rebuild)", () => {
       for (const cell of [
         "PlannerCalendarCell",
         "PlannerActivityCell",
         "PlannerStreakCell",
-        "PlannerInspoCell",
       ]) {
-        expect(section).toContain(cell);
+        expect(widgets).toContain(cell);
       }
     });
 
-    test("LIB-COLORMAP — the COLLECTION map cell is gone from the planner", () => {
-      expect(section).not.toContain("HeatSinkGridCell");
+    test("the inspo board is NOT here — it left for the FOCUS screen", () => {
+      expect(widgets).not.toContain("PlannerInspoCell");
     });
 
-    test("uses a responsive grid (single stack on mobile, 2-col on md+)", () => {
-      // LIB-COLORMAP — with the COLLECTION hero gone the grid rebalances
-      // to a 2-column desktop layout (4 cells), single stack on mobile.
-      expect(section).toContain("grid-cols-1");
-      expect(section).toContain("md:grid-cols-2");
-      expect(section).toContain("md:col-start-1");
-      expect(section).toContain("md:col-start-2");
+    test("threads calYear / calMonth to the calendar cell only", () => {
+      expect(widgets).toMatch(
+        /<PlannerCalendarCell\s+calYear=\{calYear\}\s+calMonth=\{calMonth\}/,
+      );
     });
 
-    test("mobile reorder: Streak > Activity > Calendar > Inspo", () => {
-      // Each cell wrapper carries an explicit `order-N` class that
-      // controls the mobile (<md) stacking order. Streak first (smallest +
-      // most reward-loaded), Activity second (freshest action), Calendar
-      // third (the small month widget), Inspo closes the scroll.
-      const streakIdx = section.indexOf("order-1");
-      const activityIdx = section.indexOf("order-2");
-      const calendarIdx = section.indexOf("order-3");
-      const inspoIdx = section.indexOf("order-4");
-      expect(streakIdx).toBeGreaterThan(-1);
-      expect(activityIdx).toBeGreaterThan(-1);
-      expect(calendarIdx).toBeGreaterThan(-1);
-      expect(inspoIdx).toBeGreaterThan(-1);
-
-      // Tie each order-N class to the right cell by checking the
-      // component name follows on the same wrapper div.
-      const orderMatch = (cell: string, n: number) => {
-        const re = new RegExp(
-          `order-${n}[^"]*"[\\s\\S]{0,300}?<${cell}`,
-        );
-        expect(section, `${cell} should be order-${n}`).toMatch(re);
-      };
-      orderMatch("PlannerStreakCell", 1);
-      orderMatch("PlannerActivityCell", 2);
-      orderMatch("PlannerCalendarCell", 3);
-      orderMatch("PlannerInspoCell", 4);
-    });
-
-    test("desktop order preserved via md:row-start / md:col-start", () => {
-      // On md+ each cell pins its grid row + column so the mobile reorder
-      // doesn't bleed into the desktop visual. Two rows, two columns.
-      expect(section).toContain("md:row-start-1");
-      expect(section).toContain("md:row-start-2");
+    test("uses a responsive grid (single stack on mobile, 3-up on md+)", () => {
+      expect(widgets).toContain("grid-cols-1");
+      expect(widgets).toContain("md:grid-cols-3");
     });
   });
 

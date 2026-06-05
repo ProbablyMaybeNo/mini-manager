@@ -1,0 +1,73 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  ProjectsDashboardTable,
+  type ProjectDashboardRow,
+} from "@/components/ProjectsDashboardTable";
+
+/**
+ * FOCUS-DASH (2026-06-04) — full-width PROJECTS table for the DASHBOARD.
+ *
+ * Replaces the D2 master-detail split: the IA restructure intentionally
+ * unwinds the two-pane workspace + the detail inspector (detail-focus is
+ * gone, rows already navigate to the project page) so the table spans the
+ * full width on every breakpoint.
+ *
+ * This thin client shell keeps the only piece of the old workspace worth
+ * preserving — the name/faction filter — and hands the filtered rows to
+ * the existing `ProjectsDashboardTable` (single owner of the table; the
+ * dense desktop table + the M3 mobile comparison table both live inside
+ * it, so there's no double-mount).
+ */
+interface Props {
+  rows: ReadonlyArray<ProjectDashboardRow>;
+  ownedRecipes: ReadonlyArray<{
+    id: string;
+    name: string;
+    attachedProjectId: string | null;
+  }>;
+  projectNameById: Readonly<Record<string, string>>;
+}
+
+export function DashboardProjectsTable({
+  rows,
+  ownedRecipes,
+  projectNameById,
+}: Props) {
+  const [query, setQuery] = useState("");
+
+  const filteredRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    // Match on name OR faction so the tree stays navigable.
+    return rows.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        (r.faction ? r.faction.toLowerCase().includes(q) : false),
+    );
+  }, [rows, query]);
+
+  return (
+    <div className="space-y-3">
+      <label className="frame flex items-center gap-2 px-3 py-2">
+        <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+          Filter
+        </span>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Filter projects by name…"
+          aria-label="Filter projects by name"
+          className="flex-1 bg-transparent font-mono text-xs text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-none"
+        />
+      </label>
+      <ProjectsDashboardTable
+        rows={filteredRows}
+        ownedRecipes={ownedRecipes}
+        projectNameById={projectNameById}
+      />
+    </div>
+  );
+}

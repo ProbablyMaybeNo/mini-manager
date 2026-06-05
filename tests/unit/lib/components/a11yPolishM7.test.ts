@@ -58,10 +58,9 @@ describe("M7 step 6 — focus-visible on the new controls", () => {
     expect(win).toMatch(/focus-visible:outline-2/);
   });
 
-  test("inspector tabs have a visible focus ring", () => {
-    const inspector = read("src/components/projects/ProjectInspector.tsx");
-    expect(inspector).toMatch(/focus-visible:outline-2 focus-visible:outline-\[var\(--color-accent\)\]/);
-  });
+  // FOCUS-DASH — the project-detail inspector (with its Detail/Focus tabs)
+  // was removed when /projects became the full-width DASHBOARD, so its
+  // focus-ring assertion retired with it.
 
   test("disclosure toggle has a visible focus ring", () => {
     const section = read("src/components/projects/CollapsibleSection.tsx");

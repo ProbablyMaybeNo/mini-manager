@@ -1,20 +1,23 @@
 /**
- * M4 — mobile `/projects` progressive-disclosure sections.
+ * FOCUS-DASH (2026-06-04) — supersedes the M4 mobile collapsed-sections
+ * contract.
  *
- * Static source-scan net (mirrors plannerSectionScaffold / densityFoundations)
- * for the M4 acceptance under the locked Decisions (2026-06-03 §1):
+ * M4 wrapped FOCUS + PLANNER in collapsed-by-default disclosure sections
+ * on the mobile /projects pane (inside the D2 `ProjectsWorkspace`). The IA
+ * restructure dissolved that: the FOCUS bench moved to its own /planner
+ * screen and the planner widgets moved to the DASHBOARD table surface, so
+ * there is no mobile master-detail workspace and no collapsed FOCUS/PLANNER
+ * disclosure on /projects anymore.
  *
- *   - `/projects` is ONE page; FOCUS + PLANNER are collapsed-by-default
- *     disclosure sections on mobile (no `app/focus`, no mobile
- *     `app/planner`).
- *   - A collapsed section does NOT mount its body — the children are gated
- *     behind `open`, so the heavy FocusPanel / PlannerSection subtrees are
- *     absent from the phone DOM until expanded (first-viewport node-count
- *     floor).
- *   - Desktop stays coherent: the section is always expanded on md+ and
- *     the collapse chevron is hidden.
- *   - PLANNER mounts the shared cluster `bare` so the disclosure header
- *     owns the single "PLANNER" title (no double Card header).
+ * What still holds — and is pinned here:
+ *   - The `CollapsibleSection` disclosure primitive remains a correct,
+ *     SSR-safe, accessible component (it's a general-purpose primitive,
+ *     kept for reuse).
+ *   - The dissolved master-detail workspace is gone (no ProjectsWorkspace
+ *     / ProjectInspector files), and the DASHBOARD page does not reference
+ *     them.
+ *   - Decisions §1 still holds: no dedicated `app/focus` route — the FOCUS
+ *     screen reuses the `/planner` path.
  */
 import { describe, expect, test } from "vitest";
 import * as fs from "node:fs";
@@ -25,7 +28,7 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(ROOT, rel), "utf-8");
 }
 
-describe("M4 — CollapsibleSection disclosure primitive", () => {
+describe("CollapsibleSection disclosure primitive (still valid)", () => {
   const src = read("src/components/projects/CollapsibleSection.tsx");
 
   test("is a client component", () => {
@@ -33,14 +36,12 @@ describe("M4 — CollapsibleSection disclosure primitive", () => {
   });
 
   test("gates the body so a collapsed section does NOT mount children", () => {
-    // Body mounts only when open (or non-collapsible desktop) — collapsed
-    // mobile leaves the heavy subtree out of the DOM entirely.
     expect(src).toMatch(/const bodyMounted = open \|\| !collapsible/);
     expect(src).toMatch(/bodyMounted \?\s*\(/);
   });
 
   test("SSR-safe: desktop-first default, collapses on phones via matchMedia", () => {
-    expect(src).toMatch(/useState\(true\)/); // open defaults true (desktop-first)
+    expect(src).toMatch(/useState\(true\)/);
     expect(src).toMatch(/matchMedia\("\(max-width: 767px\)"\)/);
     expect(src).toMatch(/setOpen\(!mq\.matches\)/);
   });
@@ -48,11 +49,6 @@ describe("M4 — CollapsibleSection disclosure primitive", () => {
   test("exposes a real disclosure button with aria-expanded on mobile", () => {
     expect(src).toMatch(/aria-expanded=\{collapsible \? open : undefined\}/);
     expect(src).toMatch(/aria-controls=\{collapsible \? panelId : undefined\}/);
-  });
-
-  test("collapse chevron is mobile-only (md:hidden) — desktop stays open", () => {
-    expect(src).toMatch(/ChevronRight/);
-    expect(src).toMatch(/md:hidden/);
   });
 
   test("toggle meets the tap-target floor; no cyan; no raw hex", () => {
@@ -65,58 +61,24 @@ describe("M4 — CollapsibleSection disclosure primitive", () => {
   });
 });
 
-describe("M4 — mobile pane wires FOCUS + PLANNER as collapsed sections", () => {
-  // D2 relocated the master-detail composition into ProjectsWorkspace; the
-  // mobile single-pane branch there owns the collapsed FOCUS + PLANNER
-  // disclosure sections (same behaviour, code moved out of the page).
-  const workspace = read("src/components/projects/ProjectsWorkspace.tsx");
-  const page = read("src/app/projects/page.tsx");
-
-  test("FOCUS + PLANNER are wrapped in CollapsibleSection (mobile branch)", () => {
-    expect(workspace).toContain("CollapsibleSection");
-    expect(workspace).toMatch(/<CollapsibleSection[^>]*title="FOCUS"/s);
-    expect(workspace).toMatch(/<CollapsibleSection title="PLANNER"/);
+describe("FOCUS-DASH — the master-detail workspace is dissolved", () => {
+  test("ProjectsWorkspace + ProjectInspector files are removed", () => {
+    expect(
+      fs.existsSync(path.resolve(ROOT, "src/components/projects/ProjectsWorkspace.tsx")),
+    ).toBe(false);
+    expect(
+      fs.existsSync(path.resolve(ROOT, "src/components/projects/ProjectInspector.tsx")),
+    ).toBe(false);
   });
 
-  test("PLANNER mounts the shared cluster `bare` (disclosure owns the header)", () => {
-    // The bare cluster is built on the server page and passed in.
-    expect(page).toMatch(/<PlannerSection calYear=\{calYear\} calMonth=\{calMonth\} bare \/>/);
+  test("the DASHBOARD page references neither", () => {
+    const page = read("src/app/projects/page.tsx");
+    expect(page).not.toContain("ProjectsWorkspace");
+    expect(page).not.toContain("ProjectInspector");
   });
 
-  test("Decisions §1 — no mobile app/focus or app/planner route is referenced", () => {
-    // The mobile path reaches FOCUS/PLANNER via the collapsed sections,
-    // never via a dedicated mobile route push.
-    expect(page).not.toMatch(/href="\/focus"/);
-    expect(workspace).not.toMatch(/router\.push\("\/planner"\)/);
-  });
-
-  test("no dedicated app/focus route exists (Decisions §1)", () => {
+  test("Decisions §1 — no dedicated app/focus route (FOCUS reuses /planner)", () => {
     const focusRoute = path.resolve(ROOT, "src/app/focus/page.tsx");
     expect(fs.existsSync(focusRoute)).toBe(false);
-  });
-
-  test("mobile order preserved: table, then FOCUS, then PLANNER", () => {
-    // In the single-pane (mobile) branch the table comes first, then the
-    // collapsed FOCUS + PLANNER disclosures.
-    const tableIdx = workspace.indexOf("<ProjectsDashboardTable");
-    const focusIdx = workspace.indexOf('title="FOCUS"');
-    const plannerIdx = workspace.indexOf('title="PLANNER"');
-    expect(tableIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeGreaterThan(-1);
-    expect(plannerIdx).toBeGreaterThan(-1);
-    expect(focusIdx).toBeLessThan(plannerIdx);
-  });
-});
-
-describe("M4 — PlannerSection bare mount", () => {
-  const section = read("src/components/planner/PlannerSection.tsx");
-
-  test("accepts a `bare` prop that skips the wrapping Card", () => {
-    expect(section).toMatch(/bare\?:\s*boolean/);
-    expect(section).toMatch(/if \(bare\) return grid/);
-  });
-
-  test("standalone (non-bare) mount still draws the PLANNER Card", () => {
-    expect(section).toMatch(/title="PLANNER"/);
   });
 });

@@ -105,8 +105,9 @@ describe("ProjectColorSchemeBox — recipe tabs wiring (UX-907)", () => {
   });
 });
 
-describe("Dashboard page — focusRecipe URL param honour (UX-907)", () => {
-  const src = read("src/app/projects/page.tsx");
+describe("FOCUS page — focusRecipe URL param honour (UX-907)", () => {
+  // FOCUS-DASH — the FOCUS bench (+ its focusRecipe wiring) moved to /planner.
+  const src = read("src/app/planner/page.tsx");
 
   test("reads `focusRecipe` out of searchParams", () => {
     expect(src).toContain("params.focusRecipe");

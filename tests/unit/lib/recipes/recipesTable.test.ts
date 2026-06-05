@@ -93,6 +93,60 @@ describe("RecipesTable — Ross's locked column set", () => {
   });
 });
 
+describe("DashboardRecipesTable — FOCUS-DASH dashboard variant", () => {
+  const src = read("src/components/recipes/RecipesTable.tsx");
+
+  test("exports a DashboardRecipesTable from the SAME module (one component)", () => {
+    // Ross's spec: enhance the existing RecipesTable rather than fork a
+    // parallel table. The dashboard variant ships from the same file.
+    expect(src).toContain("export function DashboardRecipesTable");
+    expect(src).toContain("export interface DashboardRecipeRowVm");
+    expect(src).toContain("export interface DashboardRecipeSlotVm");
+  });
+
+  test("rows carry the recipe title linking into the editor", () => {
+    expect(src).toMatch(/DashboardRecipeRowCard[\s\S]*?`\/recipes\/\$\{row\.id\}`/);
+  });
+
+  test("each square shows the paint name + the layer label", () => {
+    expect(src).toContain("slot.paintLabel");
+    expect(src).toContain("slot.layerLabel");
+  });
+
+  test("squares are BIGGER than the dense table's w-4 strip swatches", () => {
+    // Dashboard squares are w-12 h-12; the table PaletteStrip is w-4 h-4.
+    expect(src).toMatch(/w-12 h-12/);
+  });
+
+  test("owned = green border, wishlisted = yellow border, neither = neutral", () => {
+    // Same library colour-map dot treatment.
+    expect(src).toMatch(/coverage === "owned"[\s\S]{0,80}var\(--color-green\)/);
+    expect(src).toMatch(/coverage === "wanted"[\s\S]{0,80}var\(--color-yellow\)/);
+    expect(src).toMatch(/return "var\(--color-border-strong\)"/);
+  });
+
+  test("the Assign Recipe button is success-green (off cyan)", () => {
+    expect(src).toMatch(/variant="success"[\s\S]{0,200}Assign Recipe/);
+  });
+
+  test("an empty recipe list renders an explanatory hint", () => {
+    expect(src).toMatch(/No recipes yet/);
+  });
+});
+
+describe("DASHBOARD page wires the recipes table + query in", () => {
+  const page = read("src/app/projects/page.tsx");
+
+  test("imports DashboardRecipesTable + listRecipesForDashboard", () => {
+    expect(page).toContain("DashboardRecipesTable");
+    expect(page).toContain("listRecipesForDashboard");
+  });
+
+  test("the recipes table is wrapped in a RECIPES Card", () => {
+    expect(page).toMatch(/<Card title="RECIPES"[\s\S]*?<DashboardRecipesTable/);
+  });
+});
+
 describe("Recipes page wires the table in", () => {
   const src = read("src/app/recipes/page.tsx");
 

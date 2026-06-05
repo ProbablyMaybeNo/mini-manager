@@ -22,6 +22,30 @@ export interface RecipeRowVm {
 type SortKey = "name" | "bodyType" | "slotCount" | "createdAt" | "updatedAt";
 type SortDir = "asc" | "desc";
 
+/**
+ * FOCUS-DASH — one paint square in the dashboard "cards" variant: the
+ * colour, the paint name + the layer it sits on, and the painter's
+ * ownership coverage (green border = owned, yellow = wishlisted, blank =
+ * neither — the same library colour-map dot treatment).
+ */
+export interface DashboardRecipeSlotVm {
+  hex: string;
+  paintLabel: string;
+  layerLabel: string;
+  coverage: "owned" | "wanted" | "none";
+}
+
+/** Row shape for the dashboard "cards" variant. */
+export interface DashboardRecipeRowVm {
+  id: string;
+  name: string;
+  bodyType: string;
+  publicSlug: string | null;
+  slots: DashboardRecipeSlotVm[];
+  slotCount: number;
+  updatedAt: number;
+}
+
 interface Props {
   rows: ReadonlyArray<RecipeRowVm>;
 }
@@ -322,4 +346,107 @@ function formatDate(ms: number): string {
   const d = new Date(ms);
   // ISO-ish: YYYY-MM-DD — short, mono-friendly, sortable.
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/* ============================================================
+   FOCUS-DASH — dashboard "cards" variant
+   ============================================================ */
+
+/** Owned/wishlist border for a dashboard paint square — the same
+ *  treatment as the library colour-map dots (green = owned, yellow =
+ *  wishlisted, neutral border = neither). */
+function coverageBorder(coverage: DashboardRecipeSlotVm["coverage"]): string {
+  if (coverage === "owned") return "var(--color-green)";
+  if (coverage === "wanted") return "var(--color-yellow)";
+  return "var(--color-border-strong)";
+}
+
+/**
+ * FOCUS-DASH — the DASHBOARD recipes table (Ross's spec). Rows of BIGGER
+ * paint/colour squares with the paint name + layer visible, the recipe
+ * title, and an "Assign Recipe" button. Squares carry the owned/wishlist
+ * border. Lives on the dashboard alongside the project table; the dense
+ * sortable `RecipesTable` above stays the /recipes view — same data, two
+ * presentations.
+ */
+export function DashboardRecipesTable({
+  rows,
+}: {
+  rows: ReadonlyArray<DashboardRecipeRowVm>;
+}) {
+  if (rows.length === 0) {
+    return (
+      <p className="frame px-3 py-4 text-xs font-sans text-[var(--color-fg-muted)]">
+        No recipes yet. Build a scheme from the wheel, library, or
+        eyedropper, then assign it to a project.
+      </p>
+    );
+  }
+  return (
+    <ul className="flex flex-col gap-2" role="list">
+      {rows.map((row) => (
+        <DashboardRecipeRowCard key={row.id} row={row} />
+      ))}
+    </ul>
+  );
+}
+
+function DashboardRecipeRowCard({ row }: { row: DashboardRecipeRowVm }) {
+  return (
+    <li className="frame px-3 py-3 flex flex-col gap-3 bg-[var(--color-bg-elevated)]">
+      <div className="flex items-start justify-between gap-3">
+        <Link
+          href={`/recipes/${row.id}`}
+          className="font-mono text-sm text-[var(--color-cyan)] hover:underline min-w-0 truncate"
+        >
+          {row.name}
+        </Link>
+        <Button
+          as="a"
+          href={`/recipes/${row.id}`}
+          variant="success"
+          size="sm"
+          className="shrink-0"
+          title="Open editor + assign to a project"
+        >
+          Assign Recipe
+        </Button>
+      </div>
+      {row.slots.length === 0 ? (
+        <span className="text-2xs font-mono text-[var(--color-fg-muted)] opacity-60">
+          no paints yet
+        </span>
+      ) : (
+        <ul
+          className="flex flex-wrap items-start gap-2"
+          role="list"
+          aria-label={`${row.name} paints`}
+        >
+          {row.slots.map((slot, i) => (
+            <li
+              key={`${i}-${slot.hex}`}
+              role="listitem"
+              className="flex flex-col items-center gap-1 w-[4.5rem]"
+            >
+              <span
+                aria-hidden
+                title={`${slot.paintLabel} · ${slot.layerLabel}`}
+                className="block w-12 h-12 rounded-sm"
+                style={{
+                  background: slot.hex,
+                  border: `2px solid ${coverageBorder(slot.coverage)}`,
+                }}
+              />
+              <span className="font-mono text-2xs text-[var(--color-fg)] text-center leading-tight line-clamp-2 break-words">
+                {slot.paintLabel}
+              </span>
+              <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] text-center leading-tight">
+                {slot.layerLabel}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
 }

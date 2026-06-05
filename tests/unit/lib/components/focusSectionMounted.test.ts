@@ -1,9 +1,11 @@
 /**
- * P13.11 — FOCUS section sits above the main dashboard table.
+ * FOCUS-DASH (2026-06-04) — the FOCUS bench lives on the FOCUS screen.
  *
- * Pins the wiring on /projects so a future refactor can't quietly
- * relocate the FOCUS section below the table or drop the locked
- * "FOCUS" label Ross signed off on.
+ * Supersedes the P13.11 / D2 "FOCUS section on /projects" contract: the
+ * IA restructure moved the FOCUS bench (FocusPicker + FocusPanel +
+ * Stopwatch) off the projects DASHBOARD and onto the /planner FOCUS
+ * screen. This pins the new wiring so a future refactor can't quietly
+ * drag the bench back onto the dashboard or drop the locked "FOCUS" label.
  */
 import { describe, expect, test } from "vitest";
 import * as fs from "node:fs";
@@ -15,41 +17,35 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(ROOT, rel), "utf-8");
 }
 
-describe("Dashboard FOCUS section (P13.11 / D2)", () => {
-  const src = read("src/app/projects/page.tsx");
-  // D2 — FOCUS is now built once on the page as the `focusBench` node and
-  // handed to ProjectsWorkspace: the inspector's Focus tab on desktop, the
-  // collapsed FOCUS disclosure on mobile.
-  const workspace = read("src/components/projects/ProjectsWorkspace.tsx");
-  const inspector = read("src/components/projects/ProjectInspector.tsx");
+describe("FOCUS bench lives on the FOCUS screen (FOCUS-DASH)", () => {
+  const focus = read("src/app/planner/page.tsx");
+  const dashboard = read("src/app/projects/page.tsx");
 
-  test("mounts the FocusPicker + FocusPanel components (focusBench node)", () => {
-    expect(src).toContain("FocusPicker");
-    expect(src).toContain("FocusPanel");
+  test("the FOCUS screen mounts FocusPicker + FocusPanel + Stopwatch", () => {
+    expect(focus).toContain("FocusPicker");
+    expect(focus).toContain("FocusPanel");
+    expect(focus).toContain("Stopwatch");
   });
 
-  test("the focusBench is wired into the workspace", () => {
-    expect(src).toMatch(/focusBench=\{focusBench\}/);
-    expect(workspace).toContain("focusBench");
-  });
-
-  test("desktop: FOCUS bench is the inspector's Focus tab (not default)", () => {
-    // Detail is the default home state; Focus is the opt-in bench tab.
-    expect(inspector).toMatch(/useState<InspectorTab>\("detail"\)/);
-    expect(inspector).toMatch(/focusTab/);
-  });
-
-  test("mobile: FOCUS is a collapsed disclosure with the locked label", () => {
-    expect(workspace).toMatch(/<CollapsibleSection[^>]*title="FOCUS"/s);
+  test("the FOCUS screen draws the locked 'FOCUS' Card label", () => {
+    expect(focus).toMatch(/<Card[^>]*title="FOCUS"/s);
   });
 
   test("reads focus state via the dedicated query helpers (not bespoke SQL)", () => {
-    expect(src).toContain("listFocusCandidates");
-    expect(src).toContain("getFocusedRecipeBundle");
+    expect(focus).toContain("listFocusCandidates");
+    expect(focus).toContain("getFocusedRecipeBundle");
   });
 
   test("provides an empty-state message when no focus is set", () => {
-    expect(src).toContain("FocusEmptyState");
-    expect(src).toMatch(/Pick a project to focus on/);
+    expect(focus).toContain("FocusEmptyState");
+    expect(focus).toMatch(/Pick a project to focus on/);
+  });
+
+  test("the DASHBOARD no longer carries the FOCUS bench", () => {
+    // The bench left for /planner — the dashboard is the project table +
+    // planner widgets + recipes, no FocusPicker / FocusPanel / Stopwatch.
+    expect(dashboard).not.toContain("FocusPicker");
+    expect(dashboard).not.toContain("FocusPanel");
+    expect(dashboard).not.toContain("Stopwatch");
   });
 });
