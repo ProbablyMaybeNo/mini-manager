@@ -7,8 +7,11 @@
 import { describe, expect, test } from "vitest";
 import {
   CELL_MIN_PX,
+  DESKTOP_CELL_MIN_PX,
   cellRectAt,
   computeCanvasLayout,
+  dotMetricsForCell,
+  fillHeightLayout,
   indexAtPoint,
 } from "@/components/library/heatSinkHelpers";
 
@@ -171,5 +174,104 @@ describe("indexAtPoint", () => {
     const zeroLayout = computeCanvasLayout(0, 400, 4);
     // count=0, any point → null
     expect(indexAtPoint(0, 0, zeroLayout, 0)).toBeNull();
+  });
+});
+
+/* ============================================================
+   LIB-COLORMAP-POLISH (1) — fillHeightLayout (desktop height-fill)
+   ============================================================ */
+
+describe("DESKTOP_CELL_MIN_PX (desktop pixel floor)", () => {
+  test("is a larger floor than the compact CELL_MIN_PX", () => {
+    expect(DESKTOP_CELL_MIN_PX).toBeGreaterThan(CELL_MIN_PX);
+  });
+});
+
+describe("fillHeightLayout", () => {
+  test("grows cells past the min edge to fill the available height", () => {
+    // 100 cells, 200px wide, 800px tall, 10px min.
+    // Width-only densest: cols=20, cellSize=10, rows=5, height=50 → tiny.
+    const densest = computeCanvasLayout(100, 200, 10);
+    expect(densest.height).toBe(50);
+    const filled = fillHeightLayout(100, 200, 800, 10);
+    // Fewer columns, bigger cells, taller grid that fits 800.
+    expect(filled.cols).toBeLessThan(densest.cols);
+    expect(filled.cellSize).toBeGreaterThan(densest.cellSize);
+    expect(filled.height).toBeGreaterThan(densest.height);
+    expect(filled.height).toBeLessThanOrEqual(800);
+  });
+
+  test("chooses the largest fitting cell when there is vertical room", () => {
+    // 300 cells, 200px wide, 800px tall, 10px min — fits with room to grow.
+    const filled = fillHeightLayout(300, 200, 800, 10);
+    expect(filled.height).toBeLessThanOrEqual(800);
+    // One fewer column would overshoot the height — confirms it's maximal.
+    const oneFewer = filled.cols - 1;
+    if (oneFewer >= 1) {
+      const cellSize = 200 / oneFewer;
+      const rows = Math.ceil(300 / oneFewer);
+      expect(rows * cellSize).toBeGreaterThan(800);
+    }
+  });
+
+  test("cells never shrink below the min edge", () => {
+    const filled = fillHeightLayout(100, 200, 800, 10);
+    expect(filled.cellSize).toBeGreaterThanOrEqual(10);
+  });
+
+  test("falls back to the densest (scrolling) layout when even min cells overflow", () => {
+    // A huge catalog in a short panel: densest already exceeds the height.
+    const densest = computeCanvasLayout(7144, 320, DESKTOP_CELL_MIN_PX);
+    expect(densest.height).toBeGreaterThan(200);
+    const filled = fillHeightLayout(7144, 320, 200, DESKTOP_CELL_MIN_PX);
+    expect(filled).toEqual(densest);
+  });
+
+  test("unmeasured height (<=0) falls back to the width-only layout", () => {
+    const densest = computeCanvasLayout(100, 200, 10);
+    expect(fillHeightLayout(100, 200, 0, 10)).toEqual(densest);
+    expect(fillHeightLayout(100, 200, -5, 10)).toEqual(densest);
+  });
+
+  test("zero count → zero rows, no growth", () => {
+    const filled = fillHeightLayout(0, 200, 800, 10);
+    expect(filled.rows).toBe(0);
+    expect(filled.height).toBe(0);
+  });
+
+  test("columns fill the width exactly (cellSize = width / cols)", () => {
+    const filled = fillHeightLayout(100, 200, 800, 10);
+    expect(filled.cellSize).toBeCloseTo(200 / filled.cols);
+    expect(filled.width).toBe(200);
+  });
+});
+
+/* ============================================================
+   LIB-COLORMAP-POLISH (3) — dotMetricsForCell (legible markers)
+   ============================================================ */
+
+describe("dotMetricsForCell", () => {
+  test("the dot grows with the cell", () => {
+    const small = dotMetricsForCell(4);
+    const big = dotMetricsForCell(20);
+    expect(big.size).toBeGreaterThan(small.size);
+  });
+
+  test("never shrinks below the small-cell floor", () => {
+    expect(dotMetricsForCell(1).size).toBeGreaterThanOrEqual(7);
+  });
+
+  test("the ring is always a visible outline (>=1px), clamped to a crisp max", () => {
+    for (const cell of [4, 9, 14, 24, 40]) {
+      const { ring } = dotMetricsForCell(cell);
+      expect(ring).toBeGreaterThanOrEqual(1);
+      expect(ring).toBeLessThanOrEqual(3);
+    }
+  });
+
+  test("the ring grows with the dot up to its clamp", () => {
+    expect(dotMetricsForCell(20).ring).toBeGreaterThanOrEqual(
+      dotMetricsForCell(4).ring,
+    );
   });
 });

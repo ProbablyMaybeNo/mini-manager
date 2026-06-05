@@ -117,12 +117,20 @@ describe("CollectionPanel — LIB-COLORMAP contract (source-scan)", () => {
     expect(classNameHexes).toBeNull();
   });
 
-  test("reuses the readout/legend/brand-chip helpers (copied, not the planner client)", () => {
+  test("reuses the readout/filter helpers (copied, not the planner client)", () => {
     expect(src).toContain("coverageReadout");
     expect(src).toContain("formatCount");
     expect(src).toContain("filterCellsByBrands");
     // It does NOT import HeatSinkGridClient (markup copied per the spec).
     expect(src).not.toContain("HeatSinkGridClient");
+  });
+
+  test("LIB-COLORMAP-POLISH (1): the canvas fills the panel with bigger desktop pixels", () => {
+    // Larger desktop cell floor + height-fill so the map occupies the
+    // whole side panel instead of a small square.
+    expect(src).toContain("DESKTOP_CELL_MIN_PX");
+    expect(src).toMatch(/cellMinPx=\{DESKTOP_CELL_MIN_PX\}/);
+    expect(src).toContain("fillHeight");
   });
 });
 

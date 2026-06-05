@@ -90,12 +90,54 @@ export function detectMobileViewport(): boolean {
 export const CELL_MIN_PX = 4;
 
 /**
+ * LIB-COLORMAP-POLISH (1) — the desktop (lg+) minimum cell edge (px).
+ *
+ * The colour map only mounts inside the lg+ right-hand panel, where it has
+ * a tall side column to itself. There, 4px pixels read as a cramped postage
+ * stamp; this larger floor makes individual paints visible and — together
+ * with `fillHeightLayout` — lets the spectrum grow to occupy the full panel
+ * height instead of a small square. `CELL_MIN_PX` stays the compact 4px
+ * floor used everywhere else.
+ */
+export const DESKTOP_CELL_MIN_PX = 9;
+
+/**
  * The overlay-dot diameter (px) and its near-black ring width (px). A2:
  * the dot is an APPROXIMATE, at-a-glance marker, deliberately larger than
  * the 4px cell so it stays legible.
+ *
+ * LIB-COLORMAP-POLISH (3) — the dot now scales with the cell (see
+ * `dotMetricsForCell`) so the bigger desktop pixels carry bigger, legible
+ * markers; these constants remain the small-cell floor / fallback.
  */
 export const DOT_SIZE_PX = 7;
 export const DOT_RING_PX = 1;
+
+/**
+ * LIB-COLORMAP-POLISH (3) — dot diameter + ring width for a given cell
+ * size, so the owned/wishlist markers grow with the bigger desktop pixels
+ * and the ring (drawn in --color-bg, i.e. near-black) is thick enough to
+ * separate the dot from a same-hue pixel underneath it.
+ *
+ * The dot fills most of the cell (so it's an obvious marker, not a speck)
+ * but never shrinks below the small-cell floor. The ring scales with the
+ * dot, clamped so it stays a clear outline at every size.
+ */
+export interface DotMetrics {
+  /** Dot diameter in CSS px. */
+  size: number;
+  /** Ring (border) width in CSS px, drawn outside the dot. */
+  ring: number;
+}
+
+export function dotMetricsForCell(cellSize: number): DotMetrics {
+  // Aim for a dot a touch larger than the cell so it reads as a marker
+  // sitting on the field; floor at the legacy 7px so tiny cells still show.
+  const size = Math.max(DOT_SIZE_PX, Math.round(cellSize * 1.15));
+  // Ring grows with the dot but stays a crisp 1–3px outline.
+  const ring = Math.max(DOT_RING_PX, Math.min(3, Math.round(size * 0.22)));
+  return { size, ring };
+}
 
 /* ============================================================
    A2 — sparse approximate ownership overlay.
@@ -163,6 +205,50 @@ export function computeCanvasLayout(
   const rows = count === 0 ? 0 : Math.ceil(count / cols);
   const height = rows * cellSize;
   return { cols, rows, cellSize, width: widthPx, height };
+}
+
+/**
+ * LIB-COLORMAP-POLISH (1) — height-filling layout for the desktop panel.
+ *
+ * `computeCanvasLayout` derives the grid from width alone, so the spectrum
+ * always renders at its intrinsic (often short) height and leaves the tall
+ * side panel mostly empty. This variant additionally takes the available
+ * panel `heightPx` and grows the cell — by dropping columns — so the grid
+ * fills that height without overflowing it.
+ *
+ * Algorithm: start dense (the most columns the width allows at the minimum
+ * cell edge → the shortest grid) then remove columns one at a time. Fewer
+ * columns ⇒ larger cells ⇒ more rows ⇒ a taller grid. Keep the layout with
+ * the fewest columns (largest cells) whose height still fits `heightPx`. If
+ * even the densest layout overflows (a huge catalog in a short panel), fall
+ * back to the densest layout — the panel scrolls, exactly as before.
+ *
+ * Pure: no DOM, no React. `heightPx <= 0` (unmeasured) falls back to the
+ * width-only layout so the first paint matches the legacy behaviour until
+ * the ResizeObserver reports a real height.
+ */
+export function fillHeightLayout(
+  count: number,
+  widthPx: number,
+  heightPx: number,
+  cellEdgePx: number,
+): CanvasLayout {
+  const densest = computeCanvasLayout(count, widthPx, cellEdgePx);
+  if (count === 0 || heightPx <= 0 || widthPx <= 0) return densest;
+
+  // The densest layout already overflows the panel height — keep it (scrolls).
+  if (densest.height > heightPx) return densest;
+
+  let best = densest;
+  // Drop columns (grow cells) while the grid still fits the panel height.
+  for (let cols = densest.cols - 1; cols >= 1; cols--) {
+    const cellSize = widthPx / cols;
+    const rows = Math.ceil(count / cols);
+    const height = rows * cellSize;
+    if (height > heightPx) break; // any fewer cols is taller still — stop.
+    best = { cols, rows, cellSize, width: widthPx, height };
+  }
+  return best;
 }
 
 /** Bounding rect (CSS px) of a cell at the given flat index. */

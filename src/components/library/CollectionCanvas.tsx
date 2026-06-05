@@ -28,14 +28,15 @@ import type { CoverageCell } from "@/db/queries/paintCoverage";
 import type { CoverageState } from "@/lib/paints/coverage";
 import {
   CELL_MIN_PX,
-  DOT_RING_PX,
-  DOT_SIZE_PX,
   OVERLAY_SAMPLE_STRIDE,
   cellRectAt,
   computeCanvasLayout,
+  dotMetricsForCell,
+  fillHeightLayout,
   indexAtPoint,
   showsOverlayDot,
 } from "./heatSinkHelpers";
+import type { CanvasLayout } from "./heatSinkHelpers";
 
 interface Props {
   /** Visible cells, hue-sorted — one pixel each. */
@@ -46,6 +47,19 @@ interface Props {
   stateForPaint: (id: string, fallback: CoverageState) => CoverageState;
   /** Called when the user clicks/taps a cell. */
   onPickCell: (cell: CoverageCell) => void;
+  /**
+   * LIB-COLORMAP-POLISH (1) — the minimum cell edge in CSS px. Defaults to
+   * the compact `CELL_MIN_PX` (4px); the desktop panel passes a larger
+   * floor so the pixels read clearly in the tall side column.
+   */
+  cellMinPx?: number;
+  /**
+   * LIB-COLORMAP-POLISH (1) — when true, the canvas measures its
+   * container's height and grows the cells (via `fillHeightLayout`) so the
+   * spectrum fills the available panel height instead of rendering at its
+   * intrinsic (short) height. Off by default → legacy width-only layout.
+   */
+  fillHeight?: boolean;
 }
 
 /** Read a CSS custom property value from the canvas element. */
@@ -58,10 +72,22 @@ export function CollectionCanvas({
   summaryLabel,
   stateForPaint,
   onPickCell,
+  cellMinPx = CELL_MIN_PX,
+  fillHeight = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Store width separately so the draw effect re-runs on resize.
+  // Store width/height separately so the draw effect re-runs on resize.
   const widthRef = useRef<number>(0);
+  const heightRef = useRef<number>(0);
+
+  // Single source of truth for the layout so draw() and hit-testing agree.
+  const resolveLayout = useCallback(
+    (width: number, height: number): CanvasLayout =>
+      fillHeight
+        ? fillHeightLayout(cells.length, width, height, cellMinPx)
+        : computeCanvasLayout(cells.length, width, cellMinPx),
+    [cells.length, cellMinPx, fillHeight],
+  );
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -69,7 +95,7 @@ export function CollectionCanvas({
     const width = widthRef.current;
     if (width <= 0) return;
 
-    const layout = computeCanvasLayout(cells.length, width, CELL_MIN_PX);
+    const layout = resolveLayout(width, heightRef.current);
     const dpr = window.devicePixelRatio ?? 1;
 
     // Resize the backing store only when dimensions change to avoid flickering.
@@ -107,8 +133,12 @@ export function CollectionCanvas({
     // Walk cells in hue order, count marked ones, draw a dot on every
     // OVERLAY_SAMPLE_STRIDE-th marked cell.
     let markedIndex = 0;
-    const dotRadius = DOT_SIZE_PX / 2;
-    const ringWidth = DOT_RING_PX;
+    // LIB-COLORMAP-POLISH (3) — size the dot + its near-black ring to the
+    // actual cell so markers grow with the bigger desktop pixels and stay
+    // legible against a same-hue pixel underneath.
+    const dotMetrics = dotMetricsForCell(layout.cellSize);
+    const dotRadius = dotMetrics.size / 2;
+    const ringWidth = dotMetrics.ring;
 
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
@@ -147,16 +177,20 @@ export function CollectionCanvas({
       const entry = entries[0];
       if (!entry) return;
       const w = entry.contentRect.width;
+      const h = entry.contentRect.height;
       if (w > 0) {
         widthRef.current = w;
+        // Height only matters for fill-height layouts; harmless to track.
+        if (h > 0) heightRef.current = h;
         draw();
       }
     });
     ro.observe(container);
     // Initial measurement.
-    const w = container.getBoundingClientRect().width;
-    if (w > 0) {
-      widthRef.current = w;
+    const initialRect = container.getBoundingClientRect();
+    if (initialRect.width > 0) {
+      widthRef.current = initialRect.width;
+      if (initialRect.height > 0) heightRef.current = initialRect.height;
       draw();
     }
     return () => ro.disconnect();
@@ -188,17 +222,13 @@ export function CollectionCanvas({
       // Map from viewport px to CSS px within the canvas.
       const cssX = e.clientX - rect.left;
       const cssY = e.clientY - rect.top;
-      const layout = computeCanvasLayout(
-        cells.length,
-        widthRef.current,
-        CELL_MIN_PX,
-      );
+      const layout = resolveLayout(widthRef.current, heightRef.current);
       const index = indexAtPoint(cssX, cssY, layout, cells.length);
       if (index === null) return;
       const cell = cells[index];
       if (cell) onPickCell(cell);
     },
-    [cells, onPickCell],
+    [cells, onPickCell, resolveLayout],
   );
 
   return (

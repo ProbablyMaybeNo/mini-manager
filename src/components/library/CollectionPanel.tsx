@@ -32,6 +32,7 @@ import type { CoverageCell } from "@/db/queries/paintCoverage";
 import type { CoverageState, CoverageSummary } from "@/lib/paints/coverage";
 import { CollectionCanvas } from "./CollectionCanvas";
 import {
+  DESKTOP_CELL_MIN_PX,
   coverageReadout,
   filterCellsByBrands,
   formatCount,
@@ -199,6 +200,8 @@ export function CollectionPanel({
             summaryLabel={summaryLabel}
             stateForPaint={stateForPaint}
             onPickCell={handlePickCell}
+            cellMinPx={DESKTOP_CELL_MIN_PX}
+            fillHeight
           />
         )}
       </div>
