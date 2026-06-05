@@ -4,15 +4,32 @@ Ross's 2026-06-02 feature wave. Captures the "whole list of features to add"
 he flagged — some already shipped (noted), some new, some needing a decision.
 Living doc; tick as they land.
 
+> **Status (2026-06-04, branch `batch/focus-dashboard`, do NOT merge — lead
+> reconciles):** the IA restructure landed. **PLANNER → FOCUS** — `/planner`
+> is now the FOCUS painting screen (FocusPicker + FocusPanel recipe row with
+> inline per-paint notes + compact project panel + Stopwatch + the reused
+> inspo board); the path stays `/planner`, the NavRail label + H1 are
+> retitled FOCUS. **PROJECTS → DASHBOARD** — `/projects` H1 is now DASHBOARD,
+> the projects table titled "PROJECTS" is full-width (the D2 master-detail
+> `ProjectsWorkspace`/`ProjectInspector` are deleted), the relocated planner
+> widgets (streak/activity/calendar) sit below it, and a new RECIPES table
+> (enhanced `RecipesTable` → `DashboardRecipesTable`: bigger squares with
+> paint name + layer, recipe title, "Assign Recipe", owned-green /
+> wishlist-yellow square borders) closes the surface. This SUPERSEDES the
+> "Dashboard reorder" item below and the D2/D6 master-detail layout in
+> `DESKTOP_UXUI_UPGRADE_PLAN.md` / `MOBILE_UXUI_UPGRADE_PLAN.md`. typecheck
+> clean; vitest 2078 passing.
+
 ## Decided / queued
 
-- [ ] **Dashboard reorder → FOCUS → Projects → Planner.** Ross's call
-      2026-06-02. The project table got buried below FOCUS + the (large)
-      PLANNER section, so "where are my projects?" The new order:
-      header → FOCUS card → **ProjectsDashboardTable** → Top Wishes →
-      PLANNER → Recently bought. Single edit in `src/app/projects/page.tsx`
-      (reorder the JSX in the non-empty branch). Held until the P15.2
-      touch-sweep agent finishes (it's editing the same surface).
+- [x] **Dashboard reorder → FOCUS → Projects → Planner.** ~~Ross's call
+      2026-06-02.~~ SUPERSEDED 2026-06-04 by the FOCUS/DASHBOARD IA
+      restructure (`batch/focus-dashboard`): FOCUS left `/projects`
+      entirely for its own `/planner` screen, so there is no FOCUS card to
+      order above the table. `/projects` is now the DASHBOARD: PROJECTS
+      table → planner widgets (streak/activity/calendar) → RECIPES table →
+      recently bought. The "where are my projects?" burying is resolved by
+      the table sitting directly under the header.
 
 ## Needs a decision before build
 
