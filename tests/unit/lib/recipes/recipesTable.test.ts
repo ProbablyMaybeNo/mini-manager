@@ -33,11 +33,25 @@ describe("RecipesTable component surface", () => {
     expect(src).toContain("`/recipes/${row.id}`");
   });
 
-  test("the Assign-row-action uses variant='success' (green) per R7-006", () => {
+  test("the row Assign action is the inline project dropdown (not a navigate)", () => {
+    // Item 1: the row's ASSIGN opens a dropdown of projects and attaches
+    // the recipe in place — it does NOT navigate to the recipe creator.
+    expect(src).toContain("AssignToProjectMenu");
+  });
+
+  test("the Assign-dropdown trigger uses variant='success' (green) per R7-006", () => {
     // R7-006 — ATTACH / ASSIGN actions flipped off cyan. Green is the
     // Round-7 semantic for ADD / ATTACH / ASSIGN; cyan stays for
     // auth and final-step confirms only.
-    expect(src).toMatch(/variant="success"[\s\S]{0,200}Assign/);
+    const menu = read("src/components/recipes/AssignToProjectMenu.tsx");
+    expect(menu).toMatch(/variant="success"[\s\S]{0,400}Assign/);
+  });
+
+  test("the Assign dropdown attaches via attachRecipeToProject (shared path)", () => {
+    const menu = read("src/components/recipes/AssignToProjectMenu.tsx");
+    expect(menu).toContain("attachRecipeToProject");
+    // It stays on the list (refresh) rather than navigating away.
+    expect(menu).toContain("router.refresh()");
   });
 
   test("the Share-row-action uses variant='warning' (pastel yellow)", () => {
@@ -46,11 +60,12 @@ describe("RecipesTable component surface", () => {
     expect(src).toMatch(/variant="warning"[\s\S]{0,200}Share/);
   });
 
-  test("sortable by every key the row carries", () => {
+  test("sortable by name + updated; body / slots sorts removed (Item 2)", () => {
     expect(src).toContain('"name"');
-    expect(src).toContain('"bodyType"');
-    expect(src).toContain('"slotCount"');
     expect(src).toContain('"updatedAt"');
+    // Item 2: the body-type + slot-count columns (and their sorts) are gone.
+    expect(src).not.toMatch(/SortKey = [^;]*"bodyType"/);
+    expect(src).not.toMatch(/SortKey = [^;]*"slotCount"/);
     // Flat model: no separate step count column / sort.
     expect(src).not.toContain('"stepCount"');
   });
@@ -60,14 +75,30 @@ describe("RecipesTable component surface", () => {
     expect(src).toContain('useState<SortDir>("desc")');
   });
 
-  test("PaletteStrip renders up to 8 swatches", () => {
-    expect(src).toContain("swatches.slice(0, 8)");
+  test("rows render creator-sized paint squares (w-12 h-12), not w-4 chips", () => {
+    // Item 1: /recipes is the primary recipe-access surface, so each row
+    // renders its paints at the SAME size as the recipe creator
+    // (w-12 h-12) with the paint name + layer, not a tiny w-4 strip.
+    expect(src).toContain("w-12 h-12");
+    expect(src).not.toContain("w-4 h-4");
   });
 
-  test("PaletteStrip hover label shows the paint name (not just the hex)", () => {
-    // Item 1: hovering a swatch shows the chosen paint's NAME (name
-    // primary, hex secondary). Custom-colour slots fall back to the hex.
-    expect(src).toContain("${sw.label} · ${sw.hex}");
+  test("each square shows the paint name + the layer label", () => {
+    expect(src).toContain("slot.paintLabel");
+    expect(src).toContain("slot.layerLabel");
+  });
+
+  test("a colour-only slot with no paint shows a + Assign Paint affordance", () => {
+    // Item 1: a slot that's just a colour with no catalog paint assigned
+    // renders a "+ Assign Paint" call to action (black/white per contrast)
+    // instead of a name.
+    expect(src).toContain("slot.needsPaint");
+    expect(src).toMatch(/\+ Assign/);
+    expect(src).toContain("readableTextOn");
+  });
+
+  test("clicking a paint square navigates to the recipe creator", () => {
+    expect(src).toMatch(/router\.push\(`\/recipes\/\$\{recipeId\}`\)/);
   });
 
   test("a recipe with no palette renders an explanatory hint", () => {
@@ -84,18 +115,29 @@ describe("RecipesTable component surface", () => {
 describe("RecipesTable — Ross's locked column set", () => {
   const src = read("src/components/recipes/RecipesTable.tsx");
 
-  test("columns: Name / Body / Palette / Slots / Attached / Updated / Actions", () => {
+  test("columns: Name / Palette / Attached / Updated / Actions (Item 2 trim)", () => {
     // Sortable columns pass label= prop to <Th>; non-sortable
     // columns render the text directly inside <th>.
     expect(src).toContain('label="Name"');
-    expect(src).toContain('label="Body"');
     expect(src).toContain("Palette");
-    expect(src).toContain('label="Slots"');
-    // Flat model: the separate Steps column is gone.
-    expect(src).not.toContain('label="Steps"');
     expect(src).toContain("Attached to");
     expect(src).toContain('label="Updated"');
     expect(src).toContain("Actions");
+    // Item 2: the body-type column ("INFANTRY") is gone — no "body" to
+    // assign in the flat recipe model.
+    expect(src).not.toContain('label="Body"');
+    // Item 2: the slot-count column is gone (the painter counts squares).
+    expect(src).not.toContain('label="Slots"');
+    // Flat model: the separate Steps column is gone.
+    expect(src).not.toContain('label="Steps"');
+  });
+
+  test("paint squares carry the owned/wishlist border (Item 2)", () => {
+    // Item 2: bigger squares get the green = owned / yellow = wishlist
+    // border indicator, reusing the existing coverage treatment.
+    expect(src).toContain("coverageBorder(slot.coverage)");
+    expect(src).toMatch(/coverage === "owned"[\s\S]{0,80}var\(--color-green\)/);
+    expect(src).toMatch(/coverage === "wanted"[\s\S]{0,80}var\(--color-yellow\)/);
   });
 });
 
