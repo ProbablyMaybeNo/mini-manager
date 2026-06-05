@@ -58,3 +58,39 @@ describe("Project schema — Item 2 game column", () => {
     expect(src).toContain('faction: text("faction")');
   });
 });
+
+describe("Project type options — Item 3 TERRAIN rename, no VEHICLE", () => {
+  const formSrc = read("src/components/NewProjectForm.tsx");
+  const schemaSrc = read("src/db/schema.ts");
+
+  test("the terrain option is labelled 'Terrain' (renders TERRAIN, drops 'Piece')", () => {
+    // Label-only change: the stored enum value stays "Terrain Piece" but
+    // the picker shows the friendly label "Terrain" (the `uppercase`
+    // class renders it as TERRAIN). The option renders opt.label.
+    expect(formSrc).toContain('label: "Terrain"');
+    expect(formSrc).toContain("{opt.label ?? opt.type}");
+  });
+
+  test("Diorama is no longer a creatable option (selectable: false)", () => {
+    // The "Diorama" enum value is retained so existing rows still
+    // resolve, but it's filtered out of the new-project picker.
+    expect(formSrc).toContain("selectable: false");
+    expect(formSrc).toContain("m.selectable !== false");
+  });
+
+  test("the stored enum values are untouched (no risky migration)", () => {
+    // Item 3 is a label-only change — the type enum keeps both stored
+    // values so no project_type rebuild / data migration is needed.
+    expect(schemaSrc).toContain('"Terrain Piece"');
+    expect(schemaSrc).toContain('"Diorama"');
+  });
+
+  test("VEHICLE is deliberately NOT a project type (Ross flagged it undecided)", () => {
+    // Assert there is no Vehicle enum member / type-meta entry. A doc
+    // comment may mention VEHICLE to record the decision — that's fine;
+    // what matters is it's not a real, creatable type.
+    expect(schemaSrc).not.toContain('"Vehicle"');
+    expect(formSrc).not.toContain('type: "Vehicle"');
+    expect(formSrc).not.toContain('value="Vehicle"');
+  });
+});
