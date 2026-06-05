@@ -172,6 +172,10 @@ export interface RecipeTableRow {
   attachedProjectId: string | null;
   /** Up to 8 hexes in slot-position order — the palette strip. */
   paletteHexes: string[];
+  /** Up to 8 swatches in slot-position order — each carries its colour
+   *  plus a hover label: the paint's "Brand Name" for catalog slots, or
+   *  the hex itself for custom-colour slots with no paint. */
+  palette: { hex: string; label: string }[];
   /** Total slot count (one paint + layer per slot). */
   slotCount: number;
   /** ms-timestamps so the table can sort. */
@@ -205,18 +209,24 @@ export async function listRecipesForTable(
     slotsByRecipeId.set(s.recipeId, arr);
   }
 
-  const paintHex = await getPaintHexMap();
+  const paintMeta = await getPaintMetaMap();
 
   const out: RecipeTableRow[] = [];
   for (const r of recipeRows) {
     const slots = slotsByRecipeId.get(r.id) ?? [];
     const paletteHexes: string[] = [];
+    const palette: { hex: string; label: string }[] = [];
     for (const slot of slots) {
       if (slot.customColorHex) {
         paletteHexes.push(slot.customColorHex);
+        // No catalog paint — fall back to the hex as the hover label.
+        palette.push({ hex: slot.customColorHex, label: slot.customColorHex });
       } else if (slot.paintId) {
-        const hex = paintHex.get(slot.paintId);
-        if (hex) paletteHexes.push(hex);
+        const meta = paintMeta.get(slot.paintId);
+        if (meta) {
+          paletteHexes.push(meta.hex);
+          palette.push({ hex: meta.hex, label: meta.label });
+        }
       }
       if (paletteHexes.length >= 8) break;
     }
@@ -230,6 +240,7 @@ export async function listRecipesForTable(
       attachmentKind,
       attachedProjectId: r.attachedProjectId,
       paletteHexes,
+      palette,
       slotCount: slots.length,
       createdAt: r.createdAt.getTime(),
       updatedAt: r.updatedAt.getTime(),
