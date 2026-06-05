@@ -38,9 +38,18 @@ describe("Tool page subheadings — plain prose, no jargon (P11.12)", () => {
     expect(src).toMatch(/transitions feel even across the eye/);
   });
 
-  test("WHEEL subheading is preserved (no jargon to retire)", () => {
+  test("WHEEL header leads with the recipe-flow explainer (2026-06-04 rework)", () => {
+    // The wheel page now authors a recipe rather than planning a
+    // standalone palette: the header explainer points the painter at the
+    // assign-paint → attach/save recipe flow. The wheel-mechanic line
+    // survives as a secondary hint, minus the retired "Find in library"
+    // standalone-planner copy.
     const src = read("src/components/tools/wheel/WheelClient.tsx");
+    expect(src).toMatch(
+      /Use the colour wheel to plan a recipe — assign a paint to each\s+colour, then attach it to a project or save it for later\./,
+    );
     expect(src).toMatch(/Drag the primary pick\. Switch harmony with the bar below\./);
+    expect(src).not.toMatch(/Find in library/);
   });
 });
 

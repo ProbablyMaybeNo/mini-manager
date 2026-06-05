@@ -16,7 +16,7 @@ import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { WheelCanvas, type WheelStop } from "./WheelCanvas";
 import { HarmonyPicker } from "./HarmonyPicker";
-import { SwatchActions } from "./SwatchActions";
+import { SwatchActions, type SwatchAssignment } from "./SwatchActions";
 
 interface PrimaryHs {
   hue: number;
@@ -29,13 +29,20 @@ const DEFAULT_HARMONY: HarmonyKey = "complementary";
 
 /**
  * Owns the wheel's interactive state — the primary HSL pick, the active
- * harmony mode, the lightness slider, and the pinned-swatch set. Renders
- * the WheelCanvas on the input pane and the swatch list (with closest-
- * paint subrows) on the output pane.
+ * harmony mode, the lightness slider, the pinned-swatch set, and the
+ * per-colour paint assignments. Renders the WheelCanvas on the input pane
+ * and the planned-recipe colour list on the output pane.
  *
- * The "[ Send to recipe ]" / "[ Save palette ]" footer actions are wired
- * placeholders for P4.7 — they expose the current palette via the future
- * SendToRecipeModal.
+ * 2026-06-04 recipe-flow rework — the page no longer plans a standalone
+ * palette. It authors a RECIPE: each wheel colour is a planned recipe
+ * slot, "[ Assign paint ]" opens the SAME recipe `ColorPicker` side panel
+ * the create-recipe editor uses (wheel + harmony, library, ΔE match,
+ * eyedropper), and "[ Send to recipe ]" saves it as a real recipe (raw-hex
+ * slots allowed) or attaches it to a project — the saved row lands on
+ * /recipes alongside hand-authored recipes. Assignments are keyed by the
+ * planned colour's hex so they survive harmony/lightness tweaks that keep
+ * the same swatch, and they ride into the save as `sourcePaintId` so the
+ * recipe pins the real catalog paint instead of a custom hex.
  */
 export function WheelClient() {
   const searchParams = useSearchParams();
@@ -70,7 +77,11 @@ export function WheelClient() {
   const [pinnedHexes, setPinnedHexes] = useState<ReadonlySet<string>>(new Set());
   const [activeStopId, setActiveStopId] = useState<string>("p");
   const [paints, setPaints] = useState<ReadonlyArray<Paint>>([]);
-  const [catalogLoading, setCatalogLoading] = useState(true);
+  // Per-colour paint assignments, keyed by the planned colour's hex so a
+  // harmony/lightness tweak that lands on the same swatch keeps its paint.
+  const [assignments, setAssignments] = useState<
+    ReadonlyMap<string, SwatchAssignment>
+  >(new Map());
 
   // Load the paint catalog once.
   useEffect(() => {
@@ -98,10 +109,8 @@ export function WheelClient() {
       })
       .catch(() => {
         // Catalog failure is non-fatal — the wheel still works without
-        // closest-paint matches.
-      })
-      .finally(() => {
-        if (mounted) setCatalogLoading(false);
+        // assigned-paint label resolution; the picker side panel loads its
+        // own catalog independently.
       });
     return () => {
       mounted = false;
@@ -142,37 +151,93 @@ export function WheelClient() {
     });
   }, []);
 
+  // Index the catalog by id so an assigned paintId resolves to a display
+  // label ("Citadel Macragge Blue") without a second catalog fetch.
+  const paintsById = useMemo(() => {
+    const map = new Map<string, Paint>();
+    paints.forEach((p) => map.set(p.id, p));
+    return map;
+  }, [paints]);
+
+  const assignPaint = useCallback(
+    (
+      planHex: string,
+      selection: { hex: string; paintId: string | null },
+    ) => {
+      const paint = selection.paintId
+        ? paintsById.get(selection.paintId)
+        : undefined;
+      const label = paint ? `${paint.brand} ${paint.name}` : undefined;
+      setAssignments((prev) => {
+        const next = new Map(prev);
+        next.set(planHex, {
+          paintId: selection.paintId,
+          hex: selection.hex,
+          label,
+        });
+        return next;
+      });
+    },
+    [paintsById],
+  );
+
+  const clearAssign = useCallback((planHex: string) => {
+    setAssignments((prev) => {
+      if (!prev.has(planHex)) return prev;
+      const next = new Map(prev);
+      next.delete(planHex);
+      return next;
+    });
+  }, []);
+
   const swatchLabel = (i: number) =>
     i === 0 ? "Primary" : `Swatch ${i + 1}`;
 
   const harmonyMeta = getHarmonyMeta(harmony);
   const activeHex = harmonyHexes[indexForStopId(activeStopId)] ?? harmonyHexes[0];
 
-  // The footer ships the full harmony as the palette. Pinned swatches
-  // sort to the front so the painter's curated picks lead.
+  // The footer ships the planned recipe as the palette. A colour that has
+  // a paint assigned contributes the assigned paint's hex + `sourcePaintId`
+  // (so `sendPaletteToRecipe` pins the real catalog paint instead of a raw
+  // custom-hex slot); an un-assigned colour rides as its planned hex —
+  // raw-hex slots are allowed, exactly like the create-recipe flow. Pinned
+  // swatches sort to the front so the painter's curated picks lead.
   const footerSwatches: ReadonlyArray<ToolPaletteSwatch> = useMemo(() => {
-    const swatches = harmonyHexes.map((hex, i) => ({
-      hex,
-      name: i === 0 ? "Primary" : `Swatch ${i + 1}`,
-    }));
-    if (pinnedHexes.size === 0) return swatches;
-    return [...swatches].sort((a, b) => {
-      const aP = pinnedHexes.has(a.hex) ? 0 : 1;
-      const bP = pinnedHexes.has(b.hex) ? 0 : 1;
-      return aP - bP;
+    const entries = harmonyHexes.map((planHex, i) => {
+      const assigned = assignments.get(planHex);
+      const planName = i === 0 ? "Primary" : `Swatch ${i + 1}`;
+      const swatch: ToolPaletteSwatch = assigned
+        ? {
+            hex: assigned.hex,
+            name: assigned.label ?? planName,
+            ...(assigned.paintId ? { sourcePaintId: assigned.paintId } : {}),
+          }
+        : { hex: planHex, name: planName };
+      return { planHex, swatch };
     });
-  }, [harmonyHexes, pinnedHexes]);
+    const ordered =
+      pinnedHexes.size === 0
+        ? entries
+        : [...entries].sort((a, b) => {
+            const aP = pinnedHexes.has(a.planHex) ? 0 : 1;
+            const bP = pinnedHexes.has(b.planHex) ? 0 : 1;
+            return aP - bP;
+          });
+    return ordered.map((e) => e.swatch);
+  }, [harmonyHexes, pinnedHexes, assignments]);
 
   return (
     <ToolShell
       input={
         <div className="space-y-4">
-          <header className="space-y-1">
+          <header className="space-y-2">
             <h1 className="text-3xl tracking-wide">COLOUR WHEEL</h1>
-            <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
+            <p className="frame px-3 py-2 text-2xs font-sans leading-snug text-[var(--color-fg-muted)] bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]">
+              Use the colour wheel to plan a recipe — assign a paint to each
+              colour, then attach it to a project or save it for later.
+            </p>
+            <p className="text-2xs font-sans text-[var(--color-fg-subtle)]">
               Drag the primary pick. Switch harmony with the bar below.
-              Click <span className="font-mono uppercase tracking-wider">Find in library</span>{" "}
-              on any swatch to pull the closest paints across every brand.
             </p>
           </header>
 
@@ -225,7 +290,9 @@ export function WheelClient() {
       output={
         <div className="space-y-4">
           <header className="space-y-1">
-            <h2 className="section-title">Swatches · {harmonyHexes.length}</h2>
+            <h2 className="section-title">
+              Recipe colours · {harmonyHexes.length}
+            </h2>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
               Active:{" "}
               <span
@@ -240,6 +307,18 @@ export function WheelClient() {
             </p>
           </header>
 
+          <p className="text-2xs font-sans text-[var(--color-fg-subtle)] leading-snug">
+            Each colour is a recipe slot. Click{" "}
+            <span className="font-mono uppercase tracking-wider">
+              Assign paint
+            </span>{" "}
+            to pick a real paint from the library (or the wheel, match, or
+            eyedropper), then{" "}
+            <span className="font-mono uppercase tracking-wider">
+              Send to recipe
+            </span>{" "}
+            to save it or attach it to a project.
+          </p>
           <div className="space-y-2">
             {harmonyHexes.map((hex, i) => (
               <SwatchActions
@@ -248,9 +327,10 @@ export function WheelClient() {
                 label={swatchLabel(i)}
                 isPrimary={i === 0}
                 isPinned={pinnedHexes.has(hex)}
-                paints={paints}
-                catalogLoading={catalogLoading}
+                assignment={assignments.get(hex) ?? null}
                 onPin={() => togglePin(hex)}
+                onAssign={(selection) => assignPaint(hex, selection)}
+                onClearAssign={() => clearAssign(hex)}
               />
             ))}
           </div>

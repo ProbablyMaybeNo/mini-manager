@@ -54,11 +54,17 @@ describe("P13.9 — Result row drops the `ΔE` prefix on the value", () => {
 });
 
 describe("P13.9 — Sweep other UI surfaces that displayed `ΔE`", () => {
-  test("Wheel SwatchActions row drops the ΔE prefix + adds tooltip", () => {
+  test("Wheel SwatchActions no longer renders its own ΔE row (delegates to the recipe ColorPicker)", () => {
+    // 2026-06-04 recipe-flow rework — the wheel row used to host an inline
+    // read-only "Find in library" ΔE expander. That standalone-planner
+    // lookup is gone: the row now opens the shared recipe ColorPicker side
+    // panel (ASSIGN PAINT), whose library/match sub-panel owns the ΔE
+    // display. So the wheel row must NOT print a raw ΔE value at all — the
+    // P13.9 anti-jargon guarantee for this surface is met by removal.
     const src = read("src/components/tools/wheel/SwatchActions.tsx");
     expect(src).not.toMatch(/ΔE \{r\.deltaE\.toFixed\(1\)\}/);
-    expect(src).toMatch(/\{r\.deltaE\.toFixed\(1\)\}/);
-    expect(src).toMatch(/title="Match closeness/);
+    expect(src).not.toMatch(/r\.deltaE\.toFixed\(1\)/);
+    expect(src).toMatch(/ColorPickerDialog/);
   });
 
   test("Eyedropper closest-paint subrow drops the ΔE prefix + adds tooltip", () => {
