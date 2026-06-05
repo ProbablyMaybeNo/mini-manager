@@ -59,6 +59,12 @@ const TYPE_META: ReadonlyArray<TypeMeta> = [
     acceptsParent: true,
   },
   {
+    type: "Model",
+    blurb: "A single miniature — a hero, champion, or one-off. Nest it under an army, warband, or unit, or track it on its own.",
+    defaultCount: 1,
+    acceptsParent: true,
+  },
+  {
     type: "Terrain Piece",
     label: "Terrain",
     blurb: "Scenery — buildings, ruins, hills. Tracks the same five stages. Top-level only.",

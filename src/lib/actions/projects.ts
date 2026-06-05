@@ -129,10 +129,14 @@ export async function createProject(
           "Only Army, Warband, or Unit parents can contain sub-projects.",
       };
     }
-    if (type !== "Unit") {
+    // 2026-06-05 — sub-projects may now be a Unit OR a single Model. The
+    // per-parent containment rules (a Unit can't host a Unit, a Model
+    // hosts nothing, etc.) are layered on separately; this guard just
+    // bounds the legal sub-project type set.
+    if (type !== "Unit" && type !== "Model") {
       return {
         ok: false,
-        error: "Sub-projects must be of type Unit.",
+        error: "Sub-projects must be a Unit or a Model.",
       };
     }
     finalParentId = parent.id;

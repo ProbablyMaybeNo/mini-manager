@@ -140,6 +140,13 @@ export const projectTypes = [
   "Army",
   "Warband",
   "Unit",
+  // 2026-06-05 — single-model sub-project. A "Model" is a 1-mini project
+  // nested under an Army / Warband / Unit (e.g. a hero, a champion). Kept
+  // deliberately simple — no "unique character" data model, it's just a
+  // contained member of the existing project-type enum. `type` is a
+  // Drizzle application-level enum with NO DB CHECK constraint, so adding
+  // this value needs no migration; existing rows are unaffected.
+  "Model",
   "Terrain Piece",
   "Diorama",
 ] as const;

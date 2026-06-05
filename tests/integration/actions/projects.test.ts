@@ -135,7 +135,7 @@ describe("createProject", () => {
     expect(child[0]!.parentId).toBe(unit!.id);
   });
 
-  test("P13.4 — sub-projects must be Unit type (Terrain rejected)", async () => {
+  test("sub-projects must be a Unit or Model (Terrain rejected)", async () => {
     await createProject({ name: "An Army", type: "Army", count: 0 });
     const [army] = await state.db!.select().from(projects);
 
@@ -146,7 +146,33 @@ describe("createProject", () => {
       parentId: army!.id,
     });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/Sub-projects must be of type Unit/);
+    if (!res.ok) expect(res.error).toMatch(/Sub-projects must be a Unit or a Model/);
+  });
+
+  test("2026-06-05 — a Model is a legal sub-project under an Army", async () => {
+    await createProject({ name: "Hero Army", type: "Army", count: 0 });
+    const [army] = await state.db!.select().from(projects);
+
+    // Success path redirects (returns undefined) rather than resolving to
+    // an ActionResult — assert via the inserted row + the redirect call,
+    // matching the other happy-path createProject tests.
+    await createProject({
+      name: "Captain Lysander",
+      type: "Model",
+      count: 1,
+      parentId: army!.id,
+    });
+
+    const child = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.name, "Captain Lysander"));
+    expect(child).toHaveLength(1);
+    expect(child[0]!.type).toBe("Model");
+    expect(child[0]!.parentId).toBe(army!.id);
+    expect(vi.mocked(redirect)).toHaveBeenCalledWith(
+      `/projects/${child[0]!.id}`,
+    );
   });
 
   test("P13.4 — parent that isn't Army/Warband/Unit is rejected (e.g. Terrain Piece can't parent)", async () => {

@@ -94,3 +94,36 @@ describe("Project type options — Item 3 TERRAIN rename, no VEHICLE", () => {
     expect(formSrc).not.toContain('value="Vehicle"');
   });
 });
+
+describe("MODEL project type — single-model sub-projects (2026-06-05)", () => {
+  const formSrc = read("src/components/NewProjectForm.tsx");
+  const schemaSrc = read("src/db/schema.ts");
+  const actionSrc = read("src/lib/actions/projects.ts");
+
+  test('"Model" is a member of the projectTypes enum', () => {
+    expect(schemaSrc).toContain('"Model"');
+  });
+
+  test("the new-project picker offers a creatable Model option that can nest", () => {
+    expect(formSrc).toContain('type: "Model"');
+    // Model can sit under an Army / Warband / Unit.
+    expect(formSrc).toMatch(/type: "Model",[\s\S]{0,200}acceptsParent: true/);
+    // Not marked selectable: false — it shows in the picker.
+    expect(formSrc).not.toMatch(/type: "Model",[\s\S]{0,200}selectable: false/);
+  });
+
+  test("createProject accepts a Model as a sub-project type", () => {
+    expect(actionSrc).toContain('type !== "Unit" && type !== "Model"');
+    expect(actionSrc).toContain("Sub-projects must be a Unit or a Model.");
+  });
+
+  test("MODEL needs no migration — it's an application-level enum member", () => {
+    // The type column is a Drizzle enum with no DB CHECK constraint, so
+    // adding "Model" is purely application-level. Sanity: there is no new
+    // migration that touches a project_type check or rebuilds the table
+    // for this value. (Asserted by the doc comment + the absence of a
+    // type CHECK in the schema — the only project CHECK is the cascade.)
+    expect(schemaSrc).toContain("project_stage_cascade");
+    expect(schemaSrc).not.toContain('check("project_type');
+  });
+});

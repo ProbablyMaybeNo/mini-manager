@@ -40,6 +40,7 @@ const TYPE_CHIP: Readonly<Record<ProjectType, string>> = {
   "Army":          "type-chip-cyan",
   "Warband":       "type-chip-cyan",
   "Unit":          "type-chip-amber",
+  "Model":         "type-chip-yellow",
   "Terrain Piece": "type-chip-green",
   "Diorama":       "type-chip-purple",
 };
