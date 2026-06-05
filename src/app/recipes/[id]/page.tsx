@@ -6,6 +6,7 @@ import { db } from "@/db/client";
 import {
   getPaintMetaMap,
   getRecipeWithSlots,
+  listInspoForRecipe,
 } from "@/db/queries/recipes";
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { projects } from "@/db/schema";
@@ -52,7 +53,7 @@ export default async function RecipeEditorPage({
   const recipe = await getRecipeWithSlots(userId, id);
   if (!recipe) notFound();
 
-  const [paintMeta, attachment, inventoryEntries, assignProjects] =
+  const [paintMeta, attachment, inventoryEntries, assignProjects, inspoRows] =
     await Promise.all([
       getPaintMetaMap(),
       resolveAttachment(recipe),
@@ -72,6 +73,8 @@ export default async function RecipeEditorPage({
           and(eq(projects.ownerId, userId), isNull(projects.archivedAt)),
         )
         .orderBy(asc(projects.name)),
+      // Item 4 — the recipe's saved inspo links / image URLs.
+      listInspoForRecipe(recipe.id),
     ]);
   const assignProjectsOptions: ReadonlyArray<AssignProjectOption> =
     assignProjects.map((p) => ({
@@ -182,6 +185,11 @@ export default async function RecipeEditorPage({
         slots={slotItems}
         ownedPaintIds={ownedPaintIds}
         inventoryByPaintId={inventoryByPaintId}
+        inspo={inspoRows.map((row) => ({
+          id: row.id,
+          url: row.url,
+          label: row.label,
+        }))}
       />
     </div>
   );

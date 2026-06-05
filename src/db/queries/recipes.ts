@@ -8,9 +8,11 @@ import { db } from "@/db/client";
 import {
   recipes,
   recipeSlots,
+  recipeInspo,
   phase12LayerLabel,
   type Recipe,
   type RecipeSlot,
+  type RecipeInspo,
   type Phase12LayerKey,
   type TechniqueKey,
 } from "@/db/schema";
@@ -109,6 +111,21 @@ export async function getRecipeWithSlots(
     .orderBy(asc(recipeSlots.position));
 
   return { ...recipe, slots };
+}
+
+/**
+ * Item 4 — the recipe's saved inspo links / image URLs, in position order.
+ * Caller is responsible for the ownership check (the editor page already
+ * resolves the recipe via getRecipeWithSlots before reading inspo).
+ */
+export async function listInspoForRecipe(
+  recipeId: string,
+): Promise<ReadonlyArray<RecipeInspo>> {
+  return db
+    .select()
+    .from(recipeInspo)
+    .where(eq(recipeInspo.recipeId, recipeId))
+    .orderBy(asc(recipeInspo.position));
 }
 
 export interface RecipesGrouped {

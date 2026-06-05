@@ -221,6 +221,22 @@ describe("Item 2 — WISHLIST + OWNED buttons in the slot side panel", () => {
   });
 });
 
+describe("Item 4 — Inspo section on the recipe creator", () => {
+  test("RecipeInspo renders a table persisting links via the inspo actions", () => {
+    const src = read("src/components/recipes/RecipeInspo.tsx");
+    expect(src).toContain('title="Inspo"');
+    expect(src).toContain("<table");
+    expect(src).toContain("addInspo");
+    expect(src).toContain("deleteInspo");
+  });
+
+  test("the editor client mounts the Inspo section", () => {
+    const src = read("src/components/recipes/RecipeEditorClient.tsx");
+    expect(src).toContain("RecipeInspo");
+    expect(src).toContain("initialRows={inspo}");
+  });
+});
+
 describe("B5 — single 'Recipe notes' box", () => {
   test("RecipeNotes card title reads 'Recipe notes'", () => {
     const src = read("src/components/recipes/RecipeNotes.tsx");
