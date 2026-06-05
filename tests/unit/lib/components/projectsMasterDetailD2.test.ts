@@ -87,8 +87,11 @@ describe("FOCUS-DASH — /projects page is the DASHBOARD", () => {
     expect(noComments).not.toContain("max-w-7xl");
   });
 
-  test("mounts the relocated planner widgets + the recipes table", () => {
+  test("mounts the relocated planner widgets (recipes table removed)", () => {
+    // DASH-RECIPES (2026-06-05) — the dashboard recipes table moved to
+    // /recipes as the single primary surface; the dashboard keeps the
+    // relocated planner widget row but no longer renders the recipes table.
     expect(page).toContain("DashboardWidgets");
-    expect(page).toContain("DashboardRecipesTable");
+    expect(page).not.toContain("DashboardRecipesTable");
   });
 });

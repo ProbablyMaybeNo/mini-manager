@@ -4,14 +4,12 @@ import {
   getProjectPalettesMap,
   getProjectFirstRecipeMap,
   listOwnedRecipesLean,
-  listRecipesForDashboard,
 } from "@/db/queries/recipes";
 import { QuickAddBar } from "@/components/QuickAddBar";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
-import { DashboardRecipesTable } from "@/components/recipes/RecipesTable";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { displayStatus, progressPercent } from "@/lib/progress";
@@ -34,9 +32,12 @@ export const dynamic = "force-dynamic";
  *     mobile comparison table inside `ProjectsDashboardTable`).
  *   - DASHBOARD widget row: streak, activity, calendar (the relocated
  *     planner cells, reused verbatim).
- *   - RECIPES dashboard table: bigger paint squares with name + layer +
- *     owned/wishlist borders, recipe title, Assign Recipe button.
  *   - RecentlyBoughtLine — passive spend readout.
+ *
+ * DASH-RECIPES (2026-06-05) — the dashboard recipes table was removed.
+ * /recipes is now the single primary surface for the recipe list, so the
+ * dashboard no longer duplicates it. The grid re-balances around the
+ * project table + widget row.
  */
 interface DashboardPageProps {
   /** P14.3 — calendar prev/next nav writes `?calYear` + `?calMonth`
@@ -61,13 +62,11 @@ export default async function DashboardPage({
     palettesByProjectId,
     firstRecipeByProjectId,
     ownedRecipes,
-    dashboardRecipes,
   ] = await Promise.all([
     listAllProjects(userId),
     getProjectPalettesMap(userId),
     getProjectFirstRecipeMap(userId),
     listOwnedRecipesLean(userId),
-    listRecipesForDashboard(userId),
   ]);
 
   const isEmpty = allProjects.length === 0;
@@ -157,10 +156,6 @@ export default async function DashboardPage({
 
       {/* The planner widgets that moved here from the FOCUS screen. */}
       <DashboardWidgets calYear={calYear} calMonth={calMonth} />
-
-      <Card title="RECIPES" accentColor="purple">
-        <DashboardRecipesTable rows={dashboardRecipes} />
-      </Card>
 
       <RecentlyBoughtLine />
     </div>

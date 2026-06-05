@@ -30,14 +30,16 @@ describe("DASHBOARD planner-widget row (FOCUS-DASH)", () => {
     expect(page).toMatch(/<DashboardWidgets calYear=\{calYear\} calMonth=\{calMonth\}/);
   });
 
-  test("the widget row mounts table → widgets → recipes (calendar after the table)", () => {
-    // Order by JSX usage, not import order.
+  test("the widget row mounts after the project table (calendar after the table)", () => {
+    // Order by JSX usage, not import order. DASH-RECIPES (2026-06-05) —
+    // the dashboard recipes table was removed; the widget row is now the
+    // last major section above RecentlyBoughtLine.
     const tableIdx = page.indexOf("<DashboardProjectsTable");
     const widgetsIdx = page.indexOf("<DashboardWidgets");
-    const recipesIdx = page.indexOf("<DashboardRecipesTable");
     expect(tableIdx).toBeGreaterThan(-1);
     expect(widgetsIdx).toBeGreaterThan(tableIdx);
-    expect(recipesIdx).toBeGreaterThan(widgetsIdx);
+    // The dashboard recipes table is gone from the page.
+    expect(page).not.toContain("<DashboardRecipesTable");
   });
 
   describe("DashboardWidgets composite", () => {

@@ -9,17 +9,12 @@ import {
   recipes,
   recipeSlots,
   recipeInspo,
-  phase12LayerLabel,
   type Recipe,
   type RecipeSlot,
   type RecipeInspo,
-  type Phase12LayerKey,
-  type TechniqueKey,
 } from "@/db/schema";
 import type { Paint, PaintCatalog } from "@/lib/paints/types";
 import type { RecipeWithSlots } from "@/lib/recipes/types";
-import { getInventoryByPaintId } from "@/db/queries/paintCoverage";
-import { coverageFor, type CoverageState } from "@/lib/paints/coverage";
 
 /* ============================================================
    Recipe lookups
@@ -262,125 +257,6 @@ export async function listRecipesForTable(
       createdAt: r.createdAt.getTime(),
       updatedAt: r.updatedAt.getTime(),
       publicSlug: r.publicSlug,
-    });
-  }
-  return out;
-}
-
-/* ============================================================
-   FOCUS-DASH — Dashboard recipes table
-   ============================================================ */
-
-/** One paint square on the dashboard recipes card: the colour, the paint
- *  name + the layer it's used on, and the painter's ownership coverage
- *  (green border = owned, yellow = wishlisted, none = neither) — the same
- *  treatment as the library colour-map dots. */
-export interface DashboardRecipeSlot {
-  hex: string;
-  /** Resolved "Brand Name" for catalog paints; "Custom mix" for
-   *  customColorHex slots. */
-  paintLabel: string;
-  /** Human layer label (Basecoat / Highlight / …). */
-  layerLabel: string;
-  /** Ownership coverage — "none" for custom-mix slots (no catalog paint
-   *  to own). */
-  coverage: CoverageState;
-}
-
-export interface DashboardRecipeRow {
-  id: string;
-  name: string;
-  bodyType: Recipe["bodyType"];
-  publicSlug: string | null;
-  /** Per-slot paint squares in slot-position order (bounded). */
-  slots: DashboardRecipeSlot[];
-  slotCount: number;
-  updatedAt: number;
-}
-
-function layerLabelFor(technique: TechniqueKey): string {
-  if (technique in phase12LayerLabel) {
-    return phase12LayerLabel[technique as Phase12LayerKey];
-  }
-  return technique
-    .split("_")
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join(" ");
-}
-
-/**
- * FOCUS-DASH — every recipe owned by the painter, with each slot resolved
- * to a paint square carrying the colour, paint name, layer, and ownership
- * coverage. Powers the DASHBOARD recipes table (Ross's spec: bigger
- * squares with paint name + layer, recipe title, Assign button, and
- * owned/wishlist border treatment).
- *
- * Two SQL reads (recipes + their slots) plus the cached paint catalog and
- * one inventory read — no N+1.
- */
-export async function listRecipesForDashboard(
-  userId: string,
-  perRecipeSlotCap = 12,
-): Promise<ReadonlyArray<DashboardRecipeRow>> {
-  const recipeRows = await db
-    .select()
-    .from(recipes)
-    .where(eq(recipes.ownerId, userId))
-    .orderBy(desc(recipes.updatedAt));
-
-  if (recipeRows.length === 0) return [];
-
-  const recipeIds = recipeRows.map((r) => r.id);
-  const slotRows = await db
-    .select()
-    .from(recipeSlots)
-    .where(inArray(recipeSlots.recipeId, recipeIds))
-    .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position));
-
-  const slotsByRecipeId = new Map<string, RecipeSlot[]>();
-  for (const s of slotRows) {
-    const arr = slotsByRecipeId.get(s.recipeId) ?? [];
-    arr.push(s);
-    slotsByRecipeId.set(s.recipeId, arr);
-  }
-
-  const [paintMeta, inventory] = await Promise.all([
-    getPaintMetaMap(),
-    getInventoryByPaintId(userId),
-  ]);
-
-  const out: DashboardRecipeRow[] = [];
-  for (const r of recipeRows) {
-    const slots = slotsByRecipeId.get(r.id) ?? [];
-    const dashSlots: DashboardRecipeSlot[] = [];
-    for (const slot of slots) {
-      if (dashSlots.length >= perRecipeSlotCap) break;
-      if (slot.paintId) {
-        const meta = paintMeta.get(slot.paintId);
-        if (!meta) continue;
-        dashSlots.push({
-          hex: meta.hex,
-          paintLabel: meta.label,
-          layerLabel: layerLabelFor(slot.technique),
-          coverage: coverageFor(slot.paintId, inventory),
-        });
-      } else if (slot.customColorHex) {
-        dashSlots.push({
-          hex: slot.customColorHex,
-          paintLabel: "Custom mix",
-          layerLabel: layerLabelFor(slot.technique),
-          coverage: "none",
-        });
-      }
-    }
-    out.push({
-      id: r.id,
-      name: r.name,
-      bodyType: r.bodyType,
-      publicSlug: r.publicSlug,
-      slots: dashSlots,
-      slotCount: slots.length,
-      updatedAt: r.updatedAt.getTime(),
     });
   }
   return out;
