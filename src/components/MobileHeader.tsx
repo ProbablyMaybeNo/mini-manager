@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { OPEN_SEARCH_EVENT } from "@/components/search/GlobalSearch";
+import { Logo } from "@/components/ui/Logo";
 
 export interface MobileHeaderUser {
   name: string | null;
@@ -41,11 +42,15 @@ export function MobileHeader({
       style={{ paddingTop: "env(safe-area-inset-top, 0)" }}
       aria-label="Mobile header"
     >
+      {/* UI-CHROME — the text wordmark is replaced by the sign-in brand
+          logo (the engraved CRT lockup), sized to fit the 48px header.
+          The Link carries the accessible name. */}
       <Link
         href="/projects"
-        className="font-mono text-sm glow-cyan tracking-wide"
+        aria-label="Mini Manager"
+        className="inline-flex items-center rounded-sm"
       >
-        MINI MANAGER
+        <Logo width={32} decorative />
       </Link>
 
       <span className="inline-flex items-center gap-2">

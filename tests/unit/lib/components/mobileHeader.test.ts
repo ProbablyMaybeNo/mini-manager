@@ -42,9 +42,19 @@ describe("MobileHeader — R7-009 user avatar links to /user", () => {
     expect(src).toContain("tap-target");
   });
 
-  test("MINI MANAGER wordmark also links — secondary nav path", () => {
+  test("brand logo also links to /projects — secondary nav path", () => {
     // Belt + braces. The brand link going to /projects is the other
-    // mobile escape hatch from any deep page.
-    expect(src).toMatch(/<Link[\s\S]{0,60}href="\/projects"/);
+    // mobile escape hatch from any deep page. UI-CHROME: the "MINI
+    // MANAGER" wordmark was replaced by the sign-in Logo, but the Link
+    // (and its /projects target) survives.
+    expect(src).toMatch(/<Link[\s\S]{0,90}href="\/projects"/);
+  });
+
+  test("UI-CHROME — brand mark is the sign-in Logo, not a text wordmark", () => {
+    expect(src).toContain('import { Logo } from "@/components/ui/Logo"');
+    expect(src).toContain("<Logo");
+    expect(src).not.toContain("MINI MANAGER");
+    // The brand Link names itself for AT since the Logo is decorative.
+    expect(src).toMatch(/aria-label="Mini Manager"/);
   });
 });
