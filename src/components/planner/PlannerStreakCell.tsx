@@ -66,8 +66,18 @@ export async function PlannerStreakCell({ days, now }: Props = {}) {
   const ariaUnit = result.streak === 1 ? "day" : "days";
 
   return (
-    <Card title="STREAK" titleAs="h3" accentColor="purple">
-      <div className="frame p-3 space-y-2">
+    // DASH-PROPORTION — `h-full` lets the card fill its dashboard grid
+    // cell (half the calendar's height) instead of floating in a large
+    // empty box. The body is centred vertically so the counter + copy
+    // sit in the middle of that half rather than clinging to the top.
+    <Card
+      title="STREAK"
+      titleAs="h3"
+      accentColor="purple"
+      className="h-full"
+      bodyClassName="flex-1 flex flex-col"
+    >
+      <div className="frame p-3 space-y-2 flex-1 flex flex-col justify-center">
         <div className="flex items-baseline gap-2">
           <span
             className={"text-3xl tabular-nums tracking-wide font-medium " + numberColor}

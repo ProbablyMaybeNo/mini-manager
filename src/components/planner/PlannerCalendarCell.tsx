@@ -46,6 +46,7 @@ export async function PlannerCalendarCell({ calYear, calMonth }: Props) {
       title="CALENDAR"
       titleAs="h3"
       accentColor="amber"
+      className="h-full"
       bodyClassName="!p-2 sm:!p-3.5"
     >
       <div className="space-y-3">

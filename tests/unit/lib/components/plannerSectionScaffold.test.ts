@@ -61,9 +61,29 @@ describe("DASHBOARD planner-widget row (FOCUS-DASH)", () => {
       );
     });
 
-    test("uses a responsive grid (single stack on mobile, 3-up on md+)", () => {
+    test("uses a responsive grid (single stack on mobile, 3-col on md+)", () => {
       expect(widgets).toContain("grid-cols-1");
       expect(widgets).toContain("md:grid-cols-3");
+    });
+
+    test("DASH-PROPORTION: calendar is the wide, tall column; streak/activity stack beside it", () => {
+      // The calendar widens to span 2 of the 3 columns AND both rows, so
+      // it's the tall column. Streak + Activity each occupy the single
+      // narrow left column, stacked (row 1 / row 2) so the two shorter
+      // widgets together match the calendar's height — the trio reads as
+      // one rectangle.
+      expect(widgets).toMatch(
+        /md:col-start-2 md:col-span-2 md:row-start-1 md:row-span-2[\s\S]*?<PlannerCalendarCell/,
+      );
+      expect(widgets).toMatch(
+        /md:col-start-1 md:row-start-1[\s\S]*?<PlannerStreakCell/,
+      );
+      expect(widgets).toMatch(
+        /md:col-start-1 md:row-start-2[\s\S]*?<PlannerActivityCell/,
+      );
+      // Even halves on the left so Streak doesn't float in a large empty
+      // box and the stack height tracks the calendar.
+      expect(widgets).toContain("md:auto-rows-fr");
     });
   });
 

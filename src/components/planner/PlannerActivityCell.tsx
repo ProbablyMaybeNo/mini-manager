@@ -47,8 +47,14 @@ export async function PlannerActivityCell({ rows, now }: Props = {}) {
 
   if (resolvedRows.length === 0) {
     return (
-      <Card title="ACTIVITY" titleAs="h3" accentColor="green">
-        <div className="frame p-3">
+      <Card
+        title="ACTIVITY"
+        titleAs="h3"
+        accentColor="green"
+        className="h-full"
+        bodyClassName="flex-1 flex flex-col"
+      >
+        <div className="frame p-3 flex-1">
           <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-relaxed">
             No activity yet. Bump a stage or create a recipe to
             populate the stream.
@@ -59,8 +65,18 @@ export async function PlannerActivityCell({ rows, now }: Props = {}) {
   }
 
   return (
-    <Card title="ACTIVITY" titleAs="h3" accentColor="green">
-      <ol className="frame p-3 space-y-2 list-none">
+    // DASH-PROPORTION — `h-full` lets the card fill its dashboard grid
+    // cell. The list is capped + scrolls (`min-h-0 overflow-y-auto`) so a
+    // long activity stream can't grow the cell taller than the calendar
+    // it sits beside; the trio stays a clean rectangle.
+    <Card
+      title="ACTIVITY"
+      titleAs="h3"
+      accentColor="green"
+      className="h-full"
+      bodyClassName="flex-1 flex flex-col min-h-0"
+    >
+      <ol className="frame p-3 space-y-2 list-none flex-1 min-h-0 overflow-y-auto">
         {resolvedRows.map((row) => (
           <li
             key={row.id}
