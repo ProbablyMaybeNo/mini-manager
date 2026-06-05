@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavRailCollapsed } from "@/lib/hooks/useNavRailCollapsed";
 import { OPEN_SEARCH_EVENT } from "@/components/search/GlobalSearch";
+import { Logo } from "@/components/ui/Logo";
 
 type NavItem = {
   href: Route;
@@ -155,9 +156,14 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
         {collapsed ? null : (
           <Link
             href="/projects"
-            className="font-mono text-sm glow-cyan tracking-wide"
+            aria-label="Mini Manager"
+            className="inline-flex items-center rounded-sm"
           >
-            MINI MANAGER
+            {/* UI-CHROME — the text wordmark is replaced by the sign-in
+                brand logo (the engraved CRT lockup). Sized compact for the
+                rail header; the Link carries the accessible name so the
+                decorative image needs none. */}
+            <Logo width={36} decorative />
           </Link>
         )}
         <button
