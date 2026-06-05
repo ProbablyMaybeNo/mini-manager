@@ -187,6 +187,13 @@ export const projects = sqliteTable(
     // Action"). Nullable free text — no curated enum, painters track all
     // sorts of systems.
     game: text("game"),
+    // batch/model-warband — per-model "Class" cell. Free-text label the
+    // painter types on a Warband's model rows (e.g. "Leader", "Bestigor",
+    // "Champion"). Nullable; surfaced ONLY on Warband model (Unit
+    // sub-project) rows. Empty input collapses to null at the action
+    // layer. Length-capped ~40 at the action layer to keep the table cell
+    // tidy. Additive migration 0019 — existing rows backfill to NULL.
+    modelClass: text("model_class"),
     priority: text("priority", { enum: priorities }).default("Medium"),
     targetDate: integer("target_date", { mode: "timestamp_ms" }),
     pointsValue: integer("points_value"),

@@ -134,6 +134,13 @@
       "when": 1780617572627,
       "tag": "0018_foamy_bloodscream",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1780622570560,
+      "tag": "0019_mysterious_champions",
+      "breakpoints": true
     }
   ]
 }
