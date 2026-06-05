@@ -19,7 +19,11 @@ import {
   averageCompletion,
   formatPaintTime,
 } from "@/components/dashboard/dashboardKpiHelpers";
-import { computeStreak } from "@/components/planner/plannerStreakHelpers";
+import {
+  computeStreak,
+  computeStreakBaseline,
+  streakBaselineLine,
+} from "@/components/planner/plannerStreakHelpers";
 import { getActivityByDay } from "@/db/queries/activityLog";
 import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
 import { Button } from "@/components/ui/Button";
@@ -105,6 +109,12 @@ export default async function DashboardPage({
   // duration, not model counts, so time-at-the-desk is the closest cheaply
   // derivable equivalent.
   const streak = computeStreak(streakDays, now);
+  // DASH-STREAK-BASELINE (item 3, doc §8) — the streak's third context
+  // layer: a WoW painting-day trend + the best-streak benchmark, both
+  // derived from the same activity_log window the streak uses.
+  const streakBaseline = streakBaselineLine(
+    computeStreakBaseline(streakDays, now),
+  );
   const isHotStreak = streak.streak >= 7;
   const isActiveStreak = streak.streak >= 1;
   const paintTime = formatPaintTime(weekSeconds);
@@ -139,6 +149,7 @@ export default async function DashboardPage({
       glowClassName: isActiveStreak ? "glow-text-strong" : undefined,
       accentColor: "purple",
       valueAriaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak`,
+      baseline: streakBaseline ?? undefined,
     },
     {
       label: "PAINTING TIME",

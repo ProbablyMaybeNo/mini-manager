@@ -112,6 +112,92 @@ export function microcopyFor(result: StreakResult): string {
 }
 
 /**
+ * DASH-STREAK-BASELINE (2026-06-05) — the streak's third context layer.
+ *
+ * A raw streak number is uninterpretable without a baseline (doc §8: a
+ * KPI needs a temporal comparison + a benchmark). This derives two from
+ * the SAME activity_log window already fetched for the streak:
+ *   - `bestStreak`   — the longest run of consecutive qualifying days
+ *                      anywhere in the window (the all-time-within-window
+ *                      benchmark to beat).
+ *   - `thisWeek` /
+ *     `lastWeek`     — count of qualifying (painting) days in the current
+ *                      vs previous 7-day window (the WoW temporal trend).
+ *
+ * Everything is computed from the same `dayHasStreakActivity` predicate
+ * the streak uses, so "a painting day" means the same thing in both.
+ */
+export interface StreakBaseline {
+  bestStreak: number;
+  thisWeek: number;
+  lastWeek: number;
+}
+
+export function computeStreakBaseline(
+  daysNewestFirst: ReadonlyArray<ActivityDay>,
+  today: Date,
+): StreakBaseline {
+  const qualifyingSet = new Set(
+    daysNewestFirst.filter(dayHasStreakActivity).map((d) => d.date),
+  );
+
+  // Longest consecutive run anywhere in the window. Walk each qualifying
+  // day; a day starts a run only when the day before it is NOT qualifying.
+  let bestStreak = 0;
+  for (const key of qualifyingSet) {
+    if (qualifyingSet.has(shiftDay(key, -1))) continue; // not a run start
+    let len = 0;
+    let cursor = key;
+    while (qualifyingSet.has(cursor)) {
+      len += 1;
+      cursor = shiftDay(cursor, 1);
+    }
+    if (len > bestStreak) bestStreak = len;
+  }
+
+  // WoW painting-day counts. `today` anchors the current 7-day window
+  // (days 0..6 back); the prior window is days 7..13 back.
+  const todayKey = toDayKey(today);
+  let thisWeek = 0;
+  let lastWeek = 0;
+  for (let i = 0; i < 14; i += 1) {
+    const key = shiftDay(todayKey, -i);
+    if (!qualifyingSet.has(key)) continue;
+    if (i < 7) thisWeek += 1;
+    else lastWeek += 1;
+  }
+
+  return { bestStreak, thisWeek, lastWeek };
+}
+
+/**
+ * One-line baseline string for the streak KPI's third context layer.
+ * Pairs the WoW painting-day trend with the best-streak benchmark.
+ * Returns null when there's no qualifying history at all (a brand-new
+ * painter gets no misleading "0 vs 0" line — the KPI shows the number
+ * alone until there's something to compare against).
+ */
+export function streakBaselineLine(baseline: StreakBaseline): string | null {
+  if (
+    baseline.bestStreak === 0 &&
+    baseline.thisWeek === 0 &&
+    baseline.lastWeek === 0
+  ) {
+    return null;
+  }
+  const trend =
+    baseline.thisWeek > baseline.lastWeek
+      ? "▲"
+      : baseline.thisWeek < baseline.lastWeek
+        ? "▼"
+        : "■";
+  return (
+    `${trend} ${baseline.thisWeek} this wk vs ${baseline.lastWeek} last` +
+    ` · best ${baseline.bestStreak}`
+  );
+}
+
+/**
  * Days between two YYYY-MM-DD keys. Positive when `later` is after
  * `earlier`. Computed in UTC to match toDayKey's projection.
  */

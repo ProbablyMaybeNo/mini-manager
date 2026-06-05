@@ -6,11 +6,15 @@
  * tests/integration/actions/activityLogQueries.test.ts.
  */
 import { describe, expect, test } from "vitest";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import type { ActivityDay } from "@/db/queries/activityLog";
 import {
   computeStreak,
+  computeStreakBaseline,
   dayHasStreakActivity,
   microcopyFor,
+  streakBaselineLine,
 } from "@/components/planner/plannerStreakHelpers";
 
 function day(
@@ -201,5 +205,99 @@ describe("microcopyFor (P14.5)", () => {
     expect(microcopyFor({ streak: 0, daysSinceLast: null })).toBe(
       "Bump a stage to start your streak.",
     );
+  });
+});
+
+describe("computeStreakBaseline (DASH-STREAK-BASELINE, item 3)", () => {
+  test("empty input -> all zeros", () => {
+    expect(computeStreakBaseline([], TODAY)).toEqual({
+      bestStreak: 0,
+      thisWeek: 0,
+      lastWeek: 0,
+    });
+  });
+
+  test("bestStreak finds the longest run anywhere in the window", () => {
+    // A 2-day run last week, a longer 4-day run earlier — best is 4.
+    const days = [
+      day("2026-05-31", ["stage_bump"]),
+      day("2026-05-30", ["stage_bump"]),
+      // gap
+      day("2026-05-20", ["stage_bump"]),
+      day("2026-05-19", ["recipe_created"]),
+      day("2026-05-18", ["stage_bump"]),
+      day("2026-05-17", ["stage_bump"]),
+    ];
+    expect(computeStreakBaseline(days, TODAY).bestStreak).toBe(4);
+  });
+
+  test("non-qualifying days never extend the best run", () => {
+    const days = [
+      day("2026-05-31", ["stage_bump"]),
+      day("2026-05-30", ["paint_added"]), // does not qualify
+      day("2026-05-29", ["stage_bump"]),
+    ];
+    expect(computeStreakBaseline(days, TODAY).bestStreak).toBe(1);
+  });
+
+  test("WoW counts split this-week (0..6 back) vs last-week (7..13 back)", () => {
+    // TODAY = 2026-06-01. This week = 05-26..06-01; last = 05-19..05-25.
+    const days = [
+      day("2026-06-01", ["stage_bump"]), // this wk
+      day("2026-05-30", ["stage_bump"]), // this wk
+      day("2026-05-24", ["stage_bump"]), // last wk
+      day("2026-05-12", ["stage_bump"]), // outside both windows
+    ];
+    const b = computeStreakBaseline(days, TODAY);
+    expect(b.thisWeek).toBe(2);
+    expect(b.lastWeek).toBe(1);
+  });
+});
+
+describe("streakBaselineLine (DASH-STREAK-BASELINE, item 3)", () => {
+  test("returns null when there's no qualifying history (no misleading 0 vs 0)", () => {
+    expect(
+      streakBaselineLine({ bestStreak: 0, thisWeek: 0, lastWeek: 0 }),
+    ).toBeNull();
+  });
+
+  test("up trend uses ▲ and shows the best-streak benchmark", () => {
+    const line = streakBaselineLine({
+      bestStreak: 9,
+      thisWeek: 3,
+      lastWeek: 1,
+    });
+    expect(line).toBe("▲ 3 this wk vs 1 last · best 9");
+  });
+
+  test("down trend uses ▼", () => {
+    const line = streakBaselineLine({
+      bestStreak: 5,
+      thisWeek: 1,
+      lastWeek: 4,
+    });
+    expect(line).toContain("▼");
+  });
+
+  test("flat trend uses ■", () => {
+    const line = streakBaselineLine({
+      bestStreak: 5,
+      thisWeek: 2,
+      lastWeek: 2,
+    });
+    expect(line).toContain("■");
+  });
+});
+
+describe("DASHBOARD streak KPI wires the third context layer", () => {
+  const page = fs.readFileSync(
+    path.resolve(__dirname, "../../../../", "src/app/projects/page.tsx"),
+    "utf-8",
+  );
+
+  test("page computes + passes the streak baseline into the KPI card", () => {
+    expect(page).toContain("computeStreakBaseline");
+    expect(page).toContain("streakBaselineLine");
+    expect(page).toContain("baseline: streakBaseline");
   });
 });
