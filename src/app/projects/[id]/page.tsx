@@ -34,12 +34,17 @@ import {
 } from "@/components/ProjectProgressTable";
 import {
   getPaintMetaMap,
+  getProjectFirstRecipeMap,
   getProjectPalettesMap,
   getRecipeWithSlots,
   listOwnedRecipesLean,
   listRecipesForProject,
 } from "@/db/queries/recipes";
 import type { RecipeOption } from "@/components/recipes/AttachRecipeModal";
+import {
+  WarbandModelsTable,
+  type WarbandModelRow,
+} from "@/components/projects/WarbandModelsTable";
 
 export const dynamic = "force-dynamic";
 
@@ -212,6 +217,26 @@ export default async function ProjectDetailPage({
         : null,
     }));
 
+  // batch/model-warband — on a Warband, the recipe box at the top is
+  // replaced by a "+ Model" + models table. Models are the child Unit
+  // sub-projects. Build the per-model row VMs here (palette swatches +
+  // first-recipe link + derived status/percent + the new modelClass).
+  const isWarband = project.type === "Warband";
+  let warbandModelRows: ReadonlyArray<WarbandModelRow> = [];
+  if (isWarband) {
+    const firstRecipeMap = await getProjectFirstRecipeMap(userId);
+    warbandModelRows = children.map((c) => ({
+      id: c.id,
+      name: c.name,
+      modelClass: c.modelClass,
+      priority: c.priority,
+      status: displayStatus(c),
+      paletteHexes: projectPalettes.get(c.id) ?? [],
+      progressPercent: progressPercent(c),
+      firstAttachedRecipeId: firstRecipeMap.get(c.id) ?? null,
+    }));
+  }
+
   // UX-907 — when 2+ recipes are attached we render a tab strip and
   // honour `?recipe=<id>` for the active selection. Fall back to most-
   // recently-updated (already the listRecipesForProject default order).
@@ -327,20 +352,38 @@ export default async function ProjectDetailPage({
         showAddChild={canHaveChildren}
       />
 
-      <ProjectColorSchemeBox
-        projectId={project.id}
-        projectName={project.name}
-        attachedRecipeId={attachedRecipe?.id ?? null}
-        attachedRecipeName={attachedRecipe?.name ?? null}
-        slots={colorSchemeSlots}
-        attachedRecipes={attachedRecipes.map((r) => ({
-          id: r.id,
-          name: r.name,
-        }))}
-        attachCandidates={attachCandidates}
-      />
+      {/* batch/model-warband — a Warband swaps the recipe-at-top box for
+          a "+ Model" + models table (its models ARE the child Unit
+          sub-projects). Every other project type keeps the recipe box. */}
+      {isWarband ? (
+        <WarbandModelsTable
+          warbandId={project.id}
+          rows={warbandModelRows}
+          ownedRecipes={ownedRecipes}
+          projectNameById={projectNameById}
+        />
+      ) : (
+        <ProjectColorSchemeBox
+          projectId={project.id}
+          projectName={project.name}
+          attachedRecipeId={attachedRecipe?.id ?? null}
+          attachedRecipeName={attachedRecipe?.name ?? null}
+          slots={colorSchemeSlots}
+          attachedRecipes={attachedRecipes.map((r) => ({
+            id: r.id,
+            name: r.name,
+          }))}
+          attachCandidates={attachCandidates}
+        />
+      )}
 
-      <ProjectProgressTable parentType={project.type} rows={progressRows} />
+      {/* The Warband models table already lists every child model with
+          per-row status/recipe/completion, so the generic Progress table
+          would be redundant for a Warband — render it only for non-
+          Warband container types. */}
+      {isWarband ? null : (
+        <ProjectProgressTable parentType={project.type} rows={progressRows} />
+      )}
 
       {isContainer && aggregate ? (
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6">

@@ -88,3 +88,35 @@ describe("WarbandModelsTable component surface", () => {
     expect(src).toContain("No models yet");
   });
 });
+
+describe("Project detail page swaps the recipe box for the models table on a Warband", () => {
+  const src = read("src/app/projects/[id]/page.tsx");
+
+  test("imports WarbandModelsTable + its row type", () => {
+    expect(src).toContain("WarbandModelsTable");
+    expect(src).toContain("WarbandModelRow");
+  });
+
+  test("gates the swap on project.type === Warband", () => {
+    expect(src).toContain('project.type === "Warband"');
+    expect(src).toContain("isWarband");
+  });
+
+  test("renders the models table instead of the ColorSchemeBox when Warband", () => {
+    // The ternary picks WarbandModelsTable on a Warband and the existing
+    // ProjectColorSchemeBox otherwise.
+    expect(src).toMatch(
+      /isWarband \? \([\s\S]{0,400}WarbandModelsTable[\s\S]{0,400}ProjectColorSchemeBox/,
+    );
+  });
+
+  test("builds per-model rows carrying modelClass + first recipe link", () => {
+    expect(src).toContain("warbandModelRows");
+    expect(src).toContain("getProjectFirstRecipeMap");
+    expect(src).toContain("modelClass: c.modelClass");
+  });
+
+  test("non-Warband projects still render the ProjectColorSchemeBox", () => {
+    expect(src).toContain("ProjectColorSchemeBox");
+  });
+});
