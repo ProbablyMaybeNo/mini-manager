@@ -27,6 +27,7 @@ const {
   bumpProjectStatus,
   deleteProject,
   countProjectDescendants,
+  setModelClass,
 } = await import("@/lib/actions/projects");
 const { redirect } = await import("next/navigation");
 const { displayStatus } = await import("@/lib/progress");
@@ -474,5 +475,81 @@ describe("deleteProject", () => {
     expect(after).toHaveLength(2);
     const names = after.map((r) => r.name).sort();
     expect(names).toEqual(["Army B", "Standalone Unit"]);
+  });
+});
+
+/* ============================================================
+   batch/model-warband — setModelClass action
+   ============================================================ */
+
+describe("setModelClass", () => {
+  test("sets a free-text class on a model row for the owner", async () => {
+    await createProject({ name: "Bestigor", type: "Unit", count: 1 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await setModelClass({ id: row!.id, modelClass: "Leader" });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.modelClass).toBe("Leader");
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(updated!.modelClass).toBe("Leader");
+  });
+
+  test("trims whitespace around the class label", async () => {
+    await createProject({ name: "Gor", type: "Unit", count: 1 });
+    const [row] = await state.db!.select().from(projects);
+
+    await setModelClass({ id: row!.id, modelClass: "  Champion  " });
+    const [updated] = await state.db!.select().from(projects);
+    expect(updated!.modelClass).toBe("Champion");
+  });
+
+  test("blank input clears the class back to null", async () => {
+    await createProject({ name: "Ungor", type: "Unit", count: 1 });
+    const [row] = await state.db!.select().from(projects);
+    await setModelClass({ id: row!.id, modelClass: "Standard Bearer" });
+
+    const res = await setModelClass({ id: row!.id, modelClass: "   " });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.modelClass).toBeNull();
+
+    const [updated] = await state.db!.select().from(projects);
+    expect(updated!.modelClass).toBeNull();
+  });
+
+  test("omitted modelClass collapses to null", async () => {
+    await createProject({ name: "Centigor", type: "Unit", count: 1 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await setModelClass({ id: row!.id });
+    expect(res.ok).toBe(true);
+    const [updated] = await state.db!.select().from(projects);
+    expect(updated!.modelClass).toBeNull();
+  });
+
+  test("rejects a class over the 40-char cap", async () => {
+    await createProject({ name: "Doombull", type: "Unit", count: 1 });
+    const [row] = await state.db!.select().from(projects);
+
+    const res = await setModelClass({
+      id: row!.id,
+      modelClass: "x".repeat(41),
+    });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/Class is too long/);
+  });
+
+  test("does not touch a project owned by a different user", async () => {
+    await createProject({ name: "Minotaur", type: "Unit", count: 1 });
+    const [row] = await state.db!.select().from(projects);
+
+    state.userId = "intruder";
+    const res = await setModelClass({ id: row!.id, modelClass: "Leader" });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/Project not found/);
+
+    // Original owner's row is untouched.
+    const [unchanged] = await state.db!.select().from(projects);
+    expect(unchanged!.modelClass).toBeNull();
   });
 });

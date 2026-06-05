@@ -290,6 +290,67 @@ export async function updateProjectName(
 }
 
 /* ============================================================
+   batch/model-warband — inline per-model "Class" cell.
+
+   Sets the free-text `model_class` label on a model (Unit sub-project)
+   row inside a Warband's models table. Owner-scoped, trimmed, length-
+   capped at 40, blank → null (so an emptied cell clears the column
+   rather than storing "" — mirrors the faction/game blank handling in
+   createProject). The displayed cell surfaces only on Warband model
+   rows; the action itself stays type-agnostic so it composes with the
+   existing dashboard-editing actions below.
+   ============================================================ */
+
+const setModelClassSchema = z.object({
+  id: z.string().min(1).max(64),
+  modelClass: z
+    .string()
+    .trim()
+    .max(40, "Class is too long")
+    .nullish()
+    .transform((v) => (v ? v : null)),
+});
+
+export type SetModelClassInput = z.input<typeof setModelClassSchema>;
+
+export async function setModelClass(
+  raw: SetModelClassInput,
+): Promise<ActionResult<{ id: string; modelClass: string | null }>> {
+  const parsed = setModelClassSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid class",
+    };
+  }
+  const { id, modelClass } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select({ id: projects.id, parentId: projects.parentId })
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  try {
+    await db.update(projects).set({ modelClass }).where(eq(projects.id, id));
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${id}`);
+    if (project.parentId) {
+      revalidatePath(`/projects/${project.parentId}`);
+    }
+    return { ok: true, data: { id, modelClass } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to update class",
+    };
+  }
+}
+
+/* ============================================================
    R7-1 inline dashboard editing — type / priority / status bump
    ============================================================ */
 
