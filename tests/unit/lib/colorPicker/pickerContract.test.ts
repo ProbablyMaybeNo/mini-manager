@@ -99,6 +99,27 @@ describe("ColorPicker — R7-002 mode prop", () => {
   });
 });
 
+describe("ColorPicker — item 3: saturation escape from greyscale", () => {
+  const src = read("src/components/ui/ColorPicker.tsx");
+
+  test("saturation has a setter (the latch bug was a read-only `sat`)", () => {
+    // The bug: `const [sat] = useState(...)` — seeded from a greyscale
+    // slot (s=0) and never settable, so the wheel stayed grey forever.
+    expect(src).toContain("const [sat, setSat] = useState<number>(seedHsl.s);");
+    expect(src).not.toContain("const [sat] = useState");
+  });
+
+  test("renders a Saturation slider wired to setSat", () => {
+    expect(src).toContain('id="cp-saturation"');
+    expect(src).toContain("onChange={(e) => setSat(Number(e.target.value))}");
+    expect(src).toContain('aria-label="Saturation"');
+  });
+
+  test("shows a hint at saturation 0 explaining how to get colour back", () => {
+    expect(src).toContain("drag saturation up to pick a colour");
+  });
+});
+
 describe("SlotList — flat-slot editor surface", () => {
   const src = read("src/components/recipes/SlotList.tsx");
 

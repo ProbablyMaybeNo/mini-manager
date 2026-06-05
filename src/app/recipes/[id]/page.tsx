@@ -6,6 +6,7 @@ import { db } from "@/db/client";
 import {
   getPaintMetaMap,
   getRecipeWithSlots,
+  listInspoForRecipe,
 } from "@/db/queries/recipes";
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { projects } from "@/db/schema";
@@ -52,7 +53,7 @@ export default async function RecipeEditorPage({
   const recipe = await getRecipeWithSlots(userId, id);
   if (!recipe) notFound();
 
-  const [paintMeta, attachment, inventoryEntries, assignProjects] =
+  const [paintMeta, attachment, inventoryEntries, assignProjects, inspoRows] =
     await Promise.all([
       getPaintMetaMap(),
       resolveAttachment(recipe),
@@ -72,6 +73,8 @@ export default async function RecipeEditorPage({
           and(eq(projects.ownerId, userId), isNull(projects.archivedAt)),
         )
         .orderBy(asc(projects.name)),
+      // Item 4 — the recipe's saved inspo links / image URLs.
+      listInspoForRecipe(recipe.id),
     ]);
   const assignProjectsOptions: ReadonlyArray<AssignProjectOption> =
     assignProjects.map((p) => ({
@@ -94,8 +97,18 @@ export default async function RecipeEditorPage({
   });
 
   const ownedPaintIds = new Set<string>();
+  // Item 2 — the slot side panel's WISHLIST / OWNED buttons need the
+  // currently-selected paint's full inventory state, not just ownership.
+  const inventoryByPaintId = new Map<
+    string,
+    { ownedCount: number; isWishlisted: boolean }
+  >();
   inventoryEntries.forEach((entry, paintId) => {
     if (entry.ownedCount > 0) ownedPaintIds.add(paintId);
+    inventoryByPaintId.set(paintId, {
+      ownedCount: entry.ownedCount,
+      isWishlisted: entry.isWishlisted,
+    });
   });
 
   // Build a MarkdownInput for the share modal — resolves paint name + hex
@@ -134,7 +147,11 @@ export default async function RecipeEditorPage({
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl space-y-6">
+    // Item 5 — wider editor canvas (96rem, was 80rem) so the RECIPE SLOTS
+    // grid can grow without squeezing RECIPE NOTES, and the full-width
+    // Inspo table below has room to breathe. Explicit rem value (the
+    // max-w-screen-* utilities were dropped in Tailwind v4).
+    <div className="p-6 md:p-8 max-w-[96rem] space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
         <Link href="/recipes" className="hover:text-[var(--color-accent)]">
           ← Recipes
@@ -171,6 +188,12 @@ export default async function RecipeEditorPage({
         recipe={recipe}
         slots={slotItems}
         ownedPaintIds={ownedPaintIds}
+        inventoryByPaintId={inventoryByPaintId}
+        inspo={inspoRows.map((row) => ({
+          id: row.id,
+          url: row.url,
+          label: row.label,
+        }))}
       />
     </div>
   );

@@ -86,7 +86,12 @@ export function ColorPicker({
   }, [value?.hex]);
 
   const [hue, setHue] = useState<number>(seedHsl.h);
-  const [sat] = useState<number>(seedHsl.s);
+  // BUG fix (item 3) — saturation was seeded from the slot colour but had
+  // NO setter, so a greyscale seed (s = 0) latched the wheel into greyscale
+  // forever: every hslToHex(hue, 0, light) renders grey regardless of hue,
+  // with no control to climb back out. It now has a slider (mirrors the
+  // lightness one) so a greyscale slot can be lifted back into full colour.
+  const [sat, setSat] = useState<number>(seedHsl.s);
   const [light, setLight] = useState<number>(seedHsl.l);
   const [harmony, setHarmony] = useState<ColorPickerHarmony>("complementary");
 
@@ -288,6 +293,41 @@ export function ColorPicker({
               title={hex}
             />
           ))}
+        </div>
+
+        {/* Item 3 — horizontal saturation slider. The companion to the
+            lightness slider below. Critically, it's the way OUT of a
+            greyscale slot: a slot seeded at saturation 0 used to be
+            permanently grey because nothing could raise saturation. Drag
+            this up and the wheel hue + harmonies + matches re-render in
+            full colour again. */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="cp-saturation"
+              className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
+            >
+              Saturation
+            </label>
+            <span className="font-mono text-2xs tabular-nums text-[var(--color-fg-subtle)]">
+              {Math.round(sat)}
+            </span>
+          </div>
+          <input
+            id="cp-saturation"
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round(sat)}
+            onChange={(e) => setSat(Number(e.target.value))}
+            className="w-full"
+            aria-label="Saturation"
+          />
+          {sat === 0 ? (
+            <p className="text-2xs font-sans text-[var(--color-fg-subtle)] leading-snug">
+              Greyscale — drag saturation up to pick a colour from the wheel.
+            </p>
+          ) : null}
         </div>
 
         {/* R7-3 — horizontal lightness slider. Lives below the wheel +

@@ -67,6 +67,7 @@ export default async function RecipesPage() {
       ? projectNameById.get(r.attachedProjectId) ?? "Project"
       : null,
     paletteHexes: r.paletteHexes,
+    palette: r.palette,
     slotCount: r.slotCount,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,

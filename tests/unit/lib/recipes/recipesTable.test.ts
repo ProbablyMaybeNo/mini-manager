@@ -61,7 +61,13 @@ describe("RecipesTable component surface", () => {
   });
 
   test("PaletteStrip renders up to 8 swatches", () => {
-    expect(src).toContain("hexes.slice(0, 8)");
+    expect(src).toContain("swatches.slice(0, 8)");
+  });
+
+  test("PaletteStrip hover label shows the paint name (not just the hex)", () => {
+    // Item 1: hovering a swatch shows the chosen paint's NAME (name
+    // primary, hex secondary). Custom-colour slots fall back to the hex.
+    expect(src).toContain("${sw.label} · ${sw.hex}");
   });
 
   test("a recipe with no palette renders an explanatory hint", () => {

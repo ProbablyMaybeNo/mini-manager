@@ -13,6 +13,8 @@ export interface RecipeRowVm {
   attachmentKind: "standalone" | "project";
   attachmentLabel: string | null;
   paletteHexes: string[];
+  /** Per-swatch colour + hover label (paint name, or hex for custom slots). */
+  palette: { hex: string; label: string }[];
   slotCount: number;
   createdAt: number;
   updatedAt: number;
@@ -175,7 +177,7 @@ function RecipeCardRow({ row }: { row: RecipeRowVm }) {
         </Link>
         <StatusPill status="neutral">{row.bodyType}</StatusPill>
       </div>
-      <PaletteStrip hexes={row.paletteHexes} />
+      <PaletteStrip swatches={row.palette} />
       <div className="flex items-center gap-3 text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
         <span>
           {row.slotCount} slot{row.slotCount === 1 ? "" : "s"}
@@ -268,7 +270,7 @@ function RecipeRow({ row }: { row: RecipeRowVm }) {
         <StatusPill status="neutral">{row.bodyType}</StatusPill>
       </td>
       <td className="px-3 py-2">
-        <PaletteStrip hexes={row.paletteHexes} />
+        <PaletteStrip swatches={row.palette} />
       </td>
       <td className="px-3 py-2 text-right tabular-nums">{row.slotCount}</td>
       <td className="px-3 py-2 text-[var(--color-fg-muted)]">
@@ -311,8 +313,12 @@ function RecipeRow({ row }: { row: RecipeRowVm }) {
   );
 }
 
-function PaletteStrip({ hexes }: { hexes: ReadonlyArray<string> }) {
-  if (hexes.length === 0) {
+function PaletteStrip({
+  swatches,
+}: {
+  swatches: ReadonlyArray<{ hex: string; label: string }>;
+}) {
+  if (swatches.length === 0) {
     return (
       <span className="text-2xs text-[var(--color-fg-muted)] opacity-50">
         no palette yet
@@ -323,21 +329,29 @@ function PaletteStrip({ hexes }: { hexes: ReadonlyArray<string> }) {
     <span
       className="inline-flex items-center gap-1"
       role="list"
-      aria-label={`Palette · ${hexes.length} swatch${hexes.length === 1 ? "" : "es"}`}
+      aria-label={`Palette · ${swatches.length} swatch${swatches.length === 1 ? "" : "es"}`}
     >
-      {hexes.slice(0, 8).map((hex, i) => (
-        <span
-          key={`${i}-${hex}`}
-          role="listitem"
-          aria-label={hex}
-          title={hex}
-          className="block w-4 h-4 rounded-sm"
-          style={{
-            background: hex,
-            border: "1px solid var(--color-border-strong)",
-          }}
-        />
-      ))}
+      {swatches.slice(0, 8).map((sw, i) => {
+        // Hover label: paint name primary, hex secondary when the label
+        // isn't already the hex (custom-colour slots use the hex itself).
+        const hover =
+          sw.label.toLowerCase() === sw.hex.toLowerCase()
+            ? sw.hex
+            : `${sw.label} · ${sw.hex}`;
+        return (
+          <span
+            key={`${i}-${sw.hex}`}
+            role="listitem"
+            aria-label={hover}
+            title={hover}
+            className="block w-4 h-4 rounded-sm"
+            style={{
+              background: sw.hex,
+              border: "1px solid var(--color-border-strong)",
+            }}
+          />
+        );
+      })}
     </span>
   );
 }

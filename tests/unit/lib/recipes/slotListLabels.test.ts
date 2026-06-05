@@ -192,6 +192,75 @@ describe("B3 — brand filter chips in the paint picker", () => {
   });
 });
 
+describe("Item 2 — WISHLIST + OWNED buttons in the slot side panel", () => {
+  const buttons = read("src/components/recipes/RecipeInventoryButtons.tsx");
+  const slotList = read("src/components/recipes/SlotList.tsx");
+
+  test("WISHLIST button is the warning (yellow border + text) outline style", () => {
+    // Yellow border + yellow text, black fill == warning variant, outline
+    // tone when inactive. Mirrors the app's other WISHLIST CTAs.
+    expect(buttons).toMatch(/variant="warning"/);
+    expect(buttons).toContain("Wishlist");
+  });
+
+  test("OWNED button is the success (neon-green border + text) outline style", () => {
+    expect(buttons).toMatch(/variant="success"/);
+    expect(buttons).toContain("Mark owned");
+  });
+
+  test("toggles route through the shared inventory action path", () => {
+    // Reuses the exact server actions the library InventoryControls uses.
+    expect(buttons).toContain("toggleWishlistedPaint");
+    expect(buttons).toContain("setOwnedCount");
+  });
+
+  test("only renders for the slot's selected catalog paint", () => {
+    // No clear selected-paint context on the add path / custom-hex slots.
+    expect(slotList).toContain("selectedPaintId && selectedPaintInventory");
+    expect(slotList).toContain("<RecipeInventoryButtons");
+  });
+});
+
+describe("Item 4 — Inspo section on the recipe creator", () => {
+  test("RecipeInspo renders a table persisting links via the inspo actions", () => {
+    const src = read("src/components/recipes/RecipeInspo.tsx");
+    expect(src).toContain('title="Inspo"');
+    expect(src).toContain("<table");
+    expect(src).toContain("addInspo");
+    expect(src).toContain("deleteInspo");
+  });
+
+  test("the editor client mounts the Inspo section", () => {
+    const src = read("src/components/recipes/RecipeEditorClient.tsx");
+    expect(src).toContain("RecipeInspo");
+    expect(src).toContain("initialRows={inspo}");
+  });
+});
+
+describe("Item 5 — balanced SLOTS/NOTES layout + full-width Inspo", () => {
+  const src = read("src/components/recipes/RecipeEditorClient.tsx");
+
+  test("SLOTS vs NOTES split on a proportional ratio (not 1fr / fixed px)", () => {
+    expect(src).toContain("md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
+    expect(src).not.toContain("md:grid-cols-[minmax(0,1fr)_320px]");
+  });
+
+  test("Inspo sits OUTSIDE the two-column grid (full container width)", () => {
+    // The RecipeInspo mount is a sibling of the grid div, not inside it,
+    // so it spans the full width and lines up with the columns above.
+    const gridEnd = src.indexOf("</div>", src.indexOf("grid-cols-1"));
+    const inspoIdx = src.indexOf("<RecipeInspo");
+    expect(gridEnd).toBeGreaterThan(-1);
+    expect(inspoIdx).toBeGreaterThan(gridEnd);
+  });
+
+  test("the editor page widens its canvas for the bigger slot grid", () => {
+    const page = read("src/app/recipes/[id]/page.tsx");
+    expect(page).toContain("max-w-[96rem]");
+    expect(page).not.toContain("max-w-7xl");
+  });
+});
+
 describe("B5 — single 'Recipe notes' box", () => {
   test("RecipeNotes card title reads 'Recipe notes'", () => {
     const src = read("src/components/recipes/RecipeNotes.tsx");

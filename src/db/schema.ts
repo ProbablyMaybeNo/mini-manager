@@ -517,6 +517,43 @@ export const recipeSlots = sqliteTable(
 );
 
 /* ============================================================
+   Domain — Recipe inspo (item 4)
+   ============================================================
+   A flat, contained child of recipe: the painter saves reference
+   links / image URLs they found online for a recipe (e.g. a
+   technique tutorial, a 'eavy-metal photo). One row per saved
+   link, ordered by `position` like recipe_slot. `label` is an
+   optional human caption; `url` is the link/image address. Mirrors
+   the recipe_slot shape (cascade on recipe delete, position uq)
+   rather than introducing a new persistence pattern.
+   ============================================================ */
+
+export const recipeInspo = sqliteTable(
+  "recipe_inspo",
+  {
+    id: id(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    /** The link or image URL the painter saved. */
+    url: text("url").notNull(),
+    /** Optional human caption (e.g. "Duncan's edge highlight tutorial"). */
+    label: text("label"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    recipeIdx: index("recipe_inspo_recipe_idx").on(t.recipeId),
+    recipePositionUq: uniqueIndex("recipe_inspo_recipe_position").on(
+      t.recipeId,
+      t.position,
+    ),
+  }),
+);
+
+/* ============================================================
    Domain — Palettes (P4.4)
    Free-floating saved colour sets. Tools (Wheel / Match /
    Eyedropper / Gradient) emit them; the Recipe layer consumes
@@ -665,6 +702,7 @@ export const recipesRelations = relations(recipes, ({ one, many }) => ({
     relationName: "recipe_attached_project",
   }),
   slots: many(recipeSlots),
+  inspo: many(recipeInspo),
 }));
 
 export const recipeSlotsRelations = relations(recipeSlots, ({ one, many }) => ({
@@ -673,6 +711,13 @@ export const recipeSlotsRelations = relations(recipeSlots, ({ one, many }) => ({
     references: [recipes.id],
   }),
   completions: many(recipeStepCompletion),
+}));
+
+export const recipeInspoRelations = relations(recipeInspo, ({ one }) => ({
+  recipe: one(recipes, {
+    fields: [recipeInspo.recipeId],
+    references: [recipes.id],
+  }),
 }));
 
 /* ============================================================
@@ -831,6 +876,9 @@ export type NewRecipe = typeof recipes.$inferInsert;
 
 export type RecipeSlot = typeof recipeSlots.$inferSelect;
 export type NewRecipeSlot = typeof recipeSlots.$inferInsert;
+
+export type RecipeInspo = typeof recipeInspo.$inferSelect;
+export type NewRecipeInspo = typeof recipeInspo.$inferInsert;
 
 export type Palette = typeof palettes.$inferSelect;
 export type NewPalette = typeof palettes.$inferInsert;
