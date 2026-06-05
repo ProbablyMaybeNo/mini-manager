@@ -42,16 +42,24 @@ export const dynamic = "force-dynamic";
  *
  * Surface (top to bottom):
  *   - Page header retitled DASHBOARD + the quick-add / import / new row.
+ *   - KPI strip — big-number cards (active / avg completion / streak /
+ *     painting time), the inverted-pyramid headline layer.
  *   - PROJECTS table (full-width, the existing dense desktop table + M3
  *     mobile comparison table inside `ProjectsDashboardTable`).
- *   - DASHBOARD widget row: streak, activity, calendar (the relocated
- *     planner cells, reused verbatim).
- *   - RecentlyBoughtLine — passive spend readout.
+ *   - DASHBOARD widget row: activity + calendar (the relocated planner
+ *     cells, reused verbatim) — the pyramid's detail layer.
+ *   - RecentlyBoughtLine — passive spend readout (weakest real estate).
  *
  * DASH-RECIPES (2026-06-05) — the dashboard recipes table was removed.
  * /recipes is now the single primary surface for the recipe list, so the
  * dashboard no longer duplicates it. The grid re-balances around the
  * project table + widget row.
+ *
+ * DASH-PYRAMID (2026-06-05) — re-sequenced to the canonical inverted
+ * pyramid (UXUI_DASHBOARD_DESIGN.md §4/§14): KPI strip → PROJECTS table
+ * → Activity/Calendar → RecentlyBoughtLine. The Streak number moved up
+ * into the KPI strip, so the Streak cell was dropped from the widget row
+ * to avoid a duplicate headline.
  */
 interface DashboardPageProps {
   /** P14.3 — calendar prev/next nav writes `?calYear` + `?calMonth`

@@ -43,14 +43,18 @@ describe("DASHBOARD planner-widget row (FOCUS-DASH)", () => {
   });
 
   describe("DashboardWidgets composite", () => {
-    test("reuses the three relocated planner cells (no rebuild)", () => {
-      for (const cell of [
-        "PlannerCalendarCell",
-        "PlannerActivityCell",
-        "PlannerStreakCell",
-      ]) {
+    test("reuses the relocated planner cells (no rebuild)", () => {
+      // DASH-PYRAMID (2026-06-05) — the Streak NUMBER moved to the top
+      // KPI strip, so the standalone Streak cell left this trio to avoid
+      // showing the headline twice. The widget row is now Activity +
+      // Calendar (the pyramid's detail layer).
+      for (const cell of ["PlannerCalendarCell", "PlannerActivityCell"]) {
         expect(widgets).toContain(cell);
       }
+    });
+
+    test("the Streak cell is NOT in the widget row — promoted to the KPI strip", () => {
+      expect(widgets).not.toContain("PlannerStreakCell");
     });
 
     test("the inspo board is NOT here — it left for the FOCUS screen", () => {
@@ -68,24 +72,17 @@ describe("DASHBOARD planner-widget row (FOCUS-DASH)", () => {
       expect(widgets).toContain("md:grid-cols-3");
     });
 
-    test("DASH-PROPORTION: calendar is the wide, tall column; streak/activity stack beside it", () => {
-      // The calendar widens to span 2 of the 3 columns AND both rows, so
-      // it's the tall column. Streak + Activity each occupy the single
-      // narrow left column, stacked (row 1 / row 2) so the two shorter
-      // widgets together match the calendar's height — the trio reads as
-      // one rectangle.
+    test("DASH-PYRAMID: calendar is the wide column; activity is the narrow left column", () => {
+      // The calendar spans 2 of the 3 columns (the wide column). Activity
+      // is the narrow left column, `h-full` so it matches the calendar's
+      // height — the row reads as one clean rectangle with no floating
+      // gap (holds the prior DASH-PROPORTION rhythm minus the streak cell).
       expect(widgets).toMatch(
-        /md:col-start-2 md:col-span-2 md:row-start-1 md:row-span-2[\s\S]*?<PlannerCalendarCell/,
+        /md:col-start-2 md:col-span-2[\s\S]*?<PlannerCalendarCell/,
       );
       expect(widgets).toMatch(
-        /md:col-start-1 md:row-start-1[\s\S]*?<PlannerStreakCell/,
+        /md:col-start-1[\s\S]*?<PlannerActivityCell/,
       );
-      expect(widgets).toMatch(
-        /md:col-start-1 md:row-start-2[\s\S]*?<PlannerActivityCell/,
-      );
-      // Even halves on the left so Streak doesn't float in a large empty
-      // box and the stack height tracks the calendar.
-      expect(widgets).toContain("md:auto-rows-fr");
     });
   });
 
