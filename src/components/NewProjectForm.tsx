@@ -93,6 +93,9 @@ export function NewProjectForm({
   const initialMeta = TYPE_META_BY_TYPE[type];
   const [name, setName] = useState("");
   const [count, setCount] = useState<number>(initialMeta.defaultCount);
+  // Item 2 — optional faction + game/system the army is built for.
+  const [faction, setFaction] = useState("");
+  const [game, setGame] = useState("");
   const [parentId, setParentId] = useState<string>(initialParentId ?? "");
   const [error, setError] = useState<string | null>(null);
   // P10.2 — when a server action rejects with a free-tier cap message,
@@ -133,6 +136,8 @@ export function NewProjectForm({
         type,
         count,
         parentId: parentId === "" ? null : parentId,
+        faction: faction.trim() === "" ? null : faction.trim(),
+        game: game.trim() === "" ? null : game.trim(),
       });
       // Success path throws via redirect; only reachable on failure.
       if (result && result.ok === false) {
@@ -256,6 +261,44 @@ export function NewProjectForm({
             ? "0 means the parent has no rank-and-file of its own; counters come from child units."
             : "How many identical-scheme miniatures this project contains. Use 1 for a single character."}
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label
+            htmlFor={`${formId}-faction`}
+            className="block section-title mb-0"
+          >
+            Faction <span className="text-[var(--color-fg-muted)] normal-case">(optional)</span>
+          </label>
+          <input
+            id={`${formId}-faction`}
+            type="text"
+            value={faction}
+            onChange={(e) => setFaction(e.target.value)}
+            maxLength={80}
+            placeholder="e.g. Salamanders"
+            className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor={`${formId}-game`}
+            className="block section-title mb-0"
+          >
+            Game <span className="text-[var(--color-fg-muted)] normal-case">(optional)</span>
+          </label>
+          <input
+            id={`${formId}-game`}
+            type="text"
+            value={game}
+            onChange={(e) => setGame(e.target.value)}
+            maxLength={80}
+            placeholder="e.g. Warhammer 40,000"
+            className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
+          />
+        </div>
       </div>
 
       {showParentPicker ? (
