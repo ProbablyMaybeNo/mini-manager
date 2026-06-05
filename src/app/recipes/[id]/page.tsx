@@ -147,7 +147,11 @@ export default async function RecipeEditorPage({
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl space-y-6">
+    // Item 5 — wider editor canvas (96rem, was 80rem) so the RECIPE SLOTS
+    // grid can grow without squeezing RECIPE NOTES, and the full-width
+    // Inspo table below has room to breathe. Explicit rem value (the
+    // max-w-screen-* utilities were dropped in Tailwind v4).
+    <div className="p-6 md:p-8 max-w-[96rem] space-y-6">
       <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
         <Link href="/recipes" className="hover:text-[var(--color-accent)]">
           ← Recipes

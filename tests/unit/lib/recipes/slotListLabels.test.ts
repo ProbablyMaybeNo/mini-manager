@@ -237,6 +237,30 @@ describe("Item 4 — Inspo section on the recipe creator", () => {
   });
 });
 
+describe("Item 5 — balanced SLOTS/NOTES layout + full-width Inspo", () => {
+  const src = read("src/components/recipes/RecipeEditorClient.tsx");
+
+  test("SLOTS vs NOTES split on a proportional ratio (not 1fr / fixed px)", () => {
+    expect(src).toContain("md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
+    expect(src).not.toContain("md:grid-cols-[minmax(0,1fr)_320px]");
+  });
+
+  test("Inspo sits OUTSIDE the two-column grid (full container width)", () => {
+    // The RecipeInspo mount is a sibling of the grid div, not inside it,
+    // so it spans the full width and lines up with the columns above.
+    const gridEnd = src.indexOf("</div>", src.indexOf("grid-cols-1"));
+    const inspoIdx = src.indexOf("<RecipeInspo");
+    expect(gridEnd).toBeGreaterThan(-1);
+    expect(inspoIdx).toBeGreaterThan(gridEnd);
+  });
+
+  test("the editor page widens its canvas for the bigger slot grid", () => {
+    const page = read("src/app/recipes/[id]/page.tsx");
+    expect(page).toContain("max-w-[96rem]");
+    expect(page).not.toContain("max-w-7xl");
+  });
+});
+
 describe("B5 — single 'Recipe notes' box", () => {
   test("RecipeNotes card title reads 'Recipe notes'", () => {
     const src = read("src/components/recipes/RecipeNotes.tsx");
