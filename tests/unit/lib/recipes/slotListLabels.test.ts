@@ -62,9 +62,54 @@ describe("SlotList — flat slot UI strings", () => {
     // wheel / harmony / eyedropper (customColorHex). Both flow through
     // addSlot via the shared selectionPatch helper.
     expect(src).toContain("handleAddPaint");
-    expect(src).toContain("addSlot({ recipeId, ...selectionPatch(selection) })");
+    // The add path derives the patch from the selection then sends it to
+    // addSlot (the optimistic-add fix names the intermediate `patch` so
+    // the same shape feeds both the optimistic cell and the write).
+    expect(src).toContain("const patch = selectionPatch(selection)");
+    expect(src).toContain("await addSlot({ recipeId, ...patch })");
     expect(src).toContain("paintId: selection.paintId");
     expect(src).toContain("customColorHex: selection.hex");
+  });
+});
+
+describe("SlotList — optimistic add (perf-lag fix)", () => {
+  const src = read("src/components/recipes/SlotList.tsx");
+
+  test("appends an optimistic cell before awaiting the server write", () => {
+    // The optimistic append must happen synchronously in handleAddPaint,
+    // BEFORE the addSlot await inside the transition — that's what makes
+    // the swatch show instantly.
+    const handler = src.slice(
+      src.indexOf("const handleAddPaint"),
+      src.indexOf("const handleSwapPaint"),
+    );
+    const appendIdx = handler.indexOf("setLocalSlots((prev) => [...prev, optimisticSlot])");
+    const awaitIdx = handler.indexOf("await addSlot(");
+    expect(appendIdx).toBeGreaterThan(-1);
+    expect(awaitIdx).toBeGreaterThan(-1);
+    expect(appendIdx).toBeLessThan(awaitIdx);
+  });
+
+  test("uses the picked hex for the optimistic swatch", () => {
+    expect(src).toContain("swatchHex: selection.hex");
+  });
+
+  test("rolls the optimistic cell back when the write fails", () => {
+    expect(src).toContain("setLocalSlots((prev) => prev.filter((s) => s.id !== tempId))");
+  });
+
+  test("optimistic temp ids are namespaced + recognised", () => {
+    expect(src).toContain('`optimistic-${optimisticSeq.current}`');
+    expect(src).toContain('return id.startsWith("optimistic-")');
+  });
+
+  test("optimistic cells are guarded out of delete / reorder / edit", () => {
+    // delete drops locally instead of calling the server action.
+    expect(src).toContain("if (isOptimisticId(slotId)) {");
+    // reorder skips when either end is an optimistic cell.
+    expect(src).toContain("if (isOptimisticId(draggedId) || isOptimisticId(targetId)) return;");
+    // selecting an optimistic cell does not open the editor panel.
+    expect(src).toContain("if (isOptimisticId(slot.id)) return;");
   });
 });
 

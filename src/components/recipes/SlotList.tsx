@@ -38,6 +38,13 @@ export interface SlotListItem {
   technique: TechniqueKey;
 }
 
+/** True for an optimistic, not-yet-persisted slot's temp id (perf-lag
+ *  fix). Such cells exist only until the server re-render replaces them
+ *  with the real row, so they must never be sent to a slot mutation. */
+function isOptimisticId(id: string): boolean {
+  return id.startsWith("optimistic-");
+}
+
 /** True when `key` is one of the locked Phase-12 layer names. */
 function isPhase12Layer(key: TechniqueKey | null): key is Phase12LayerKey {
   if (!key) return false;
@@ -84,6 +91,8 @@ export function SlotList({ recipeId, slots }: Props) {
   const [addOpen, setAddOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isSaving, startSaveTransition] = useTransition();
+  // Monotonic counter for optimistic-slot temp ids (perf-lag fix).
+  const optimisticSeq = useRef(0);
 
   useEffect(() => {
     setLocalSlots(slots);
@@ -94,6 +103,9 @@ export function SlotList({ recipeId, slots }: Props) {
     draggedIdRef.current = null;
     setDragTargetId(null);
     if (!draggedId || draggedId === targetId) return;
+    // Don't reorder while an optimistic (not-yet-persisted) cell is in the
+    // grid — its temp id isn't a real slot the server can order.
+    if (isOptimisticId(draggedId) || isOptimisticId(targetId)) return;
     const fromIdx = localSlots.findIndex((s) => s.id === draggedId);
     const toIdx = localSlots.findIndex((s) => s.id === targetId);
     if (fromIdx === -1 || toIdx === -1) return;
@@ -127,13 +139,36 @@ export function SlotList({ recipeId, slots }: Props) {
 
   const handleAddPaint = (selection: ColorPickerSelection) => {
     setActionError(null);
+    // Perf (perf-lag fix): append an optimistic slot cell immediately so
+    // the swatch shows the instant the painter picks — no waiting on the
+    // server write + revalidate round-trip. The server re-render replaces
+    // localSlots (via the `slots` prop sync) with the real row, which
+    // carries the resolved paint label; we roll the optimistic cell back
+    // only if the write fails.
+    const patch = selectionPatch(selection);
+    optimisticSeq.current += 1;
+    const tempId = `optimistic-${optimisticSeq.current}`;
+    const isPaint = "paintId" in patch;
+    const optimisticSlot: SlotListItem = {
+      id: tempId,
+      swatchHex: selection.hex,
+      paintId: isPaint ? patch.paintId : null,
+      customColorHex: isPaint ? null : patch.customColorHex,
+      // The picked paint's catalog label isn't on the wire; show the hex
+      // for the sub-second window until the server render fills the name.
+      paintLabel: isPaint ? selection.hex : null,
+      technique: "basecoat",
+    };
+    setLocalSlots((prev) => [...prev, optimisticSlot]);
+    setAddOpen(false);
     startSaveTransition(async () => {
-      const result = await addSlot({ recipeId, ...selectionPatch(selection) });
+      const result = await addSlot({ recipeId, ...patch });
       if (!result.ok) {
         setActionError(result.error);
-        return;
+        // Roll back the optimistic cell; the server state is the source
+        // of truth and the write didn't land.
+        setLocalSlots((prev) => prev.filter((s) => s.id !== tempId));
       }
-      setAddOpen(false);
     });
   };
 
@@ -165,6 +200,12 @@ export function SlotList({ recipeId, slots }: Props) {
 
   const handleDelete = (slotId: string) => {
     setActionError(null);
+    // An optimistic cell has no server row yet — just drop it locally.
+    if (isOptimisticId(slotId)) {
+      setLocalSlots((prev) => prev.filter((s) => s.id !== slotId));
+      if (editingSlotId === slotId) setEditingSlotId(null);
+      return;
+    }
     startSaveTransition(async () => {
       const result = await deleteSlot({ id: slotId });
       if (!result.ok) setActionError(result.error);
@@ -206,6 +247,8 @@ export function SlotList({ recipeId, slots }: Props) {
                 slot={slot}
                 selected={editingSlotId === slot.id}
                 onSelect={() => {
+                  // An optimistic cell has no editable server row yet.
+                  if (isOptimisticId(slot.id)) return;
                   setActionError(null);
                   setEditingSlotId(slot.id);
                 }}
