@@ -60,11 +60,12 @@ describe("RecipesTable component surface", () => {
     expect(src).toMatch(/variant="warning"[\s\S]{0,200}Share/);
   });
 
-  test("sortable by every key the row carries", () => {
+  test("sortable by name + updated; body / slots sorts removed (Item 2)", () => {
     expect(src).toContain('"name"');
-    expect(src).toContain('"bodyType"');
-    expect(src).toContain('"slotCount"');
     expect(src).toContain('"updatedAt"');
+    // Item 2: the body-type + slot-count columns (and their sorts) are gone.
+    expect(src).not.toMatch(/SortKey = [^;]*"bodyType"/);
+    expect(src).not.toMatch(/SortKey = [^;]*"slotCount"/);
     // Flat model: no separate step count column / sort.
     expect(src).not.toContain('"stepCount"');
   });
@@ -114,18 +115,29 @@ describe("RecipesTable component surface", () => {
 describe("RecipesTable — Ross's locked column set", () => {
   const src = read("src/components/recipes/RecipesTable.tsx");
 
-  test("columns: Name / Body / Palette / Slots / Attached / Updated / Actions", () => {
+  test("columns: Name / Palette / Attached / Updated / Actions (Item 2 trim)", () => {
     // Sortable columns pass label= prop to <Th>; non-sortable
     // columns render the text directly inside <th>.
     expect(src).toContain('label="Name"');
-    expect(src).toContain('label="Body"');
     expect(src).toContain("Palette");
-    expect(src).toContain('label="Slots"');
-    // Flat model: the separate Steps column is gone.
-    expect(src).not.toContain('label="Steps"');
     expect(src).toContain("Attached to");
     expect(src).toContain('label="Updated"');
     expect(src).toContain("Actions");
+    // Item 2: the body-type column ("INFANTRY") is gone — no "body" to
+    // assign in the flat recipe model.
+    expect(src).not.toContain('label="Body"');
+    // Item 2: the slot-count column is gone (the painter counts squares).
+    expect(src).not.toContain('label="Slots"');
+    // Flat model: the separate Steps column is gone.
+    expect(src).not.toContain('label="Steps"');
+  });
+
+  test("paint squares carry the owned/wishlist border (Item 2)", () => {
+    // Item 2: bigger squares get the green = owned / yellow = wishlist
+    // border indicator, reusing the existing coverage treatment.
+    expect(src).toContain("coverageBorder(slot.coverage)");
+    expect(src).toMatch(/coverage === "owned"[\s\S]{0,80}var\(--color-green\)/);
+    expect(src).toMatch(/coverage === "wanted"[\s\S]{0,80}var\(--color-yellow\)/);
   });
 });
 

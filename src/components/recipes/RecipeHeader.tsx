@@ -143,7 +143,10 @@ export function RecipeHeader({
             {recipe.name}
           </h1>
           <div className="flex items-center gap-3 mt-2 text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
-            <StatusPill status="neutral">{recipe.bodyType}</StatusPill>
+            {/* Item 2 — the body-type ("INFANTRY") pill is removed: there's
+                no "body" to assign in the flat recipe model anymore. The
+                bodyType column stays in the DB (still carried in share /
+                export payloads) but is no longer surfaced in the UI. */}
             {attachment.kind === "standalone" ? (
               <StatusPill status="neutral">Standalone</StatusPill>
             ) : attachment.href ? (

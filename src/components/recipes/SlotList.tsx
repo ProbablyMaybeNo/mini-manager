@@ -63,6 +63,31 @@ interface PaintInventoryState {
   isWishlisted: boolean;
 }
 
+type SlotCoverage = "owned" | "wanted" | "none";
+
+/** Coverage for a slot's paint from the painter's inventory — drives the
+ *  green (owned) / yellow (wishlisted) square border. A custom-hex slot
+ *  has no catalog paint to own, so it's always "none". */
+function coverageForSlot(
+  slot: SlotListItem,
+  inventoryByPaintId?: ReadonlyMap<string, PaintInventoryState>,
+): SlotCoverage {
+  if (!slot.paintId) return "none";
+  const inv = inventoryByPaintId?.get(slot.paintId);
+  if (!inv) return "none";
+  if (inv.ownedCount > 0) return "owned";
+  if (inv.isWishlisted) return "wanted";
+  return "none";
+}
+
+/** Owned/wishlist border for a slot square — the same green/yellow
+ *  treatment as the library colour-map dots + the /recipes table. */
+function coverageBorder(coverage: SlotCoverage): string {
+  if (coverage === "owned") return "var(--color-green)";
+  if (coverage === "wanted") return "var(--color-yellow)";
+  return "var(--color-border-strong)";
+}
+
 interface Props {
   recipeId: string;
   slots: ReadonlyArray<SlotListItem>;
@@ -253,6 +278,7 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
               <SlotCell
                 key={slot.id}
                 slot={slot}
+                coverage={coverageForSlot(slot, inventoryByPaintId)}
                 selected={editingSlotId === slot.id}
                 onSelect={() => {
                   // An optimistic cell has no editable server row yet.
@@ -553,6 +579,7 @@ function SlotEditorPanel({
  */
 function SlotCell({
   slot,
+  coverage,
   selected,
   onSelect,
   onDelete,
@@ -563,6 +590,7 @@ function SlotCell({
   onDragEnd,
 }: {
   slot: SlotListItem;
+  coverage: SlotCoverage;
   selected: boolean;
   onSelect: () => void;
   onDelete: () => void;
@@ -615,10 +643,13 @@ function SlotCell({
         )}
         style={{
           background: filled ? slot.swatchHex! : "transparent",
+          // Item 2 — owned (green) / wishlisted (yellow) border on the
+          // filled square, matching the library dots + the /recipes table.
+          // Selection still wins (accent); empty slots stay dashed.
           border: selected
             ? "2px solid var(--color-accent)"
             : filled
-              ? "2px solid var(--color-border-strong)"
+              ? `2px solid ${coverageBorder(coverage)}`
               : "2px dashed var(--color-border-strong)",
         }}
       >

@@ -62,7 +62,6 @@ export default async function RecipesPage() {
   const vm: RecipeRowVm[] = rows.map((r) => ({
     id: r.id,
     name: r.name,
-    bodyType: r.bodyType,
     attachmentKind: r.attachmentKind,
     attachedProjectId: r.attachedProjectId,
     attachmentLabel: r.attachedProjectId

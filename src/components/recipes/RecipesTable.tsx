@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import { StatusPill } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
 import { AssignToProjectMenu } from "@/components/recipes/AssignToProjectMenu";
 import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
@@ -23,7 +22,6 @@ export interface RecipeTableSlotVm {
 export interface RecipeRowVm {
   id: string;
   name: string;
-  bodyType: string;
   attachmentKind: "standalone" | "project";
   /** Currently-attached project id so the Assign dropdown can mark it. */
   attachedProjectId: string | null;
@@ -39,7 +37,7 @@ export interface RecipeRowVm {
   publicSlug: string | null;
 }
 
-type SortKey = "name" | "bodyType" | "slotCount" | "createdAt" | "updatedAt";
+type SortKey = "name" | "createdAt" | "updatedAt";
 type SortDir = "asc" | "desc";
 
 /**
@@ -78,18 +76,20 @@ interface Props {
  * card grid (standalone / project-attached). P13.4 collapsed the
  * "named-model-attached" branch when named models folded into Units.
  *
- * Columns:
+ * Columns (Item 2 trimmed Body + Slots):
  *   Name              click → /recipes/<id> editor
- *   Body type         coloured chip
- *   Palette           up to 8 swatches (slot-position order)
- *   Slots             slot count (one paint + layer per slot)
- *   Attached to       chip linking to the project/model (when any)
+ *   Palette           creator-sized paint squares (name + layer)
+ *   Attached to       chip linking to the project (when any)
  *   Updated           short ISO-ish date
- *   Actions           Assign ▾ (cyan/primary) + Share (warning/yellow)
+ *   Actions           Assign ▾ (inline project dropdown) + Share
+ *
+ * The body-type ("INFANTRY") column is gone — there's no "body" to
+ * assign in the flat recipe model. The slots-count column is gone too:
+ * the painter can count the squares, and the freed width feeds the
+ * bigger paint squares.
  *
  * Default sort = updatedAt desc; clicking any sortable header toggles
- * asc/desc. The Assign + Share row-actions defer to the existing
- * editor for the heavy lifting — they're shortcuts that navigate.
+ * asc/desc.
  */
 export function RecipesTable({ rows, assignProjects }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
@@ -113,7 +113,7 @@ export function RecipesTable({ rows, assignProjects }: Props) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "name" || key === "bodyType" ? "asc" : "desc");
+      setSortDir(key === "name" ? "asc" : "desc");
     }
   };
 
@@ -144,22 +144,9 @@ export function RecipesTable({ rows, assignProjects }: Props) {
               dir={sortDir}
               onClick={() => handleSort("name")}
             />
-            <Th
-              label="Body"
-              active={sortKey === "bodyType"}
-              dir={sortDir}
-              onClick={() => handleSort("bodyType")}
-            />
             <th scope="col" className="px-3 py-2">
               Palette
             </th>
-            <Th
-              label="Slots"
-              align="right"
-              active={sortKey === "slotCount"}
-              dir={sortDir}
-              onClick={() => handleSort("slotCount")}
-            />
             <th scope="col" className="px-3 py-2">
               Attached to
             </th>
@@ -210,7 +197,6 @@ function RecipeCardRow({
         >
           {row.name}
         </Link>
-        <StatusPill status="neutral">{row.bodyType}</StatusPill>
       </div>
       <RecipeSlotSquares recipeId={row.id} slots={row.slots} />
       <div className="flex items-center gap-3 text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
@@ -304,12 +290,8 @@ function RecipeRow({
         </Link>
       </td>
       <td className="px-3 py-3">
-        <StatusPill status="neutral">{row.bodyType}</StatusPill>
-      </td>
-      <td className="px-3 py-3">
         <RecipeSlotSquares recipeId={row.id} slots={row.slots} />
       </td>
-      <td className="px-3 py-3 text-right tabular-nums">{row.slotCount}</td>
       <td className="px-3 py-3 text-[var(--color-fg-muted)]">
         {row.attachmentLabel ?? (
           <span className="opacity-50">standalone</span>
