@@ -10,9 +10,23 @@ import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
+import {
+  DashboardKpiStrip,
+  type KpiCardData,
+} from "@/components/dashboard/DashboardKpiStrip";
+import {
+  activeProjectCount,
+  averageCompletion,
+  formatPaintTime,
+} from "@/components/dashboard/dashboardKpiHelpers";
+import { computeStreak } from "@/components/planner/plannerStreakHelpers";
+import { getActivityByDay } from "@/db/queries/activityLog";
+import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { displayStatus, progressPercent } from "@/lib/progress";
+
+const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
 export const dynamic = "force-dynamic";
 
@@ -57,19 +71,77 @@ export default async function DashboardPage({
   const calMonth = Array.isArray(calMonthRaw) ? calMonthRaw[0] : calMonthRaw;
 
   const userId = await currentUserId();
+  const now = new Date();
   const [
     allProjects,
     palettesByProjectId,
     firstRecipeByProjectId,
     ownedRecipes,
+    streakDays,
+    weekSeconds,
   ] = await Promise.all([
     listAllProjects(userId),
     getProjectPalettesMap(userId),
     getProjectFirstRecipeMap(userId),
     listOwnedRecipesLean(userId),
+    getActivityByDay(userId, new Date(now.getTime() - SIXTY_DAYS_MS)),
+    getWeekRollupSeconds(userId, now.getTime()),
   ]);
 
   const isEmpty = allProjects.length === 0;
+
+  // DASH-KPI (2026-06-05) — the top KPI strip (doc §14/§4/§8). Every
+  // metric is derived from the data fetched above + existing helpers; no
+  // new tracking infra. The fourth card ("painting time this week") is a
+  // SUBSTITUTE for "models painted this week" — paint_sessions records
+  // duration, not model counts, so time-at-the-desk is the closest cheaply
+  // derivable equivalent.
+  const streak = computeStreak(streakDays, now);
+  const isHotStreak = streak.streak >= 7;
+  const isActiveStreak = streak.streak >= 1;
+  const paintTime = formatPaintTime(weekSeconds);
+  const kpiCards: KpiCardData[] = [
+    {
+      label: "ACTIVE PROJECTS",
+      value: String(activeProjectCount(allProjects)),
+      unit: "in flight",
+      valueClassName: "text-[var(--color-fg)]",
+      glowClassName: "glow-text-strong",
+      accentColor: "green",
+      valueAriaLabel: `${activeProjectCount(allProjects)} active projects`,
+    },
+    {
+      label: "AVG COMPLETION",
+      value: `${averageCompletion(allProjects)}%`,
+      unit: "across projects",
+      valueClassName: "text-[var(--color-fg)]",
+      glowClassName: "glow-text-strong",
+      accentColor: "amber",
+      valueAriaLabel: `${averageCompletion(allProjects)} percent average completion`,
+    },
+    {
+      label: "STREAK",
+      value: String(streak.streak),
+      unit: streak.streak === 1 ? "day" : "days",
+      valueClassName: isHotStreak
+        ? "text-[var(--color-green)]"
+        : isActiveStreak
+          ? "text-[var(--color-amber)]"
+          : "text-[var(--color-fg-muted)]",
+      glowClassName: isActiveStreak ? "glow-text-strong" : undefined,
+      accentColor: "purple",
+      valueAriaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak`,
+    },
+    {
+      label: "PAINTING TIME",
+      value: paintTime.value,
+      unit: paintTime.unit,
+      valueClassName: "text-[var(--color-fg)]",
+      glowClassName: weekSeconds > 0 ? "glow-text-strong" : undefined,
+      accentColor: "neutral",
+      valueAriaLabel: `${paintTime.value} painting time this week`,
+    },
+  ];
 
   // Build name lookup so the inline AttachRecipeModal can label recipes
   // that are currently attached elsewhere.
@@ -145,13 +217,20 @@ export default async function DashboardPage({
       {isEmpty ? (
         <EmptyState />
       ) : (
-        <Card title="PROJECTS" accentColor="cyan">
-          <DashboardProjectsTable
-            rows={rows}
-            ownedRecipes={ownedRecipes}
-            projectNameById={projectNameById}
-          />
-        </Card>
+        <>
+          {/* DASH-KPI — the top KPI strip: the 5-second "where do I
+              stand" answer, above the granular PROJECTS table per the
+              inverted pyramid (doc §14/§4). */}
+          <DashboardKpiStrip cards={kpiCards} />
+
+          <Card title="PROJECTS" accentColor="cyan">
+            <DashboardProjectsTable
+              rows={rows}
+              ownedRecipes={ownedRecipes}
+              projectNameById={projectNameById}
+            />
+          </Card>
+        </>
       )}
 
       {/* The planner widgets that moved here from the FOCUS screen. */}
