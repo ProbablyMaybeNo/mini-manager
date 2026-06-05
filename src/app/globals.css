@@ -357,13 +357,12 @@ hr { border: 0; border-top: 1px solid var(--color-border); }
 }
 
 /* D1 [D §3, §14] — when keyboard focus moves to a control, anchor it
-   clear of the fixed chrome so the focus ring is never hidden behind
-   the 24px StatusBar (desktop) or the 48px MobileHeader. scroll-margin
-   on focus targets is the robust per-element guard; the html-level
-   scroll-padding covers programmatic scroll-into-view. */
-html {
-  scroll-padding-top: 28px;
-}
+   clear of the fixed chrome so the focus ring is never hidden behind it.
+   UI-CHROME: the desktop status strip was removed, so desktop now has NO
+   fixed TOP chrome — its scroll-padding-top is 0. Mobile still floors a
+   48px fixed MobileHeader + 64px bottom tab bar. scroll-margin on focus
+   targets is the robust per-element guard; the html-level scroll-padding
+   covers programmatic scroll-into-view. */
 @media (max-width: 767px) {
   html {
     scroll-padding-top: 52px;

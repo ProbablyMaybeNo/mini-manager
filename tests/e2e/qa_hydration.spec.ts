@@ -11,11 +11,12 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * ships. This mission loads representative pages and fails on any hydration
  * complaint.
  *
- * Origin: StatusBar derived NET status from `navigator.onLine` during render.
- * Modern Node exposes a global `navigator` with `onLine === undefined`, so
- * SSR rendered `NET · OFF` while the browser hydrated to `NET · ON`. Fixed by
- * rendering deterministic placeholders on first paint and correcting in an
- * effect after mount.
+ * Origin: the (since-removed) desktop StatusBar derived NET status from
+ * `navigator.onLine` during render. Modern Node exposes a global
+ * `navigator` with `onLine === undefined`, so SSR rendered `NET · OFF`
+ * while the browser hydrated to `NET · ON`. The pattern lives on as a
+ * general guard: any future client-only render that leaks into SSR fails
+ * this mission across the core pages below.
  */
 
 const HYDRATION_PATTERN =
@@ -40,7 +41,7 @@ test.describe("M10 — Hydration / SSR integrity", () => {
 
     await signInAs(page, freshTestEmail("hydration"));
 
-    // Each carries the desktop chrome (StatusBar) + its own page shell.
+    // Each carries the desktop chrome (NavRail) + its own page shell.
     for (const path of ["/projects", "/library", "/recipes", "/tools"]) {
       await page.goto(path, { waitUntil: "networkidle" });
       // Give React a beat to flush any hydration warning to the console.

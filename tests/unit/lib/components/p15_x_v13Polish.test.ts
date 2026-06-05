@@ -165,26 +165,10 @@ describe("UX-1304 — wishlist rows reflow to a stacked card below 768px", () =>
   });
 });
 
-describe("UX-1309 — live clock node is hydration-safe (no #418)", () => {
-  const src = read("src/components/StatusBar.tsx");
-
-  test("first render still uses the SSR placeholder so SSR/CSR agree", () => {
-    expect(src).toContain('CLOCK_PLACEHOLDER = "--:--:--"');
-    expect(src).toContain("useState<string>(CLOCK_PLACEHOLDER)");
-  });
-
-  test("the real time is only set inside useEffect (client-only)", () => {
-    expect(src).toMatch(
-      /useEffect\(\(\)\s*=>\s*\{\s*setTime\(formatTime\(new Date\(\)\)\)/,
-    );
-  });
-
-  test("the TIME segment carries suppressHydrationWarning", () => {
-    expect(src).toContain(
-      '<Segment label="TIME" value={time} tone="neutral" suppressHydrationWarning />',
-    );
-  });
-});
+// UX-1309 — the live-clock hydration-safety block was retired with the
+// StatusBar (UI-CHROME — the non-functional desktop status strip, which
+// owned the SYS/NET/TIME segments, was removed). The general hydration
+// regression guard now lives in tests/e2e/qa_hydration.spec.ts.
 
 describe("UX-1306 — shared SegmentedControl gives the active segment a solid fill", () => {
   const css = read("src/app/globals.css");
