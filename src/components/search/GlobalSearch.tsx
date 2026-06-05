@@ -130,8 +130,8 @@ export function GlobalSearch() {
       router.push(href);
     };
     return [
-      { id: "go-projects", label: "Go to Projects", keywords: "projects armies", href: "/projects", run: go("/projects") },
-      { id: "go-planner", label: "Go to Planner", keywords: "planner dashboard calendar streak", href: "/planner", run: go("/planner") },
+      { id: "go-projects", label: "Go to Dashboard", keywords: "dashboard projects armies calendar streak activity recipes", href: "/projects", run: go("/projects") },
+      { id: "go-planner", label: "Go to Focus", keywords: "focus painting bench recipe stopwatch inspo planner", href: "/planner", run: go("/planner") },
       { id: "go-library", label: "Go to Library", keywords: "library paints catalog", href: "/library", run: go("/library") },
       { id: "go-recipes", label: "Go to Recipes", keywords: "recipes schemes", href: "/recipes", run: go("/recipes") },
       { id: "go-tools", label: "Go to Tools", keywords: "tools wheel match", href: "/tools", run: go("/tools") },

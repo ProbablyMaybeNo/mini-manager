@@ -44,9 +44,10 @@ describe("D4 — open bindings", () => {
 describe("D4 — Commands section", () => {
   const src = read("src/components/search/GlobalSearch.tsx");
 
-  test("surfaces navigation commands incl. Planner", () => {
-    expect(src).toMatch(/label: "Go to Projects"/);
-    expect(src).toMatch(/label: "Go to Planner"/);
+  test("surfaces navigation commands incl. Focus + Dashboard", () => {
+    // FOCUS-DASH — /projects relabelled Dashboard, /planner relabelled Focus.
+    expect(src).toMatch(/label: "Go to Dashboard"/);
+    expect(src).toMatch(/label: "Go to Focus"/);
     expect(src).toMatch(/label: "Go to Library"/);
     expect(src).toMatch(/label: "Go to Recipes"/);
     expect(src).toMatch(/label: "Go to Tools"/);

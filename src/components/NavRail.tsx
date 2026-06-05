@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   Folder,
-  CalendarDays,
+  Target,
   Palette,
   FlaskConical,
   Wrench,
@@ -27,11 +27,15 @@ type NavItem = {
 };
 
 const PRIMARY: readonly NavItem[] = [
-  { href: "/projects", Icon: Folder,       label: "Projects" },
-  // D6 — desktop-surfaced PLANNER route (mobile reaches the same widgets
-  // via the collapsed PLANNER disclosure on /projects). Sits next to
-  // Projects: planning is the projects-adjacent surface.
-  { href: "/planner",  Icon: CalendarDays, label: "Planner"  },
+  // FOCUS-DASH — /projects is the DASHBOARD (project table + planner
+  // widgets); its NavRail label stays "Projects" (the table is what the
+  // painter navigates).
+  { href: "/projects", Icon: Folder, label: "Projects" },
+  // FOCUS-DASH — /planner is now the FOCUS painting screen (bench recipe
+  // row + compact project panel + stopwatch + inspo). Path kept to limit
+  // typed-route churn; label + H1 retitled FOCUS. Target icon = the
+  // single-project painting focus.
+  { href: "/planner", Icon: Target, label: "Focus" },
   { href: "/library",  Icon: Palette,      label: "Library"  },
   { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
   { href: "/tools",    Icon: Wrench,       label: "Tools"    },
