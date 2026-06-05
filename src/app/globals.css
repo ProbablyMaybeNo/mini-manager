@@ -119,6 +119,31 @@
   --text-2xl: 1.75rem;    /* 28px */
   --text-3xl: 2.25rem;    /* 36px */
 
+  /* ----- Terminal text-glow tiers (UI-GLOW) -----
+     A phosphor halo lifted from the text's OWN colour via currentColor,
+     so every surface glows in its native hue (cyan headings glow cyan,
+     green status glows green) without hard-coding a colour. Three tiers:
+
+       --glow-body   very subtle — regular/dense body text. A whisper of
+                     bloom so prose reads as lit phosphor, never blurred.
+       --glow-strong stronger — titles/headings, buttons, interactive
+                     text (links, active nav). The "this is hot" tier.
+       --glow-intense reserved for hero/brand lockups that want max bloom.
+
+     Glow is purely DECORATIVE light: it sits at low alpha around the same
+     hue as the glyph, so text contrast (the glyph vs background) is
+     unchanged and stays WCAG-AA. Reduced-motion users get it stripped
+     entirely (see the prefers-reduced-motion block below). Built as
+     custom-props + reusable .glow-text* utilities rather than per-
+     component inline styles so the bloom is one source of truth. */
+  --glow-body: 0 0 1px color-mix(in srgb, currentColor 28%, transparent);
+  --glow-strong:
+    0 0 2px color-mix(in srgb, currentColor 42%, transparent),
+    0 0 7px color-mix(in srgb, currentColor 24%, transparent);
+  --glow-intense:
+    0 0 3px color-mix(in srgb, currentColor 55%, transparent),
+    0 0 12px color-mix(in srgb, currentColor 32%, transparent);
+
   /* ----- Spacing rhythm (4px base) ----- */
   --radius-none: 0;
   --radius-sm: 2px;
@@ -177,6 +202,12 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* UI-GLOW — the body tier. A very subtle, hue-matched halo on ALL
+     regular text so the whole app reads as lit phosphor rather than flat
+     ink. Inherited by every descendant; the strong tiers below override
+     it on headings / buttons / interactive text. Kept to a 1px bloom so
+     dense tables and prose stay crisp, not fuzzy. */
+  text-shadow: var(--glow-body);
 }
 
 body {
@@ -255,7 +286,8 @@ h1 {
   letter-spacing: 0.02em;
   line-height: 1.1;
   color: var(--color-cyan);
-  text-shadow: 0 0 12px color-mix(in srgb, var(--color-cyan) 22%, transparent);
+  /* UI-GLOW — titles get the strong tier (hue-matched to the cyan H1). */
+  text-shadow: var(--glow-strong);
 }
 
 h2 {
@@ -264,6 +296,8 @@ h2 {
   letter-spacing: 0.04em;
   line-height: 1.25;
   color: var(--color-fg);
+  /* UI-GLOW — section headers glow in their white hue. */
+  text-shadow: var(--glow-strong);
 }
 
 h3 {
@@ -272,10 +306,7 @@ h3 {
   letter-spacing: 0.04em;
   line-height: 1.3;
   color: var(--color-fg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  h1 { text-shadow: none; }
+  text-shadow: var(--glow-strong);
 }
 
 /* Tabular numerals on every mono surface — paint counts, stage
@@ -297,6 +328,9 @@ a {
   color: var(--color-cyan);
   text-decoration: none;
   transition: color 150ms ease-out;
+  /* UI-GLOW — interactive text (links) takes the strong tier, hue-matched
+     to the link colour. Reads as "live / actionable" phosphor. */
+  text-shadow: var(--glow-strong);
 }
 a:hover { text-decoration: underline; text-underline-offset: 2px; }
 button { cursor: pointer; background: transparent; color: inherit; border: 0; padding: 0; }
@@ -417,8 +451,25 @@ select.frame-strong {
   text-shadow: 0 0 6px color-mix(in srgb, var(--color-amber) 40%, transparent);
 }
 
+/* UI-GLOW — hue-agnostic text-glow utilities. Unlike .glow-cyan/green/amber
+   (which SET a colour AND a halo), these add ONLY a currentColor-derived
+   halo, so they layer onto whatever colour an element already has. Use to
+   promote a span to a stronger tier than its element's default (e.g. a
+   highlighted metric, an active label) without re-stating its colour. */
+.glow-text          { text-shadow: var(--glow-body); }
+.glow-text-strong   { text-shadow: var(--glow-strong); }
+.glow-text-intense  { text-shadow: var(--glow-intense); }
+
+/* UI-GLOW — reduced-motion / no-glow opt-out. Glow is decorative bloom,
+   never a state signal, so stripping it changes nothing functional. One
+   consolidated block kills every tier + the legacy colour-glow classes,
+   the base body halo, headings, links, and outline buttons. */
 @media (prefers-reduced-motion: reduce) {
-  .glow-green, .glow-cyan, .glow-amber { text-shadow: none; }
+  .glow-green, .glow-cyan, .glow-amber,
+  .glow-text, .glow-text-strong, .glow-text-intense,
+  .btn-outline, h1, h2, h3, a, html {
+    text-shadow: none;
+  }
 }
 
 /* ============================================================
@@ -661,6 +712,11 @@ select.frame-strong {
    crowd the visual hierarchy (e.g. dense table-row inline actions). */
 .btn-outline {
   background: transparent;
+  /* UI-GLOW — outline buttons carry coloured phosphor text on a dark
+     ground, so the strong hue-matched halo applies. Solid-fill buttons
+     are intentionally excluded: their label is near-black on a bright
+     fill, where a currentColor halo would bloom DARK, not glow. */
+  text-shadow: var(--glow-strong);
 }
 .btn-outline.btn-primary,
 .btn-outline.btn-secondary {
