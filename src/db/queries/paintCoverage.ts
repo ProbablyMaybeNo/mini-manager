@@ -1,6 +1,6 @@
 import "server-only";
 
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { eq } from "drizzle-orm";
@@ -95,21 +95,37 @@ export function composeCoverageGrid(
    ============================================================ */
 
 let catalogCache: Paint[] | null = null;
-let catalogCacheExportedAt = -1;
+/** Cache key: the catalog file's mtime in ms. -1 = cold. */
+let catalogCacheMtimeMs = -1;
 
 /**
- * Read the static paint catalog from disk. Cached per export timestamp
- * so the read + JSON parse is paid once per process.
+ * Read the static paint catalog from disk.
+ *
+ * Perf (perf-lag fix): the old cache keyed on `__exported_at`, which is
+ * inside the file — so every call still paid a full `readFile` +
+ * `JSON.parse` of the ~1.6 MB / 7k-row catalog just to read the key,
+ * the exact I/O + parse the cache was meant to skip. This is the
+ * PLANNER coverage-grid read path; it shares the lag pattern fixed in
+ * `getPaintMetaMap`. We now key on the file `mtime` via a `stat`
+ * (~0.008 ms vs ~4.9 ms read+parse hot, far worse on a cold disk) and
+ * skip `readFile` + `JSON.parse` entirely on a hit.
  */
 export async function loadCatalogPaints(): Promise<Paint[]> {
   const file = resolve(process.cwd(), "public", "data", "paints.json");
+  let mtimeMs = -1;
+  try {
+    mtimeMs = (await stat(file)).mtimeMs;
+    if (catalogCache && mtimeMs === catalogCacheMtimeMs) {
+      return catalogCache;
+    }
+  } catch {
+    if (catalogCache) return catalogCache;
+  }
+
   const raw = await readFile(file, "utf8");
   const catalog = JSON.parse(raw) as PaintCatalog;
-  if (catalogCache && catalogCacheExportedAt === catalog.__exported_at) {
-    return catalogCache;
-  }
   catalogCache = catalog.paints;
-  catalogCacheExportedAt = catalog.__exported_at;
+  catalogCacheMtimeMs = mtimeMs;
   return catalog.paints;
 }
 
