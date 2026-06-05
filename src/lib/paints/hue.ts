@@ -93,8 +93,9 @@ export function hexToHsl(hex: string): Hsl | null {
  *     by hue, then saturation, then lightness — same-hue paints ramp
  *     pale→vivid then light→dark.
  *   - **Near-grey** paints (`s < threshold`, or an unparseable hex)
- *     sort into a neutral band *after* every chromatic paint, ordered
- *     by lightness (dark → light).
+ *     sort into a neutral band *after* every chromatic paint, with the
+ *     tinted/transition greys first and the PURE black/grey/white last
+ *     (saturation desc → pure greyscale at the very end), each by lightness.
  *
  * Returned as a flat tuple so callers compare lexically. `band` is the
  * coarse partition (0 = spectrum, 1 = neutral) and dominates.
@@ -121,6 +122,17 @@ export function hueSortKey(paint: Paint): HueSortKey {
 /** Lexical compare of two hue-sort keys. */
 export function compareHueSortKey(a: HueSortKey, b: HueSortKey): number {
   if (a.band !== b.band) return a.band - b.band;
+  if (a.band === 1) {
+    // Neutral band (Ross 2026-06-05): order the near-greys so the
+    // TRANSITION/tinted greys come first and the PURE black/grey/white land
+    // at the very end — the map reads RED → … → transition greys → solid
+    // greyscale → END. Saturation DESCENDING (tinted → pure), then lightness
+    // (dark → light). An unparseable hex (s = 0, l = +∞) stays dead last.
+    if (a.s !== b.s) return b.s - a.s;
+    if (a.l !== b.l) return a.l - b.l;
+    return 0;
+  }
+  // Chromatic band: hue, then saturation (pale → vivid), then lightness.
   if (a.h !== b.h) return a.h - b.h;
   if (a.s !== b.s) return a.s - b.s;
   if (a.l !== b.l) return a.l - b.l;

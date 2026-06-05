@@ -132,6 +132,20 @@ describe("hueSortKey + ordering", () => {
     ]);
   });
 
+  test("within the neutral band, tinted/transition greys precede the PURE greyscale (solid last)", () => {
+    // Ross 2026-06-05: the map should read RED → transition greys → pure
+    // greyscale → END, so a tinted near-grey (s > 0, still below the
+    // threshold) sorts BEFORE a pure grey (s = 0). Both are band 1.
+    const tinted = p({ id: "tinted", hex: "#808284" }); // s > 0, < threshold
+    const pureMid = p({ id: "pure", hex: "#808080" }); // s = 0
+    expect(hueSortKey(tinted).band).toBe(1);
+    expect(hueSortKey(pureMid).band).toBe(1);
+    expect(hexToHsl("#808284")!.s).toBeGreaterThan(0);
+    expect(hexToHsl("#808080")!.s).toBe(0);
+    const sorted = hueSortPaints([pureMid, tinted]).map((x) => x.id);
+    expect(sorted).toEqual(["tinted", "pure"]);
+  });
+
   test("multiple greys never scatter through the chromatic band", () => {
     const list = [
       p({ id: "grey1", hex: "#333333" }),
