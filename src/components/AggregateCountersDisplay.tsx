@@ -124,22 +124,25 @@ export function AggregateCountersDisplay({
               key={stage}
               role="listitem"
               className={clsx(
-                "flex flex-col gap-1 px-2 py-1.5 rounded-sm",
+                "flex flex-col gap-1 px-2 py-1.5 rounded-sm overflow-hidden",
                 "border border-[var(--color-border)]",
                 "bg-[var(--color-bg-panel)]",
               )}
             >
-              <div className="flex items-baseline justify-between gap-1.5">
+              {/* min-w-0 on the row + label lets the label truncate instead
+                  of pushing the value past the cell border on narrow (3-col)
+                  layouts; the value stays whole via shrink-0. */}
+              <div className="flex items-baseline justify-between gap-1.5 min-w-0">
                 <span
                   className={clsx(
-                    "font-mono text-2xs uppercase tracking-wider whitespace-nowrap",
+                    "font-mono text-2xs uppercase tracking-wider min-w-0 truncate",
                     isLead ? "font-bold" : "text-[var(--color-fg-muted)]",
                   )}
                   style={isLead ? { color: tint } : undefined}
                 >
                   {label}
                 </span>
-                <span className="font-mono text-xs text-[var(--color-fg)] whitespace-nowrap tabular-nums">
+                <span className="font-mono text-xs text-[var(--color-fg)] whitespace-nowrap tabular-nums shrink-0">
                   {value}
                   <span className="text-[var(--color-fg-subtle)]">/{total}</span>
                 </span>

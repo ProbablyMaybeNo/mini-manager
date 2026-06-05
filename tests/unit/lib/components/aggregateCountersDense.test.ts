@@ -187,6 +187,45 @@ describe("AggregateCountersDisplay — stage tint per cell (P13.5)", () => {
   });
 });
 
+describe("AggregateCountersDisplay — text stays inside the cell border (overflow fix)", () => {
+  // Ross flagged the aggregated-stages boxes for running text past their
+  // borders. The fix: each cell clips overflow and the label truncates so
+  // a wide label + value pair can't push past the cell on narrow 3-col
+  // layouts. Pin the containment so it can't quietly regress.
+  test("each stage cell clips overflow", () => {
+    const tree = render(makeAggregate({ ownedCount: 1 }));
+    const cells = findAll(tree, (n) => n.props.role === "listitem");
+    expect(cells).toHaveLength(6);
+    for (const cell of cells) {
+      expect(classOf(cell)).toContain("overflow-hidden");
+    }
+  });
+
+  test("the label truncates (min-w-0 + truncate) rather than overflowing", () => {
+    const tree = render(makeAggregate({ ownedCount: 1 }));
+    const cells = findAll(tree, (n) => n.props.role === "listitem");
+    for (const cell of cells) {
+      const labelSpan = findAll(cell, (n) =>
+        classOf(n).includes("uppercase tracking-wider"),
+      )[0];
+      expect(labelSpan).toBeDefined();
+      expect(classOf(labelSpan!)).toContain("truncate");
+      expect(classOf(labelSpan!)).toContain("min-w-0");
+    }
+  });
+
+  test("the value cell never wraps + holds its width (whitespace-nowrap + shrink-0)", () => {
+    const tree = render(makeAggregate({ count: 100, ownedCount: 88 }));
+    const cells = findAll(tree, (n) => n.props.role === "listitem");
+    const valueSpan = findAll(cells[0]!, (n) =>
+      classOf(n).includes("tabular-nums"),
+    )[0];
+    expect(valueSpan).toBeDefined();
+    expect(classOf(valueSpan!)).toContain("whitespace-nowrap");
+    expect(classOf(valueSpan!)).toContain("shrink-0");
+  });
+});
+
 describe("AggregateCountersDisplay — progressbar width tracks value/total (P13.5)", () => {
   test("zero progress renders 0% fill", () => {
     const tree = render(makeAggregate({ ownedCount: 0 }));
