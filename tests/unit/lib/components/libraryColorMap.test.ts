@@ -132,6 +132,28 @@ describe("CollectionPanel — LIB-COLORMAP contract (source-scan)", () => {
     expect(src).toMatch(/cellMinPx=\{DESKTOP_CELL_MIN_PX\}/);
     expect(src).toContain("fillHeight");
   });
+
+  test("LIB-COLORMAP-POLISH (2): brand filter is a compact checkbox dropdown, not a chip row", () => {
+    // The wrapping chip row is gone; a single trigger opens a checklist.
+    expect(src).not.toContain("BrandChip");
+    expect(src).toContain("BrandFilterDropdown");
+    // Disclosure trigger + checkbox menu items.
+    expect(src).toContain('aria-haspopup="menu"');
+    expect(src).toContain('role="menuitemcheckbox"');
+    expect(src).toMatch(/aria-checked=\{checked\}/);
+    // Same multi-select behaviour wiring: toggle + "all" reset preserved.
+    expect(src).toContain("onToggleBrand");
+    expect(src).toContain("onSelectAll");
+    // Outside-click + Escape close (SSR-safe disclosure pattern).
+    expect(src).toContain('e.key === "Escape"');
+  });
+
+  test("LIB-COLORMAP-POLISH (2): the brand filter behaviour helpers are intact", () => {
+    // Multi-select state + the null = "all brands" default are unchanged.
+    expect(src).toContain("filterCellsByBrands");
+    expect(src).toMatch(/selectedBrands === null/);
+    expect(src).toContain("toggleBrand");
+  });
 });
 
 /* ============================================================

@@ -25,7 +25,7 @@
  * (canvas reads hex from paint data + tokens via getComputedStyle).
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clsx } from "clsx";
 
 import type { CoverageCell } from "@/db/queries/paintCoverage";
@@ -104,6 +104,11 @@ export function CollectionPanel({
   const allBrandsActive =
     selectedBrands === null || selectedBrands.size === brands.length;
 
+  // Number of brands currently included by the filter (all = the catalog).
+  const selectedBrandCount = allBrandsActive
+    ? brands.length
+    : (selectedBrands?.size ?? 0);
+
   const handlePickCell = useCallback(
     (cell: CoverageCell) => {
       onScrollToPaint(cell.paint.id);
@@ -166,26 +171,19 @@ export function CollectionPanel({
         </span>
       </p>
 
-      {/* Brand-filter chip row */}
-      <div
-        role="group"
-        aria-label="Filter the map by brand"
-        className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1"
-      >
-        <BrandChip
-          active={allBrandsActive}
-          onClick={() => setSelectedBrands(null)}
-          label="All"
-        />
-        {brands.map((brand) => (
-          <BrandChip
-            key={brand}
-            active={isBrandActive(brand)}
-            onClick={() => toggleBrand(brand)}
-            label={brand}
-          />
-        ))}
-      </div>
+      {/* LIB-COLORMAP-POLISH (2) — brand filter as a compact checkbox
+          dropdown. The old wrapping chip row could eat ~5 rows of vertical
+          space; collapsing it to a single "Brands (N)" trigger reclaims
+          that height for the map. Same behaviour: multi-select brands with
+          an "All" default. */}
+      <BrandFilterDropdown
+        brands={brands}
+        allBrandsActive={allBrandsActive}
+        selectedBrandCount={selectedBrandCount}
+        isBrandActive={isBrandActive}
+        onToggleBrand={toggleBrand}
+        onSelectAll={() => setSelectedBrands(null)}
+      />
 
       {/* The pixel spectrum — the navigator. Clicking a cell scrolls the
           main list to that paint's hue section (no popup, no selection). */}
@@ -215,31 +213,147 @@ export function CollectionPanel({
   );
 }
 
-function BrandChip({
-  active,
-  onClick,
-  label,
+/**
+ * LIB-COLORMAP-POLISH (2) — compact brand filter.
+ *
+ * A single "Brands (N)" trigger that opens a scrollable checkbox checklist
+ * (an "All" reset row + one row per brand). Replaces the old wrapping chip
+ * row to reclaim vertical space for the map. Behaviour is unchanged:
+ * multi-select brands, "All" as the default. Outside-click + Escape close,
+ * mirroring the WishlistToolsMenu disclosure pattern. Token colours only.
+ */
+function BrandFilterDropdown({
+  brands,
+  allBrandsActive,
+  selectedBrandCount,
+  isBrandActive,
+  onToggleBrand,
+  onSelectAll,
 }: {
-  active: boolean;
-  onClick: () => void;
+  brands: ReadonlyArray<string>;
+  allBrandsActive: boolean;
+  selectedBrandCount: number;
+  isBrandActive: (brand: string) => boolean;
+  onToggleBrand: (brand: string) => void;
+  onSelectAll: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const triggerLabel = allBrandsActive
+    ? "Brands · All"
+    : "Brands · " + formatCount(selectedBrandCount);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Filter the map by brand"
+        className={clsx(
+          "tap-target w-full inline-flex items-center justify-between gap-2 px-2.5 py-1.5",
+          "font-mono text-2xs uppercase tracking-[0.04em] leading-tight",
+          "border rounded-sm transition-colors text-left",
+          allBrandsActive
+            ? "bg-[color-mix(in_srgb,var(--color-fg-muted)_8%,transparent)] text-[var(--color-fg-muted)] border-[var(--color-border-strong)] hover:text-[var(--color-fg)] hover:border-[var(--color-amber)]"
+            : "bg-[var(--color-amber)] text-[var(--color-bg)] border-[var(--color-amber)] font-bold",
+        )}
+      >
+        <span className="truncate">{triggerLabel}</span>
+        <span aria-hidden className="shrink-0">
+          {open ? "▴" : "▾"}
+        </span>
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          aria-label="Brand filter options"
+          className="absolute left-0 right-0 top-full mt-1 z-30 max-h-56 overflow-y-auto frame-strong bg-[var(--color-bg-panel)] shadow-xl py-1"
+        >
+          <BrandCheckItem
+            checked={allBrandsActive}
+            onToggle={onSelectAll}
+            label="All brands"
+            emphasise
+          />
+          <div
+            role="separator"
+            aria-hidden
+            className="my-1 h-px bg-[var(--color-border)]"
+          />
+          {brands.map((brand) => (
+            <BrandCheckItem
+              key={brand}
+              checked={isBrandActive(brand)}
+              onToggle={() => onToggleBrand(brand)}
+              label={brand}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function BrandCheckItem({
+  checked,
+  onToggle,
+  label,
+  emphasise = false,
+}: {
+  checked: boolean;
+  onToggle: () => void;
   label: string;
+  emphasise?: boolean;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      aria-pressed={active}
+      role="menuitemcheckbox"
+      aria-checked={checked}
+      onClick={onToggle}
       className={clsx(
-        "tap-target inline-flex items-center justify-center px-2.5 py-1.5",
+        "tap-target w-full flex items-center gap-2 px-2.5 py-1.5 text-left",
         "font-mono text-2xs uppercase tracking-[0.04em] leading-tight",
-        "whitespace-normal text-center break-words",
-        "border rounded-sm transition-colors",
-        active
-          ? "bg-[var(--color-amber)] text-[var(--color-bg)] border-[var(--color-amber)] font-bold"
-          : "bg-[color-mix(in_srgb,var(--color-fg-muted)_8%,transparent)] text-[var(--color-fg-muted)] border-[var(--color-border-strong)] hover:border-[var(--color-amber)] hover:text-[var(--color-fg)]",
+        "hover:bg-[color-mix(in_srgb,var(--color-amber)_12%,transparent)]",
+        emphasise
+          ? "text-[var(--color-fg)] font-bold"
+          : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
       )}
     >
-      {label}
+      <span
+        aria-hidden
+        className={clsx(
+          "shrink-0 inline-flex items-center justify-center h-3.5 w-3.5 rounded-[2px] border text-2xs leading-none",
+          checked
+            ? "bg-[var(--color-amber)] text-[var(--color-bg)] border-[var(--color-amber)]"
+            : "bg-transparent border-[var(--color-border-strong)]",
+        )}
+      >
+        {checked ? "✓" : ""}
+      </span>
+      <span className="truncate">{label}</span>
     </button>
   );
 }
