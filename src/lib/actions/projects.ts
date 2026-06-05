@@ -129,14 +129,26 @@ export async function createProject(
           "Only Army, Warband, or Unit parents can contain sub-projects.",
       };
     }
-    // 2026-06-05 — sub-projects may now be a Unit OR a single Model. The
-    // per-parent containment rules (a Unit can't host a Unit, a Model
-    // hosts nothing, etc.) are layered on separately; this guard just
-    // bounds the legal sub-project type set.
+    // 2026-06-05 — sub-projects may be a Unit OR a single Model. This
+    // guard bounds the legal sub-project type set (Terrain / Diorama can
+    // never be a child).
     if (type !== "Unit" && type !== "Model") {
       return {
         ok: false,
         error: "Sub-projects must be a Unit or a Model.",
+      };
+    }
+    // 2026-06-05 containment rules (Ross): a Unit can't contain another
+    // Unit (you can still add a Model to it, and a Model can be assigned
+    // to a Unit). A Model never hosts anything — but a Model parent is
+    // already rejected by the Army/Warband/Unit-parent guard above, so we
+    // only need the Unit→Unit case here. Army / Warband keep both Unit +
+    // Model children.
+    if (parent.type === "Unit" && type === "Unit") {
+      return {
+        ok: false,
+        error:
+          "A unit can't contain another unit. Add a model to it, or assign this unit to an army or warband.",
       };
     }
     finalParentId = parent.id;

@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { ProjectType } from "@/db/schema";
 import { Button } from "@/components/ui/Button";
-import { childNoun } from "@/lib/progress";
 
 interface Props {
   /** Parent project — new children deep-link with this as the parent. */
   projectId: string;
-  /** Parent type — drives which add options are reachable + their labels.
-   *  Army / Warband nest Units AND can spawn top-level Terrain; a Unit
-   *  nests Models (1-model Units per the P13.4 fold). */
+  /** Parent type. Only Army / Warband expose this menu (Add unit / Add
+   *  model). Units, Models, Terrain + Diorama render nothing — a Unit
+   *  can't host a unit/model from its own menu, a Model hosts nothing,
+   *  and Terrain is top-level only (containment rules, 2026-06-05). */
   parentType: ProjectType;
 }
 
@@ -25,11 +25,14 @@ interface Props {
  * one entry point at the top of the page — the only place the painter
  * looks to add anything.
  *
- * Options by parent type:
- *   - Army / Warband → "Add unit" (nests a Unit under this project) +
- *     "Add terrain" (a top-level Terrain Piece — terrain stays leaf-only
- *     per the locked sub-project rule, so it gets no parent).
- *   - Unit           → "Add model" (nests a 1-model Unit sub-project).
+ * Options by parent type (2026-06-05 containment rules):
+ *   - Army / Warband → "Add unit" + "Add model" (both nest under this
+ *     project). Terrain is NOT offered here — it's top-level only, added
+ *     from the initial /projects/new page.
+ *   - Unit / Model / Terrain / Diorama → no add menu (the parent renders
+ *     nothing). A Unit can't add a unit or model from inside; a Model is
+ *     assigned to a unit from the new-project parent picker, not created
+ *     from the unit's menu.
  *
  * Mirrors the WishlistToolsMenu pattern (click-away + Escape close,
  * role="menu"). Trigger uses the success variant per the P12.23 button
@@ -57,11 +60,11 @@ export function AddChildMenu({ projectId, parentType }: Props) {
     };
   }, [open]);
 
-  // Army / Warband nest Units; a Unit nests Models.
-  const childLabel = childNoun(parentType); // "Unit" | "Model"
-  // Terrain only makes sense as a top-level sibling under an Army/Warband
-  // roster — terrain can't nest, so it's offered without a parent.
-  const showTerrain = parentType === "Army" || parentType === "Warband";
+  // Only Army / Warband can add children (Unit + Model). Every other
+  // parent type renders nothing — the containment rules forbid adding
+  // from inside a unit/model, and terrain is top-level only.
+  const canAdd = parentType === "Army" || parentType === "Warband";
+  if (!canAdd) return null;
 
   return (
     <div ref={ref} className="relative inline-block ml-auto">
@@ -86,16 +89,14 @@ export function AddChildMenu({ projectId, parentType }: Props) {
             href={`/projects/new?parent=${projectId}&type=Unit`}
             onClick={() => setOpen(false)}
           >
-            Add {childLabel.toLowerCase()}
+            Add unit
           </MenuLink>
-          {showTerrain ? (
-            <MenuLink
-              href={`/projects/new?type=Terrain Piece`}
-              onClick={() => setOpen(false)}
-            >
-              Add terrain
-            </MenuLink>
-          ) : null}
+          <MenuLink
+            href={`/projects/new?parent=${projectId}&type=Model`}
+            onClick={() => setOpen(false)}
+          >
+            Add model
+          </MenuLink>
         </div>
       ) : null}
     </div>

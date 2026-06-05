@@ -73,22 +73,35 @@ export function ProjectProgressTable({
   rows,
 }: Props) {
   if (rows.length === 0) {
-    // Item 1 — the add affordances moved to the single "+ Add ▾" menu in
-    // the header strip. The empty state now points the painter at that
-    // one control instead of duplicating add buttons here.
+    // The add affordances live behind the single "+ Add ▾" menu in the
+    // header strip — but only Army / Warband expose it (Add unit / Add
+    // model). A Unit gets models assigned to it from the new-project
+    // parent picker rather than its own menu, so its empty-state copy
+    // points there instead (containment rules, 2026-06-05).
+    const canAddHere = parentType === "Army" || parentType === "Warband";
     return (
       <section
         className="frame p-6 text-center space-y-3"
         aria-label="Progress (empty)"
       >
         <p className="text-sm font-sans text-[var(--color-fg-muted)]">
-          No children yet. Use the{" "}
-          <span className="font-mono text-[var(--color-green)]">+ Add</span>{" "}
-          menu at the top of the page to add a unit
-          {parentType === "Army" || parentType === "Warband"
-            ? " or terrain"
-            : ""}{" "}
-          and start tracking progress for this {parentType.toLowerCase()}.
+          {canAddHere ? (
+            <>
+              No children yet. Use the{" "}
+              <span className="font-mono text-[var(--color-green)]">
+                + Add
+              </span>{" "}
+              menu at the top of the page to add a unit or model and start
+              tracking progress for this {parentType.toLowerCase()}.
+            </>
+          ) : (
+            <>
+              No models assigned yet. Create a{" "}
+              <span className="font-mono text-[var(--color-green)]">Model</span>{" "}
+              from the new-project page and pick this unit as its parent to
+              track it here.
+            </>
+          )}
         </p>
       </section>
     );

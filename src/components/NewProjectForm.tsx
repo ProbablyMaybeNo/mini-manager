@@ -98,14 +98,14 @@ export function NewProjectForm({
 }: {
   parents: ReadonlyArray<ParentOption>;
   initialParentId?: string;
-  /** Item 1 — the unified "+ Add" menu pre-selects the project type
-   *  via `?type=`. Ignored when a parent is present (nested children are
-   *  Unit-only). Defaults to Unit. */
+  /** The unified "+ Add" menu pre-selects the project type via `?type=`.
+   *  When a parent is present the legal children are Unit or Model, so the
+   *  hint is honoured for those; otherwise the form defaults to Unit. */
   initialType?: ProjectType;
 }) {
-  // P13.4 — when a parent is pre-selected, the only legal child is Unit.
-  // Item 3 — non-selectable types (Diorama) are never offered in the
-  // picker; they live in the metadata map only so existing rows resolve.
+  // When a parent is pre-selected, the legal children are Unit or Model.
+  // Non-selectable types (Diorama) are never offered in the picker; they
+  // live in the metadata map only so existing rows resolve.
   const hasInitialParent = Boolean(initialParentId);
   const availableTypes = useMemo<ReadonlyArray<TypeMeta>>(
     () =>
@@ -115,8 +115,15 @@ export function NewProjectForm({
     [hasInitialParent],
   );
 
+  // With a parent, honour a Unit/Model hint (the only legal children);
+  // anything else falls back to Unit. Top-level honours any hint.
+  const initialNestable = initialType === "Unit" || initialType === "Model";
   const [type, setType] = useState<ProjectType>(
-    hasInitialParent ? "Unit" : initialType ?? "Unit",
+    hasInitialParent
+      ? initialNestable
+        ? initialType!
+        : "Unit"
+      : initialType ?? "Unit",
   );
   const initialMeta = TYPE_META_BY_TYPE[type];
   const [name, setName] = useState("");
@@ -230,7 +237,7 @@ export function NewProjectForm({
         </div>
         {hasInitialParent ? (
           <p className="text-2xs font-mono text-[var(--color-fg-muted)] mt-1">
-            Sub-projects can only be Unit.
+            Sub-projects can be a Unit or a Model.
           </p>
         ) : null}
       </fieldset>

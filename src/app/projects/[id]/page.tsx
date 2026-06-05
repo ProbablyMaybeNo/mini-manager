@@ -103,14 +103,23 @@ export default async function ProjectDetailPage({
     ? recipeParamRaw[0]
     : recipeParamRaw;
 
-  // P13.4 — Army, Warband AND Unit can host sub-projects (which are
-  // always Unit-typed per the new sub-project rule). The container
-  // workspace surface (sub-project table, aggregated counters) shows
-  // for any project that's allowed to nest children.
+  // Army, Warband AND Unit can HAVE sub-projects to display: an Army /
+  // Warband nests Units + Models, and a Unit can have Models assigned to
+  // it. The container workspace surface (sub-project Progress table)
+  // shows for any of these.
   const canHaveChildren =
     project.type === "Army" ||
     project.type === "Warband" ||
     project.type === "Unit";
+
+  // 2026-06-05 containment rules (Ross): the in-project "+ Add" menu only
+  // ADDS sub-projects from Army / Warband. A Unit shows no add menu (you
+  // can't add a unit or model from inside a unit — a Model is assigned to
+  // a unit via the new-project parent picker, not created from the unit's
+  // menu). Terrain is top-level only, added from the initial /projects/new
+  // page, never from an in-project menu.
+  const canAddChild =
+    project.type === "Army" || project.type === "Warband";
 
   // Containers fetch the wider context they need for aggregation; leaf
   // projects skip these queries entirely so the workspace stays cheap.
@@ -344,9 +353,10 @@ export default async function ProjectDetailPage({
         status={status}
         percent={percent}
         totalModels={headerTotalModels}
-        // Army / Warband / Unit can nest child Units. Terrain Piece /
-        // Diorama stay leaf-only.
-        showAddChild={canHaveChildren}
+        // 2026-06-05 — only Army / Warband expose the in-project add menu
+        // (Add unit / Add model). Units, Models, Terrain + Diorama show no
+        // add menu per the containment rules.
+        showAddChild={canAddChild}
       />
 
       {/* batch/model-warband — a Warband swaps the recipe-at-top box for

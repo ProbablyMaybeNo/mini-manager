@@ -100,20 +100,26 @@ describe("AddChildMenu — Item 1 single unified add control", () => {
     expect(src).toContain("aria-expanded={open}");
   });
 
-  test("offers Add unit/model (nested under this project)", () => {
-    // childNoun drives the unit-vs-model wording; the nested child link
-    // always carries the parent + type=Unit (sub-projects are Unit-only).
-    expect(src).toContain("childNoun");
+  test("offers Add unit AND Add model, both nested under this project (2026-06-05)", () => {
     expect(src).toContain("`/projects/new?parent=${projectId}&type=Unit`");
-    expect(src).toContain("Add {childLabel.toLowerCase()}");
+    expect(src).toContain("Add unit");
+    expect(src).toContain("`/projects/new?parent=${projectId}&type=Model`");
+    expect(src).toContain("Add model");
   });
 
-  test("offers Add terrain (top-level, no parent) only for Army/Warband", () => {
+  test("only Army / Warband expose the menu; everything else renders nothing", () => {
+    // Containment rules: a Unit can't add a unit/model from inside, a
+    // Model hosts nothing, terrain is top-level only. The menu short-
+    // circuits to null for any non-Army/Warband parent.
     expect(src).toContain(
       'parentType === "Army" || parentType === "Warband"',
     );
-    expect(src).toContain('href={`/projects/new?type=Terrain Piece`}');
-    expect(src).toContain("Add terrain");
+    expect(src).toContain("if (!canAdd) return null;");
+  });
+
+  test("does NOT offer Add terrain (terrain is top-level only now)", () => {
+    expect(src).not.toContain("Add terrain");
+    expect(src).not.toContain("type=Terrain Piece");
   });
 
   test("closes on click-away and Escape (matches WishlistToolsMenu)", () => {
@@ -198,5 +204,17 @@ describe("Project detail page wires the new header strip in", () => {
   test("page passes showAddChild based on project.type (container vs leaf)", () => {
     expect(src).toContain("showAddChild=");
     expect(src).toContain('project.type === "Army"');
+  });
+
+  test("2026-06-05 — the add menu is gated to Army/Warband only (canAddChild)", () => {
+    // Containment rules: a Unit no longer shows the in-project add menu.
+    // The page derives canAddChild = Army||Warband and feeds it to
+    // showAddChild (separate from canHaveChildren, which still includes
+    // Unit so assigned models still display).
+    expect(src).toContain("const canAddChild =");
+    expect(src).toMatch(
+      /canAddChild =\s*project\.type === "Army" \|\| project\.type === "Warband"/,
+    );
+    expect(src).toContain("showAddChild={canAddChild}");
   });
 });

@@ -22,14 +22,15 @@ export default async function NewProjectPage({
     ? initialParentId
     : undefined;
 
-  // Item 1 — the unified "+ Add" menu deep-links here with `?type=` so a
-  // chosen kind (Unit / Terrain Piece) pre-selects the radio. A nested
-  // child can only be a Unit (sub-project rule), so the type hint is
-  // ignored when a parent is present; the form locks to Unit in that case.
+  // The unified "+ Add" menu deep-links here with `?type=` so a chosen
+  // kind pre-selects the radio. Top-level: any selectable type. Nested
+  // (parent present): only Unit or Model are legal children, so honour
+  // the hint when it's one of those and otherwise let the form default.
+  const isNestableChildType = typeParam === "Unit" || typeParam === "Model";
   const safeInitialType: ProjectType | undefined =
-    !safeInitialParent &&
     typeParam !== undefined &&
-    (projectTypes as ReadonlyArray<string>).includes(typeParam)
+    (projectTypes as ReadonlyArray<string>).includes(typeParam) &&
+    (safeInitialParent ? isNestableChildType : true)
       ? (typeParam as ProjectType)
       : undefined;
 

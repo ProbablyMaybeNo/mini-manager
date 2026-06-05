@@ -117,22 +117,61 @@ describe("createProject", () => {
     expect(child[0]!.parentId).toBe(army!.id);
   });
 
-  test("P13.4 — Unit is now a legal parent (Army/Warband/Unit can host sub-Units)", async () => {
+  test("2026-06-05 — a Unit can't contain another Unit", async () => {
+    // Containment rule reversal (Ross 2026-06-05): a Unit no longer hosts
+    // sub-Units. It can host a Model; a Unit itself is assigned to an
+    // army/warband, not nested in a unit.
     await createProject({ name: "Top Unit", type: "Unit", count: 10 });
     const [unit] = await state.db!.select().from(projects);
 
-    await createProject({
+    const res = await createProject({
       name: "Sub-unit",
       type: "Unit",
       count: 5,
       parentId: unit!.id,
     });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error).toMatch(/A unit can't contain another unit/);
+
     const child = await state
       .db!.select()
       .from(projects)
       .where(eq(projects.name, "Sub-unit"));
+    expect(child).toHaveLength(0);
+  });
+
+  test("2026-06-05 — a Unit CAN host a Model (model assigned to a unit)", async () => {
+    await createProject({ name: "Squad", type: "Unit", count: 10 });
+    const [unit] = await state.db!.select().from(projects);
+
+    await createProject({
+      name: "Sergeant",
+      type: "Model",
+      count: 1,
+      parentId: unit!.id,
+    });
+    const child = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.name, "Sergeant"));
     expect(child).toHaveLength(1);
+    expect(child[0]!.type).toBe("Model");
     expect(child[0]!.parentId).toBe(unit!.id);
+  });
+
+  test("2026-06-05 — a Model never hosts a sub-project (Model parent rejected)", async () => {
+    await createProject({ name: "Lone Hero", type: "Model", count: 1 });
+    const [model] = await state.db!.select().from(projects);
+
+    const res = await createProject({
+      name: "Bad child",
+      type: "Unit",
+      count: 1,
+      parentId: model!.id,
+    });
+    expect(res.ok).toBe(false);
+    if (!res.ok)
+      expect(res.error).toMatch(/Only Army, Warband, or Unit parents/);
   });
 
   test("sub-projects must be a Unit or Model (Terrain rejected)", async () => {
