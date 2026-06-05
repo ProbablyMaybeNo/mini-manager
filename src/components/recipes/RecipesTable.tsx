@@ -47,6 +47,14 @@ interface Props {
   assignProjects: ReadonlyArray<AssignProjectOption>;
 }
 
+/** Square border colour for a slot's ownership coverage: green = owned,
+ *  yellow = wanted, neutral otherwise. */
+function coverageBorder(coverage: RecipeTableSlotVm["coverage"]): string {
+  if (coverage === "owned") return "var(--color-green)";
+  if (coverage === "wanted") return "var(--color-yellow)";
+  return "var(--color-border-strong)";
+}
+
 /**
  * P12.5 — Single sortable table replacing the prior two-section
  * card grid (standalone / project-attached). P13.4 collapsed the

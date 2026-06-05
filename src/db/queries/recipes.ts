@@ -9,12 +9,17 @@ import {
   recipes,
   recipeSlots,
   recipeInspo,
+  phase12LayerLabel,
   type Recipe,
   type RecipeSlot,
   type RecipeInspo,
+  type Phase12LayerKey,
+  type TechniqueKey,
 } from "@/db/schema";
 import type { Paint, PaintCatalog } from "@/lib/paints/types";
 import type { RecipeWithSlots } from "@/lib/recipes/types";
+import { getInventoryByPaintId } from "@/db/queries/paintCoverage";
+import { coverageFor, type CoverageState } from "@/lib/paints/coverage";
 
 /* ============================================================
    Recipe lookups
@@ -173,6 +178,16 @@ export async function listAllRecipesGrouped(
  *
  * One read pass each over `recipes` and `recipe_slot` — O(R+S) flat.
  */
+
+function layerLabelFor(technique: TechniqueKey): string {
+  if (technique in phase12LayerLabel) {
+    return phase12LayerLabel[technique as Phase12LayerKey];
+  }
+  return technique
+    .split("_")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(" ");
+}
 
 /** One rich paint square for the /recipes table row — same data the
  *  recipe creator's slot cell renders (colour, paint name, layer) plus
