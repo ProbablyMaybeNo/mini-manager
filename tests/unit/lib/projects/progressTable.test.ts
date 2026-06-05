@@ -131,4 +131,20 @@ describe("Project detail page wires the Progress table in", () => {
   test("fetches the project-palettes map for the recipe column", () => {
     expect(src).toContain("getProjectPalettesMap");
   });
+
+  test("removes the redundant Units tree + Aggregated-stages cards (2026-06-05)", () => {
+    // Ross flagged the Progress / Units / Aggregated-stages trio as
+    // saying the same thing. The Progress table is kept as the single
+    // representation; the other two cards no longer render and their
+    // imports are gone from the page.
+    expect(src).not.toContain('title="Aggregated stages"');
+    expect(src).not.toContain("AggregateCountersDisplay");
+    expect(src).not.toContain("ProjectTree");
+    expect(src).not.toContain("childNoun");
+  });
+
+  test("keeps the editable Roster + Stages counters for leaf projects", () => {
+    expect(src).toContain('title="Roster"');
+    expect(src).toContain('title="Stages"');
+  });
 });

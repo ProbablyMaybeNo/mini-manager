@@ -9,11 +9,8 @@ import {
 import type { Project } from "@/db/schema";
 import { OwnedCounter } from "@/components/OwnedCounter";
 import { StageCounter } from "@/components/StageCounter";
-import { ProjectTree } from "@/components/ProjectTree";
-import { AggregateCountersDisplay } from "@/components/AggregateCountersDisplay";
 import {
   aggregateCounters,
-  childNoun,
   displayStatus,
   isLeafProject,
   progressPercent,
@@ -385,34 +382,15 @@ export default async function ProjectDetailPage({
         <ProjectProgressTable parentType={project.type} rows={progressRows} />
       )}
 
-      {isContainer && aggregate ? (
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6">
-          <div className="order-2 md:order-1">
-            <Card
-              title={`${childNoun(project.type, true)} · ${children.length}`}
-            >
-              {children.length === 0 ? (
-                <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-relaxed">
-                  Add {childNoun(project.type, true)} under this{" "}
-                  {project.type.toLowerCase()} to track them. Each child's stage
-                  counters roll up into the aggregated view on the right.
-                </p>
-              ) : (
-                <ProjectTree projects={children} />
-              )}
-            </Card>
-          </div>
-
-          <div className="order-1 md:order-2">
-            <Card title="Aggregated stages" accentColor="cyan">
-              <AggregateCountersDisplay
-                aggregate={aggregate}
-                childCount={descendants.length}
-              />
-            </Card>
-          </div>
-        </div>
-      ) : (
+      {/* Note (Ross 2026-06-05): the Progress / Units / Aggregated-stages
+          trio on a container workspace all said the same thing. The
+          Progress table above is the single, most-informative
+          representation (per-child name · type · count · recipe · status ·
+          progress), so the redundant "Units" tree card and "Aggregated
+          stages" roll-up card were removed. Containers now render the
+          Progress table only; the editable Roster + Stages counters stay
+          for leaf projects (actual miniatures on the desk). */}
+      {isContainer ? null : (
         <div className="space-y-6">
           {showInteractiveCounters ? (
             <Card title="Roster">
