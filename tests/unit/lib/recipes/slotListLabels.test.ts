@@ -113,6 +113,46 @@ describe("SlotList — optimistic add (perf-lag fix)", () => {
   });
 });
 
+describe("Item 3 — slide-out stays open when a paint is picked", () => {
+  const src = read("src/components/recipes/SlotList.tsx");
+
+  function fnBody(name: string, nextName: string): string {
+    const start = src.indexOf(name);
+    const end = src.indexOf(nextName, start + name.length);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    return src.slice(start, end);
+  }
+
+  test("swapping a paint (edit panel) does NOT close the panel", () => {
+    // The regression: handleSwapPaint used to call setEditingSlotId(null)
+    // on a successful pick, slamming the slide-out shut. Picking a paint
+    // must keep the panel open so the painter can keep adjusting.
+    const handler = fnBody("const handleSwapPaint", "const handleLayerSelect");
+    expect(handler).toContain("await updateSlot(");
+    expect(handler).not.toContain("setEditingSlotId(null)");
+  });
+
+  test("adding a paint does NOT close the add panel on pick", () => {
+    // The add slide-out also stays open so several paints can be added in
+    // a row; it used to setAddOpen(false) the instant a paint was picked.
+    const handler = fnBody("const handleAddPaint", "const handleSwapPaint");
+    expect(handler).toContain("await addSlot(");
+    expect(handler).not.toContain("setAddOpen(false)");
+  });
+
+  test("the panel still closes only via the explicit Close control / Esc", () => {
+    // onClose handlers remain wired so the painter can dismiss the panel
+    // deliberately — close button + backdrop + Escape key.
+    expect(src).toContain('aria-label="Close picker"');
+    expect(src).toContain('if (e.key === "Escape") onClose();');
+    // The editing-slot panel's onClose still resets the editing id.
+    expect(src).toContain("onClose={() => setEditingSlotId(null)}");
+    // The add panel's onClose still closes the add tile.
+    expect(src).toContain("onClose={() => setAddOpen(false)}");
+  });
+});
+
 describe("RecipeEditorClient — no zones, no Steps box, no segmented control", () => {
   const src = read("src/components/recipes/RecipeEditorClient.tsx");
 

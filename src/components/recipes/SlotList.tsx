@@ -193,7 +193,9 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
       technique: "basecoat",
     };
     setLocalSlots((prev) => [...prev, optimisticSlot]);
-    setAddOpen(false);
+    // Item 3 — keep the slide-out OPEN after a pick so the painter can
+    // add several paints in a row (or keep adjusting). The panel closes
+    // only via its explicit Close control / Esc, never on a paint click.
     startSaveTransition(async () => {
       const result = await addSlot({ recipeId, ...patch });
       if (!result.ok) {
@@ -217,9 +219,10 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
       });
       if (!result.ok) {
         setActionError(result.error);
-        return;
       }
-      setEditingSlotId(null);
+      // Item 3 — do NOT close the panel on a successful pick. The painter
+      // keeps the slide-out open to keep adjusting / pick again; it closes
+      // only via the explicit Close control / Esc.
     });
   };
 
