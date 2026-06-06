@@ -32,12 +32,18 @@ export async function PublicRecipeView({
 
   return (
     <article className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-8">
+      {/* Terminal hero — the SYS ▸ coordinate caption + display-font title
+          lockup used across the app, so a shared recipe link reads as the
+          same mission-control surface even outside the authed shell. */}
       <header className="space-y-3">
-        <h1 className="font-mono text-2xl md:text-3xl font-semibold text-[var(--color-fg)]">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
+          SYS ▸ RECIPE / SHARED
+        </p>
+        <h1 className="title-display text-base md:text-lg text-[var(--color-fg)]">
           {recipe.name}
         </h1>
         <div className="flex items-center gap-3 text-xs font-mono text-[var(--color-fg-muted)]">
-          <span className="px-2 py-0.5 border border-[var(--color-border-strong)] uppercase tracking-wider">
+          <span className="px-2 py-0.5 border border-[var(--color-border-strong)] uppercase tracking-wider text-[var(--color-cyan)]">
             {recipe.bodyType}
           </span>
           <span aria-hidden>·</span>
@@ -54,7 +60,10 @@ export async function PublicRecipeView({
           This recipe has no slots yet.
         </p>
       ) : (
-        <section className="frame bg-[var(--color-bg-elevated)] p-4 md:p-5">
+        <section className="panel panel-ticks relative p-4 md:p-5">
+          <span className="panel-label" aria-hidden>
+            RECIPE ▸ SLOTS
+          </span>
           <ol className="space-y-2">
             {recipe.slots.map((slot) => {
               const meta = slot.paintId
@@ -106,10 +115,8 @@ export async function PublicRecipeView({
       )}
 
       {recipe.notesMd ? (
-        <section className="frame bg-[var(--color-bg-elevated)] p-4 md:p-5 space-y-2">
-          <h2 className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)]">
-            Notes
-          </h2>
+        <section className="panel relative p-4 md:p-5 space-y-2">
+          <h2 className="section-title mb-0">Notes</h2>
           <p className="font-mono text-sm text-[var(--color-fg)] whitespace-pre-wrap">
             {recipe.notesMd}
           </p>
@@ -124,7 +131,10 @@ export async function PublicRecipeView({
         ) : (
           <CloneButton slug={slug} />
         )}
-        <div className="frame bg-[var(--color-bg-elevated)] px-4 py-3 space-y-2 text-center sm:text-left sm:max-w-xs">
+        <div className="panel relative px-4 py-3 pt-4 space-y-2 text-center sm:text-left sm:max-w-xs">
+          <span className="panel-label" aria-hidden>
+            SYS ▸ JOIN
+          </span>
           <p className="font-mono text-xs text-[var(--color-fg-muted)]">
             Mini Manager tracks every model from wishlist to complete and builds
             paint recipes from a 7k+ cross-brand library.
