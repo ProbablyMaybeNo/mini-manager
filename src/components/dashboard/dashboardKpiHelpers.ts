@@ -1,4 +1,6 @@
 import type { Project } from "@/db/schema";
+import type { ActivityDay } from "@/db/queries/activityLog";
+import { toDayKey } from "@/db/queries/activityLog";
 import { displayStatus, progressPercent } from "@/lib/progress";
 
 /**
@@ -82,4 +84,40 @@ export function formatPaintTime(seconds: number): {
     return { value: `${hours}h ${minutes}m`, unit: "this week" };
   }
   return { value: `${minutes}m`, unit: "this week" };
+}
+
+/**
+ * PHASE-1 viz — dense daily-activity series for the dashboard trend graph
+ * (LineGraph / Sparkline). The dashboard already fetches `getActivityByDay`
+ * over a 60-day window for the streak; this re-uses that exact data (no new
+ * query) and projects it into a gap-filled, fixed-length numeric series
+ * for the bespoke viz kit.
+ *
+ * The input is sparse (only days WITH activity have a row) and newest-
+ * first; the viz needs a CONTIGUOUS series oldest→newest so the plot reads
+ * left = `days` ago, right = today, with quiet days drawn as zeros (a flat
+ * stretch) rather than collapsed out. Returns exactly `days` numbers.
+ */
+export function activityTrendSeries(
+  daysNewestFirst: ReadonlyArray<ActivityDay>,
+  today: Date,
+  days = 30,
+): number[] {
+  const span = Math.max(1, Math.round(days));
+  const countByKey = new Map<string, number>();
+  for (const d of daysNewestFirst) countByKey.set(d.date, d.count);
+
+  const todayMs = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate(),
+  );
+  const series: number[] = [];
+  // i runs oldest (span-1 days ago) → newest (today) so the plot is
+  // chronological left→right.
+  for (let i = span - 1; i >= 0; i -= 1) {
+    const key = toDayKey(new Date(todayMs - i * 24 * 60 * 60 * 1000));
+    series.push(countByKey.get(key) ?? 0);
+  }
+  return series;
 }

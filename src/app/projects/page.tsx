@@ -18,7 +18,9 @@ import {
   activeProjectCount,
   averageCompletion,
   formatPaintTime,
+  activityTrendSeries,
 } from "@/components/dashboard/dashboardKpiHelpers";
+import { DashboardTrendPanel } from "@/components/dashboard/DashboardTrendPanel";
 import {
   computeStreak,
   computeStreakBaseline,
@@ -119,6 +121,12 @@ export default async function DashboardPage({
   const isActiveStreak = streak.streak >= 1;
   const paintTime = formatPaintTime(weekSeconds);
   const avgCompletion = averageCompletion(allProjects);
+  // PHASE-1 viz — the activity-trend series for the bespoke AREA GRAPH /
+  // SPARKLINE (DESIGN_LANGUAGE §13). Re-uses the SAME 60-day activity_log
+  // window already fetched for the streak (no new query) and gap-fills it
+  // to a contiguous daily-count series, oldest → newest.
+  const TREND_DAYS = 60;
+  const trendSeries = activityTrendSeries(streakDays, now, TREND_DAYS);
   // PHASE-1 — the STREAK dial reads against a 7-day "hot streak" target,
   // so the ring fills as the painter approaches a full week and tops out
   // (capped at 100%) once they're on a hot streak. The centre carries the
@@ -272,6 +280,16 @@ export default async function DashboardPage({
               stand" answer, above the granular PROJECTS table per the
               inverted pyramid (doc §14/§4). */}
           <DashboardKpiStrip cards={kpiCards} />
+
+          {/* PHASE-1 viz — the bespoke activity-trend panel (area graph +
+              sparkline + segmented output-rate bar), reading like moodboard
+              groups 20 + 27. Sits between the headline KPIs and the
+              granular table per the inverted pyramid. */}
+          <DashboardTrendPanel
+            trend={trendSeries}
+            windowDays={TREND_DAYS}
+            avgCompletion={avgCompletion}
+          />
 
           {/* PHASE-1 cohesion — the PROJECTS table panel carries the same
               corner ticks + coordinate tech label as the KPI cards + the

@@ -104,8 +104,11 @@ describe("CircularProgress — SSR-safe", () => {
 describe("DashboardKpiStrip wires the dial into headline KPIs", () => {
   const src = read("src/components/dashboard/DashboardKpiStrip.tsx");
 
-  test("renders the CircularProgress dial when a card supplies one", () => {
-    expect(src).toContain("CircularProgress");
+  // PHASE-1 viz — the headline dial swapped CircularProgress for the
+  // bespoke ticked + glowing RadialGauge (DESIGN_LANGUAGE §13). The plain
+  // CircularProgress is retained as a primitive but no longer wired here.
+  test("renders the RadialGauge dial when a card supplies one", () => {
+    expect(src).toContain("RadialGauge");
     expect(src).toContain("card.dial");
   });
 });
