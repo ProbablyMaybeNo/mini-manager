@@ -321,10 +321,19 @@ export default async function ProjectDetailPage({
       <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
         SYS ▸ {project.type.toUpperCase()} / WORKSPACE
       </p>
-      <nav className="text-xs font-mono text-[var(--color-fg-muted)] flex items-center justify-between gap-3">
+      {/* UX-005 — the breadcrumb root reads DASHBOARD, matching the nav rail
+          + mobile tab bar's active item (both light "Dashboard" on
+          /projects/[id]). Previously the nav said DASHBOARD while the
+          breadcrumb said "Projects", so the only location cues disagreed.
+          Naming them identically gives one coherent "you are here:
+          DASHBOARD ▸ … ▸ <this unit>" trail. */}
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-mono text-[var(--color-fg-muted)] flex items-center justify-between gap-3"
+      >
         <span className="min-w-0 truncate">
           <Link href="/projects" className="hover:text-[var(--color-accent)]">
-            ← Projects
+            ← DASHBOARD
           </Link>
           {ancestors.map((a) => (
             <span key={a.id}>
