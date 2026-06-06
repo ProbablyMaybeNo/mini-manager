@@ -124,7 +124,11 @@ describe("UX-1305 — recipes list reflows to stacked cards below 768px", () => 
 
   test("a mobile card list renders below md, table hidden below md", () => {
     expect(src).toContain('<div className="md:hidden flex flex-col gap-2">');
-    expect(src).toContain('<div className="hidden md:block frame overflow-x-auto">');
+    // Terminal re-skin (batch/redesign-recipes): the dense desktop table
+    // is wrapped in a `.panel` terminal frame (was a bare `.frame`), still
+    // hidden below md + horizontally scrollable.
+    expect(src).toContain('className="hidden md:block panel');
+    expect(src).toContain("overflow-x-auto");
   });
 
   test("the card row exists and keeps Assign + Share as full-width buttons", () => {

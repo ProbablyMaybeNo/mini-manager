@@ -101,8 +101,8 @@ export function AssignToProjectMenu({
         <div
           role="menu"
           aria-label="Pick a project"
-          className="absolute right-0 top-full mt-1 z-30 w-72 max-h-80 overflow-y-auto frame bg-[var(--color-bg-panel)] shadow-lg"
-          style={{ border: "1px solid var(--color-border-strong)" }}
+          className="absolute right-0 top-full mt-1 z-30 w-72 max-h-80 overflow-y-auto panel bg-[var(--color-bg-panel)] shadow-lg"
+          style={{ border: "1px solid var(--color-cyan-dim)" }}
         >
           <input
             type="search"
@@ -111,7 +111,7 @@ export function AssignToProjectMenu({
             autoFocus
             placeholder="Search projects…"
             className="block w-full px-3 py-2 font-mono text-xs bg-[var(--color-bg)]"
-            style={{ borderBottom: "1px solid var(--color-border)" }}
+            style={{ borderBottom: "1px solid var(--color-cyan-dim)" }}
           />
           {filteredProjects.length === 0 ? (
             <p className="px-3 py-3 text-2xs font-sans text-[var(--color-fg-muted)] text-center">
@@ -129,10 +129,10 @@ export function AssignToProjectMenu({
                       onClick={() => handleAssign(p.id)}
                       disabled={isCurrent || isPending}
                       className={clsx(
-                        "w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-xs font-mono tap-target",
+                        "w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-xs font-mono tap-target transition-colors",
                         isCurrent
                           ? "opacity-50 cursor-not-allowed"
-                          : "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
+                          : "hover:bg-[color-mix(in_srgb,var(--color-cyan)_12%,transparent)] hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
                       )}
                     >
                       <span className="truncate text-[var(--color-fg)]">

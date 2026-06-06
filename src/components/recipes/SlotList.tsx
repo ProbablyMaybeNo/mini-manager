@@ -257,6 +257,9 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
     <>
       <Card
         title={`Recipe slots · ${localSlots.length}`}
+        nested
+        ticks
+        techLabel="SLOTS"
         headerActions={
           localSlots.length > 1 ? (
             <span className="text-2xs font-mono text-[var(--color-fg-subtle)] tracking-wider normal-case">
@@ -519,15 +522,21 @@ function SlotEditorPanel({
         onClick={onClose}
         className="flex-1 bg-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
       />
+      {/* Item 2 — terminal drawer: near-black fill with a 1px phosphor
+          (cyan-dim) edge so the slide-out reads as a CRT side-panel, not a
+          grey sheet. Top edge on mobile, left edge on desktop. */}
       <aside
-        className="w-full max-h-[88vh] md:max-h-none md:w-[480px] md:h-full bg-[var(--color-bg-elevated)] flex flex-col border-t border-[var(--color-border-strong)] md:border-t-0 md:border-l md:border-[var(--color-border-strong)]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}
+        className="w-full max-h-[88vh] md:max-h-none md:w-[480px] md:h-full bg-[var(--color-bg-elevated)] flex flex-col border-t md:border-t-0 md:border-l"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom, 0)",
+          borderColor: "var(--color-cyan-dim)",
+        }}
       >
         <header
           className="flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: "1px solid var(--color-border)" }}
+          style={{ borderBottom: "1px solid var(--color-cyan-dim)" }}
         >
-          <h2 className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg)]">
+          <h2 className="font-mono text-xs uppercase tracking-wider text-[var(--color-cyan)] glow-text-strong">
             {contextLabel}
           </h2>
           <Button

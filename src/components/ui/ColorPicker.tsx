@@ -503,11 +503,31 @@ export function ColorPicker({
 
 /* ============================================================
    <WheelRing>
-   SVG HSL ring with a draggable cursor. Cursor position →
-   hue. Saturation + lightness are held constant for the
-   default fast-pick UX — Ross's brief stresses speed, not
-   precise HSL control.
+   PIXEL / retro rainbow hue wheel (batch/redesign-recipes,
+   DESIGN_LANGUAGE §7.3 "pixel color-wheel upgrade").
+
+   Behaviour is UNCHANGED from the prior smooth-wedge ring — the
+   pointer / keyboard handlers, the aria-slider contract, and the
+   cursor all compute purely from the angle about the centre, so
+   they're independent of how the ring is painted. The VISUAL is
+   restyled toward the moodboard's pixelated retro colour wheel:
+   the ring is rasterised into a grid of discrete square "pixels",
+   each filled by the hue at its angle (quantised into stepped
+   bands) and slightly stepped in saturation across two radial
+   rings, with a chunky pixel cursor block instead of a smooth dot.
+
+   Saturation + lightness for the WHEEL FILL are held constant for
+   the fast-pick UX (Ross's brief stresses speed); the picked
+   colour's real S/L still come from the sliders below the wheel.
    ============================================================ */
+
+/** Pixel grid resolution + ring geometry for the retro wheel. A fixed
+ *  cell size keeps every "pixel" a crisp square regardless of the SVG
+ *  scale; the ring band is ~5 cells thick so the blocks read as a chunky
+ *  rainbow donut rather than a thin line. */
+const WHEEL_SIZE = 160;
+const WHEEL_PX = 10; // edge of one square pixel cell (retro chunk size)
+const WHEEL_HUE_STEPS = 24; // quantised hue bands (retro colour banding)
 
 function WheelRing({
   hue,
@@ -519,7 +539,7 @@ function WheelRing({
   const ref = useRef<SVGSVGElement | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  const size = 160;
+  const size = WHEEL_SIZE;
   const radius = size / 2 - 8;
   const cx = size / 2;
   const cy = size / 2;
@@ -528,8 +548,12 @@ function WheelRing({
     const svg = ref.current;
     if (!svg) return null;
     const rect = svg.getBoundingClientRect();
-    const x = clientX - rect.left - cx;
-    const y = clientY - rect.top - cy;
+    // Map client px → SVG user units so the angle is correct even when the
+    // wheel is CSS-scaled (the grid is in user units, not screen px).
+    const sx = rect.width ? size / rect.width : 1;
+    const sy = rect.height ? size / rect.height : 1;
+    const x = (clientX - rect.left) * sx - cx;
+    const y = (clientY - rect.top) * sy - cy;
     let deg = (Math.atan2(y, x) * 180) / Math.PI;
     if (deg < 0) deg += 360;
     return deg;
@@ -555,37 +579,45 @@ function WheelRing({
     (e.target as Element).releasePointerCapture?.(e.pointerId);
   };
 
-  // Conic gradient via 12 wedge slices (SVG doesn't have conic gradients
-  // natively; this gives a clean ring without a foreignObject hack).
-  const wedges = useMemo(() => {
-    const steps = 36;
-    const slice = 360 / steps;
-    return Array.from({ length: steps }, (_, i) => {
-      const startAngle = i * slice;
-      const endAngle = startAngle + slice;
-      const startRad = (startAngle * Math.PI) / 180;
-      const endRad = (endAngle * Math.PI) / 180;
-      const inner = radius - 16;
-      const outer = radius;
-      const x1 = cx + Math.cos(startRad) * outer;
-      const y1 = cy + Math.sin(startRad) * outer;
-      const x2 = cx + Math.cos(endRad) * outer;
-      const y2 = cy + Math.sin(endRad) * outer;
-      const x3 = cx + Math.cos(endRad) * inner;
-      const y3 = cy + Math.sin(endRad) * inner;
-      const x4 = cx + Math.cos(startRad) * inner;
-      const y4 = cy + Math.sin(startRad) * inner;
-      const midAngle = startAngle + slice / 2;
-      return {
-        path: `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} L ${x4} ${y4} Z`,
-        fill: hslToHex(midAngle, 80, 55),
-      };
-    });
-  }, [cx, cy, radius]);
+  // Rasterise the ring into a grid of square pixel cells. Each cell whose
+  // centre lands inside the ring band gets a colour from the hue at its
+  // angle — quantised into WHEEL_HUE_STEPS bands for the stepped retro
+  // rainbow, and stepped in saturation across the inner/outer half of the
+  // band so the donut has a touch of pixel-art depth.
+  const pixels = useMemo(() => {
+    const innerR = radius - WHEEL_PX * 5;
+    const outerR = radius;
+    const cells: { x: number; y: number; fill: string }[] = [];
+    for (let gy = 0; gy < size; gy += WHEEL_PX) {
+      for (let gx = 0; gx < size; gx += WHEEL_PX) {
+        const ccx = gx + WHEEL_PX / 2;
+        const ccy = gy + WHEEL_PX / 2;
+        const dx = ccx - cx;
+        const dy = ccy - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist < innerR || dist > outerR) continue;
+        let deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+        if (deg < 0) deg += 360;
+        // Quantise hue into discrete retro bands.
+        const band = Math.round(deg / (360 / WHEEL_HUE_STEPS));
+        const qHue = (band * (360 / WHEEL_HUE_STEPS)) % 360;
+        // Step saturation by radial position (outer = punchier).
+        const sat = dist > (innerR + outerR) / 2 ? 90 : 65;
+        cells.push({ x: gx, y: gy, fill: hslToHex(qHue, sat, 55) });
+      }
+    }
+    return cells;
+  }, [cx, cy, radius, size]);
 
+  // Pixel cursor — a chunky square block snapped to the grid, sitting on
+  // the ring at the current hue (replaces the smooth dot for the retro
+  // look). White block + black outline so it reads on any hue.
   const hueRad = (hue * Math.PI) / 180;
-  const cursorX = cx + Math.cos(hueRad) * (radius - 8);
-  const cursorY = cy + Math.sin(hueRad) * (radius - 8);
+  const midR = radius - WHEEL_PX * 2.5;
+  const rawCurX = cx + Math.cos(hueRad) * midR;
+  const rawCurY = cy + Math.sin(hueRad) * midR;
+  const curX = Math.floor(rawCurX / WHEEL_PX) * WHEEL_PX;
+  const curY = Math.floor(rawCurY / WHEEL_PX) * WHEEL_PX;
 
   return (
     <svg
@@ -606,17 +638,31 @@ function WheelRing({
         if (e.key === "ArrowLeft") onChange((hue - 5 + 360) % 360);
         if (e.key === "ArrowRight") onChange((hue + 5) % 360);
       }}
+      // crispEdges keeps the square pixels hard-edged (no AA blur) for the
+      // retro raster look.
+      shapeRendering="crispEdges"
       className="block mx-auto cursor-crosshair"
     >
-      {wedges.map((w, i) => (
-        <path key={i} d={w.path} fill={w.fill} stroke="none" />
+      {pixels.map((p, i) => (
+        <rect
+          key={i}
+          x={p.x}
+          y={p.y}
+          width={WHEEL_PX}
+          height={WHEEL_PX}
+          fill={p.fill}
+          stroke="#000000"
+          strokeWidth={0.5}
+        />
       ))}
-      <circle
-        cx={cursorX}
-        cy={cursorY}
-        r={7}
-        fill="white"
-        stroke="black"
+      {/* Chunky pixel cursor block. */}
+      <rect
+        x={curX}
+        y={curY}
+        width={WHEEL_PX}
+        height={WHEEL_PX}
+        fill="#ffffff"
+        stroke="#000000"
         strokeWidth={2}
       />
     </svg>
