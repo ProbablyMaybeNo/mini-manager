@@ -304,7 +304,7 @@ export function FocusPanel({
 
                   <span
                     aria-hidden
-                    className="block w-12 h-12 rounded-none border border-[var(--color-border-strong)] shrink-0"
+                    className="block w-10 h-10 md:w-12 md:h-12 rounded-none border border-[var(--color-border-strong)] shrink-0"
                     style={{
                       background: slot.paintHex ?? "transparent",
                       backgroundImage: slot.paintHex

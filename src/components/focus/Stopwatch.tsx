@@ -298,7 +298,7 @@ export function Stopwatch({
         ) : null}
       </div>
 
-      <div className="flex flex-col ml-auto text-right">
+      <div className="flex flex-col basis-full text-left sm:basis-auto sm:ml-auto sm:text-right">
         <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
           Today · This week
         </span>
