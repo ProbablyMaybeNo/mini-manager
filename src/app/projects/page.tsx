@@ -118,6 +118,17 @@ export default async function DashboardPage({
   const isHotStreak = streak.streak >= 7;
   const isActiveStreak = streak.streak >= 1;
   const paintTime = formatPaintTime(weekSeconds);
+  const avgCompletion = averageCompletion(allProjects);
+  // PHASE-1 — the STREAK dial reads against a 7-day "hot streak" target,
+  // so the ring fills as the painter approaches a full week and tops out
+  // (capped at 100%) once they're on a hot streak. The centre carries the
+  // raw count; the hue mirrors the number's green/amber/muted state.
+  const streakDialPercent = Math.min(100, (streak.streak / 7) * 100);
+  const streakDialTone = isHotStreak
+    ? "ok"
+    : isActiveStreak
+      ? "warning"
+      : "neutral";
   const kpiCards: KpiCardData[] = [
     {
       label: "ACTIVE PROJECTS",
@@ -130,12 +141,17 @@ export default async function DashboardPage({
     },
     {
       label: "AVG COMPLETION",
-      value: `${averageCompletion(allProjects)}%`,
+      value: `${avgCompletion}%`,
       unit: "across projects",
       valueClassName: "text-[var(--color-fg)]",
       glowClassName: "glow-text-strong",
       accentColor: "amber",
-      valueAriaLabel: `${averageCompletion(allProjects)} percent average completion`,
+      valueAriaLabel: `${avgCompletion} percent average completion`,
+      dial: {
+        percent: avgCompletion,
+        // auto tone tracks the behind/mid/ahead threshold set.
+        ariaLabel: `${avgCompletion} percent average completion`,
+      },
     },
     {
       label: "STREAK",
@@ -150,6 +166,13 @@ export default async function DashboardPage({
       accentColor: "purple",
       valueAriaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak`,
       baseline: streakBaseline ?? undefined,
+      dial: {
+        percent: streakDialPercent,
+        tone: streakDialTone,
+        label: String(streak.streak),
+        caption: streak.streak === 1 ? "day" : "days",
+        ariaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak, ${Math.round(streakDialPercent)} percent toward a week`,
+      },
     },
     {
       label: "PAINTING TIME",

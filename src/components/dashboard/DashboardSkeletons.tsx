@@ -36,11 +36,15 @@ function Bar({ className }: { className?: string }) {
 function SkeletonCard({
   title,
   accentColor,
+  techLabel,
   children,
   bodyClassName,
 }: {
   title: string;
   accentColor: CardAccent;
+  /** Matches the loaded cell's terminal tech label so the frame is
+   *  identical before + after the data lands (no chrome shift). */
+  techLabel: string;
   children: ReactNode;
   bodyClassName?: string;
 }) {
@@ -49,6 +53,8 @@ function SkeletonCard({
       title={title}
       titleAs="h3"
       accentColor={accentColor}
+      ticks
+      techLabel={techLabel}
       className="h-full"
       bodyClassName={bodyClassName ?? "flex-1 flex flex-col"}
       ariaLabel={`${title} loading`}
@@ -64,8 +70,8 @@ function SkeletonCard({
 /** Mirrors PlannerActivityCell: a vertical list of event lines. */
 export function ActivitySkeleton() {
   return (
-    <SkeletonCard title="ACTIVITY" accentColor="green">
-      <div className="frame p-3 space-y-3">
+    <SkeletonCard title="ACTIVITY" accentColor="green" techLabel="LOG ▸ FEED">
+      <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-2">
             <Bar className="w-4 h-4 shrink-0" />
@@ -84,6 +90,7 @@ export function CalendarSkeleton() {
     <SkeletonCard
       title="CALENDAR"
       accentColor="amber"
+      techLabel="CAL ▸ MONTH"
       bodyClassName="!p-2 sm:!p-3.5"
     >
       <div className="space-y-3">

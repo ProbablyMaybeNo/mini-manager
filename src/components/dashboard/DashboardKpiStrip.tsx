@@ -1,4 +1,8 @@
 import { Card } from "@/components/ui/Card";
+import {
+  CircularProgress,
+  type CircularProgressTone,
+} from "@/components/ui/CircularProgress";
 import { clsx } from "clsx";
 
 /**
@@ -52,6 +56,19 @@ export interface KpiCardData {
   accentColor: "cyan" | "green" | "amber" | "purple" | "neutral";
   /** aria-label for the value (spells out the unit for screen readers). */
   valueAriaLabel: string;
+  /** Optional circular dial (DESIGN_LANGUAGE §7.1) shown beside the number
+   *  for the headline-progress KPIs (avg completion, streak) — the
+   *  recurring moodboard gauge. `percent` drives the sweep; `tone` locks
+   *  the hue; `label`/`caption` override the centre readout (e.g. a raw
+   *  streak count instead of a %). KPIs without a meaningful ratio omit
+   *  it and keep the plain big number. */
+  dial?: {
+    percent: number;
+    tone?: CircularProgressTone;
+    label?: string;
+    caption?: string;
+    ariaLabel: string;
+  };
 }
 
 interface Props {
@@ -89,35 +106,50 @@ export function DashboardKpiStrip({ cards }: Props) {
             bodyClassName="flex flex-col"
           >
             <div
-              className="flex flex-col gap-1"
+              className="flex items-center justify-between gap-3"
               data-kpi-card
               data-kpi-lead={isLead ? "true" : undefined}
             >
-              <div className="flex items-baseline gap-2">
-                <span
-                  className={clsx(
-                    "tabular-nums tracking-wide font-medium leading-none",
-                    // Lead metric gets the larger readout; the rest stay at
-                    // the strip's standard big-number size.
-                    isLead ? "text-4xl" : "text-3xl",
-                    card.valueClassName,
-                    card.glowClassName,
-                  )}
-                  aria-label={card.valueAriaLabel}
-                >
-                  {card.value}
-                </span>
-                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
-                  {card.unit}
-                </span>
+              <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className={clsx(
+                      "tabular-nums tracking-wide font-medium leading-none",
+                      // Lead metric gets the larger readout; the rest stay
+                      // at the strip's standard big-number size.
+                      isLead ? "text-4xl" : "text-3xl",
+                      card.valueClassName,
+                      card.glowClassName,
+                    )}
+                    aria-label={card.valueAriaLabel}
+                  >
+                    {card.value}
+                  </span>
+                  <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
+                    {card.unit}
+                  </span>
+                </div>
+                {card.baseline ? (
+                  <p
+                    className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"
+                    data-kpi-baseline
+                  >
+                    {card.baseline}
+                  </p>
+                ) : null}
               </div>
-              {card.baseline ? (
-                <p
-                  className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"
-                  data-kpi-baseline
-                >
-                  {card.baseline}
-                </p>
+              {/* Circular phosphor dial for the headline-progress KPIs —
+                  the recurring moodboard gauge (§7.1). */}
+              {card.dial ? (
+                <CircularProgress
+                  percent={card.dial.percent}
+                  tone={card.dial.tone}
+                  label={card.dial.label}
+                  caption={card.dial.caption}
+                  ariaLabel={card.dial.ariaLabel}
+                  size={isLead ? 64 : 56}
+                  className="shrink-0"
+                />
               ) : null}
             </div>
           </Card>
