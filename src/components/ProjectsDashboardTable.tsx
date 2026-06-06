@@ -284,16 +284,14 @@ export function ProjectsDashboardTable({
           scrollable) covers the sub-md viewport. M3 replaced the prior
           stacked-card mobile layout, which destroyed cross-record
           comparison [BP §7, §14]. */}
-      {/* PHASE-1 — the "mission table": near-black surface with a 1px
-          phosphor (cyan-tinted) border so it reads as a lit terminal
-          frame rather than a grey SaaS box. */}
-      <div
-        className="overflow-x-auto hidden md:block rounded-sm border bg-[var(--color-bg-elevated)]"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
-        }}
-      >
+      {/* PHASE-1 — the "mission table": near-black surface inside the
+          PROJECTS card.
+          REDESIGN-CLEANUP (fix 1) — Ross flagged the "weird double border"
+          here: this wrapper carried its OWN phosphor frame WHILE sitting
+          inside the bordered PROJECTS `Card`, so the panel read as a box-in-
+          a-box. The wrapper border is dropped so the Card supplies the single
+          clean frame; the thead bottom-rule below is the only internal line. */}
+      <div className="overflow-x-auto hidden md:block bg-[var(--color-bg-elevated)]">
         {/* D1 — mm-density-rows: desktop row height tracks the global
             Comfortable/Compact lever (--density-row-h). D3's library
             table opts in the same way. */}
@@ -384,12 +382,13 @@ export function ProjectsDashboardTable({
           sortDir={sortDir}
           onChangeKey={(k) => handleSort(k)}
         />
+        {/* REDESIGN-CLEANUP (fix 1) — same double-border kill as the desktop
+            table: this scroll region lives inside the PROJECTS `Card`, so its
+            own frame is dropped and the Card carries the single clean border.
+            Kept a faint phosphor focus-ring affordance on keyboard focus so
+            the scrollable region still signals focus (WCAG 2.4.7). */}
         <div
-          className="overflow-x-auto rounded-sm border bg-[var(--color-bg-elevated)]"
-          style={{
-            borderColor:
-              "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
-          }}
+          className="overflow-x-auto bg-[var(--color-bg-elevated)] focus-visible:outline-2 focus-visible:outline-[var(--color-cyan)]"
           role="region"
           aria-label="Projects comparison table"
           tabIndex={0}

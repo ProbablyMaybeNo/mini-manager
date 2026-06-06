@@ -120,7 +120,16 @@
   --color-fg-muted: #cfcfcf;
   --color-fg-subtle: #d4d4d4;
 
-  --color-border: #262626;
+  /* REDESIGN-CLEANUP (fix 1) — Ross: "remove all the grey border lines."
+     The decorative border token was a flat neutral grey (#262626) which
+     read as the "grey SaaS box" lines the design language rejects. Re-tinted
+     to a FAINT cyan-leaning dark (same near-black luminance, just a phosphor
+     hue) so every divider / decorative frame that references this token reads
+     as a quiet terminal line instead of grey — no grey lines left. The
+     `color-mix(... cyan X%, --color-border)` panel/card frames inherit the
+     coherent tint for free; the WCAG-critical input border keeps its own
+     dedicated --color-border-input token (untouched). */
+  --color-border: #1c2426;
   /* Bumped from #363636 (1.68:1 on bg) to #5a5a5a so the border reads
      as a real boundary on auth-form inputs + every other
      .frame-strong surface. UX-V3-003 — auditor round 3.
