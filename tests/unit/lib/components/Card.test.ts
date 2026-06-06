@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
 import type { ReactElement } from "react";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { Card } from "@/components/ui/Card";
+
+const css = fs.readFileSync(
+  path.resolve(__dirname, "../../../../src/app/globals.css"),
+  "utf-8",
+);
 
 type AnyNode = { type: unknown; props: Record<string, unknown> } | string | null;
 
@@ -75,6 +82,86 @@ describe("Card primitive — heading semantics (UX-V3-005)", () => {
     expect(tree && typeof tree === "object" ? tree.props["aria-label"] : null).toBe(
       "Sign in",
     );
+  });
+});
+
+describe("globals.css — panel/card terminal frame primitives (Phase 0)", () => {
+  test(".card fill is near-black (token), never grey", () => {
+    const body = /\n\.card\s*\{([\s\S]*?)\}/.exec(css)?.[1] ?? "";
+    expect(body).toMatch(/background:\s*var\(--color-bg-elevated\)/);
+  });
+
+  test(".card border is a cyan-tinted phosphor border (not bare grey)", () => {
+    const body = /\n\.card\s*\{([\s\S]*?)\}/.exec(css)?.[1] ?? "";
+    expect(body).toMatch(/border:[^;]*var\(--color-cyan\)/);
+  });
+
+  test(".panel primitive exists with near-black/transparent fill", () => {
+    expect(css).toMatch(/\.panel\s*\{/);
+    expect(css).toMatch(/\.panel-transparent\s*\{\s*background:\s*transparent/);
+  });
+
+  test(".panel-nested draws an inset inner ring", () => {
+    const body = /\.panel-nested\s*\{([\s\S]*?)\}/.exec(css)?.[1] ?? "";
+    expect(body).toMatch(/box-shadow:\s*[\s\S]*inset/);
+  });
+
+  test(".panel-ticks draws corner brackets via ::before/::after", () => {
+    expect(css).toMatch(/\.panel-ticks::before/);
+    expect(css).toMatch(/\.panel-ticks::after/);
+  });
+
+  test(".panel-label is the technical caption slot (cyan, mono)", () => {
+    const body = /\.panel-label\s*\{([\s\S]*?)\}/.exec(css)?.[1] ?? "";
+    expect(body).toMatch(/color:\s*var\(--color-cyan\)/);
+    expect(body).toMatch(/font-family:\s*var\(--font-mono\)/);
+  });
+});
+
+describe("Card terminal treatment — nested border / ticks / tech label (Phase 0)", () => {
+  function rootClass(tree: ReactElement): string {
+    const n = tree as unknown as { props: Record<string, unknown> };
+    return String(n.props.className ?? "");
+  }
+
+  test("plain card carries the base .card class only", () => {
+    const tree = render({ children: "body" });
+    const cls = rootClass(tree);
+    expect(cls).toMatch(/\bcard\b/);
+    expect(cls).not.toMatch(/card-nested/);
+    expect(cls).not.toMatch(/panel-ticks/);
+  });
+
+  test("nested adds .card-nested for the inner bezel ring", () => {
+    const tree = render({ nested: true, children: "body" });
+    expect(rootClass(tree)).toMatch(/\bcard-nested\b/);
+  });
+
+  test("ticks adds .panel-ticks for corner brackets", () => {
+    const tree = render({ ticks: true, children: "body" });
+    expect(rootClass(tree)).toMatch(/\bpanel-ticks\b/);
+  });
+
+  test("techLabel renders an aria-hidden .panel-label caption", () => {
+    const tree = render({ techLabel: "SYS · OK", children: "body" });
+    const label = findFirst(tree, (n) =>
+      String((n.props.className as string | undefined) ?? "").includes(
+        "panel-label",
+      ),
+    );
+    expect(label).not.toBeNull();
+    expect(label?.props.children).toBe("SYS · OK");
+    expect(label?.props["aria-hidden"]).toBe(true);
+  });
+
+  test("no techLabel renders no panel-label element", () => {
+    const tree = render({ children: "body" });
+    const label = findFirst(tree, (n) =>
+      String((n.props.className as string | undefined) ?? "").includes(
+        "panel-label",
+      ),
+    );
+    expect(label).toBeNull();
   });
 });
 

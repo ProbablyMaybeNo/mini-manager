@@ -37,6 +37,17 @@ export interface CardProps {
   children: ReactNode;
   /** Aria label for the section element. Defaults to title when present. */
   ariaLabel?: string;
+  /** Phase-0 terminal treatment: draw the inner nested-border ring (the
+   *  box-in-box CRT bezel) over the card. Off by default — reserve it for
+   *  headline / hero panels so the detail stays special. */
+  nested?: boolean;
+  /** Draw L-shaped corner ticks/brackets at the panel corners (the
+   *  diegetic registration-mark detail). Off by default. */
+  ticks?: boolean;
+  /** Optional tiny technical caption slotted onto the top border (e.g.
+   *  `SYS · OK`, a coordinate tag). Rendered aria-hidden — it's chrome
+   *  flavour, not content. */
+  techLabel?: string;
 }
 
 /** Card — bordered surface with header bar + body. Replaces ad-hoc
@@ -57,14 +68,27 @@ export function Card({
   bodyClassName,
   children,
   ariaLabel,
+  nested = false,
+  ticks = false,
+  techLabel,
 }: CardProps) {
   const hasHeader = Boolean(title || headerActions);
   const TitleTag = titleAs;
   return (
     <section
-      className={clsx("card", className)}
+      className={clsx(
+        "card",
+        nested && "card-nested",
+        ticks && "panel-ticks",
+        className,
+      )}
       aria-label={ariaLabel ?? title}
     >
+      {techLabel ? (
+        <span className="panel-label" aria-hidden>
+          {techLabel}
+        </span>
+      ) : null}
       {hasHeader ? (
         <header className="card-header">
           <span className="card-header-title">
