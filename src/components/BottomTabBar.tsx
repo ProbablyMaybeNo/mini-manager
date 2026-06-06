@@ -20,7 +20,7 @@ type TabItem = {
 };
 
 const TABS: readonly TabItem[] = [
-  { href: "/projects", Icon: Folder,       label: "Projects" },
+  { href: "/projects", Icon: Folder,       label: "Dashboard" },
   { href: "/library",  Icon: Palette,      label: "Library"  },
   { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
   { href: "/tools",    Icon: Wrench,       label: "Tools"    },

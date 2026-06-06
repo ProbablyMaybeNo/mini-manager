@@ -45,11 +45,11 @@ describe("globals.css — UI-GLOW text-glow tokens", () => {
     }
   });
 
-  test("the body tier is the subtlest (a single ~1px bloom)", () => {
+  test("the body tier is the subtlest (a single ~3px bloom)", () => {
     // Dense prose/tables must stay crisp — body glow is one small radius.
     const decl = /--glow-body:\s*([^;]+);/.exec(css);
     expect(decl).not.toBeNull();
-    expect(decl![1]).toMatch(/0 0 1px/);
+    expect(decl![1]).toMatch(/0 0 3px/);
     // A single shadow layer keeps it a whisper, not a blur: exactly one
     // `0 0 <r>` halo offset (color-mix's own commas are ignored).
     expect((decl![1] ?? "").match(/0 0 \d+px/g)?.length).toBe(1);

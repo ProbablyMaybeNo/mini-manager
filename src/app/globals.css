@@ -136,13 +136,13 @@
      entirely (see the prefers-reduced-motion block below). Built as
      custom-props + reusable .glow-text* utilities rather than per-
      component inline styles so the bloom is one source of truth. */
-  --glow-body: 0 0 1px color-mix(in srgb, currentColor 28%, transparent);
+  --glow-body: 0 0 3px color-mix(in srgb, currentColor 45%, transparent);
   --glow-strong:
-    0 0 2px color-mix(in srgb, currentColor 42%, transparent),
-    0 0 7px color-mix(in srgb, currentColor 24%, transparent);
+    0 0 4px color-mix(in srgb, currentColor 62%, transparent),
+    0 0 11px color-mix(in srgb, currentColor 38%, transparent);
   --glow-intense:
-    0 0 3px color-mix(in srgb, currentColor 55%, transparent),
-    0 0 12px color-mix(in srgb, currentColor 32%, transparent);
+    0 0 6px color-mix(in srgb, currentColor 72%, transparent),
+    0 0 18px color-mix(in srgb, currentColor 48%, transparent);
 
   /* ----- Spacing rhythm (4px base) ----- */
   --radius-none: 0;

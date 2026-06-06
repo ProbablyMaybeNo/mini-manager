@@ -28,10 +28,9 @@ type NavItem = {
 };
 
 const PRIMARY: readonly NavItem[] = [
-  // FOCUS-DASH — /projects is the DASHBOARD (project table + planner
-  // widgets); its NavRail label stays "Projects" (the table is what the
-  // painter navigates).
-  { href: "/projects", Icon: Folder, label: "Projects" },
+  // /projects is the DASHBOARD (KPI strip + project table + widgets);
+  // nav label matches the page title.
+  { href: "/projects", Icon: Folder, label: "Dashboard" },
   // FOCUS-DASH — /planner is now the FOCUS painting screen (bench recipe
   // row + compact project panel + stopwatch + inspo). Path kept to limit
   // typed-route churn; label + H1 retitled FOCUS. Target icon = the
