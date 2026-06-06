@@ -8,10 +8,24 @@ import { RecipeTabs, type RecipeTab } from "@/components/focus/RecipeTabs";
 import { FocusQuickActions } from "@/components/focus/FocusQuickActions";
 import { SlotActivator } from "@/components/focus/SlotActivator";
 import { StepCompletionCheckbox } from "@/components/focus/StepCompletionCheckbox";
+import { CircularProgress } from "@/components/ui/CircularProgress";
+import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import {
   projectStatePill,
   recipeCompletionPercent,
+  type ProjectStatePillSegment,
 } from "@/lib/focus/rollup";
+
+/** Map a project-stage pill segment to a colour-bar tone so the four
+ *  cumulative stages read as distinct solid blocks (DESIGN_LANGUAGE §7.2
+ *  "colour bars with black text"). Cascade order BUILT → COMPLETE rises
+ *  from a neutral grey through cyan/yellow to the green "go" of complete. */
+const PILL_TONE: Record<ProjectStatePillSegment["key"], StatusPillKind> = {
+  built: "neutral",
+  primed: "info",
+  painted: "warning",
+  complete: "ok",
+};
 
 /**
  * Dashboard FOCUS recipe panel (2026-06-04 unify + flatten).
@@ -118,7 +132,14 @@ export function FocusPanel({
 
   return (
     <div className="space-y-4" data-project-id={projectId}>
-      <header className="space-y-3">
+      {/* Compact project panel — a labelled terminal frame carrying the
+          "painting now" header, a CircularProgress completion dial, the
+          per-stage colour-bar statuses, and the quick-action row. Smaller
+          than the full unit page; glanceable at the bench. */}
+      <header className="panel panel-ticks relative px-3 pt-4 pb-3 space-y-3">
+        <span className="panel-label" aria-hidden>
+          UNIT ▸ STATUS
+        </span>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="min-w-0">
             <p className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
@@ -136,48 +157,52 @@ export function FocusPanel({
           </p>
         </div>
 
-        {pillSegments ? (
-          <p
-            className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-            data-project-pill
-          >
-            {pillSegments.map((seg, i) => (
-              <span key={seg.key}>
-                {i > 0 ? (
-                  <span className="text-[var(--color-fg-subtle)]"> · </span>
-                ) : null}
-                <span className="text-[var(--color-fg)]">{seg.value}</span>{" "}
-                {seg.label}
-              </span>
-            ))}
-          </p>
-        ) : null}
-
-        {totalSlots > 0 ? (
-          <div className="space-y-1" data-recipe-completion>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
-                {completionPct}% complete
-              </span>
-              <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]">
-                {doneSlots}/{totalSlots}
-              </span>
-            </div>
+        {/* Completion dial + stage colour-bars, side by side. The dial is
+            the headline figure (DESIGN_LANGUAGE §7.1); the bars are the
+            stage breakdown (§7.2). */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          {totalSlots > 0 ? (
             <div
-              className="h-1.5 w-full rounded-sm bg-[var(--color-bg-panel)] overflow-hidden"
-              role="progressbar"
-              aria-label="Recipe completion"
-              aria-valuenow={completionPct}
-              aria-valuemin={0}
-              aria-valuemax={100}
+              className="flex items-center gap-3"
+              data-recipe-completion
             >
-              <div
-                className="h-full bg-[var(--color-green)] transition-[width]"
-                style={{ width: `${completionPct}%` }}
+              <CircularProgress
+                percent={completionPct}
+                size={64}
+                tone="ok"
+                caption="DONE"
+                ariaLabel="Recipe completion"
               />
+              <div className="flex flex-col leading-tight">
+                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
+                  {completionPct}% complete
+                </span>
+                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                  {doneSlots}/{totalSlots} slots
+                </span>
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+
+          {pillSegments ? (
+            <div
+              className="flex flex-wrap items-center gap-1.5 min-w-0"
+              data-project-pill
+              aria-label="Project stage counts"
+            >
+              {pillSegments.map((seg) => (
+                <StatusPill
+                  key={seg.key}
+                  status={PILL_TONE[seg.key]}
+                  tone="bar"
+                  title={`${seg.value} ${seg.label}`}
+                >
+                  {seg.value} {seg.label}
+                </StatusPill>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         <FocusQuickActions
           projectId={projectId}
