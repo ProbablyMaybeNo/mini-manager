@@ -99,13 +99,36 @@ function writeExpanded(set: ReadonlySet<string>): void {
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
-  PURCHASED: "neutral",
+  // REDESIGN-CLEANUP (fix 3) — Ross: "make the PURCHASED element neon green.
+  // Maybe switch it to OWNED." This is a DISPLAY-only restyle: the PURCHASED
+  // DisplayStatus is DERIVED (ownedCount > 0), never a stored DB enum, so the
+  // tone flips to "ok" (neon green = owned/go per the design language) and the
+  // visible label renders "OWNED" via STATUS_LABEL below — the computed key
+  // stays "PURCHASED" so the rest of the app (and the wishlist enum) is intact.
+  PURCHASED: "ok",
   BUILDING: "info",
   PRIMING: "info",
   PAINTING: "warning",
   BASING: "warning",
   COMPLETE: "ok",
   SHELVED: "neutral",
+};
+
+/** REDESIGN-CLEANUP (fix 3) — display-only status labels. The DisplayStatus
+ *  KEY stays "PURCHASED" (derived from ownedCount, mirrored by the wishlist
+ *  "Bought -> PURCHASED" vocabulary), but the dashboard renders it as
+ *  "OWNED" — Ross's preferred wording + how the state reads elsewhere. Every
+ *  other status renders verbatim. Use STATUS_LABEL anywhere a status string
+ *  is shown to the user (pill text, popover options, aria labels). */
+const STATUS_LABEL: Record<DisplayStatus, string> = {
+  WISHLIST: "WISHLIST",
+  PURCHASED: "OWNED",
+  BUILDING: "BUILDING",
+  PRIMING: "PRIMING",
+  PAINTING: "PAINTING",
+  BASING: "BASING",
+  COMPLETE: "COMPLETE",
+  SHELVED: "SHELVED",
 };
 
 /** Stages flow WISHLIST -> PURCHASED -> BUILDING -> PRIMING -> PAINTING
@@ -785,10 +808,10 @@ function DashboardRow({
       </td>
       <td className="px-3 py-2">
         <InlineCellPopover
-          triggerLabel={`Status · ${row.status}`}
+          triggerLabel={`Status · ${STATUS_LABEL[row.status]}`}
           trigger={
             <StatusPill status={STATUS_PILL[row.status]} tone="bar">
-              {row.status}
+              {STATUS_LABEL[row.status]}
             </StatusPill>
           }
         >
@@ -798,7 +821,7 @@ function DashboardRow({
               active={s === row.status}
               onClick={() => handleStatus(s)}
             >
-              {s}
+              {STATUS_LABEL[s]}
             </InlineCellPopoverItem>
           ))}
         </InlineCellPopover>
@@ -1071,11 +1094,11 @@ function MobileCompRow({
           onClick={() => setSheetField("status")}
           aria-haspopup="dialog"
           aria-expanded={sheetField === "status"}
-          aria-label={`Edit status · ${row.status}`}
+          aria-label={`Edit status · ${STATUS_LABEL[row.status]}`}
           className="tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
           <StatusPill status={STATUS_PILL[row.status]} tone="bar">
-            {row.status}
+            {STATUS_LABEL[row.status]}
           </StatusPill>
         </button>
       </td>
@@ -1232,7 +1255,7 @@ function RowEditSheet({
                 active={s === currentStatus}
                 onClick={() => onSelectStatus(s)}
               >
-                {s}
+                {STATUS_LABEL[s]}
               </RowEditOption>
             ))
           : (
