@@ -36,8 +36,10 @@ export function MobileHeader({
         "md:hidden fixed top-0 left-0 right-0 z-40",
         "flex items-center justify-between",
         "h-12 px-3 gap-2",
-        "border-b border-[var(--color-border)]",
-        "bg-[var(--color-bg)]"
+        // Phosphor bottom edge — cyan 22% into --color-border, matching
+        // the StatusBar + NavRail so the chrome reads as one terminal frame.
+        "border-b border-[color-mix(in_srgb,var(--color-cyan)_22%,var(--color-border))]",
+        "bg-[var(--color-bg-elevated)]"
       )}
       style={{ paddingTop: "env(safe-area-inset-top, 0)" }}
       aria-label="Mobile header"
@@ -88,10 +90,10 @@ export function MobileHeader({
           aria-label="User"
           className={clsx(
             "tap-target inline-flex items-center justify-center",
-            "h-8 w-8 rounded-full border font-mono text-xs",
+            "h-8 w-8 rounded-full border font-mono text-xs transition-colors",
             userActive
-              ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-              : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)]"
+              ? "border-[var(--color-cyan)] text-[var(--color-cyan)] glow-cyan"
+              : "border-[var(--color-border-strong)] text-[var(--color-fg-muted)] hover:border-[var(--color-cyan)] hover:text-[var(--color-cyan)]"
           )}
         >
           {initial}

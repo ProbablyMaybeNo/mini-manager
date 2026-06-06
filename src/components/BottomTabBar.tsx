@@ -42,8 +42,11 @@ export function BottomTabBar() {
     <nav
       className={clsx(
         "md:hidden fixed bottom-0 left-0 right-0 z-40",
-        "flex flex-row border-t border-[var(--color-border)]",
-        "bg-[var(--color-bg)]"
+        // Phosphor top edge — cyan 22% into --color-border, matching the
+        // StatusBar + NavRail + MobileHeader so the chrome reads as one
+        // continuous terminal frame.
+        "flex flex-row border-t border-[color-mix(in_srgb,var(--color-cyan)_22%,var(--color-border))]",
+        "bg-[var(--color-bg-elevated)]"
       )}
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}
       aria-label="Primary"
@@ -58,11 +61,15 @@ export function BottomTabBar() {
             aria-current={active ? "page" : undefined}
             aria-label={item.label}
             className={clsx(
-              "flex flex-col items-center justify-center gap-1",
+              // Terminal tab: cyan top-edge marker + faint cyan wash on the
+              // active tab; the 2px transparent top border on the resting
+              // state reserves the marker's space so activation doesn't
+              // shift the row. 56px row keeps the ≥44px mobile tap floor.
+              "group flex flex-col items-center justify-center gap-1",
               "flex-1 min-h-[56px] px-1 py-2",
               "border-t-2 transition-colors duration-150",
               active
-                ? "border-t-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
+                ? "border-t-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
                 : "border-t-transparent"
             )}
           >
@@ -70,14 +77,18 @@ export function BottomTabBar() {
               size={22}
               strokeWidth={1.75}
               className={clsx(
-                active ? "text-[var(--color-accent)]" : "text-[var(--color-fg-muted)]"
+                active
+                  ? "text-[var(--color-cyan)] glow-cyan"
+                  : "text-[var(--color-fg-muted)] group-hover:text-[var(--color-cyan)]"
               )}
               aria-hidden
             />
             <span
               className={clsx(
-                "font-mono text-2xs tracking-wide",
-                active ? "text-[var(--color-accent)]" : "text-[var(--color-fg-muted)]"
+                "font-mono text-2xs tracking-wide uppercase",
+                active
+                  ? "text-[var(--color-cyan)] glow-cyan"
+                  : "text-[var(--color-fg-muted)] group-hover:text-[var(--color-cyan)]"
               )}
             >
               {item.label}

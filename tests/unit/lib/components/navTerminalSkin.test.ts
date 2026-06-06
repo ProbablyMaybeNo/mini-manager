@@ -41,3 +41,49 @@ describe("NavRail — terminal command-column skin", () => {
     expect(src).toMatch(/group-hover:text-\[var\(--color-cyan\)\]/);
   });
 });
+
+describe("MobileHeader — terminal skin", () => {
+  const src = read("src/components/MobileHeader.tsx");
+
+  test("header carries the phosphor (cyan-tinted) bottom border", () => {
+    expect(src).toMatch(
+      /border-b border-\[color-mix\(in_srgb,var\(--color-cyan\)_22%,var\(--color-border\)\)\]/,
+    );
+  });
+
+  test("active user pill lights cyan with the phosphor glow", () => {
+    expect(src).toContain(
+      "border-[var(--color-cyan)] text-[var(--color-cyan)] glow-cyan",
+    );
+  });
+
+  test("avatar keeps the tap-target floor (mobile ≥44px)", () => {
+    expect(src).toContain("tap-target");
+  });
+});
+
+describe("BottomTabBar — terminal skin", () => {
+  const src = read("src/components/BottomTabBar.tsx");
+
+  test("bar carries the phosphor (cyan-tinted) top border", () => {
+    expect(src).toMatch(
+      /border-t border-\[color-mix\(in_srgb,var\(--color-cyan\)_22%,var\(--color-border\)\)\]/,
+    );
+  });
+
+  test("active tab lights cyan with the phosphor glow (icon + label)", () => {
+    expect(src).toContain("text-[var(--color-cyan)] glow-cyan");
+  });
+
+  test("active tab gets the cyan top-edge marker", () => {
+    expect(src).toContain("border-t-[var(--color-cyan)]");
+  });
+
+  test("inactive tab hover tints cyan", () => {
+    expect(src).toMatch(/group-hover:text-\[var\(--color-cyan\)\]/);
+  });
+
+  test("tab row keeps the ≥44px mobile tap floor (56px row)", () => {
+    expect(src).toContain("min-h-[56px]");
+  });
+});
