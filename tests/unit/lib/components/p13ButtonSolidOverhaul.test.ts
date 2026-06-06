@@ -73,13 +73,16 @@ function contrastRatio(a: Rgb, b: Rgb): number {
  *  test on the CSS file itself confirms the same hex values stay
  *  declared, so a future palette-token change has to update both. */
 const PALETTE = {
-  bg: [0x0a, 0x0a, 0x0a],
+  // Phase-0 terminal rebuild palette (DESIGN_LANGUAGE.md §2). Pure-black
+  // base, the 5 style-guide phosphor colours. All clear WCAG-AA black-on-
+  // fill: cyan 11.66, green 15.71, yellow 18.63, purple 6.51, red 6.11.
+  bg: [0x00, 0x00, 0x00],
   fg: [0xf5, 0xf5, 0xf5],
-  cyan: [0x7d, 0xd3, 0xfc],
-  green: [0x33, 0xff, 0x66],
-  yellow: [0xff, 0xe0, 0x66],
-  red: [0xff, 0x47, 0x57],
-  purple: [0xb7, 0x94, 0xf6],
+  cyan: [0x00, 0xd2, 0xff],
+  green: [0x51, 0xfd, 0x80],
+  yellow: [0xee, 0xf9, 0x96],
+  red: [0xff, 0x42, 0x44],
+  purple: [0x9b, 0x80, 0xdc],
 } as const satisfies Record<string, Rgb>;
 
 describe("P13.1 — every action variant is solid-filled with dark text", () => {
@@ -163,9 +166,11 @@ describe("P13.1 — WCAG AA contrast (≥4.5:1) on every variant fill", () => {
     expect(ratio).toBeLessThan(4.5);
   });
 
-  test("ghost (panel grey) on white text passes AA (≥4.5:1)", () => {
-    // Ghost has its own contrast pair: panel #1f1f1f + foreground #f5f5f5.
-    const panel: Rgb = [0x1f, 0x1f, 0x1f];
+  test("ghost (near-black panel) on white text passes AA (≥4.5:1)", () => {
+    // Phase-0 killed the grey panel fill: ghost now sits on the near-black
+    // panel (--color-bg-panel = #0a0a0a) + foreground #f5f5f5, with the
+    // 1px phosphor border carrying the affordance. Contrast climbs to ~19:1.
+    const panel: Rgb = [0x0a, 0x0a, 0x0a];
     const ratio = contrastRatio(panel, PALETTE.fg);
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });

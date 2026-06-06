@@ -94,14 +94,17 @@
 
 @theme {
   /* ----- Color tokens -----
-     Backgrounds are neutral near-black — lifted off pure-#000 to avoid
-     halation on OLED + reduce astigmatism bloom against the cyan
-     accent (per UX-010), but with zero hue cast so the cyan can carry
-     all the colour weight. Borders are matched-lightness neutral grey
-     so they read as structure rather than a cool tint. */
-  --color-bg: #0a0a0a;
-  --color-bg-elevated: #161616;
-  --color-bg-panel: #1f1f1f;
+     Phase-0 terminal rebuild (DESIGN_LANGUAGE.md §2): pure-black base,
+     surfaces transparent / near-black — NEVER grey. The prior #161616 /
+     #1f1f1f panel greys were exactly the "boring grey SaaS" Ross
+     rejected; the elevated/panel tokens now resolve to #0a0a0a so every
+     consumer that reaches for them renders near-black-on-black, with the
+     1px phosphor border (not a grey fill) carrying the panel boundary.
+     Pure #000 is the page base; #0a0a0a sits a hair above it so nested
+     panels are faintly distinguishable without reading as grey. */
+  --color-bg: #000000;
+  --color-bg-elevated: #0a0a0a;
+  --color-bg-panel: #0a0a0a;
 
   --color-fg: #f5f5f5;
   /* Secondary text — lifted from #a0a0a0 / #8a8a8a so labels, brand
@@ -135,16 +138,26 @@
      would make non-active inputs read as focused. */
   --color-border-input: #666666;
 
-  --color-green: #33ff66;
-  --color-green-dim: #1ea845;
-  --color-cyan: #7dd3fc;
+  /* The 5 locked style-guide colours, treated as glowing CRT phosphor
+     (DESIGN_LANGUAGE.md §2). All clear WCAG-AA (≥4.5:1) on #000 as text
+     AND carry crisp black text when used as a button fill:
+       cyan   #00D2FF  11.66:1   primary / selection / active nav / links
+       green  #51FD80  15.71:1   success / owned / "go"
+       yellow #EEF996  18.63:1   warning / wishlist / highlight (sparing)
+       purple #9B80DC   6.51:1   special / featured (sparing)
+       red    #FF4244   6.11:1   destructive / error / alert (sparing)
+     `-dim` variants are the same hue darkened for borders/fills/hover —
+     not for text-on-black. `-bright` is a hover-lift for cyan. */
+  --color-green: #51fd80;
+  --color-green-dim: #2bb053;
+  --color-cyan: #00d2ff;
   --color-cyan-dim: #008fa0;
-  --color-cyan-bright: #00e5ff;
-  --color-yellow: #ffe066;
-  --color-yellow-dim: #cca400;
+  --color-cyan-bright: #5ce1ff;
+  --color-yellow: #eef996;
+  --color-yellow-dim: #b9c453;
   --color-amber: #ffb020;
   --color-amber-dim: #c47a00;
-  --color-red: #ff4757;
+  --color-red: #ff4244;
   --color-red-dim: #b8232f;
   /* Pastel purple — 5th seat in the locked palette
      (cyan / pastel yellow / pastel red / neon green / pastel purple).
@@ -152,8 +165,8 @@
      `--color-magenta` retained as a deprecated alias pointing at the
      same value so existing consumers keep working through P11.x sweep.
      P11.10 — Phase 11 UX overhaul. */
-  --color-purple-pastel: #b794f6;
-  --color-purple-dim: #8157d4;
+  --color-purple-pastel: #9b80dc;
+  --color-purple-dim: #6f55b0;
   --color-magenta: var(--color-purple-pastel);
   --color-blue: #4a9eff;
 
@@ -766,9 +779,10 @@ select.frame-strong {
 
 /* Ghost — the one variant that stays "low-key" for tertiary actions
    sitting inside dense surfaces (cancel, dismiss, secondary nav).
-   Solid mid-grey fill so it still reads as a button, not a link;
-   white text for contrast (#cfcfcf foreground gives ~9:1 on #1f1f1f
-   panel grey, well clear of AA). */
+   Near-black fill (--color-bg-panel = #0a0a0a, NOT grey) so it reads as
+   a bordered button rather than a link; the 1px phosphor border carries
+   the affordance and white text gives huge contrast (~19:1 on #0a0a0a),
+   well clear of AA. */
 .btn-ghost {
   background: var(--color-bg-panel);
   color: var(--color-fg);

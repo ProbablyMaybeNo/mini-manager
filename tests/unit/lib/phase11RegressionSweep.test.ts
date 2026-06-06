@@ -20,8 +20,10 @@ function read(rel: string): string {
 describe("Phase 11 — palette tokens still in place (P11.10)", () => {
   const css = read("src/app/globals.css");
 
-  test("--color-purple-pastel: #b794f6 token survives", () => {
-    expect(css).toMatch(/--color-purple-pastel:\s*#b794f6/i);
+  test("--color-purple-pastel token survives (Phase-0 hue #9b80dc)", () => {
+    // Phase-0 terminal rebuild repointed the 5th palette seat to the
+    // style-guide purple #9b80dc; the token itself must still exist.
+    expect(css).toMatch(/--color-purple-pastel:\s*#9b80dc/i);
   });
 
   test("--status-purple semantic alias survives", () => {

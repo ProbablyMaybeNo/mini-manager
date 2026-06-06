@@ -32,7 +32,9 @@ describe("5-color palette tokens (P11.10)", () => {
   });
 
   test("pastel purple token is defined as the 5th palette seat", () => {
-    expect(css).toMatch(/--color-purple-pastel:\s*#b794f6/i);
+    // Phase-0 terminal rebuild repointed the 5th seat to the style-guide
+    // purple #9b80dc (6.51:1 on #000 — clears WCAG-AA as text + fill).
+    expect(css).toMatch(/--color-purple-pastel:\s*#9b80dc/i);
   });
 
   test("status-purple semantic alias resolves to the pastel purple token", () => {
