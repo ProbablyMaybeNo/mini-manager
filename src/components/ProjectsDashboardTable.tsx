@@ -284,7 +284,16 @@ export function ProjectsDashboardTable({
           scrollable) covers the sub-md viewport. M3 replaced the prior
           stacked-card mobile layout, which destroyed cross-record
           comparison [BP §7, §14]. */}
-      <div className="frame overflow-x-auto hidden md:block">
+      {/* PHASE-1 — the "mission table": near-black surface with a 1px
+          phosphor (cyan-tinted) border so it reads as a lit terminal
+          frame rather than a grey SaaS box. */}
+      <div
+        className="overflow-x-auto hidden md:block rounded-sm border bg-[var(--color-bg-elevated)]"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
+        }}
+      >
         {/* D1 — mm-density-rows: desktop row height tracks the global
             Comfortable/Compact lever (--density-row-h). D3's library
             table opts in the same way. */}
@@ -292,7 +301,10 @@ export function ProjectsDashboardTable({
           <thead>
             <tr
               className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-              style={{ borderBottom: "1px solid var(--color-border-strong)" }}
+              style={{
+                borderBottom:
+                  "1px solid color-mix(in srgb, var(--color-cyan) 45%, var(--color-border-strong))",
+              }}
             >
               <th scope="col" className="w-8 px-2 py-2" aria-label="Expand" />
               <Th
@@ -373,7 +385,11 @@ export function ProjectsDashboardTable({
           onChangeKey={(k) => handleSort(k)}
         />
         <div
-          className="frame overflow-x-auto"
+          className="overflow-x-auto rounded-sm border bg-[var(--color-bg-elevated)]"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
+          }}
           role="region"
           aria-label="Projects comparison table"
           tabIndex={0}
@@ -629,8 +645,15 @@ function DashboardRow({
         router.push(`/projects/${row.id}`);
       }}
       className={clsx(
-        "transition-colors cursor-pointer",
-        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)]",
+        // PHASE-1 — the cyan-highlighted hover/active row (the favourite
+        // mission-table reference detail): a stronger cyan wash + a 2px
+        // cyan left-edge marker via an inset box-shadow so the focused row
+        // pops as the "selected" line on the screen.
+        "group/row transition-colors cursor-pointer",
+        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        "hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+        "focus-within:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        "focus-within:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
         pending && "opacity-70",
       )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
@@ -762,7 +785,7 @@ function DashboardRow({
         <InlineCellPopover
           triggerLabel={`Status · ${row.status}`}
           trigger={
-            <StatusPill status={STATUS_PILL[row.status]}>
+            <StatusPill status={STATUS_PILL[row.status]} tone="bar">
               {row.status}
             </StatusPill>
           }
@@ -1047,7 +1070,9 @@ function MobileCompRow({
           aria-label={`Edit status · ${row.status}`}
           className="tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <StatusPill status={STATUS_PILL[row.status]}>{row.status}</StatusPill>
+          <StatusPill status={STATUS_PILL[row.status]} tone="bar">
+            {row.status}
+          </StatusPill>
         </button>
       </td>
 

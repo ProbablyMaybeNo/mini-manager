@@ -1184,6 +1184,47 @@ select.frame-strong {
    use `purple`. Class retained so existing markup keeps rendering. */
 .pill-magenta  { color: var(--status-purple); }
 
+/* ----- Status BAR — the signature "colour bar with black text" element
+   (DESIGN_LANGUAGE §7.2). A solid phosphor-coloured block with crisp
+   BLACK text — the mission-table status idiom from the GOOD moodboard
+   examples. Distinct from `.pill` (which is an outline border on black):
+   the bar FILLS, so a row's status reads as a solid colour-coded chip at
+   a glance. Black text on every fill clears WCAG-AA (the same fills the
+   button tiers verify: green 15.71:1, yellow/wishlist 18.63:1, cyan
+   11.66:1, red 6.11:1, purple 6.51:1; neutral uses fg-muted #cfcfcf as
+   the fill with black text, 12.6:1).
+
+   The `wishlist` kind keeps a slightly different treatment — yellow fill
+   reads as "wanted / hopeful" vs the green "go" — so the full eight
+   project stages stay visually separable on one screen. */
+.status-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  line-height: 1.4;
+  color: var(--color-bg);
+  /* The fill itself is the signal — no phosphor halo (it would bloom
+     DARK around black text). */
+  text-shadow: none;
+}
+.status-bar-ok       { background: var(--status-ok); border-color: var(--status-ok); }
+.status-bar-warning  { background: var(--status-warning); border-color: var(--status-warning); }
+.status-bar-wishlist { background: var(--status-wishlist); border-color: var(--status-wishlist); }
+.status-bar-danger   { background: var(--status-danger); border-color: var(--status-danger); }
+.status-bar-info     { background: var(--status-info); border-color: var(--status-info); }
+.status-bar-neutral  { background: var(--color-fg-muted); border-color: var(--color-fg-muted); }
+.status-bar-purple   { background: var(--status-purple); border-color: var(--status-purple); }
+.status-bar-magenta  { background: var(--status-purple); border-color: var(--status-purple); }
+
 /* Minimum touch target helpers (mobile defaults, narrowed on desktop) */
 .tap-target {
   min-width: 44px;
