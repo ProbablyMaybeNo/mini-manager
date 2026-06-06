@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { NavRail } from "@/components/NavRail";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { MobileHeader } from "@/components/MobileHeader";
@@ -10,19 +9,10 @@ import { auth } from "@/auth";
 import { DENSITY_BOOTSTRAP_SCRIPT } from "@/lib/hooks/useDensity";
 import "./globals.css";
 
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-mono",
-  display: "swap",
-});
-
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-sans",
-  display: "swap",
-});
+// Fonts are self-hosted via @font-face in globals.css (public/fonts/*.woff2)
+// — no runtime Google Fonts fetch. The family names ("IBM Plex Mono",
+// "IBM Plex Sans", "Share Tech Mono", "Press Start 2P") resolve straight
+// from the bundled .woff2 faces.
 
 export const metadata: Metadata = {
   title: "Mini Manager",
@@ -80,7 +70,7 @@ export default async function RootLayout({
     : null;
 
   return (
-    <html lang="en" className={`${plexMono.variable} ${plexSans.variable}`}>
+    <html lang="en">
       <body>
         {/* D1 — apply the stored Comfortable/Compact density to <html>
             before first paint so there is no comfortable→compact flash

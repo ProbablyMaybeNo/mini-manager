@@ -1,6 +1,84 @@
 @import "tailwindcss";
 
 /* ============================================================
+   Self-hosted fonts (Phase 0 — terminal rebuild)
+   ============================================================
+   All families self-hosted from public/fonts as .woff2 — no
+   runtime Google Fonts fetch, no external deps. Every face is
+   free + commercially licensed (SIL OFL 1.1):
+
+     IBM Plex Mono  — body + Heading 2 (readability floor)
+     IBM Plex Sans  — prose fallback (font-sans utility)
+     Share Tech Mono — Heading 1 (tactical/OSD mono, "UAV OSD" stand-in)
+     Press Start 2P  — Title only (arcade display, "Digital Arcade" stand-in)
+
+   `font-display: swap` keeps text painted while a face loads; the
+   stacks below fall back to the system monospace so nothing blocks. */
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
+}
+
+/* Heading 1 — tactical/OSD mono (UAV OSD Mono stand-in). SIL OFL 1.1. */
+@font-face {
+  font-family: "Share Tech Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/share-tech-mono-latin-400-normal.woff2") format("woff2");
+}
+
+/* Title — arcade display (Digital Arcade stand-in). SIL OFL 1.1.
+   Pixel display face: hero/page-top titles ONLY, never body. */
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/press-start-2p-latin-400-normal.woff2") format("woff2");
+}
+
+/* ============================================================
    Mini Manager — terminal aesthetic design tokens
    ============================================================
    Phosphor palette on near-black background. IBM Plex Mono for
@@ -103,11 +181,23 @@
      should use `purple`. Kept for incremental migration. */
   --status-magenta: var(--status-purple);
 
-  /* ----- Typography ----- */
+  /* ----- Typography -----
+     mono     = body + Heading 2 + all chrome (readability floor).
+     sans     = prose fallback (font-sans utility on long-form copy).
+     tactical = Heading 1 — Share Tech Mono, an OSD/HUD tactical mono
+                (stand-in for the unlicensed "UAV OSD Mono"). Falls back
+                to the mono stack so H1 never goes unstyled.
+     display  = Title only — Press Start 2P, an 8-bit arcade display
+                face (stand-in for "Digital Arcade"). Page-top / hero
+                titles ONLY; pixel font is fatigue at body sizes. */
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
     "Roboto Mono", Consolas, "Liberation Mono", monospace;
   --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-tactical: "Share Tech Mono", "IBM Plex Mono", ui-monospace,
+    Consolas, monospace;
+  --font-display: "Press Start 2P", "Share Tech Mono", "IBM Plex Mono",
+    ui-monospace, monospace;
 
   /* ----- Sizes ----- */
   --text-2xs: 0.6875rem;  /* 11px — chrome labels only */
@@ -281,8 +371,11 @@ h1, h2, h3 {
 }
 
 h1 {
+  /* Heading 1 — tactical/OSD mono. Reads as a HUD readout, distinct
+     from the IBM Plex Mono body + H2 while staying fully legible. */
+  font-family: var(--font-tactical);
   font-size: var(--text-3xl);
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1.1;
   color: var(--color-cyan);
@@ -421,6 +514,24 @@ select.frame-strong {
 
 .frame-strong {
   border: 1px solid var(--color-border-strong);
+}
+
+/* Title — the arcade display face (Press Start 2P). Page-top / hero
+   titles ONLY: a pixel display font is fatigue at any reading size, so
+   it is reserved for short, glanceable lockups. Pairs a tight line-box
+   with extra letter-spacing so the 8-bit glyphs don't crowd, and the
+   intense glow tier for max phosphor bloom on the headline. Consumers
+   keep their own font-size utility; this only sets family + flavour. */
+.title-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  text-shadow: var(--glow-intense);
+}
+@media (prefers-reduced-motion: reduce) {
+  .title-display { text-shadow: none; }
 }
 
 /* Section title — mono, small, underlined, all-caps. Replaces ASCII
