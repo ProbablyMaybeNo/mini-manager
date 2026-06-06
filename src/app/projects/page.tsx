@@ -202,8 +202,16 @@ export default async function DashboardPage({
     <div className="content-cap p-6 md:p-8 space-y-6">
       <header className="flex items-end justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl tracking-wide">DASHBOARD</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans">
+          {/* PHASE-1 — page title takes the arcade display (Press Start 2P)
+              treatment, kept SMALL per the spec (the pixel face is fatigue
+              at any reading size). Pairs with a tracked-out coordinate
+              system caption so the header reads as a mission-control
+              screen banner, not a plain SaaS H1. */}
+          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+            SYS ▸ WORKBENCH / 00
+          </p>
+          <h1 className="title-display text-base md:text-lg">DASHBOARD</h1>
+          <p className="text-sm text-[var(--color-fg-muted)] mt-3 max-w-xl font-sans">
             Your wargaming workbench at a glance — every project, your
             painting rhythm, and your recipes, all on one screen.
           </p>

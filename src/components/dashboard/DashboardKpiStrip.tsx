@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { clsx } from "clsx";
 
 /**
  * DASH-KPI (2026-06-05) — the top KPI strip on the DASHBOARD.
@@ -18,11 +19,16 @@ import { Card } from "@/components/ui/Card";
  *                          counts, so the closest derivable metric is
  *                          time at the desk this week.
  *
- * Presentational only — the page computes every value from data it
- * already fetches (see DashboardKpiStrip usage in projects/page.tsx).
- * Big tabular-nums numbers, label-led, no decorative chrome on data
- * (§6/§13). Reuses the Card primitive + the hue-matched KPI `glow-*`
- * utilities just added to globals.css.
+ * PHASE-1 RE-SKIN (terminal rebuild, DESIGN_LANGUAGE §5/§7) — the strip is
+ * re-skinned into mission-control STAT CARDS: each KPI is a near-black
+ * Card carrying corner ticks (`ticks`) and a tiny coordinate-style tech
+ * label on the top border (`techLabel`, e.g. `STAT ▸ 01`). The big number
+ * renders in tabular-nums mono with the sanctioned phosphor glow; the unit
+ * is a tracked-out mono caption. The LEAD metric (card index 0, top-left
+ * per §4) takes the nested-border bezel + an extra-large readout so it
+ * reads as the headline. Cyan is reserved for nav / CTA, so KPI NUMBERS
+ * stay fg / green / amber / purple / muted — the corner ticks + tech label
+ * carry the cyan-phosphor frame instead.
  */
 
 export interface KpiCardData {
@@ -52,6 +58,14 @@ interface Props {
   cards: ReadonlyArray<KpiCardData>;
 }
 
+/** Coordinate-style tech caption for the panel's top border — a diegetic
+ *  registration tag (`STAT ▸ 01`) sequenced left → right. The lead card
+ *  is flagged so its caption reads as the headline channel. */
+function techLabelFor(index: number, lead: boolean): string {
+  const n = String(index + 1).padStart(2, "0");
+  return lead ? `LEAD ▸ ${n}` : `STAT ▸ ${n}`;
+}
+
 export function DashboardKpiStrip({ cards }: Props) {
   return (
     <div
@@ -59,41 +73,56 @@ export function DashboardKpiStrip({ cards }: Props) {
       aria-label="Dashboard at a glance"
       data-kpi-strip
     >
-      {cards.map((card) => (
-        <Card
-          key={card.label}
-          title={card.label}
-          titleAs="h2"
-          accentColor={card.accentColor}
-          bodyClassName="flex flex-col"
-        >
-          <div className="frame p-3 space-y-1" data-kpi-card>
-            <div className="flex items-baseline gap-2">
-              <span
-                className={
-                  "text-3xl tabular-nums tracking-wide font-medium " +
-                  card.valueClassName +
-                  (card.glowClassName ? " " + card.glowClassName : "")
-                }
-                aria-label={card.valueAriaLabel}
-              >
-                {card.value}
-              </span>
-              <span className="text-xs font-sans text-[var(--color-fg-muted)] uppercase tracking-wide">
-                {card.unit}
-              </span>
+      {cards.map((card, index) => {
+        // Lead metric (top-left, §4) carries the nested-border bezel + the
+        // larger readout so it reads as the headline of the strip.
+        const isLead = index === 0;
+        return (
+          <Card
+            key={card.label}
+            title={card.label}
+            titleAs="h2"
+            accentColor={card.accentColor}
+            nested={isLead}
+            ticks
+            techLabel={techLabelFor(index, isLead)}
+            bodyClassName="flex flex-col"
+          >
+            <div
+              className="flex flex-col gap-1"
+              data-kpi-card
+              data-kpi-lead={isLead ? "true" : undefined}
+            >
+              <div className="flex items-baseline gap-2">
+                <span
+                  className={clsx(
+                    "tabular-nums tracking-wide font-medium leading-none",
+                    // Lead metric gets the larger readout; the rest stay at
+                    // the strip's standard big-number size.
+                    isLead ? "text-4xl" : "text-3xl",
+                    card.valueClassName,
+                    card.glowClassName,
+                  )}
+                  aria-label={card.valueAriaLabel}
+                >
+                  {card.value}
+                </span>
+                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
+                  {card.unit}
+                </span>
+              </div>
+              {card.baseline ? (
+                <p
+                  className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"
+                  data-kpi-baseline
+                >
+                  {card.baseline}
+                </p>
+              ) : null}
             </div>
-            {card.baseline ? (
-              <p
-                className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"
-                data-kpi-baseline
-              >
-                {card.baseline}
-              </p>
-            ) : null}
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }
