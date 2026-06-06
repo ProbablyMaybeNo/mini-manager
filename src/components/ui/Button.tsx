@@ -63,10 +63,15 @@ export type ButtonProps = ButtonElProps | AnchorElProps;
  *  killed the bracketed-outline aesthetic — every button now ships
  *  filled-solid by default with high-contrast black text per WCAG AA.
  *
- *    primary  — solid cyan + black text. Save / confirm / sign-in.
- *               NOT for ADD/CREATE/NEW (those go to `success`).
- *    secondary— solid cyan + black text. Navigation, secondary cta.
- *    ghost    — solid panel-grey + white text. Tertiary / dismiss / cancel.
+ *    primary  — solid cyan + black text. The lead action: save / confirm
+ *               / sign-in / navigate. Cyan-on-primary is the locked
+ *               Phase-0 design (DESIGN_LANGUAGE §2) — the prior "no cyan
+ *               on CTAs" guardrail is retired.
+ *    secondary— solid green + black text. The supporting action, kept
+ *               visually distinct from the cyan primary so a pair reads
+ *               as a hierarchy.
+ *    ghost    — near-black fill + neutral border + white text. Tertiary /
+ *               dismiss / cancel; minimal, icon-first, compact.
  *    danger   — solid red + black text. Remove / delete / destroy.
  *    success  — solid neon-green + black text. ADD / CREATE / NEW /
  *               SAVE-NEW. The default "I'm making something" button.

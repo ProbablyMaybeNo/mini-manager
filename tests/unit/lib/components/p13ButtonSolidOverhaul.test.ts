@@ -90,7 +90,8 @@ describe("P13.1 — every action variant is solid-filled with dark text", () => 
 
   const SOLID_VARIANTS: ReadonlyArray<{ name: string; bg: string }> = [
     { name: ".btn-primary", bg: "var(--color-cyan)" },
-    { name: ".btn-secondary", bg: "var(--color-cyan)" },
+    // Phase-0 tier system: secondary is green (distinct from cyan primary).
+    { name: ".btn-secondary", bg: "var(--color-green)" },
     { name: ".btn-danger", bg: "var(--color-red)" },
     { name: ".btn-success", bg: "var(--color-green)" },
     { name: ".btn-warning", bg: "var(--color-yellow)" },

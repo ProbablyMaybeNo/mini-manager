@@ -754,11 +754,24 @@ select.frame-strong {
   }
 }
 
-/* ----- Solid-fill variants (default tone) -----
-   Every action button on the app reads as a solid block of colour with
-   crisp black text. The variant carries semantic intent (success =
-   create, warning = lateral, danger = destroy, purple = special,
-   primary/secondary = navigate/confirm). No bracket-outline chrome. */
+/* ----- Tier system (DESIGN_LANGUAGE.md §4) -----
+   Every action button reads as a solid block of phosphor colour with
+   crisp BLACK text (solid tone, default), or a coloured border + black
+   fill + coloured text (outline tone). 1px border, sharp corners, no
+   gradients / no glassy SaaS pills.
+
+     PRIMARY   cyan   — the lead action / confirm / sign-in / navigate.
+                        Cyan-on-primary is the locked design (§2): this
+                        supersedes the retired "no cyan on CTAs" rule.
+     SECONDARY green  — the supporting action, visually distinct from the
+                        cyan primary so a primary/secondary pair reads as
+                        a hierarchy, not two identical buttons.
+     TERTIARY  ghost  — minimal / icon-first / compact; near-black fill,
+                        neutral border, used for dismiss / cancel / dense
+                        inline actions.
+
+   Intent variants (success=create, warning=lateral, danger=destroy,
+   purple=special) layer on top of the tiers and keep their hues. */
 .btn-primary {
   background: var(--color-cyan);
   color: var(--color-bg);
@@ -768,13 +781,15 @@ select.frame-strong {
   background: color-mix(in srgb, var(--color-cyan) 85%, white);
 }
 
+/* Secondary — green, so it never reads as a cyan-primary clone. Black
+   text on green is 15.71:1 (AAA). */
 .btn-secondary {
-  background: var(--color-cyan);
+  background: var(--color-green);
   color: var(--color-bg);
-  border-color: var(--color-cyan);
+  border-color: var(--color-green);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-cyan) 85%, white);
+  background: color-mix(in srgb, var(--color-green) 85%, white);
 }
 
 /* Ghost — the one variant that stays "low-key" for tertiary actions
@@ -842,14 +857,19 @@ select.frame-strong {
      fill, where a currentColor halo would bloom DARK, not glow. */
   text-shadow: var(--glow-strong);
 }
-.btn-outline.btn-primary,
-.btn-outline.btn-secondary {
+.btn-outline.btn-primary {
   color: var(--color-cyan);
   border-color: var(--color-cyan);
 }
-.btn-outline.btn-primary:hover:not(:disabled),
-.btn-outline.btn-secondary:hover:not(:disabled) {
+.btn-outline.btn-primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-cyan) 10%, transparent);
+}
+.btn-outline.btn-secondary {
+  color: var(--color-green);
+  border-color: var(--color-green);
+}
+.btn-outline.btn-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-green) 10%, transparent);
 }
 .btn-outline.btn-ghost {
   color: var(--color-fg);
