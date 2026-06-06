@@ -99,13 +99,36 @@ function writeExpanded(set: ReadonlySet<string>): void {
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
-  PURCHASED: "neutral",
+  // REDESIGN-CLEANUP (fix 3) — Ross: "make the PURCHASED element neon green.
+  // Maybe switch it to OWNED." This is a DISPLAY-only restyle: the PURCHASED
+  // DisplayStatus is DERIVED (ownedCount > 0), never a stored DB enum, so the
+  // tone flips to "ok" (neon green = owned/go per the design language) and the
+  // visible label renders "OWNED" via STATUS_LABEL below — the computed key
+  // stays "PURCHASED" so the rest of the app (and the wishlist enum) is intact.
+  PURCHASED: "ok",
   BUILDING: "info",
   PRIMING: "info",
   PAINTING: "warning",
   BASING: "warning",
   COMPLETE: "ok",
   SHELVED: "neutral",
+};
+
+/** REDESIGN-CLEANUP (fix 3) — display-only status labels. The DisplayStatus
+ *  KEY stays "PURCHASED" (derived from ownedCount, mirrored by the wishlist
+ *  "Bought -> PURCHASED" vocabulary), but the dashboard renders it as
+ *  "OWNED" — Ross's preferred wording + how the state reads elsewhere. Every
+ *  other status renders verbatim. Use STATUS_LABEL anywhere a status string
+ *  is shown to the user (pill text, popover options, aria labels). */
+const STATUS_LABEL: Record<DisplayStatus, string> = {
+  WISHLIST: "WISHLIST",
+  PURCHASED: "OWNED",
+  BUILDING: "BUILDING",
+  PRIMING: "PRIMING",
+  PAINTING: "PAINTING",
+  BASING: "BASING",
+  COMPLETE: "COMPLETE",
+  SHELVED: "SHELVED",
 };
 
 /** Stages flow WISHLIST -> PURCHASED -> BUILDING -> PRIMING -> PAINTING
@@ -284,16 +307,14 @@ export function ProjectsDashboardTable({
           scrollable) covers the sub-md viewport. M3 replaced the prior
           stacked-card mobile layout, which destroyed cross-record
           comparison [BP §7, §14]. */}
-      {/* PHASE-1 — the "mission table": near-black surface with a 1px
-          phosphor (cyan-tinted) border so it reads as a lit terminal
-          frame rather than a grey SaaS box. */}
-      <div
-        className="overflow-x-auto hidden md:block rounded-sm border bg-[var(--color-bg-elevated)]"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
-        }}
-      >
+      {/* PHASE-1 — the "mission table": near-black surface inside the
+          PROJECTS card.
+          REDESIGN-CLEANUP (fix 1) — Ross flagged the "weird double border"
+          here: this wrapper carried its OWN phosphor frame WHILE sitting
+          inside the bordered PROJECTS `Card`, so the panel read as a box-in-
+          a-box. The wrapper border is dropped so the Card supplies the single
+          clean frame; the thead bottom-rule below is the only internal line. */}
+      <div className="overflow-x-auto hidden md:block bg-[var(--color-bg-elevated)]">
         {/* D1 — mm-density-rows: desktop row height tracks the global
             Comfortable/Compact lever (--density-row-h). D3's library
             table opts in the same way. */}
@@ -384,12 +405,13 @@ export function ProjectsDashboardTable({
           sortDir={sortDir}
           onChangeKey={(k) => handleSort(k)}
         />
+        {/* REDESIGN-CLEANUP (fix 1) — same double-border kill as the desktop
+            table: this scroll region lives inside the PROJECTS `Card`, so its
+            own frame is dropped and the Card carries the single clean border.
+            Kept a faint phosphor focus-ring affordance on keyboard focus so
+            the scrollable region still signals focus (WCAG 2.4.7). */}
         <div
-          className="overflow-x-auto rounded-sm border bg-[var(--color-bg-elevated)]"
-          style={{
-            borderColor:
-              "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
-          }}
+          className="overflow-x-auto bg-[var(--color-bg-elevated)] focus-visible:outline-2 focus-visible:outline-[var(--color-cyan)]"
           role="region"
           aria-label="Projects comparison table"
           tabIndex={0}
@@ -710,9 +732,12 @@ function DashboardRow({
             }}
           />
         ) : null}
+        {/* REDESIGN-CLEANUP (fix 2) — Ross: the project NAME should be white
+            so TYPE (cyan chip) is the differentiator. White by default, still
+            a link: hover lights it cyan + underlines. */}
         <Link
           href={`/projects/${row.id}`}
-          className="group inline-flex items-center gap-1 text-[var(--color-cyan)] hover:underline"
+          className="group inline-flex items-center gap-1 text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
           title={`Open ${row.name}`}
         >
           {row.name}
@@ -783,10 +808,10 @@ function DashboardRow({
       </td>
       <td className="px-3 py-2">
         <InlineCellPopover
-          triggerLabel={`Status · ${row.status}`}
+          triggerLabel={`Status · ${STATUS_LABEL[row.status]}`}
           trigger={
             <StatusPill status={STATUS_PILL[row.status]} tone="bar">
-              {row.status}
+              {STATUS_LABEL[row.status]}
             </StatusPill>
           }
         >
@@ -796,7 +821,7 @@ function DashboardRow({
               active={s === row.status}
               onClick={() => handleStatus(s)}
             >
-              {s}
+              {STATUS_LABEL[s]}
             </InlineCellPopoverItem>
           ))}
         </InlineCellPopover>
@@ -990,9 +1015,11 @@ function MobileCompRow({
             <span aria-hidden className="block w-3 shrink-0" />
           ) : null}
           <span className="min-w-0">
+            {/* REDESIGN-CLEANUP (fix 2) — name white (matches desktop); link
+                hover lights cyan + underline. */}
             <Link
               href={`/projects/${row.id}`}
-              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-cyan)] hover:underline"
+              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
               title={`Open ${row.name}`}
             >
               <span className="truncate">{row.name}</span>
@@ -1067,11 +1094,11 @@ function MobileCompRow({
           onClick={() => setSheetField("status")}
           aria-haspopup="dialog"
           aria-expanded={sheetField === "status"}
-          aria-label={`Edit status · ${row.status}`}
+          aria-label={`Edit status · ${STATUS_LABEL[row.status]}`}
           className="tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
           <StatusPill status={STATUS_PILL[row.status]} tone="bar">
-            {row.status}
+            {STATUS_LABEL[row.status]}
           </StatusPill>
         </button>
       </td>
@@ -1228,7 +1255,7 @@ function RowEditSheet({
                 active={s === currentStatus}
                 onClick={() => onSelectStatus(s)}
               >
-                {s}
+                {STATUS_LABEL[s]}
               </RowEditOption>
             ))
           : (

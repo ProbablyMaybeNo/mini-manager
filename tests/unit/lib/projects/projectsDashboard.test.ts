@@ -55,6 +55,25 @@ describe("ProjectsDashboardTable component surface", () => {
     expect(src).toContain("`/projects/${row.id}`");
   });
 
+  test("REDESIGN-CLEANUP fix 2 — project name renders white, not cyan", () => {
+    // The Name link is --color-fg (white) so the cyan TYPE chip is the
+    // differentiator; it stays a link (hover -> cyan + underline).
+    expect(src).toContain(
+      "text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline",
+    );
+  });
+
+  test("REDESIGN-CLEANUP fix 3 — PURCHASED shows as OWNED, neon green", () => {
+    // Display-only relabel: the derived DisplayStatus key stays PURCHASED,
+    // but the pill renders "OWNED" with the green ("ok") tone.
+    expect(src).toContain('PURCHASED: "ok"');
+    expect(src).toContain('PURCHASED: "OWNED"');
+    // The visible label flows through STATUS_LABEL, never the raw status key,
+    // on both the desktop pill and the mobile comparison row.
+    expect(src).toContain("STATUS_LABEL[row.status]");
+    expect(src).toContain("{STATUS_LABEL[s]}");
+  });
+
   test("Type column uses the existing per-type chip palette", () => {
     expect(src).toContain("type-chip");
     expect(src).toContain("type-chip-cyan");
