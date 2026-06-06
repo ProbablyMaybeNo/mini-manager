@@ -72,7 +72,7 @@ export function InspoGalleryGrid({ displayed, all }: Props) {
       </div>
 
       {displayed.length === 0 ? (
-        <div className="frame p-3">
+        <div className="panel p-3">
           <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-relaxed">
             Paste a URL from Pinterest, Instagram, or ArtStation to
             start your reference board.
@@ -89,7 +89,7 @@ export function InspoGalleryGrid({ displayed, all }: Props) {
             return (
               <li
                 key={img.id}
-                className="frame overflow-hidden bg-[var(--color-bg-elevated)] aspect-square"
+                className="panel overflow-hidden border-[var(--color-border-strong)] aspect-square"
               >
                 {isBroken ? (
                   // UX-1103 — fallback tile for images that 503 / 403 /
