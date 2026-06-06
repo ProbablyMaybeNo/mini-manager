@@ -34,6 +34,22 @@ describe("CRT overlay — scanlines on a viewport-anchored wrapper", () => {
     expect(body).toMatch(/position:\s*fixed/);
   });
 
+  test("UX-007 — the scanline is a VISIBLE lit phosphor line, not a dark line on near-black", () => {
+    const body = ruleBody("body::before");
+    // The line must be a non-black phosphor tint (so it reads against the
+    // #0A0A0A ground) at a medium ~10–12% alpha — never the old
+    // rgba(0,0,0,0.0x) dark line that was luminance-identical to the bg.
+    expect(body).not.toMatch(/rgba\(\s*0\s*,\s*0\s*,\s*0\s*,/);
+    const rgba = body.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/);
+    expect(rgba).not.toBeNull();
+    const [, r, g, b, a] = rgba!.map(Number);
+    // A lit (non-black) colour…
+    expect(r + g + b).toBeGreaterThan(100);
+    // …at a medium alpha that reads but doesn't wash text out.
+    expect(a).toBeGreaterThanOrEqual(0.08);
+    expect(a).toBeLessThanOrEqual(0.14);
+  });
+
   test("the overlay never intercepts input (pointer-events: none)", () => {
     expect(ruleBody("body::before")).toMatch(/pointer-events:\s*none/);
     expect(ruleBody("body::after")).toMatch(/pointer-events:\s*none/);
