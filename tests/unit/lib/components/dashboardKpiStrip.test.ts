@@ -15,8 +15,10 @@ import {
   activeProjectCount,
   averageCompletion,
   formatPaintTime,
+  activityTrendSeries,
   type KpiProject,
 } from "@/components/dashboard/dashboardKpiHelpers";
+import type { ActivityDay } from "@/db/queries/activityLog";
 
 function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
@@ -137,6 +139,68 @@ describe("formatPaintTime", () => {
 
   test("negative clamps to 0m", () => {
     expect(formatPaintTime(-100)).toEqual({ value: "0m", unit: "this week" });
+  });
+});
+
+describe("activityTrendSeries (PHASE-1 viz trend graph)", () => {
+  // Anchor "today" in UTC so the YYYY-MM-DD keys are deterministic.
+  const today = new Date("2026-06-06T12:00:00.000Z");
+  const day = (date: string, count: number): ActivityDay => ({
+    date,
+    count,
+    kinds: ["stage_bump"],
+  });
+
+  test("returns exactly `days` contiguous values, oldest -> newest", () => {
+    const series = activityTrendSeries([], today, 7);
+    expect(series).toHaveLength(7);
+    expect(series.every((n) => n === 0)).toBe(true);
+  });
+
+  test("gap-fills quiet days with zeros and places counts chronologically", () => {
+    const rows = [
+      day("2026-06-06", 4), // today -> last slot
+      day("2026-06-04", 2), // 2 days ago
+    ];
+    const series = activityTrendSeries(rows, today, 5);
+    // Window days: 06-02, 06-03, 06-04, 06-05, 06-06
+    expect(series).toEqual([0, 0, 2, 0, 4]);
+  });
+
+  test("ignores activity outside the window", () => {
+    const rows = [day("2026-01-01", 9), day("2026-06-06", 1)];
+    const series = activityTrendSeries(rows, today, 3);
+    expect(series).toEqual([0, 0, 1]);
+  });
+});
+
+describe("DASHBOARD page wires the bespoke trend panel", () => {
+  const page = read("src/app/projects/page.tsx");
+  const panel = read("src/components/dashboard/DashboardTrendPanel.tsx");
+
+  test("page derives the trend series + renders the trend panel", () => {
+    expect(page).toContain("activityTrendSeries");
+    expect(page).toContain("<DashboardTrendPanel");
+  });
+
+  test("trend panel sits between the KPI strip and the PROJECTS table", () => {
+    const kpi = page.indexOf("<DashboardKpiStrip");
+    const trend = page.indexOf("<DashboardTrendPanel");
+    const table = page.indexOf('title="PROJECTS"');
+    expect(kpi).toBeLessThan(trend);
+    expect(trend).toBeLessThan(table);
+  });
+
+  test("panel uses the bespoke viz kit (area graph + sparkline + segmented bar)", () => {
+    expect(panel).toContain("AreaGraph");
+    expect(panel).toContain("Sparkline");
+    expect(panel).toContain("SegmentedBar");
+  });
+
+  test("panel reuses the real activity data, no new query", () => {
+    // The series is passed in from the page's existing getActivityByDay
+    // window — the panel itself imports no db query.
+    expect(panel).not.toContain("@/db/queries");
   });
 });
 

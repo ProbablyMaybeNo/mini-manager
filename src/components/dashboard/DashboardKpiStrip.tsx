@@ -1,9 +1,43 @@
 import { Card } from "@/components/ui/Card";
-import {
-  CircularProgress,
-  type CircularProgressTone,
-} from "@/components/ui/CircularProgress";
+import { RadialGauge } from "@/components/viz/RadialGauge";
+import type { VizToneOrAuto } from "@/components/viz/vizTokens";
 import { clsx } from "clsx";
+
+/**
+ * PHASE-1 viz — the KPI dial swaps the plain `CircularProgress` for the
+ * bespoke, ticked + glowing `RadialGauge` (DESIGN_LANGUAGE §13, group 20
+ * "terminal access" radial). The dashboard page still describes its dials
+ * with the legacy CircularProgress tone vocabulary (ok/warning/neutral
+ * etc.), so this maps those onto the gauge's phosphor tone names and the
+ * page call-site is unchanged.
+ */
+type LegacyDialTone =
+  | "auto"
+  | "ok"
+  | "warning"
+  | "danger"
+  | "info"
+  | "purple"
+  | "neutral";
+
+function dialToneToViz(tone: LegacyDialTone | undefined): VizToneOrAuto {
+  switch (tone) {
+    case "ok":
+      return "green";
+    case "warning":
+      return "amber";
+    case "danger":
+      return "red";
+    case "info":
+      return "cyan";
+    case "purple":
+      return "purple";
+    case "neutral":
+      return "neutral";
+    default:
+      return "auto";
+  }
+}
 
 /**
  * DASH-KPI (2026-06-05) — the top KPI strip on the DASHBOARD.
@@ -64,7 +98,7 @@ export interface KpiCardData {
    *  it and keep the plain big number. */
   dial?: {
     percent: number;
-    tone?: CircularProgressTone;
+    tone?: LegacyDialTone;
     label?: string;
     caption?: string;
     ariaLabel: string;
@@ -138,16 +172,18 @@ export function DashboardKpiStrip({ cards }: Props) {
                   </p>
                 ) : null}
               </div>
-              {/* Circular phosphor dial for the headline-progress KPIs —
-                  the recurring moodboard gauge (§7.1). */}
+              {/* Bespoke phosphor RADIAL GAUGE for the headline-progress
+                  KPIs — the moodboard group-20 "terminal access" dial
+                  (ticked graduations + glowing value-arc), superseding the
+                  plain CircularProgress (§13). */}
               {card.dial ? (
-                <CircularProgress
-                  percent={card.dial.percent}
-                  tone={card.dial.tone}
+                <RadialGauge
+                  value={card.dial.percent}
+                  tone={dialToneToViz(card.dial.tone)}
                   label={card.dial.label}
                   caption={card.dial.caption}
                   ariaLabel={card.dial.ariaLabel}
-                  size={isLead ? 64 : 56}
+                  size={isLead ? 84 : 76}
                   className="shrink-0"
                 />
               ) : null}
