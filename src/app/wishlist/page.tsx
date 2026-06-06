@@ -89,11 +89,19 @@ export default async function WishlistPage({
 
   return (
     <div className="flex flex-col h-screen">
-      <header className="px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)]">
+      {/* Terminal hero — mirrors the Library / Dashboard banner so the
+          Wishlist reads as the same mission-control surface: a tracked-out
+          coordinate caption above the display-font title, not a plain SaaS
+          H1. The heading text stays "WISHLIST" so the E2E heading probe and
+          nav still resolve it. */}
+      <header className="relative overflow-hidden px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)]">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
           <div>
-            <h1 className="text-3xl tracking-wide">WISHLIST</h1>
-            <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans leading-snug">
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+              SYS ▸ WISHLIST / 05
+            </p>
+            <h1 className="title-display text-base md:text-lg">WISHLIST</h1>
+            <p className="text-xs text-[var(--color-fg-muted)] mt-3 font-sans leading-snug">
               Paints and models you want to buy. Paste a vendor URL to
               auto-fill the row, or type a name for a manual entry.
               Each row gets sorted into Models or Paints automatically.
@@ -134,10 +142,15 @@ export default async function WishlistPage({
           <section aria-label="Models" className="space-y-2">
             <h2 className="section-title">Models · {modelItems.length}</h2>
             {modelItems.length === 0 ? (
-              <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-                No model rows match. Add a kit, box, or unit from a vendor URL
-                and it&apos;ll land here.
-              </p>
+              <div className="relative panel panel-ticks px-4 py-5 overflow-hidden">
+                <span className="panel-label" aria-hidden>
+                  MODELS · 0
+                </span>
+                <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+                  No model rows match. Add a kit, box, or unit from a vendor URL
+                  and it&apos;ll land here.
+                </p>
+              </div>
             ) : (
               <WishlistTable
                 items={modelItems}
@@ -150,10 +163,15 @@ export default async function WishlistPage({
           <section aria-label="Paints" className="space-y-2">
             <h2 className="section-title">Paints · {paintItems.length}</h2>
             {paintItems.length === 0 ? (
-              <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-3">
-                No paint rows match. Match a hex with the Match tool and add
-                it to your wishlist to see it here.
-              </p>
+              <div className="relative panel panel-ticks px-4 py-5 overflow-hidden">
+                <span className="panel-label" aria-hidden>
+                  PAINTS · 0
+                </span>
+                <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+                  No paint rows match. Match a hex with the Match tool and add
+                  it to your wishlist to see it here.
+                </p>
+              </div>
             ) : (
               <WishlistTable
                 items={paintItems}
