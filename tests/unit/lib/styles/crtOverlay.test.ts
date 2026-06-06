@@ -42,7 +42,10 @@ describe("CRT overlay — scanlines on a viewport-anchored wrapper", () => {
     expect(body).not.toMatch(/rgba\(\s*0\s*,\s*0\s*,\s*0\s*,/);
     const rgba = body.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/);
     expect(rgba).not.toBeNull();
-    const [, r, g, b, a] = rgba!.map(Number);
+    const r = Number(rgba![1]);
+    const g = Number(rgba![2]);
+    const b = Number(rgba![3]);
+    const a = Number(rgba![4]);
     // A lit (non-black) colour…
     expect(r + g + b).toBeGreaterThan(100);
     // …at a medium alpha that reads but doesn't wash text out.
