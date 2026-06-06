@@ -1454,3 +1454,17 @@ select.frame-strong {
   .boot { opacity: 1; animation: none; transform: none; }
   .term-cursor { animation: none; }
 }
+
+/* ============================================================
+   batch/redesign-wishlist — terminal Wishlist re-skin
+   ============================================================
+   Trailing additive block (per the build brief: keep globals.css edits
+   minimal + clearly labelled). Only the slide-out drawer's enter
+   animation lives here; everything else reuses existing tokens /
+   primitives. The drawer applies this via a `motion-safe:` Tailwind
+   prefix, so reduced-motion users get the panel placed without the
+   slide — no extra reduced-motion override needed. */
+@keyframes drawer-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}

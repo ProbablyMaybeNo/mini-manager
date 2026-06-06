@@ -10,6 +10,7 @@ import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { setWishlistStatus } from "@/lib/actions/wishlist";
 import { WishlistToolsMenu } from "./WishlistToolsMenu";
+import { WishlistDetailDrawer } from "./WishlistDetailDrawer";
 
 export interface WishlistTableProjectOption {
   id: string;
@@ -66,6 +67,18 @@ export function WishlistTable({
     ownedCount: p.ownedCount,
     parentId: p.parentId,
   }));
+
+  // Right-hand detail drawer — the `?item=` param the rows already set via
+  // openItem() now resolves to the matching row in THIS table's partition
+  // and pops the terminal slide-out for full edit / delete / mark-bought.
+  // Each /wishlist table instance only owns its own kind partition, so a
+  // given item id matches at most one table — no double-render. (The drawer
+  // is wired from the client table, NOT the server page, so the page stays
+  // inline-edit-only at the server layer.)
+  const openItemId = sp?.get("item") ?? null;
+  const openDetail = openItemId
+    ? items.find((i) => i.id === openItemId) ?? null
+    : null;
 
   if (items.length === 0) {
     return (
@@ -207,6 +220,7 @@ export function WishlistTable({
           projects={modalProjects}
         />
       ) : null}
+      <WishlistDetailDrawer item={openDetail} projects={modalProjects} />
     </div>
   );
 }
