@@ -85,11 +85,13 @@
    chrome and tabular data. IBM Plex Sans for prose. Monospace
    for reading is fatigue; reserve it for structure.
 
-   Token rules (per V2-BUILD-PLAN §9):
+   Token rules (per V2-BUILD-PLAN §9 + DESIGN_LANGUAGE §6):
    - Glow only on active states and headers, never on dense body
    - Min body font 14px desktop / 16px mobile
    - Min touch target 32px desktop / 44px mobile
-   - No animated scanlines (preference-gated, off by default)
+   - MEDIUM static scanline overlay (no animation); readability is a
+     hard floor, and the whole CRT overlay is stripped under
+     prefers-reduced-motion + the .crt-off opt-out.
    ============================================================ */
 
 @theme {
@@ -322,15 +324,24 @@ body {
 }
 
 /* ============================================================
-   CRT phosphor overlay — scanlines + corner vignette.
+   CRT phosphor overlay — MEDIUM scanlines + corner vignette.
 
-   Two layers, both pointer-events: none, anchored to the viewport
-   so they survive scroll. Subtle enough to read as ambience rather
-   than fighting any content. Respects prefers-reduced-motion + can
-   be globally disabled via the .crt-off opt-out class on <html>.
+   Phase-0 terminal rebuild (DESIGN_LANGUAGE §6): Ross chose a MEDIUM
+   scanline treatment, with READABILITY as a hard floor. The overlay
+   lives on a viewport-anchored layout wrapper (body pseudo-elements),
+   both pointer-events:none so they never intercept input.
+
+   "Medium" = a 3px-period line (1px lit gap, 2px dark) at ~8% — clearly
+   a scanlined CRT, but still well short of washing text out (the BAD
+   moodboard examples failed by being over-produced). Glow stays on its
+   own tiered text-shadow tokens; this overlay is purely the screen grid.
+
+   ALL of it is stripped under prefers-reduced-motion (the consolidated
+   block below) and can be globally disabled via the .crt-off opt-out
+   class on <html>.
    ============================================================ */
 
-/* Scanlines: 2px-period horizontal lines at ~4% opacity. */
+/* Scanlines: 3px-period horizontal lines (medium). */
 body::before {
   content: "";
   position: fixed;
@@ -341,10 +352,9 @@ body::before {
     to bottom,
     transparent 0,
     transparent 1px,
-    rgba(255, 255, 255, 0.04) 1px,
-    rgba(255, 255, 255, 0.04) 2px
+    rgba(0, 0, 0, 0.08) 1px,
+    rgba(0, 0, 0, 0.08) 3px
   );
-  mix-blend-mode: overlay;
 }
 
 /* Corner vignette: radial darkening for the CRT "tube edge" feel. */
@@ -364,6 +374,17 @@ body::after {
 html.crt-off body::before,
 html.crt-off body::after {
   display: none;
+}
+
+/* Readability + reduced-motion floor — strip the entire CRT overlay for
+   users who ask for reduced motion. The scanline grid is decorative
+   ambience, never a state signal, so removing it changes nothing
+   functional and guarantees maximum legibility. */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    display: none;
+  }
 }
 
 /* Chrome elements use mono. Prose uses sans (set on body). */
