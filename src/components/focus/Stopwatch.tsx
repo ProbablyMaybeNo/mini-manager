@@ -207,23 +207,28 @@ export function Stopwatch({
   return (
     <div
       className={clsx(
+        "panel panel-ticks relative",
         "flex flex-wrap items-center gap-3",
-        "p-3 rounded-sm",
-        "bg-[var(--color-bg-panel)]",
-        "border border-[var(--color-border)]",
+        "px-3 pt-4 pb-3",
       )}
       data-stopwatch-project-id={projectId}
       data-stopwatch-status={status}
     >
+      <span className="panel-label" aria-hidden>
+        SYS ▸ TIMER
+      </span>
       <div className="flex flex-col">
         <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
           Stopwatch
         </span>
+        {/* Terminal readout — tabular-nums so the digits don't jitter on
+            each tick; cyan while live (the active phosphor state), yellow
+            while paused, dim when idle. Glow promoted while running. */}
         <span
           className={clsx(
             "font-mono text-2xl tabular-nums tracking-wider",
             status === "running"
-              ? "text-[var(--color-green)]"
+              ? "text-[var(--color-cyan)] glow-text-strong"
               : status === "paused"
                 ? "text-[var(--color-yellow)]"
                 : "text-[var(--color-fg-subtle)]",
@@ -293,7 +298,7 @@ export function Stopwatch({
         ) : null}
       </div>
 
-      <div className="flex flex-col ml-auto text-right">
+      <div className="flex flex-col basis-full text-left sm:basis-auto sm:ml-auto sm:text-right">
         <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
           Today · This week
         </span>

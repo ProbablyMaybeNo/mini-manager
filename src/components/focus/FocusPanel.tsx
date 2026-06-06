@@ -8,10 +8,24 @@ import { RecipeTabs, type RecipeTab } from "@/components/focus/RecipeTabs";
 import { FocusQuickActions } from "@/components/focus/FocusQuickActions";
 import { SlotActivator } from "@/components/focus/SlotActivator";
 import { StepCompletionCheckbox } from "@/components/focus/StepCompletionCheckbox";
+import { CircularProgress } from "@/components/ui/CircularProgress";
+import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import {
   projectStatePill,
   recipeCompletionPercent,
+  type ProjectStatePillSegment,
 } from "@/lib/focus/rollup";
+
+/** Map a project-stage pill segment to a colour-bar tone so the four
+ *  cumulative stages read as distinct solid blocks (DESIGN_LANGUAGE §7.2
+ *  "colour bars with black text"). Cascade order BUILT → COMPLETE rises
+ *  from a neutral grey through cyan/yellow to the green "go" of complete. */
+const PILL_TONE: Record<ProjectStatePillSegment["key"], StatusPillKind> = {
+  built: "neutral",
+  primed: "info",
+  painted: "warning",
+  complete: "ok",
+};
 
 /**
  * Dashboard FOCUS recipe panel (2026-06-04 unify + flatten).
@@ -118,7 +132,14 @@ export function FocusPanel({
 
   return (
     <div className="space-y-4" data-project-id={projectId}>
-      <header className="space-y-3">
+      {/* Compact project panel — a labelled terminal frame carrying the
+          "painting now" header, a CircularProgress completion dial, the
+          per-stage colour-bar statuses, and the quick-action row. Smaller
+          than the full unit page; glanceable at the bench. */}
+      <header className="panel panel-ticks relative px-3 pt-4 pb-3 space-y-3">
+        <span className="panel-label" aria-hidden>
+          UNIT ▸ STATUS
+        </span>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="min-w-0">
             <p className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
@@ -136,48 +157,52 @@ export function FocusPanel({
           </p>
         </div>
 
-        {pillSegments ? (
-          <p
-            className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-            data-project-pill
-          >
-            {pillSegments.map((seg, i) => (
-              <span key={seg.key}>
-                {i > 0 ? (
-                  <span className="text-[var(--color-fg-subtle)]"> · </span>
-                ) : null}
-                <span className="text-[var(--color-fg)]">{seg.value}</span>{" "}
-                {seg.label}
-              </span>
-            ))}
-          </p>
-        ) : null}
-
-        {totalSlots > 0 ? (
-          <div className="space-y-1" data-recipe-completion>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
-                {completionPct}% complete
-              </span>
-              <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]">
-                {doneSlots}/{totalSlots}
-              </span>
-            </div>
+        {/* Completion dial + stage colour-bars, side by side. The dial is
+            the headline figure (DESIGN_LANGUAGE §7.1); the bars are the
+            stage breakdown (§7.2). */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          {totalSlots > 0 ? (
             <div
-              className="h-1.5 w-full rounded-sm bg-[var(--color-bg-panel)] overflow-hidden"
-              role="progressbar"
-              aria-label="Recipe completion"
-              aria-valuenow={completionPct}
-              aria-valuemin={0}
-              aria-valuemax={100}
+              className="flex items-center gap-3"
+              data-recipe-completion
             >
-              <div
-                className="h-full bg-[var(--color-green)] transition-[width]"
-                style={{ width: `${completionPct}%` }}
+              <CircularProgress
+                percent={completionPct}
+                size={64}
+                tone="ok"
+                caption="DONE"
+                ariaLabel="Recipe completion"
               />
+              <div className="flex flex-col leading-tight">
+                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
+                  {completionPct}% complete
+                </span>
+                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                  {doneSlots}/{totalSlots} slots
+                </span>
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+
+          {pillSegments ? (
+            <div
+              className="flex flex-wrap items-center gap-1.5 min-w-0"
+              data-project-pill
+              aria-label="Project stage counts"
+            >
+              {pillSegments.map((seg) => (
+                <StatusPill
+                  key={seg.key}
+                  status={PILL_TONE[seg.key]}
+                  tone="bar"
+                  title={`${seg.value} ${seg.label}`}
+                >
+                  {seg.value} {seg.label}
+                </StatusPill>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         <FocusQuickActions
           projectId={projectId}
@@ -196,56 +221,71 @@ export function FocusPanel({
       ) : null}
 
       {totalSlots === 0 ? (
-        <p className="frame p-4 text-xs font-sans text-[var(--color-fg-muted)]">
+        <p className="panel p-4 text-xs font-sans text-[var(--color-fg-muted)]">
           This recipe has no slots yet. Open the recipe to add some, then
           come back to focus on it.
         </p>
       ) : (
         <>
-          <div
-            role="list"
-            aria-label="Recipe slot palette"
-            className="flex flex-wrap items-center gap-3"
-          >
-            {slots.map((slot) => (
-              <div
-                key={slot.id}
-                role="listitem"
-                className="flex flex-col items-center gap-1"
-              >
-                <span
-                  aria-label={`${slot.paintLabel ?? techniqueLabel(slot.technique)} swatch`}
-                  className={clsx(
-                    "block w-16 h-16 rounded-sm",
-                    "border-2 border-[var(--color-border-strong)]",
-                  )}
-                  style={{
-                    background: slot.paintHex ?? "transparent",
-                    backgroundImage: slot.paintHex
-                      ? undefined
-                      : "repeating-linear-gradient(45deg, var(--color-border) 0 2px, transparent 2px 6px)",
-                  }}
-                />
-                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] text-center max-w-[5rem] truncate">
-                  {techniqueLabel(slot.technique)}
-                </span>
-              </div>
-            ))}
+          {/* Slot palette — the recipe's paints as a phosphor-bordered
+              swatch strip inside a labelled terminal panel. The bench
+              "parts tray": glanceable colour order before the per-slot
+              detail rows below. */}
+          <div className="panel panel-ticks relative px-3 pt-4 pb-3">
+            <span className="panel-label" aria-hidden>
+              REC ▸ PALETTE
+            </span>
+            <div
+              role="list"
+              aria-label="Recipe slot palette"
+              className="flex flex-wrap items-center gap-3"
+            >
+              {slots.map((slot) => (
+                <div
+                  key={slot.id}
+                  role="listitem"
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span
+                    aria-label={`${slot.paintLabel ?? techniqueLabel(slot.technique)} swatch`}
+                    className={clsx(
+                      "block w-12 h-12 md:w-14 md:h-14 rounded-none",
+                      "border border-[var(--color-border-strong)]",
+                      "shadow-[0_0_0_1px_var(--color-bg),0_0_6px_-2px_rgba(0,0,0,0.8)]",
+                    )}
+                    style={{
+                      background: slot.paintHex ?? "transparent",
+                      backgroundImage: slot.paintHex
+                        ? undefined
+                        : "repeating-linear-gradient(45deg, var(--color-border) 0 2px, transparent 2px 6px)",
+                    }}
+                  />
+                  <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] text-center max-w-[4.5rem] truncate">
+                    {techniqueLabel(slot.technique)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
+          {/* Bench slot rows — one near-black panel-framed row per slot, in
+              recipe order, each tagged with its slot index like a bench
+              station. The active slot is ringed green; the per-paint note
+              disclosure stays intact inside the detail column. */}
           <ul className="space-y-2" role="list">
-            {slots.map((slot) => {
+            {slots.map((slot, index) => {
               const isActiveSlot = slot.id === activeSlotId;
               const isNext = slot.id === nextSlotId;
+              const slotTag = `SLOT ${String(index + 1).padStart(2, "0")}`;
               return (
                 <li
                   key={slot.id}
                   className={clsx(
                     "grid items-start gap-3 grid-cols-[auto_auto_minmax(0,1fr)]",
-                    "p-2 rounded-sm",
+                    "panel relative p-2 pl-3",
                     isActiveSlot
                       ? "border-2 border-[var(--color-green)] bg-[var(--color-bg-elevated)]"
-                      : "bg-[var(--color-bg-panel)] border border-[var(--color-border)]",
+                      : "border border-[var(--color-border-strong)] bg-[var(--color-bg)]",
                     slot.done && "opacity-50",
                   )}
                   data-slot-id={slot.id}
@@ -264,7 +304,7 @@ export function FocusPanel({
 
                   <span
                     aria-hidden
-                    className="block w-12 h-12 rounded-sm border-2 border-[var(--color-border-strong)] shrink-0"
+                    className="block w-10 h-10 md:w-12 md:h-12 rounded-none border border-[var(--color-border-strong)] shrink-0"
                     style={{
                       background: slot.paintHex ?? "transparent",
                       backgroundImage: slot.paintHex
@@ -274,6 +314,12 @@ export function FocusPanel({
                   />
 
                   <div className="min-w-0 space-y-1">
+                    <span
+                      aria-hidden
+                      className="block font-mono text-2xs uppercase tracking-[0.18em] text-[var(--color-cyan)]"
+                    >
+                      {slotTag}
+                    </span>
                     <div className="flex items-start justify-between gap-2">
                       <p
                         className={clsx(
