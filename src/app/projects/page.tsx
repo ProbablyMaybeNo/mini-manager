@@ -10,6 +10,7 @@ import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import {
   DashboardKpiStrip,
   type KpiCardData,
@@ -276,6 +277,24 @@ export default async function DashboardPage({
         <EmptyState />
       ) : (
         <>
+          {/* UX-015 — the signature dashboard HERO: the bespoke WireframeGlobe
+              radar scope framed in the terminal panel language, the dashboard
+              counterpart to the sign-in CRT art so the "wow" isn't on the
+              gauges alone. Establishing shot only — the figures it shows are
+              restated from the authoritative KPI strip directly below; the
+              globe is desktop-only so it never crams the mobile column. */}
+          <DashboardHero
+            stats={[
+              {
+                label: "ACTIVE",
+                value: String(activeProjectCount(allProjects)),
+                tone: "green",
+              },
+              { label: "AVG COMPLETION", value: `${avgCompletion}%`, tone: "amber" },
+              { label: "STREAK", value: `${streak.streak}d`, tone: "purple" },
+            ]}
+          />
+
           {/* DASH-KPI — the top KPI strip: the 5-second "where do I
               stand" answer, above the granular PROJECTS table per the
               inverted pyramid (doc §14/§4). */}
