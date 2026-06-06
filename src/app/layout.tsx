@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NavRail } from "@/components/NavRail";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { MobileHeader } from "@/components/MobileHeader";
+import { StatusBarServer } from "@/components/StatusBarServer";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -79,14 +80,19 @@ export default async function RootLayout({
         <ServiceWorkerRegistrar />
         <ToastProvider>
           {isAuthed ? <MobileHeader user={user} /> : null}
-          {/* UI-CHROME — the desktop status strip (SYS/NET/TIME) was removed:
-              it was non-functional chrome (SYS hard-coded OK) and the
-              terminal identity didn't justify the reserved top band. The
-              former md:pt-6 offset for that 24px fixed bar is gone with it,
-              so the NavRail + content now start flush at the viewport top. */}
+          {/* UI-CHROME — Phase-0 re-introduces a FUNCTIONAL top strip
+              (StatusBar): live clock + current Focus project + quick stats
+              (active projects / streak), reusing the dashboard KPI + streak
+              helpers. It sits at the top of the content column so it spans
+              the page (not the NavRail), and collapses to a compact line on
+              mobile under the fixed MobileHeader. The old dead SYS/OK strip
+              stays gone — this one earns its space. */}
           <div className="flex min-h-screen">
             {isAuthed ? <NavRail user={user} appVersion={APP_VERSION} /> : null}
             <main className={isAuthed ? "flex-1 min-w-0 pt-12 pb-20 md:pt-0 md:pb-0" : "flex-1 min-w-0"}>
+              {isAuthed && session?.user?.id ? (
+                <StatusBarServer userId={session.user.id} />
+              ) : null}
               {children}
             </main>
           </div>
