@@ -42,10 +42,16 @@ export default async function SignInPage({
         <h1 className="sr-only">Sign in to Mini Manager</h1>
         {/* UX-1209 — cap the hero on mobile so the form stays above the
             fold (matches /sign-up). Full panel width returns at md+. */}
-        <div className="flex justify-center pt-2 md:pt-0">
+        <div className="flex flex-col items-center gap-2 pt-2 md:pt-0">
           <div className="w-full max-w-[150px] md:max-w-none">
             <Logo decorative />
           </div>
+          <p
+            className="font-mono text-2xs uppercase tracking-[0.25em] text-[var(--color-cyan)]"
+            aria-hidden
+          >
+            SYS ▸ ACCESS
+          </p>
         </div>
 
         <Card title="Sign in" ariaLabel="Sign in">
