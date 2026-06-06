@@ -69,12 +69,17 @@ function NavLink({
       href={item.href}
       title={collapsed ? item.label : undefined}
       className={clsx(
-        "group flex items-center gap-3 rounded-sm text-sm tap-target",
+        // Terminal nav row: mono label, sharp corners, a cyan left-edge
+        // marker on the active route. The 2px transparent left border on
+        // the resting state reserves the marker's space so the active
+        // cyan edge doesn't shift the row.
+        "group relative flex items-center gap-3 rounded-none text-sm tap-target",
         "border-l-2 border-transparent transition-colors duration-150",
+        "uppercase tracking-[0.08em]",
         collapsed ? "px-2 py-2 justify-center" : "px-3 py-2",
         active
-          ? "border-l-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]"
-          : "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]"
+          ? "border-l-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
+          : "hover:border-l-[color-mix(in_srgb,var(--color-cyan)_45%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-cyan)_6%,transparent)]"
       )}
       aria-current={active ? "page" : undefined}
       aria-label={collapsed ? item.label : undefined}
@@ -83,8 +88,8 @@ function NavLink({
         className={clsx(
           "inline-flex w-6 justify-center",
           active
-            ? "text-[var(--color-accent)]"
-            : "text-[var(--color-fg-muted)] group-hover:text-[var(--color-fg)]"
+            ? "text-[var(--color-cyan)] glow-cyan"
+            : "text-[var(--color-fg-muted)] group-hover:text-[var(--color-cyan)]"
         )}
         aria-hidden
       >
@@ -93,10 +98,25 @@ function NavLink({
       {collapsed ? null : (
         <span
           className={clsx(
-            "font-mono",
-            active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]"
+            "font-mono inline-flex items-center gap-1.5",
+            active
+              ? "text-[var(--color-cyan)] glow-cyan"
+              : "text-[var(--color-fg)] group-hover:text-[var(--color-cyan)]"
           )}
         >
+          {/* Tech-label marker — a tiny ▸ that lights cyan on the active
+              row, the diegetic "selected channel" cue from the spec. */}
+          <span
+            aria-hidden
+            className={clsx(
+              "font-mono text-2xs leading-none transition-opacity",
+              active
+                ? "opacity-100 text-[var(--color-cyan)]"
+                : "opacity-0 group-hover:opacity-60"
+            )}
+          >
+            ▸
+          </span>
           {item.label}
         </span>
       )}
@@ -140,7 +160,13 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
   return (
     <aside
       className={clsx(
-        "hidden md:flex md:flex-col shrink-0 border-r border-[var(--color-border)] py-4 px-2 gap-1",
+        // Near-black command-column with a 1px phosphor right-edge — the
+        // cyan-tinted border matches the StatusBar foundation
+        // (color-mix cyan 22% into the neutral border) so the shell reads
+        // as one continuous terminal frame.
+        "hidden md:flex md:flex-col shrink-0 py-4 px-2 gap-1",
+        "bg-[var(--color-bg-elevated)]",
+        "border-r border-[color-mix(in_srgb,var(--color-cyan)_22%,var(--color-border))]",
         "transition-[width] duration-200 ease-out",
         collapsed ? "w-[64px]" : "w-[200px]",
       )}
@@ -193,7 +219,7 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
         className={clsx(
           "group flex items-center gap-3 rounded-sm text-sm tap-target mb-1",
           "border border-[var(--color-border-strong)] transition-colors duration-150",
-          "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:border-[var(--color-fg-muted)]",
+          "text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] hover:border-[var(--color-cyan)]",
           // M7 — visible focus ring (≥2px, 3:1) on the new control.
           "focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]",
           collapsed ? "px-2 py-2 justify-center" : "px-3 py-2",
