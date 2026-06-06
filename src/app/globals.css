@@ -223,10 +223,19 @@
   --font-display: "PixelSplitter", "UAV OSD Mono", "IBM Plex Mono",
     ui-monospace, monospace;
 
-  /* ----- Sizes ----- */
-  --text-2xs: 0.6875rem;  /* 11px — chrome labels only */
-  --text-xs:  0.8125rem;  /* 13px — table cell secondary */
-  --text-sm:  0.875rem;   /* 14px — minimum body */
+  /* ----- Sizes -----
+     UX-004 — monospace readability floor raised. IBM Plex Mono reads ~15%
+     smaller than sans at the same px, so the dense 11px/13px chrome was
+     below the legibility floor the brief insists on. The ladder stays
+     constrained + rem-based (browser zoom works) but every step moved up:
+       2xs 11→12px  micro-labels / tech-ticks / pills (the new floor)
+       xs  13→14px  table cells / secondary body
+       sm  14→15px  minimum body (the "base ~15px" target)
+       base 16px    default (unchanged anchor)
+     Steps stay distinct so the scale reads as a hierarchy, not one blur. */
+  --text-2xs: 0.75rem;    /* 12px — chrome labels / tech-ticks (floor) */
+  --text-xs:  0.875rem;   /* 14px — table cell / secondary body */
+  --text-sm:  0.9375rem;  /* 15px — minimum body */
   --text-base: 1rem;      /* 16px — default */
   --text-lg:  1.125rem;   /* 18px */
   --text-xl:  1.375rem;   /* 22px */
