@@ -6,14 +6,20 @@ import { Button } from "@/components/ui/Button";
 import type { InspoImage } from "@/db/schema";
 import { AddInspoForm } from "./AddInspoForm";
 import { ManageInspoModal } from "./ManageInspoModal";
+import { InspoLightbox } from "./InspoLightbox";
 
 /**
  * P14.7 — Inspo gallery grid.
  *
- * 3-column Notion-style grid on `md+`, 2-column on mobile, of the
- * painter's displayed inspo URLs. Each cell renders `<img
- * src={url}>` directly — no fetch, no proxy. The image element
- * lazy-loads and falls back to the alt text on broken sources.
+ * Compact thumbnail grid of the painter's displayed inspo URLs:
+ * 2-up on mobile, 3-up at `md`, 4-up at `lg` — small reference tiles,
+ * not the page-dominating board it used to be (Focus-polish: Ross
+ * wanted the INSPO section "much smaller"). Each cell renders `<img
+ * src={url}>` directly — no fetch, no proxy. The image lazy-loads and
+ * falls back to the alt text on broken sources.
+ *
+ * Double-clicking a thumbnail opens it full-size in {@link
+ * InspoLightbox}; the overlay closes on a backdrop click or Esc.
  *
  * "Add inspo" form sits below the grid. "Manage" button opens a
  * modal with the full list (including hidden) for show/hide toggle
@@ -32,6 +38,12 @@ interface Props {
 
 export function InspoGalleryGrid({ displayed, all }: Props) {
   const [isManageOpen, setIsManageOpen] = useState(false);
+  // Focus-polish — the thumbnail the painter double-clicked to enlarge.
+  // Null when the lightbox is closed; the overlay mounts only while set.
+  const [lightbox, setLightbox] = useState<{
+    url: string;
+    alt: string;
+  } | null>(null);
   // UX-1103 — track per-image load failures so we can swap the broken
   // <img> for a friendly fallback tile + "open source" link. Keys are
   // the InspoImage `id` so reordering / re-rendering stays stable.
@@ -81,11 +93,13 @@ export function InspoGalleryGrid({ displayed, all }: Props) {
       ) : (
         <ul
           aria-label="Inspo gallery"
-          className="grid grid-cols-2 md:grid-cols-3 gap-2"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5"
         >
           {displayed.map((img) => {
             const isBroken = brokenIds.has(img.id);
             const altText = img.altText ?? "Inspo reference";
+            const openLightbox = () =>
+              setLightbox({ url: img.url, alt: altText });
             return (
               <li
                 key={img.id}
@@ -111,16 +125,30 @@ export function InspoGalleryGrid({ displayed, all }: Props) {
                     </span>
                   </a>
                 ) : (
+                  // Focus-polish — double-click enlarges into the
+                  // lightbox. Double-click isn't keyboard-reachable, so
+                  // the tile is also a focusable button-role element that
+                  // opens on Enter / Space for keyboard + AT users.
                   <img
                     src={img.url}
                     alt={altText}
                     loading="lazy"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Enlarge: ${altText}`}
                     // UX-1103 — `no-referrer` reduces 403s from
                     // Pinterest's hotlink-protection by stripping
                     // the painter's referer from the request.
                     referrerPolicy="no-referrer"
                     onError={() => markBroken(img.id)}
-                    className="w-full h-full object-cover"
+                    onDoubleClick={openLightbox}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openLightbox();
+                      }
+                    }}
+                    className="w-full h-full object-cover cursor-zoom-in focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-cyan)]"
                   />
                 )}
               </li>
@@ -135,6 +163,14 @@ export function InspoGalleryGrid({ displayed, all }: Props) {
         <ManageInspoModal
           rows={all}
           onClose={() => setIsManageOpen(false)}
+        />
+      ) : null}
+
+      {lightbox ? (
+        <InspoLightbox
+          src={lightbox.url}
+          alt={lightbox.alt}
+          onClose={() => setLightbox(null)}
         />
       ) : null}
     </div>

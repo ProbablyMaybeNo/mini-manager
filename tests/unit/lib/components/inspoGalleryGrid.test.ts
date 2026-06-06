@@ -31,6 +31,27 @@ describe("InspoGalleryGrid structure (P14.7)", () => {
     expect(src).toContain("md:grid-cols-3");
   });
 
+  test("Focus-polish — grid stays compact (4-up at lg, tighter gap)", () => {
+    // Ross wanted INSPO "much smaller" → more columns + a tighter
+    // gutter so the section reads as a thumbnail strip, not a board.
+    expect(src).toContain("lg:grid-cols-4");
+    expect(src).toMatch(/gap-1\.5/);
+  });
+
+  test("Focus-polish — thumbnails open the lightbox on double-click", () => {
+    expect(src).toContain("InspoLightbox");
+    expect(src).toMatch(/onDoubleClick=\{openLightbox\}/);
+    expect(src).toMatch(/setLightbox\(/);
+  });
+
+  test("Focus-polish — thumbnail is keyboard-openable (Enter / Space)", () => {
+    // Double-click isn't keyboard-reachable, so the tile carries
+    // role=button + tabIndex + an Enter/Space handler for AT users.
+    expect(src).toMatch(/role=["']button["']/);
+    expect(src).toMatch(/tabIndex=\{0\}/);
+    expect(src).toMatch(/e\.key === "Enter" \|\| e\.key === " "/);
+  });
+
   test("renders each url via plain <img src={url}> — no proxy, no Next/Image", () => {
     expect(src).toMatch(/<img[^>]+src=\{img\.url\}/);
     expect(src).not.toMatch(/from\s+["']next\/image["']/);
@@ -57,6 +78,48 @@ describe("InspoGalleryGrid structure (P14.7)", () => {
 
   test("grid <ul> has an aria-label so the gallery is discoverable", () => {
     expect(src).toMatch(/aria-label=["']Inspo gallery["']/);
+  });
+});
+
+describe("InspoLightbox structure (Focus-polish)", () => {
+  const src = read("src/components/planner/InspoLightbox.tsx");
+
+  test("renders an accessible dialog overlay", () => {
+    expect(src).toMatch(/role=["']dialog["']/);
+    expect(src).toMatch(/aria-modal=["']true["']/);
+  });
+
+  test("SSR-safe — portals to document.body only after mount", () => {
+    expect(src).toContain("createPortal");
+    expect(src).toContain("document.body");
+    expect(src).toMatch(/useEffect\(\(\) => setMounted\(true\), \[\]\)/);
+    expect(src).toMatch(/if \(!mounted\) return null;/);
+  });
+
+  test("closes on a backdrop click (outside the image)", () => {
+    expect(src).toMatch(/e\.target === e\.currentTarget/);
+    expect(src).toMatch(/onMouseDown=/);
+  });
+
+  test("closes on Escape", () => {
+    expect(src).toMatch(/e\.key === "Escape"/);
+    expect(src).toContain('window.addEventListener("keydown"');
+  });
+
+  test("focus-traps Tab / Shift+Tab within the overlay", () => {
+    expect(src).toContain("querySelectorAll");
+    expect(src).toMatch(/e\.key !== "Tab"/);
+    expect(src).toContain("e.shiftKey");
+  });
+
+  test("locks body scroll while open and restores it on unmount", () => {
+    expect(src).toContain('document.body.style.overflow = "hidden"');
+    expect(src).toContain("document.body.style.overflow = prevOverflow");
+  });
+
+  test("restores focus to the opener on close", () => {
+    expect(src).toContain("previouslyFocused");
+    expect(src).toMatch(/previouslyFocused\?\.focus\?\.\(\)/);
   });
 });
 
@@ -139,6 +202,7 @@ describe("Inspo widget discipline (P14.7)", () => {
     "src/components/planner/InspoGalleryGrid.tsx",
     "src/components/planner/AddInspoForm.tsx",
     "src/components/planner/ManageInspoModal.tsx",
+    "src/components/planner/InspoLightbox.tsx",
   ];
 
   test("no raw hex literals across the inspo surface (forces @theme tokens)", () => {
