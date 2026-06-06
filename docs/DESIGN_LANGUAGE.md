@@ -177,3 +177,38 @@ as a black retro terminal · 1980s vector arcade (sparingly).
   branch preview + comments) **before** merge.
 - **Phase 2 — Propagate** across every page via the orchestrator, per-area batches.
 - **Phase 3 — Heavy signature pieces** that were parked (e.g. full isometric viz).
+
+---
+
+## 13. Data-viz kit — moodboard references (bespoke SVG)
+
+The "re-skin isn't enough" feedback points here: the **content** (gauges, graphs,
+progress) must become genuinely impressive, hand-built SVG styled to the Figma
+moodboard — NOT generic widgets. Build under `src/components/viz/`. Each maps to a
+specific moodboard reference (Ross's GOOD examples + comments):
+
+- **Radial / circular gauges** ← moodboard **group 20** (josh-floyd "cyberspace" —
+  *"LOVE THE VIBE… radial menus like the terminal access element, circular progress
+  elements"*) + groups 22/24. Concentric rings, tick marks around the dial, a
+  glowing phosphor arc, value in mono at center. This replaces the plain
+  `CircularProgress` (Ross: *"make these even more stylistic — group 20"*).
+- **Line / area graphs** ← **group 21** (*"line graphs… the memory element could be
+  good for the color-map style"*). Phosphor plot line + low-alpha area fill,
+  faint grid, plotted nodes; readable at a glance (no hover-only data).
+- **Segmented / output-rate bars** ← the wireframe-globe "OUTPUT RATE" panel +
+  group 27 (*"progress bars… boxes with black or no fill"*). Segmented blocks, not
+  a smooth fill; color-bar-with-black-text idiom for labels.
+- **Sparklines** ← trend cues for streak / completion-over-time (group 27's
+  glanceable readouts).
+- **Mission-table treatment** ← **group 27** (the favorite: 5-color palette,
+  cyan-highlighted row, black/no-fill cells, quick-action buttons).
+- **Wireframe / isometric hero** (heaviest, phase-able) ← group 20 (wireframe
+  globe / radar), group 23 (3D city), terrain. A single signature hero viz, not
+  everywhere.
+- **Pixel color wheel** ← group 26 (done).
+
+Style rules: phosphor stroke + restrained glow on active arcs/lines only; tick
+marks + tiny tech labels for the HUD feel; medium scanline backdrop OK behind a
+viz; animate on mount (motion-safe) but **readability is the hard floor**; 5-color
+palette, more color than a one-hue HUD. Moodboard file (reference, Starter-tier
+MCP is rate-limited): fileKey `IHy67xh3iXAxtJE6vHsjUJ`.
