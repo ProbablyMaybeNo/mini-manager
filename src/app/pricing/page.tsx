@@ -125,7 +125,7 @@ export default async function PricingPage() {
     // multi-column tier row doesn't sprawl on an ultrawide [D §7, §10].
     <div className="content-cap p-6 md:p-8 space-y-8">
       <header className="space-y-2 text-center max-w-2xl mx-auto">
-        <h1 className="text-3xl md:text-4xl tracking-wide">PRICING</h1>
+        <h1 className="title-display text-base md:text-lg">PRICING</h1>
         <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-relaxed">
           The free tier gets you a real taste. Pro unlocks the limits. Founder
           is the one-time supporter slot — capped at {FOUNDER_TOTAL_SEATS}.

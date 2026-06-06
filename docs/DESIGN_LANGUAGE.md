@@ -35,7 +35,7 @@ fills → transparent / black panels with phosphor nested borders.
 
 | Token | Hex | Role |
 |---|---|---|
-| `--color-bg` | `#000000` | Page base (pure black, matches GOOD examples) |
+| `--color-bg` | `#0A0A0A` | Page base (near-black — see halation note below) |
 | `--color-surface` | transparent / `#0A0A0A` | Panels — transparent or near-black, **never grey** |
 | `--color-cyan` | `#00D2FF` | **Primary** action, selection / highlighted table row, active nav, links |
 | `--color-green` | `#51FD80` | Success / owned / "go" status, positive viz, secondary action |
@@ -46,6 +46,13 @@ fills → transparent / black panels with phosphor nested borders.
 - **Cyan-on-actions is now correct** — Ross's button sheet makes Primary cyan.
   This overrides the prior "no cyan on CTAs" guardrail.
 - All phosphor-on-black pairings must clear **WCAG-AA (≥4.5:1)** for text.
+- **Halation note (UX-019):** `--color-bg` is `#0A0A0A`, **not** pure
+  `#000000`. The implementation deliberately uses near-black because a
+  hair above pure black reduces phosphor halation/bloom on OLED + lets
+  nested `#0A0A0A` panels sit faintly distinct from the page without
+  reading as grey (UX-UI-BEST-PRACTICES §9). The spec previously said
+  `#000000`; this reconciles the doc to the better implemented value — do
+  **not** "fix" the code back to pure black.
 
 ---
 

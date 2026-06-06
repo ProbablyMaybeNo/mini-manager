@@ -223,10 +223,19 @@
   --font-display: "PixelSplitter", "UAV OSD Mono", "IBM Plex Mono",
     ui-monospace, monospace;
 
-  /* ----- Sizes ----- */
-  --text-2xs: 0.6875rem;  /* 11px — chrome labels only */
-  --text-xs:  0.8125rem;  /* 13px — table cell secondary */
-  --text-sm:  0.875rem;   /* 14px — minimum body */
+  /* ----- Sizes -----
+     UX-004 — monospace readability floor raised. IBM Plex Mono reads ~15%
+     smaller than sans at the same px, so the dense 11px/13px chrome was
+     below the legibility floor the brief insists on. The ladder stays
+     constrained + rem-based (browser zoom works) but every step moved up:
+       2xs 11→12px  micro-labels / tech-ticks / pills (the new floor)
+       xs  13→14px  table cells / secondary body
+       sm  14→15px  minimum body (the "base ~15px" target)
+       base 16px    default (unchanged anchor)
+     Steps stay distinct so the scale reads as a hierarchy, not one blur. */
+  --text-2xs: 0.75rem;    /* 12px — chrome labels / tech-ticks (floor) */
+  --text-xs:  0.875rem;   /* 14px — table cell / secondary body */
+  --text-sm:  0.9375rem;  /* 15px — minimum body */
   --text-base: 1rem;      /* 16px — default */
   --text-lg:  1.125rem;   /* 18px */
   --text-xl:  1.375rem;   /* 22px */
@@ -340,17 +349,26 @@ body {
    lives on a viewport-anchored layout wrapper (body pseudo-elements),
    both pointer-events:none so they never intercept input.
 
-   "Medium" = a 3px-period line (1px lit gap, 2px dark) at ~8% — clearly
-   a scanlined CRT, but still well short of washing text out (the BAD
-   moodboard examples failed by being over-produced). Glow stays on its
-   own tiered text-shadow tokens; this overlay is purely the screen grid.
+   "Medium" = a 3px-period line at ~10% — clearly a scanlined CRT, but
+   still well short of washing text out (the BAD moodboard examples failed
+   by being over-produced). Glow stays on its own tiered text-shadow
+   tokens; this overlay is purely the screen grid.
+
+   UX-007 — the prior overlay drew its line with rgba(0,0,0,0.08) (a DARK
+   line) on the #0A0A0A ground, so the scanlines were luminance-identical
+   to the background and computed-style inspection found NO visible
+   texture. The line is now a faint phosphor-CYAN tint at ~10% alpha — a
+   LIT scanline that actually reads against near-black while staying a
+   whisper (the glyphs sit far above it on contrast, so text AA is
+   unchanged). Period kept at 3px (1px lit line, 2px gap).
 
    ALL of it is stripped under prefers-reduced-motion (the consolidated
    block below) and can be globally disabled via the .crt-off opt-out
    class on <html>.
    ============================================================ */
 
-/* Scanlines: 3px-period horizontal lines (medium). */
+/* Scanlines: 3px-period horizontal lines (medium), drawn as a faint
+   phosphor-cyan tint so they read against the near-black ground. */
 body::before {
   content: "";
   position: fixed;
@@ -359,10 +377,10 @@ body::before {
   z-index: 9998;
   background-image: repeating-linear-gradient(
     to bottom,
-    transparent 0,
+    rgba(120, 220, 255, 0.1) 0,
+    rgba(120, 220, 255, 0.1) 1px,
     transparent 1px,
-    rgba(0, 0, 0, 0.08) 1px,
-    rgba(0, 0, 0, 0.08) 3px
+    transparent 3px
   );
 }
 
