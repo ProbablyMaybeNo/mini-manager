@@ -146,8 +146,11 @@ export function MatchClient() {
     <ToolShell
       input={
         <div className="space-y-4">
-          <header className="space-y-1">
-            <h1 className="text-3xl tracking-wide">MATCH</h1>
+          <header className="space-y-2">
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
+              SYS ▸ MATCH / 02
+            </p>
+            <h1 className="title-display text-base md:text-lg">MATCH</h1>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)] leading-snug">
               Paste a hex; see the top matches across every brand. The dot
               shows how close: green = identical to the eye, amber = close,
@@ -176,15 +179,31 @@ export function MatchClient() {
                   borderColor: "var(--color-border-strong)",
                 }}
               />
-              <input
-                id="match-hex"
-                type="text"
-                value={hexInput}
-                onChange={(e) => setHexInput(e.target.value)}
-                placeholder="#0E4A8A"
-                maxLength={7}
-                className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-              />
+              {/* Terminal command-prompt hex input — a cyan ▸ prompt + a
+                  phosphor-tinted frame matching the Library search idiom. */}
+              <label
+                className="flex-1 min-w-0 rounded-sm border flex items-center gap-2 px-2 py-1.5 focus-within:border-[var(--color-accent)] transition-colors motion-reduce:transition-none"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--color-cyan) 22%, var(--color-border))",
+                }}
+              >
+                <span
+                  aria-hidden
+                  className="font-mono text-xs text-[var(--color-cyan)]"
+                >
+                  ▸
+                </span>
+                <input
+                  id="match-hex"
+                  type="text"
+                  value={hexInput}
+                  onChange={(e) => setHexInput(e.target.value)}
+                  placeholder="#0E4A8A"
+                  maxLength={7}
+                  className="flex-1 min-w-0 bg-transparent font-mono text-xs text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-none"
+                />
+              </label>
               <Button
                 type="submit"
                 variant="secondary"
@@ -277,10 +296,13 @@ export function MatchClient() {
             </p>
           </header>
           <div
-            className="frame"
+            className="relative panel"
             role="table"
             aria-label="Match results"
           >
+            <span className="panel-label" aria-hidden>
+              DB ▸ RANKED
+            </span>
             <div
               className="grid grid-cols-[24px_1fr_72px_56px] items-center gap-2 px-2 py-1 border-b border-[var(--color-border-strong)] text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]"
               role="row"
