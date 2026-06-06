@@ -59,23 +59,23 @@
   src: url("/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
 }
 
-/* Heading 1 — tactical/OSD mono (UAV OSD Mono stand-in). SIL OFL 1.1. */
+/* Heading 1 — UAV OSD Mono, the real tactical/HUD OSD face (Ross's file). */
 @font-face {
-  font-family: "Share Tech Mono";
+  font-family: "UAV OSD Mono";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/share-tech-mono-latin-400-normal.woff2") format("woff2");
+  src: url("/fonts/uav-osd-mono.woff2") format("woff2");
 }
 
-/* Title — arcade display (Digital Arcade stand-in). SIL OFL 1.1.
-   Pixel display face: hero/page-top titles ONLY, never body. */
+/* Title — PixelSplitter Bold, a bold techno display face (Ross's file).
+   Hero/page-top titles ONLY, never body. */
 @font-face {
-  font-family: "Press Start 2P";
+  font-family: "PixelSplitter";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 700;
   font-display: swap;
-  src: url("/fonts/press-start-2p-latin-400-normal.woff2") format("woff2");
+  src: url("/fonts/pixelsplitter-bold.woff2") format("woff2");
 }
 
 /* ============================================================
@@ -209,9 +209,9 @@
     "Roboto Mono", Consolas, "Liberation Mono", monospace;
   --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-tactical: "Share Tech Mono", "IBM Plex Mono", ui-monospace,
+  --font-tactical: "UAV OSD Mono", "IBM Plex Mono", ui-monospace,
     Consolas, monospace;
-  --font-display: "Press Start 2P", "Share Tech Mono", "IBM Plex Mono",
+  --font-display: "PixelSplitter", "UAV OSD Mono", "IBM Plex Mono",
     ui-monospace, monospace;
 
   /* ----- Sizes ----- */
