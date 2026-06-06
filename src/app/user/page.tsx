@@ -124,8 +124,11 @@ export default async function UserPage() {
     // full width as the header block; the rest pack into two columns.
     <div className="content-cap p-6 md:p-8 space-y-8">
       <header className="space-y-2">
-        <h1 className="text-3xl tracking-wide">USER</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans leading-snug">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+          SYS ▸ USER / ACCOUNT
+        </p>
+        <h1 className="title-display text-base md:text-lg">USER</h1>
+        <p className="text-sm text-[var(--color-fg-muted)] font-sans leading-snug mt-3">
           Your account, plan, and data tools. Set a recovery email to enable
           password reset; export a full JSON backup any time.
         </p>

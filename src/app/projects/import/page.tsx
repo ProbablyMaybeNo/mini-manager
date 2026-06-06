@@ -15,8 +15,11 @@ export default function ImportArmyPage() {
       </nav>
 
       <header className="space-y-2">
-        <h1 className="text-3xl tracking-wide">IMPORT ARMY LIST</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-2xl">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+          SYS ▸ PROJECTS / IMPORT
+        </p>
+        <h1 className="title-display text-base md:text-lg">IMPORT ARMY LIST</h1>
+        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-2xl mt-3 leading-snug">
           Drop a BattleScribe <code className="font-mono">.ros</code> /{" "}
           <code className="font-mono">.rosz</code> file, a Warhammer App PDF, a{" "}
           <code className="font-mono">.json</code> list, or paste a plain-text

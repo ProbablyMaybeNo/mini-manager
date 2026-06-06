@@ -25,10 +25,16 @@ export default async function SignUpPage() {
             Password / Confirm / submit below the 667 fold. Cap it at
             150px on small screens so the form is the visible task; it
             grows back to full panel width at md+. */}
-        <div className="flex justify-center pt-2 md:pt-0">
+        <div className="flex flex-col items-center gap-2 pt-2 md:pt-0">
           <div className="w-full max-w-[150px] md:max-w-none">
             <Logo decorative />
           </div>
+          <p
+            className="font-mono text-2xs uppercase tracking-[0.25em] text-[var(--color-cyan)]"
+            aria-hidden
+          >
+            SYS ▸ ENROL
+          </p>
         </div>
 
         <Card title="Create account" ariaLabel="Create account">

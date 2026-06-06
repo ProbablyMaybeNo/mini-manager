@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { PromptField } from "@/components/ui/PromptField";
 import { StatusPill } from "@/components/ui/StatusPill";
 import {
   PASSWORD_ERROR_COPY,
@@ -111,67 +112,54 @@ export function SignUpForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <label className="block space-y-2">
-        <span className="block text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-          Username
-        </span>
-        <input
-          name="username"
-          type="text"
-          required
-          autoFocus
-          autoComplete="username"
-          minLength={USERNAME_MIN_LENGTH}
-          maxLength={USERNAME_MAX_LENGTH}
-          placeholder="alice42"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
-        />
-        <div className="min-h-[20px]">
-          {check.kind === "checking" && (
-            <StatusPill status="neutral">checking…</StatusPill>
-          )}
-          {check.kind === "ok" && (
-            <StatusPill status="ok">available</StatusPill>
-          )}
-          {check.kind === "taken" && (
-            <StatusPill status="danger">{check.reason}</StatusPill>
-          )}
-        </div>
-      </label>
+      <PromptField
+        label="Username"
+        name="username"
+        type="text"
+        required
+        autoFocus
+        autoComplete="username"
+        minLength={USERNAME_MIN_LENGTH}
+        maxLength={USERNAME_MAX_LENGTH}
+        placeholder="alice42"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        trailing={
+          <div className="min-h-[20px]">
+            {check.kind === "checking" && (
+              <StatusPill status="neutral">checking…</StatusPill>
+            )}
+            {check.kind === "ok" && (
+              <StatusPill status="ok">available</StatusPill>
+            )}
+            {check.kind === "taken" && (
+              <StatusPill status="danger">{check.reason}</StatusPill>
+            )}
+          </div>
+        }
+      />
 
-      <label className="block space-y-2">
-        <span className="block text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-          Password
-        </span>
-        <input
-          name="password"
-          type="password"
-          required
-          autoComplete="new-password"
-          minLength={PASSWORD_MIN_LENGTH}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
-        />
-      </label>
+      <PromptField
+        label="Password"
+        name="password"
+        type="password"
+        required
+        autoComplete="new-password"
+        minLength={PASSWORD_MIN_LENGTH}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
-      <label className="block space-y-2">
-        <span className="block text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-          Confirm password
-        </span>
-        <input
-          name="confirm"
-          type="password"
-          required
-          autoComplete="new-password"
-          minLength={PASSWORD_MIN_LENGTH}
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          className="w-full px-3 py-2 frame-strong tap-target font-mono text-sm bg-transparent text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
-        />
-      </label>
+      <PromptField
+        label="Confirm password"
+        name="confirm"
+        type="password"
+        required
+        autoComplete="new-password"
+        minLength={PASSWORD_MIN_LENGTH}
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+      />
 
       {formError ? (
         <div role="alert">

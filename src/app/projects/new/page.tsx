@@ -44,9 +44,16 @@ export default async function NewProjectPage({
         <span className="text-[var(--color-fg)]">New project</span>
       </nav>
 
+      {/* Terminal hero — mirrors the Library / Wishlist banner so the
+          new-project surface reads as the same mission-control OS: a
+          tracked-out coordinate caption above the display-font title.
+          Heading text stays "NEW PROJECT" so any heading probe resolves. */}
       <header className="space-y-2">
-        <h1 className="text-3xl tracking-wide">NEW PROJECT</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-xl">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+          SYS ▸ PROJECTS / NEW
+        </p>
+        <h1 className="title-display text-base md:text-lg">NEW PROJECT</h1>
+        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-xl mt-3 leading-snug">
           Pick the kind of thing you&apos;re tracking. Armies and warbands are
           containers; units and single models do the actual painting. Nest a unit
           inside an army to roll up its counters.
