@@ -126,10 +126,19 @@ export function CollectionPanel({
     " wanted";
 
   return (
-    <div className="frame p-3 space-y-2 h-full flex flex-col min-h-0">
+    // Terminal "memory / coverage" module — the colour map framed as a
+    // mission-control panel (DESIGN_LANGUAGE §7): phosphor border + corner
+    // ticks via `.panel`/`.panel-ticks`, with a MEM ▸ COVERAGE coordinate
+    // tag on the top border. The phosphor border is supplied by the
+    // `.panel` CSS rule, not a colour token in this file (the colour map's
+    // contract bans the cyan token in the component source).
+    <div className="panel panel-ticks relative p-3 pt-4 space-y-2 h-full flex flex-col min-h-0">
+      <span className="panel-label" aria-hidden>
+        MEM ▸ COVERAGE
+      </span>
       {/* Header readout — mono-caps, tabular for the counts. */}
       <p
-        className="text-xs font-sans uppercase tracking-wide tabular-nums text-[var(--color-fg-muted)]"
+        className="text-xs font-mono uppercase tracking-wide tabular-nums text-[var(--color-fg-muted)]"
         aria-label={summaryLabel}
       >
         {coverageReadout(summary)}
@@ -150,9 +159,10 @@ export function CollectionPanel({
         />
       </div>
 
-      {/* Legend — what the dots mean against the spectrum field. */}
+      {/* Legend — what the dots mean against the spectrum field. Mono-caps
+          to match the terminal module language. */}
       <p
-        className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-sans text-[var(--color-fg-muted)]"
+        className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs font-mono uppercase tracking-wide text-[var(--color-fg-muted)]"
         aria-label="Legend: green dot is owned, yellow dot is wishlisted"
       >
         <span className="inline-flex items-center gap-1.5">
