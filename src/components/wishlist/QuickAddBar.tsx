@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { clsx } from "clsx";
 import {
   createWishlistItem,
   scrapeAndCreateWishlistItem,
@@ -70,18 +69,29 @@ export function QuickAddBar() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-1 w-full md:max-w-2xl">
       <div className="flex items-center gap-2">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          maxLength={500}
-          aria-label="Quick add wishlist item"
-          placeholder="Paste a vendor URL — or type a title to add manually"
-          className={clsx(
-            "flex-1 min-w-0 px-3 py-2 font-mono text-sm bg-[var(--color-bg-elevated)] frame",
-            "focus:border-[var(--color-accent)]",
-          )}
-        />
+        {/* Terminal command-prompt input — a cyan ▸ prompt + a phosphor-
+            tinted frame matching the Library search idiom, so quick-add
+            reads as a CLI command line, not a generic SaaS box. */}
+        <label
+          className="flex-1 min-w-0 rounded-sm border flex items-center gap-2 px-3 py-2 bg-[var(--color-bg-elevated)] focus-within:border-[var(--color-cyan)] transition-colors motion-reduce:transition-none"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--color-cyan) 22%, var(--color-border))",
+          }}
+        >
+          <span aria-hidden className="font-mono text-sm text-[var(--color-cyan)]">
+            ▸
+          </span>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            maxLength={500}
+            aria-label="Quick add wishlist item"
+            placeholder="Paste a vendor URL — or type a title to add manually"
+            className="flex-1 min-w-0 bg-transparent font-mono text-sm text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-none border-0 p-0"
+          />
+        </label>
         <Button
           type="submit"
           disabled={isPending || value.trim().length === 0}

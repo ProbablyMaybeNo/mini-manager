@@ -10,6 +10,7 @@ import { MarkBoughtModal, type MarkBoughtProjectOption } from "./MarkBoughtModal
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { setWishlistStatus } from "@/lib/actions/wishlist";
 import { WishlistToolsMenu } from "./WishlistToolsMenu";
+import { WishlistDetailDrawer } from "./WishlistDetailDrawer";
 
 export interface WishlistTableProjectOption {
   id: string;
@@ -67,9 +68,24 @@ export function WishlistTable({
     parentId: p.parentId,
   }));
 
+  // Right-hand detail drawer — the `?item=` param the rows already set via
+  // openItem() now resolves to the matching row in THIS table's partition
+  // and pops the terminal slide-out for full edit / delete / mark-bought.
+  // Each /wishlist table instance only owns its own kind partition, so a
+  // given item id matches at most one table — no double-render. (The drawer
+  // is wired from the client table, NOT the server page, so the page stays
+  // inline-edit-only at the server layer.)
+  const openItemId = sp?.get("item") ?? null;
+  const openDetail = openItemId
+    ? items.find((i) => i.id === openItemId) ?? null
+    : null;
+
   if (items.length === 0) {
     return (
-      <div className="relative frame p-8 text-center overflow-hidden">
+      <div className="relative panel panel-ticks p-8 text-center overflow-hidden">
+        <span className="panel-label" aria-hidden>
+          QUEUE · 0
+        </span>
         <p className="text-sm font-mono text-[var(--color-fg-muted)]">
           {hasActiveFilters
             ? "No wishlist items match the current filters."
@@ -80,7 +96,14 @@ export function WishlistTable({
   }
 
   return (
-    <div className="frame">
+    // Terminal panel frame: near-black fill, 1px phosphor border, corner
+    // ticks + a top-border technical label — the signature box-in-box look
+    // matching the Recipes / Library tables. The dense desktop grid scrolls
+    // horizontally inside the bounded panel on narrow viewports.
+    <div className="relative panel panel-ticks pt-1">
+      <span className="panel-label" aria-hidden>
+        {showTools ? "PAINTS · QUEUE" : "MODELS · QUEUE"}
+      </span>
       {/* UX-1304 — the column header only makes sense for the dense
           desktop table; the mobile card layout is self-labelling, so
           hide the header strip below md. */}
@@ -116,7 +139,10 @@ export function WishlistTable({
             // UX-1304 — below md the row is a stacked card so the STATUS
             // / OPEN-IN controls never clip off the right edge of a phone.
             // At md+ it restores the dense multi-column grid.
-            "flex flex-col gap-2 md:grid md:items-center md:gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
+            // Terminal re-skin: hover / keyboard-focus lift the row with a
+            // brighter cyan wash + a 2px cyan left edge so the active row
+            // reads as the "selected line" from the GOOD moodboard tables.
+            "flex flex-col gap-2 md:grid md:items-center md:gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer transition-[background-color,box-shadow] motion-reduce:transition-none hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_14%,transparent)] focus-visible:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
             GRID_CLASS,
           )}
         >
@@ -194,6 +220,7 @@ export function WishlistTable({
           projects={modalProjects}
         />
       ) : null}
+      <WishlistDetailDrawer item={openDetail} projects={modalProjects} />
     </div>
   );
 }
@@ -282,9 +309,15 @@ function StatusChangePopover({
     });
   };
 
-  // PURCHASED is terminal from the table — no menu, just the static pill.
+  // PURCHASED is terminal from the table — no menu, just the static bar.
+  // Solid colour-bar + black text (DESIGN_LANGUAGE §7.2) so the status
+  // reads as a solid colour-coded block at a glance.
   if (item.status === "PURCHASED") {
-    return <StatusPill status={STATUS_PILL[item.status]}>{item.status}</StatusPill>;
+    return (
+      <StatusPill status={STATUS_PILL[item.status]} tone="bar">
+        {item.status}
+      </StatusPill>
+    );
   }
 
   return (
@@ -300,11 +333,26 @@ function StatusChangePopover({
         // with no padding/min-height, well under the 44px touch floor.
         // tap-target floors the tappable button to 44px (mobile) / 32px
         // (desktop) without enlarging the visual pill inside it.
-        className="tap-target inline-flex items-center justify-center"
+        //
+        // Terminal re-skin (Ross's note: "make the status change clean and
+        // obvious"): the status is now a SOLID colour-bar (black text on the
+        // phosphor fill) carrying a trailing ▾, and the trigger lifts on
+        // hover/focus with a cyan ring + faint glow so it unmistakably reads
+        // as a tappable control rather than a static badge.
+        className={clsx(
+          "tap-target inline-flex items-center justify-center",
+          "group rounded-sm transition-[box-shadow,transform] motion-reduce:transition-none",
+          "hover:[box-shadow:0_0_0_1px_var(--color-cyan)] focus-visible:[box-shadow:0_0_0_2px_var(--color-cyan)]",
+          "active:translate-y-px",
+        )}
       >
         <StatusPill
           status={STATUS_PILL[item.status]}
-          className={item.status === "HOLD" ? "line-through" : undefined}
+          tone="bar"
+          className={clsx(
+            "group-hover:brightness-110",
+            item.status === "HOLD" && "line-through",
+          )}
         >
           {item.status} ▾
         </StatusPill>
@@ -313,7 +361,7 @@ function StatusChangePopover({
         <div
           role="menu"
           aria-label="Change status"
-          className="absolute right-0 top-full mt-1 z-30 min-w-[140px] frame-strong bg-[var(--color-bg-panel)] shadow-xl py-1"
+          className="absolute right-0 top-full mt-1 z-30 min-w-[160px] panel bg-[var(--color-bg-panel)] shadow-xl py-1"
         >
           {item.status === "WISHLIST" ? (
             <>

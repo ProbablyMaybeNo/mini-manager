@@ -94,7 +94,7 @@ export function TagToProjectMenu({
       </button>
       {open ? (
         <div
-          className="absolute right-0 z-[60] mt-1 w-64 bg-[var(--color-bg-panel)] border border-[var(--color-border-strong)] rounded-sm shadow-2xl p-2 space-y-1"
+          className="absolute right-0 z-[60] mt-1 w-64 panel bg-[var(--color-bg-panel)] shadow-2xl p-2 space-y-1"
           role="listbox"
         >
           <input
