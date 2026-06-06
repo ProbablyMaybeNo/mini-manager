@@ -1477,3 +1477,41 @@ select.frame-strong {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }
 }
+
+/* ============================================================
+   batch/viz-kit-dashboard — bespoke SVG data-viz kit (§13)
+   ============================================================
+   Trailing additive block (per the build brief: keep globals.css edits
+   minimal + clearly labelled). ONLY the mount-animation keyframes for the
+   src/components/viz kit live here — every colour/stroke is a token read
+   inline in the components, so there are no viz style rules to leak.
+
+   Each keyframe is consumed via a Tailwind `motion-safe:[animation:…]`
+   arbitrary utility on the component, so reduced-motion users never see
+   the motion (the rule simply isn't applied) and the SSR markup is
+   identical to the final painted frame — readability is the hard floor.
+
+     viz-arc-in   RadialGauge value-arc fade + radial bloom on mount. Kept
+                  to opacity (NOT stroke-dasharray) so it never fights the
+                  component's computed `${dash} ${circumference}` value.
+     viz-fade-in  RadialGauge centre readout fade-in.
+     viz-draw     Line/Area/Sparkline path draw-on (stroke-dashoffset);
+                  paths set pathLength=1 so the dash maths is unit-scaled.
+     viz-cell-in  SegmentedBar lit-cell "charge" (per-cell stagger set
+                  inline via animation-delay). */
+@keyframes viz-arc-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes viz-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes viz-draw {
+  from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  to   { stroke-dasharray: 1; stroke-dashoffset: 0; }
+}
+@keyframes viz-cell-in {
+  from { opacity: 0; transform: scaleY(0.4); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
