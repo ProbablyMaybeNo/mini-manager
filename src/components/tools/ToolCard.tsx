@@ -14,6 +14,9 @@ interface Props {
    *  colour from the locked 5-color palette so the index reads as
    *  a colour-coded launcher rather than a uniform grid. */
   tone?: ToolTone;
+  /** Tiny technical caption slotted onto the panel's top border (the
+   *  diegetic port/coordinate tag from the terminal language). */
+  techLabel?: string;
 }
 
 /* Tailwind JIT needs each `group-hover:…` class spelled out literally
@@ -35,29 +38,53 @@ const TONE_HOVER_BORDER: Record<ToolTone, string> = {
   red:    "hover:border-[var(--color-red)] focus-visible:border-[var(--color-red)]",
 };
 
+/* The per-tone color-bar chip (solid fill, black glyph) that anchors each
+ * tile — the §7.2 "color bars with black text" signature element. */
+const TONE_BAR: Record<ToolTone, string> = {
+  cyan:   "bg-[var(--color-cyan)]",
+  yellow: "bg-[var(--color-yellow)]",
+  green:  "bg-[var(--color-green)]",
+  purple: "bg-[var(--color-purple-pastel)]",
+  red:    "bg-[var(--color-red)]",
+};
+
 /**
- * One card on the Tools landing page. Per-tool palette tone (P11.8)
- * colour-codes the glyph + hover border so the index reads as a
- * launcher rather than a uniform grid. Glyph fades from muted →
- * full tone on hover/focus.
+ * One card on the Tools landing page, re-skinned to the terminal language
+ * (batch/redesign-tools): a near-black `.panel` tile carrying corner ticks
+ * + a top-border tech label. The glyph rides a solid per-tone color-bar
+ * chip with black text (the §7.2 signature), and the title/arrow fade to
+ * the tool's tone on hover so the index reads as a colour-coded launcher.
  */
-export function ToolCard({ href, glyph, title, blurb, tone = "cyan" }: Props) {
+export function ToolCard({
+  href,
+  glyph,
+  title,
+  blurb,
+  tone = "cyan",
+  techLabel,
+}: Props) {
   const toneGlyphHover = TONE_GLYPH_HOVER[tone];
   const toneHoverBorder = TONE_HOVER_BORDER[tone];
+  const toneBar = TONE_BAR[tone];
   return (
     <Link
       href={href}
       className={clsx(
-        "group block frame p-4 transition-colors",
+        "group block relative panel panel-ticks p-4 transition-colors",
         toneHoverBorder,
       )}
     >
+      {techLabel ? (
+        <span className="panel-label" aria-hidden>
+          {techLabel}
+        </span>
+      ) : null}
       <div className="flex items-start gap-3">
         <span
           aria-hidden
           className={clsx(
-            "font-mono text-2xl text-[var(--color-fg-muted)] transition-colors",
-            toneGlyphHover,
+            "grid place-items-center w-10 h-10 shrink-0 font-mono text-xl text-black",
+            toneBar,
           )}
         >
           {glyph}

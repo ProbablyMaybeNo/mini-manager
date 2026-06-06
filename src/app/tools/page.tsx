@@ -7,6 +7,8 @@ interface ToolEntry {
   title: string;
   blurb: string;
   tone: ToolTone;
+  /** Diegetic port tag rendered on the tile's top border (terminal chrome). */
+  techLabel: string;
 }
 
 /**
@@ -24,6 +26,7 @@ const TOOLS: ReadonlyArray<ToolEntry> = [
     title: "Colour Wheel",
     blurb: "Pick a hue + harmony, see the closest paint in your library.",
     tone: "purple",
+    techLabel: "MOD ▸ 01",
   },
   {
     href: "/tools/match" as Route,
@@ -31,6 +34,7 @@ const TOOLS: ReadonlyArray<ToolEntry> = [
     title: "Cross-brand Match",
     blurb: "Paste a hex, get the closest paints ranked across every brand.",
     tone: "cyan",
+    techLabel: "MOD ▸ 02",
   },
   {
     href: "/tools/eyedropper" as Route,
@@ -38,6 +42,7 @@ const TOOLS: ReadonlyArray<ToolEntry> = [
     title: "Image Eyedropper",
     blurb: "Drop a reference image, extract the dominant colours and paints.",
     tone: "green",
+    techLabel: "MOD ▸ 03",
   },
   {
     href: "/tools/gradient" as Route,
@@ -45,15 +50,22 @@ const TOOLS: ReadonlyArray<ToolEntry> = [
     title: "Layering",
     blurb: "Plan a base → highlight ramp with the closest paint per step.",
     tone: "yellow",
+    techLabel: "MOD ▸ 04",
   },
 ];
 
 export default function ToolsPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl space-y-6">
+      {/* Terminal banner — coordinate caption above the display-font title,
+          mirroring the Library / Dashboard heroes so Tools reads as the
+          same mission-control surface. */}
       <header className="space-y-2">
-        <h1 className="text-3xl tracking-wide">TOOLS</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] max-w-2xl font-sans leading-snug">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
+          SYS ▸ TOOLS / 04
+        </p>
+        <h1 className="title-display text-base md:text-lg">TOOLS</h1>
+        <p className="text-sm text-[var(--color-fg-muted)] max-w-2xl font-sans leading-snug pt-1">
           Single-purpose colour utilities. Open one mid-recipe, pull a
           swatch, hand it back into a scheme. Every tool ends in one
           click → recipe.
@@ -69,6 +81,7 @@ export default function ToolsPage() {
             title={t.title}
             blurb={t.blurb}
             tone={t.tone}
+            techLabel={t.techLabel}
           />
         ))}
       </div>
