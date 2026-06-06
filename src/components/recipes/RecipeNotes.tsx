@@ -49,6 +49,9 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
   return (
     <Card
       title="Recipe notes"
+      nested
+      ticks
+      techLabel="NOTES"
       headerActions={
         <span
           className={clsx(

@@ -79,6 +79,9 @@ export function RecipeInspo({ recipeId, initialRows }: Props) {
   return (
     <Card
       title="Inspo"
+      nested
+      ticks
+      techLabel="INSPO"
       headerActions={
         <span className="text-2xs font-mono normal-case tracking-wider text-[var(--color-fg-subtle)]">
           {rows.length} link{rows.length === 1 ? "" : "s"}
