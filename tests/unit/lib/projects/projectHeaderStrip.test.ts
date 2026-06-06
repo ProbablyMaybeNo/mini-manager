@@ -77,6 +77,27 @@ describe("ProjectHeaderStrip component surface", () => {
     expect(src).toContain("{percent}%");
   });
 
+  test("PHASE-2 — header is a terminal panel with corner ticks + tech label", () => {
+    // The project-detail header is the page's mission banner: a near-black
+    // .panel carrying corner ticks and a coordinate-style tech label on the
+    // top border (DESIGN_LANGUAGE §5/§7).
+    expect(src).toContain("panel panel-ticks");
+    expect(src).toContain("panel-label");
+  });
+
+  test("PHASE-2 — headline completion reads as a phosphor CircularProgress dial", () => {
+    // §7.1 — the recurring moodboard gauge. The dense linear bar stays for
+    // the at-a-glance fill; the dial is the headline figure.
+    expect(src).toContain("CircularProgress");
+    expect(src).toContain("caption=\"DONE\"");
+  });
+
+  test("PHASE-2 — status renders as the solid colour-bar idiom (tone=bar)", () => {
+    // §7.2 — the signature solid colour-bar with black text, matching the
+    // mission table's status column.
+    expect(src).toContain('tone="bar"');
+  });
+
   test("v6-4 — header bar reads the live optimistic percent from StageProgressContext", () => {
     // The header bar must track stage bumps instantly instead of lagging
     // behind the revalidatePath round-trip. It reads useLiveProgressPercent
