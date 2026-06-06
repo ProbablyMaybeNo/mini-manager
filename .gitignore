@@ -61,3 +61,6 @@ ux-audit/**/*.png
 # NOT the raw cleaned third-party guides (Apple/Google/NN/g excerpts) — this
 # repo is public, so don't republish copyrighted source content.
 docs/research/sources/
+
+# UX audit screenshots (local reference only)
+ux-audit/shots/
