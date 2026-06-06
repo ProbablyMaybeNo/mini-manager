@@ -121,20 +121,38 @@ export function WarbandModelsTable({
       </div>
 
       {rows.length === 0 ? (
-        <p className="frame px-3 py-4 text-xs font-sans text-[var(--color-fg-muted)] leading-relaxed">
-          No models yet. Use{" "}
-          <span className="font-mono text-[var(--color-green)]">+ Model</span>{" "}
-          to add the first model to this warband. Each model is its own
-          sub-project — attach a recipe, set its class, and track it to
-          completion.
-        </p>
+        // PHASE-2 — terminal panel empty state (ticks + coordinate label)
+        // so a fresh warband reads as the mission-control surface.
+        <div className="panel panel-ticks relative px-4 py-5">
+          <span className="panel-label" aria-hidden>
+            DB ▸ MODELS
+          </span>
+          <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-relaxed">
+            No models yet. Use{" "}
+            <span className="font-mono text-[var(--color-green)]">+ Model</span>{" "}
+            to add the first model to this warband. Each model is its own
+            sub-project — attach a recipe, set its class, and track it to
+            completion.
+          </p>
+        </div>
       ) : (
-        <div className="frame overflow-x-auto">
+        // PHASE-2 — the mission table: near-black surface + 1px cyan-tinted
+        // phosphor border, matching the dashboard ProjectsDashboardTable.
+        <div
+          className="overflow-x-auto rounded-sm border bg-[var(--color-bg-elevated)]"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
+          }}
+        >
           <table className="mm-density-rows w-full text-xs font-mono">
             <thead>
               <tr
                 className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-                style={{ borderBottom: "1px solid var(--color-border-strong)" }}
+                style={{
+                  borderBottom:
+                    "1px solid color-mix(in srgb, var(--color-cyan) 45%, var(--color-border-strong))",
+                }}
               >
                 <th scope="col" className="px-3 py-2">Name</th>
                 <th scope="col" className="px-3 py-2">Class</th>
@@ -219,9 +237,14 @@ function ModelRow({
 
   return (
     <tr
+      // PHASE-2 — the cyan-highlighted mission-table row: a cyan wash + a
+      // 2px cyan left-edge marker via an inset box-shadow on hover/focus.
       className={clsx(
         "transition-colors",
-        "hover:bg-[color-mix(in_srgb,var(--color-accent)_4%,transparent)]",
+        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        "hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+        "focus-within:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        "focus-within:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
         pending && "opacity-70",
       )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
@@ -230,13 +253,13 @@ function ModelRow({
       <td className="px-3 py-2">
         <Link
           href={`/projects/${row.id}`}
-          className="group inline-flex items-center gap-1 text-[var(--color-accent)] hover:underline"
+          className="group inline-flex items-center gap-1 text-[var(--color-cyan)] hover:underline"
           title={`Open ${row.name}`}
         >
           {row.name}
           <span
             aria-hidden
-            className="text-2xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-accent)] transition-colors"
+            className="text-2xs text-[var(--color-fg-subtle)] group-hover:text-[var(--color-cyan)] transition-colors"
           >
             ↗
           </span>
@@ -261,7 +284,7 @@ function ModelRow({
           {row.paletteHexes.length > 0 ? (
             <PaletteStrip hexes={row.paletteHexes} />
           ) : (
-            <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] transition-colors">
+            <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] transition-colors">
               + attach
             </span>
           )}
@@ -280,7 +303,7 @@ function ModelRow({
         <InlineCellPopover
           triggerLabel={`Status · ${row.status}`}
           trigger={
-            <StatusPill status={STATUS_PILL[row.status]}>
+            <StatusPill status={STATUS_PILL[row.status]} tone="bar">
               {row.status}
             </StatusPill>
           }
@@ -407,8 +430,8 @@ function ModelClassCell({
           "tap-target w-28 min-w-0 px-2 py-1 font-mono text-xs",
           "bg-transparent frame text-[var(--color-fg)]",
           "placeholder:text-[var(--color-fg-subtle)]",
-          "focus:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]",
-          "focus:border-[var(--color-accent)] outline-none",
+          "focus:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
+          "focus:border-[var(--color-cyan)] outline-none",
         )}
       />
       {isPending ? (

@@ -403,12 +403,16 @@ export default async function ProjectDetailPage({
       {isContainer ? null : (
         <div className="space-y-6">
           {showInteractiveCounters ? (
-            <Card title="Roster">
+            // PHASE-2 cohesion — the Roster + Stages panels carry the same
+            // corner ticks + coordinate tech labels as the dashboard KPI
+            // cards so the leaf workspace reads as one mission-control
+            // surface rather than mixed card styles.
+            <Card title="Roster" accentColor="amber" ticks techLabel="OPS ▸ ROSTER">
               <OwnedCounter snapshot={ownedSnapshot} />
             </Card>
           ) : null}
 
-          <Card title="Stages" accentColor="cyan">
+          <Card title="Stages" accentColor="cyan" ticks techLabel="OPS ▸ STAGES">
             <StageCounter snapshot={stageSnapshot} />
           </Card>
 

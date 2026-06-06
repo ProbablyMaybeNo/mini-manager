@@ -87,6 +87,31 @@ describe("WarbandModelsTable component surface", () => {
   test("renders an empty-state when the warband has no models", () => {
     expect(src).toContain("No models yet");
   });
+
+  test("PHASE-2 — table reads as the mission table (cyan-tinted phosphor frame)", () => {
+    // Matches the dashboard ProjectsDashboardTable: near-black surface +
+    // a 1px cyan-tinted border and the cyan-highlighted hover row marker.
+    expect(src).toContain("var(--color-cyan) 28%, var(--color-border)");
+    expect(src).toContain("inset_2px_0_0_0_var(--color-cyan)");
+  });
+
+  test("PHASE-2 — row status renders as the solid colour-bar (tone=bar)", () => {
+    expect(src).toContain('tone="bar"');
+  });
+
+  test("PHASE-2 — empty state is a terminal panel with ticks + label", () => {
+    expect(src).toContain("panel panel-ticks");
+    expect(src).toContain("panel-label");
+  });
+});
+
+describe("Project detail page — Roster + Stages cards carry terminal chrome", () => {
+  const src = read("src/app/projects/[id]/page.tsx");
+
+  test("PHASE-2 — Roster + Stages cards get corner ticks + coordinate labels", () => {
+    expect(src).toContain('techLabel="OPS ▸ ROSTER"');
+    expect(src).toContain('techLabel="OPS ▸ STAGES"');
+  });
 });
 
 describe("Project detail page swaps the recipe box for the models table on a Warband", () => {
