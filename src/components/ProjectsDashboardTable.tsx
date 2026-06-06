@@ -709,9 +709,12 @@ function DashboardRow({
             }}
           />
         ) : null}
+        {/* REDESIGN-CLEANUP (fix 2) — Ross: the project NAME should be white
+            so TYPE (cyan chip) is the differentiator. White by default, still
+            a link: hover lights it cyan + underlines. */}
         <Link
           href={`/projects/${row.id}`}
-          className="group inline-flex items-center gap-1 text-[var(--color-cyan)] hover:underline"
+          className="group inline-flex items-center gap-1 text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
           title={`Open ${row.name}`}
         >
           {row.name}
@@ -989,9 +992,11 @@ function MobileCompRow({
             <span aria-hidden className="block w-3 shrink-0" />
           ) : null}
           <span className="min-w-0">
+            {/* REDESIGN-CLEANUP (fix 2) — name white (matches desktop); link
+                hover lights cyan + underline. */}
             <Link
               href={`/projects/${row.id}`}
-              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-cyan)] hover:underline"
+              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
               title={`Open ${row.name}`}
             >
               <span className="truncate">{row.name}</span>
