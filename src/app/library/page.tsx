@@ -73,9 +73,15 @@ export default async function LibraryPage() {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-3rem-5rem)] md:h-screen">
+      {/* Terminal hero — mirrors the dashboard banner so the Library reads
+          as the same mission-control surface: a tracked-out coordinate
+          caption above the display-font title, not a plain SaaS H1. */}
       <header className="relative overflow-hidden px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-[var(--color-border)]">
-        <h1 className="text-3xl tracking-wide">LIBRARY</h1>
-        <p className="text-xs text-[var(--color-fg-muted)] mt-2 font-sans pr-24 md:pr-0">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+          SYS ▸ CATALOG / 02
+        </p>
+        <h1 className="title-display text-base md:text-lg">LIBRARY</h1>
+        <p className="text-xs text-[var(--color-fg-muted)] mt-3 font-sans pr-24 md:pr-0">
           {catalog.__row_count.toLocaleString()} paints across the cross-brand catalog.
           Filter by brand, line, type, or hue. Tap a row for swatch detail.
         </p>

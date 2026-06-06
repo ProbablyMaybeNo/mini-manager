@@ -221,7 +221,16 @@ export function LibraryPageClient({
           lets the column collapse to the viewport so the table's own
           truncation/clip can take effect. */}
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]">
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)]">
+          {/* Terminal module tag — a tiny coordinate caption anchors the
+              toolbar as a mission-control surface (lg+ only so it never
+              crowds the search on phones). */}
+          <span
+            aria-hidden
+            className="hidden lg:inline shrink-0 font-mono text-2xs uppercase tracking-[0.14em] text-[var(--color-cyan)]"
+          >
+            DB ▸ CATALOG
+          </span>
           {/* M2 — always-visible Library search field. Typing a known
               paint name is faster than chip-hunting (recognition over
               recall on a 7,144-paint catalog). Writes the same `q` URL
@@ -315,20 +324,32 @@ function LibrarySearchField({ initial }: { initial: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [local]);
 
+  // Terminal command-prompt search — a cyan ▸ prompt + a phosphor-tinted
+  // frame matching the dashboard filter idiom, so the Library's primary
+  // search reads as a CLI input, not a generic SaaS search box.
   return (
-    <input
-      type="search"
-      value={local}
-      onChange={(e) => setLocal(e.target.value)}
-      placeholder="Search paints…"
-      aria-label="Search the paint catalog"
-      className={
-        "flex-1 min-w-0 px-3 py-1.5 rounded-sm font-mono text-sm " +
-        "bg-[var(--color-bg-panel)] text-[var(--color-fg)] frame " +
-        "placeholder:text-[var(--color-fg-muted)] " +
-        "focus:outline-2 focus:outline-[var(--color-accent)]"
-      }
-    />
+    <label
+      className="flex-1 min-w-0 rounded-sm border flex items-center gap-2 px-3 py-1.5 focus-within:border-[var(--color-cyan)] transition-colors motion-reduce:transition-none"
+      style={{
+        borderColor:
+          "color-mix(in srgb, var(--color-cyan) 22%, var(--color-border))",
+      }}
+    >
+      <span aria-hidden className="font-mono text-xs text-[var(--color-cyan)]">
+        ▸
+      </span>
+      <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)] hidden sm:inline">
+        Search
+      </span>
+      <input
+        type="search"
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        placeholder="Filter paints by name, brand, SKU…"
+        aria-label="Search the paint catalog"
+        className="flex-1 min-w-0 bg-transparent font-mono text-sm text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-none"
+      />
+    </label>
   );
 }
 

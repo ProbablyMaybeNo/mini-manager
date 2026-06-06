@@ -270,8 +270,18 @@ export function LibraryTable({
         aria-colcount={9}
       >
         {paints.length === 0 ? (
-          <div className="p-8 text-center text-sm font-mono text-[var(--color-fg-muted)]">
-            No paints match the current filters.
+          <div className="p-6">
+            {/* Terminal empty-state panel — a framed module with a coordinate
+                tag, so a zero-result read still feels like the OS reporting
+                back, not a blank SaaS table. */}
+            <div className="panel panel-ticks relative p-8 text-center">
+              <span className="panel-label" aria-hidden>
+                DB ▸ EMPTY
+              </span>
+              <p className="text-sm font-mono text-[var(--color-fg-muted)]">
+                No paints match the current filters.
+              </p>
+            </div>
           </div>
         ) : (
           <div style={{ height: totalHeight, position: "relative" }}>
@@ -661,9 +671,14 @@ function PaintRow({
         "border-b border-[var(--color-border)]",
         rowIndex % 2 === 1 &&
           "bg-[color-mix(in_srgb,var(--color-fg)_2%,transparent)]",
-        "hover:bg-[color-mix(in_srgb,var(--color-fg)_4%,transparent)]",
-        "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)]",
-        active && "bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]",
+        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_6%,transparent)]",
+        "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        // Selected / detail-open row reads as a clear cyan-highlighted band
+        // (DESIGN_LANGUAGE §1: "a cyan-highlighted row"): a phosphor wash +
+        // an inset cyan rail down the left edge so the active row is
+        // unmistakable in the dense list.
+        active &&
+          "bg-[color-mix(in_srgb,var(--color-cyan)_14%,transparent)] shadow-[inset_2px_0_0_0_var(--color-cyan)]",
         selected &&
           "bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]",
         // LIB-COLORMAP — transient flash when the colour map scrolls here.
