@@ -188,8 +188,11 @@ export function EyedropperClient() {
     <ToolShell
       input={
         <div className="space-y-4">
-          <header className="space-y-1">
-            <h1 className="text-3xl tracking-wide">EYEDROPPER</h1>
+          <header className="space-y-2">
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
+              SYS ▸ EYEDROPPER / 03
+            </p>
+            <h1 className="title-display text-base md:text-lg">EYEDROPPER</h1>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)] leading-snug">
               Drop a reference image. It extracts six dominant colours —
               click any swatch to drop it from the palette.
@@ -198,7 +201,7 @@ export function EyedropperClient() {
 
           {previewUrl ? (
             <div className="space-y-2">
-              <div className="frame overflow-hidden">
+              <div className="panel panel-ticks overflow-hidden">
                 {sampled ? (
                   <EyedropperPins
                     imageUrl={previewUrl}
@@ -295,7 +298,7 @@ export function EyedropperClient() {
           </header>
 
           {swatches.length === 0 ? (
-            <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-6 text-center">
+            <p className="text-xs font-sans text-[var(--color-fg-muted)] panel px-3 py-6 text-center">
               No image yet — drop or choose one to extract colours.
             </p>
           ) : (
@@ -304,22 +307,20 @@ export function EyedropperClient() {
                 const matches: ReadonlyArray<MatchResult> =
                   matchesPerSwatch[i] ?? [];
                 return (
-                  <div key={`${hex}-${i}`} className="frame">
+                  <div key={`${hex}-${i}`} className="panel">
                     <div className="flex items-center gap-3 px-3 py-2 border-b border-[var(--color-border)]">
+                      {/* Color-bar swatch — solid fill, black hex text (§7.2),
+                          and the click target that drops it from the palette. */}
                       <button
                         type="button"
                         onClick={() => removeSwatch(i)}
                         aria-label={`Remove swatch ${hex}`}
-                        className="inline-block w-10 h-10 rounded-sm border tap-target"
-                        style={{
-                          background: hex,
-                          borderColor: "var(--color-border-strong)",
-                        }}
-                      />
+                        className="inline-grid place-items-center w-16 h-10 rounded-sm tap-target font-mono text-2xs text-black"
+                        style={{ background: hex }}
+                      >
+                        {hex}
+                      </button>
                       <div className="flex-1 min-w-0">
-                        <div className="font-mono text-xs text-[var(--color-fg)]">
-                          {hex}
-                        </div>
                         <div className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
                           Swatch {i + 1}
                         </div>
@@ -342,11 +343,8 @@ export function EyedropperClient() {
                           >
                             <span
                               aria-hidden
-                              className="inline-block w-4 h-4 rounded-sm border shrink-0"
-                              style={{
-                                background: r.paint.hex,
-                                borderColor: "var(--color-border-strong)",
-                              }}
+                              className="inline-block w-4 h-4 rounded-sm shrink-0"
+                              style={{ background: r.paint.hex }}
                             />
                             <span className="flex-1 min-w-0 text-2xs font-mono truncate text-[var(--color-fg)]">
                               {r.paint.brand} {r.paint.name}

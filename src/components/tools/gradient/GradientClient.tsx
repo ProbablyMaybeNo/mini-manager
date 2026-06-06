@@ -60,20 +60,33 @@ function ColorInput({ label, value, onChange, onOpenPicker }: ColorInputProps) {
             borderColor: "var(--color-border-strong)",
           }}
         />
-        <input
-          id={inputId}
-          type="text"
-          value={value}
-          aria-label={`${label} hex`}
-          onChange={(e) => {
-            const next = e.target.value.trim();
-            const normalised = normaliseHex(next);
-            onChange(normalised ?? next.toUpperCase());
+        {/* Terminal command-prompt hex field — cyan ▸ prompt + phosphor
+            frame (matches Match + Library search idioms). */}
+        <label
+          className="flex-1 min-w-0 rounded-sm border flex items-center gap-2 px-2 py-1.5 focus-within:border-[var(--color-accent)] transition-colors motion-reduce:transition-none"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--color-cyan) 22%, var(--color-border))",
           }}
-          maxLength={7}
-          placeholder="#0E4A8A"
-          className="flex-1 px-2 py-1.5 font-mono text-xs bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-        />
+        >
+          <span aria-hidden className="font-mono text-xs text-[var(--color-cyan)]">
+            ▸
+          </span>
+          <input
+            id={inputId}
+            type="text"
+            value={value}
+            aria-label={`${label} hex`}
+            onChange={(e) => {
+              const next = e.target.value.trim();
+              const normalised = normaliseHex(next);
+              onChange(normalised ?? next.toUpperCase());
+            }}
+            maxLength={7}
+            placeholder="#0E4A8A"
+            className="flex-1 min-w-0 bg-transparent font-mono text-xs text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-none"
+          />
+        </label>
         <Button
           type="button"
           onClick={onOpenPicker}
@@ -177,7 +190,10 @@ export function GradientClient() {
     <ToolShell
       input={
         <div className="space-y-4">
-          <header className="space-y-1">
+          <header className="space-y-2">
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
+              SYS ▸ LAYERING / 04
+            </p>
             <h1 className="text-3xl tracking-wide">LAYERING</h1>
             <p className="text-2xs font-sans text-[var(--color-fg-muted)] leading-snug">
               Pick base, shadow, and highlight. The ramp interpolates so the

@@ -60,7 +60,7 @@ export function DropZone({ onFile, onError, disabled }: Props) {
       }}
       tabIndex={0}
       className={clsx(
-        "frame-strong p-6 text-center cursor-pointer transition-colors",
+        "panel panel-ticks p-6 text-center cursor-pointer transition-colors",
         hovering
           ? "border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]"
           : "hover:border-[var(--color-cyan)]",

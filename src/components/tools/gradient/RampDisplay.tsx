@@ -20,22 +20,29 @@ interface Props {
 export function RampDisplay({ steps }: Props) {
   if (steps.length === 0) {
     return (
-      <p className="text-xs font-sans text-[var(--color-fg-muted)] frame px-3 py-6 text-center">
+      <p className="text-xs font-sans text-[var(--color-fg-muted)] panel px-3 py-6 text-center">
         Enter base + shadow + highlight to render a ramp.
       </p>
     );
   }
   return (
     <div className="space-y-2">
-      <div className="flex w-full h-16 frame-strong overflow-hidden">
-        {steps.map((s, i) => (
-          <div
-            key={i}
-            className="flex-1 border border-[var(--color-border)]"
-            style={{ background: s.hex }}
-            aria-hidden
-          />
-        ))}
+      {/* Ramp bar framed as a terminal panel; each segment is a color bar
+          with its hex in black text overlaid (§7.2). */}
+      <div className="relative panel panel-ticks p-1">
+        <div className="flex w-full h-16 overflow-hidden">
+          {steps.map((s, i) => (
+            <div
+              key={i}
+              className="flex-1 grid place-items-center"
+              style={{ background: s.hex }}
+            >
+              <span className="font-mono text-[10px] text-black/80 px-0.5 truncate">
+                {s.hex}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
       <div
         className="grid gap-1"
@@ -45,9 +52,6 @@ export function RampDisplay({ steps }: Props) {
       >
         {steps.map((s, i) => (
           <div key={i} className="space-y-0.5 text-center">
-            <div className="font-mono text-2xs text-[var(--color-fg)]">
-              {s.hex}
-            </div>
             {s.match ? (
               <div
                 className={clsx(
