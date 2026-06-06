@@ -166,6 +166,8 @@ export function ProjectColorSchemeBox({
           attachedRecipeName ? `Recipe · ${attachedRecipeName}` : "Recipe"
         }
         accentColor="cyan"
+        ticks
+        techLabel="OPS ▸ RECIPE"
       >
         <div className="space-y-3">
           {/* UX-907 — When 2+ recipes attached, surface the recipe-picker

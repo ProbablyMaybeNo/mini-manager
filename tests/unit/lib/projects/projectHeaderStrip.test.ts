@@ -189,6 +189,13 @@ describe("Project detail page wraps the workspace in the progress provider", () 
     expect(src).toContain("StageProgressProvider");
     expect(src).toContain("<StageProgressProvider>");
   });
+
+  test("PHASE-2 — page shows a coordinate-style SYS channel caption", () => {
+    // Mirrors the dashboard's `SYS ▸ …` banner so the unit workspace
+    // reads as a mission-control screen.
+    expect(src).toContain("SYS ▸ ");
+    expect(src).toContain("project.type.toUpperCase()");
+  });
 });
 
 describe("ProgressBar — stretch + height props (P12.8)", () => {

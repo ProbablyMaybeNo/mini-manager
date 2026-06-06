@@ -314,6 +314,13 @@ export default async function ProjectDetailPage({
     <StageProgressProvider>
     <RosterProvider>
     <div className="p-6 md:p-8 max-w-5xl space-y-6">
+      {/* PHASE-2 cohesion — a coordinate-style channel caption above the
+          breadcrumb, mirroring the dashboard's `SYS ▸ …` banner so the
+          unit workspace reads as a mission-control screen. The channel is
+          the project type (ARMY / WARBAND / UNIT …). */}
+      <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
+        SYS ▸ {project.type.toUpperCase()} / WORKSPACE
+      </p>
       <nav className="text-xs font-mono text-[var(--color-fg-muted)] flex items-center justify-between gap-3">
         <span className="min-w-0 truncate">
           <Link href="/projects" className="hover:text-[var(--color-accent)]">

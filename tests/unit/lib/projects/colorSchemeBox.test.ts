@@ -67,6 +67,12 @@ describe("ProjectColorSchemeBox component surface", () => {
     expect(src).toContain('aria-modal="true"');
     expect(src).toContain("onClick={onClose}");
   });
+
+  test("PHASE-2 — the recipe Card carries corner ticks + a coordinate label", () => {
+    // Cohesion with the dashboard KPI cards + the roster/stages panels.
+    expect(src).toContain("ticks");
+    expect(src).toContain('techLabel="OPS ▸ RECIPE"');
+  });
 });
 
 describe("Project detail page wires the Color Scheme box in", () => {
