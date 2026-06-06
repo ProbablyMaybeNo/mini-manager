@@ -16,6 +16,7 @@ import { RadialGauge } from "@/components/viz/RadialGauge";
 import { LineGraph, AreaGraph } from "@/components/viz/LineGraph";
 import { Sparkline } from "@/components/viz/Sparkline";
 import { SegmentedBar } from "@/components/viz/SegmentedBar";
+import { WireframeGlobe } from "@/components/viz/WireframeGlobe";
 import { resolveAutoTone } from "@/components/viz/vizTokens";
 
 function read(rel: string): string {
@@ -173,6 +174,68 @@ describe("SegmentedBar — segmented (non-smooth) progress", () => {
 });
 
 /* ============================================================
+   WireframeGlobe — the signature dashboard radar hero
+   ============================================================ */
+describe("WireframeGlobe — accessible radar-scope hero", () => {
+  const render = (p?: Parameters<typeof WireframeGlobe>[0]) =>
+    renderToStaticMarkup(createElement(WireframeGlobe, p ?? {}));
+
+  test("renders an accessible img with a default label", () => {
+    const html = render();
+    expect(html).toContain('role="img"');
+    expect(html).toContain("aria-label=");
+  });
+
+  test("honours an explicit aria-label", () => {
+    expect(render({ ariaLabel: "Mission radar" })).toContain(
+      'aria-label="Mission radar"',
+    );
+  });
+
+  test("renders a complete still frame: rim, grid, ticks, sweep, blips", () => {
+    const html = render();
+    expect(html).toContain("<svg"); // SSR-rendered SVG
+    expect(html).toContain("<circle"); // rim + blips
+    expect(html).toContain("<ellipse"); // latitude rings + meridians
+    expect(html).toContain("<line"); // tick graduations + axes
+    expect(html).toContain("<path"); // the radar sweep wedge
+    expect(html).toContain("radialGradient"); // the sweep fill
+  });
+
+  test("the sweep carries the glow bloom (drop-shadow on the active edge)", () => {
+    expect(render()).toContain("drop-shadow");
+  });
+
+  test("renders a deterministic count of meridian/latitude rings", () => {
+    // 7 meridians + (3 latitudes * 2 mirrored) + 1 equator = 14 ellipses.
+    const html = render({ meridians: 7, latitudes: 3 });
+    const ellipses = html.match(/<ellipse/g) ?? [];
+    expect(ellipses.length).toBe(7 + 3 * 2 + 1);
+  });
+
+  test("does not emit NaN coordinates for any geometry", () => {
+    expect(render({ size: 200, meridians: 9, latitudes: 4 })).not.toContain(
+      "NaN",
+    );
+  });
+
+  test("animation is opt-out (no infinite animation when animate=false)", () => {
+    // The sweep id (`wfg-sweep-cyan`) survives in the gradient defs even when
+    // static — assert on the keyframe *application* (the `_8s` / `_2.6s`
+    // duration tokens) instead, which only the motion-safe classes carry.
+    const html = render({ animate: false });
+    expect(html).not.toContain("wfg-sweep_");
+    expect(html).not.toContain("wfg-ping_");
+    expect(html).not.toContain("motion-safe:");
+  });
+
+  test("animation when enabled is motion-safe gated", () => {
+    const html = render({ animate: true });
+    expect(html).toContain("motion-safe:[animation:wfg-sweep_");
+  });
+});
+
+/* ============================================================
    Shared tone resolution (the locked completion threshold set)
    ============================================================ */
 describe("resolveAutoTone — locked behind/mid/ahead set", () => {
@@ -198,6 +261,7 @@ describe("viz kit — token discipline + SSR-safe", () => {
     "src/components/viz/LineGraph.tsx",
     "src/components/viz/Sparkline.tsx",
     "src/components/viz/SegmentedBar.tsx",
+    "src/components/viz/WireframeGlobe.tsx",
     "src/components/viz/vizTokens.ts",
   ];
 
@@ -226,6 +290,7 @@ describe("viz kit — token discipline + SSR-safe", () => {
       "src/components/viz/LineGraph.tsx",
       "src/components/viz/Sparkline.tsx",
       "src/components/viz/SegmentedBar.tsx",
+      "src/components/viz/WireframeGlobe.tsx",
     ]) {
       expect(read(f)).toContain("motion-safe:");
     }

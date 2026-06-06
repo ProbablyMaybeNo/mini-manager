@@ -11,6 +11,7 @@ export { RadialGauge, type RadialGaugeProps } from "./RadialGauge";
 export { LineGraph, AreaGraph, type LineGraphProps } from "./LineGraph";
 export { Sparkline, type SparklineProps } from "./Sparkline";
 export { SegmentedBar, type SegmentedBarProps } from "./SegmentedBar";
+export { WireframeGlobe, type WireframeGlobeProps } from "./WireframeGlobe";
 export {
   type VizTone,
   type VizToneOrAuto,
