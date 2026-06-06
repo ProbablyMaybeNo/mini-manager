@@ -80,10 +80,16 @@ export function ProjectProgressTable({
     // points there instead (containment rules, 2026-06-05).
     const canAddHere = parentType === "Army" || parentType === "Warband";
     return (
+      // PHASE-2 — the empty state is a terminal panel (ticks + coordinate
+      // label) so a container with no children still reads as the mission-
+      // control surface rather than a bare frame.
       <section
-        className="frame p-6 text-center space-y-3"
+        className="panel panel-ticks relative p-6 text-center space-y-3"
         aria-label="Progress (empty)"
       >
+        <span className="panel-label" aria-hidden>
+          DB ▸ PROGRESS
+        </span>
         <p className="text-sm font-sans text-[var(--color-fg-muted)]">
           {canAddHere ? (
             <>
@@ -112,12 +118,24 @@ export function ProjectProgressTable({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="section-title">Progress · {rows.length}</h2>
       </div>
-      <div className="frame overflow-x-auto">
-        <table className="w-full text-xs font-mono">
+      {/* PHASE-2 — the "mission table": near-black surface with a 1px
+          cyan-tinted phosphor border so it reads as a lit terminal frame,
+          matching the dashboard ProjectsDashboardTable. */}
+      <div
+        className="overflow-x-auto rounded-sm border bg-[var(--color-bg-elevated)]"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--color-cyan) 28%, var(--color-border))",
+        }}
+      >
+        <table className="mm-density-rows w-full text-xs font-mono">
           <thead>
             <tr
               className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-              style={{ borderBottom: "1px solid var(--color-border-strong)" }}
+              style={{
+                borderBottom:
+                  "1px solid color-mix(in srgb, var(--color-cyan) 45%, var(--color-border-strong))",
+              }}
             >
               <th scope="col" className="px-3 py-2">Name</th>
               <th scope="col" className="px-3 py-2">Type</th>
@@ -162,7 +180,16 @@ function ProgressTableRow({ row }: { row: ProgressRow }) {
 
   return (
     <tr
-      className="hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors"
+      // PHASE-2 — the cyan-highlighted active/hover row (the mission-table
+      // reference detail): a cyan wash + a 2px cyan left-edge marker via an
+      // inset box-shadow so the focused line pops as the "selected" row.
+      className={clsx(
+        "transition-colors",
+        "hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        "hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+        "focus-within:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
+        "focus-within:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+      )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
     >
       <td className="px-3 py-2">
@@ -215,7 +242,10 @@ function ProgressTableRow({ row }: { row: ProgressRow }) {
         <PaletteStrip hexes={row.paletteHexes} />
       </td>
       <td className="px-3 py-2">
-        <StatusPill status={STATUS_PILL[row.status]}>{row.status}</StatusPill>
+        {/* §7.2 — solid colour-bar status, the mission-table idiom. */}
+        <StatusPill status={STATUS_PILL[row.status]} tone="bar">
+          {row.status}
+        </StatusPill>
       </td>
       <td className="px-3 py-2">
         <span className="inline-flex items-center gap-2">

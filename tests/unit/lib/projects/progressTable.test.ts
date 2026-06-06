@@ -80,6 +80,24 @@ describe("ProjectProgressTable component surface", () => {
     // Same range as updateProjectCount zod schema.
     expect(src).toMatch(/Math\.max\(0,\s*Math\.min\(9999/);
   });
+
+  test("PHASE-2 — table reads as the mission table (cyan-tinted phosphor frame)", () => {
+    // Matches the dashboard ProjectsDashboardTable: near-black surface +
+    // a 1px cyan-tinted border, density rows, and the cyan-highlighted
+    // hover row with the inset left-edge marker.
+    expect(src).toContain("var(--color-cyan) 28%, var(--color-border)");
+    expect(src).toContain("mm-density-rows");
+    expect(src).toContain("inset_2px_0_0_0_var(--color-cyan)");
+  });
+
+  test("PHASE-2 — row status renders as the solid colour-bar (tone=bar)", () => {
+    expect(src).toContain('tone="bar"');
+  });
+
+  test("PHASE-2 — empty state is a terminal panel with ticks + label", () => {
+    expect(src).toContain("panel panel-ticks");
+    expect(src).toContain("panel-label");
+  });
 });
 
 describe("updateProjectCount server action (P12.10)", () => {
