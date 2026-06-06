@@ -14,6 +14,7 @@ import { ToolFooterActions } from "@/components/tools/ToolFooterActions";
 import type { ToolPaletteSwatch } from "@/lib/tools/types";
 import { MatchResultsRow } from "./MatchResultsRow";
 import { Button } from "@/components/ui/Button";
+import { Panel } from "@/components/ui/Panel";
 import { ColorPickerDialog } from "@/components/ui/ColorPickerDialog";
 
 const PAGE_SIZE = 50;
@@ -295,14 +296,11 @@ export function MatchClient() {
               Page {page + 1} / {pageCount}
             </p>
           </header>
-          <div
-            className="relative panel"
+          <Panel
+            label="DB ▸ RANKED"
             role="table"
             aria-label="Match results"
           >
-            <span className="panel-label" aria-hidden>
-              DB ▸ RANKED
-            </span>
             <div
               className="grid grid-cols-[24px_1fr_72px_56px] items-center gap-2 px-2 py-1 border-b border-[var(--color-border-strong)] text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]"
               role="row"
@@ -347,7 +345,7 @@ export function MatchClient() {
                 />
               ))
             )}
-          </div>
+          </Panel>
           {pageCount > 1 ? (
             <div className="flex items-center justify-center gap-2 pt-1">
               <button

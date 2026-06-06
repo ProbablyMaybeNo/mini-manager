@@ -18,6 +18,7 @@ import {
 import { Stopwatch } from "@/components/focus/Stopwatch";
 import { PlannerInspoCell } from "@/components/planner/PlannerInspoCell";
 import { Card } from "@/components/ui/Card";
+import { Panel } from "@/components/ui/Panel";
 import { buildFocusSlots } from "@/lib/focus/rollup";
 
 export const dynamic = "force-dynamic";
@@ -223,7 +224,7 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
  */
 function FocusEmptyState({ hasCandidates }: { hasCandidates: boolean }) {
   return (
-    <div className="panel p-4 space-y-2">
+    <Panel ticks label="SYS ▸ STANDBY" className="p-4 space-y-2">
       <p className="text-sm font-sans text-[var(--color-fg)] leading-relaxed">
         Pick a project to focus on while you paint — its recipe will live
         here.
@@ -242,6 +243,6 @@ function FocusEmptyState({ hasCandidates }: { hasCandidates: boolean }) {
           </>
         )}
       </p>
-    </div>
+    </Panel>
   );
 }
