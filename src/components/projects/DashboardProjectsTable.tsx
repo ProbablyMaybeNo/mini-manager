@@ -50,7 +50,19 @@ export function DashboardProjectsTable({
 
   return (
     <div className="space-y-3">
-      <label className="frame flex items-center gap-2 px-3 py-2">
+      {/* PHASE-1 cohesion — the filter reads as a terminal command prompt:
+          a cyan ▸ prompt + a phosphor-tinted frame that matches the
+          mission table's border. */}
+      <label
+        className="rounded-sm border flex items-center gap-2 px-3 py-2 focus-within:border-[var(--color-cyan)] transition-colors"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--color-cyan) 22%, var(--color-border))",
+        }}
+      >
+        <span aria-hidden className="font-mono text-xs text-[var(--color-cyan)]">
+          ▸
+        </span>
         <span className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
           Filter
         </span>

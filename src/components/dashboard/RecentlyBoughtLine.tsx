@@ -14,6 +14,10 @@ export async function RecentlyBoughtLine({ windowDays = 7 }: { windowDays?: numb
   const totals = Object.entries(totalByCurrency).map(([code, n]) => formatTotal(n, code));
   return (
     <p className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
+      {/* PHASE-1 cohesion — a cyan ▸ marker reads the passive spend readout
+          as a terminal status line, consistent with the screen's other
+          coordinate captions. */}
+      <span aria-hidden className="text-[var(--color-cyan)]">▸ </span>
       Last {windowDays} days: {count} item{count === 1 ? "" : "s"}
       {totals.length > 0 ? ` · ${totals.join(" · ")} spent` : ""}
     </p>

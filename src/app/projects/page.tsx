@@ -273,7 +273,11 @@ export default async function DashboardPage({
               inverted pyramid (doc §14/§4). */}
           <DashboardKpiStrip cards={kpiCards} />
 
-          <Card title="PROJECTS" accentColor="cyan">
+          {/* PHASE-1 cohesion — the PROJECTS table panel carries the same
+              corner ticks + coordinate tech label as the KPI cards + the
+              widget panels, so the whole screen reads as one mission-
+              control surface rather than mixed card styles. */}
+          <Card title="PROJECTS" accentColor="cyan" ticks techLabel="DB ▸ PROJECTS">
             <DashboardProjectsTable
               rows={rows}
               ownedRecipes={ownedRecipes}
@@ -293,7 +297,13 @@ export default async function DashboardPage({
 
 function EmptyState() {
   return (
-    <div className="relative frame p-8 text-center space-y-6 overflow-hidden">
+    // PHASE-1 cohesion — the empty state is a terminal panel (ticks +
+    // coordinate label) so the very first thing a new painter sees already
+    // reads as the mission-control surface, not a grey SaaS box.
+    <div className="panel panel-ticks relative p-8 text-center space-y-6 overflow-hidden">
+      <span className="panel-label" aria-hidden>
+        DB ▸ EMPTY
+      </span>
       <div>
         <h2 className="text-lg glow-cyan mb-3">No projects yet</h2>
         <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto">
