@@ -133,4 +133,36 @@ describe("FOCUS page — Stopwatch wiring (Phase-14 spillover)", () => {
       /focusBundle\s*\?[\s\S]{0,400}<Stopwatch/,
     );
   });
+
+  test("Focus-polish — Stopwatch lives in its own TIMER card, not the FOCUS bench", () => {
+    // Ross: "separate the stopwatch into its own small section." The
+    // timer is lifted out of the FOCUS Card into a dedicated TIMER card
+    // with the SYS ▸ TIMER tech label.
+    expect(src).toMatch(/<Card[^>]*title="TIMER"[\s\S]{0,200}<Stopwatch/);
+    expect(src).toMatch(/techLabel="SYS ▸ TIMER"/);
+    // The Stopwatch must NOT sit inside the FOCUS bench card body
+    // anymore — the FOCUS Card closes before the TIMER card opens.
+    expect(src).toMatch(
+      /title="FOCUS"[\s\S]*?<\/Card>[\s\S]*?title="TIMER"[\s\S]*?<Stopwatch/,
+    );
+  });
+});
+
+describe("Stopwatch — own-section framing (Focus-polish)", () => {
+  const src = read("src/components/focus/Stopwatch.tsx");
+
+  test("drops its own panel chrome now it sits in a dedicated card", () => {
+    // The duplicate `.panel panel-ticks` frame + `SYS ▸ TIMER` panel
+    // label moved up to the TIMER Card; the component renders as the
+    // card body's content row.
+    expect(src).not.toMatch(/className=\{clsx\(\s*["']panel panel-ticks/);
+    expect(src).not.toContain('className="panel-label"');
+  });
+
+  test("keeps the full start / pause / resume / stop lifecycle", () => {
+    expect(src).toContain("handleStart");
+    expect(src).toContain("handlePause");
+    expect(src).toContain("handleResume");
+    expect(src).toContain("handleStop");
+  });
 });

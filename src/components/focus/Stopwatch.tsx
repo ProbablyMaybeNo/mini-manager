@@ -205,18 +205,16 @@ export function Stopwatch({
   }, [sessionId, pauseStartMs]);
 
   return (
+    // Focus-polish — the stopwatch now lives in its own TIMER card on
+    // the FOCUS page, so it drops its own `.panel` chrome + duplicate
+    // `SYS ▸ TIMER` label and renders as the card body's content row.
     <div
       className={clsx(
-        "panel panel-ticks relative",
-        "flex flex-wrap items-center gap-3",
-        "px-3 pt-4 pb-3",
+        "relative flex flex-wrap items-center gap-3",
       )}
       data-stopwatch-project-id={projectId}
       data-stopwatch-status={status}
     >
-      <span className="panel-label" aria-hidden>
-        SYS ▸ TIMER
-      </span>
       <div className="flex flex-col">
         <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
           Stopwatch

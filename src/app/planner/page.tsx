@@ -175,25 +175,39 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
           ) : (
             <FocusEmptyState hasCandidates={focusCandidates.length > 0} />
           )}
-          {focusBundle ? (
-            <Stopwatch
-              projectId={focusBundle.project.id}
-              inProgressSession={
-                inProgressSession
-                  ? {
-                      id: inProgressSession.id,
-                      projectId: inProgressSession.projectId,
-                      startedAt: inProgressSession.startedAt.getTime(),
-                      pausedMs: inProgressSession.pausedMs,
-                    }
-                  : null
-              }
-              todaySeconds={sessionRollups.todaySeconds}
-              weekSeconds={sessionRollups.weekSeconds}
-            />
-          ) : null}
         </div>
       </Card>
+
+      {/* Section: the bench stopwatch — its own compact card, lifted out
+          of the FOCUS bench so the session timer reads as a distinct
+          instrument (Ross: "separate the stopwatch into its own small
+          section"). Only shown when a project is focused, since the timer
+          is scoped to that project. */}
+      {focusBundle ? (
+        <Card
+          title="TIMER"
+          titleAs="h2"
+          accentColor="cyan"
+          ticks
+          techLabel="SYS ▸ TIMER"
+        >
+          <Stopwatch
+            projectId={focusBundle.project.id}
+            inProgressSession={
+              inProgressSession
+                ? {
+                    id: inProgressSession.id,
+                    projectId: inProgressSession.projectId,
+                    startedAt: inProgressSession.startedAt.getTime(),
+                    pausedMs: inProgressSession.pausedMs,
+                  }
+                : null
+            }
+            todaySeconds={sessionRollups.todaySeconds}
+            weekSeconds={sessionRollups.weekSeconds}
+          />
+        </Card>
+      ) : null}
 
       {/* Section 4: the inspo reference board. */}
       <PlannerInspoCell />
