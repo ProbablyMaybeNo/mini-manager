@@ -231,8 +231,11 @@ export function WheelClient() {
       input={
         <div className="space-y-4">
           <header className="space-y-2">
-            <h1 className="text-3xl tracking-wide">COLOUR WHEEL</h1>
-            <p className="frame px-3 py-2 text-2xs font-sans leading-snug text-[var(--color-fg-muted)] bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]">
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
+              SYS ▸ WHEEL / 01
+            </p>
+            <h1 className="title-display text-base md:text-lg">COLOUR WHEEL</h1>
+            <p className="panel px-3 py-2 text-2xs font-sans leading-snug text-[var(--color-fg-muted)]">
               Use the colour wheel to plan a recipe — assign a paint to each
               colour, then attach it to a project or save it for later.
             </p>
@@ -241,7 +244,12 @@ export function WheelClient() {
             </p>
           </header>
 
-          <div className="flex items-center justify-center">
+          {/* The pixel wheel framed in terminal chrome — a nested-border
+              panel with corner ticks + an INPUT ▸ HUE port tag. */}
+          <div className="relative panel panel-ticks p-4 flex items-center justify-center">
+            <span className="panel-label" aria-hidden>
+              INPUT ▸ HUE
+            </span>
             <WheelCanvas
               size={360}
               lightness={lightness}
@@ -289,21 +297,20 @@ export function WheelClient() {
       }
       output={
         <div className="space-y-4">
-          <header className="space-y-1">
+          <header className="space-y-2">
             <h2 className="section-title">
               Recipe colours · {harmonyHexes.length}
             </h2>
-            <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
-              Active:{" "}
+            {/* Active pick rendered as a color-bar chip — solid fill, black
+                text shows the hex (§7.2 signature, AA on the fill). */}
+            <p className="flex items-center gap-2 text-2xs font-sans text-[var(--color-fg-muted)]">
+              <span className="font-mono uppercase tracking-wider">Active</span>
               <span
-                aria-hidden
-                className="inline-block align-middle w-3 h-3 rounded-sm border mx-1"
-                style={{
-                  background: activeHex,
-                  borderColor: "var(--color-border-strong)",
-                }}
-              />
-              <span className="font-mono">{activeHex}</span>
+                className="inline-flex items-center px-2 py-0.5 rounded-sm font-mono text-2xs text-black"
+                style={{ background: activeHex }}
+              >
+                {activeHex}
+              </span>
             </p>
           </header>
 

@@ -84,24 +84,21 @@ export function SwatchActions({
   return (
     <div
       className={clsx(
-        "frame px-2 py-1.5",
+        "panel px-2 py-1.5",
         isPrimary && "border-[var(--color-accent)]",
       )}
     >
       <div className="flex items-center gap-2">
+        {/* Color-bar swatch — solid fill, black hex text (§7.2). The chip
+            both shows the colour and labels it, AA on its own fill. */}
         <span
-          aria-hidden
-          className="inline-block w-6 h-6 rounded-sm border shrink-0"
-          style={{
-            background: hex,
-            borderColor: "var(--color-border-strong)",
-          }}
-        />
+          className="inline-flex items-center justify-center w-16 shrink-0 px-1 py-1 rounded-sm font-mono text-2xs text-black"
+          style={{ background: hex }}
+        >
+          {hex}
+        </span>
         <div className="flex-1 min-w-0">
-          <div className="font-mono text-xs text-[var(--color-fg)] truncate">
-            {hex}
-          </div>
-          <div className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
+          <div className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider truncate">
             {label}
             {isPrimary ? " · primary" : ""}
             {isPinned ? " · pinned" : ""}
@@ -147,11 +144,8 @@ export function SwatchActions({
         <div className="mt-2 border-t border-[var(--color-border)] pt-2 flex items-center gap-2">
           <span
             aria-hidden
-            className="inline-block w-4 h-4 rounded-sm border shrink-0"
-            style={{
-              background: assigned.hex,
-              borderColor: "var(--color-border-strong)",
-            }}
+            className="inline-block w-4 h-4 rounded-sm shrink-0"
+            style={{ background: assigned.hex }}
           />
           <span className="flex-1 min-w-0 text-2xs font-mono truncate text-[var(--color-fg)]">
             {assignedLabel}
