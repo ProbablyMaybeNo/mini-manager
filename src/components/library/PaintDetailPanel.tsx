@@ -112,17 +112,35 @@ export function PaintDetailPanel({
 
   if (!paint) return null;
 
+  // Inventory status for the colour-bar readout. Reflects the server-passed
+  // snapshot (refreshed after a toggle via the stepper's router.refresh) —
+  // a glanceable badge, not the live editing surface.
+  const isOwned = (inventory?.ownedCount ?? 0) > 0;
+  const isWanted = inventory?.isWishlisted ?? false;
+
   return (
     <aside
       className={clsx(
         "fixed inset-y-0 right-0 z-50 w-full md:w-[420px] bg-[var(--color-bg-panel)]",
-        "border-l border-[var(--color-border-strong)] shadow-2xl",
+        // Terminal side-panel: near-black fill + a 1px phosphor left border
+        // (cyan-tinted) so the slide-out reads as a CRT bezel docking onto
+        // the list rather than a grey SaaS drawer.
+        "border-l shadow-2xl",
         "flex flex-col pb-20 md:pb-0",
       )}
+      style={{
+        borderLeftColor:
+          "color-mix(in srgb, var(--color-cyan) 32%, var(--color-border-strong))",
+      }}
       aria-label={`${paint.brand} ${paint.name} detail`}
     >
-      <header className="flex items-start justify-between gap-2 p-4 border-b border-[var(--color-border)]">
+      <header className="flex items-start justify-between gap-2 p-4 border-b border-[var(--color-border-strong)]">
         <div className="min-w-0">
+          {/* Coordinate tag — anchors the panel as a mission-control
+              readout, mirroring the page hero + map module captions. */}
+          <p className="text-2xs font-mono uppercase tracking-[0.18em] text-[var(--color-cyan)] mb-1">
+            SYS ▸ PAINT
+          </p>
           <p className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
             {paint.brand}
             {paint.line ? ` · ${paint.line}` : ""}
@@ -148,10 +166,27 @@ export function PaintDetailPanel({
 
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-5">
         <div
-          className="h-48 w-full rounded-sm border border-[var(--color-border)]"
+          className="h-48 w-full rounded-sm border border-[var(--color-border-strong)]"
           style={{ background: paint.hex }}
           aria-label={`Swatch ${paint.hex}`}
         />
+
+        {/* Inventory status as colour bars (DESIGN_LANGUAGE §7.2) — a
+            glanceable green OWNED / yellow WANTED block so the painter sees
+            collection state without reading the stepper below. */}
+        <section
+          className="flex flex-wrap items-center gap-2"
+          aria-label="Collection status"
+        >
+          <StatusPill status={isOwned ? "ok" : "neutral"} tone="bar">
+            {isOwned ? `Owned · ${inventory?.ownedCount ?? 0}` : "Not owned"}
+          </StatusPill>
+          {isWanted ? (
+            <StatusPill status="wishlist" tone="bar">
+              Wanted
+            </StatusPill>
+          ) : null}
+        </section>
 
         <section
           className="flex items-center gap-3"
@@ -162,7 +197,10 @@ export function PaintDetailPanel({
             title={`${paint.type} — paint type / medium`}
           >
             <TypeIcon type={paint.type} className="text-[var(--color-fg)] text-base" />
-            <StatusPill status={PAINT_TYPE_PILL[paint.type] ?? "neutral"}>
+            {/* Color-bar status (DESIGN_LANGUAGE §7.2) — the paint type reads
+                as a solid phosphor block with black text, the terminal status
+                idiom, rather than an outline chip. */}
+            <StatusPill status={PAINT_TYPE_PILL[paint.type] ?? "neutral"} tone="bar">
               {paint.type}
             </StatusPill>
           </span>
