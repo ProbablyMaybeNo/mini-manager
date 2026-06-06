@@ -185,10 +185,14 @@ export function NavRail({ user, appVersion }: NavRailProps = {}) {
             className="inline-flex items-center rounded-sm"
           >
             {/* UI-CHROME — the text wordmark is replaced by the sign-in
-                brand logo (the engraved CRT lockup). Sized compact for the
-                rail header; the Link carries the accessible name so the
-                decorative image needs none. */}
-            <Logo width={36} decorative />
+                brand logo (the engraved CRT lockup). The Link carries the
+                accessible name so the decorative image needs none.
+                REDESIGN-CLEANUP (fix 4) — Ross: the brand logo was too small
+                to read ("mini-manager" illegible at 36px). Bumped to 48px so
+                the wordmark inside the lockup is legible; still fits the
+                200px rail header beside the 32px collapse toggle, and the
+                collapsed rail renders no logo so nothing clips there. */}
+            <Logo width={48} decorative />
           </Link>
         )}
         <button

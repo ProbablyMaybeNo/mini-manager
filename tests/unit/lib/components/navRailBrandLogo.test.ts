@@ -34,4 +34,12 @@ describe("NavRail — UI-CHROME brand logo replaces the text wordmark", () => {
   test("the brand link carries the accessible name", () => {
     expect(src).toMatch(/aria-label="Mini Manager"/);
   });
+
+  test("REDESIGN-CLEANUP fix 4 — logo sized for a legible wordmark", () => {
+    // Ross flagged the 36px lockup as too small to read "mini-manager".
+    // Pin a legible floor (>= 44px) so a future tidy-up can't shrink it back.
+    const m = src.match(/<Logo\s+width=\{(\d+)\}/);
+    expect(m).not.toBeNull();
+    expect(Number(m![1])).toBeGreaterThanOrEqual(44);
+  });
 });
