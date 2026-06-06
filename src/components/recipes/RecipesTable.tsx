@@ -115,12 +115,19 @@ export function RecipesTable({ rows, assignProjects }: Props) {
           />
         ))}
       </div>
-      <div className="hidden md:block frame overflow-x-auto">
+      {/* Item 1 — terminal panel frame: near-black fill, 1px phosphor
+          border, corner ticks + a tiny technical label on the top border,
+          replacing the bare `.frame`. The table itself carries the
+          cyan-highlighted hover/selected row idiom below. */}
+      <div className="hidden md:block panel panel-ticks relative overflow-x-auto">
+        <span className="panel-label" aria-hidden>
+          RECIPES · {sorted.length}
+        </span>
       <table className="w-full text-xs font-mono">
         <thead>
           <tr
             className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-            style={{ borderBottom: "1px solid var(--color-border-strong)" }}
+            style={{ borderBottom: "1px solid var(--color-cyan-dim)" }}
           >
             <Th
               label="Name"
@@ -173,7 +180,7 @@ function RecipeCardRow({
   assignProjects: ReadonlyArray<AssignProjectOption>;
 }) {
   return (
-    <div className="frame px-3 py-3 flex flex-col gap-2 bg-[var(--color-bg-elevated)]">
+    <div className="panel px-3 py-3 flex flex-col gap-2 active:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] transition-shadow">
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/recipes/${row.id}`}
@@ -262,7 +269,7 @@ function RecipeRow({
 }) {
   return (
     <tr
-      className="hover:bg-[color-mix(in_srgb,var(--color-cyan)_4%,transparent)] transition-colors align-top"
+      className="caret-row hover:bg-[color-mix(in_srgb,var(--color-cyan)_12%,transparent)] hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] transition-colors align-top"
       style={{ borderBottom: "1px solid var(--color-border)" }}
     >
       <td className="px-3 py-3">

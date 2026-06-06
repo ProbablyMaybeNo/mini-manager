@@ -95,7 +95,10 @@ export default async function RecipesPage() {
 
 function EmptyState() {
   return (
-    <div className="relative frame p-8 text-center space-y-4 overflow-hidden">
+    <div className="relative panel panel-ticks p-8 text-center space-y-4 overflow-hidden">
+      <span className="panel-label" aria-hidden>
+        RECIPES · 0
+      </span>
       <h2 className="text-lg glow-cyan">No recipes yet</h2>
       <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto leading-snug">
         Build your first scheme: click a + slot, pick a paint from the
