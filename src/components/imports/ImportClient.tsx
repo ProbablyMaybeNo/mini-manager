@@ -92,15 +92,18 @@ export function ImportClient() {
 
   return (
     <div className="space-y-6">
-      {/* Drop-file section */}
+      {/* Drop-file section — a terminal panel with a top-border label +
+          corner registration ticks, so the drop target reads as a CRT
+          ingest bay rather than a plain dashed SaaS box. The cyan phosphor
+          tint lifts on drag-over. */}
       <section className="space-y-3">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-          Drop file
-        </h2>
+        <h2 className="section-title mb-0">Drop file</h2>
         <div
           className={clsx(
-            "frame-strong p-8 text-center transition-colors",
-            dragging && "bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]",
+            "panel panel-nested panel-ticks p-8 text-center transition-colors motion-reduce:transition-none",
+            dragging
+              ? "border-[var(--color-cyan)] bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]"
+              : null,
           )}
           onDragOver={(e) => {
             e.preventDefault();
@@ -109,6 +112,9 @@ export function ImportClient() {
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
         >
+          <span className="panel-label" aria-hidden>
+            INGEST ▸ FILE
+          </span>
           <p className="text-sm font-mono mb-2">
             Drop a <strong>.pdf</strong>, <strong>.ros</strong>,{" "}
             <strong>.rosz</strong>, or <strong>.json</strong> file here
@@ -141,24 +147,29 @@ export function ImportClient() {
         </div>
       </section>
 
-      {/* Paste-list section — standalone, always visible below drop-file */}
+      {/* Paste-list section — standalone, always visible below drop-file.
+          The textarea sits inside a phosphor-bordered terminal panel with a
+          top-border label, so a pasted list reads as a CLI buffer. */}
       <section className="space-y-3">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-          Paste list
-        </h2>
+        <h2 className="section-title mb-0">Paste list</h2>
         <form className="space-y-3" onSubmit={onSubmitPaste}>
           <label htmlFor="paste-list" className="sr-only">
             Paste list
           </label>
-          <textarea
-            id="paste-list"
-            value={pasted}
-            onChange={(e) => setPasted(e.target.value)}
-            placeholder={`## My Army\n10x Intercessors - 200pts\n5x Terminators - 185pts\nCaptain - 105pts`}
-            rows={12}
-            maxLength={MAX_PASTE_CHARS}
-            className="w-full p-3 frame font-mono text-xs bg-transparent text-[var(--color-fg)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-          />
+          <div className="panel relative focus-within:border-[var(--color-cyan)] transition-colors motion-reduce:transition-none">
+            <span className="panel-label" aria-hidden>
+              BUFFER ▸ PASTE
+            </span>
+            <textarea
+              id="paste-list"
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              placeholder={`## My Army\n10x Intercessors - 200pts\n5x Terminators - 185pts\nCaptain - 105pts`}
+              rows={12}
+              maxLength={MAX_PASTE_CHARS}
+              className="block w-full p-3 font-mono text-xs bg-transparent text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-none resize-y border-0"
+            />
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono text-[var(--color-fg-muted)]">
               {pasted.length.toLocaleString()} / {MAX_PASTE_CHARS.toLocaleString()} chars

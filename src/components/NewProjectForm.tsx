@@ -8,6 +8,20 @@ import { Button } from "@/components/ui/Button";
 
 type ParentOption = Pick<Project, "id" | "name" | "type" | "faction">;
 
+/** Terminal command-prompt input idiom — a cyan ▸ caret + a phosphor-
+ *  tinted frame that lights to cyan on focus, matching the Library search
+ *  / Wishlist quick-add CLI line. The wrapper carries the border + focus
+ *  ring; the bare input drops its own chrome so the row reads as one
+ *  command line, not a generic SaaS box. */
+const PROMPT_WRAP =
+  "flex items-center gap-2 px-3 py-2.5 rounded-sm border bg-[var(--color-bg-elevated)] " +
+  "border-[color-mix(in_srgb,var(--color-cyan)_22%,var(--color-border))] " +
+  "focus-within:border-[var(--color-cyan)] transition-colors motion-reduce:transition-none";
+const PROMPT_CARET = "font-mono text-sm text-[var(--color-cyan)] select-none";
+const PROMPT_INPUT =
+  "flex-1 min-w-0 bg-transparent font-mono text-sm text-[var(--color-fg)] " +
+  "placeholder:text-[var(--color-fg-subtle)] focus:outline-none border-0 p-0";
+
 type TypeMeta = {
   type: ProjectType;
   /** Item 3 — user-facing label for the type option. Stored enum values
@@ -249,23 +263,28 @@ export function NewProjectForm({
         >
           Name
         </label>
-        <input
-          id={`${formId}-name`}
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          autoFocus
-          maxLength={120}
-          required
-          placeholder={
-            type === "Army"
-              ? "e.g. Salamanders 2k"
-              : type === "Unit"
-                ? "e.g. Tactical Squad Alpha"
-                : "e.g. Ruined Hab Block"
-          }
-          className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-        />
+        <div className={PROMPT_WRAP}>
+          <span aria-hidden className={PROMPT_CARET}>
+            ▸
+          </span>
+          <input
+            id={`${formId}-name`}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+            maxLength={120}
+            required
+            placeholder={
+              type === "Army"
+                ? "e.g. Salamanders 2k"
+                : type === "Unit"
+                  ? "e.g. Tactical Squad Alpha"
+                  : "e.g. Ruined Hab Block"
+            }
+            className={PROMPT_INPUT}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -275,22 +294,24 @@ export function NewProjectForm({
         >
           Model count
         </label>
-        <input
-          id={`${formId}-count`}
-          type="number"
-          min={0}
-          max={9999}
-          step={1}
-          value={count}
-          onChange={(e) => {
-            const next = Number.parseInt(e.target.value, 10);
-            setCount(Number.isFinite(next) && next >= 0 ? next : 0);
-          }}
-          className={clsx(
-            "block w-32 px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame",
-            "focus:border-[var(--color-accent)]",
-          )}
-        />
+        <div className={clsx(PROMPT_WRAP, "w-32")}>
+          <span aria-hidden className={PROMPT_CARET}>
+            ▸
+          </span>
+          <input
+            id={`${formId}-count`}
+            type="number"
+            min={0}
+            max={9999}
+            step={1}
+            value={count}
+            onChange={(e) => {
+              const next = Number.parseInt(e.target.value, 10);
+              setCount(Number.isFinite(next) && next >= 0 ? next : 0);
+            }}
+            className={PROMPT_INPUT}
+          />
+        </div>
         <p className="text-xs font-sans text-[var(--color-fg-muted)]">
           {meta.type === "Army" || meta.type === "Warband"
             ? "0 means the parent has no rank-and-file of its own; counters come from child units."
@@ -306,15 +327,20 @@ export function NewProjectForm({
           >
             Faction <span className="text-[var(--color-fg-muted)] normal-case">(optional)</span>
           </label>
-          <input
-            id={`${formId}-faction`}
-            type="text"
-            value={faction}
-            onChange={(e) => setFaction(e.target.value)}
-            maxLength={80}
-            placeholder="e.g. Salamanders"
-            className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-          />
+          <div className={PROMPT_WRAP}>
+            <span aria-hidden className={PROMPT_CARET}>
+              ▸
+            </span>
+            <input
+              id={`${formId}-faction`}
+              type="text"
+              value={faction}
+              onChange={(e) => setFaction(e.target.value)}
+              maxLength={80}
+              placeholder="e.g. Salamanders"
+              className={PROMPT_INPUT}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -324,15 +350,20 @@ export function NewProjectForm({
           >
             Game <span className="text-[var(--color-fg-muted)] normal-case">(optional)</span>
           </label>
-          <input
-            id={`${formId}-game`}
-            type="text"
-            value={game}
-            onChange={(e) => setGame(e.target.value)}
-            maxLength={80}
-            placeholder="e.g. Warhammer 40,000"
-            className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-          />
+          <div className={PROMPT_WRAP}>
+            <span aria-hidden className={PROMPT_CARET}>
+              ▸
+            </span>
+            <input
+              id={`${formId}-game`}
+              type="text"
+              value={game}
+              onChange={(e) => setGame(e.target.value)}
+              maxLength={80}
+              placeholder="e.g. Warhammer 40,000"
+              className={PROMPT_INPUT}
+            />
+          </div>
         </div>
       </div>
 
@@ -405,19 +436,24 @@ function ParentPicker({
       <label htmlFor={`${formId}-parent`} className="block section-title mb-0">
         Parent (optional)
       </label>
-      <select
-        id={`${formId}-parent`}
-        value={parentId}
-        onChange={(e) => onChange(e.target.value)}
-        className="block w-full px-3 py-2.5 font-mono text-sm bg-[var(--color-bg-elevated)] frame focus:border-[var(--color-accent)]"
-      >
-        <option value="">— None (top-level project) —</option>
-        {options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <div className={PROMPT_WRAP}>
+        <span aria-hidden className={PROMPT_CARET}>
+          ▸
+        </span>
+        <select
+          id={`${formId}-parent`}
+          value={parentId}
+          onChange={(e) => onChange(e.target.value)}
+          className={clsx(PROMPT_INPUT, "appearance-none cursor-pointer")}
+        >
+          <option value="">— None (top-level project) —</option>
+          {options.map((opt) => (
+            <option key={opt.id} value={opt.id}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
       <p className="text-xs font-sans text-[var(--color-fg-muted)]">
         Nest this Unit under an Army, Warband, or another Unit to aggregate its counters.
       </p>

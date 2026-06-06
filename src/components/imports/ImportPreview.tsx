@@ -27,6 +27,19 @@ interface UnitRow {
 let rowIdCounter = 0;
 const nextRowKey = (): string => `u-${++rowIdCounter}`;
 
+/** Terminal command-prompt input idiom — cyan ▸ caret + phosphor-tinted
+ *  frame lighting to cyan on focus, matching the new-project / Library
+ *  CLI line. The wrapper owns the border + focus state; the bare input
+ *  drops its own chrome. */
+const PROMPT_WRAP =
+  "flex items-center gap-2 px-2.5 py-2 rounded-sm border bg-[var(--color-bg-elevated)] " +
+  "border-[color-mix(in_srgb,var(--color-cyan)_22%,var(--color-border))] " +
+  "focus-within:border-[var(--color-cyan)] transition-colors motion-reduce:transition-none";
+const PROMPT_CARET = "font-mono text-sm text-[var(--color-cyan)] select-none";
+const PROMPT_INPUT =
+  "flex-1 min-w-0 bg-transparent font-mono text-sm text-[var(--color-fg)] " +
+  "placeholder:text-[var(--color-fg-subtle)] focus:outline-none border-0 p-0";
+
 export function ImportPreview({
   importId,
   initialTree,
@@ -144,7 +157,10 @@ export function ImportPreview({
 
   return (
     <div className="space-y-6">
-      <div className="frame p-4 space-y-1 text-xs font-mono">
+      <div className="panel panel-ticks relative p-4 space-y-1 text-xs font-mono">
+        <span className="panel-label" aria-hidden>
+          PARSE ▸ STATUS
+        </span>
         <p className="flex items-center gap-2 flex-wrap">
           <LogTag
             variant={
@@ -200,36 +216,51 @@ export function ImportPreview({
             <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
               Name
             </span>
-            <input
-              value={armyName}
-              onChange={(e) => setArmyName(e.target.value)}
-              maxLength={120}
-              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-            />
+            <span className={clsx(PROMPT_WRAP, "mt-1")}>
+              <span aria-hidden className={PROMPT_CARET}>
+                ▸
+              </span>
+              <input
+                value={armyName}
+                onChange={(e) => setArmyName(e.target.value)}
+                maxLength={120}
+                className={PROMPT_INPUT}
+              />
+            </span>
           </label>
           <label className="block">
             <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
               Faction
             </span>
-            <input
-              value={faction}
-              onChange={(e) => setFaction(e.target.value)}
-              maxLength={120}
-              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-            />
+            <span className={clsx(PROMPT_WRAP, "mt-1")}>
+              <span aria-hidden className={PROMPT_CARET}>
+                ▸
+              </span>
+              <input
+                value={faction}
+                onChange={(e) => setFaction(e.target.value)}
+                maxLength={120}
+                className={PROMPT_INPUT}
+              />
+            </span>
           </label>
           <label className="block">
             <span className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
               Total points
             </span>
-            <input
-              type="number"
-              value={totalPoints}
-              onChange={(e) => setTotalPoints(e.target.value)}
-              min={0}
-              max={99999}
-              className="w-full mt-1 p-2 frame font-mono text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-            />
+            <span className={clsx(PROMPT_WRAP, "mt-1")}>
+              <span aria-hidden className={PROMPT_CARET}>
+                ▸
+              </span>
+              <input
+                type="number"
+                value={totalPoints}
+                onChange={(e) => setTotalPoints(e.target.value)}
+                min={0}
+                max={99999}
+                className={PROMPT_INPUT}
+              />
+            </span>
           </label>
         </div>
       </section>

@@ -23,9 +23,12 @@ export default async function ImportPreviewPage({ params }: PreviewPageProps) {
           </Link>
         </nav>
         <header className="space-y-2">
-          <h1 className="text-3xl tracking-wide">IMPORT FAILED</h1>
+          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-red)] mb-2">
+            SYS ▸ IMPORT / FAILED
+          </p>
+          <h1 className="title-display text-base md:text-lg">IMPORT FAILED</h1>
           <p
-            className="text-sm font-mono text-[var(--color-amber)]"
+            className="text-sm font-mono text-[var(--color-amber)] mt-3"
             role="alert"
           >
             {result.error}
@@ -53,8 +56,11 @@ export default async function ImportPreviewPage({ params }: PreviewPageProps) {
       </nav>
 
       <header className="space-y-2">
-        <h1 className="text-3xl tracking-wide">PREVIEW</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-2xl">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+          SYS ▸ IMPORT / PREVIEW
+        </p>
+        <h1 className="title-display text-base md:text-lg">PREVIEW</h1>
+        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-2xl mt-3 leading-snug">
           Edit anything the parser got wrong. <strong>Apply</strong> creates an
           Army project with one Unit child per row.
         </p>
