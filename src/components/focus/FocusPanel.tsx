@@ -196,56 +196,71 @@ export function FocusPanel({
       ) : null}
 
       {totalSlots === 0 ? (
-        <p className="frame p-4 text-xs font-sans text-[var(--color-fg-muted)]">
+        <p className="panel p-4 text-xs font-sans text-[var(--color-fg-muted)]">
           This recipe has no slots yet. Open the recipe to add some, then
           come back to focus on it.
         </p>
       ) : (
         <>
-          <div
-            role="list"
-            aria-label="Recipe slot palette"
-            className="flex flex-wrap items-center gap-3"
-          >
-            {slots.map((slot) => (
-              <div
-                key={slot.id}
-                role="listitem"
-                className="flex flex-col items-center gap-1"
-              >
-                <span
-                  aria-label={`${slot.paintLabel ?? techniqueLabel(slot.technique)} swatch`}
-                  className={clsx(
-                    "block w-16 h-16 rounded-sm",
-                    "border-2 border-[var(--color-border-strong)]",
-                  )}
-                  style={{
-                    background: slot.paintHex ?? "transparent",
-                    backgroundImage: slot.paintHex
-                      ? undefined
-                      : "repeating-linear-gradient(45deg, var(--color-border) 0 2px, transparent 2px 6px)",
-                  }}
-                />
-                <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] text-center max-w-[5rem] truncate">
-                  {techniqueLabel(slot.technique)}
-                </span>
-              </div>
-            ))}
+          {/* Slot palette — the recipe's paints as a phosphor-bordered
+              swatch strip inside a labelled terminal panel. The bench
+              "parts tray": glanceable colour order before the per-slot
+              detail rows below. */}
+          <div className="panel panel-ticks relative px-3 pt-4 pb-3">
+            <span className="panel-label" aria-hidden>
+              REC ▸ PALETTE
+            </span>
+            <div
+              role="list"
+              aria-label="Recipe slot palette"
+              className="flex flex-wrap items-center gap-3"
+            >
+              {slots.map((slot) => (
+                <div
+                  key={slot.id}
+                  role="listitem"
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span
+                    aria-label={`${slot.paintLabel ?? techniqueLabel(slot.technique)} swatch`}
+                    className={clsx(
+                      "block w-12 h-12 md:w-14 md:h-14 rounded-none",
+                      "border border-[var(--color-border-strong)]",
+                      "shadow-[0_0_0_1px_var(--color-bg),0_0_6px_-2px_rgba(0,0,0,0.8)]",
+                    )}
+                    style={{
+                      background: slot.paintHex ?? "transparent",
+                      backgroundImage: slot.paintHex
+                        ? undefined
+                        : "repeating-linear-gradient(45deg, var(--color-border) 0 2px, transparent 2px 6px)",
+                    }}
+                  />
+                  <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] text-center max-w-[4.5rem] truncate">
+                    {techniqueLabel(slot.technique)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
+          {/* Bench slot rows — one near-black panel-framed row per slot, in
+              recipe order, each tagged with its slot index like a bench
+              station. The active slot is ringed green; the per-paint note
+              disclosure stays intact inside the detail column. */}
           <ul className="space-y-2" role="list">
-            {slots.map((slot) => {
+            {slots.map((slot, index) => {
               const isActiveSlot = slot.id === activeSlotId;
               const isNext = slot.id === nextSlotId;
+              const slotTag = `SLOT ${String(index + 1).padStart(2, "0")}`;
               return (
                 <li
                   key={slot.id}
                   className={clsx(
                     "grid items-start gap-3 grid-cols-[auto_auto_minmax(0,1fr)]",
-                    "p-2 rounded-sm",
+                    "panel relative p-2 pl-3",
                     isActiveSlot
                       ? "border-2 border-[var(--color-green)] bg-[var(--color-bg-elevated)]"
-                      : "bg-[var(--color-bg-panel)] border border-[var(--color-border)]",
+                      : "border border-[var(--color-border-strong)] bg-[var(--color-bg)]",
                     slot.done && "opacity-50",
                   )}
                   data-slot-id={slot.id}
@@ -264,7 +279,7 @@ export function FocusPanel({
 
                   <span
                     aria-hidden
-                    className="block w-12 h-12 rounded-sm border-2 border-[var(--color-border-strong)] shrink-0"
+                    className="block w-12 h-12 rounded-none border border-[var(--color-border-strong)] shrink-0"
                     style={{
                       background: slot.paintHex ?? "transparent",
                       backgroundImage: slot.paintHex
@@ -274,6 +289,12 @@ export function FocusPanel({
                   />
 
                   <div className="min-w-0 space-y-1">
+                    <span
+                      aria-hidden
+                      className="block font-mono text-2xs uppercase tracking-[0.18em] text-[var(--color-cyan)]"
+                    >
+                      {slotTag}
+                    </span>
                     <div className="flex items-start justify-between gap-2">
                       <p
                         className={clsx(

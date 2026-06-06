@@ -127,10 +127,16 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
   })();
 
   return (
-    <div className="content-cap p-6 md:p-8 space-y-6">
+    <div className="content-cap p-4 md:p-8 space-y-4 md:space-y-6">
+      {/* Terminal hero — mirrors the dashboard + library banner so FOCUS
+          reads as the same mission-control surface: a tracked-out
+          coordinate caption above the display-font title, kept small. */}
       <header>
-        <h1 className="text-3xl tracking-wide">FOCUS</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans">
+        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+          SYS ▸ FOCUS / 01
+        </p>
+        <h1 className="title-display text-base md:text-lg">FOCUS</h1>
+        <p className="text-xs text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans leading-relaxed">
           Sit down and paint. Pick what you&apos;re working on, read the
           recipe with its per-paint notes, run the stopwatch, and keep your
           reference board in reach — each section fits one screen.
@@ -139,7 +145,7 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
 
       {/* Sections 1–3: the FOCUS bench. Picker, then the recipe row +
           compact project panel (FocusPanel), then the stopwatch. */}
-      <Card title="FOCUS" accentColor="green">
+      <Card title="FOCUS" accentColor="green" ticks techLabel="SYS ▸ BENCH">
         <div className="space-y-4">
           <FocusPicker
             options={focusCandidates.map((c) => ({
@@ -203,7 +209,7 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
  */
 function FocusEmptyState({ hasCandidates }: { hasCandidates: boolean }) {
   return (
-    <div className="frame p-4 space-y-2">
+    <div className="panel p-4 space-y-2">
       <p className="text-sm font-sans text-[var(--color-fg)] leading-relaxed">
         Pick a project to focus on while you paint — its recipe will live
         here.
