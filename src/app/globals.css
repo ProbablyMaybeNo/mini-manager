@@ -855,6 +855,112 @@ select.frame-strong {
   pointer-events: none;
 }
 
+/* ============================================================
+   Panel & Card variants — gold-standard §07
+   ============================================================
+   Six semantic surfaces straight off the spec image: DEFAULT (white
+   border), INFO (cyan + ⓘ), WARNING (yellow + ⚠), SUCCESS (green + ✓),
+   ERROR (red + ✕), DISABLED (dim). Each variant re-seeds `currentColor`
+   to its hue so the existing `--glow-edge` border bloom + 1px border
+   blooms IN-HUE, sets the matching border colour, and colours its title.
+   The body copy reads slightly dimmer than the title so it stays the
+   image's "coloured heading + lighter body" hierarchy.
+
+   These attach to BOTH `.panel` and `.card` (the `.panel` selectors
+   below; Card composes the same modifier classes), so the variant set is
+   one source of truth across the two primitives. */
+.panel-info,
+.card.panel-info {
+  color: var(--color-cyan);
+  border-color: var(--color-cyan);
+  box-shadow: var(--glow-edge-strong);
+}
+.panel-warning,
+.card.panel-warning {
+  color: var(--color-yellow);
+  border-color: var(--color-yellow);
+  box-shadow: var(--glow-edge-strong);
+}
+.panel-success,
+.card.panel-success {
+  color: var(--color-green);
+  border-color: var(--color-green);
+  box-shadow: var(--glow-edge-strong);
+}
+.panel-error,
+.card.panel-error {
+  color: var(--color-red);
+  border-color: var(--color-red);
+  box-shadow: var(--glow-edge-strong);
+}
+.panel-disabled,
+.card.panel-disabled {
+  color: var(--color-disabled);
+  border-color: var(--color-disabled);
+  box-shadow: none;
+}
+
+/* Card variant header — when a Card carries a §07 variant, its header
+   strip + title + icon adopt the seeded hue. The card root re-seeded
+   currentColor (.panel-info etc.), but .card-header hard-sets its own
+   colour, so re-inherit it here. The bottom rule also tints the header
+   divider to the variant border colour for a clean coloured frame. */
+.card-header-variant {
+  color: currentColor;
+  border-bottom-color: currentColor;
+}
+.card-header-variant .card-header-heading {
+  color: currentColor;
+  text-shadow: var(--glow-strong);
+}
+.card-header-variant-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 1;
+  color: currentColor;
+}
+
+/* Variant header — coloured icon + coloured title, matching the image's
+   "⚠ WARNING PANEL" / "ⓘ INFO PANEL" lockups. The title inherits the
+   panel's seeded hue (currentColor); the icon sits left at the same
+   colour with a phosphor halo. */
+.panel-variant-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: inherit;
+  text-shadow: var(--glow-strong);
+  margin: 0 0 6px;
+}
+.panel-variant-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 1;
+}
+/* Body copy under a variant header — a touch dimmer than the coloured
+   title so the heading leads, per the image hierarchy. Default + disabled
+   keep their own colour (white / dim); the coloured variants soften the
+   body to ~80% of the hue mixed toward white for readability on black. */
+.panel-variant-body {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.panel-info .panel-variant-body,
+.panel-warning .panel-variant-body,
+.panel-success .panel-variant-body,
+.panel-error .panel-variant-body {
+  color: color-mix(in srgb, currentColor 88%, white);
+}
+.panel-disabled .panel-variant-body {
+  color: var(--color-disabled);
+}
+
 /* Card nested-border treatment — opt a `.card` into the same inner ring
    + corner brackets so headline KPI panels can carry the full terminal
    frame while keeping the card header/body structure. */

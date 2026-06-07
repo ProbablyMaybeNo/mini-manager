@@ -1,5 +1,47 @@
-import type { ElementType, ReactNode } from "react";
+import type { ComponentType, ElementType, ReactNode } from "react";
 import { clsx } from "clsx";
+import {
+  Info,
+  TriangleAlert,
+  CircleCheck,
+  CircleX,
+  type LucideProps,
+} from "lucide-react";
+
+/** Semantic panel surface — gold-standard §07.
+ *  default  white border, white title, white body (the bare frame).
+ *  info     cyan border + ⓘ icon + cyan title.
+ *  warning  yellow border + ⚠ icon + yellow title.
+ *  success  green border + ✓ icon + green title.
+ *  error    red border + ✕ icon + red title.
+ *  disabled dim border + dim title + dim body, no icon. */
+export type PanelVariant =
+  | "default"
+  | "info"
+  | "warning"
+  | "success"
+  | "error"
+  | "disabled";
+
+const VARIANT_CLASS: Record<PanelVariant, string | false> = {
+  default: false,
+  info: "panel-info",
+  warning: "panel-warning",
+  success: "panel-success",
+  error: "panel-error",
+  disabled: "panel-disabled",
+};
+
+/** Icon per variant — null for default + disabled (the image shows no
+ *  glyph on those two). */
+const VARIANT_ICON: Record<PanelVariant, ComponentType<LucideProps> | null> = {
+  default: null,
+  info: Info,
+  warning: TriangleAlert,
+  success: CircleCheck,
+  error: CircleX,
+  disabled: null,
+};
 
 /**
  * Panel — the single, canonical nested-border terminal frame (UX-003).
@@ -37,6 +79,17 @@ export interface PanelProps {
   /** Tiny technical caption slotted onto the top border (e.g. `DB ▸ RANKED`).
    *  Rendered aria-hidden — it's chrome flavour, not content. */
   label?: string;
+  /** Semantic surface (gold-standard §07): default / info / warning /
+   *  success / error / disabled. Colours the border + edge glow in-hue. */
+  variant?: PanelVariant;
+  /** Optional coloured title rendered with the variant's icon (the image's
+   *  "⚠ WARNING PANEL" lockup). When set, the children render under it as
+   *  the panel body. Omit to compose the panel freely. */
+  title?: string;
+  /** Heading level for `title`. Defaults to a non-heading <p> so the panel
+   *  doesn't pollute the document outline; pass e.g. "h3" when the panel
+   *  IS a section heading. */
+  titleAs?: "p" | "h2" | "h3" | "h4";
   /** Element to render. Defaults to `div`. */
   as?: ElementType;
   className?: string;
@@ -50,15 +103,21 @@ export function Panel({
   nested = false,
   transparent = false,
   label,
+  variant = "default",
+  title,
+  titleAs = "p",
   as,
   className,
   ...rest
 }: PanelProps) {
   const Tag = (as ?? "div") as ElementType;
+  const Icon = VARIANT_ICON[variant];
+  const TitleTag = titleAs as ElementType;
   return (
     <Tag
       className={clsx(
         "panel",
+        VARIANT_CLASS[variant],
         transparent && "panel-transparent",
         nested && "panel-nested",
         (ticks || label) && "relative",
@@ -72,7 +131,17 @@ export function Panel({
           {label}
         </span>
       ) : null}
-      {children}
+      {title ? (
+        <TitleTag className="panel-variant-head">
+          {Icon ? (
+            <span className="panel-variant-icon" aria-hidden>
+              <Icon size={16} strokeWidth={2} />
+            </span>
+          ) : null}
+          {title}
+        </TitleTag>
+      ) : null}
+      {title ? <div className="panel-variant-body">{children}</div> : children}
     </Tag>
   );
 }

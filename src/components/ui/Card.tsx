@@ -1,5 +1,41 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { clsx } from "clsx";
+import {
+  Info,
+  TriangleAlert,
+  CircleCheck,
+  CircleX,
+  type LucideProps,
+} from "lucide-react";
+
+/** Semantic card surface — gold-standard §07, shared with <Panel>.
+ *  default / info / warning / success / error / disabled. Colours the
+ *  card border + edge glow in-hue and tints the header icon + title. */
+export type CardVariant =
+  | "default"
+  | "info"
+  | "warning"
+  | "success"
+  | "error"
+  | "disabled";
+
+const VARIANT_CLASS: Record<CardVariant, string | false> = {
+  default: false,
+  info: "panel-info",
+  warning: "panel-warning",
+  success: "panel-success",
+  error: "panel-error",
+  disabled: "panel-disabled",
+};
+
+const VARIANT_ICON: Record<CardVariant, ComponentType<LucideProps> | null> = {
+  default: null,
+  info: Info,
+  warning: TriangleAlert,
+  success: CircleCheck,
+  error: CircleX,
+  disabled: null,
+};
 
 export type CardAccent =
   | "cyan"
@@ -32,6 +68,10 @@ export interface CardProps {
   titleAs?: CardTitleAs;
   headerActions?: ReactNode;
   accentColor?: CardAccent;
+  /** Semantic surface (gold-standard §07): default / info / warning /
+   *  success / error / disabled. Colours the card border + edge glow
+   *  in-hue and tints the header icon + title to match the spec image. */
+  variant?: CardVariant;
   className?: string;
   bodyClassName?: string;
   children: ReactNode;
@@ -69,6 +109,7 @@ export function Card({
   titleAs = "h2",
   headerActions,
   accentColor,
+  variant = "default",
   className,
   bodyClassName,
   children,
@@ -80,10 +121,12 @@ export function Card({
 }: CardProps) {
   const hasHeader = Boolean(title || headerActions);
   const TitleTag = titleAs;
+  const VariantIcon = VARIANT_ICON[variant];
   return (
     <section
       className={clsx(
         "card",
+        VARIANT_CLASS[variant],
         nested && "card-nested",
         ticks && "panel-ticks",
         className,
@@ -96,8 +139,18 @@ export function Card({
         </span>
       ) : null}
       {hasHeader ? (
-        <header className="card-header">
+        <header
+          className={clsx(
+            "card-header",
+            variant !== "default" && "card-header-variant",
+          )}
+        >
           <span className="card-header-title">
+            {VariantIcon ? (
+              <span className="card-header-variant-icon" aria-hidden>
+                <VariantIcon size={16} strokeWidth={2} />
+              </span>
+            ) : null}
             {accentColor ? (
               <span
                 aria-hidden
