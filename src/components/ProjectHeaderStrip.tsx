@@ -3,7 +3,6 @@
 import { clsx } from "clsx";
 import type { ProjectType } from "@/db/schema";
 import type { DisplayStatus } from "@/lib/progress";
-import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { CircularProgress } from "@/components/ui/CircularProgress";
 import { EditableProjectTitle } from "@/components/EditableProjectTitle";
@@ -51,9 +50,9 @@ interface Props {
  * Top row: cyan project title (h1, big), then the stat row inline:
  *   type chip · faction · N models · status pill · + Add unit (green)
  *
- * Below the row: full-width ProgressBar with the percent overlay
- * centered. Tone follows the locked red < 25 / yellow 25-75 / green
- * >= 75 thresholds from P12.6.
+ * Completion reads as a single hero CircularProgress dial on the right
+ * (UX-016 dropped the duplicate linear bar). Tone follows the locked
+ * red < 25 / yellow 25-75 / green >= 75 thresholds from P12.6.
  *
  * Replaces the bespoke header on /projects/<id>. Layout intentionally
  * matches Ross's brief verbatim — keeps the title + stats compact at
@@ -80,9 +79,8 @@ export function ProjectHeaderStrip({
     // near-black terminal `.panel` with corner ticks + a coordinate-style
     // tech label on the top border (DESIGN_LANGUAGE §5/§7), so the unit
     // workspace opens on a lit command-control surface rather than a bare
-    // heading. The headline completion reads as a phosphor CircularProgress
-    // dial (§7.1) on the right; the dense linear bar stays beneath the stat
-    // row for the at-a-glance fill.
+    // heading. The headline completion reads as a single phosphor
+    // CircularProgress dial (§7.1) on the right (UX-016).
     <header className="panel panel-ticks relative p-4 md:p-5">
       <span className="panel-label" aria-hidden>
         SYS ▸ UNIT
@@ -110,28 +108,19 @@ export function ProjectHeaderStrip({
               <AddChildMenu projectId={projectId} parentType={type} />
             ) : null}
           </div>
-          <div className="relative">
-            <ProgressBar percent={percent} stretch height={14} />
-            <span
-              aria-hidden
-              className="absolute inset-0 flex items-center justify-center text-2xs font-mono tabular-nums text-[var(--color-fg)]"
-              style={{
-                textShadow:
-                  "0 0 4px color-mix(in srgb, var(--color-bg) 80%, transparent)",
-              }}
-            >
-              {percent}%
-            </span>
-          </div>
         </div>
-        {/* Headline completion dial — the recurring moodboard gauge. The
-            auto tone tracks the behind/mid/ahead threshold set the linear
-            bar shares, so the dial and the bar read the same colour. */}
+        {/* UX-016 — the header previously double-encoded completion: this
+            circular dial AND a full-width linear bar showed the identical
+            `percent` within ~40px. Per DESIGN_LANGUAGE §7.1 (circular dials
+            are for HEADLINE progress; linear bars belong in dense table
+            rows) the gauge is kept as the single hero stat and the
+            redundant linear ProgressBar is dropped. The dial is enlarged so
+            it clearly reads as the headline completion. */}
         <CircularProgress
           percent={percent}
           caption="DONE"
           ariaLabel={`${percent} percent complete`}
-          size={72}
+          size={88}
           className="shrink-0"
         />
       </div>
