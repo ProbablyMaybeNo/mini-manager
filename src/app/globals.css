@@ -658,7 +658,8 @@ select.frame-strong {
 @media (prefers-reduced-motion: reduce) {
   .glow-green, .glow-cyan, .glow-amber,
   .glow-text, .glow-text-strong, .glow-text-intense,
-  .btn-outline, .pill, .panel-variant-head, h1, h2, h3, a, html {
+  .btn-outline, .pill, .panel-variant-head, .meter-readout,
+  h1, h2, h3, a, html {
     text-shadow: none;
   }
   /* The §05 status dot's own halo is decorative light too. */
@@ -1437,6 +1438,56 @@ select.frame-strong {
 .pill-dot-neutral  { color: var(--status-neutral); }
 .pill-dot-purple   { color: var(--status-purple); }
 .pill-dot-magenta  { color: var(--status-purple); }
+
+/* ----- Meter bar — gold-standard §06 labeled usage meter -----
+   Label top-left (white mono), level-coloured percentage top-right, a
+   thin smooth bar below: coloured fill on a dark track. Matches the spec
+   image's CPU / MEMORY / STORAGE rows. The readout + fill colour come
+   inline from <MeterBar> (level → cyan/yellow/red); these rules own the
+   layout + the dark track + fill bloom. */
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.meter-label {
+  color: var(--color-fg);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meter-readout {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  text-shadow: var(--glow-body);
+}
+.meter-track {
+  position: relative;
+  width: 100%;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.meter-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: 0;
+}
 
 /* ----- Status BAR — the signature "colour bar with black text" element
    (DESIGN_LANGUAGE §7.2). A solid phosphor-coloured block with crisp
