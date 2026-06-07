@@ -33,6 +33,8 @@ import type { CoverageState, CoverageSummary } from "@/lib/paints/coverage";
 import { CollectionCanvas } from "./CollectionCanvas";
 import {
   DESKTOP_CELL_MIN_PX,
+  HUE_BUCKET_TICKS,
+  cellHoverReadout,
   coverageReadout,
   filterCellsByBrands,
   formatCount,
@@ -116,6 +118,16 @@ export function CollectionPanel({
     [onScrollToPaint],
   );
 
+  // UX-009 — the cell currently under the pointer, driving the live hover
+  // readout below the spectrum. null = resting (shows the inspect/jump hint).
+  const [hoverCell, setHoverCell] = useState<CoverageCell | null>(null);
+  const hoverReadout = useMemo(() => {
+    const effective = hoverCell
+      ? stateForPaint(hoverCell.paint.id, hoverCell.state)
+      : undefined;
+    return cellHoverReadout(hoverCell, effective);
+  }, [hoverCell, stateForPaint]);
+
   const summaryLabel =
     "Paint collection: " +
     formatCount(summary.owned) +
@@ -159,8 +171,14 @@ export function CollectionPanel({
         />
       </div>
 
-      {/* Legend — what the dots mean against the spectrum field. Mono-caps
-          to match the terminal module language. */}
+      {/* UX-009 — cell-meaning legend. The audit flagged the spectrum as
+          reading like decoration: it had a DOT legend but never said what a
+          CELL encodes. State it plainly first ("each cell = one paint;
+          position = hue"), then the owned/wishlisted dot key. Mono-caps to
+          match the terminal module language. */}
+      <p className="text-2xs font-mono uppercase tracking-wide leading-snug text-[var(--color-fg-muted)]">
+        Each cell = one paint · position = hue
+      </p>
       <p
         className="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xs font-mono uppercase tracking-wide text-[var(--color-fg-muted)]"
         aria-label="Legend: green dot is owned, yellow dot is wishlisted"
@@ -180,6 +198,27 @@ export function CollectionPanel({
           wishlisted
         </span>
       </p>
+
+      {/* UX-009 — hue-axis bucket labels. The spectrum sweeps these buckets
+          left→right, top→bottom; spelling them out gives a cell's POSITION
+          stated meaning so the graphic earns its space. Decorative swatches
+          carry data hex (the bucket's own colour), not a token — same
+          contract as the canvas. */}
+      <ul
+        aria-label="Hue buckets, in spectrum order"
+        className="flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs font-mono uppercase tracking-wide text-[var(--color-fg-subtle)] m-0 p-0 list-none"
+      >
+        {HUE_BUCKET_TICKS.map((tick) => (
+          <li key={tick.label} className="inline-flex items-center gap-1">
+            <span
+              aria-hidden
+              className="inline-block h-2 w-2 rounded-[1px]"
+              style={{ background: tick.swatch }}
+            />
+            <span>{tick.label.slice(0, 3)}</span>
+          </li>
+        ))}
+      </ul>
 
       {/* LIB-COLORMAP-POLISH (2) — brand filter as a compact checkbox
           dropdown. The old wrapping chip row could eat ~5 rows of vertical
@@ -208,16 +247,28 @@ export function CollectionPanel({
             summaryLabel={summaryLabel}
             stateForPaint={stateForPaint}
             onPickCell={handlePickCell}
+            onHoverCell={setHoverCell}
             cellMinPx={DESKTOP_CELL_MIN_PX}
             fillHeight
           />
         )}
       </div>
 
+      {/* UX-009 — live hover readout. Hovering a cell names the paint it
+          encodes (brand · name · hex · coverage state); resting shows the
+          inspect/jump hint. aria-live=polite so screen readers hear the
+          identified paint without stealing focus. tabular-nums keeps the
+          hex from jittering as it updates. */}
+      <p
+        aria-live="polite"
+        className="min-h-[1.5em] text-2xs font-mono uppercase tracking-wide tabular-nums leading-snug text-[var(--color-fg)] truncate"
+      >
+        {hoverReadout}
+      </p>
+
       <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
-        Your library as a hue-sorted spectrum — every paint a pixel. Click a
-        region to jump the list to that hue. Green dots ≈ owned · yellow dots
-        ≈ wishlisted (a sparse at-a-glance overlay, not pixel-precise).
+        Click a region to jump the list to that hue. Dots are a sparse
+        at-a-glance ownership overlay, not pixel-precise.
       </p>
     </div>
   );

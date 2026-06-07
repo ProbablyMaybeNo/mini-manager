@@ -41,6 +41,80 @@ export function coverageReadout(summary: CoverageSummary): string {
   );
 }
 
+/* ============================================================
+   UX-009 — colour-map legend + live hover readout.
+
+   The spectrum is hue-sorted left→right, top→bottom, so its horizontal
+   axis is effectively a hue ramp. These pure helpers give the panel an
+   explicit hue-bucket legend (so a cell's POSITION has stated meaning,
+   not just "looks colourful") and a per-cell hover readout (so the map
+   reads as an interactive coverage instrument, not decoration).
+   ============================================================ */
+
+/** One tick on the hue-axis legend: a short label + its representative
+ *  swatch hex (data, not a token — the legend mirrors the spectrum's own
+ *  colours). */
+export interface HueBucketTick {
+  /** Short uppercase label, e.g. "RED". */
+  label: string;
+  /** Representative swatch hex for the bucket. */
+  swatch: string;
+}
+
+/**
+ * The fixed hue buckets the spectrum sweeps through, left→right. Mirrors
+ * the FilterRail hue bands so the legend, the filter chips, and the cell
+ * ordering all speak the same vocabulary. Pure constant — no DOM.
+ */
+export const HUE_BUCKET_TICKS: readonly HueBucketTick[] = [
+  { label: "Red", swatch: "#ff3344" },
+  { label: "Orange", swatch: "#ff8844" },
+  { label: "Yellow", swatch: "#ffcc33" },
+  { label: "Green", swatch: "#33dd66" },
+  { label: "Cyan", swatch: "#33cccc" },
+  { label: "Blue", swatch: "#3366ff" },
+  { label: "Violet", swatch: "#7733cc" },
+  { label: "Magenta", swatch: "#dd44aa" },
+];
+
+/** Short, human label for a cell's coverage state — used in the hover
+ *  readout. Mirrors the dot legend (owned / wanted / none). */
+export function coverageStateLabel(state: CoverageState): string {
+  switch (state) {
+    case "owned":
+      return "owned";
+    case "wanted":
+      return "wanted";
+    default:
+      return "not owned";
+  }
+}
+
+/**
+ * The live hover readout for a cell, e.g.
+ *   "Citadel · Mephiston Red · #9a1115 · owned"
+ * `null` (pointer off the field) returns the resting hint so the line
+ * never collapses to empty and jump its height. `effectiveState` is the
+ * coverage state AFTER optimistic overrides, so the readout matches the
+ * dot the user sees.
+ */
+export function cellHoverReadout(
+  cell: CoverageCell | null,
+  effectiveState?: CoverageState,
+): string {
+  if (!cell) return "Hover a cell to inspect · click to jump the list";
+  const state = effectiveState ?? cell.state;
+  return (
+    cell.paint.brand +
+    " · " +
+    cell.paint.name +
+    " · " +
+    cell.paint.hex.toUpperCase() +
+    " · " +
+    coverageStateLabel(state)
+  );
+}
+
 /**
  * Narrow the working set to the selected brands. `null` means "all
  * brands" (the unfiltered default seat) and returns the input untouched.

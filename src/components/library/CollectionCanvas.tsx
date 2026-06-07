@@ -48,6 +48,13 @@ interface Props {
   /** Called when the user clicks/taps a cell. */
   onPickCell: (cell: CoverageCell) => void;
   /**
+   * UX-009 — called as the pointer moves over a cell (and with `null` when
+   * it leaves the field). Drives the panel's live hover readout so the
+   * spectrum reads as an interactive coverage map, not decoration. Optional:
+   * omit it on surfaces that only want click-to-jump.
+   */
+  onHoverCell?: (cell: CoverageCell | null) => void;
+  /**
    * LIB-COLORMAP-POLISH (1) — the minimum cell edge in CSS px. Defaults to
    * the compact `CELL_MIN_PX` (4px); the desktop panel passes a larger
    * floor so the pixels read clearly in the tall side column.
@@ -72,6 +79,7 @@ export function CollectionCanvas({
   summaryLabel,
   stateForPaint,
   onPickCell,
+  onHoverCell,
   cellMinPx = CELL_MIN_PX,
   fillHeight = false,
 }: Props) {
@@ -226,22 +234,53 @@ export function CollectionCanvas({
     return () => mq.removeEventListener("change", onChange);
   }, [draw]);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Map a pointer event to the cell under it (or null off the field).
+  const cellAtEvent = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>): CoverageCell | null => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) return null;
       const rect = canvas.getBoundingClientRect();
       // Map from viewport px to CSS px within the canvas.
       const cssX = e.clientX - rect.left;
       const cssY = e.clientY - rect.top;
       const layout = resolveLayout(widthRef.current, heightRef.current);
       const index = indexAtPoint(cssX, cssY, layout, cells.length);
-      if (index === null) return;
-      const cell = cells[index];
+      if (index === null) return null;
+      return cells[index] ?? null;
+    },
+    [cells, resolveLayout],
+  );
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const cell = cellAtEvent(e);
       if (cell) onPickCell(cell);
     },
-    [cells, onPickCell, resolveLayout],
+    [cellAtEvent, onPickCell],
   );
+
+  // UX-009 — live hover readout. Skips emitting when the cell under the
+  // pointer hasn't changed so we don't thrash the parent's state on every
+  // mousemove pixel.
+  const lastHoverId = useRef<string | null>(null);
+  const handleMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!onHoverCell) return;
+      const cell = cellAtEvent(e);
+      const id = cell?.paint.id ?? null;
+      if (id === lastHoverId.current) return;
+      lastHoverId.current = id;
+      onHoverCell(cell);
+    },
+    [cellAtEvent, onHoverCell],
+  );
+
+  const handleLeave = useCallback(() => {
+    if (!onHoverCell) return;
+    if (lastHoverId.current === null) return;
+    lastHoverId.current = null;
+    onHoverCell(null);
+  }, [onHoverCell]);
 
   return (
     <canvas
@@ -250,6 +289,8 @@ export function CollectionCanvas({
       aria-label={summaryLabel}
       style={{ display: "block", width: "100%", cursor: "crosshair" }}
       onClick={handleClick}
+      onMouseMove={onHoverCell ? handleMove : undefined}
+      onMouseLeave={onHoverCell ? handleLeave : undefined}
     />
   );
 }
