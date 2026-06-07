@@ -98,9 +98,13 @@ export function SwatchActions({
           {hex}
         </span>
         <div className="flex-1 min-w-0">
+          {/* UX-020 — the row already shows the slot role via `label`
+              ("Primary" for the lead swatch, "Swatch N" otherwise), so the
+              extra "· primary" suffix produced the duplicate "PRIMARY ·
+              PRIMARY" the audit flagged. Show the role ONCE (the label) and
+              keep only the orthogonal "· pinned" state cue. */}
           <div className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider truncate">
             {label}
-            {isPrimary ? " · primary" : ""}
             {isPinned ? " · pinned" : ""}
           </div>
         </div>
