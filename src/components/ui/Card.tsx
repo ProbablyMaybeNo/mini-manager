@@ -48,6 +48,11 @@ export interface CardProps {
    *  `SYS · OK`, a coordinate tag). Rendered aria-hidden — it's chrome
    *  flavour, not content. */
   techLabel?: string;
+  /** Override the default `truncate` on the header heading. Pass e.g.
+   *  `"whitespace-normal leading-tight"` to let a long title wrap to two
+   *  lines instead of ellipsizing — used by the KPI strip at narrow
+   *  widths (UX-008) where "AVG COMPLETION" clipped to "AVG COMPLET…". */
+  titleClassName?: string;
 }
 
 /** Card — bordered surface with header bar + body. Replaces ad-hoc
@@ -71,6 +76,7 @@ export function Card({
   nested = false,
   ticks = false,
   techLabel,
+  titleClassName,
 }: CardProps) {
   const hasHeader = Boolean(title || headerActions);
   const TitleTag = titleAs;
@@ -99,7 +105,14 @@ export function Card({
               />
             ) : null}
             {title ? (
-              <TitleTag className="card-header-heading truncate">
+              <TitleTag
+                className={clsx(
+                  "card-header-heading",
+                  // Default to single-line truncation; callers can opt into
+                  // wrapping (KPI strip, UX-008) via titleClassName.
+                  titleClassName ?? "truncate",
+                )}
+              >
                 {title}
               </TitleTag>
             ) : null}

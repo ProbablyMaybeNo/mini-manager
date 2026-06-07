@@ -79,9 +79,23 @@ describe("ProjectsDashboardTable component surface", () => {
     expect(src).toContain("type-chip-cyan");
   });
 
-  test("Completion column uses the ProgressBar primitive", () => {
-    expect(src).toContain("<ProgressBar");
+  test("Completion column uses the SegmentedBar viz (UX-006)", () => {
+    // UX-006 replaced the thin smooth ProgressBar with the moodboard
+    // group-27 segmented-block readout, right-aligned + tabular-nums.
+    expect(src).toContain("<SegmentedBar");
     expect(src).toContain("row.progressPercent");
+  });
+
+  test("focused project row gets the persistent cyan active line (UX-006)", () => {
+    // Keyed to the pinned Focus project id threaded from the page.
+    expect(src).toContain("focusProjectId");
+    expect(src).toContain("isFocus");
+    expect(src).toContain('data-focus-row');
+  });
+
+  test("settled (complete/shelved) rows dim for hierarchy (UX-006)", () => {
+    expect(src).toContain("isSettledStatus");
+    expect(src).toMatch(/dimmed/);
   });
 
   test("STATUS_RANK orders WISHLIST first, SHELVED last", () => {

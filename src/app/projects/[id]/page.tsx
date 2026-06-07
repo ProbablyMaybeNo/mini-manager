@@ -327,9 +327,13 @@ export default async function ProjectDetailPage({
           breadcrumb said "Projects", so the only location cues disagreed.
           Naming them identically gives one coherent "you are here:
           DASHBOARD ▸ … ▸ <this unit>" trail. */}
+      {/* UX-013 — the DELETE PROJECT action moved OUT of this top
+          breadcrumb (it was above the fold, next to a wrapping title on
+          mobile — easy to mis-tap) down to a dedicated danger zone at the
+          page bottom. The breadcrumb is now navigation only. */}
       <nav
         aria-label="Breadcrumb"
-        className="text-xs font-mono text-[var(--color-fg-muted)] flex items-center justify-between gap-3"
+        className="text-xs font-mono text-[var(--color-fg-muted)] flex items-center gap-3"
       >
         <span className="min-w-0 truncate">
           <Link href="/projects" className="hover:text-[var(--color-accent)]">
@@ -349,16 +353,6 @@ export default async function ProjectDetailPage({
           {" > "}
           <span className="text-[var(--color-fg)]">{project.name}</span>
         </span>
-        {/* UX-1208 — destructive actions must read as destructive. The
-            inline text-link tone was indistinguishable from a benign
-            link; render the solid red `variant="danger"` Button so the
-            irreversible delete is visually distinct. The confirm step
-            lives in DeleteProjectModal. */}
-        <DeleteProjectButton
-          projectId={project.id}
-          projectName={project.name}
-          redirectToProjectsOnSuccess
-        />
       </nav>
 
       <ProjectHeaderStrip
@@ -435,6 +429,22 @@ export default async function ProjectDetailPage({
           {actionButtonRow}
         </div>
       )}
+
+      {/* UX-013 — danger zone: the destructive DELETE PROJECT lives here at
+          the page bottom (was the top breadcrumb), rendered as a red-OUTLINE
+          button (DeleteProjectButton default tone) behind the
+          DeleteProjectModal confirm step. Demoted + standardized with the
+          recipe-detail delete (also a bottom danger-outline + confirm). */}
+      <div className="pt-4 mt-2 border-t border-[var(--color-border)] flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+          Danger zone
+        </p>
+        <DeleteProjectButton
+          projectId={project.id}
+          projectName={project.name}
+          redirectToProjectsOnSuccess
+        />
+      </div>
     </div>
     </RosterProvider>
     </StageProgressProvider>

@@ -70,7 +70,16 @@ export function ToolCard({
     <Link
       href={href}
       className={clsx(
-        "group block relative panel panel-ticks p-4 transition-colors",
+        // UX-010 — the folder/file tiles "lift" on hover/focus: a small
+        // upward translate + a phosphor drop-shadow in the tile's tone so
+        // the 2x2 grid reads as physical boxes that pop forward when
+        // targeted (moodboard group-27 "boxes that open"). Motion-safe;
+        // reduced-motion users keep the border + colour cues only.
+        "group block relative panel panel-ticks p-4",
+        "transition-[transform,box-shadow,border-color] motion-reduce:transition-none",
+        "motion-safe:hover:-translate-y-0.5 motion-safe:focus-visible:-translate-y-0.5",
+        "hover:shadow-[0_6px_18px_-6px_color-mix(in_srgb,var(--color-cyan)_45%,transparent)]",
+        "focus-visible:shadow-[0_6px_18px_-6px_color-mix(in_srgb,var(--color-cyan)_45%,transparent)]",
         toneHoverBorder,
       )}
     >

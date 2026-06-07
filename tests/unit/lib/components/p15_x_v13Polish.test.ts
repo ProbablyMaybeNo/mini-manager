@@ -160,7 +160,15 @@ describe("UX-1304 — wishlist rows reflow to a stacked card below 768px", () =>
   });
 
   test("the header strip is hidden below md (card is self-labelling)", () => {
-    expect(src).toContain("hidden md:grid items-center gap-3 px-3 py-1.5");
+    // UX-017 added pr-4 (status-column right pad) between px-3 and py-1.5.
+    expect(src).toContain("hidden md:grid items-center gap-3 px-3 pr-4 py-1.5");
+  });
+
+  test("UX-017 — desktop grid scrolls inside the bounded panel (no edge clip)", () => {
+    // The panel is an x-scroll region and the grid floors to its natural
+    // width (md:min-w-max) so the rightmost status control renders fully.
+    expect(src).toContain("panel panel-ticks pt-1 overflow-x-auto");
+    expect(src).toMatch(/md:min-w-max/);
   });
 
   test("inner wrappers dissolve into the grid on desktop via md:contents", () => {

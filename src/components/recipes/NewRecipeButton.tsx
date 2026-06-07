@@ -86,10 +86,14 @@ export function NewRecipeButton({
 
   return (
     <>
+      {/* UX-002 — on /recipes this is the page's single dominant CTA, so the
+          "primary" call site takes the cyan PRIMARY tier (was green/success,
+          which let the louder per-row Share/Assign actions compete with the
+          page lead). The "subtle" call site (inside modals) stays ghost. */}
       <Button
         type="button"
         onClick={() => setOpen(true)}
-        variant={variant === "primary" ? "success" : "ghost"}
+        variant={variant === "primary" ? "primary" : "ghost"}
         size="sm"
       >
         {label}

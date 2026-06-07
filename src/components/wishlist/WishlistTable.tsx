@@ -98,9 +98,16 @@ export function WishlistTable({
   return (
     // Terminal panel frame: near-black fill, 1px phosphor border, corner
     // ticks + a top-border technical label — the signature box-in-box look
-    // matching the Recipes / Library tables. The dense desktop grid scrolls
-    // horizontally inside the bounded panel on narrow viewports.
-    <div className="relative panel panel-ticks pt-1">
+    // matching the Recipes / Library tables.
+    //
+    // UX-017 — the desktop grid (fixed-px + fr columns) was wider than the
+    // content column at 1440px, so the rightmost status control clipped
+    // past the panel/viewport edge. Make the panel a bounded x-scroll
+    // region (overflow-x-auto) and floor the grid to its natural width
+    // (min-w-max via .wishlist-grid-min on the header + rows) so the last
+    // column always renders fully — it scrolls inside the panel rather than
+    // bleeding off-screen.
+    <div className="relative panel panel-ticks pt-1 overflow-x-auto">
       <span className="panel-label" aria-hidden>
         {showTools ? "PAINTS · QUEUE" : "MODELS · QUEUE"}
       </span>
@@ -109,7 +116,10 @@ export function WishlistTable({
           hide the header strip below md. */}
       <div
         className={clsx(
-          "hidden md:grid items-center gap-3 px-3 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)]",
+          // UX-017 — md:min-w-max keeps the header at its natural column
+          // width inside the x-scroll panel so the last (status) column
+          // isn't squeezed off the edge; pr-4 right-pads the status cell.
+          "hidden md:grid items-center gap-3 px-3 pr-4 py-1.5 border-b border-[var(--color-border-strong)] section-title m-0 bg-[var(--color-bg-elevated)] md:min-w-max",
           GRID_CLASS,
         )}
       >
@@ -142,7 +152,10 @@ export function WishlistTable({
             // Terminal re-skin: hover / keyboard-focus lift the row with a
             // brighter cyan wash + a 2px cyan left edge so the active row
             // reads as the "selected line" from the GOOD moodboard tables.
-            "flex flex-col gap-2 md:grid md:items-center md:gap-3 px-3 py-2 border-b border-[var(--color-border)] cursor-pointer transition-[background-color,box-shadow] motion-reduce:transition-none hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_14%,transparent)] focus-visible:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+            // UX-017 — md:min-w-max + pr-4 match the header so every row
+            // renders the full column set (incl. the status control) inside
+            // the bounded x-scroll panel instead of clipping at the edge.
+            "flex flex-col gap-2 md:grid md:items-center md:gap-3 px-3 md:pr-4 py-2 border-b border-[var(--color-border)] cursor-pointer transition-[background-color,box-shadow] motion-reduce:transition-none hover:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)] hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_14%,transparent)] focus-visible:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] md:min-w-max",
             GRID_CLASS,
           )}
         >

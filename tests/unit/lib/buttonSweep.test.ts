@@ -31,12 +31,11 @@ interface VariantExpectation {
 }
 
 const ADD_CREATE_NEW_SUCCESS: ReadonlyArray<VariantExpectation> = [
-  {
-    label: "QuickAddBar (projects)",
-    file: "src/components/QuickAddBar.tsx",
-    expected: "success",
-    signature: 'aria-label="Add project"',
-  },
+  // UX-002 — the projects QuickAddBar is the DASHBOARD's single dominant
+  // CTA, so it is the documented exception to the ADD→success rule: it
+  // takes the cyan PRIMARY tier (asserted separately in DOMINANT_PRIMARY
+  // below) so each page has exactly one cyan lead action. Every other
+  // ADD/CREATE/NEW button stays green (success).
   {
     label: "QuickAddBar (wishlist)",
     file: "src/components/wishlist/QuickAddBar.tsx",
@@ -102,6 +101,47 @@ const SHARE_IMPORT_EXPORT_WARNING: ReadonlyArray<VariantExpectation> = [
     signature: "Export all my data",
   },
 ];
+
+/**
+ * UX-002 — the single dominant CTA per primary surface carries the cyan
+ * PRIMARY tier (DESIGN_LANGUAGE §4: exactly one cyan-solid lead per view).
+ * These three are the page leads on the Dashboard, Recipes list, and
+ * Recipe editor respectively. Locks them so a future sweep doesn't demote
+ * them back to green and leave a view with no cyan anchor.
+ */
+const DOMINANT_PRIMARY: ReadonlyArray<VariantExpectation> = [
+  {
+    label: "QuickAddBar (projects) — dashboard lead",
+    file: "src/components/QuickAddBar.tsx",
+    expected: "primary",
+    signature: 'aria-label="Add project"',
+  },
+  {
+    label: "RecipeActionsBar Save — recipe editor lead",
+    file: "src/components/recipes/RecipeActionsBar.tsx",
+    expected: "primary",
+    signature: "Save to your recipe library (detach from project)",
+  },
+];
+
+describe("UX-002 — dominant CTA per surface → primary (cyan)", () => {
+  for (const e of DOMINANT_PRIMARY) {
+    test(`${e.label} uses variant='primary'`, () => {
+      const src = read(e.file);
+      const idx = src.indexOf(e.signature);
+      expect(idx).toBeGreaterThan(0);
+      const window = src.slice(Math.max(0, idx - 400), idx + 200);
+      expect(window).toMatch(/variant="primary"/);
+    });
+  }
+
+  test("NewRecipeButton (recipes list lead) maps the primary tier to cyan", () => {
+    // This call site uses a ternary (variant === "primary" ? "primary" :
+    // "ghost") rather than a literal prop, so assert the mapping directly.
+    const src = read("src/components/recipes/NewRecipeButton.tsx");
+    expect(src).toMatch(/variant === "primary" \? "primary" : "ghost"/);
+  });
+});
 
 describe("P12.24 button sweep — ADD/CREATE/NEW → success", () => {
   for (const e of ADD_CREATE_NEW_SUCCESS) {

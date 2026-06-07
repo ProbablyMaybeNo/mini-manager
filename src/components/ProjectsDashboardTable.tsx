@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import type { Priority, ProjectType } from "@/db/schema";
 import { priorities, projectTypes } from "@/db/schema";
-import { ProgressBar } from "@/components/ProgressBar";
+import { SegmentedBar } from "@/components/viz/SegmentedBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import {
   InlineCellPopover,
@@ -145,6 +145,14 @@ const STATUS_RANK: Record<DisplayStatus, number> = {
   SHELVED: 7,
 };
 
+/** UX-006 — row hierarchy: a finished or hibernating project is
+ *  "settled" work, so its row is dimmed to let active/priority rows carry
+ *  the eye in the 5-second scan. The focused row always overrides this
+ *  (it stays fully lit + cyan-keyed regardless of status). */
+function isSettledStatus(status: DisplayStatus): boolean {
+  return status === "COMPLETE" || status === "SHELVED";
+}
+
 /** Locked priority order — Urgent first, Low last. */
 const PRIORITY_RANK: Record<NonNullable<Priority>, number> = {
   Urgent: 0,
@@ -184,6 +192,10 @@ interface Props {
   /** R7-1 — projectId → human name lookup so the AttachRecipeModal can
    *  show "currently attached to <X>" labels. */
   projectNameById: Readonly<Record<string, string>>;
+  /** UX-006 — the pinned Focus project id. Its row renders the persistent
+   *  cyan "active/selected line" (left-border + faint tint) keyed to the
+   *  painter's current focus, the most-cited moodboard group-27 detail. */
+  focusProjectId?: string | null;
 }
 
 /**
@@ -203,6 +215,7 @@ export function ProjectsDashboardTable({
   rows,
   ownedRecipes,
   projectNameById,
+  focusProjectId = null,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -380,6 +393,7 @@ export function ProjectsDashboardTable({
                   onToggleExpand={() => toggleExpanded(row.id)}
                   ownedRecipes={ownedRecipes}
                   projectNameById={projectNameById}
+                  isFocus={row.id === focusProjectId}
                 />
               );
             })}
@@ -463,6 +477,7 @@ export function ProjectsDashboardTable({
                     onToggleExpand={() => toggleExpanded(row.id)}
                     ownedRecipes={ownedRecipes}
                     projectNameById={projectNameById}
+                    isFocus={row.id === focusProjectId}
                   />
                 );
               })}
@@ -597,6 +612,7 @@ function DashboardRow({
   onToggleExpand,
   ownedRecipes,
   projectNameById,
+  isFocus,
 }: {
   row: ProjectDashboardRow;
   hasChildren: boolean;
@@ -608,14 +624,39 @@ function DashboardRow({
     attachedProjectId: string | null;
   }>;
   projectNameById: Readonly<Record<string, string>>;
+  /** UX-006 — true when this is the painter's pinned Focus project. */
+  isFocus: boolean;
 }) {
   const typeChipClass = TYPE_CHIP[row.type];
   // Tree-connector indent — 16px per depth level. depth 0 = no indent.
   const indentPx = row.depth * 16;
+  // UX-006 — settled rows dim unless they're the focused row (focus wins).
+  const dimmed = !isFocus && isSettledStatus(row.status);
 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [attachOpen, setAttachOpen] = useState(false);
+  // UX-006 — the per-row ▸ overflow menu (currently just Delete) so the
+  // destructive action is no longer an always-visible row link.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   const attachCandidates: ReadonlyArray<RecipeOption> = useMemo(() => {
     return ownedRecipes
@@ -676,10 +717,20 @@ function DashboardRow({
         "hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
         "focus-within:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
         "focus-within:[box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+        // UX-006 — the PERSISTENT active line: the pinned Focus project's
+        // row carries a steady faint-cyan tint + a 2px cyan left edge so it
+        // reads as "selected" at rest (not just on hover). Hover still
+        // layers its slightly stronger wash on top.
+        isFocus &&
+          "bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)] [box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+        // UX-006 — settled (complete/shelved) rows dim so active work wins
+        // the scan. focus overrides (dimmed is false when isFocus).
+        dimmed && "opacity-55",
         pending && "opacity-70",
       )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
+      data-focus-row={isFocus || undefined}
     >
       <td className="px-2 py-2 w-10 text-center">
         {hasChildren ? (
@@ -735,9 +786,12 @@ function DashboardRow({
         {/* REDESIGN-CLEANUP (fix 2) — Ross: the project NAME should be white
             so TYPE (cyan chip) is the differentiator. White by default, still
             a link: hover lights it cyan + underlines. */}
+        {/* UX-011 — tap-target floors the name link's own hit area to ≥24px
+            (44px on mobile) so it clears WCAG 2.2 §2.5.8 instead of the bare
+            ~17px text line-height. */}
         <Link
           href={`/projects/${row.id}`}
-          className="group inline-flex items-center gap-1 text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
+          className="tap-target group inline-flex items-center gap-1 text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
           title={`Open ${row.name}`}
         >
           {row.name}
@@ -753,6 +807,16 @@ function DashboardRow({
         {row.faction ? (
           <span className="ml-2 text-2xs text-[var(--color-fg-muted)]">
             {row.faction}
+          </span>
+        ) : null}
+        {/* UX-006 — name-cell FOCUS chip reinforces the cyan active line for
+            colour-blind users + when the left edge scrolls out of view. */}
+        {isFocus ? (
+          <span
+            className="ml-2 inline-flex items-center font-mono text-2xs uppercase tracking-wider text-[var(--color-bg)] bg-[var(--color-cyan)] px-1.5 py-px rounded-[2px] align-middle"
+            title="Your current focus project"
+          >
+            Focus
           </span>
         ) : null}
       </td>
@@ -852,24 +916,68 @@ function DashboardRow({
           </InlineCellPopoverItem>
         </InlineCellPopover>
       </td>
+      {/* UX-006 — completion renders as the SegmentedBar viz (moodboard
+          group-27 "boxes with black/no fill"), right-aligned with a
+          tabular-nums readout chip so the column scans as a clean column of
+          numbers. Replaces the thin smooth ProgressBar. */}
       <td className="px-3 py-2">
-        <span className="inline-flex items-center gap-2">
-          <ProgressBar percent={row.progressPercent} width={22} />
-          <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
+        <div className="flex items-center justify-end gap-2 min-w-[8rem]">
+          <SegmentedBar
+            value={row.progressPercent}
+            segments={8}
+            height={12}
+            animate={false}
+            className="w-24"
+            ariaLabel={`${row.progressPercent} percent complete`}
+          />
+          <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums w-9 text-right">
             {row.progressPercent}%
           </span>
-        </span>
+        </div>
       </td>
       <td className="px-3 py-2 text-right">
-        {/* P13.3 — per-row Delete trigger. Inline + red so the dashboard
-            stays scannable; the modal handles the destructive confirm. */}
-        <DeleteProjectButton
-          projectId={row.id}
-          projectName={row.name}
-          redirectToProjectsOnSuccess={false}
-          inline
-          label="Delete"
-        />
+        {/* UX-006 — the destructive Delete moved out of the always-visible
+            row into a ▸ overflow menu (revealed on hover/focus, always
+            available to keyboard + touch via the button). The
+            DeleteProjectModal still owns the confirm step. */}
+        <div className="relative inline-block" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label={`Row actions for ${row.name}`}
+            className={clsx(
+              "tap-target inline-flex items-center justify-center w-8 h-8 rounded-sm transition-[color,opacity]",
+              "text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]",
+              // Reveal on row hover / keyboard focus; stay visible while open
+              // and always for touch (no hover) via focus-visible + open.
+              "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100",
+              menuOpen && "opacity-100 text-[var(--color-cyan)]",
+            )}
+          >
+            <span aria-hidden className="text-sm leading-none">
+              ▸
+            </span>
+          </button>
+          {menuOpen ? (
+            <div
+              role="menu"
+              aria-label={`Actions · ${row.name}`}
+              className="absolute right-0 top-full mt-1 z-30 min-w-[150px] panel bg-[var(--color-bg-panel)] shadow-xl py-1"
+            >
+              <div role="none" className="px-1">
+                <DeleteProjectButton
+                  projectId={row.id}
+                  projectName={row.name}
+                  redirectToProjectsOnSuccess={false}
+                  inline
+                  label="Delete project"
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
       </td>
     </tr>
   );
@@ -903,6 +1011,7 @@ function MobileCompRow({
   onToggleExpand,
   ownedRecipes,
   projectNameById,
+  isFocus,
 }: {
   row: ProjectDashboardRow;
   hasChildren: boolean;
@@ -914,11 +1023,15 @@ function MobileCompRow({
     attachedProjectId: string | null;
   }>;
   projectNameById: Readonly<Record<string, string>>;
+  /** UX-006 — true when this is the painter's pinned Focus project. */
+  isFocus: boolean;
 }) {
   const typeChipClass = TYPE_CHIP[row.type];
   // Mobile indent is shallower than the desktop table (8px per level) so
   // the frozen name column doesn't get pinched at 320px.
   const indentPx = row.depth * 8;
+  // UX-006 — settled rows dim unless they're the focused row (focus wins).
+  const dimmed = !isFocus && isSettledStatus(row.status);
 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -927,6 +1040,26 @@ function MobileCompRow({
   const [sheetField, setSheetField] = useState<"status" | "priority" | null>(
     null,
   );
+  // UX-006 — per-row ▸ overflow menu (Delete lives here, not inline).
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   const attachCandidates: ReadonlyArray<RecipeOption> = useMemo(() => {
     return ownedRecipes
@@ -978,10 +1111,16 @@ function MobileCompRow({
       }}
       className={clsx(
         "transition-colors cursor-pointer",
+        // UX-006 — persistent cyan active line for the focused project,
+        // mirroring the desktop table so both viewports flag the focus row.
+        isFocus &&
+          "bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)] [box-shadow:inset_2px_0_0_0_var(--color-cyan)]",
+        dimmed && "opacity-55",
         pending && "opacity-70",
       )}
       style={{ borderBottom: "1px solid var(--color-border)" }}
       data-depth={row.depth}
+      data-focus-row={isFocus || undefined}
     >
       {/* FROZEN — chevron + name. Sticky-left so it stays put while the
           remaining columns scroll horizontally. */}
@@ -1017,9 +1156,11 @@ function MobileCompRow({
           <span className="min-w-0">
             {/* REDESIGN-CLEANUP (fix 2) — name white (matches desktop); link
                 hover lights cyan + underline. */}
+            {/* UX-011 — tap-target floors the mobile name link to the 44px
+                touch minimum. */}
             <Link
               href={`/projects/${row.id}`}
-              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
+              className="tap-target group flex items-center gap-1 text-xs font-mono text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
               title={`Open ${row.name}`}
             >
               <span className="truncate">{row.name}</span>
@@ -1034,6 +1175,14 @@ function MobileCompRow({
             {row.faction ? (
               <span className="block text-2xs font-mono text-[var(--color-fg-muted)] truncate">
                 {row.faction}
+              </span>
+            ) : null}
+            {isFocus ? (
+              <span
+                className="mt-0.5 inline-flex items-center font-mono text-2xs uppercase tracking-wider text-[var(--color-bg)] bg-[var(--color-cyan)] px-1.5 py-px rounded-[2px]"
+                title="Your current focus project"
+              >
+                Focus
               </span>
             ) : null}
           </span>
@@ -1119,25 +1268,63 @@ function MobileCompRow({
         </button>
       </td>
 
-      {/* Completion bar. */}
+      {/* Completion — SegmentedBar viz (UX-006), matching the desktop
+          treatment. */}
       <td className="px-3 py-2 align-top whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
-          <ProgressBar percent={row.progressPercent} width={22} />
+          <SegmentedBar
+            value={row.progressPercent}
+            segments={6}
+            height={11}
+            animate={false}
+            className="w-16"
+            ariaLabel={`${row.progressPercent} percent complete`}
+          />
           <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
             {row.progressPercent}%
           </span>
         </span>
       </td>
 
-      {/* Delete. */}
+      {/* Row actions — ▸ overflow menu holding the (destructive) Delete,
+          matching the desktop treatment so phone + desktop agree. */}
       <td className="px-3 py-2 align-top text-right whitespace-nowrap">
-        <DeleteProjectButton
-          projectId={row.id}
-          projectName={row.name}
-          redirectToProjectsOnSuccess={false}
-          inline
-          label="Delete"
-        />
+        <div className="relative inline-block" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label={`Row actions for ${row.name}`}
+            className={clsx(
+              "tap-target inline-flex items-center justify-center w-8 h-8 rounded-sm transition-colors",
+              menuOpen
+                ? "text-[var(--color-cyan)]"
+                : "text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]",
+            )}
+          >
+            <span aria-hidden className="text-sm leading-none">
+              ▸
+            </span>
+          </button>
+          {menuOpen ? (
+            <div
+              role="menu"
+              aria-label={`Actions · ${row.name}`}
+              className="absolute right-0 top-full mt-1 z-30 min-w-[150px] panel bg-[var(--color-bg-panel)] shadow-xl py-1"
+            >
+              <div role="none" className="px-1">
+                <DeleteProjectButton
+                  projectId={row.id}
+                  projectName={row.name}
+                  redirectToProjectsOnSuccess={false}
+                  inline
+                  label="Delete project"
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
       </td>
 
       {/* Nonmodal row-edit bottom sheet — keeps the table visible behind

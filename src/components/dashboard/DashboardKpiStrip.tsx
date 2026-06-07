@@ -138,9 +138,21 @@ export function DashboardKpiStrip({ cards }: Props) {
             ticks
             techLabel={techLabelFor(index, isLead)}
             bodyClassName="flex flex-col"
+            // UX-008 — let the KPI title wrap to two lines instead of
+            // ellipsizing ("AVG COMPLET…", "PAINTING TI…") at 390px.
+            titleClassName="whitespace-normal leading-tight"
           >
             <div
-              className="flex items-center justify-between gap-3"
+              className={clsx(
+                // UX-008 — at narrow widths (390px 2-up) the number and the
+                // radial gauge collided when forced side-by-side, so the
+                // gauge dropped on top of the unit caption. Stack the gauge
+                // BELOW the number/unit block by default and only sit it
+                // beside the number once there's room (sm+), where it no
+                // longer overlaps.
+                "flex flex-col items-start gap-3",
+                "sm:flex-row sm:items-center sm:justify-between",
+              )}
               data-kpi-card
               data-kpi-lead={isLead ? "true" : undefined}
             >

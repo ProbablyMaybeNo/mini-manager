@@ -86,4 +86,22 @@ describe("BottomTabBar — terminal skin", () => {
   test("tab row keeps the ≥44px mobile tap floor (56px row)", () => {
     expect(src).toContain("min-h-[56px]");
   });
+
+  test("UX-014 — FOCUS (/planner) is reachable from the mobile tab bar", () => {
+    // The mobile bar shipped with only 5 of the 6 sections; FOCUS was the
+    // missing core flow. Assert /planner is now a tab with a Focus label.
+    expect(src).toContain('href: "/planner"');
+    expect(src).toMatch(/label:\s*"Focus"/);
+    // All six primary sections present.
+    for (const href of [
+      "/projects",
+      "/planner",
+      "/library",
+      "/recipes",
+      "/tools",
+      "/wishlist",
+    ]) {
+      expect(src).toContain(`href: "${href}"`);
+    }
+  });
 });

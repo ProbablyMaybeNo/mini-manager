@@ -91,11 +91,17 @@ export function QuickAddBar() {
             "focus:border-[var(--color-accent)]",
           )}
         />
+        {/* UX-002 — the quick-add submit is the DASHBOARD's single dominant
+            CTA (the fastest path to creating a project), so it carries the
+            cyan PRIMARY tier. "New project" stays green (success) and
+            "Import" stays yellow (warning) below, giving the header one
+            clean primary→secondary→lateral hierarchy instead of the prior
+            two-greens-plus-yellow clash. */}
         <Button
           type="submit"
           disabled={isPending || value.trim().length === 0}
           aria-label="Add project"
-          variant="success"
+          variant="primary"
           size="sm"
         >
           {isPending ? "…" : "Add"}

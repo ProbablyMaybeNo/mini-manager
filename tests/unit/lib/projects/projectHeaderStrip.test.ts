@@ -67,14 +67,14 @@ describe("ProjectHeaderStrip component surface", () => {
     expect(src).not.toContain("childAddLabel");
   });
 
-  test("the full-width progress bar uses stretch + height={14}", () => {
-    expect(src).toContain("stretch");
-    expect(src).toContain("height={14}");
-  });
-
-  test("the percent overlay sits absolutely centered above the bar", () => {
-    expect(src).toContain("absolute inset-0 flex items-center justify-center");
-    expect(src).toContain("{percent}%");
+  test("UX-016 — the duplicate linear progress bar is removed", () => {
+    // The header double-encoded completion (CircularProgress dial AND a
+    // full-width linear bar showing the same percent within ~40px). UX-016
+    // keeps the dial as the single hero stat and drops the linear bar +
+    // its centered overlay + the ProgressBar import.
+    expect(src).not.toContain("<ProgressBar");
+    expect(src).not.toContain('import { ProgressBar }');
+    expect(src).not.toContain("stretch");
   });
 
   test("PHASE-2 — header is a terminal panel with corner ticks + tech label", () => {
@@ -85,11 +85,12 @@ describe("ProjectHeaderStrip component surface", () => {
     expect(src).toContain("panel-label");
   });
 
-  test("PHASE-2 — headline completion reads as a phosphor CircularProgress dial", () => {
-    // §7.1 — the recurring moodboard gauge. The dense linear bar stays for
-    // the at-a-glance fill; the dial is the headline figure.
+  test("UX-016 — completion is the single hero CircularProgress dial", () => {
+    // §7.1 — the recurring moodboard gauge is now the ONLY completion
+    // encoding in the header, enlarged so it reads as the headline figure.
     expect(src).toContain("CircularProgress");
     expect(src).toContain("caption=\"DONE\"");
+    expect(src).toContain("percent={percent}");
   });
 
   test("PHASE-2 — status renders as the solid colour-bar idiom (tone=bar)", () => {

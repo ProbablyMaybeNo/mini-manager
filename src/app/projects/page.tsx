@@ -29,6 +29,7 @@ import {
 } from "@/components/planner/plannerStreakHelpers";
 import { getActivityByDay } from "@/db/queries/activityLog";
 import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
+import { getFocusProjectId } from "@/db/queries/focus";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { displayStatus, progressPercent } from "@/lib/progress";
@@ -94,6 +95,7 @@ export default async function DashboardPage({
     ownedRecipes,
     streakDays,
     weekSeconds,
+    focusProjectId,
   ] = await Promise.all([
     listAllProjects(userId),
     getProjectPalettesMap(userId),
@@ -101,6 +103,9 @@ export default async function DashboardPage({
     listOwnedRecipesLean(userId),
     getActivityByDay(userId, new Date(now.getTime() - SIXTY_DAYS_MS)),
     getWeekRollupSeconds(userId, now.getTime()),
+    // UX-006 — the focused project drives the mission table's persistent
+    // cyan "active row" highlight (keyed below). Null when no focus pinned.
+    getFocusProjectId(userId),
   ]);
 
   const isEmpty = allProjects.length === 0;
@@ -319,6 +324,7 @@ export default async function DashboardPage({
               rows={rows}
               ownedRecipes={ownedRecipes}
               projectNameById={projectNameById}
+              focusProjectId={focusProjectId}
             />
           </Card>
         </>
