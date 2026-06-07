@@ -8,10 +8,11 @@
  * components — which inputs are by definition.
  *
  * The R7-005 fix routes every <input>, <textarea>, <select> through a
- * dedicated `--color-border-input` token, aliased to
- * `--color-border-strong` (#5a5a5a — 4.05:1 on #0a0a0a). The CSS rule
- * uses a tag.class selector so it wins specificity over `.frame`
- * without `!important`.
+ * dedicated `--color-border-input` token. GOLD-STANDARD pass: Ross's
+ * "all grey → bright white" rule repointed every border token (including
+ * this one) to #FFFFFF — white on #0a0a0a is 19.8:1, far past WCAG 2.2
+ * §1.4.11's 3:1 floor. The CSS rule still uses a tag.class selector so it
+ * wins specificity over `.frame` without `!important`.
  */
 import { describe, expect, test } from "vitest";
 import * as fs from "node:fs";
@@ -27,13 +28,12 @@ function read(rel: string): string {
 const css = read("src/app/globals.css");
 
 describe("globals.css — R7-005 form input border tokens", () => {
-  test("--color-border-input is declared in @theme at #666666", () => {
-    // 3.34:1 on #0a0a0a — clears WCAG 1.4.11 (3:1) for non-text
-    // component boundaries. --color-border-strong (#5a5a5a, 2.87:1) is
-    // re-tested in the contrast budget describe below; it doesn't
-    // quite clear, so inputs need a dedicated token rather than
-    // aliasing to strong.
-    expect(css).toMatch(/--color-border-input:\s*#666666/);
+  test("--color-border-input is declared in @theme at #ffffff (gold-standard: all grey → white)", () => {
+    // 19.8:1 on #0a0a0a — clears WCAG 1.4.11 (3:1) for non-text
+    // component boundaries with enormous headroom. The gold-standard
+    // pass collapsed every border token to bright white, so inputs share
+    // the same #ffffff edge as every other surface.
+    expect(css).toMatch(/--color-border-input:\s*#ffffff/i);
   });
 
   test("the docblock references R7-005 + WCAG 1.4.11", () => {
@@ -84,21 +84,16 @@ describe("Contrast budget — R7-005 token value", () => {
     return (hi + 0.05) / (lo + 0.05);
   }
 
-  test("#666666 (the input-border token) passes WCAG 1.4.11 (≥3:1)", () => {
-    expect(contrast("#666666", "#0a0a0a")).toBeGreaterThanOrEqual(3);
+  test("#ffffff (the gold-standard input-border token) passes WCAG 1.4.11 (≥3:1)", () => {
+    // White on near-black is 19.8:1 — vastly past the 3:1 floor.
+    expect(contrast("#ffffff", "#0a0a0a")).toBeGreaterThanOrEqual(3);
+    expect(contrast("#ffffff", "#0a0a0a")).toBeGreaterThan(19);
   });
 
-  test("#5a5a5a (the original border-strong) misses 3:1 by a hair", () => {
-    // Documents WHY R7-005 needed its own token — the existing
-    // border-strong is 2.87:1, just under the floor, so we couldn't
-    // simply alias.
-    const c = contrast("#5a5a5a", "#0a0a0a");
-    expect(c).toBeLessThan(3);
-    expect(c).toBeGreaterThan(2.8);
-  });
-
-  test("the rejected #262626 (default frame) fails the 3:1 floor", () => {
-    // Sanity: documents WHY we needed the override.
+  test("the retired grey border greys (#5a5a5a / #262626) sat at/under the floor", () => {
+    // Documents WHY the gold-standard pass went all the way to white: the
+    // old grey border tokens hovered at or below the 3:1 boundary.
+    expect(contrast("#5a5a5a", "#0a0a0a")).toBeLessThan(3);
     expect(contrast("#262626", "#0a0a0a")).toBeLessThan(3);
   });
 });

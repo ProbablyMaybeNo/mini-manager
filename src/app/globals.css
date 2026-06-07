@@ -59,23 +59,19 @@
   src: url("/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
 }
 
-/* Heading 1 — UAV OSD Mono, the real tactical/HUD OSD face (Ross's file). */
+/* Heading 1 + TITLES — UAV OSD Mono, the squared tactical/HUD OSD face
+   (Ross's file). GOLD-STANDARD font decision: the spec image's title
+   ("VINTAGE TERMINAL UI ELEMENT PACK v1.0") is a CLEAN SQUARED TERMINAL
+   MONO — larger, letter-spaced — NOT a pixel/arcade face. PixelSplitter
+   (the pixel/techno display face) does not match the image, so it is
+   DROPPED; UAV OSD Mono now carries both H1 and the page-top title
+   (--font-display) for a single squared-mono identity. */
 @font-face {
   font-family: "UAV OSD Mono";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url("/fonts/uav-osd-mono.woff2") format("woff2");
-}
-
-/* Title — PixelSplitter Bold, a bold techno display face (Ross's file).
-   Hero/page-top titles ONLY, never body. */
-@font-face {
-  font-family: "PixelSplitter";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/fonts/pixelsplitter-bold.woff2") format("woff2");
 }
 
 /* ============================================================
@@ -96,80 +92,72 @@
 
 @theme {
   /* ----- Color tokens -----
-     Phase-0 terminal rebuild (DESIGN_LANGUAGE.md §2): pure-black base,
-     surfaces transparent / near-black — NEVER grey. The prior #161616 /
-     #1f1f1f panel greys were exactly the "boring grey SaaS" Ross
-     rejected; the elevated/panel tokens now resolve to #0a0a0a so every
-     consumer that reaches for them renders near-black-on-black, with the
-     1px phosphor border (not a grey fill) carrying the panel boundary.
-     Pure #000 is the page base; #0a0a0a sits a hair above it so nested
-     panels are faintly distinguishable without reading as grey. */
-  --color-bg: #000000;
+     GOLD-STANDARD terminal rebuild (docs/design/gold-standard-ui.png —
+     the literal element-pack spec). Solid near-black base (#0A0A0A) for
+     the page AND panel fills; panels are transparent/black, never grey.
+     Ross's headline rule for this pass: EVERY grey → bright white. So
+     borders, dividers, table rules, and muted/secondary text all become
+     #FFFFFF — the only thing that stays dimmed is genuinely DISABLED
+     state, which uses dimmed white (~40% alpha) so "disabled" still
+     reads as disabled (see the image's grey DISABLED button/panel). */
+  --color-bg: #0a0a0a;
   --color-bg-elevated: #0a0a0a;
   --color-bg-panel: #0a0a0a;
 
-  --color-fg: #f5f5f5;
-  /* Secondary text — lifted from #a0a0a0 / #8a8a8a so labels, brand
-     names, metadata pop instead of fading into the dark backdrop.
-     Some hierarchy preserved (subtle slightly dimmer than muted) but
-     both clear AAA contrast on #0a0a0a (-muted 16.1:1, -subtle 12.6:1). */
-  /* Ross + R5 audit compromise: was #f0f0f0 (indistinguishable from
-     #f5f5f5 fg). Lifted to #cfcfcf — bright enough to keep the
-     "labels pop" intent from the earlier grey→white pass, but
-     distinct from fg so hierarchy reads. Still 12.6:1 on bg = AAA. */
-  --color-fg-muted: #cfcfcf;
-  --color-fg-subtle: #d4d4d4;
+  /* Foreground + secondary text → all bright white. The former grey
+     hierarchy (#cfcfcf / #d4d4d4) is collapsed to #FFFFFF per Ross:
+     "instead of everything that is grey it should be bright white
+     across the board." Hierarchy now comes from weight / size / glow,
+     not from greying text down. */
+  --color-fg: #ffffff;
+  --color-fg-muted: #ffffff;
+  --color-fg-subtle: #ffffff;
 
-  /* REDESIGN-CLEANUP (fix 1) — Ross: "remove all the grey border lines."
-     The decorative border token was a flat neutral grey (#262626) which
-     read as the "grey SaaS box" lines the design language rejects. Re-tinted
-     to a FAINT cyan-leaning dark (same near-black luminance, just a phosphor
-     hue) so every divider / decorative frame that references this token reads
-     as a quiet terminal line instead of grey — no grey lines left. The
-     `color-mix(... cyan X%, --color-border)` panel/card frames inherit the
-     coherent tint for free; the WCAG-critical input border keeps its own
-     dedicated --color-border-input token (untouched). */
-  --color-border: #1c2426;
-  /* Bumped from #363636 (1.68:1 on bg) to #5a5a5a so the border reads
-     as a real boundary on auth-form inputs + every other
-     .frame-strong surface. UX-V3-003 — auditor round 3.
-     Round-7 contrast re-test: #5a5a5a is 2.87:1 on #0a0a0a, JUST under
-     WCAG 2.2 §1.4.11's 3:1 floor. Form inputs need 3:1 specifically;
-     decorative frames around prose / metadata get a pass at 2.87:1 since
-     they don't demarcate a focusable component. Inputs use the
-     dedicated --color-border-input token below (lifted to #666666 →
-     3.34:1 on bg) so the WCAG-critical surface clears the floor. */
-  --color-border-strong: #5a5a5a;
-  /* Dedicated input-border token. Round-7 audit flagged form inputs
-     using the generic `.frame` (1px @ --color-border = 1.4:1 on bg)
-     failing WCAG 2.2 §1.4.11. R7-005 routes every <input>, <textarea>,
-     and <select> through this token (3.34:1 on bg) so the border passes
-     regardless of whether the component reaches for .frame or
-     .frame-strong. Held just inside the 3:1 floor — lifting further
-     would make non-active inputs read as focused. */
-  --color-border-input: #666666;
+  /* Disabled-only dimmed white — the ONE place white is allowed to drop.
+     ~40% alpha over the near-black ground reads as a clearly muted /
+     inert element (the image's grey DISABLED button + panel) while every
+     enabled grey surface is now full white. 3.45:1 on #0a0a0a — still a
+     visible boundary, just visibly de-emphasised. */
+  --color-disabled: rgba(255, 255, 255, 0.4);
 
-  /* The 5 locked style-guide colours, treated as glowing CRT phosphor
-     (DESIGN_LANGUAGE.md §2). All clear WCAG-AA (≥4.5:1) on #000 as text
-     AND carry crisp black text when used as a button fill:
-       cyan   #00D2FF  11.66:1   primary / selection / active nav / links
-       green  #51FD80  15.71:1   success / owned / "go"
-       yellow #EEF996  18.63:1   warning / wishlist / highlight (sparing)
-       purple #9B80DC   6.51:1   special / featured (sparing)
-       red    #FF4244   6.11:1   destructive / error / alert (sparing)
+  /* GREY → WHITE: every border / divider / table-rule token is now bright
+     white. The old #1c2426 / #5a5a5a / #666666 greys are retired. The
+     input-border token stays distinct in name (consumers reference it)
+     but resolves to the same white — white on #0a0a0a is 19.8:1, far past
+     WCAG 2.2 §1.4.11's 3:1 floor for non-text component boundaries. */
+  --color-border: #ffffff;
+  --color-border-strong: #ffffff;
+  /* Dedicated input-border token — kept as a named alias so the R7-005
+     `input.frame` override selectors keep resolving, now pointing at the
+     bright-white border per the gold-standard "all grey → white" rule.
+     WCAG 2.2 §1.4.11: white on #0a0a0a = 19.8:1, well clear of 3:1. */
+  --color-border-input: #ffffff;
+
+  /* The locked style-guide colours, treated as glowing CRT phosphor, taken
+     from the gold-standard image's "02 COLOR PALETTE" with Ross's tweaks.
+     All clear WCAG-AA (≥4.5:1) on #0A0A0A as text AND carry crisp black
+     text when used as a button fill (verified):
+       cyan   #7DF9FF  15.90:1   primary / selection / active nav / links
+                       (brighter sky-cyan than the old #00D2FF)
+       green  #8BFF8B  15.81:1   success / owned / "go"
+       yellow #F2EFA8  16.68:1   warning / wishlist / highlight — image is
+                       #F5E86C, softened MORE PASTEL per Ross to #F2EFA8
+       purple #9B80DC   6.14:1   special / featured (sparing, unchanged)
+       red    #FF5F5F   6.65:1   destructive / error / alert (sparing)
      `-dim` variants are the same hue darkened for borders/fills/hover —
-     not for text-on-black. `-bright` is a hover-lift for cyan. */
-  --color-green: #51fd80;
-  --color-green-dim: #2bb053;
-  --color-cyan: #00d2ff;
-  --color-cyan-dim: #008fa0;
-  --color-cyan-bright: #5ce1ff;
-  --color-yellow: #eef996;
-  --color-yellow-dim: #b9c453;
-  --color-amber: #ffb020;
-  --color-amber-dim: #c47a00;
-  --color-red: #ff4244;
-  --color-red-dim: #b8232f;
+     not for text-on-black. `-bright` (#B8F1FF) is the light-cyan accent
+     from the image + the cyan hover-lift. */
+  --color-green: #8bff8b;
+  --color-green-dim: #4fbf57;
+  --color-cyan: #7df9ff;
+  --color-cyan-dim: #2bb8c4;
+  --color-cyan-bright: #b8f1ff;
+  --color-yellow: #f2efa8;
+  --color-yellow-dim: #bdb95f;
+  --color-amber: #f2efa8;
+  --color-amber-dim: #bdb95f;
+  --color-red: #ff5f5f;
+  --color-red-dim: #c43a3a;
   /* Pastel purple — 5th seat in the locked palette
      (cyan / pastel yellow / pastel red / neon green / pastel purple).
      Used for "special / accent / featured / unusual" semantic intent.
@@ -208,19 +196,21 @@
   /* ----- Typography -----
      mono     = body + Heading 2 + all chrome (readability floor).
      sans     = prose fallback (font-sans utility on long-form copy).
-     tactical = Heading 1 — Share Tech Mono, an OSD/HUD tactical mono
-                (stand-in for the unlicensed "UAV OSD Mono"). Falls back
-                to the mono stack so H1 never goes unstyled.
-     display  = Title only — Press Start 2P, an 8-bit arcade display
-                face (stand-in for "Digital Arcade"). Page-top / hero
-                titles ONLY; pixel font is fatigue at body sizes. */
+     tactical = Heading 1 — UAV OSD Mono, the squared OSD/HUD tactical
+                mono. Falls back to the mono stack so H1 never goes
+                unstyled.
+     display  = Title — UAV OSD Mono (gold-standard: PixelSplitter dropped;
+                the spec image's title is a clean squared terminal mono,
+                not a pixel face). Page-top / hero titles render in the
+                same squared mono as H1, just larger + cyan + letter-
+                spaced, matching the image's title treatment. */
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
     "Roboto Mono", Consolas, "Liberation Mono", monospace;
   --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-tactical: "UAV OSD Mono", "IBM Plex Mono", ui-monospace,
     Consolas, monospace;
-  --font-display: "PixelSplitter", "UAV OSD Mono", "IBM Plex Mono",
+  --font-display: "UAV OSD Mono", "IBM Plex Mono",
     ui-monospace, monospace;
 
   /* ----- Sizes -----
@@ -266,6 +256,27 @@
   --glow-intense:
     0 0 6px color-mix(in srgb, currentColor 72%, transparent),
     0 0 18px color-mix(in srgb, currentColor 48%, transparent);
+
+  /* ----- Phosphor ELEMENT glow (gold-standard pass) -----
+     Ross: "add a phosphor glow to elements, not just text." The whole app
+     should read as a lit CRT — borders / panels bloom, not only glyphs.
+     These are box-shadow halos (NOT text-shadow) derived from currentColor
+     via color-mix, so a cyan-bordered panel blooms cyan, a red one red,
+     etc. Tasteful + readability-floored: low alpha, small radius, and the
+     whole tier is stripped under prefers-reduced-motion (see the
+     consolidated block below).
+
+       --glow-edge   the resting bloom for default panels / cards / inputs.
+       --glow-edge-strong  a lifted bloom for active / focused / hovered
+                     surfaces + coloured-variant panels.
+
+     Because they read currentColor, consumers either set a colour on the
+     element (coloured panels) or pass white/border-coloured borders and
+     get a white bloom. The `.glow-edge*` utilities apply them directly. */
+  --glow-edge: 0 0 6px -1px color-mix(in srgb, currentColor 28%, transparent);
+  --glow-edge-strong:
+    0 0 4px -1px color-mix(in srgb, currentColor 45%, transparent),
+    0 0 12px -2px color-mix(in srgb, currentColor 30%, transparent);
 
   /* ----- Spacing rhythm (4px base) ----- */
   --radius-none: 0;
@@ -631,6 +642,15 @@ select.frame-strong {
 .glow-text-strong   { text-shadow: var(--glow-strong); }
 .glow-text-intense  { text-shadow: var(--glow-intense); }
 
+/* UI-GLOW — ELEMENT (border/panel) bloom utilities (gold-standard pass).
+   A currentColor-derived BOX-shadow halo so any bordered element reads as
+   lit phosphor, not just text. Use `.glow-edge` for a resting bloom and
+   `.glow-edge-strong` for active/focused/coloured surfaces. The halo
+   follows the element's own colour — seed `color:` (or use a coloured
+   border) to bloom in-hue. Stripped under reduced-motion below. */
+.glow-edge        { box-shadow: var(--glow-edge); }
+.glow-edge-strong { box-shadow: var(--glow-edge-strong); }
+
 /* UI-GLOW — reduced-motion / no-glow opt-out. Glow is decorative bloom,
    never a state signal, so stripping it changes nothing functional. One
    consolidated block kills every tier + the legacy colour-glow classes,
@@ -640,6 +660,22 @@ select.frame-strong {
   .glow-text, .glow-text-strong, .glow-text-intense,
   .btn-outline, h1, h2, h3, a, html {
     text-shadow: none;
+  }
+  /* Element (border/panel) bloom is decorative light too — strip it. The
+     standalone utilities drop to no shadow; the .card / .panel primitives
+     reference the --glow-edge* tokens in their box-shadow, and those tokens
+     are zeroed at :root below, so the phosphor halo vanishes while the
+     plain elevation shadows survive — the frame stays crisp + readable
+     without re-stating each primitive's full shadow stack. */
+  .glow-edge, .glow-edge-strong {
+    box-shadow: none;
+  }
+  :root {
+    /* An invisible (transparent, zero-size) shadow — valid inside the
+       comma-joined box-shadow lists on .card / .panel, so the halo
+       disappears without invalidating the rest of the shadow stack. */
+    --glow-edge: 0 0 0 0 transparent;
+    --glow-edge-strong: 0 0 0 0 transparent;
   }
 }
 
@@ -660,11 +696,18 @@ select.frame-strong {
   display: flex;
   flex-direction: column;
   background: var(--color-bg-elevated);
-  border: 1px solid color-mix(in srgb, var(--color-cyan) 22%, var(--color-border));
+  /* Gold-standard: default panel border is bright WHITE (all grey → white).
+     `color: var(--color-border)` seeds currentColor so the white phosphor
+     edge-glow below blooms white. */
+  color: var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  /* Subtle elevation: outer shadow lifts off the page, inset top
-     highlight suggests light from above (the CRT-screen-edge gleam). */
+  /* Subtle elevation + the phosphor EDGE glow so the panel reads as a lit
+     CRT frame (Ross: glow on elements, not just text). The currentColor
+     bloom is white here; coloured-variant cards re-seed currentColor and
+     bloom in their own hue. */
   box-shadow:
+    var(--glow-edge),
     0 4px 12px -4px rgba(0, 0, 0, 0.55),
     0 1px 2px -1px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 0 color-mix(in srgb, var(--color-fg) 4%, transparent);
@@ -741,8 +784,13 @@ select.frame-strong {
 .panel {
   position: relative;
   background: var(--color-bg-elevated);
-  border: 1px solid color-mix(in srgb, var(--color-cyan) 28%, var(--color-border));
+  /* Gold-standard DEFAULT panel: bright-white 1px phosphor border + white
+     edge-glow (all grey → white). currentColor is seeded white so the
+     bloom matches; coloured panel variants re-seed it to bloom in-hue. */
+  color: var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-none);
+  box-shadow: var(--glow-edge);
 }
 
 /* Transparent variant — pure box-on-black, no fill at all (the panel
@@ -827,14 +875,15 @@ select.frame-strong {
    discipline (P12.23) is preserved — variants still map intent →
    colour — only the tone flipped from outline to fill.
 
-   Contrast (text-on-fill, verified WCAG 2.2 §1.4.3, ≥4.5:1 AA):
-     primary  cyan #7dd3fc  + black: 11.87:1  AAA
-     secondary cyan ditto   (now solid)
+   Contrast (text-on-fill = near-black #0a0a0a, verified WCAG 2.2 §1.4.3,
+   ≥4.5:1 AA — gold-standard palette):
+     primary  cyan   #7df9ff + black: 16.87:1  AAA
+     secondary green #8bff8b + black: 16.77:1  AAA
      ghost    near-bg neutral + white text (low-emphasis surface)
-     danger   red  #ff4757  + black:  5.93:1  AA
-     success  green #33ff66 + black: 14.74:1  AAA
-     warning  yellow #ffe066 + black: 15.18:1  AAA
-     purple   purple #b794f6 + black:  8.09:1  AAA
+     danger   red    #ff5f5f + black:  7.05:1  AA
+     success  green  #8bff8b + black: 16.77:1  AAA
+     warning  yellow #f2efa8 + black: 17.69:1  AAA
+     purple   purple #9b80dc + black:  6.51:1  AA
 
    Outline tone — `.btn-outline-*` modifiers flip back to transparent bg
    + coloured text + coloured border for low-emphasis surfaces. Driven

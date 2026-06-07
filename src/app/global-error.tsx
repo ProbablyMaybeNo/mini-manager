@@ -33,7 +33,7 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           background: "#0A0A0A",
-          color: "#f5f5f5",
+          color: "#FFFFFF",
           fontFamily:
             '"IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace',
           padding: "24px",
@@ -45,7 +45,7 @@ export default function GlobalError({
               fontSize: "0.6875rem",
               textTransform: "uppercase",
               letterSpacing: "0.25em",
-              color: "#FF4244",
+              color: "#FF5F5F",
               margin: "0 0 1rem",
             }}
           >
@@ -55,8 +55,8 @@ export default function GlobalError({
             aria-hidden
             style={{
               fontSize: "2.75rem",
-              color: "#00D2FF",
-              textShadow: "0 0 8px rgba(0,210,255,0.55)",
+              color: "#7DF9FF",
+              textShadow: "0 0 8px rgba(125,249,255,0.55)",
               margin: "0 0 1rem",
             }}
           >
@@ -68,7 +68,7 @@ export default function GlobalError({
           <p
             style={{
               fontSize: "0.875rem",
-              color: "#cfcfcf",
+              color: "#FFFFFF",
               lineHeight: 1.6,
               margin: "0 0 1.5rem",
             }}
@@ -94,8 +94,8 @@ export default function GlobalError({
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
                 color: "#0A0A0A",
-                background: "#00D2FF",
-                border: "1px solid #00D2FF",
+                background: "#7DF9FF",
+                border: "1px solid #7DF9FF",
                 borderRadius: 2,
                 padding: "8px 16px",
                 minHeight: 36,
@@ -112,9 +112,9 @@ export default function GlobalError({
                 fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
-                color: "#00D2FF",
+                color: "#7DF9FF",
                 background: "transparent",
-                border: "1px solid #00D2FF",
+                border: "1px solid #7DF9FF",
                 borderRadius: 2,
                 padding: "8px 16px",
                 minHeight: 36,

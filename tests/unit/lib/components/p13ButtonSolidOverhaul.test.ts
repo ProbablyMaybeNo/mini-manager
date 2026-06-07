@@ -73,15 +73,16 @@ function contrastRatio(a: Rgb, b: Rgb): number {
  *  test on the CSS file itself confirms the same hex values stay
  *  declared, so a future palette-token change has to update both. */
 const PALETTE = {
-  // Phase-0 terminal rebuild palette (DESIGN_LANGUAGE.md §2). Pure-black
-  // base, the 5 style-guide phosphor colours. All clear WCAG-AA black-on-
-  // fill: cyan 11.66, green 15.71, yellow 18.63, purple 6.51, red 6.11.
-  bg: [0x00, 0x00, 0x00],
-  fg: [0xf5, 0xf5, 0xf5],
-  cyan: [0x00, 0xd2, 0xff],
-  green: [0x51, 0xfd, 0x80],
-  yellow: [0xee, 0xf9, 0x96],
-  red: [0xff, 0x42, 0x44],
+  // GOLD-STANDARD palette (docs/design/gold-standard-ui.png + Ross's
+  // tweaks). Near-black base #0A0A0A, foreground bright white #FFFFFF, the
+  // brighter phosphor accents. All clear WCAG-AA black-on-fill: cyan 16.87,
+  // green 16.77, yellow 17.69, purple 6.51, red 7.05.
+  bg: [0x0a, 0x0a, 0x0a],
+  fg: [0xff, 0xff, 0xff],
+  cyan: [0x7d, 0xf9, 0xff],
+  green: [0x8b, 0xff, 0x8b],
+  yellow: [0xf2, 0xef, 0xa8],
+  red: [0xff, 0x5f, 0x5f],
   purple: [0x9b, 0x80, 0xdc],
 } as const satisfies Record<string, Rgb>;
 

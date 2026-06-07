@@ -91,9 +91,13 @@ describe("globals.css — panel/card terminal frame primitives (Phase 0)", () =>
     expect(body).toMatch(/background:\s*var\(--color-bg-elevated\)/);
   });
 
-  test(".card border is a cyan-tinted phosphor border (not bare grey)", () => {
+  test(".card border is the bright-white phosphor border (gold-standard: all grey → white)", () => {
+    // Gold-standard pass: the default panel/card border is bright white,
+    // not the old cyan-tinted grey. The phosphor character now comes from
+    // the white border + the --glow-edge box-shadow bloom, not a hue tint.
     const body = /\n\.card\s*\{([\s\S]*?)\}/.exec(css)?.[1] ?? "";
-    expect(body).toMatch(/border:[^;]*var\(--color-cyan\)/);
+    expect(body).toMatch(/border:[^;]*var\(--color-border\)/);
+    expect(body).toMatch(/box-shadow:[\s\S]*var\(--glow-edge\)/);
   });
 
   test(".panel primitive exists with near-black/transparent fill", () => {
