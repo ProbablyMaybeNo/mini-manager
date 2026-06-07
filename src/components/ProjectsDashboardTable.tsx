@@ -786,9 +786,12 @@ function DashboardRow({
         {/* REDESIGN-CLEANUP (fix 2) — Ross: the project NAME should be white
             so TYPE (cyan chip) is the differentiator. White by default, still
             a link: hover lights it cyan + underlines. */}
+        {/* UX-011 — tap-target floors the name link's own hit area to ≥24px
+            (44px on mobile) so it clears WCAG 2.2 §2.5.8 instead of the bare
+            ~17px text line-height. */}
         <Link
           href={`/projects/${row.id}`}
-          className="group inline-flex items-center gap-1 text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
+          className="tap-target group inline-flex items-center gap-1 text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
           title={`Open ${row.name}`}
         >
           {row.name}
@@ -1153,9 +1156,11 @@ function MobileCompRow({
           <span className="min-w-0">
             {/* REDESIGN-CLEANUP (fix 2) — name white (matches desktop); link
                 hover lights cyan + underline. */}
+            {/* UX-011 — tap-target floors the mobile name link to the 44px
+                touch minimum. */}
             <Link
               href={`/projects/${row.id}`}
-              className="group flex items-center gap-1 text-xs font-mono text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
+              className="tap-target group flex items-center gap-1 text-xs font-mono text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
               title={`Open ${row.name}`}
             >
               <span className="truncate">{row.name}</span>

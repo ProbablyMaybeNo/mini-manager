@@ -58,7 +58,7 @@ export function DashboardProjectsTable({
           a cyan ▸ prompt + a phosphor-tinted frame that matches the
           mission table's border. */}
       <label
-        className="rounded-sm border flex items-center gap-2 px-3 py-2 focus-within:border-[var(--color-cyan)] transition-colors"
+        className="rounded-sm border flex items-center gap-2 px-3 py-2 min-h-[44px] md:min-h-[36px] focus-within:border-[var(--color-cyan)] transition-colors"
         style={{
           borderColor:
             "color-mix(in srgb, var(--color-cyan) 22%, var(--color-border))",

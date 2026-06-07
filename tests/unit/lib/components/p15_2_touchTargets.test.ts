@@ -36,6 +36,23 @@ describe("P15.2 — tap-target utility is the shared floor mechanism", () => {
   });
 });
 
+describe("UX-011 — dashboard row links + filter clear the 24px floor", () => {
+  const table = read("src/components/ProjectsDashboardTable.tsx");
+  const filter = read("src/components/projects/DashboardProjectsTable.tsx");
+
+  test("desktop + mobile project-name links carry tap-target", () => {
+    // Both row variants floor the name link's own hit area (was ~17px text
+    // line-height) via tap-target.
+    const occurrences = table.split("tap-target group").length - 1;
+    expect(occurrences).toBeGreaterThanOrEqual(2);
+  });
+
+  test("the dashboard filter input clears the touch floor", () => {
+    expect(filter).toContain("min-h-[44px]");
+    expect(filter).toContain("md:min-h-[36px]");
+  });
+});
+
 describe("P15.2 — shared InlineCellPopover trigger floors its hit-box", () => {
   const src = read("src/components/ui/InlineCellPopover.tsx");
 
