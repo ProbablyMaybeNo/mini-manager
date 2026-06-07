@@ -89,7 +89,17 @@ describe("Projects dashboard table mounts the delete trigger per row", () => {
 
   test("renders the inline trigger in the row's actions cell, NOT redirecting", () => {
     expect(src).toMatch(/redirectToProjectsOnSuccess=\{false\}/);
-    expect(src).toMatch(/label="Delete"/);
+    // UX-006 — the inline trigger now lives inside the ▸ overflow menu and
+    // reads "Delete project" (was "Delete"); still the inline tone.
+    expect(src).toMatch(/label="Delete project"/);
+    expect(src).toMatch(/\binline\b/);
+  });
+
+  test("the per-row Delete is tucked inside a ▸ overflow menu (UX-006)", () => {
+    // The destructive action is no longer an always-visible row link; it
+    // sits behind a role=menu opened by the row-actions ▸ button.
+    expect(src).toMatch(/aria-label=\{`Row actions for/);
+    expect(src).toMatch(/role="menu"/);
   });
 });
 

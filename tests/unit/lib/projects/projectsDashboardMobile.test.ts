@@ -95,7 +95,8 @@ describe("ProjectsDashboardTable — mobile comparison table (M3)", () => {
     expect(row).toMatch(/setSheetField\("priority"\)/);
     expect(row).toMatch(/AttachRecipeModal/);
     expect(row).toMatch(/DeleteProjectButton/);
-    expect(row).toMatch(/<ProgressBar/);
+    // UX-006 — completion is now the SegmentedBar viz (was ProgressBar).
+    expect(row).toMatch(/<SegmentedBar/);
   });
 
   test("row editing opens a NONMODAL bottom sheet with X + Back dismiss", () => {

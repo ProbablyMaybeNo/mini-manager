@@ -28,12 +28,16 @@ interface Props {
     attachedProjectId: string | null;
   }>;
   projectNameById: Readonly<Record<string, string>>;
+  /** UX-006 — the pinned Focus project id; its row gets the persistent
+   *  cyan "active line" highlight. Null when no focus is set. */
+  focusProjectId?: string | null;
 }
 
 export function DashboardProjectsTable({
   rows,
   ownedRecipes,
   projectNameById,
+  focusProjectId = null,
 }: Props) {
   const [query, setQuery] = useState("");
 
@@ -79,6 +83,7 @@ export function DashboardProjectsTable({
         rows={filteredRows}
         ownedRecipes={ownedRecipes}
         projectNameById={projectNameById}
+        focusProjectId={focusProjectId}
       />
     </div>
   );
