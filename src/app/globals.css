@@ -658,8 +658,12 @@ select.frame-strong {
 @media (prefers-reduced-motion: reduce) {
   .glow-green, .glow-cyan, .glow-amber,
   .glow-text, .glow-text-strong, .glow-text-intense,
-  .btn-outline, h1, h2, h3, a, html {
+  .btn-outline, .pill, .panel-variant-head, h1, h2, h3, a, html {
     text-shadow: none;
+  }
+  /* The §05 status dot's own halo is decorative light too. */
+  .pill-dot {
+    box-shadow: none;
   }
   /* Element (border/panel) bloom is decorative light too — strip it. The
      standalone utilities drop to no shadow; the .card / .panel primitives
@@ -1385,7 +1389,7 @@ select.frame-strong {
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   letter-spacing: 0.08em;
@@ -1395,6 +1399,12 @@ select.frame-strong {
   border-radius: var(--radius-sm);
   white-space: nowrap;
   line-height: 1.4;
+  /* Gold-standard §05: the outline pill reads as a lit phosphor badge —
+     coloured text halo + an in-hue edge bloom on the 1px border. Both are
+     stripped under prefers-reduced-motion via the consolidated kill block;
+     the colour/contrast (text vs background) is unchanged either way. */
+  text-shadow: var(--glow-body);
+  box-shadow: var(--glow-edge);
 }
 .pill-ok       { color: var(--status-ok); }
 .pill-warning  { color: var(--status-warning); }
@@ -1406,6 +1416,27 @@ select.frame-strong {
 /* Deprecated alias — `magenta` kind retired in P11.10; new code should
    use `purple`. Class retained so existing markup keeps rendering. */
 .pill-magenta  { color: var(--status-purple); }
+
+/* Leading status dot (gold-standard §05 ONLINE / OFFLINE / BUSY). A small
+   filled disc that carries its OWN colour, independent of the pill's
+   border/text hue — so a neutral white pill can flag a green "online" or
+   cyan "busy" state. Blooms in its own hue. */
+.pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+  box-shadow: 0 0 6px -1px currentColor;
+}
+.pill-dot-ok       { color: var(--status-ok); }
+.pill-dot-warning  { color: var(--status-warning); }
+.pill-dot-wishlist { color: var(--status-wishlist); }
+.pill-dot-danger   { color: var(--status-danger); }
+.pill-dot-info     { color: var(--status-info); }
+.pill-dot-neutral  { color: var(--status-neutral); }
+.pill-dot-purple   { color: var(--status-purple); }
+.pill-dot-magenta  { color: var(--status-purple); }
 
 /* ----- Status BAR — the signature "colour bar with black text" element
    (DESIGN_LANGUAGE §7.2). A solid phosphor-coloured block with crisp

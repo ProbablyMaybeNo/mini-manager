@@ -44,6 +44,17 @@ const BAR_CLASS: Record<StatusPillKind, string> = {
   magenta: "status-bar-magenta",
 };
 
+const DOT_CLASS: Record<StatusPillKind, string> = {
+  ok: "pill-dot-ok",
+  warning: "pill-dot-warning",
+  wishlist: "pill-dot-wishlist",
+  danger: "pill-dot-danger",
+  info: "pill-dot-info",
+  neutral: "pill-dot-neutral",
+  purple: "pill-dot-purple",
+  magenta: "pill-dot-magenta",
+};
+
 export interface StatusPillProps {
   status: StatusPillKind;
   children: ReactNode;
@@ -51,21 +62,37 @@ export interface StatusPillProps {
   title?: string;
   /** Visual tone — outline pill (default) or the solid colour-bar. */
   tone?: StatusPillTone;
+  /** Optional leading status dot (gold-standard §05 ONLINE/OFFLINE/BUSY).
+   *  The dot carries its OWN colour, independent of the pill's border/text
+   *  hue — e.g. a neutral white pill flagging a green "online" state. Pass
+   *  `true` to colour the dot the same as the pill, or a kind to override
+   *  (e.g. `<StatusPill status="neutral" dot="ok">ONLINE</StatusPill>`).
+   *  Only valid on the outline tone; ignored on `tone="bar"`. */
+  dot?: boolean | StatusPillKind;
 }
 
 /** StatusPill — bordered, mono, all-caps. Drives status indicators
  *  across project rows, paint types, wishlist items, recipe attachments.
  *
  *  Pass `tone="bar"` for the signature solid colour-bar-with-black-text
- *  treatment (the mission-table status idiom). */
+ *  treatment (the mission-table status idiom). Pass `dot` for the §05
+ *  leading status disc (ONLINE / OFFLINE / BUSY). */
 export function StatusPill({
   status,
   children,
   className,
   title,
   tone = "outline",
+  dot = false,
 }: StatusPillProps) {
   const isBar = tone === "bar";
+  const dotKind: StatusPillKind | null = isBar
+    ? null
+    : dot === true
+      ? status
+      : dot === false
+        ? null
+        : dot;
   return (
     <span
       className={clsx(
@@ -75,6 +102,9 @@ export function StatusPill({
       )}
       title={title}
     >
+      {dotKind ? (
+        <span className={clsx("pill-dot", DOT_CLASS[dotKind])} aria-hidden />
+      ) : null}
       {children}
     </span>
   );
