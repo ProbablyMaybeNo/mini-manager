@@ -5,7 +5,7 @@ import {
   type LogTagVariant,
 } from "@/components/ui/LogTag";
 
-const ALL_VARIANTS: LogTagVariant[] = ["info", "okay", "warn", "err", "debg"];
+const ALL_VARIANTS: LogTagVariant[] = ["info", "okay", "warn", "err", "debug"];
 
 describe("LOG_TAG_LABEL", () => {
   test("info renders INFO", () => {
@@ -24,8 +24,8 @@ describe("LOG_TAG_LABEL", () => {
     expect(LOG_TAG_LABEL.err).toBe("ERR");
   });
 
-  test("debg renders DEBG", () => {
-    expect(LOG_TAG_LABEL.debg).toBe("DEBG");
+  test("debug renders DEBUG (gold-standard §10)", () => {
+    expect(LOG_TAG_LABEL.debug).toBe("DEBUG");
   });
 
   test("all five variants are present", () => {
@@ -52,8 +52,10 @@ describe("LOG_TAG_COLOR", () => {
     expect(LOG_TAG_COLOR.err).toContain("--status-danger");
   });
 
-  test("debg maps to status-purple (P11.10 — pastel purple palette)", () => {
-    expect(LOG_TAG_COLOR.debg).toContain("--status-purple");
+  test("debug maps to cyan-bright (gold-standard §10 — debug is white/cyan)", () => {
+    // SUPERSEDES the P11.10 pastel-purple DEBG mapping — the spec image's
+    // [DEBUG] line is a quiet cyan-white, so debug now uses --color-cyan-bright.
+    expect(LOG_TAG_COLOR.debug).toContain("--color-cyan-bright");
   });
 
   test("all five variants have colour classes", () => {

@@ -1582,6 +1582,46 @@ select.field-control {
   border-radius: 0;
 }
 
+/* ----- Log output — gold-standard §10 -----
+   A bordered terminal panel of `timestamp · [LEVEL] · message` rows. The
+   panel reuses `.panel` (white border + edge glow); these rules own the
+   monospace row grid: a dim tabular timestamp, the bracketed colour tag
+   (from <LogTag>), and a bright-white message. Columns stay aligned via
+   a fixed timestamp + auto tag + flexible message track. */
+.log-output {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+.log-output-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  overflow-y: auto;
+}
+.log-line {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1.5;
+}
+.log-line-time {
+  color: var(--color-fg-muted);
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.log-line-tag {
+  /* The bracketed tag column — keep it from shrinking so messages align. */
+  min-width: 6ch;
+}
+.log-line-msg {
+  color: var(--color-fg);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* ----- Status BAR — the signature "colour bar with black text" element
    (DESIGN_LANGUAGE §7.2). A solid phosphor-coloured block with crisp
    BLACK text — the mission-table status idiom from the GOOD moodboard
