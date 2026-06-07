@@ -182,7 +182,9 @@ export function FilterRail({
           value={textLocal}
           onChange={(e) => setTextLocal(e.target.value)}
           placeholder="Name, brand, sku…"
-          className="w-full px-2 py-1.5 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-accent)]"
+          // UX-011 — py-2 lifts the filter input above the 24px floor with
+          // breathing room (globals already floor inputs to 44px on touch).
+          className="w-full px-2 py-2 frame bg-[var(--color-bg-elevated)] font-mono text-sm focus:border-[var(--color-accent)]"
           aria-label="Free-text search"
         />
       </Section>
@@ -276,7 +278,10 @@ export function FilterRail({
                 <label
                   key={line}
                   className={clsx(
-                    "flex items-center gap-2 px-1 py-0.5 text-xs font-mono cursor-pointer",
+                    // UX-011 — `tap-target` floors the clickable label row to
+                    // 44px on touch / 32px desktop, both ≥ the WCAG 24px
+                    // minimum (was an ~18px mis-tap target at py-0.5).
+                    "tap-target flex items-center gap-2 px-1 text-xs font-mono cursor-pointer",
                     active && "text-[var(--color-accent)]",
                   )}
                 >
@@ -295,7 +300,8 @@ export function FilterRail({
       ) : null}
 
       <Section title="Inventory">
-        <label className="flex items-center gap-2 text-xs font-mono">
+        {/* UX-011 — tap-target floors this toggle row to ≥24px (44px touch). */}
+        <label className="tap-target flex items-center gap-2 text-xs font-mono cursor-pointer">
           <input
             type="checkbox"
             checked={filter.ownedOnly}
@@ -334,7 +340,9 @@ export function FilterRail({
 
 function chipClass(active: boolean): string {
   return clsx(
-    "inline-flex items-center px-2 py-1 text-2xs font-mono rounded-sm border",
+    // UX-011 — min-h-[24px] keeps the type/hue chips at/above the WCAG
+    // target floor (py-1 + text-2xs alone read ~22px).
+    "inline-flex items-center px-2 py-1 min-h-[24px] text-2xs font-mono rounded-sm border",
     "transition-colors",
     active
       ? "border-[var(--color-accent)] text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]"
@@ -474,7 +482,9 @@ function BrandRow({
   return (
     <label
       className={clsx(
-        "flex items-center gap-2 px-1 py-0.5 text-xs font-mono cursor-pointer",
+        // UX-011 — tap-target floors each brand row to a ≥24px hit area
+        // (44px on touch); was ~18px at py-0.5.
+        "tap-target flex items-center gap-2 px-1 text-xs font-mono cursor-pointer",
         selected && "text-[var(--color-accent)]",
       )}
     >

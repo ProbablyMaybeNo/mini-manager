@@ -491,19 +491,24 @@ function SelectAllCheckbox({
   useEffect(() => {
     if (ref.current) ref.current.indeterminate = someSelected;
   }, [someSelected]);
+  const label = allSelected
+    ? `Deselect all ${rowCount} paints`
+    : `Select all ${rowCount} paints`;
+  // UX-011 — same fix as the row checkbox: a centred tap-target <label>
+  // floors the select-all hit area to ≥24px (44px on touch) while the
+  // native glyph keeps its size.
   return (
-    <input
-      ref={ref}
-      type="checkbox"
-      checked={allSelected}
-      onChange={onToggle}
-      aria-label={
-        allSelected
-          ? `Deselect all ${rowCount} paints`
-          : `Select all ${rowCount} paints`
-      }
-      className="accent-[var(--color-amber)] cursor-pointer"
-    />
+    <label className="tap-target inline-flex items-center justify-center cursor-pointer">
+      <span className="sr-only">{label}</span>
+      <input
+        ref={ref}
+        type="checkbox"
+        checked={allSelected}
+        onChange={onToggle}
+        aria-label={label}
+        className="accent-[var(--color-amber)] cursor-pointer"
+      />
+    </label>
   );
 }
 
@@ -691,20 +696,27 @@ function PaintRow({
     >
       {/* D3 — per-row select checkbox. Stops propagation so toggling
           selection doesn't open the detail panel. Hidden visual weight on
-          the card layout (still present for selection). */}
+          the card layout (still present for selection).
+          UX-011 — the bare ~14px checkbox was a sub-24px target. The glyph
+          stays native (a 44px box would distort it), but a centred <label>
+          tap-target spans the cell so the WHOLE cell toggles selection:
+          ≥24px everywhere, 44px touch zone on mobile. */}
       <span
         role="gridcell"
         aria-colindex={1}
         className="flex items-center shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggleSelect}
-          aria-label={`Select ${paint.name}`}
-          className="accent-[var(--color-amber)] cursor-pointer"
-        />
+        <label className="tap-target inline-flex items-center justify-center w-full h-full cursor-pointer">
+          <span className="sr-only">{`Select ${paint.name}`}</span>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggleSelect}
+            aria-label={`Select ${paint.name}`}
+            className="accent-[var(--color-amber)] cursor-pointer"
+          />
+        </label>
       </span>
 
       {/* Swatch. */}
