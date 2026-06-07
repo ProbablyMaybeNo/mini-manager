@@ -565,6 +565,99 @@ select.frame-strong {
   border-color: var(--color-border-input);
 }
 
+/* ----- Inputs & selects — gold-standard §04 -----
+   White-border text input / password / select / textarea, label above,
+   cyan-checked checkbox + radio. The base input border tokens are already
+   white (--color-border-input) and focus lifts to cyan; this block adds
+   the §04 field SYSTEM as one source of truth: a `.field` label-stack, a
+   `.field-control` white-border box, the select chevron, and the cyan
+   check/radio accent. */
+
+/* CHECKBOX + RADIO — checked = cyan (image §04). `accent-color` tints the
+   native control so a checked box / selected radio fills cyan while the
+   unchecked state stays a white outline, with zero custom-control markup
+   (keeps keyboard + screen-reader behaviour native). Applied globally so
+   every checkbox/radio in the app matches the spec, not just new ones. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-cyan);
+  /* A faint white ring around the unchecked control so it reads as the
+     image's outlined box/circle on the near-black ground. */
+  outline-offset: 1px;
+}
+
+/* The §04 field stack: a small-caps mono label sitting above a control. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.field-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-fg);
+}
+/* The white-border control box shared by text / password / select /
+   textarea. 1px white border, near-black fill, dim placeholder; focus
+   lifts to cyan via the global input:focus-visible rule above. */
+.field-control {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-fg);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.field-control::placeholder {
+  /* Dim placeholder per the image — the disabled token (rgba white .4). */
+  color: var(--color-disabled);
+}
+textarea.field-control {
+  min-height: 88px;
+  resize: vertical;
+}
+
+/* CHECK / RADIO ROW — a native control (cyan-checked) beside its label,
+   matching the image's "☑ CHECKED  ◉ SELECTED" rows. */
+.field-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-fg);
+  cursor: pointer;
+}
+.field-toggle input[type="checkbox"],
+.field-toggle input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.field-toggle-label {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* SELECT — white-border box with a chevron glyph drawn as a background
+   SVG (so it needs no wrapper element). The native arrow is suppressed
+   via appearance:none and the right padding clears the chevron. */
+select.field-control {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  /* Cyan chevron, matching the image's "Select option ⌄" affordance. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%237DF9FF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
 /* ============================================================
    Utility classes
    ============================================================ */
