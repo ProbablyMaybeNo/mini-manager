@@ -224,6 +224,19 @@ describe("DashboardKpiStrip component surface", () => {
   test("supports a third-context-layer baseline line (doc §8)", () => {
     expect(src).toContain("data-kpi-baseline");
   });
+
+  test("UX-008 — KPI titles wrap (no truncation) at narrow widths", () => {
+    // Pass titleClassName so "AVG COMPLETION" / "PAINTING TIME" wrap to two
+    // lines instead of ellipsizing to "AVG COMPLET…" at 390px.
+    expect(src).toMatch(/titleClassName="whitespace-normal/);
+  });
+
+  test("UX-008 — gauge stacks below the number on mobile (no overlap)", () => {
+    // The number/unit block and the radial gauge stack (flex-col) at narrow
+    // widths and only sit side-by-side at sm+, so the gauge can't land on
+    // top of the unit caption.
+    expect(src).toMatch(/flex flex-col items-start[\s\S]{0,80}sm:flex-row/);
+  });
 });
 
 describe("DASHBOARD page wires the KPI strip above the table", () => {
