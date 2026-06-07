@@ -15,8 +15,9 @@ import {
   FocusPanel,
   type FocusSlotView,
 } from "@/components/focus/FocusPanel";
-import { Stopwatch } from "@/components/focus/Stopwatch";
+import { Stopwatch, _formatRollup } from "@/components/focus/Stopwatch";
 import { PlannerInspoCell } from "@/components/planner/PlannerInspoCell";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Panel } from "@/components/ui/Panel";
 import { buildFocusSlots } from "@/lib/focus/rollup";
@@ -182,16 +183,23 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
       {/* Section: the bench stopwatch — its own compact card, lifted out
           of the FOCUS bench so the session timer reads as a distinct
           instrument (Ross: "separate the stopwatch into its own small
-          section"). Only shown when a project is focused, since the timer
-          is scoped to that project. */}
-      {focusBundle ? (
-        <Card
-          title="TIMER"
-          titleAs="h2"
-          accentColor="cyan"
-          ticks
-          techLabel="SYS ▸ TIMER"
-        >
+          section").
+
+          UX-014 — the TIMER card now renders in EVERY state, not just when
+          a project is focused: the stopwatch is the signature FOCUS feature,
+          but the empty state previously hid it entirely, so the headline's
+          "run the stopwatch" promise had no visible surface. With no focus,
+          a DISABLED shell (00:00 + greyed Start + a hint) makes the feature
+          discoverable before setup; the live Stopwatch swaps in once a
+          project is focused. */}
+      <Card
+        title="TIMER"
+        titleAs="h2"
+        accentColor="cyan"
+        ticks
+        techLabel="SYS ▸ TIMER"
+      >
+        {focusBundle ? (
           <Stopwatch
             projectId={focusBundle.project.id}
             inProgressSession={
@@ -207,11 +215,71 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
             todaySeconds={sessionRollups.todaySeconds}
             weekSeconds={sessionRollups.weekSeconds}
           />
-        </Card>
-      ) : null}
+        ) : (
+          <StopwatchEmptyShell
+            todaySeconds={sessionRollups.todaySeconds}
+            weekSeconds={sessionRollups.weekSeconds}
+          />
+        )}
+      </Card>
 
       {/* Section 4: the inspo reference board. */}
       <PlannerInspoCell />
+    </div>
+  );
+}
+
+/**
+ * UX-014 — disabled TIMER shell shown in the FOCUS empty state (no project
+ * focused yet). Mirrors the live Stopwatch's layout — readout at 00:00, a
+ * greyed-out Start, and the Today·This week rollup — plus a one-line hint
+ * pointing at the picker. Pure server markup (no interactivity), so the
+ * signature stopwatch is visible + self-explanatory before any setup.
+ */
+function StopwatchEmptyShell({
+  todaySeconds,
+  weekSeconds,
+}: {
+  todaySeconds: number;
+  weekSeconds: number;
+}) {
+  return (
+    <div className="relative flex flex-wrap items-center gap-3" aria-disabled>
+      <div className="flex flex-col">
+        <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
+          Stopwatch
+        </span>
+        <span
+          className="font-mono text-2xl tabular-nums tracking-wider text-[var(--color-fg-subtle)]"
+          aria-label="Session timer ready"
+        >
+          00:00
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button type="button" variant="success" size="sm" disabled>
+          Start
+        </Button>
+      </div>
+
+      <div className="flex flex-col basis-full text-left sm:basis-auto sm:ml-auto sm:text-right">
+        <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
+          Today · This week
+        </span>
+        <span className="font-mono text-xs text-[var(--color-fg)]">
+          {_formatRollup(todaySeconds)}{" "}
+          <span className="text-[var(--color-fg-subtle)]">·</span>{" "}
+          {_formatRollup(weekSeconds)}
+        </span>
+      </div>
+
+      <p
+        role="note"
+        className="basis-full text-2xs font-mono text-[var(--color-fg-muted)]"
+      >
+        Pick a project to focus on above to start the bench timer.
+      </p>
     </div>
   );
 }

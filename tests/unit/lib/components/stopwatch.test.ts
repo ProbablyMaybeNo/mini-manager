@@ -117,7 +117,10 @@ describe("FOCUS page — Stopwatch wiring (Phase-14 spillover)", () => {
   const src = read("src/app/planner/page.tsx");
 
   test("imports and mounts the Stopwatch", () => {
-    expect(src).toContain('import { Stopwatch }');
+    // UX-014 — the import now also pulls _formatRollup for the disabled
+    // empty-state shell, so assert the Stopwatch symbol is imported rather
+    // than the exact import statement shape.
+    expect(src).toMatch(/import \{[^}]*\bStopwatch\b[^}]*\} from "@\/components\/focus\/Stopwatch"/);
     expect(src).toContain("<Stopwatch");
   });
 
@@ -126,19 +129,31 @@ describe("FOCUS page — Stopwatch wiring (Phase-14 spillover)", () => {
     expect(src).toContain("getSessionRollups(userId)");
   });
 
-  test("only mounts the Stopwatch when a focus project is set", () => {
-    // The Stopwatch is rendered inside the `focusBundle ?` conditional
-    // — no focus = no stopwatch (matches the FOCUS empty state).
+  test("only the LIVE Stopwatch is gated on a focus project (UX-014)", () => {
+    // The interactive <Stopwatch> still renders only inside `focusBundle ?`
+    // (it needs a real projectId); the empty branch swaps in the disabled
+    // StopwatchEmptyShell so the timer is always visible.
     expect(src).toMatch(
       /focusBundle\s*\?[\s\S]{0,400}<Stopwatch/,
     );
+  });
+
+  test("UX-014 — the TIMER card always renders, with a disabled empty shell", () => {
+    // The TIMER Card is no longer wrapped in a `{focusBundle ? <Card> :
+    // null}` gate — the card mounts unconditionally and chooses between the
+    // live Stopwatch and the StopwatchEmptyShell internally, so the
+    // signature feature is discoverable before any project is focused.
+    expect(src).toContain("<StopwatchEmptyShell");
+    expect(src).toContain("function StopwatchEmptyShell");
+    // The empty shell carries a disabled Start + a "00:00" placeholder.
+    expect(src).toMatch(/StopwatchEmptyShell[\s\S]*?00:00/);
   });
 
   test("Focus-polish — Stopwatch lives in its own TIMER card, not the FOCUS bench", () => {
     // Ross: "separate the stopwatch into its own small section." The
     // timer is lifted out of the FOCUS Card into a dedicated TIMER card
     // with the SYS ▸ TIMER tech label.
-    expect(src).toMatch(/<Card[^>]*title="TIMER"[\s\S]{0,200}<Stopwatch/);
+    expect(src).toMatch(/<Card[^>]*title="TIMER"[\s\S]{0,300}<Stopwatch/);
     expect(src).toMatch(/techLabel="SYS ▸ TIMER"/);
     // The Stopwatch must NOT sit inside the FOCUS bench card body
     // anymore — the FOCUS Card closes before the TIMER card opens.
