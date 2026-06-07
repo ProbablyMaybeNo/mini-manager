@@ -869,25 +869,38 @@ select.frame-strong {
 /* Button primitives — variants: primary / secondary / ghost / danger
    / success / warning / purple. Sizes: sm / md / lg.
 
-   P13.1 (2026-06-01) overhaul — Ross killed the `[ ]` bracketed-text
-   aesthetic on action buttons. Every variant now renders SOLID-FILLED
-   with black text (`var(--color-bg)`) by default. The four-colour
-   discipline (P12.23) is preserved — variants still map intent →
-   colour — only the tone flipped from outline to fill.
+   GOLD-STANDARD (2026-06) overhaul — Ross reversed the P13.1 all-solid
+   rule and CONFIRMED the spec image (docs/design/gold-standard-ui.png
+   §03) as the literal contract:
 
-   Contrast (text-on-fill = near-black #0a0a0a, verified WCAG 2.2 §1.4.3,
-   ≥4.5:1 AA — gold-standard palette):
-     primary  cyan   #7df9ff + black: 16.87:1  AAA
-     secondary green #8bff8b + black: 16.77:1  AAA
-     ghost    near-bg neutral + white text (low-emphasis surface)
-     danger   red    #ff5f5f + black:  7.05:1  AA
-     success  green  #8bff8b + black: 16.77:1  AAA
-     warning  yellow #f2efa8 + black: 17.69:1  AAA
-     purple   purple #9b80dc + black:  6.51:1  AA
+     PRIMARY    solid cyan fill + black text  — the single lead action.
+     SECONDARY  white 1px border + white text, NO fill.
+     SUCCESS    green 1px border + green text, NO fill.
+     WARNING    pastel-yellow 1px border + yellow text, NO fill.
+     DANGER     red 1px border + red text, NO fill.
+     PURPLE     pastel-purple border + text, NO fill (image has no purple
+                seat; kept consistent with the outline family).
+     DISABLED   any variant + :disabled → dimmed (opacity), reads as the
+                image's greyed white-outline DISABLED chip.
+     GHOST      tertiary — near-black fill + neutral border + white text.
 
-   Outline tone — `.btn-outline-*` modifiers flip back to transparent bg
-   + coloured text + coloured border for low-emphasis surfaces. Driven
-   from the `tone="outline"` Button prop. Solid stays the default. */
+   So PRIMARY is the ONLY solid-filled variant by default; every coloured
+   intent variant ships as a phosphor OUTLINE (1px coloured border +
+   matching coloured text + edge glow on a dark ground). This supersedes
+   the P13.1 "every variant solid-filled" rule and the tests that pinned
+   it (buttonVariants / p13ButtonSolidOverhaul + dependents) — intentional.
+
+   Escape hatch: `tone="solid"` forces a coloured FILL + black text for
+   the rare surfaces that still want a solid block (e.g. the delete-
+   confirm "Delete forever"). Solid-fill contrast (black text, WCAG 2.2
+   §1.4.3, ≥4.5:1 AA): cyan 16.87 · green 16.77 · yellow 17.69 · red 7.05
+   · purple 6.51 — all AA+. Outline text-on-bg (#0a0a0a): cyan 15.90 ·
+   green 15.81 · yellow 16.68 · red 6.65 · white 19.3 — all AA+.
+
+   Phosphor element glow: outline variants carry `--glow-edge` on the
+   border + `--glow-strong` on the text so the whole chip blooms in its
+   native hue, per the gold-standard "glow elements, not just text" pass.
+   Stripped under prefers-reduced-motion via the consolidated kill block. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -952,24 +965,46 @@ select.frame-strong {
   }
 }
 
-/* ----- Tier system (DESIGN_LANGUAGE.md §4) -----
-   Every action button reads as a solid block of phosphor colour with
-   crisp BLACK text (solid tone, default), or a coloured border + black
-   fill + coloured text (outline tone). 1px border, sharp corners, no
-   gradients / no glassy SaaS pills.
+/* ----- Tier system (gold-standard §03) -----
+   PRIMARY is the single solid-filled lead action (cyan block + black
+   text). Every coloured intent variant ships as a phosphor OUTLINE:
+   transparent fill, 1px coloured border, matching coloured text, an
+   `--glow-edge` border bloom + `--glow-strong` text halo. Sharp corners,
+   no gradients / no glassy SaaS pills.
 
-     PRIMARY   cyan   — the lead action / confirm / sign-in / navigate.
-                        Cyan-on-primary is the locked design (§2): this
-                        supersedes the retired "no cyan on CTAs" rule.
-     SECONDARY green  — the supporting action, visually distinct from the
-                        cyan primary so a primary/secondary pair reads as
-                        a hierarchy, not two identical buttons.
-     TERTIARY  ghost  — minimal / icon-first / compact; near-black fill,
-                        neutral border, used for dismiss / cancel / dense
-                        inline actions.
+     PRIMARY   cyan  — solid fill + black text. The one lead action.
+     SECONDARY white — white border + white text. Supporting action;
+                       neutral so the cyan primary owns the hierarchy.
+     SUCCESS   green — green outline. CREATE / ADD / NEW.
+     WARNING   yellow— pastel-yellow outline. SHARE / IMPORT / WISHLIST.
+     DANGER    red   — red outline. REMOVE / DELETE / DESTROY.
+     PURPLE    purple— pastel-purple outline. SPECIAL / FEATURED.
+     TERTIARY  ghost — near-black fill + neutral border + white text;
+                       dismiss / cancel / dense inline actions.
 
-   Intent variants (success=create, warning=lateral, danger=destroy,
-   purple=special) layer on top of the tiers and keep their hues. */
+   `tone="solid"` (the `.btn-solid` modifier) is the escape hatch: it
+   refills the coloured variants with their hue + black text for surfaces
+   that still want a solid block (delete-confirm, active segmented row). */
+
+/* All outline-family variants share the transparent ground + phosphor
+   halo. Primary + ghost override below (they carry their own fill). */
+.btn-secondary,
+.btn-success,
+.btn-warning,
+.btn-danger,
+.btn-purple {
+  background: transparent;
+  text-shadow: var(--glow-strong);
+  box-shadow: var(--glow-edge);
+}
+.btn-secondary:hover:not(:disabled),
+.btn-success:hover:not(:disabled),
+.btn-warning:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
+.btn-purple:hover:not(:disabled) {
+  box-shadow: var(--glow-edge-strong);
+}
+
 .btn-primary {
   background: var(--color-cyan);
   color: var(--color-bg);
@@ -979,23 +1014,20 @@ select.frame-strong {
   background: color-mix(in srgb, var(--color-cyan) 85%, white);
 }
 
-/* Secondary — green, so it never reads as a cyan-primary clone. Black
-   text on green is 15.71:1 (AAA). */
+/* Secondary — white border + white text, no fill (image §03). Neutral so
+   it never competes with the cyan primary. White-on-#0a0a0a ≈ 19:1. */
 .btn-secondary {
-  background: var(--color-green);
-  color: var(--color-bg);
-  border-color: var(--color-green);
+  color: var(--color-fg);
+  border-color: var(--color-fg);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-green) 85%, white);
+  background: color-mix(in srgb, var(--color-fg) 10%, transparent);
 }
 
-/* Ghost — the one variant that stays "low-key" for tertiary actions
-   sitting inside dense surfaces (cancel, dismiss, secondary nav).
-   Near-black fill (--color-bg-panel = #0a0a0a, NOT grey) so it reads as
-   a bordered button rather than a link; the 1px phosphor border carries
-   the affordance and white text gives huge contrast (~19:1 on #0a0a0a),
-   well clear of AA. */
+/* Ghost — tertiary, stays low-key for actions inside dense surfaces
+   (cancel, dismiss, secondary nav). Near-black fill (--color-bg-panel =
+   #0a0a0a, NOT grey); the 1px phosphor border carries the affordance and
+   white text gives ~19:1 contrast, well clear of AA. */
 .btn-ghost {
   background: var(--color-bg-panel);
   color: var(--color-fg);
@@ -1007,53 +1039,97 @@ select.frame-strong {
 }
 
 .btn-danger {
-  background: var(--color-red);
-  color: var(--color-bg);
+  color: var(--color-red);
   border-color: var(--color-red);
 }
 .btn-danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-red) 85%, white);
+  background: color-mix(in srgb, var(--color-red) 12%, transparent);
 }
 
 .btn-success {
+  color: var(--color-green);
+  border-color: var(--color-green);
+}
+.btn-success:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-green) 12%, transparent);
+}
+
+.btn-warning {
+  color: var(--color-yellow);
+  border-color: var(--color-yellow);
+}
+.btn-warning:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-yellow) 12%, transparent);
+}
+
+.btn-purple {
+  color: var(--color-purple-pastel);
+  border-color: var(--color-purple-pastel);
+}
+.btn-purple:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-purple-pastel) 12%, transparent);
+}
+
+/* ----- Solid tone (high-emphasis escape hatch) -----
+   Applied by Button when `tone="solid"`. Refills a coloured variant with
+   its hue + black text — the rare "this is a hard commit" surfaces (e.g.
+   the delete-confirm "Delete forever", an active segmented row). The
+   coloured-text glow is dropped (black-on-bright would bloom dark); the
+   edge bloom is kept so the solid chip still reads as lit phosphor. */
+.btn-solid {
+  text-shadow: none;
+}
+.btn-solid.btn-secondary {
   background: var(--color-green);
   color: var(--color-bg);
   border-color: var(--color-green);
 }
-.btn-success:hover:not(:disabled) {
+.btn-solid.btn-secondary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-green) 85%, white);
 }
-
-.btn-warning {
+.btn-solid.btn-danger {
+  background: var(--color-red);
+  color: var(--color-bg);
+  border-color: var(--color-red);
+}
+.btn-solid.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-red) 85%, white);
+}
+.btn-solid.btn-success {
+  background: var(--color-green);
+  color: var(--color-bg);
+  border-color: var(--color-green);
+}
+.btn-solid.btn-success:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-green) 85%, white);
+}
+.btn-solid.btn-warning {
   background: var(--color-yellow);
   color: var(--color-bg);
   border-color: var(--color-yellow);
 }
-.btn-warning:hover:not(:disabled) {
+.btn-solid.btn-warning:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-yellow) 85%, white);
 }
-
-.btn-purple {
+.btn-solid.btn-purple {
   background: var(--color-purple-pastel);
   color: var(--color-bg);
   border-color: var(--color-purple-pastel);
 }
-.btn-purple:hover:not(:disabled) {
+.btn-solid.btn-purple:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-purple-pastel) 85%, white);
 }
 
-/* ----- Outline tone (low-emphasis modifier) -----
-   Applied by Button when `tone="outline"`. Flips the variant back to
-   transparent background + coloured text + coloured border. Use
-   sparingly — only on surfaces where a solid block of colour would
-   crowd the visual hierarchy (e.g. dense table-row inline actions). */
+/* ----- Outline tone (legacy no-op alias) -----
+   Pre-gold-standard call sites pass `tone="outline"` to opt a variant
+   into the bordered look. Outline is now the DEFAULT for every coloured
+   variant, so `.btn-outline` only needs to (a) re-assert the transparent
+   ground for primary (the lone solid default) and (b) stay a harmless
+   marker class for everything else. */
 .btn-outline {
   background: transparent;
-  /* UI-GLOW — outline buttons carry coloured phosphor text on a dark
-     ground, so the strong hue-matched halo applies. Solid-fill buttons
-     are intentionally excluded: their label is near-black on a bright
-     fill, where a currentColor halo would bloom DARK, not glow. */
   text-shadow: var(--glow-strong);
+  box-shadow: var(--glow-edge);
 }
 .btn-outline.btn-primary {
   color: var(--color-cyan);
@@ -1061,13 +1137,6 @@ select.frame-strong {
 }
 .btn-outline.btn-primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-cyan) 10%, transparent);
-}
-.btn-outline.btn-secondary {
-  color: var(--color-green);
-  border-color: var(--color-green);
-}
-.btn-outline.btn-secondary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-green) 10%, transparent);
 }
 .btn-outline.btn-ghost {
   color: var(--color-fg);
@@ -1077,34 +1146,6 @@ select.frame-strong {
   background: color-mix(in srgb, var(--color-fg) 6%, transparent);
   border-color: var(--color-accent);
   color: var(--color-accent);
-}
-.btn-outline.btn-danger {
-  color: var(--color-danger);
-  border-color: var(--color-danger);
-}
-.btn-outline.btn-danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-}
-.btn-outline.btn-success {
-  color: var(--color-green);
-  border-color: var(--color-green);
-}
-.btn-outline.btn-success:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-green) 10%, transparent);
-}
-.btn-outline.btn-warning {
-  color: var(--color-yellow);
-  border-color: var(--color-yellow);
-}
-.btn-outline.btn-warning:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-yellow) 10%, transparent);
-}
-.btn-outline.btn-purple {
-  color: var(--color-purple-pastel);
-  border-color: var(--color-purple-pastel);
-}
-.btn-outline.btn-purple:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-purple-pastel) 10%, transparent);
 }
 
 /* Type chips — used on project list rows to colour-code the project

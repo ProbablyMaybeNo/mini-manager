@@ -1,16 +1,29 @@
 /**
- * P13.1 — Button primitive overhaul sentinel.
+ * Button primitive contract — GOLD-STANDARD outline overhaul.
  *
- * Ross killed the `[ ]` bracketed-outline aesthetic on action buttons.
- * Every variant now renders SOLID-FILLED with black text by default.
- * Outlined remains an option for low-emphasis surfaces via the new
- * `tone="outline"` prop (default `tone="solid"`).
+ * SUPERSEDES the P13.1 "every variant solid-filled" rule. Ross reversed
+ * it and confirmed the spec image (docs/design/gold-standard-ui.png §03)
+ * as the literal contract:
+ *
+ *   PRIMARY    solid cyan fill + black text  — the lone solid lead action.
+ *   SECONDARY  white border + white text, no fill.
+ *   SUCCESS    green border + green text, no fill.
+ *   WARNING    pastel-yellow border + yellow text, no fill.
+ *   DANGER     red border + red text, no fill.
+ *   PURPLE     pastel-purple border + text, no fill.
+ *   GHOST      near-black fill + neutral border + white text (tertiary).
+ *
+ * `tone="solid"` (→ `.btn-solid`) is the escape hatch that refills a
+ * coloured variant with its hue + black text for hard-commit surfaces.
  *
  * This file pins:
- *   1. Each variant's solid-fill CSS rule (background + dark text).
- *   2. The `.btn-outline.btn-*` modifier rules for the escape hatch.
- *   3. The Button primitive renders the right classes for both tones.
- *   4. WCAG AA contrast (≥4.5:1) of black text on every variant fill.
+ *   1. PRIMARY's solid-fill CSS rule (cyan bg + black text).
+ *   2. Each coloured variant's OUTLINE rule (coloured text + border, no
+ *      own bg fill).
+ *   3. The `.btn-solid.btn-*` escape-hatch refill rules.
+ *   4. The Button primitive renders the right classes for each tone.
+ *   5. WCAG AA contrast (≥4.5:1) of every variant in its default rendering
+ *      (black-on-cyan for primary; coloured-text-on-#0a0a0a for outlines).
  */
 import { describe, expect, test } from "vitest";
 import * as fs from "node:fs";
@@ -69,14 +82,8 @@ function contrastRatio(a: Rgb, b: Rgb): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** Palette tokens — kept in sync with globals.css @theme block. The
- *  test on the CSS file itself confirms the same hex values stay
- *  declared, so a future palette-token change has to update both. */
+/** Palette tokens — kept in sync with globals.css @theme block. */
 const PALETTE = {
-  // GOLD-STANDARD palette (docs/design/gold-standard-ui.png + Ross's
-  // tweaks). Near-black base #0A0A0A, foreground bright white #FFFFFF, the
-  // brighter phosphor accents. All clear WCAG-AA black-on-fill: cyan 16.87,
-  // green 16.77, yellow 17.69, purple 6.51, red 7.05.
   bg: [0x0a, 0x0a, 0x0a],
   fg: [0xff, 0xff, 0xff],
   cyan: [0x7d, 0xf9, 0xff],
@@ -86,144 +93,166 @@ const PALETTE = {
   purple: [0x9b, 0x80, 0xdc],
 } as const satisfies Record<string, Rgb>;
 
-describe("P13.1 — every action variant is solid-filled with dark text", () => {
+describe("GOLD-STANDARD §03 — PRIMARY is the lone solid-filled variant", () => {
   const css = readCss();
 
-  const SOLID_VARIANTS: ReadonlyArray<{ name: string; bg: string }> = [
-    { name: ".btn-primary", bg: "var(--color-cyan)" },
-    // Phase-0 tier system: secondary is green (distinct from cyan primary).
-    { name: ".btn-secondary", bg: "var(--color-green)" },
-    { name: ".btn-danger", bg: "var(--color-red)" },
-    { name: ".btn-success", bg: "var(--color-green)" },
-    { name: ".btn-warning", bg: "var(--color-yellow)" },
-    { name: ".btn-purple", bg: "var(--color-purple-pastel)" },
-  ];
+  test(".btn-primary declares background: var(--color-cyan) + color: var(--color-bg)", () => {
+    const body = bodyOf(css, ".btn-primary");
+    expect(body).toMatch(/background:\s*var\(--color-cyan\)/);
+    expect(body).toMatch(/color:\s*var\(--color-bg\)/);
+  });
 
-  for (const { name, bg } of SOLID_VARIANTS) {
-    test(`${name} declares background: ${bg} + color: var(--color-bg)`, () => {
-      const body = bodyOf(css, name);
-      expect(body).toMatch(
-        new RegExp(`background:\\s*${bg.replace(/[()]/g, "\\$&")}`),
-      );
-      expect(body).toMatch(/color:\s*var\(--color-bg\)/);
-    });
-  }
-
-  test("ghost variant carries a solid background (no transparent fallback)", () => {
+  test("ghost variant carries a solid near-black panel fill (tertiary)", () => {
     const body = bodyOf(css, ".btn-ghost");
     expect(body).not.toMatch(/background:\s*transparent/);
     expect(body).toMatch(/background:\s*var\(--color-bg-panel\)/);
   });
 });
 
-describe("P13.1 — `.btn-outline` modifier exists for low-emphasis surfaces", () => {
+describe("GOLD-STANDARD §03 — coloured intent variants ship as OUTLINE", () => {
   const css = readCss();
 
-  test("base .btn-outline rule flips background back to transparent", () => {
-    const body = bodyOf(css, ".btn-outline");
-    expect(body).toMatch(/background:\s*transparent/);
+  const OUTLINE_VARIANTS: ReadonlyArray<{ name: string; fg: string }> = [
+    { name: ".btn-secondary", fg: "var(--color-fg)" },
+    { name: ".btn-danger", fg: "var(--color-red)" },
+    { name: ".btn-success", fg: "var(--color-green)" },
+    { name: ".btn-warning", fg: "var(--color-yellow)" },
+    { name: ".btn-purple", fg: "var(--color-purple-pastel)" },
+  ];
+
+  // Shared rule (the comma-grouped selector) gives every coloured variant
+  // a transparent ground — assert the grouped selector sets transparent bg.
+  test("the coloured variants share a transparent-background rule", () => {
+    expect(css).toMatch(
+      /\.btn-secondary,[\s\S]{0,120}?background:\s*transparent/,
+    );
   });
 
+  /** Find the STANDALONE variant rule (the single-selector `{ ... }` block),
+   *  skipping the comma-grouped shared rule that also ends in the selector
+   *  (e.g. the `.btn-secondary, … , .btn-purple { background: transparent }`
+   *  group). We scan every `selector { body }` and keep the one whose body
+   *  carries a `color:` declaration. */
+  function standaloneBody(name: string): string {
+    const sel = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`(^|[,}\\s])${sel}\\s*\\{([^}]*)\\}`, "g");
+    let m;
+    const bodies: string[] = [];
+    while ((m = re.exec(css)) !== null) {
+      if (m[2]) bodies.push(m[2]);
+    }
+    const own = bodies.find((b) => /(^|;|\s)color:/.test(b));
+    if (own === undefined) {
+      throw new Error(`standalone rule for ${name} not found`);
+    }
+    return own;
+  }
+
+  for (const { name, fg } of OUTLINE_VARIANTS) {
+    test(`${name} declares coloured text + border (no own bg fill)`, () => {
+      const body = standaloneBody(name);
+      expect(body).toMatch(
+        new RegExp(`color:\\s*${fg.replace(/[()]/g, "\\$&")}`),
+      );
+      expect(body).toMatch(
+        new RegExp(`border-color:\\s*${fg.replace(/[()]/g, "\\$&")}`),
+      );
+      // The variant's OWN rule must not set a coloured solid background.
+      expect(body).not.toMatch(/background:\s*var\(/);
+    });
+  }
+});
+
+describe("GOLD-STANDARD §03 — `.btn-solid` escape hatch refills coloured variants", () => {
+  const css = readCss();
+
   for (const variant of [
-    ".btn-outline.btn-primary",
-    ".btn-outline.btn-danger",
-    ".btn-outline.btn-success",
-    ".btn-outline.btn-warning",
-    ".btn-outline.btn-purple",
-    ".btn-outline.btn-ghost",
+    ".btn-solid.btn-secondary",
+    ".btn-solid.btn-danger",
+    ".btn-solid.btn-success",
+    ".btn-solid.btn-warning",
+    ".btn-solid.btn-purple",
   ]) {
-    test(`${variant} declares a coloured text + border (no bg fill)`, () => {
-      // Combined comma-grouped selector keeps the rule body short; assert
-      // via a fresh regex that the selector appears anywhere in the file.
-      expect(css).toMatch(
-        new RegExp(variant.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    test(`${variant} refills with a coloured background + black text`, () => {
+      const body = bodyOf(css, variant);
+      expect(body).toMatch(/background:\s*var\(--color-/);
+      expect(body).toMatch(/color:\s*var\(--color-bg\)/);
+    });
+  }
+});
+
+describe("GOLD-STANDARD §03 — WCAG AA contrast (≥4.5:1) in default rendering", () => {
+  // PRIMARY: black text on cyan fill.
+  test("primary (black text on cyan fill) passes AA", () => {
+    expect(contrastRatio(PALETTE.cyan, PALETTE.bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // OUTLINE variants: coloured text on the near-black ground (#0a0a0a).
+  type FgKey = "fg" | "red" | "green" | "yellow" | "purple";
+  const outlines: ReadonlyArray<{ name: string; fg: FgKey }> = [
+    { name: "secondary (white text)", fg: "fg" },
+    { name: "danger (red text)", fg: "red" },
+    { name: "success (green text)", fg: "green" },
+    { name: "warning (yellow text)", fg: "yellow" },
+    { name: "purple text", fg: "purple" },
+  ];
+
+  for (const { name, fg } of outlines) {
+    test(`${name} on #0a0a0a passes AA (≥4.5:1)`, () => {
+      expect(contrastRatio(PALETTE[fg], PALETTE.bg)).toBeGreaterThanOrEqual(
+        4.5,
       );
     });
   }
-});
-
-describe("P13.1 — WCAG AA contrast (≥4.5:1) on every variant fill", () => {
-  type FillKey = "cyan" | "red" | "green" | "yellow" | "purple";
-  const checks: ReadonlyArray<{ name: string; bg: FillKey }> = [
-    { name: "primary (cyan)", bg: "cyan" },
-    { name: "secondary (cyan)", bg: "cyan" },
-    { name: "danger (red)", bg: "red" },
-    { name: "success (green)", bg: "green" },
-    { name: "warning (yellow)", bg: "yellow" },
-    { name: "purple", bg: "purple" },
-  ];
-
-  for (const { name, bg } of checks) {
-    test(`${name} on black text passes WCAG AA (≥4.5:1)`, () => {
-      const ratio = contrastRatio(PALETTE[bg], PALETTE.bg);
-      expect(ratio).toBeGreaterThanOrEqual(4.5);
-    });
-  }
-
-  test("danger (red) on white text fails AA — sanity check we picked black", () => {
-    // Red passes black-on-fill (5.93:1) but fails white-on-fill (3.06:1).
-    // This pin confirms the variant uses --color-bg (black) as Phase 13
-    // requires, not --color-fg (white).
-    const ratio = contrastRatio(PALETTE.red, PALETTE.fg);
-    expect(ratio).toBeLessThan(4.5);
-  });
 
   test("ghost (near-black panel) on white text passes AA (≥4.5:1)", () => {
-    // Phase-0 killed the grey panel fill: ghost now sits on the near-black
-    // panel (--color-bg-panel = #0a0a0a) + foreground #f5f5f5, with the
-    // 1px phosphor border carrying the affordance. Contrast climbs to ~19:1.
     const panel: Rgb = [0x0a, 0x0a, 0x0a];
-    const ratio = contrastRatio(panel, PALETTE.fg);
-    expect(ratio).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(panel, PALETTE.fg)).toBeGreaterThanOrEqual(4.5);
   });
 });
 
-describe("P13.1 — Button primitive `tone` prop", () => {
-  test("default tone is solid — no btn-outline class on render", () => {
+describe("GOLD-STANDARD §03 — Button primitive `tone` prop", () => {
+  test("default tone is outline — emits btn-outline, not btn-solid", () => {
     const el = render({ variant: "success", children: "Add" });
-    expect(classNameOf(el)).not.toMatch(/\bbtn-outline\b/);
+    expect(classNameOf(el)).toMatch(/\bbtn-outline\b/);
+    expect(classNameOf(el)).not.toMatch(/\bbtn-solid\b/);
   });
 
-  test("tone='solid' is explicit and still emits no btn-outline class", () => {
-    const el = render({ variant: "success", tone: "solid", children: "Add" });
-    expect(classNameOf(el)).not.toMatch(/\bbtn-outline\b/);
+  test("tone='outline' is explicit and emits btn-outline", () => {
+    const el = render({ variant: "success", tone: "outline", children: "Add" });
+    expect(classNameOf(el)).toMatch(/\bbtn-outline\b/);
+    expect(classNameOf(el)).not.toMatch(/\bbtn-solid\b/);
   });
 
-  test("tone='outline' adds the btn-outline modifier class", () => {
+  test("tone='solid' adds the btn-solid modifier class", () => {
     const el = render({
       variant: "danger",
-      tone: "outline",
-      children: "Cancel",
+      tone: "solid",
+      children: "Delete forever",
     });
-    expect(classNameOf(el)).toMatch(/\bbtn-outline\b/);
-    // The variant class stays — outline is purely additive.
+    expect(classNameOf(el)).toMatch(/\bbtn-solid\b/);
     expect(classNameOf(el)).toMatch(/\bbtn-danger\b/);
+    expect(classNameOf(el)).not.toMatch(/\bbtn-outline\b/);
   });
 
-  test("tone='outline' works on anchor form too (as='a')", () => {
+  test("tone='solid' works on anchor form too (as='a')", () => {
     const el = render({
       as: "a",
       href: "/x",
       variant: "purple",
-      tone: "outline",
+      tone: "solid",
       children: "Featured",
     });
-    expect(classNameOf(el)).toMatch(/\bbtn-outline\b/);
+    expect(classNameOf(el)).toMatch(/\bbtn-solid\b/);
     expect(classNameOf(el)).toMatch(/\bbtn-purple\b/);
     expect((el as unknown as { type: string }).type).toBe("a");
   });
 });
 
-describe("P13.1 — `[ ]` bracket aesthetic stays retired", () => {
-  /* No CSS pseudo-element is permitted to inject literal "[ " / " ]"
-   * around button content. The original P11.11 bracketAudit covered
-   * JSX text; this pin extends to ::before / ::after content rules
-   * that target .btn-* selectors. */
+describe("GOLD-STANDARD §03 — `[ ]` bracket aesthetic stays retired", () => {
   const css = readCss();
 
   test("no .btn-* pseudo-element injects literal bracket text", () => {
-    // Find every ::before / ::after rule whose selector starts with .btn,
-    // assert its content doesn't carry a bracket character.
     const re = /\.btn[\w-]*::(?:before|after)\s*\{([^}]*)\}/g;
     let match;
     while ((match = re.exec(css)) !== null) {

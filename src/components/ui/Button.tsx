@@ -35,10 +35,13 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 interface CommonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  /** Visual tone. `solid` (default) renders the variant as a filled
-   *  block of colour with black text — the canonical P13.1 button.
-   *  `outline` flips back to transparent bg + coloured text + coloured
-   *  border for low-emphasis surfaces (e.g. dense inline actions). */
+  /** Visual tone (gold-standard §03). `outline` (the DEFAULT for the
+   *  coloured intent variants) renders a transparent chip with a coloured
+   *  1px border + matching coloured text + phosphor glow — the canonical
+   *  look in the spec image. `solid` is the escape hatch that refills the
+   *  variant with its hue + black text for the rare hard-commit surfaces
+   *  (delete-confirm, active segmented row). `primary` is always a solid
+   *  cyan block regardless of tone; `ghost` keeps its near-black fill. */
   tone?: ButtonTone;
   children: ReactNode;
   className?: string;
@@ -57,41 +60,39 @@ type AnchorElProps = CommonProps &
 
 export type ButtonProps = ButtonElProps | AnchorElProps;
 
-/** Button primitive — semantic variants for the locked five-colour palette.
+/** Button primitive — semantic variants for the locked palette.
  *
- *  Phase 12 (P12.23) locked the intent → colour map. Phase 13 (P13.1)
- *  killed the bracketed-outline aesthetic — every button now ships
- *  filled-solid by default with high-contrast black text per WCAG AA.
+ *  GOLD-STANDARD (2026-06) reversed the P13.1 all-solid rule. The spec
+ *  image (docs/design/gold-standard-ui.png §03) is the literal contract:
+ *  PRIMARY is the lone solid-filled lead action; every coloured intent
+ *  variant ships as a phosphor OUTLINE (transparent fill + coloured 1px
+ *  border + matching coloured text + glow). `tone="solid"` is the escape
+ *  hatch that refills a coloured variant for hard-commit surfaces.
  *
- *    primary  — solid cyan + black text. The lead action: save / confirm
- *               / sign-in / navigate. Cyan-on-primary is the locked
- *               Phase-0 design (DESIGN_LANGUAGE §2) — the prior "no cyan
- *               on CTAs" guardrail is retired.
- *    secondary— solid green + black text. The supporting action, kept
- *               visually distinct from the cyan primary so a pair reads
- *               as a hierarchy.
+ *    primary  — solid cyan + black text. The one lead action: save /
+ *               confirm / sign-in / navigate.
+ *    secondary— white border + white text, no fill. Supporting action,
+ *               neutral so the cyan primary owns the hierarchy.
  *    ghost    — near-black fill + neutral border + white text. Tertiary /
  *               dismiss / cancel; minimal, icon-first, compact.
- *    danger   — solid red + black text. Remove / delete / destroy.
- *    success  — solid neon-green + black text. ADD / CREATE / NEW /
- *               SAVE-NEW. The default "I'm making something" button.
- *    warning  — solid pastel-yellow + black text. SHARE / IMPORT /
- *               EXPORT / ADD-TO-WISHLIST. The "lateral move" CTA.
- *    purple   — solid pastel-purple + black text. SPECIAL / FEATURED /
- *               FOUNDER / PRO-TIER affordances.
+ *    danger   — red outline. Remove / delete / destroy.
+ *    success  — green outline. ADD / CREATE / NEW / SAVE-NEW.
+ *    warning  — pastel-yellow outline. SHARE / IMPORT / EXPORT / WISHLIST.
+ *    purple   — pastel-purple outline. SPECIAL / FEATURED / FOUNDER.
  *
  *  Sizes: sm / md / lg. Pass `as="a"` to render as an anchor.
- *  Pass `tone="outline"` to drop back to the transparent-bordered
- *  rendering for low-emphasis surfaces — solid stays the default. */
+ *  Pass `tone="solid"` to refill a coloured variant with its hue + black
+ *  text for the rare high-emphasis surfaces — outline stays the default. */
 export function Button(props: ButtonProps) {
   const variant: ButtonVariant = props.variant ?? "secondary";
   const size: ButtonSize = props.size ?? "md";
-  const tone: ButtonTone = props.tone ?? "solid";
+  const tone: ButtonTone = props.tone ?? "outline";
   const cls = clsx(
     "btn",
     VARIANT_CLASS[variant],
     SIZE_CLASS[size],
     tone === "outline" && "btn-outline",
+    tone === "solid" && "btn-solid",
     props.className,
   );
 

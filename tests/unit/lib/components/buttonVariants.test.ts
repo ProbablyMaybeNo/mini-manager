@@ -94,21 +94,28 @@ describe("Button primitive — globals.css must define the new btn-* classes", (
     expect(css).toMatch(/\.btn-purple\s*\{/);
   });
 
-  test("success + warning use solid backgrounds with dark text (Ross's locked rule)", async () => {
+  test("success + warning ship as coloured OUTLINES (gold-standard §03)", async () => {
+    // SUPERSEDES the prior "solid backgrounds with dark text" rule. Ross
+    // reversed P13.1 and confirmed the spec image: SUCCESS is a green
+    // outline (green text + border, no fill), WARNING a pastel-yellow
+    // outline. The solid block is the cyan PRIMARY only; coloured fills
+    // are opt-in via `tone="solid"` (the .btn-solid escape hatch).
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const css = await fs.readFile(
       path.resolve(process.cwd(), "src/app/globals.css"),
       "utf8",
     );
-    // Slice each class definition body, check rules
     const successMatch = css.match(/\.btn-success\s*\{([^}]*)\}/);
     const warningMatch = css.match(/\.btn-warning\s*\{([^}]*)\}/);
     expect(successMatch).not.toBeNull();
     expect(warningMatch).not.toBeNull();
-    expect(successMatch?.[1]).toMatch(/background:\s*var\(--color-green\)/);
-    expect(successMatch?.[1]).toMatch(/color:\s*var\(--color-bg\)/);
-    expect(warningMatch?.[1]).toMatch(/background:\s*var\(--color-yellow\)/);
-    expect(warningMatch?.[1]).toMatch(/color:\s*var\(--color-bg\)/);
+    // Coloured text + matching border, NO solid fill in the variant's own rule.
+    expect(successMatch?.[1]).toMatch(/color:\s*var\(--color-green\)/);
+    expect(successMatch?.[1]).toMatch(/border-color:\s*var\(--color-green\)/);
+    expect(successMatch?.[1]).not.toMatch(/background:\s*var\(/);
+    expect(warningMatch?.[1]).toMatch(/color:\s*var\(--color-yellow\)/);
+    expect(warningMatch?.[1]).toMatch(/border-color:\s*var\(--color-yellow\)/);
+    expect(warningMatch?.[1]).not.toMatch(/background:\s*var\(/);
   });
 });

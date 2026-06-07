@@ -30,9 +30,11 @@ interface Props {
  * exactly how much will disappear before they confirm. Empty trees
  * still get a confirm step (this isn't undoable).
  *
- * The destructive button uses the new P13.1 `variant="danger"` solid-
- * red filled style with black text — high WCAG contrast, matches the
- * rest of the post-P13.1 button discipline.
+ * The confirm button is the deliberate high-emphasis exception to the
+ * gold-standard outline default: `variant="danger" tone="solid"` refills
+ * it to a SOLID red block + black text. A final "Delete forever" is a
+ * hard, irreversible commit, so it keeps the loud solid fill while the
+ * quieter detail-page trigger drops to the red outline.
  */
 export function DeleteProjectModal({
   open,
@@ -166,6 +168,7 @@ export function DeleteProjectModal({
         <Button
           type="button"
           variant="danger"
+          tone="solid"
           size="sm"
           onClick={handleConfirm}
           disabled={isPending}
