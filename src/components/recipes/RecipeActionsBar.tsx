@@ -135,11 +135,16 @@ export function RecipeActionsBar({
 
   return (
     <div className="flex flex-wrap items-center gap-3" role="toolbar" aria-label="Recipe actions">
+      {/* UX-002 — Save is the recipe-editor's single dominant CTA, so it
+          carries the cyan PRIMARY tier. "Assign to project" stays green
+          (success) — the ONE consistent treatment for Assign across the
+          recipes list + this editor — so the pair reads as a clean
+          primary→secondary hierarchy instead of two competing greens. */}
       <Button
         type="button"
         onClick={handleSave}
         disabled={isPending}
-        variant="success"
+        variant="primary"
         size="sm"
         title={
           isStandalone

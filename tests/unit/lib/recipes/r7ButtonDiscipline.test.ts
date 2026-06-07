@@ -55,16 +55,24 @@ describe("R7-7 — recipes surface button discipline", () => {
     ).toEqual([]);
   });
 
-  test("RecipeActionsBar Save + Assign buttons keep their loud-tone variants", () => {
-    // R7-006 — both Save AND Assign now resolve to success (green).
-    // The pair is symmetrical now; cyan-on-buttons is reserved for
-    // auth and final-step confirms only.
+  test("RecipeActionsBar Save = primary (cyan), Assign = success (green)", () => {
+    // UX-002 — supersedes R7-006's "both green" rule. DESIGN_LANGUAGE §2
+    // restored cyan as the Primary tier, so the editor's single dominant
+    // CTA (Save) takes cyan PRIMARY while Assign keeps the green (success)
+    // treatment shared with the /recipes list row Assign — one consistent
+    // Assign colour everywhere. Locks the pair so a regression that
+    // collapses them back to two greens (or flips Assign to cyan) fails.
     const bar =
       files.find((f) => f.name === "RecipeActionsBar.tsx")?.src ?? "";
-    // At least two success variant references — one for Save, one for
-    // Assign. Counted exactly so a regression that drops either side
-    // back to ghost / primary fails fast.
-    const matches = bar.match(/variant="success"/g) ?? [];
-    expect(matches.length).toBeGreaterThanOrEqual(2);
+    expect(bar, "Save must be the cyan PRIMARY lead").toMatch(
+      /variant="primary"/,
+    );
+    // Assign keeps green — at least one success reference for the
+    // Assign-to-project trigger.
+    const assignGreen = bar.match(/variant="success"/g) ?? [];
+    expect(
+      assignGreen.length,
+      "Assign-to-project must stay green (success)",
+    ).toBeGreaterThanOrEqual(1);
   });
 });
