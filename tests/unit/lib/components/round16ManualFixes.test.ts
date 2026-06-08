@@ -38,9 +38,12 @@ describe("UX-1502 — recipe slot grid is a responsive auto-fill grid", () => {
   // square cells, so the 375px swatch/× collision can't recur.
   const src = read("src/components/recipes/SlotList.tsx");
 
-  test("slots render in an auto-fill grid of min-112px cells", () => {
+  test("slots render in an auto-fill grid of MUCH bigger cells (min-144px)", () => {
+    // Item 1 (Ross redesign): the creator squares are MUCH bigger so the
+    // paint name reads clearly in the centre with the layer along the
+    // bottom edge — auto-fill min cell bumped 112px → 144px.
     expect(src).toContain(
-      "grid gap-2 grid-cols-[repeat(auto-fill,minmax(112px,1fr))]",
+      "grid gap-2.5 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]",
     );
   });
 

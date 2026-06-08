@@ -75,12 +75,23 @@ describe("RecipesTable component surface", () => {
     expect(src).toContain('useState<SortDir>("desc")');
   });
 
-  test("rows render creator-sized paint squares (w-12 h-12), not w-4 chips", () => {
-    // Item 1: /recipes is the primary recipe-access surface, so each row
-    // renders its paints at the SAME size as the recipe creator
-    // (w-12 h-12) with the paint name + layer, not a tiny w-4 strip.
-    expect(src).toContain("w-12 h-12");
+  test("rows render MUCH bigger paint squares (w-28 h-28), not tiny chips", () => {
+    // Item 1 (Ross redesign): /recipes is the primary recipe-access
+    // surface, so each row renders LARGE squares — big enough to hold the
+    // paint name in the centre + the layer along the bottom edge — not a
+    // small swatch with the name stranded beneath it.
+    expect(src).toContain("w-28 h-28");
     expect(src).not.toContain("w-4 h-4");
+    expect(src).not.toContain("w-12 h-12");
+  });
+
+  test("the paint name sits INSIDE the square, contrast-picked (centre)", () => {
+    // The name is rendered on top of the swatch with black/white text per
+    // the swatch's luminance, not in a label below the square.
+    expect(src).toContain("slot.paintLabel");
+    expect(src).toContain("readableTextOn(slot.hex)");
+    // The name + layer share the swatch button as their parent (color: fg).
+    expect(src).toMatch(/style=\{\{ color: fg \}\}/);
   });
 
   test("each square shows the paint name + the layer label", () => {
