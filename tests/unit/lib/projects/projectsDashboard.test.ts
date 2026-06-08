@@ -165,11 +165,19 @@ describe("Projects page wires the dashboard table in", () => {
     expect(src).not.toContain("listActiveProjects");
   });
 
-  test("the New-project button is success-green; Import army-list is warning-yellow", () => {
-    // Phase-12 button discipline (P12.23/24): ADD/NEW = success,
-    // IMPORT/EXPORT/SHARE = warning. Drag these for /projects up
-    // front so the rest of the surface can follow.
-    expect(src).toMatch(/variant="success"/);
-    expect(src).toMatch(/variant="warning"/);
+  test("header CTAs are cyan (DASHBOARD-REDESIGN) and the search bar is dropped", () => {
+    // Part B item 5 — Ross's mockup: ADD PROJECT + UPLOAD ARMY LIST are both
+    // cyan, and the redundant quick-add / search bar is removed (the ADD
+    // PROJECT button covers it). This supersedes the prior success-green /
+    // warning-yellow header split.
+    expect(src).toContain('variant="primary"');
+    expect(src).toContain("Add project");
+    expect(src).toContain("Upload army list");
+    // The quick-add search bar is gone from the dashboard header.
+    expect(src).not.toContain("<QuickAddBar");
+  });
+
+  test("header shows the big brand logo (mockup, like the sign-in lockup)", () => {
+    expect(src).toContain("<Logo");
   });
 });

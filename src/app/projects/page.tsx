@@ -5,7 +5,7 @@ import {
   getProjectFirstRecipeMap,
   listOwnedRecipesLean,
 } from "@/db/queries/recipes";
-import { QuickAddBar } from "@/components/QuickAddBar";
+import { Logo } from "@/components/ui/Logo";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
@@ -190,44 +190,60 @@ export default async function DashboardPage({
 
   return (
     <div className="content-cap p-6 md:p-8 space-y-6">
+      {/* DASHBOARD-REDESIGN (Part B item 5) — header rebuilt to the mockup:
+          a BIG legible logo + the stylistic DASHBOARD title on the left, two
+          cyan CTAs on the right, and the redundant quick-add / search bar
+          dropped (the ADD PROJECT button covers it, per Ross's comment). The
+          DASHBOARD title is the stylistic terminal display face (shadow/glow
+          via .title-display), sized up so it reads as the mission-control
+          banner the mockup shows — terminal, not arcade. */}
       <header className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          {/* PHASE-1 — page title takes the arcade display (Press Start 2P)
-              treatment, kept SMALL per the spec (the pixel face is fatigue
-              at any reading size). Pairs with a tracked-out coordinate
-              system caption so the header reads as a mission-control
-              screen banner, not a plain SaaS H1. */}
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-            SYS ▸ WORKBENCH / 00
-          </p>
-          <h1 className="title-display text-base md:text-lg">DASHBOARD</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] mt-3 max-w-xl font-sans">
-            Your wargaming workbench at a glance — every project, your
-            painting rhythm, and your recipes, all on one screen.
-          </p>
-        </div>
-        <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
-          <QuickAddBar />
-          <div className="flex gap-2 w-full md:w-[420px]">
-            <Button
-              as="a"
-              href="/projects/import"
-              variant="warning"
-              size="sm"
-              className="flex-1 justify-center"
-            >
-              Import army list
-            </Button>
-            <Button
-              as="a"
-              href="/projects/new"
-              variant="success"
-              size="sm"
-              className="flex-1 justify-center"
-            >
-              New project
-            </Button>
+        <div className="flex items-center gap-4 min-w-0">
+          {/* The brand logo, sized like the sign-in lockup so "mini-manager"
+              actually reads. mix-blend screen drops the PNG's black ground. */}
+          <Logo
+            width={56}
+            decorative
+            className="shrink-0 hidden sm:block"
+          />
+          <div className="min-w-0">
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+              SYS ▸ WORKBENCH / 00
+            </p>
+            <h1 className="title-display text-2xl md:text-4xl leading-none">
+              DASHBOARD
+            </h1>
+            {/* One-line subheading (research §3 — orients the 5-second
+                glance). Kept terse so the header stays the clean mockup
+                banner rather than a paragraph. */}
+            <p className="text-2xs md:text-xs text-[var(--color-fg-muted)] mt-2 tracking-wide">
+              Your wargaming workbench at a glance.
+            </p>
           </div>
+        </div>
+        {/* Two cyan CTAs (mockup): ADD PROJECT + UPLOAD ARMY LIST. Both
+            primary-cyan per the mockup — this supersedes the prior
+            success-green / warning-yellow split for the dashboard header. */}
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button
+            as="a"
+            href="/projects/new"
+            variant="primary"
+            size="md"
+            className="flex-1 md:flex-none justify-center"
+          >
+            Add project
+          </Button>
+          <Button
+            as="a"
+            href="/projects/import"
+            variant="primary"
+            tone="outline"
+            size="md"
+            className="flex-1 md:flex-none justify-center"
+          >
+            Upload army list
+          </Button>
         </div>
       </header>
 
