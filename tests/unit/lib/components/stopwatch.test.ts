@@ -112,9 +112,12 @@ describe("Stopwatch — pure helpers", () => {
   });
 });
 
-describe("FOCUS page — Stopwatch wiring (Phase-14 spillover)", () => {
-  // FOCUS-DASH — the Stopwatch moved with the FOCUS bench to /planner.
-  const src = read("src/app/planner/page.tsx");
+describe("FOCUS section — Stopwatch wiring (Phase-14 spillover)", () => {
+  // FOCUS-FOLD (2026-06-08) — the standalone /planner route was removed
+  // and the FOCUS bench (with the Stopwatch) folded into the /projects
+  // dashboard as DashboardFocusSection. The wiring contract is unchanged;
+  // only the host file moved.
+  const src = read("src/components/focus/DashboardFocusSection.tsx");
 
   test("imports and mounts the Stopwatch", () => {
     // UX-014 — the import now also pulls _formatRollup for the disabled

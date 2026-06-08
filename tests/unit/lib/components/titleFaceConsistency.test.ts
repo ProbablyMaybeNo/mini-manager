@@ -22,7 +22,9 @@ const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf-8");
 // Static page-top section titles that must wear the title face.
 const TITLED_PAGES = [
   "projects/page.tsx", // DASHBOARD
-  "planner/page.tsx", // FOCUS
+  // FOCUS-FOLD (2026-06-08) — the standalone /planner (FOCUS) page is
+  // gone; FOCUS is now a section inside the dashboard (an <h2>, not a
+  // page-top <h1>), so it drops off this page-top-H1 list.
   "library/page.tsx",
   "recipes/page.tsx",
   "tools/page.tsx",

@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   Folder,
-  Target,
   Palette,
   FlaskConical,
   Wrench,
@@ -20,14 +19,13 @@ type TabItem = {
   label: string;
 };
 
-// UX-014 — FOCUS is a core "sit down and paint" flow and a top-level
-// desktop nav item, but the mobile tab bar shipped with only 5 of the 6
-// sections reachable. Add FOCUS (/planner, Target icon) as the 6th tab so
-// every primary section is one tap away on phones, matching the desktop
-// NavRail order (Dashboard · Focus · Library · Recipes · Tools · Collections).
+// FOCUS-FOLD (2026-06-08) — the standalone FOCUS tab is removed. The
+// painting bench (TIMER + focused recipe + INSPO) folded into the
+// /projects dashboard, so there is no separate route to tab to; the five
+// remaining sections match the desktop NavRail order
+// (Dashboard · Library · Recipes · Tools · Collections).
 const TABS: readonly TabItem[] = [
   { href: "/projects",    Icon: Folder,       label: "Dashboard" },
-  { href: "/planner",     Icon: Target,       label: "Focus"     },
   { href: "/library",     Icon: Palette,      label: "Library"   },
   { href: "/recipes",     Icon: FlaskConical, label: "Recipes"   },
   { href: "/tools",       Icon: Wrench,       label: "Tools"     },
@@ -72,9 +70,9 @@ export function BottomTabBar() {
               // active tab; the 2px transparent top border on the resting
               // state reserves the marker's space so activation doesn't
               // shift the row. 56px row keeps the ≥44px mobile tap floor.
-              // 6 tabs share the row now (UX-014), so the per-tab padding
-              // tightens to px-0.5 and the label truncates rather than
-              // wraps — keeps "DASHBOARD"/"WISHLIST" on one line at 360px.
+              // Five tabs share the row (FOCUS-FOLD), so the per-tab padding
+              // stays tight at px-0.5 and the label truncates rather than
+              // wraps — keeps "DASHBOARD"/"COLLECTIONS" on one line at 360px.
               "group flex flex-col items-center justify-center gap-1",
               "flex-1 min-w-0 min-h-[56px] px-0.5 py-2",
               "border-t-2 transition-colors duration-150",

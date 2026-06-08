@@ -23,7 +23,10 @@ const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf-8");
 const panel = read("src/components/ui/Panel.tsx");
 const css = read("src/app/globals.css");
 const match = read("src/components/tools/match/MatchClient.tsx");
-const planner = read("src/app/planner/page.tsx");
+// FOCUS-FOLD (2026-06-08) — the FOCUS empty-state Panel moved with the
+// bench into the dashboard's DashboardFocusSection (the /planner route is
+// gone).
+const focusSection = read("src/components/focus/DashboardFocusSection.tsx");
 
 describe("UX-003 — <Panel> component", () => {
   test("renders the .panel CSS primitive", () => {
@@ -73,8 +76,8 @@ describe("UX-003 — named surfaces route through <Panel>", () => {
     expect(match).not.toMatch(/className="relative panel"/);
   });
   test("focus standby empty-state uses <Panel>", () => {
-    expect(planner).toMatch(/import\s*\{\s*Panel\s*\}/);
-    expect(planner).toMatch(/<Panel/);
-    expect(planner).not.toMatch(/className="panel /);
+    expect(focusSection).toMatch(/import\s*\{\s*Panel\s*\}/);
+    expect(focusSection).toMatch(/<Panel/);
+    expect(focusSection).not.toMatch(/className="panel /);
   });
 });

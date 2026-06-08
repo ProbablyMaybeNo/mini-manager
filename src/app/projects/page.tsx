@@ -10,6 +10,7 @@ import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
+import { DashboardFocusSection } from "@/components/focus/DashboardFocusSection";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import {
   DashboardKpiStrip,
@@ -41,9 +42,13 @@ export const dynamic = "force-dynamic";
  * Supersedes the D2 master-detail two-pane workspace: the IA restructure
  * unwinds the split + the detail inspector (detail-focus is gone, rows
  * already navigate to the project page) so the PROJECTS table spans full
- * width on every breakpoint. The FOCUS bench MOVED to the FOCUS screen
- * (/planner); the planner widgets (calendar / activity / streak) MOVED
- * here, below the table.
+ * width on every breakpoint. The planner widgets (calendar / activity /
+ * streak) live here, below the table.
+ *
+ * FOCUS-FOLD (2026-06-08) — the FOCUS bench is back here too. It briefly
+ * lived on a standalone /planner route (FOCUS-DASH); that route is now
+ * removed and the bench folds in as the DashboardFocusSection below the
+ * widget grid (see the interface comment + the JSX below).
  *
  * Surface (top to bottom):
  *   - Page header retitled DASHBOARD + the quick-add / import / new row.
@@ -53,6 +58,7 @@ export const dynamic = "force-dynamic";
  *     mobile comparison table inside `ProjectsDashboardTable`).
  *   - DASHBOARD widget row: activity + calendar (the relocated planner
  *     cells, reused verbatim) — the pyramid's detail layer.
+ *   - FOCUS section — the folded-in painting bench (DashboardFocusSection).
  *   - RecentlyBoughtLine — passive spend readout (weakest real estate).
  *
  * DASH-RECIPES (2026-06-05) — the dashboard recipes table was removed.
@@ -65,12 +71,24 @@ export const dynamic = "force-dynamic";
  * → Activity/Calendar → RecentlyBoughtLine. The Streak number moved up
  * into the KPI strip, so the Streak cell was dropped from the widget row
  * to avoid a duplicate headline.
+ *
+ * FOCUS-FOLD (2026-06-08) — the standalone `/planner` (Focus) route is
+ * removed and FOCUS is dropped from the nav. The painting bench (TIMER +
+ * the focused recipe with its per-paint notes + the INSPO board) folds
+ * back onto this dashboard as the `DashboardFocusSection`, sitting below
+ * the table/widget grid and above RecentlyBoughtLine — a dedicated "the
+ * thing you use while painting" action section. The section self-fetches
+ * its focus state; this page only threads the `?focusRecipe` / `?focusSlot`
+ * persistence params (read from the same searchParams as the calendar's
+ * `?calYear` / `?calMonth`).
  */
 interface DashboardPageProps {
   /** P14.3 — calendar prev/next nav writes `?calYear` + `?calMonth`
    *  client-side via `router.replace`. The dashboard then re-renders the
-   *  calendar widget against the new month. Next hands searchParams as an
-   *  awaited promise per the App-Router rules. */
+   *  calendar widget against the new month. FOCUS-FOLD — the relocated
+   *  FOCUS bench adds `?focusRecipe` (recipe-tab persistence) + `?focusSlot`
+   *  (active-slot persistence) to the same param bag. Next hands
+   *  searchParams as an awaited promise per the App-Router rules. */
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
@@ -82,6 +100,16 @@ export default async function DashboardPage({
   const calMonthRaw = params.calMonth;
   const calYear = Array.isArray(calYearRaw) ? calYearRaw[0] : calYearRaw;
   const calMonth = Array.isArray(calMonthRaw) ? calMonthRaw[0] : calMonthRaw;
+  // FOCUS-FOLD — the relocated FOCUS bench persists its recipe-tab +
+  // active-slot selection in the URL, exactly as the old /planner route did.
+  const focusRecipeRaw = params.focusRecipe;
+  const focusRecipeId = Array.isArray(focusRecipeRaw)
+    ? focusRecipeRaw[0]
+    : focusRecipeRaw;
+  const focusSlotRaw = params.focusSlot;
+  const focusSlotParam = Array.isArray(focusSlotRaw)
+    ? focusSlotRaw[0]
+    : focusSlotRaw;
 
   const userId = await currentUserId();
   const now = new Date();
@@ -310,6 +338,17 @@ export default async function DashboardPage({
               <DashboardWidgets calYear={calYear} calMonth={calMonth} />
             </aside>
           </div>
+
+          {/* FOCUS-FOLD (2026-06-08) — the relocated painting bench. The
+              standalone /planner route is gone; the FOCUS cockpit (TIMER +
+              focused recipe with per-paint notes + INSPO board) lives here
+              as a dedicated full-width action section below the glance/scan
+              grid, above the passive spend readout. Self-fetches its focus
+              state; we only thread the recipe-tab + active-slot params. */}
+          <DashboardFocusSection
+            focusRecipeId={focusRecipeId}
+            focusSlotParam={focusSlotParam}
+          />
         </>
       )}
 

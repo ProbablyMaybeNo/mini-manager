@@ -87,15 +87,15 @@ describe("BottomTabBar — terminal skin", () => {
     expect(src).toContain("min-h-[56px]");
   });
 
-  test("UX-014 — FOCUS (/planner) is reachable from the mobile tab bar", () => {
-    // The mobile bar shipped with only 5 of the 6 sections; FOCUS was the
-    // missing core flow. Assert /planner is now a tab with a Focus label.
-    expect(src).toContain('href: "/planner"');
-    expect(src).toMatch(/label:\s*"Focus"/);
-    // All six primary sections present.
+  test("FOCUS-FOLD — the standalone FOCUS tab is gone (folded into the dashboard)", () => {
+    // FOCUS-FOLD (2026-06-08) — the standalone /planner (Focus) route was
+    // removed and the painting bench folded into the /projects dashboard,
+    // so there is no separate FOCUS tab on the mobile bar.
+    expect(src).not.toContain('href: "/planner"');
+    expect(src).not.toMatch(/label:\s*"Focus"/);
+    // The five remaining primary sections are all present.
     for (const href of [
       "/projects",
-      "/planner",
       "/library",
       "/recipes",
       "/tools",

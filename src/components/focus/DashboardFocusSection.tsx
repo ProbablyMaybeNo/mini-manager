@@ -22,57 +22,46 @@ import { Card } from "@/components/ui/Card";
 import { Panel } from "@/components/ui/Panel";
 import { buildFocusSlots } from "@/lib/focus/rollup";
 
-export const dynamic = "force-dynamic";
-
 /**
- * FOCUS-DASH (2026-06-04) — `/planner` is now the FOCUS screen: the
- * painting cockpit a painter sits in front of at the bench.
+ * FOCUS-FOLD (2026-06-08) — the FOCUS bench folded into the DASHBOARD.
  *
- * Route decision: the path stays `/planner` (the typed-route + every
- * inbound link keep working) but the surface is retitled FOCUS in the
- * NavRail + the page H1. A clean `/focus` rename would ripple through the
- * typed `Route` references in NavRail + GlobalSearch + the command
- * palette for no user-visible gain, so we retitle-in-place per the
- * batch's low-churn guidance.
+ * Ross's locked decision: the standalone `/planner` (Focus) route is
+ * removed and FOCUS is dropped from the nav; the bench the painter sits
+ * in front of — TIMER, the focused recipe with its per-paint notes, and
+ * the INSPO reference board — now lives as a compact section on the
+ * `/projects` dashboard. This is "the thing you use while painting."
  *
- * The FOCUS bench (FocusPicker + FocusPanel + Stopwatch) MOVED here from
- * /projects, which becomes the DASHBOARD. The four sections are stacked
- * mobile-first so each one fits a single phone screen:
- *   1. Recipe row — the focused recipe's paints, each with its per-paint
- *      technique note surfaced inline (FocusPanel's slot palette + cards).
- *   2. Compact project panel — the focused unit/model/terrain/vehicle's
- *      stage counts + completion, smaller than the unit page (FocusPanel's
- *      header pill).
- *   3. Stopwatch — the bench session timer.
- *   4. Inspo gallery — paste-a-URL reference board (PlannerInspoCell).
+ * This async server component is the relocated bench. It is a verbatim
+ * lift of the old `app/planner/page.tsx` data layer + render — the focus
+ * primitives (FocusPicker + FocusPanel + Stopwatch) and the reused
+ * InspoGalleryGrid are NOT rebuilt, only moved here so they compose into
+ * the dashboard. It self-fetches per-user focus state, so the dashboard
+ * page stays force-dynamic without threading any focus data through.
  *
- * The calendar / activity / streak cells LEFT this screen for the
- * DASHBOARD (/projects) — the planner widgets now live alongside the
- * project table, not the painting bench.
+ * Search-param contract (unchanged from the old route, now read from the
+ * dashboard's searchParams):
+ *   - `?focusRecipe=<id>` — the FocusPanel tab strip persists which recipe
+ *     the painter is reading (UX-907). Unknown / unowned ids fall back to
+ *     the most-recently-updated recipe inside the query helper.
+ *   - `?focusSlot=<zoneId>` — the active slot the painter is working on
+ *     (P15.0). Unknown / unowned ids fall back to the first undone slot.
+ *
+ * Layout: a compact three-card stack anchored at `#focus` so the command
+ * palette + any "jump to bench" link can deep-link to it. Mobile-first —
+ * each card stacks to one column so it reads cleanly on a phone at the
+ * bench, matching the terminal gold-standard panel language.
  */
-interface FocusPageProps {
-  /** UX-907 — recipe-tab persistence. The FocusPanel's tab strip writes
-   *  `?focusRecipe=<id>` so the painter's selection survives reloads.
-   *  Unknown / unowned ids fall back to the most-recently-updated recipe
-   *  inside the query helper. */
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+interface DashboardFocusSectionProps {
+  /** Recipe-tab persistence — `?focusRecipe=<id>` from the dashboard. */
+  focusRecipeId?: string;
+  /** Active-slot persistence — `?focusSlot=<zoneId>` from the dashboard. */
+  focusSlotParam?: string;
 }
 
-export default async function FocusPage({ searchParams }: FocusPageProps) {
-  const params = (await searchParams) ?? {};
-  const focusRecipeRaw = params.focusRecipe;
-  const focusRecipeId = Array.isArray(focusRecipeRaw)
-    ? focusRecipeRaw[0]
-    : focusRecipeRaw;
-  // P15.0 — active-slot persistence. The FocusPanel's slot activator + the
-  // "Advance slot" quick-action write `?focusSlot=<zoneId>` so the slot the
-  // painter is working on survives reload. Unknown / unowned ids fall back
-  // to the first slot with an undone step below.
-  const focusSlotRaw = params.focusSlot;
-  const focusSlotParam = Array.isArray(focusSlotRaw)
-    ? focusSlotRaw[0]
-    : focusSlotRaw;
-
+export async function DashboardFocusSection({
+  focusRecipeId,
+  focusSlotParam,
+}: DashboardFocusSectionProps) {
   const userId = await currentUserId();
   const [
     focusCandidates,
@@ -129,25 +118,27 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
   })();
 
   return (
-    <div className="content-cap p-4 md:p-8 space-y-4 md:space-y-6">
-      {/* Terminal hero — mirrors the dashboard + library banner so FOCUS
-          reads as the same mission-control surface: a tracked-out
-          coordinate caption above the display-font title, kept small. */}
+    <section id="focus" aria-label="Focus bench" className="space-y-4">
+      {/* Section header — a tracked-out coordinate caption above the
+          display-font title, mirroring the dashboard's other section
+          banners so FOCUS reads as one more mission-control surface, kept
+          compact since it now lives inside the dashboard rather than
+          owning a full screen. */}
       <header>
         <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
           SYS ▸ FOCUS / 01
         </p>
-        <h1 className="title-display text-base md:text-lg">FOCUS</h1>
+        <h2 className="title-display text-base md:text-lg">FOCUS</h2>
         <p className="text-xs text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans leading-relaxed">
           Sit down and paint. Pick what you&apos;re working on, read the
           recipe with its per-paint notes, run the stopwatch, and keep your
-          reference board in reach — each section fits one screen.
+          reference board in reach.
         </p>
       </header>
 
-      {/* Sections 1–3: the FOCUS bench. Picker, then the recipe row +
-          compact project panel (FocusPanel), then the stopwatch. */}
-      <Card title="FOCUS" accentColor="green" ticks techLabel="SYS ▸ BENCH">
+      {/* The FOCUS bench: picker, then the recipe row + compact project
+          panel (FocusPanel). */}
+      <Card title="FOCUS" titleAs="h3" accentColor="green" ticks techLabel="SYS ▸ BENCH">
         <div className="space-y-4">
           <FocusPicker
             options={focusCandidates.map((c) => ({
@@ -180,21 +171,17 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
         </div>
       </Card>
 
-      {/* Section: the bench stopwatch — its own compact card, lifted out
-          of the FOCUS bench so the session timer reads as a distinct
-          instrument (Ross: "separate the stopwatch into its own small
-          section").
+      {/* The bench stopwatch — its own compact card so the session timer
+          reads as a distinct instrument.
 
-          UX-014 — the TIMER card now renders in EVERY state, not just when
-          a project is focused: the stopwatch is the signature FOCUS feature,
-          but the empty state previously hid it entirely, so the headline's
-          "run the stopwatch" promise had no visible surface. With no focus,
-          a DISABLED shell (00:00 + greyed Start + a hint) makes the feature
+          UX-014 — the TIMER card renders in EVERY state, not just when a
+          project is focused: the stopwatch is the signature FOCUS feature,
+          so a DISABLED shell (00:00 + greyed Start + a hint) keeps it
           discoverable before setup; the live Stopwatch swaps in once a
           project is focused. */}
       <Card
         title="TIMER"
-        titleAs="h2"
+        titleAs="h3"
         accentColor="cyan"
         ticks
         techLabel="SYS ▸ TIMER"
@@ -223,18 +210,18 @@ export default async function FocusPage({ searchParams }: FocusPageProps) {
         )}
       </Card>
 
-      {/* Section 4: the inspo reference board. */}
+      {/* The inspo reference board (reused verbatim). */}
       <PlannerInspoCell />
-    </div>
+    </section>
   );
 }
 
 /**
- * UX-014 — disabled TIMER shell shown in the FOCUS empty state (no project
- * focused yet). Mirrors the live Stopwatch's layout — readout at 00:00, a
- * greyed-out Start, and the Today·This week rollup — plus a one-line hint
- * pointing at the picker. Pure server markup (no interactivity), so the
- * signature stopwatch is visible + self-explanatory before any setup.
+ * UX-014 — disabled TIMER shell shown when no project is focused yet.
+ * Mirrors the live Stopwatch's layout — readout at 00:00, a greyed-out
+ * Start, and the Today·This week rollup — plus a one-line hint pointing at
+ * the picker. Pure server markup (no interactivity), so the signature
+ * stopwatch is visible + self-explanatory before any setup.
  */
 function StopwatchEmptyShell({
   todaySeconds,

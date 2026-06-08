@@ -105,21 +105,26 @@ describe("ProjectColorSchemeBox — recipe tabs wiring (UX-907)", () => {
   });
 });
 
-describe("FOCUS page — focusRecipe URL param honour (UX-907)", () => {
-  // FOCUS-DASH — the FOCUS bench (+ its focusRecipe wiring) moved to /planner.
-  const src = read("src/app/planner/page.tsx");
+describe("FOCUS section — focusRecipe URL param honour (UX-907)", () => {
+  // FOCUS-FOLD (2026-06-08) — the FOCUS bench folded into the /projects
+  // dashboard. The dashboard page parses `?focusRecipe` out of its
+  // searchParams and threads it into DashboardFocusSection, which owns the
+  // getFocusedRecipeBundle + FocusPanel wiring.
+  const page = read("src/app/projects/page.tsx");
+  const section = read("src/components/focus/DashboardFocusSection.tsx");
 
-  test("reads `focusRecipe` out of searchParams", () => {
-    expect(src).toContain("params.focusRecipe");
+  test("the dashboard reads `focusRecipe` out of searchParams", () => {
+    expect(page).toContain("params.focusRecipe");
+    expect(page).toContain("focusRecipeId={focusRecipeId}");
   });
 
-  test("threads the id through getFocusedRecipeBundle", () => {
-    expect(src).toContain("getFocusedRecipeBundle(userId, focusRecipeId");
+  test("the section threads the id through getFocusedRecipeBundle", () => {
+    expect(section).toContain("getFocusedRecipeBundle(userId, focusRecipeId");
   });
 
-  test("forwards allRecipes + recipe id to FocusPanel", () => {
-    expect(src).toContain("recipes={focusBundle.allRecipes}");
-    expect(src).toContain("activeRecipeId={focusBundle.recipe.id}");
+  test("the section forwards allRecipes + recipe id to FocusPanel", () => {
+    expect(section).toContain("recipes={focusBundle.allRecipes}");
+    expect(section).toContain("activeRecipeId={focusBundle.recipe.id}");
   });
 });
 

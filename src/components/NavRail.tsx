@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   Folder,
-  Target,
   Palette,
   FlaskConical,
   Wrench,
@@ -28,14 +27,13 @@ type NavItem = {
 };
 
 const PRIMARY: readonly NavItem[] = [
-  // /projects is the DASHBOARD (KPI strip + project table + widgets);
-  // nav label matches the page title.
+  // /projects is the DASHBOARD (KPI strip + project table + widgets +
+  // the folded-in FOCUS bench); nav label matches the page title.
+  //
+  // FOCUS-FOLD (2026-06-08) — the standalone FOCUS nav item is removed.
+  // The painting bench (TIMER + focused recipe + INSPO) now lives as a
+  // section on the dashboard, so there is no separate route to navigate to.
   { href: "/projects", Icon: Folder, label: "Dashboard" },
-  // FOCUS-DASH — /planner is now the FOCUS painting screen (bench recipe
-  // row + compact project panel + stopwatch + inspo). Path kept to limit
-  // typed-route churn; label + H1 retitled FOCUS. Target icon = the
-  // single-project painting focus.
-  { href: "/planner", Icon: Target, label: "Focus" },
   { href: "/library",  Icon: Palette,      label: "Library"  },
   { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
   { href: "/tools",    Icon: Wrench,       label: "Tools"    },
