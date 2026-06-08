@@ -320,12 +320,17 @@ function RecipeRow({
 }
 
 /**
- * Item 1 — the row's paint squares, rendered at the SAME size the recipe
- * creator uses (w-12 h-12) with the paint name + layer beneath, so
- * /recipes reads as a full recipe at a glance. Clicking a square opens
- * the creator (to assign / edit paints). A colour-only slot with no paint
- * assigned shows a "+ Assign Paint" affordance — black or white text per
- * the swatch's contrast — instead of a name.
+ * Item 1 (Ross redesign) — MUCH bigger paint squares with the paint NAME
+ * in the CENTRE of the square (black/white per swatch contrast) and the
+ * LAYER along the BOTTOM edge of the square. The square is sized large
+ * enough to fit a paint name (w-28 h-28 ≈ 112px) so /recipes reads as a
+ * full, glanceable recipe — nothing stranded in a label beneath the
+ * swatch.
+ *
+ * Clicking a square opens the creator (to assign / edit paints). A
+ * colour-only slot with no paint assigned shows a "+ Assign Paint"
+ * affordance — black or white text per the swatch's contrast — in place
+ * of a name.
  */
 function RecipeSlotSquares({
   recipeId,
@@ -354,42 +359,37 @@ function RecipeSlotSquares({
           ? `Assign a paint · ${slot.hex} · ${slot.layerLabel}`
           : `${slot.paintLabel} · ${slot.layerLabel}`;
         return (
-          <li
-            key={`${i}-${slot.hex}`}
-            role="listitem"
-            className="flex flex-col items-center gap-1 w-[4.5rem]"
-          >
+          <li key={`${i}-${slot.hex}`} role="listitem">
             <button
               type="button"
               onClick={() => router.push(`/recipes/${recipeId}`)}
               title={hover}
               aria-label={hover}
-              className="block w-12 h-12 rounded-sm transition-transform hover:scale-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+              className="flex w-28 h-28 flex-col items-stretch justify-between rounded-sm p-1.5 text-center transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
               style={{
                 background: slot.hex,
                 border: `2px solid ${coverageBorder(slot.coverage)}`,
               }}
             >
-              {slot.needsPaint ? (
-                <span
-                  aria-hidden
-                  className="font-mono text-2xs leading-none"
-                  style={{ color: fg }}
-                >
-                  + Assign
-                  <br />
-                  Paint
-                </span>
-              ) : null}
+              {/* spacer balances the bottom layer strip so the name reads
+                  as optically centred in the square */}
+              <span aria-hidden />
+              <span
+                className="font-mono text-2xs font-semibold leading-tight break-words line-clamp-3"
+                style={{ color: fg }}
+              >
+                {slot.needsPaint
+                  ? "+ Assign Paint"
+                  : slot.paintLabel ?? "No paint"}
+              </span>
+              {/* Layer along the BOTTOM edge of the square. */}
+              <span
+                className="font-mono text-2xs uppercase tracking-wider leading-none opacity-90"
+                style={{ color: fg }}
+              >
+                {slot.layerLabel}
+              </span>
             </button>
-            <span className="font-mono text-2xs text-[var(--color-fg)] text-center leading-tight line-clamp-2 break-words">
-              {slot.paintLabel ?? (
-                <span className="text-[var(--color-fg-muted)]">no paint</span>
-              )}
-            </span>
-            <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] text-center leading-tight">
-              {slot.layerLabel}
-            </span>
           </li>
         );
       })}

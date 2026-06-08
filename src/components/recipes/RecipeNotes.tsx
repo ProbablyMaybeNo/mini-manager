@@ -8,6 +8,9 @@ import { Card } from "@/components/ui/Card";
 interface Props {
   recipeId: string;
   initialNotes: string;
+  /** Extra classes for the Card shell — used by the editor right-rail to
+   *  let Notes grow (`flex-1`) and fill the empty vertical space (item 2). */
+  className?: string;
 }
 
 const NOTES_DEBOUNCE_MS = 700;
@@ -17,7 +20,7 @@ const NOTES_DEBOUNCE_MS = 700;
  * autosaves about 700ms after the last keystroke. We don't show a
  * "Save" button; the only signal is the `saving…` chip in the header.
  */
-export function RecipeNotes({ recipeId, initialNotes }: Props) {
+export function RecipeNotes({ recipeId, initialNotes, className }: Props) {
   const [value, setValue] = useState(initialNotes);
   const [saved, setSaved] = useState(initialNotes);
   const [isPending, startTransition] = useTransition();
@@ -49,9 +52,10 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
   return (
     <Card
       title="Recipe notes"
-      nested
       ticks
       techLabel="NOTES"
+      className={className}
+      bodyClassName="flex flex-col"
       headerActions={
         <span
           className={clsx(
@@ -77,7 +81,9 @@ export function RecipeNotes({ recipeId, initialNotes }: Props) {
         className={clsx(
           "block w-full px-3 py-2.5 font-mono text-xs",
           "bg-[var(--color-bg)] frame focus:border-[var(--color-cyan)]",
-          "resize-y min-h-[200px]",
+          // Item 2 — grow to fill the right rail so the editor uses the
+          // vertical space instead of leaving a dead band beneath Notes.
+          "resize-y flex-1 min-h-[280px]",
         )}
       />
     </Card>

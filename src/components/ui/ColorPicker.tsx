@@ -523,11 +523,15 @@ export function ColorPicker({
 
 /** Pixel grid resolution + ring geometry for the retro wheel. A fixed
  *  cell size keeps every "pixel" a crisp square regardless of the SVG
- *  scale; the ring band is ~5 cells thick so the blocks read as a chunky
- *  rainbow donut rather than a thin line. */
-const WHEEL_SIZE = 160;
-const WHEEL_PX = 10; // edge of one square pixel cell (retro chunk size)
-const WHEEL_HUE_STEPS = 24; // quantised hue bands (retro colour banding)
+ *  scale. The wheel now rasterises into MANY more, SMALLER cells so it
+ *  reads as crisp pixel art rather than chunky blocks (Ross: "more pixels,
+ *  less blocky"). A larger user-space canvas + a smaller cell edge means
+ *  the donut is built from a fine grid; the band is sized in CELLS so it
+ *  stays a proper ring thickness regardless of the cell size. */
+const WHEEL_SIZE = 200; // SVG user-space canvas (CSS-scales down to fit)
+const WHEEL_PX = 5; // edge of one square pixel cell (finer = crisper)
+const WHEEL_RING_CELLS = 9; // ring-band thickness in cells (proper donut)
+const WHEEL_HUE_STEPS = 60; // quantised hue bands (smoother retro rainbow)
 
 function WheelRing({
   hue,
@@ -585,7 +589,7 @@ function WheelRing({
   // rainbow, and stepped in saturation across the inner/outer half of the
   // band so the donut has a touch of pixel-art depth.
   const pixels = useMemo(() => {
-    const innerR = radius - WHEEL_PX * 5;
+    const innerR = radius - WHEEL_PX * WHEEL_RING_CELLS;
     const outerR = radius;
     const cells: { x: number; y: number; fill: string }[] = [];
     for (let gy = 0; gy < size; gy += WHEEL_PX) {
@@ -609,15 +613,19 @@ function WheelRing({
     return cells;
   }, [cx, cy, radius, size]);
 
-  // Pixel cursor — a chunky square block snapped to the grid, sitting on
-  // the ring at the current hue (replaces the smooth dot for the retro
-  // look). White block + black outline so it reads on any hue.
+  // Pixel cursor — a square block snapped to the grid, sitting on the ring
+  // at the current hue (a pixel-art block, not a smooth dot). With the
+  // finer cells the cursor spans a few cells so it stays visible + grabbable
+  // on any hue (white block + black outline).
+  const CURSOR_CELLS = 3;
+  const cursorEdge = WHEEL_PX * CURSOR_CELLS;
   const hueRad = (hue * Math.PI) / 180;
-  const midR = radius - WHEEL_PX * 2.5;
+  const midR = radius - (WHEEL_PX * WHEEL_RING_CELLS) / 2;
   const rawCurX = cx + Math.cos(hueRad) * midR;
   const rawCurY = cy + Math.sin(hueRad) * midR;
-  const curX = Math.floor(rawCurX / WHEEL_PX) * WHEEL_PX;
-  const curY = Math.floor(rawCurY / WHEEL_PX) * WHEEL_PX;
+  // Snap to the grid, then centre the multi-cell block on the snapped cell.
+  const curX = Math.floor(rawCurX / WHEEL_PX) * WHEEL_PX - cursorEdge / 2 + WHEEL_PX / 2;
+  const curY = Math.floor(rawCurY / WHEEL_PX) * WHEEL_PX - cursorEdge / 2 + WHEEL_PX / 2;
 
   return (
     <svg
@@ -651,16 +659,18 @@ function WheelRing({
           width={WHEEL_PX}
           height={WHEEL_PX}
           fill={p.fill}
+          // Hairline gridline so the fine cells still read as discrete
+          // pixels without the black mesh swamping the smaller squares.
           stroke="#000000"
-          strokeWidth={0.5}
+          strokeWidth={0.25}
         />
       ))}
-      {/* Chunky pixel cursor block. */}
+      {/* Pixel cursor block (spans a few cells so it stays visible). */}
       <rect
         x={curX}
         y={curY}
-        width={WHEEL_PX}
-        height={WHEEL_PX}
+        width={cursorEdge}
+        height={cursorEdge}
         fill="#ffffff"
         stroke="#000000"
         strokeWidth={2}

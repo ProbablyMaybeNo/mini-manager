@@ -257,7 +257,6 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
     <>
       <Card
         title={`Recipe slots · ${localSlots.length}`}
-        nested
         ticks
         techLabel="SLOTS"
         headerActions={
@@ -276,7 +275,7 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
             layer.
           </p>
           <div
-            className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(112px,1fr))]"
+            className="grid gap-2.5 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]"
             role="list"
             aria-label="Recipe slots"
           >
@@ -678,7 +677,7 @@ function SlotCell({
         </span>
         <span
           className={clsx(
-            "block font-mono text-xs leading-tight truncate font-semibold text-center",
+            "block font-mono text-sm leading-tight font-semibold text-center break-words line-clamp-3 px-1",
             !filled && "text-[var(--color-fg)]",
           )}
           style={filled ? { color: textColor } : undefined}

@@ -79,7 +79,6 @@ export function RecipeInspo({ recipeId, initialRows }: Props) {
   return (
     <Card
       title="Inspo"
-      nested
       ticks
       techLabel="INSPO"
       headerActions={
