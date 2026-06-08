@@ -86,10 +86,12 @@ export function DashboardHero({ stats }: DashboardHeroProps) {
 
         {/* The signature radar globe (right) — desktop only so it never
             crams the mobile column. Decorative: the figures above + the KPI
-            strip below carry the data. */}
+            strip below carry the data.
+            DASHBOARD-REDESIGN (Part B item 4) — sized DOWN to read as the
+            mockup's compact CRT hero graphic rather than a half-page globe. */}
         <div className="hidden md:flex shrink-0 items-center justify-center">
           <WireframeGlobe
-            size={216}
+            size={148}
             tone="cyan"
             blipTone="green"
             ariaLabel="Workbench radar — projects in flight"
