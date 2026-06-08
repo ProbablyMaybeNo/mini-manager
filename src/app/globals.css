@@ -100,7 +100,14 @@
      #FFFFFF — the only thing that stays dimmed is genuinely DISABLED
      state, which uses dimmed white (~40% alpha) so "disabled" still
      reads as disabled (see the image's grey DISABLED button/panel). */
-  --color-bg: #0a0a0a;
+  /* DASHBOARD-REDESIGN (Part A item 1) — Ross, on the deployed preview:
+     "still no solid black background." The PAGE base is taken to pure
+     #000000 so the screen reads as true black (the mockup's ground).
+     Panels/elevated surfaces stay at the near-black #0A0A0A so a panel sitting
+     on the page is still a hair distinct from it (the doc's halation note) —
+     reconciling Ross's "solid black page" with the documented "panels sit
+     faintly distinct" goal: black page, near-black panels, never grey. */
+  --color-bg: #000000;
   --color-bg-elevated: #0a0a0a;
   --color-bg-panel: #0a0a0a;
 
@@ -206,8 +213,15 @@
                 spaced, matching the image's title treatment. */
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
     "Roboto Mono", Consolas, "Liberation Mono", monospace;
-  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* DASHBOARD-REDESIGN (Part A item 4) — Ross: "ALL text → mono across the
+     app." The `font-sans` utility + the prose body that still reached for
+     IBM Plex Sans are collapsed onto the SAME mono stack, so every text
+     surface (including long-form copy) renders in IBM Plex Mono. Kept as a
+     distinct named token so the ~60 existing `font-sans` consumers keep
+     resolving — they now just inherit mono. Body stays readable (mono is the
+     readability floor the design language already commits to). */
+  --font-sans: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
+    "Roboto Mono", Consolas, "Liberation Mono", monospace;
   --font-tactical: "UAV OSD Mono", "IBM Plex Mono", ui-monospace,
     Consolas, monospace;
   --font-display: "UAV OSD Mono", "IBM Plex Mono",
@@ -273,10 +287,18 @@
      Because they read currentColor, consumers either set a colour on the
      element (coloured panels) or pass white/border-coloured borders and
      get a white bloom. The `.glow-edge*` utilities apply them directly. */
-  --glow-edge: 0 0 6px -1px color-mix(in srgb, currentColor 28%, transparent);
+  /* DASHBOARD-REDESIGN (Part A item 3) — Ross: "more glow on UI borders, the
+     edges should read as lit CRT." The resting + active edge blooms are
+     pushed up (higher alpha + a wider second halo on the strong tier) so
+     panel/card/button borders read as genuinely lit phosphor, not a faint
+     hairline. Still readability-floored (low enough alpha that text on the
+     surface is untouched) and still stripped under prefers-reduced-motion. */
+  --glow-edge:
+    0 0 8px -1px color-mix(in srgb, currentColor 42%, transparent),
+    0 0 2px 0 color-mix(in srgb, currentColor 26%, transparent);
   --glow-edge-strong:
-    0 0 4px -1px color-mix(in srgb, currentColor 45%, transparent),
-    0 0 12px -2px color-mix(in srgb, currentColor 30%, transparent);
+    0 0 6px -1px color-mix(in srgb, currentColor 60%, transparent),
+    0 0 16px -2px color-mix(in srgb, currentColor 42%, transparent);
 
   /* ----- Spacing rhythm (4px base) ----- */
   --radius-none: 0;
@@ -330,7 +352,10 @@ html[data-density="compact"] {
 html {
   background: var(--color-bg);
   color: var(--color-fg);
-  font-family: var(--font-sans);
+  /* DASHBOARD-REDESIGN (Part A item 4) — body defaults to the mono stack so
+     the WHOLE app is monospace; `--font-sans` now resolves to mono too, but
+     naming `--font-mono` here makes the "all text is mono" intent explicit. */
+  font-family: var(--font-mono);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;

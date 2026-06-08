@@ -5,7 +5,7 @@ import {
   getProjectFirstRecipeMap,
   listOwnedRecipesLean,
 } from "@/db/queries/recipes";
-import { QuickAddBar } from "@/components/QuickAddBar";
+import { Logo } from "@/components/ui/Logo";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
@@ -18,15 +18,12 @@ import {
 import {
   activeProjectCount,
   averageCompletion,
-  formatPaintTime,
+  formatTimeTotal,
+  padCount,
   activityTrendSeries,
 } from "@/components/dashboard/dashboardKpiHelpers";
 import { DashboardTrendPanel } from "@/components/dashboard/DashboardTrendPanel";
-import {
-  computeStreak,
-  computeStreakBaseline,
-  streakBaselineLine,
-} from "@/components/planner/plannerStreakHelpers";
+import { computeStreak } from "@/components/planner/plannerStreakHelpers";
 import { getActivityByDay } from "@/db/queries/activityLog";
 import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
 import { getFocusProjectId } from "@/db/queries/focus";
@@ -110,22 +107,16 @@ export default async function DashboardPage({
 
   const isEmpty = allProjects.length === 0;
 
-  // DASH-KPI (2026-06-05) — the top KPI strip (doc §14/§4/§8). Every
-  // metric is derived from the data fetched above + existing helpers; no
-  // new tracking infra. The fourth card ("painting time this week") is a
-  // SUBSTITUTE for "models painted this week" — paint_sessions records
-  // duration, not model counts, so time-at-the-desk is the closest cheaply
-  // derivable equivalent.
+  // DASH-KPI (doc §14/§4/§8) — the top KPI strip. Every metric is derived
+  // from the data fetched above + existing helpers; no new tracking infra.
+  //
+  // DASHBOARD-REDESIGN (Part B item 1) — rebuilt to Ross's mockup: four
+  // COLOR-CODED cards, each just a title bar + a big centred number. The
+  // dials / baseline lines / unit captions are dropped (the mockup is
+  // "title + number only"). The fourth card is TIME TOTAL — time at the
+  // bench this week, the closest cheaply-derivable "output" metric since
+  // paint_sessions records duration, not model counts.
   const streak = computeStreak(streakDays, now);
-  // DASH-STREAK-BASELINE (item 3, doc §8) — the streak's third context
-  // layer: a WoW painting-day trend + the best-streak benchmark, both
-  // derived from the same activity_log window the streak uses.
-  const streakBaseline = streakBaselineLine(
-    computeStreakBaseline(streakDays, now),
-  );
-  const isHotStreak = streak.streak >= 7;
-  const isActiveStreak = streak.streak >= 1;
-  const paintTime = formatPaintTime(weekSeconds);
   const avgCompletion = averageCompletion(allProjects);
   // PHASE-1 viz — the activity-trend series for the bespoke AREA GRAPH /
   // SPARKLINE (DESIGN_LANGUAGE §13). Re-uses the SAME 60-day activity_log
@@ -133,69 +124,31 @@ export default async function DashboardPage({
   // to a contiguous daily-count series, oldest → newest.
   const TREND_DAYS = 60;
   const trendSeries = activityTrendSeries(streakDays, now, TREND_DAYS);
-  // PHASE-1 — the STREAK dial reads against a 7-day "hot streak" target,
-  // so the ring fills as the painter approaches a full week and tops out
-  // (capped at 100%) once they're on a hot streak. The centre carries the
-  // raw count; the hue mirrors the number's green/amber/muted state.
-  const streakDialPercent = Math.min(100, (streak.streak / 7) * 100);
-  const streakDialTone = isHotStreak
-    ? "ok"
-    : isActiveStreak
-      ? "warning"
-      : "neutral";
+  const activeCount = activeProjectCount(allProjects);
   const kpiCards: KpiCardData[] = [
     {
       label: "ACTIVE PROJECTS",
-      value: String(activeProjectCount(allProjects)),
-      unit: "in flight",
-      valueClassName: "text-[var(--color-fg)]",
-      glowClassName: "glow-text-strong",
-      accentColor: "green",
-      valueAriaLabel: `${activeProjectCount(allProjects)} active projects`,
+      value: padCount(activeCount),
+      color: "green",
+      valueAriaLabel: `${activeCount} active projects`,
     },
     {
-      label: "AVG COMPLETION",
+      label: "COMPLETION %",
       value: `${avgCompletion}%`,
-      unit: "across projects",
-      valueClassName: "text-[var(--color-fg)]",
-      glowClassName: "glow-text-strong",
-      accentColor: "amber",
+      color: "yellow",
       valueAriaLabel: `${avgCompletion} percent average completion`,
-      dial: {
-        percent: avgCompletion,
-        // auto tone tracks the behind/mid/ahead threshold set.
-        ariaLabel: `${avgCompletion} percent average completion`,
-      },
     },
     {
       label: "STREAK",
-      value: String(streak.streak),
-      unit: streak.streak === 1 ? "day" : "days",
-      valueClassName: isHotStreak
-        ? "text-[var(--color-green)]"
-        : isActiveStreak
-          ? "text-[var(--color-amber)]"
-          : "text-[var(--color-fg-muted)]",
-      glowClassName: isActiveStreak ? "glow-text-strong" : undefined,
-      accentColor: "purple",
+      value: padCount(streak.streak),
+      color: "purple",
       valueAriaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak`,
-      baseline: streakBaseline ?? undefined,
-      dial: {
-        percent: streakDialPercent,
-        tone: streakDialTone,
-        label: String(streak.streak),
-        caption: streak.streak === 1 ? "day" : "days",
-        ariaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak, ${Math.round(streakDialPercent)} percent toward a week`,
-      },
     },
     {
-      label: "PAINTING TIME",
-      value: paintTime.value,
-      unit: paintTime.unit,
-      valueClassName: "text-[var(--color-fg)]",
-      glowClassName: weekSeconds > 0 ? "glow-text-strong" : undefined,
-      accentColor: "neutral",
-      valueAriaLabel: `${paintTime.value} painting time this week`,
+      label: "TIME TOTAL",
+      value: formatTimeTotal(weekSeconds),
+      color: "cyan",
+      valueAriaLabel: `${formatTimeTotal(weekSeconds)} painting time this week`,
     },
   ];
 
@@ -237,44 +190,60 @@ export default async function DashboardPage({
 
   return (
     <div className="content-cap p-6 md:p-8 space-y-6">
+      {/* DASHBOARD-REDESIGN (Part B item 5) — header rebuilt to the mockup:
+          a BIG legible logo + the stylistic DASHBOARD title on the left, two
+          cyan CTAs on the right, and the redundant quick-add / search bar
+          dropped (the ADD PROJECT button covers it, per Ross's comment). The
+          DASHBOARD title is the stylistic terminal display face (shadow/glow
+          via .title-display), sized up so it reads as the mission-control
+          banner the mockup shows — terminal, not arcade. */}
       <header className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          {/* PHASE-1 — page title takes the arcade display (Press Start 2P)
-              treatment, kept SMALL per the spec (the pixel face is fatigue
-              at any reading size). Pairs with a tracked-out coordinate
-              system caption so the header reads as a mission-control
-              screen banner, not a plain SaaS H1. */}
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-            SYS ▸ WORKBENCH / 00
-          </p>
-          <h1 className="title-display text-base md:text-lg">DASHBOARD</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] mt-3 max-w-xl font-sans">
-            Your wargaming workbench at a glance — every project, your
-            painting rhythm, and your recipes, all on one screen.
-          </p>
-        </div>
-        <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-auto">
-          <QuickAddBar />
-          <div className="flex gap-2 w-full md:w-[420px]">
-            <Button
-              as="a"
-              href="/projects/import"
-              variant="warning"
-              size="sm"
-              className="flex-1 justify-center"
-            >
-              Import army list
-            </Button>
-            <Button
-              as="a"
-              href="/projects/new"
-              variant="success"
-              size="sm"
-              className="flex-1 justify-center"
-            >
-              New project
-            </Button>
+        <div className="flex items-center gap-4 min-w-0">
+          {/* The brand logo, sized like the sign-in lockup so "mini-manager"
+              actually reads. mix-blend screen drops the PNG's black ground. */}
+          <Logo
+            width={56}
+            decorative
+            className="shrink-0 hidden sm:block"
+          />
+          <div className="min-w-0">
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
+              SYS ▸ WORKBENCH / 00
+            </p>
+            <h1 className="title-display text-2xl md:text-4xl leading-none">
+              DASHBOARD
+            </h1>
+            {/* One-line subheading (research §3 — orients the 5-second
+                glance). Kept terse so the header stays the clean mockup
+                banner rather than a paragraph. */}
+            <p className="text-2xs md:text-xs text-[var(--color-fg-muted)] mt-2 tracking-wide">
+              Your wargaming workbench at a glance.
+            </p>
           </div>
+        </div>
+        {/* Two cyan CTAs (mockup): ADD PROJECT + UPLOAD ARMY LIST. Both
+            primary-cyan per the mockup — this supersedes the prior
+            success-green / warning-yellow split for the dashboard header. */}
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button
+            as="a"
+            href="/projects/new"
+            variant="primary"
+            size="md"
+            className="flex-1 md:flex-none justify-center"
+          >
+            Add project
+          </Button>
+          <Button
+            as="a"
+            href="/projects/import"
+            variant="primary"
+            tone="outline"
+            size="md"
+            className="flex-1 md:flex-none justify-center"
+          >
+            Upload army list
+          </Button>
         </div>
       </header>
 
@@ -315,23 +284,34 @@ export default async function DashboardPage({
             avgCompletion={avgCompletion}
           />
 
-          {/* PHASE-1 cohesion — the PROJECTS table panel carries the same
-              corner ticks + coordinate tech label as the KPI cards + the
-              widget panels, so the whole screen reads as one mission-
-              control surface rather than mixed card styles. */}
-          <Card title="PROJECTS" accentColor="cyan" ticks techLabel="DB ▸ PROJECTS">
-            <DashboardProjectsTable
-              rows={rows}
-              ownedRecipes={ownedRecipes}
-              projectNameById={projectNameById}
-              focusProjectId={focusProjectId}
-            />
-          </Card>
+          {/* DASHBOARD-REDESIGN (Part B items 2/3) — the mockup's main row:
+              the PROJECTS mission table on the left (wide) beside the RIGHT
+              RAIL (compact scrollable PLANNER calendar + ACTIVITY tracker).
+              On `lg+` the table takes 2 of 3 columns and the rail the third;
+              below `lg` the rail stacks under the table. */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            <div className="lg:col-span-2 min-w-0">
+              <Card
+                title="PROJECTS"
+                accentColor="cyan"
+                ticks
+                techLabel="DB ▸ PROJECTS"
+              >
+                <DashboardProjectsTable
+                  rows={rows}
+                  ownedRecipes={ownedRecipes}
+                  projectNameById={projectNameById}
+                  focusProjectId={focusProjectId}
+                />
+              </Card>
+            </div>
+            {/* Right rail — the relocated planner widgets, now stacked. */}
+            <aside className="lg:col-span-1 min-w-0" aria-label="Planner & activity">
+              <DashboardWidgets calYear={calYear} calMonth={calMonth} />
+            </aside>
+          </div>
         </>
       )}
-
-      {/* The planner widgets that moved here from the FOCUS screen. */}
-      <DashboardWidgets calYear={calYear} calMonth={calMonth} />
 
       <RecentlyBoughtLine />
     </div>

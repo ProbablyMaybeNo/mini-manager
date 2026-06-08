@@ -67,22 +67,21 @@ describe("DASHBOARD planner-widget row (FOCUS-DASH)", () => {
       );
     });
 
-    test("uses a responsive grid (single stack on mobile, 3-col on md+)", () => {
-      expect(widgets).toContain("grid-cols-1");
-      expect(widgets).toContain("md:grid-cols-3");
+    test("DASHBOARD-REDESIGN: widgets form a vertical right rail (stacked)", () => {
+      // Part B item 3 — the widgets are the dashboard's RIGHT RAIL now: a
+      // vertical stack (flex-col), not a wide 3-col row. The page lays the
+      // PROJECTS table beside this rail.
+      expect(widgets).toContain("flex flex-col");
+      expect(widgets).not.toContain("md:grid-cols-3");
     });
 
-    test("DASH-PYRAMID: calendar is the wide column; activity is the narrow left column", () => {
-      // The calendar spans 2 of the 3 columns (the wide column). Activity
-      // is the narrow left column, `h-full` so it matches the calendar's
-      // height — the row reads as one clean rectangle with no floating
-      // gap (holds the prior DASH-PROPORTION rhythm minus the streak cell).
-      expect(widgets).toMatch(
-        /md:col-start-2 md:col-span-2[\s\S]*?<PlannerCalendarCell/,
-      );
-      expect(widgets).toMatch(
-        /md:col-start-1[\s\S]*?<PlannerActivityCell/,
-      );
+    test("DASHBOARD-REDESIGN: calendar sits ABOVE activity in the rail", () => {
+      // The mockup's rail: compact PLANNER calendar on top, ACTIVITY
+      // tracker below it.
+      const calIdx = widgets.indexOf("<PlannerCalendarCell");
+      const actIdx = widgets.indexOf("<PlannerActivityCell");
+      expect(calIdx).toBeGreaterThan(-1);
+      expect(actIdx).toBeGreaterThan(calIdx);
     });
   });
 

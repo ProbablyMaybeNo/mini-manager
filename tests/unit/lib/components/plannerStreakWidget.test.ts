@@ -289,15 +289,9 @@ describe("streakBaselineLine (DASH-STREAK-BASELINE, item 3)", () => {
   });
 });
 
-describe("DASHBOARD streak KPI wires the third context layer", () => {
-  const page = fs.readFileSync(
-    path.resolve(__dirname, "../../../../", "src/app/projects/page.tsx"),
-    "utf-8",
-  );
-
-  test("page computes + passes the streak baseline into the KPI card", () => {
-    expect(page).toContain("computeStreakBaseline");
-    expect(page).toContain("streakBaselineLine");
-    expect(page).toContain("baseline: streakBaseline");
-  });
-});
+// DASHBOARD-REDESIGN (Part B item 1) — the streak KPI card no longer carries
+// a baseline "third context layer" line: the redesigned KPI cards are a
+// colour-coded title bar + a single big centred number (Ross's mockup). The
+// computeStreakBaseline / streakBaselineLine helpers stay covered by their
+// own unit tests above; the page just no longer wires the baseline into the
+// strip, so the prior page-wiring block was removed.

@@ -79,10 +79,12 @@ describe("ProjectsDashboardTable component surface", () => {
     expect(src).toContain("type-chip-cyan");
   });
 
-  test("Completion column uses the SegmentedBar viz (UX-006)", () => {
-    // UX-006 replaced the thin smooth ProgressBar with the moodboard
-    // group-27 segmented-block readout, right-aligned + tabular-nums.
-    expect(src).toContain("<SegmentedBar");
+  test("Completion column uses the solid ProgressBar (DASHBOARD-REDESIGN)", () => {
+    // Part B item 2 — Ross's mockup wants a SOLID gold-standard progress bar
+    // for completion, not the segmented blocks. The cell renders a stretched
+    // <ProgressBar> + a tabular-nums readout chip.
+    expect(src).toContain("<ProgressBar");
+    expect(src).not.toContain("<SegmentedBar");
     expect(src).toContain("row.progressPercent");
   });
 
@@ -163,11 +165,19 @@ describe("Projects page wires the dashboard table in", () => {
     expect(src).not.toContain("listActiveProjects");
   });
 
-  test("the New-project button is success-green; Import army-list is warning-yellow", () => {
-    // Phase-12 button discipline (P12.23/24): ADD/NEW = success,
-    // IMPORT/EXPORT/SHARE = warning. Drag these for /projects up
-    // front so the rest of the surface can follow.
-    expect(src).toMatch(/variant="success"/);
-    expect(src).toMatch(/variant="warning"/);
+  test("header CTAs are cyan (DASHBOARD-REDESIGN) and the search bar is dropped", () => {
+    // Part B item 5 — Ross's mockup: ADD PROJECT + UPLOAD ARMY LIST are both
+    // cyan, and the redundant quick-add / search bar is removed (the ADD
+    // PROJECT button covers it). This supersedes the prior success-green /
+    // warning-yellow header split.
+    expect(src).toContain('variant="primary"');
+    expect(src).toContain("Add project");
+    expect(src).toContain("Upload army list");
+    // The quick-add search bar is gone from the dashboard header.
+    expect(src).not.toContain("<QuickAddBar");
+  });
+
+  test("header shows the big brand logo (mockup, like the sign-in lockup)", () => {
+    expect(src).toContain("<Logo");
   });
 });

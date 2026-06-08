@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import type { Priority, ProjectType } from "@/db/schema";
 import { priorities, projectTypes } from "@/db/schema";
-import { SegmentedBar } from "@/components/viz/SegmentedBar";
+import { ProgressBar } from "@/components/ProgressBar";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import {
   InlineCellPopover,
@@ -916,19 +916,20 @@ function DashboardRow({
           </InlineCellPopoverItem>
         </InlineCellPopover>
       </td>
-      {/* UX-006 — completion renders as the SegmentedBar viz (moodboard
-          group-27 "boxes with black/no fill"), right-aligned with a
-          tabular-nums readout chip so the column scans as a clean column of
-          numbers. Replaces the thin smooth ProgressBar. */}
+      {/* DASHBOARD-REDESIGN (Part B item 2) — completion renders as the
+          SOLID ProgressBar (the gold-standard §06 loading bar), not the
+          segmented blocks. Ross: "completion should be a solid progress bar
+          like the gold-standard, not a thin dial." Stretches to fill a fixed
+          column width with a tabular-nums readout chip so the column scans as
+          a clean column of bars + numbers. Auto tone = red <25 / yellow
+          25-74 / green ≥75. */}
       <td className="px-3 py-2">
-        <div className="flex items-center justify-end gap-2 min-w-[8rem]">
-          <SegmentedBar
-            value={row.progressPercent}
-            segments={8}
-            height={12}
-            animate={false}
-            className="w-24"
-            ariaLabel={`${row.progressPercent} percent complete`}
+        <div className="flex items-center gap-2 min-w-[9rem]">
+          <ProgressBar
+            percent={row.progressPercent}
+            stretch
+            height={10}
+            className="flex-1"
           />
           <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums w-9 text-right">
             {row.progressPercent}%
@@ -1268,17 +1269,14 @@ function MobileCompRow({
         </button>
       </td>
 
-      {/* Completion — SegmentedBar viz (UX-006), matching the desktop
-          treatment. */}
+      {/* Completion — SOLID ProgressBar (Part B item 2), matching the
+          desktop treatment. */}
       <td className="px-3 py-2 align-top whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
-          <SegmentedBar
-            value={row.progressPercent}
-            segments={6}
-            height={11}
-            animate={false}
+          <ProgressBar
+            percent={row.progressPercent}
+            height={10}
             className="w-16"
-            ariaLabel={`${row.progressPercent} percent complete`}
           />
           <span className="text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
             {row.progressPercent}%

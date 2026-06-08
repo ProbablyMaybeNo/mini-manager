@@ -1,120 +1,65 @@
-import { Card } from "@/components/ui/Card";
-import { RadialGauge } from "@/components/viz/RadialGauge";
-import type { VizToneOrAuto } from "@/components/viz/vizTokens";
+import { Card, type CardAccent } from "@/components/ui/Card";
 import { clsx } from "clsx";
 
 /**
- * PHASE-1 viz — the KPI dial swaps the plain `CircularProgress` for the
- * bespoke, ticked + glowing `RadialGauge` (DESIGN_LANGUAGE §13, group 20
- * "terminal access" radial). The dashboard page still describes its dials
- * with the legacy CircularProgress tone vocabulary (ok/warning/neutral
- * etc.), so this maps those onto the gauge's phosphor tone names and the
- * page call-site is unchanged.
+ * DASH-KPI — the top KPI strip on the DASHBOARD.
+ *
+ * DASHBOARD-REDESIGN (Part B item 1) — rebuilt to match Ross's mockup:
+ * four COLOR-CODED stat cards, each a title bar + a single big CENTERED
+ * number, nothing else. The previous treatment (radial dials, baseline
+ * lines, unit captions, left-aligned numbers) is dropped — the mockup is
+ * "title + number only", which also reads cleaner against the inverted-
+ * pyramid 5-second-glance bar.
+ *
+ * Cards (left → right, by attention drop-off — lead metric top-left):
+ *   1. ACTIVE PROJECTS   green   — how many balls in the air (the lead).
+ *   2. COMPLETION %      yellow  — how far along the whole workbench is.
+ *   3. STREAK            purple  — am I keeping my rhythm.
+ *   4. TIME TOTAL        cyan    — time at the bench this week.
+ *
+ * Each card's NUMBER + title accent + edge glow render in the card's hue
+ * so the strip reads as four colour-coded readouts (the mockup), while the
+ * card frame keeps the terminal corner-ticks + coordinate tech label.
  */
-type LegacyDialTone =
-  | "auto"
-  | "ok"
-  | "warning"
-  | "danger"
-  | "info"
-  | "purple"
-  | "neutral";
 
-function dialToneToViz(tone: LegacyDialTone | undefined): VizToneOrAuto {
-  switch (tone) {
-    case "ok":
-      return "green";
-    case "warning":
-      return "amber";
-    case "danger":
-      return "red";
-    case "info":
-      return "cyan";
-    case "purple":
-      return "purple";
-    case "neutral":
-      return "neutral";
-    default:
-      return "auto";
-  }
-}
-
-/**
- * DASH-KPI (2026-06-05) — the top KPI strip on the DASHBOARD.
- *
- * Doc §14 "DASHBOARD — page composition" + §4 + §8: a thin strip of
- * big-number KPI cards at the very top of /projects, above the PROJECTS
- * table — the 5-second "where do I stand" answer. The inverted-pyramid
- * headline layer: KPIs top → table → detail widgets → spend line.
- *
- * Cards (left → right, by attention drop-off §4 — lead metric top-left):
- *   1. Active projects   — how many balls in the air (the lead).
- *   2. Avg completion    — how far along the whole workbench is.
- *   3. Streak            — am I keeping my rhythm (promoted from the
- *                          bottom-of-page widget; doc §14 calls this out).
- *   4. Painting time wk  — substitute for "models painted this week":
- *                          paint_sessions tracks duration, not model
- *                          counts, so the closest derivable metric is
- *                          time at the desk this week.
- *
- * PHASE-1 RE-SKIN (terminal rebuild, DESIGN_LANGUAGE §5/§7) — the strip is
- * re-skinned into mission-control STAT CARDS: each KPI is a near-black
- * Card carrying corner ticks (`ticks`) and a tiny coordinate-style tech
- * label on the top border (`techLabel`, e.g. `STAT ▸ 01`). The big number
- * renders in tabular-nums mono with the sanctioned phosphor glow; the unit
- * is a tracked-out mono caption. The LEAD metric (card index 0, top-left
- * per §4) takes the nested-border bezel + an extra-large readout so it
- * reads as the headline. Cyan is reserved for nav / CTA, so KPI NUMBERS
- * stay fg / green / amber / purple / muted — the corner ticks + tech label
- * carry the cyan-phosphor frame instead.
- */
+export type KpiColor = "green" | "yellow" | "purple" | "cyan";
 
 export interface KpiCardData {
   /** Short uppercase label, e.g. "ACTIVE PROJECTS". */
   label: string;
-  /** The big number / value string, e.g. "4", "62%", "8h 12m". */
+  /** The big number / value string, e.g. "05", "45%", "03", "05:47". */
   value: string;
-  /** Small unit / qualifier under the number, e.g. "in flight", "avg". */
-  unit: string;
-  /** Token colour class for the number, e.g. "text-[var(--color-green)]".
-   *  Status-coloured KPIs (streak) pass green/amber/muted; neutral KPIs
-   *  pass the default fg. Never cyan (reserved for nav/CTA). */
-  valueClassName: string;
-  /** Optional glow utility hue, paired with the value colour. KPIs are
-   *  the one place glow on a number is sanctioned (globals.css comment). */
-  glowClassName?: string;
-  /** Optional third-context-layer baseline line under the number
-   *  (doc §8) — e.g. the streak's "best 9 · 3 this wk vs 1 last". */
-  baseline?: string;
-  /** Accent bar hue on the card header. */
-  accentColor: "cyan" | "green" | "amber" | "purple" | "neutral";
-  /** aria-label for the value (spells out the unit for screen readers). */
+  /** The card's phosphor hue — drives the title accent, the big number
+   *  colour, and the in-hue edge glow. */
+  color: KpiColor;
+  /** aria-label for the value (spells out the metric for screen readers). */
   valueAriaLabel: string;
-  /** Optional circular dial (DESIGN_LANGUAGE §7.1) shown beside the number
-   *  for the headline-progress KPIs (avg completion, streak) — the
-   *  recurring moodboard gauge. `percent` drives the sweep; `tone` locks
-   *  the hue; `label`/`caption` override the centre readout (e.g. a raw
-   *  streak count instead of a %). KPIs without a meaningful ratio omit
-   *  it and keep the plain big number. */
-  dial?: {
-    percent: number;
-    tone?: LegacyDialTone;
-    label?: string;
-    caption?: string;
-    ariaLabel: string;
-  };
 }
+
+const COLOR_TEXT: Record<KpiColor, string> = {
+  green: "text-[var(--color-green)]",
+  yellow: "text-[var(--color-yellow)]",
+  purple: "text-[var(--color-purple-pastel)]",
+  cyan: "text-[var(--color-cyan)]",
+};
+
+/** Card accent-bar hue mapping (Card's CardAccent vocabulary). */
+const COLOR_ACCENT: Record<KpiColor, CardAccent> = {
+  green: "green",
+  yellow: "yellow",
+  purple: "purple",
+  cyan: "cyan",
+};
 
 interface Props {
   cards: ReadonlyArray<KpiCardData>;
 }
 
 /** Coordinate-style tech caption for the panel's top border — a diegetic
- *  registration tag (`STAT ▸ 01`) sequenced left → right. The lead card
- *  is flagged so its caption reads as the headline channel. */
-function techLabelFor(index: number, lead: boolean): string {
+ *  registration tag (`STAT ▸ 01`) sequenced left → right. */
+function techLabelFor(index: number): string {
   const n = String(index + 1).padStart(2, "0");
-  return lead ? `LEAD ▸ ${n}` : `STAT ▸ ${n}`;
+  return `STAT ▸ ${n}`;
 }
 
 export function DashboardKpiStrip({ cards }: Props) {
@@ -124,85 +69,37 @@ export function DashboardKpiStrip({ cards }: Props) {
       aria-label="Dashboard at a glance"
       data-kpi-strip
     >
-      {cards.map((card, index) => {
-        // Lead metric (top-left, §4) carries the nested-border bezel + the
-        // larger readout so it reads as the headline of the strip.
-        const isLead = index === 0;
-        return (
-          <Card
-            key={card.label}
-            title={card.label}
-            titleAs="h2"
-            accentColor={card.accentColor}
-            nested={isLead}
-            ticks
-            techLabel={techLabelFor(index, isLead)}
-            bodyClassName="flex flex-col"
-            // UX-008 — let the KPI title wrap to two lines instead of
-            // ellipsizing ("AVG COMPLET…", "PAINTING TI…") at 390px.
-            titleClassName="whitespace-normal leading-tight"
+      {cards.map((card, index) => (
+        <Card
+          key={card.label}
+          title={card.label}
+          titleAs="h2"
+          accentColor={COLOR_ACCENT[card.color]}
+          ticks
+          techLabel={techLabelFor(index)}
+          bodyClassName="flex items-center justify-center"
+          // Let a long KPI title wrap to two lines instead of ellipsizing
+          // ("COMPLETION %", "TIME TOTAL") at narrow widths (UX-008).
+          titleClassName="whitespace-normal leading-tight"
+        >
+          {/* The single big CENTERED number — the whole card body is just
+              this readout (mockup: "title bar + big centered number only").
+              tabular-nums keeps it anchored as values change; the sanctioned
+              KPI glow + the card's hue make it the colour-coded headline. */}
+          <span
+            className={clsx(
+              "block text-center tabular-nums tracking-wide font-medium leading-none py-2",
+              "text-4xl lg:text-5xl",
+              "glow-text-strong",
+              COLOR_TEXT[card.color],
+            )}
+            data-kpi-value
+            aria-label={card.valueAriaLabel}
           >
-            <div
-              className={clsx(
-                // UX-008 — at narrow widths (390px 2-up) the number and the
-                // radial gauge collided when forced side-by-side, so the
-                // gauge dropped on top of the unit caption. Stack the gauge
-                // BELOW the number/unit block by default and only sit it
-                // beside the number once there's room (sm+), where it no
-                // longer overlaps.
-                "flex flex-col items-start gap-3",
-                "sm:flex-row sm:items-center sm:justify-between",
-              )}
-              data-kpi-card
-              data-kpi-lead={isLead ? "true" : undefined}
-            >
-              <div className="flex flex-col gap-1 min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <span
-                    className={clsx(
-                      "tabular-nums tracking-wide font-medium leading-none",
-                      // Lead metric gets the larger readout; the rest stay
-                      // at the strip's standard big-number size.
-                      isLead ? "text-4xl" : "text-3xl",
-                      card.valueClassName,
-                      card.glowClassName,
-                    )}
-                    aria-label={card.valueAriaLabel}
-                  >
-                    {card.value}
-                  </span>
-                  <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]">
-                    {card.unit}
-                  </span>
-                </div>
-                {card.baseline ? (
-                  <p
-                    className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-subtle)]"
-                    data-kpi-baseline
-                  >
-                    {card.baseline}
-                  </p>
-                ) : null}
-              </div>
-              {/* Bespoke phosphor RADIAL GAUGE for the headline-progress
-                  KPIs — the moodboard group-20 "terminal access" dial
-                  (ticked graduations + glowing value-arc), superseding the
-                  plain CircularProgress (§13). */}
-              {card.dial ? (
-                <RadialGauge
-                  value={card.dial.percent}
-                  tone={dialToneToViz(card.dial.tone)}
-                  label={card.dial.label}
-                  caption={card.dial.caption}
-                  ariaLabel={card.dial.ariaLabel}
-                  size={isLead ? 84 : 76}
-                  className="shrink-0"
-                />
-              ) : null}
-            </div>
-          </Card>
-        );
-      })}
+            {card.value}
+          </span>
+        </Card>
+      ))}
     </div>
   );
 }
