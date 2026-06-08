@@ -27,13 +27,15 @@ interface Props {
  * layer. There are no zones, no separate Steps box, and no SLOTS/NOTES
  * segmented control.
  *
- * Item 5 — layout balance. RECIPE SLOTS + RECIPE NOTES split the row on a
- * proportional 3:2 ratio (was 1fr / fixed-320px, which read lopsided and
- * crushed the colour slots at wide widths). Both columns now grow with
- * the page so the slots get room without shoving notes off-balance. The
- * Inspo table sits below the row, spanning the FULL container width so its
- * left/right edges line up horizontally with the slots + notes above. On
- * mobile the columns stack and Inspo follows, full-width throughout.
+ * Item 2 (Ross — "what do we do with all this empty space?") — fill the
+ * page. The editor is a two-column grid that STRETCHES to equal heights
+ * (`items-stretch`): the left column holds the tall RECIPE SLOTS grid; the
+ * right column is a rail stacking RECIPE NOTES *and* INSPO, so the inspo
+ * table climbs up alongside the slots instead of stranding a wide dead
+ * zone below a half-empty page. Notes grows to fill the rail
+ * (`flex-1`) so the right column reaches the same height as the slots.
+ * Columns split on a proportional 3:2 ratio. On mobile everything stacks
+ * full-width (slots → notes → inspo).
  */
 export function RecipeEditorClient({
   recipe,
@@ -43,23 +45,26 @@ export function RecipeEditorClient({
   inspo = [],
 }: Props) {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-6">
-        <section className="space-y-3">
-          <SlotList
-            recipeId={recipe.id}
-            slots={slots}
-            ownedPaintIds={ownedPaintIds}
-            inventoryByPaintId={inventoryByPaintId}
-          />
-        </section>
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-6 items-stretch">
+      <section className="space-y-3 min-w-0">
+        <SlotList
+          recipeId={recipe.id}
+          slots={slots}
+          ownedPaintIds={ownedPaintIds}
+          inventoryByPaintId={inventoryByPaintId}
+        />
+      </section>
 
-        <section className="space-y-3">
-          <RecipeNotes recipeId={recipe.id} initialNotes={recipe.notesMd ?? ""} />
-        </section>
-      </div>
-
-      <RecipeInspo recipeId={recipe.id} initialRows={inspo} />
+      {/* Right rail — NOTES grows to fill, INSPO sits beneath it so the
+          rail reaches the slots' height and no empty band is left over. */}
+      <section className="flex flex-col gap-6 min-w-0">
+        <RecipeNotes
+          recipeId={recipe.id}
+          initialNotes={recipe.notesMd ?? ""}
+          className="flex-1"
+        />
+        <RecipeInspo recipeId={recipe.id} initialRows={inspo} />
+      </section>
     </div>
   );
 }

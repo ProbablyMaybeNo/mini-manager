@@ -277,24 +277,32 @@ describe("Item 4 — Inspo section on the recipe creator", () => {
   });
 });
 
-describe("Item 5 — balanced SLOTS/NOTES layout + full-width Inspo", () => {
+describe("Item 2 — fill the empty space (SLOTS left, NOTES+INSPO right rail)", () => {
   const src = read("src/components/recipes/RecipeEditorClient.tsx");
 
-  test("SLOTS vs NOTES split on a proportional ratio (not 1fr / fixed px)", () => {
+  test("SLOTS vs right-rail split on a proportional 3:2 ratio (not 1fr / fixed px)", () => {
     expect(src).toContain("md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
     expect(src).not.toContain("md:grid-cols-[minmax(0,1fr)_320px]");
   });
 
-  test("Inspo sits OUTSIDE the two-column grid (full container width)", () => {
-    // The RecipeInspo mount is a sibling of the grid div, not inside it,
-    // so it spans the full width and lines up with the columns above.
-    const gridEnd = src.indexOf("</div>", src.indexOf("grid-cols-1"));
-    const inspoIdx = src.indexOf("<RecipeInspo");
-    expect(gridEnd).toBeGreaterThan(-1);
-    expect(inspoIdx).toBeGreaterThan(gridEnd);
+  test("columns stretch to equal heights so no dead band is left over", () => {
+    // Ross: "what do we do with all this empty space?" — the grid stretches
+    // its columns so the right rail reaches the tall slots' height.
+    expect(src).toContain("items-stretch");
   });
 
-  test("the editor page widens its canvas for the bigger slot grid", () => {
+  test("INSPO moves INTO the right rail beneath NOTES (climbs alongside slots)", () => {
+    // The dead zone was a wide half-empty Inspo below a short page. Inspo
+    // now sits in the right rail under Notes, both inside the same <section>.
+    const notesIdx = src.indexOf("<RecipeNotes");
+    const inspoIdx = src.indexOf("<RecipeInspo");
+    expect(notesIdx).toBeGreaterThan(-1);
+    expect(inspoIdx).toBeGreaterThan(notesIdx);
+    // Notes grows to fill the rail so the column reaches the slots' height.
+    expect(src).toContain('className="flex-1"');
+  });
+
+  test("the editor page keeps its wide canvas for the bigger slot grid", () => {
     const page = read("src/app/recipes/[id]/page.tsx");
     expect(page).toContain("max-w-[96rem]");
     expect(page).not.toContain("max-w-7xl");
