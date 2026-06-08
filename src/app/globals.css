@@ -706,22 +706,56 @@ select.field-control {
   border: 1px solid var(--color-border-strong);
 }
 
-/* Title — the arcade display face (Press Start 2P). Page-top / hero
-   titles ONLY: a pixel display font is fatigue at any reading size, so
-   it is reserved for short, glanceable lockups. Pairs a tight line-box
-   with extra letter-spacing so the 8-bit glyphs don't crowd, and the
-   intense glow tier for max phosphor bloom on the headline. Consumers
-   keep their own font-size utility; this only sets family + flavour. */
+/* Title — the page-top / hero display lockup on the UAV OSD Mono face.
+   Page-top / hero titles ONLY, reserved for short, glanceable lockups.
+   Pairs a tight line-box with extra letter-spacing so the squared OSD
+   glyphs don't crowd. Consumers keep their own font-size utility; this
+   only sets family + flavour.
+
+   STYLISED TREATMENT (dashboard-polish) — Ross: "Don't love this font…
+   want something with a shadow, outline, or whatever. Something more
+   stylistic." The FACE stays UAV OSD Mono — this is about the TREATMENT,
+   so the page titles (DASHBOARD, FOCUS, …) read as a *lit terminal
+   headline* keyed over the screen, not a plain heading. Two layered
+   effects, ordered glyph-outward:
+
+     1. A dark CONTOUR — four 1px offsets in the near-black page ground
+        (`--color-bg`) ringing the glyph. This reads as a subtle OUTLINE
+        that crisps the letterform against the phosphor bloom + whatever
+        panel sits behind it, the way an OSD caption is keyed over live
+        video. Chosen over `-webkit-text-stroke`, which thins the glyph
+        and clips terminals — the contour keeps the letter full-weight
+        and legible (the §3 readability floor).
+     2. The PHOSPHOR HALO — the existing intense glow tier (currentColor),
+        so the headline blooms in its own hue OUTSIDE the dark contour.
+
+   Glow is decorative light at low alpha — glyph-vs-ground contrast is
+   unchanged, WCAG-AA holds. Under reduced-motion the animated halo drops
+   but the STATIC contour is kept, so the stylised outline persists and
+   the title still reads as a lit OSD headline rather than flat text. */
 .title-display {
   font-family: var(--font-display);
   font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.4;
   text-transform: uppercase;
-  text-shadow: var(--glow-intense);
+  text-shadow:
+    1px 0 0 var(--color-bg),
+    -1px 0 0 var(--color-bg),
+    0 1px 0 var(--color-bg),
+    0 -1px 0 var(--color-bg),
+    var(--glow-intense);
 }
 @media (prefers-reduced-motion: reduce) {
-  .title-display { text-shadow: none; }
+  /* Keep the static dark contour (the stylised outline); drop only the
+     animated phosphor halo so the headline still reads as a lit OSD title. */
+  .title-display {
+    text-shadow:
+      1px 0 0 var(--color-bg),
+      -1px 0 0 var(--color-bg),
+      0 1px 0 var(--color-bg),
+      0 -1px 0 var(--color-bg);
+  }
 }
 
 /* Section title — mono, small, underlined, all-caps. Replaces ASCII
