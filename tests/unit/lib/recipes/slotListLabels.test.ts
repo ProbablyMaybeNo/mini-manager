@@ -316,3 +316,29 @@ describe("B5 — single 'Recipe notes' box", () => {
     expect(src).not.toContain('title="Notes"');
   });
 });
+
+describe("Item 3 — thin (1px) section borders, no box-in-box double frame", () => {
+  // Ross: the recipe section borders were way too thick. The cause was the
+  // `nested` Card treatment (.card-nested) which draws a SECOND inner ring
+  // inset from the 1px outer border — reading as a heavy double frame. The
+  // SLOTS / NOTES / INSPO cards drop `nested` so each keeps the single
+  // gold-standard 1px phosphor border (ticks + techLabel chrome stays).
+  test("SlotList SLOTS card is not the nested double-border treatment", () => {
+    const src = read("src/components/recipes/SlotList.tsx");
+    expect(src).toContain('techLabel="SLOTS"');
+    expect(src).not.toMatch(/techLabel="SLOTS"[\s\S]{0,200}\bnested\b/);
+    expect(src).not.toMatch(/\bnested\b[\s\S]{0,200}techLabel="SLOTS"/);
+  });
+
+  test("RecipeNotes NOTES card is not the nested double-border treatment", () => {
+    const src = read("src/components/recipes/RecipeNotes.tsx");
+    expect(src).toContain('techLabel="NOTES"');
+    expect(src).not.toMatch(/title="Recipe notes"[\s\S]{0,120}\bnested\b/);
+  });
+
+  test("RecipeInspo INSPO card is not the nested double-border treatment", () => {
+    const src = read("src/components/recipes/RecipeInspo.tsx");
+    expect(src).toContain('techLabel="INSPO"');
+    expect(src).not.toMatch(/title="Inspo"[\s\S]{0,120}\bnested\b/);
+  });
+});

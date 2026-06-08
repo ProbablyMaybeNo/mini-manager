@@ -52,7 +52,6 @@ export function RecipeNotes({ recipeId, initialNotes, className }: Props) {
   return (
     <Card
       title="Recipe notes"
-      nested
       ticks
       techLabel="NOTES"
       className={className}

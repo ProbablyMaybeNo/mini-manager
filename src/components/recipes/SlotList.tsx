@@ -257,7 +257,6 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
     <>
       <Card
         title={`Recipe slots · ${localSlots.length}`}
-        nested
         ticks
         techLabel="SLOTS"
         headerActions={
