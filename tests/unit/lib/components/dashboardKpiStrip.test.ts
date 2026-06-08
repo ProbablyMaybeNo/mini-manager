@@ -215,33 +215,22 @@ describe("activityTrendSeries (PHASE-1 viz trend graph)", () => {
   });
 });
 
-describe("DASHBOARD page wires the bespoke trend panel", () => {
+describe("DASHBOARD-POLISH (fix #3) — redundant ACTIVITY-TREND panel removed", () => {
+  // Ross flagged the bespoke activity-trend panel as a redundant section,
+  // and the mockup carries no trend panel: the same activity signal is
+  // already surfaced by the right-rail ACTIVITY tracker, and COMPLETION %
+  // owns the output-rate readout in the KPI strip. The panel was dropped
+  // from the dashboard (the DashboardTrendPanel component + the
+  // activityTrendSeries helper stay in the tree, just unused by the page).
   const page = read("src/app/projects/page.tsx");
-  const panel = read("src/components/dashboard/DashboardTrendPanel.tsx");
 
-  test("page derives the trend series + renders the trend panel", () => {
-    expect(page).toContain("activityTrendSeries");
-    expect(page).toContain("<DashboardTrendPanel");
+  test("the dashboard page no longer renders the trend panel", () => {
+    expect(page).not.toContain("<DashboardTrendPanel");
+    expect(page).not.toContain("DashboardTrendPanel");
   });
 
-  test("trend panel sits between the KPI strip and the PROJECTS table", () => {
-    const kpi = page.indexOf("<DashboardKpiStrip");
-    const trend = page.indexOf("<DashboardTrendPanel");
-    const table = page.indexOf('title="PROJECTS"');
-    expect(kpi).toBeLessThan(trend);
-    expect(trend).toBeLessThan(table);
-  });
-
-  test("panel uses the bespoke viz kit (area graph + sparkline + segmented bar)", () => {
-    expect(panel).toContain("AreaGraph");
-    expect(panel).toContain("Sparkline");
-    expect(panel).toContain("SegmentedBar");
-  });
-
-  test("panel reuses the real activity data, no new query", () => {
-    // The series is passed in from the page's existing getActivityByDay
-    // window — the panel itself imports no db query.
-    expect(panel).not.toContain("@/db/queries");
+  test("the dashboard page no longer derives the trend series", () => {
+    expect(page).not.toContain("activityTrendSeries");
   });
 });
 

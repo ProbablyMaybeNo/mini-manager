@@ -21,9 +21,7 @@ import {
   averageCompletion,
   formatTimeTotal,
   padCount,
-  activityTrendSeries,
 } from "@/components/dashboard/dashboardKpiHelpers";
-import { DashboardTrendPanel } from "@/components/dashboard/DashboardTrendPanel";
 import { computeStreak } from "@/components/planner/plannerStreakHelpers";
 import { getActivityByDay } from "@/db/queries/activityLog";
 import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
@@ -146,12 +144,6 @@ export default async function DashboardPage({
   // paint_sessions records duration, not model counts.
   const streak = computeStreak(streakDays, now);
   const avgCompletion = averageCompletion(allProjects);
-  // PHASE-1 viz — the activity-trend series for the bespoke AREA GRAPH /
-  // SPARKLINE (DESIGN_LANGUAGE §13). Re-uses the SAME 60-day activity_log
-  // window already fetched for the streak (no new query) and gap-fills it
-  // to a contiguous daily-count series, oldest → newest.
-  const TREND_DAYS = 60;
-  const trendSeries = activityTrendSeries(streakDays, now, TREND_DAYS);
   const activeCount = activeProjectCount(allProjects);
   const kpiCards: KpiCardData[] = [
     {
@@ -302,15 +294,13 @@ export default async function DashboardPage({
               inverted pyramid (doc §14/§4). */}
           <DashboardKpiStrip cards={kpiCards} />
 
-          {/* PHASE-1 viz — the bespoke activity-trend panel (area graph +
-              sparkline + segmented output-rate bar), reading like moodboard
-              groups 20 + 27. Sits between the headline KPIs and the
-              granular table per the inverted pyramid. */}
-          <DashboardTrendPanel
-            trend={trendSeries}
-            windowDays={TREND_DAYS}
-            avgCompletion={avgCompletion}
-          />
+          {/* DASHBOARD-POLISH (fix #3) — the bespoke ACTIVITY-TREND panel
+              (area graph + sparkline + output-rate bar) was REMOVED here.
+              Ross flagged it as a redundant section, and the mockup carries
+              no trend panel: the same activity signal is already surfaced by
+              the right-rail ACTIVITY tracker below, and COMPLETION % already
+              owns the output-rate readout in the KPI strip. Dropping it
+              tightens the dashboard to the mockup (KPIs → table + rail). */}
 
           {/* DASHBOARD-REDESIGN (Part B items 2/3) — the mockup's main row:
               the PROJECTS mission table on the left (wide) beside the RIGHT
