@@ -15,7 +15,7 @@ import {
   FocusPanel,
   type FocusSlotView,
 } from "@/components/focus/FocusPanel";
-import { Stopwatch, _formatRollup } from "@/components/focus/Stopwatch";
+import { Stopwatch } from "@/components/focus/Stopwatch";
 import { PlannerInspoCell } from "@/components/planner/PlannerInspoCell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -223,6 +223,20 @@ export async function DashboardFocusSection({
  * the picker. Pure server markup (no interactivity), so the signature
  * stopwatch is visible + self-explanatory before any setup.
  */
+// Server-safe rollup formatter. The identical helper in Stopwatch.tsx lives
+// in a "use client" module, so calling it during server render of this
+// (server) component threw "Attempted to call _formatRollup() from the
+// server" → 500'd the whole dashboard whenever no project was focused.
+function _formatRollup(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  if (s === 0) return "0m";
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
 function StopwatchEmptyShell({
   todaySeconds,
   weekSeconds,
