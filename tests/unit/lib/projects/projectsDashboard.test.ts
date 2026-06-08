@@ -79,10 +79,12 @@ describe("ProjectsDashboardTable component surface", () => {
     expect(src).toContain("type-chip-cyan");
   });
 
-  test("Completion column uses the SegmentedBar viz (UX-006)", () => {
-    // UX-006 replaced the thin smooth ProgressBar with the moodboard
-    // group-27 segmented-block readout, right-aligned + tabular-nums.
-    expect(src).toContain("<SegmentedBar");
+  test("Completion column uses the solid ProgressBar (DASHBOARD-REDESIGN)", () => {
+    // Part B item 2 — Ross's mockup wants a SOLID gold-standard progress bar
+    // for completion, not the segmented blocks. The cell renders a stretched
+    // <ProgressBar> + a tabular-nums readout chip.
+    expect(src).toContain("<ProgressBar");
+    expect(src).not.toContain("<SegmentedBar");
     expect(src).toContain("row.progressPercent");
   });
 

@@ -95,8 +95,9 @@ describe("ProjectsDashboardTable — mobile comparison table (M3)", () => {
     expect(row).toMatch(/setSheetField\("priority"\)/);
     expect(row).toMatch(/AttachRecipeModal/);
     expect(row).toMatch(/DeleteProjectButton/);
-    // UX-006 — completion is now the SegmentedBar viz (was ProgressBar).
-    expect(row).toMatch(/<SegmentedBar/);
+    // DASHBOARD-REDESIGN (Part B item 2) — completion is the SOLID
+    // ProgressBar (gold-standard), matching the desktop treatment.
+    expect(row).toMatch(/<ProgressBar/);
   });
 
   test("row editing opens a NONMODAL bottom sheet with X + Back dismiss", () => {
