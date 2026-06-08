@@ -42,19 +42,24 @@ export async function PlannerCalendarCell({ calYear, calMonth }: Props) {
     // P14.8 — tighter inner padding on mobile so the 7-col day grid
     // can clear the ~40px tap-target floor at 375px viewport. The
     // !-overrides beat the global .card-body media-query padding.
+    // DASHBOARD-REDESIGN (Part B item 3) — the calendar lives in the right
+    // rail now, so it's WAY smaller + SCROLLABLE per Ross's mockup: a tighter
+    // PLANNER panel whose body is height-capped and scrolls internally
+    // (max-h + overflow-y-auto) so the month grid + add-event form never push
+    // the rail taller than the table beside it.
     <Card
-      title="CALENDAR"
+      title="PLANNER"
       titleAs="h3"
       accentColor="amber"
       ticks
       techLabel="CAL ▸ MONTH"
       className="h-full"
-      bodyClassName="!p-2 sm:!p-3.5"
+      bodyClassName="!p-2 sm:!p-3 max-h-[24rem] overflow-y-auto"
     >
-      <div className="space-y-3">
-        <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
-          Your painting calendar — tournaments, deadlines, battles.
-          Add an event to start.
+      <div className="space-y-2">
+        <p className="text-2xs text-[var(--color-fg-muted)] leading-snug">
+          Your painting calendar — tournaments, deadlines, battles. Add an
+          event to start.
         </p>
         <CalendarMonthGrid
           events={events.map((ev) => ({

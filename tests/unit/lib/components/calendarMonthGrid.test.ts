@@ -147,11 +147,13 @@ describe("Calendar mobile responsiveness (P14.8)", () => {
     expect(gridSrc).toContain("sm:min-h-[60px]");
   });
 
-  test("CALENDAR card body shrinks its padding on mobile", () => {
-    // Card-in-Card chrome eats grid width; the !-overrides beat the
-    // global .card-body media-query padding.
+  test("PLANNER card body is compact + scrollable (DASHBOARD-REDESIGN)", () => {
+    // Part B item 3 — the right-rail calendar is WAY smaller + scrollable:
+    // tight padding plus a height cap with internal overflow scroll.
     expect(cellSrc).toContain("bodyClassName");
-    expect(cellSrc).toMatch(/!p-2\s+sm:!p-3\.5/);
+    expect(cellSrc).toMatch(/!p-2\s+sm:!p-3\b/);
+    expect(cellSrc).toContain("overflow-y-auto");
+    expect(cellSrc).toMatch(/max-h-\[/);
   });
 });
 
@@ -163,8 +165,10 @@ describe("PlannerCalendarCell wiring (P14.3)", () => {
     expect(src).toMatch(/Add an event to start/);
   });
 
-  test("renders inside a Card titled CALENDAR with the amber accent", () => {
-    expect(src).toMatch(/title=["']CALENDAR["']/);
+  test("renders inside a Card titled PLANNER with the amber accent", () => {
+    // DASHBOARD-REDESIGN — the right-rail calendar panel is titled PLANNER
+    // (Ross's mockup), keeping the amber accent.
+    expect(src).toMatch(/title=["']PLANNER["']/);
     expect(src).toMatch(/accentColor=["']amber["']/);
   });
 

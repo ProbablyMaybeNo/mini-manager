@@ -84,14 +84,17 @@ export function ActivitySkeleton() {
   );
 }
 
-/** Mirrors PlannerCalendarCell: an intro line + a 7-col month grid. */
+/** Mirrors PlannerCalendarCell: an intro line + a 7-col month grid.
+ *  DASHBOARD-REDESIGN — titled PLANNER to match the relocated, compact +
+ *  scrollable right-rail calendar cell so the frame is identical before
+ *  and after the data lands. */
 export function CalendarSkeleton() {
   return (
     <SkeletonCard
-      title="CALENDAR"
+      title="PLANNER"
       accentColor="amber"
       techLabel="CAL ▸ MONTH"
-      bodyClassName="!p-2 sm:!p-3.5"
+      bodyClassName="!p-2 sm:!p-3 max-h-[24rem] overflow-y-auto"
     >
       <div className="space-y-3">
         <Bar className="h-3 w-3/4" />

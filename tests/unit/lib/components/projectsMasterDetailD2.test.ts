@@ -71,7 +71,9 @@ describe("FOCUS-DASH — /projects page is the DASHBOARD", () => {
 
   test("H1 reads DASHBOARD; the projects table is titled PROJECTS", () => {
     expect(page).toMatch(/<h1[^>]*>\s*DASHBOARD\s*<\/h1>/);
-    expect(page).toMatch(/<Card title="PROJECTS"/);
+    // DASHBOARD-REDESIGN — the PROJECTS Card is multi-line now (it sits in
+    // the table+rail grid), so match the title across whitespace.
+    expect(page).toMatch(/<Card\s+title="PROJECTS"/);
   });
 
   test("renders the full-width DashboardProjectsTable (not the workspace)", () => {

@@ -284,23 +284,34 @@ export default async function DashboardPage({
             avgCompletion={avgCompletion}
           />
 
-          {/* PHASE-1 cohesion — the PROJECTS table panel carries the same
-              corner ticks + coordinate tech label as the KPI cards + the
-              widget panels, so the whole screen reads as one mission-
-              control surface rather than mixed card styles. */}
-          <Card title="PROJECTS" accentColor="cyan" ticks techLabel="DB ▸ PROJECTS">
-            <DashboardProjectsTable
-              rows={rows}
-              ownedRecipes={ownedRecipes}
-              projectNameById={projectNameById}
-              focusProjectId={focusProjectId}
-            />
-          </Card>
+          {/* DASHBOARD-REDESIGN (Part B items 2/3) — the mockup's main row:
+              the PROJECTS mission table on the left (wide) beside the RIGHT
+              RAIL (compact scrollable PLANNER calendar + ACTIVITY tracker).
+              On `lg+` the table takes 2 of 3 columns and the rail the third;
+              below `lg` the rail stacks under the table. */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            <div className="lg:col-span-2 min-w-0">
+              <Card
+                title="PROJECTS"
+                accentColor="cyan"
+                ticks
+                techLabel="DB ▸ PROJECTS"
+              >
+                <DashboardProjectsTable
+                  rows={rows}
+                  ownedRecipes={ownedRecipes}
+                  projectNameById={projectNameById}
+                  focusProjectId={focusProjectId}
+                />
+              </Card>
+            </div>
+            {/* Right rail — the relocated planner widgets, now stacked. */}
+            <aside className="lg:col-span-1 min-w-0" aria-label="Planner & activity">
+              <DashboardWidgets calYear={calYear} calMonth={calMonth} />
+            </aside>
+          </div>
         </>
       )}
-
-      {/* The planner widgets that moved here from the FOCUS screen. */}
-      <DashboardWidgets calYear={calYear} calMonth={calMonth} />
 
       <RecentlyBoughtLine />
     </div>

@@ -42,7 +42,8 @@ describe("DashboardSkeletons component", () => {
 
   test("mirrors both widget cells (Activity list + Calendar grid)", () => {
     expect(src).toContain("ACTIVITY");
-    expect(src).toContain("CALENDAR");
+    // DASHBOARD-REDESIGN — the calendar cell is the right-rail PLANNER now.
+    expect(src).toContain("PLANNER");
     // Calendar skeleton mirrors the 7-col month grid.
     expect(src).toContain("grid-cols-7");
   });
