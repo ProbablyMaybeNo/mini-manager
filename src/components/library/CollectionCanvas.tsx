@@ -32,7 +32,7 @@ import {
   cellRectAt,
   computeCanvasLayout,
   dotMetricsForCell,
-  fillHeightLayout,
+  fitWithinLayout,
   indexAtPoint,
   showsOverlayDot,
 } from "./heatSinkHelpers";
@@ -61,10 +61,12 @@ interface Props {
    */
   cellMinPx?: number;
   /**
-   * LIB-COLORMAP-POLISH (1) — when true, the canvas measures its
-   * container's height and grows the cells (via `fillHeightLayout`) so the
-   * spectrum fills the available panel height instead of rendering at its
-   * intrinsic (short) height. Off by default → legacy width-only layout.
+   * LIB-COLORMAP-FIT (1) — when true, the canvas measures its container's
+   * height and sizes the grid (via `fitWithinLayout`) so the WHOLE spectrum
+   * is visible inside the panel with no vertical scroll: cells grow to fill
+   * spare height, or shrink below the min edge when the catalog is too large
+   * for the panel — always fitting both width and height. Off by default →
+   * legacy width-only layout.
    */
   fillHeight?: boolean;
 }
@@ -92,7 +94,7 @@ export function CollectionCanvas({
   const resolveLayout = useCallback(
     (width: number, height: number): CanvasLayout =>
       fillHeight
-        ? fillHeightLayout(cells.length, width, height, cellMinPx)
+        ? fitWithinLayout(cells.length, width, height, cellMinPx)
         : computeCanvasLayout(cells.length, width, cellMinPx),
     [cells.length, cellMinPx, fillHeight],
   );

@@ -235,8 +235,15 @@ export function CollectionPanel({
       />
 
       {/* The pixel spectrum — the navigator. Clicking a cell scrolls the
-          main list to that paint's hue section (no popup, no selection). */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+          main list to that paint's hue section (no popup, no selection).
+
+          LIB-COLORMAP-FIT (1) — `overflow-hidden` (was `overflow-y-auto`):
+          `fitWithinLayout` now sizes the whole map to fit this box on both
+          axes, so the entire colour map is visible with no scroll (Ross:
+          "fit the entire color map all within the side panel without
+          needing to scroll"). flex-1/min-h-0 lets this region absorb
+          whatever height the header + legends + readouts leave. */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         {visibleCells.length === 0 ? (
           <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug py-2">
             No paints match this filter. Re-add a brand to see the spectrum.

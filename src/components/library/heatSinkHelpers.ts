@@ -325,6 +325,66 @@ export function fillHeightLayout(
   return best;
 }
 
+/**
+ * LIB-COLORMAP-FIT (1) — "show the whole map, no scroll" layout.
+ *
+ * Ross's ask: *"fit the entire color map all within the side panel without
+ * needing to scroll up or down."* `fillHeightLayout` grows cells to fill the
+ * height but, when the catalog is large and the panel short (the real case —
+ * ~7k paints in a ~320px column), the densest layout at the min edge STILL
+ * overflows and the canvas scrolls. This variant guarantees the full grid is
+ * visible by treating BOTH width and height as hard caps:
+ *
+ *   1. If the grid already fits at/above the min edge, defer to
+ *      `fillHeightLayout` (largest cells that fit — the nice case).
+ *   2. Otherwise shrink cells BELOW the min edge by ADDING columns until the
+ *      grid's height fits `heightPx`. More columns ⇒ smaller cells ⇒ fewer
+ *      rows ⇒ a shorter grid. We pick the FEWEST columns (largest cells)
+ *      whose height still fits, so the map is as legible as possible while
+ *      remaining fully visible.
+ *
+ * Cells are always `widthPx / cols`, so the width cap is satisfied by
+ * construction; the height search makes the height cap hold too — the whole
+ * map fits inside `widthPx × heightPx` with no overflow on either axis.
+ *
+ * Pure: no DOM, no React. `heightPx <= 0`/`widthPx <= 0` (unmeasured) falls
+ * back to the width-only densest layout so the first paint is stable until
+ * the ResizeObserver reports a real box.
+ */
+export function fitWithinLayout(
+  count: number,
+  widthPx: number,
+  heightPx: number,
+  cellEdgePx: number,
+): CanvasLayout {
+  const densest = computeCanvasLayout(count, widthPx, cellEdgePx);
+  if (count === 0 || heightPx <= 0 || widthPx <= 0) return densest;
+
+  // Fits at the min edge → grow cells to fill the height (the nice path).
+  if (densest.height <= heightPx) {
+    return fillHeightLayout(count, widthPx, heightPx, cellEdgePx);
+  }
+
+  // Too tall at the min edge — shrink cells below the floor by adding
+  // columns until the grid's height fits. Search upward from the densest
+  // column count for the FIRST (fewest-column → largest-cell) layout that
+  // fits the height; that is the most legible fully-visible map.
+  for (let cols = densest.cols + 1; cols <= count; cols++) {
+    const cellSize = widthPx / cols;
+    const rows = Math.ceil(count / cols);
+    const height = rows * cellSize;
+    if (height <= heightPx) {
+      return { cols, rows, cellSize, width: widthPx, height };
+    }
+  }
+
+  // Degenerate: even one cell per column (cols === count, a single row of
+  // hair-thin cells) is taller than the panel. Return that single-row layout
+  // — the shortest possible grid — so we never scroll vertically.
+  const cellSize = widthPx / count;
+  return { cols: count, rows: 1, cellSize, width: widthPx, height: cellSize };
+}
+
 /** Bounding rect (CSS px) of a cell at the given flat index. */
 export interface CellRect {
   x: number;
