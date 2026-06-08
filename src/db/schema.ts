@@ -296,9 +296,57 @@ export type WishlistCategory = (typeof wishlistCategories)[number];
  * string values are no longer in the application's enum — the
  * Drizzle migration in this milestone rewrites every existing row
  * to the new vocabulary in-place.
+ *
+ * COLLECTIONS rebuild (batch/collections-rebuild): the wishlist surface
+ * became the **COLLECTIONS** page — two tables driven off `wishlist_item`.
+ * PAINTS and MODELS need DIFFERENT status vocabularies, so the column's
+ * application-level enum is the UNION of both sets. There is no DB CHECK
+ * constraint on `status` (it's a plain text column), so widening the union
+ * needs NO destructive migration — existing rows keep their value and the
+ * new lifecycle stages become assignable.
+ *
+ *   Paint statuses : WISHLIST · OWNED · HOLD
+ *   Model statuses : WISHLIST · OWNED · BUILT · PRIMED · PAINTED · BASED · COMPLETE
+ *
+ * `PURCHASED` is retained as a deprecated-but-valid value so pre-rebuild
+ * rows (and the legacy MarkBought flow / dashboard "recently bought"
+ * readouts) keep parsing. New paint rows use OWNED instead. The two
+ * per-kind subsets below are what the COLLECTIONS pickers actually surface.
  */
-export const wishlistStatuses = ["WISHLIST", "PURCHASED", "HOLD"] as const;
+export const wishlistStatuses = [
+  "WISHLIST",
+  "OWNED",
+  "HOLD",
+  "BUILT",
+  "PRIMED",
+  "PAINTED",
+  "BASED",
+  "COMPLETE",
+  // Deprecated — pre-COLLECTIONS rows + legacy MarkBought / dashboard
+  // "recently bought" readouts. Not offered in the new pickers.
+  "PURCHASED",
+] as const;
 export type WishlistStatus = (typeof wishlistStatuses)[number];
+
+/** The status set a PAINT row can hold — the COLLECTIONS paint table's
+ *  status picker iterates this (not the full union). */
+export const paintCollectionStatuses = ["WISHLIST", "OWNED", "HOLD"] as const;
+export type PaintCollectionStatus = (typeof paintCollectionStatuses)[number];
+
+/** The status set a MODEL row can hold — the COLLECTIONS model table's
+ *  status picker iterates this. Mirrors the project stage lifecycle
+ *  (built → primed → painted → based → complete) plus the pre-acquisition
+ *  WISHLIST / OWNED states. */
+export const modelCollectionStatuses = [
+  "WISHLIST",
+  "OWNED",
+  "BUILT",
+  "PRIMED",
+  "PAINTED",
+  "BASED",
+  "COMPLETE",
+] as const;
+export type ModelCollectionStatus = (typeof modelCollectionStatuses)[number];
 
 /**
  * P12.11 — wishlist_item.kind column. Splits the wishlist into
@@ -309,6 +357,33 @@ export type WishlistStatus = (typeof wishlistStatuses)[number];
  */
 export const wishlistKinds = ["paint", "model"] as const;
 export type WishlistKind = (typeof wishlistKinds)[number];
+
+/**
+ * COLLECTIONS paint `type` vocabulary. Distinct from `category`
+ * (Box / Bits / Paint / Tool…), this is the PAINT-specific medium type
+ * the COLLECTIONS paint table surfaces in its `type` column: Contrast /
+ * Wash / Acrylic / Varnish / Glaze / etc. Mirrors the static catalog's
+ * `paintTypes` (src/lib/paints/types.ts) with the brief's extras folded
+ * in (Acrylic, Glaze, Enamel, Oil). Nullable on the row — null renders
+ * as "—". No DB CHECK (plain text column), validated app-side.
+ */
+export const collectionPaintTypes = [
+  "Acrylic",
+  "Contrast",
+  "Wash",
+  "Glaze",
+  "Metallic",
+  "Varnish",
+  "Primer",
+  "Air",
+  "Ink",
+  "Enamel",
+  "Oil",
+  "Pigment",
+  "Effect",
+  "Other",
+] as const;
+export type CollectionPaintType = (typeof collectionPaintTypes)[number];
 
 export const wishlistItems = sqliteTable(
   "wishlist_item",
@@ -329,6 +404,25 @@ export const wishlistItems = sqliteTable(
     category: text("category", { enum: wishlistCategories })
       .notNull()
       .default("Other"),
+    /**
+     * COLLECTIONS rebuild — additive columns (migration 0021).
+     *
+     * `company`  — PAINT rows: the manufacturer / paint line owner
+     *              (Citadel, Vallejo, Army Painter…), distinct from
+     *              `vendor` which is the STORE the painter buys from.
+     * `paintType`— PAINT rows: the medium type (Contrast / Wash / …),
+     *              shown in the paint table's `type` column.
+     * `game`     — MODEL rows: the game system (Warhammer 40k, AoS…).
+     * `army`     — MODEL rows: the faction / army the model belongs to.
+     *
+     * All four nullable; existing rows backfill to NULL. They're free
+     * text at the DB layer (no CHECK); `paintType` is validated against
+     * `collectionPaintTypes` at the action layer.
+     */
+    company: text("company"),
+    paintType: text("paint_type"),
+    game: text("game"),
+    army: text("army"),
     priority: text("priority", { enum: priorities }).notNull().default("Medium"),
     status: text("status", { enum: wishlistStatuses })
       .notNull()

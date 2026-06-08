@@ -93,12 +93,41 @@ describe("inferWishlistKind — default + fallback", () => {
   });
 });
 
-describe("Wishlist schema — Phase-12 status + kind vocabulary", () => {
-  test("wishlistStatuses union is exactly Ross's locked set", async () => {
+describe("Wishlist schema — status + kind vocabulary", () => {
+  test("wishlistStatuses union covers paint + model collection sets", async () => {
+    // COLLECTIONS rebuild widened the union to the UNION of the paint set
+    // (WISHLIST/OWNED/HOLD) and the model lifecycle (WISHLIST/OWNED/BUILT/
+    // PRIMED/PAINTED/BASED/COMPLETE), keeping legacy PURCHASED for old rows.
     const { wishlistStatuses } = await import("@/db/schema");
     expect([...wishlistStatuses].sort()).toEqual(
-      ["HOLD", "PURCHASED", "WISHLIST"].sort(),
+      [
+        "BASED",
+        "BUILT",
+        "COMPLETE",
+        "HOLD",
+        "OWNED",
+        "PAINTED",
+        "PRIMED",
+        "PURCHASED",
+        "WISHLIST",
+      ].sort(),
     );
+  });
+
+  test("per-kind status subsets are the picker sets", async () => {
+    const { paintCollectionStatuses, modelCollectionStatuses } = await import(
+      "@/db/schema"
+    );
+    expect([...paintCollectionStatuses]).toEqual(["WISHLIST", "OWNED", "HOLD"]);
+    expect([...modelCollectionStatuses]).toEqual([
+      "WISHLIST",
+      "OWNED",
+      "BUILT",
+      "PRIMED",
+      "PAINTED",
+      "BASED",
+      "COMPLETE",
+    ]);
   });
 
   test("wishlistKinds union is exactly 'paint' | 'model'", async () => {

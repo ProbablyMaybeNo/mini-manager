@@ -9,6 +9,7 @@ import {
   wishlistCategories,
   wishlistKinds,
   wishlistStatuses,
+  collectionPaintTypes,
   priorities,
   type WishlistItem,
 } from "@/db/schema";
@@ -35,6 +36,13 @@ const baseFields = {
     .toUpperCase()
     .optional(),
   category: z.enum(wishlistCategories).optional(),
+  // COLLECTIONS rebuild — new structured fields.
+  company: z.string().trim().max(120).nullish(),
+  paintType: z.enum(collectionPaintTypes).nullish(),
+  game: z.string().trim().max(120).nullish(),
+  army: z.string().trim().max(120).nullish(),
+  kind: z.enum(wishlistKinds).optional(),
+  status: z.enum(wishlistStatuses).optional(),
   priority: z.enum(priorities).optional(),
   projectId: z.string().min(1).max(64).nullish(),
   notesMd: z.string().max(10000).nullish(),
@@ -105,22 +113,32 @@ export async function createWishlistItem(
         imageUrl: d.imageUrl ?? null,
         sourceUrl: d.sourceUrl ?? null,
         vendor: d.vendor ?? null,
+        company: d.company ?? null,
+        paintType: d.paintType ?? null,
+        game: d.game ?? null,
+        army: d.army ?? null,
         price: priceToCents(d.price ?? null),
         currency: d.currency ?? "USD",
         category: d.category ?? "Other",
         priority: d.priority ?? "Medium",
-        kind: inferWishlistKind({
-          title: d.title,
-          vendor: d.vendor ?? null,
-          category: d.category ?? null,
-        }),
+        status: d.status ?? "WISHLIST",
+        // COLLECTIONS — an explicit kind (the painter chose Paint vs Model
+        // when adding) wins; otherwise fall back to the title/vendor
+        // heuristic so URL/manual quick-adds still auto-sort.
+        kind:
+          d.kind ??
+          inferWishlistKind({
+            title: d.title,
+            vendor: d.vendor ?? null,
+            category: d.category ?? null,
+          }),
         projectId: d.projectId ?? null,
         notesMd: d.notesMd ?? null,
       })
       .returning();
     const row = inserted[0];
     if (!row) return { ok: false, error: "Insert returned no row" };
-    revalidatePath("/wishlist");
+    revalidatePath("/collections");
     return { ok: true, data: row };
   } catch (err) {
     return {
@@ -156,6 +174,12 @@ export async function updateWishlistItem(
   if (patch.price !== undefined) patchValues.price = priceToCents(patch.price ?? null);
   if (patch.currency !== undefined) patchValues.currency = patch.currency;
   if (patch.category !== undefined) patchValues.category = patch.category;
+  if (patch.company !== undefined) patchValues.company = patch.company ?? null;
+  if (patch.paintType !== undefined) patchValues.paintType = patch.paintType ?? null;
+  if (patch.game !== undefined) patchValues.game = patch.game ?? null;
+  if (patch.army !== undefined) patchValues.army = patch.army ?? null;
+  if (patch.kind !== undefined) patchValues.kind = patch.kind;
+  if (patch.status !== undefined) patchValues.status = patch.status;
   if (patch.priority !== undefined) patchValues.priority = patch.priority;
   if (patch.projectId !== undefined) patchValues.projectId = patch.projectId ?? null;
   if (patch.notesMd !== undefined) patchValues.notesMd = patch.notesMd ?? null;
@@ -168,7 +192,7 @@ export async function updateWishlistItem(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
-    revalidatePath("/wishlist");
+    revalidatePath("/collections");
     return { ok: true, data: row };
   } catch (err) {
     return {
@@ -188,7 +212,7 @@ export async function deleteWishlistItem(
     await db
       .delete(wishlistItems)
       .where(and(eq(wishlistItems.id, id.data), eq(wishlistItems.ownerId, userId)));
-    revalidatePath("/wishlist");
+    revalidatePath("/collections");
     return { ok: true, data: { id: id.data } };
   } catch (err) {
     return {
@@ -277,7 +301,7 @@ export async function scrapeAndCreateWishlistItem(
       .returning();
     const row = inserted[0];
     if (!row) return { ok: false, error: "Insert returned no row" };
-    revalidatePath("/wishlist");
+    revalidatePath("/collections");
     return { ok: true, data: row };
   } catch (err) {
     return {
@@ -316,7 +340,7 @@ export async function setWishlistStatus(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
-    revalidatePath("/wishlist");
+    revalidatePath("/collections");
     revalidatePath("/projects");
     return { ok: true, data: row };
   } catch (err) {
@@ -360,7 +384,7 @@ export async function setWishlistKind(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
-    revalidatePath("/wishlist");
+    revalidatePath("/collections");
     return { ok: true, data: row };
   } catch (err) {
     return {
