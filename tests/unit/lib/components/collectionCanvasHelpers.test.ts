@@ -12,6 +12,7 @@ import {
   computeCanvasLayout,
   dotMetricsForCell,
   fillHeightLayout,
+  fitWithinLayout,
   indexAtPoint,
 } from "@/components/library/heatSinkHelpers";
 
@@ -243,6 +244,82 @@ describe("fillHeightLayout", () => {
     const filled = fillHeightLayout(100, 200, 800, 10);
     expect(filled.cellSize).toBeCloseTo(200 / filled.cols);
     expect(filled.width).toBe(200);
+  });
+});
+
+/* ============================================================
+   LIB-COLORMAP-FIT (1) — fitWithinLayout (whole map, no scroll)
+   ============================================================ */
+
+describe("fitWithinLayout", () => {
+  test("when the grid fits at the min edge, behaves like fillHeightLayout", () => {
+    // 100 cells, 200px wide, 800px tall, 10px min — lots of vertical room.
+    const fit = fitWithinLayout(100, 200, 800, 10);
+    const filled = fillHeightLayout(100, 200, 800, 10);
+    expect(fit).toEqual(filled);
+  });
+
+  test("the real case (huge catalog, short panel) fits the height — no scroll", () => {
+    // ~7k paints in a 320px-wide, 600px-tall panel: the densest 9px layout
+    // overflows, so fitWithinLayout must shrink cells below the floor to fit.
+    const count = 7144;
+    const widthPx = 320;
+    const heightPx = 600;
+    const densest = computeCanvasLayout(count, widthPx, DESKTOP_CELL_MIN_PX);
+    expect(densest.height).toBeGreaterThan(heightPx); // confirms it'd scroll
+
+    const fit = fitWithinLayout(count, widthPx, heightPx, DESKTOP_CELL_MIN_PX);
+    // The whole map is visible: height never exceeds the panel.
+    expect(fit.height).toBeLessThanOrEqual(heightPx);
+    // It shrank below the min edge (more columns than the densest layout).
+    expect(fit.cols).toBeGreaterThan(densest.cols);
+    expect(fit.cellSize).toBeLessThan(DESKTOP_CELL_MIN_PX);
+  });
+
+  test("picks the fewest columns (largest cells) that still fit the height", () => {
+    const count = 7144;
+    const widthPx = 320;
+    const heightPx = 600;
+    const fit = fitWithinLayout(count, widthPx, heightPx, DESKTOP_CELL_MIN_PX);
+    expect(fit.height).toBeLessThanOrEqual(heightPx);
+    // One fewer column → bigger cells → taller grid that overshoots.
+    const fewer = fit.cols - 1;
+    if (fewer >= 1) {
+      const cellSize = widthPx / fewer;
+      const rows = Math.ceil(count / fewer);
+      expect(rows * cellSize).toBeGreaterThan(heightPx);
+    }
+  });
+
+  test("columns always fill the width exactly (cellSize = width / cols)", () => {
+    const fit = fitWithinLayout(7144, 320, 600, DESKTOP_CELL_MIN_PX);
+    expect(fit.cellSize).toBeCloseTo(320 / fit.cols);
+    expect(fit.width).toBe(320);
+  });
+
+  test("unmeasured height (<=0) falls back to the width-only densest layout", () => {
+    const densest = computeCanvasLayout(100, 200, 10);
+    expect(fitWithinLayout(100, 200, 0, 10)).toEqual(densest);
+    expect(fitWithinLayout(100, 200, -5, 10)).toEqual(densest);
+  });
+
+  test("zero count → zero rows, zero height", () => {
+    const fit = fitWithinLayout(0, 200, 800, 10);
+    expect(fit.rows).toBe(0);
+    expect(fit.height).toBe(0);
+  });
+
+  test("degenerate: even a single row is taller than the panel → 1 row, no vertical scroll", () => {
+    // A panel shorter than one width-spanning cell forces the single-row
+    // fallback: cols === count, rows === 1.
+    const count = 50;
+    const widthPx = 200;
+    // One row's cell height at cols=count is widthPx/count = 4px; pick a
+    // panel height below that so even a single row overflows.
+    const heightPx = 2;
+    const fit = fitWithinLayout(count, widthPx, heightPx, 10);
+    expect(fit.rows).toBe(1);
+    expect(fit.cols).toBe(count);
   });
 });
 
