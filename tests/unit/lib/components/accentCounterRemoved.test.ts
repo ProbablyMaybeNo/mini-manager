@@ -49,8 +49,8 @@ describe("R7-013 — AccentCounter dropped", () => {
     expect(src).not.toContain('value="03"');
   });
 
-  test("wishlist empty state no longer mounts AccentCounter", () => {
-    const src = read("src/components/wishlist/WishlistTable.tsx");
+  test("collections empty state no longer mounts AccentCounter", () => {
+    const src = read("src/app/collections/page.tsx");
     expect(src).not.toContain("AccentCounter");
     expect(src).not.toContain('value="04"');
   });

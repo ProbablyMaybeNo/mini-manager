@@ -39,8 +39,8 @@ describe("Recipe attached-project link — clickability affordance (P11.6)", () 
   });
 });
 
-describe("Wishlist Project column — TagToProjectMenu chevron (P11.6)", () => {
-  const src = read("src/components/wishlist/TagToProjectMenu.tsx");
+describe("Collections Project column — ProjectSelect chevron", () => {
+  const src = read("src/components/collections/ProjectSelect.tsx");
 
   test("uses lucide ChevronDown icon (not a bracket glyph)", () => {
     expect(src).toContain("ChevronDown");
@@ -50,16 +50,16 @@ describe("Wishlist Project column — TagToProjectMenu chevron (P11.6)", () => {
     expect(src).toContain("aria-haspopup");
   });
 
-  test("hover state flips the border to the active accent token", () => {
-    expect(src).toContain("hover:border-[var(--color-accent)]");
+  test("hover state flips the border to the cyan accent token", () => {
+    expect(src).toContain("hover:border-[var(--color-cyan)]");
   });
 });
 
-describe("Wishlist Status column — StatusChangePopover affordance (P11.6)", () => {
-  const src = read("src/components/wishlist/WishlistTable.tsx");
+describe("Collections Status column — StatusSelect affordance", () => {
+  const src = read("src/components/collections/StatusSelect.tsx");
 
   test("pill renders a trailing chevron `▾` when interactive", () => {
-    expect(src).toContain("{item.status} ▾");
+    expect(src).toContain("{status} ▾");
   });
 
   test("button declares aria-haspopup='menu' for keyboard parity", () => {

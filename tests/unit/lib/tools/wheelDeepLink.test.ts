@@ -115,14 +115,6 @@ describe("WheelClient — R7-004 mount wiring", () => {
   });
 });
 
-describe("WishlistToolsMenu — R7-004 docblock still accurate", () => {
-  const src = read("src/components/wishlist/WishlistToolsMenu.tsx");
-
-  test("docblock notes the wheel side reads `?hex=` canonically", () => {
-    expect(src).toContain("`?hex=` as the canonical pre-seed param");
-  });
-
-  test("still sends `?${qs}` with name in the query string", () => {
-    expect(src).toContain('new URLSearchParams({ name: paintTitle })');
-  });
-});
+// COLLECTIONS rebuild — the per-row WishlistToolsMenu ("Open in ▾" Wheel/
+// Match/Layering deep links) was removed from the rebuilt collections
+// tables, so its docblock coverage is retired with it.

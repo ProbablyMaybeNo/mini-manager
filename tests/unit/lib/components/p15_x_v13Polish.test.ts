@@ -78,10 +78,9 @@ describe("UX-1310 — DELETE PROJECT drops to a red outline (quieter)", () => {
   });
 });
 
-describe("UX-1308 — wishlist filters are 44px tappable chips", () => {
+describe("UX-1308 — chips + collections row controls are 44px tappable", () => {
   const css = read("src/app/globals.css");
   const chip = read("src/components/ui/FilterChip.tsx");
-  const filters = read("src/components/wishlist/WishlistFilters.tsx");
 
   test(".chip has a resting border + ground so it reads as a chip", () => {
     expect(css).toMatch(/\.chip\s*\{[\s\S]*?border:\s*1px solid var\(--color-border-strong\)/);
@@ -93,29 +92,26 @@ describe("UX-1308 — wishlist filters are 44px tappable chips", () => {
     expect(chip).toContain("aria-pressed={active}");
   });
 
-  test("WishlistFilters uses the shared FilterChip (local Chip removed)", () => {
-    expect(filters).toContain("import { FilterChip }");
-    expect(filters).toContain("<FilterChip");
-    expect(filters).not.toContain("function Chip(");
+  // COLLECTIONS rebuild — the per-row status menu actions + the status
+  // trigger + the project-select + the delete X all floor to tap-target.
+  test("collections status menu actions floor to tap-target", () => {
+    const select = read("src/components/collections/StatusSelect.tsx");
+    expect(select).toContain('"tap-target w-full text-left px-3 py-1.5');
   });
 
-  test("per-row status menu actions floor to tap-target", () => {
-    const table = read("src/components/wishlist/WishlistTable.tsx");
-    expect(table).toContain('"tap-target w-full text-left px-3 py-1.5');
+  test("the collections STATUS trigger floors to tap-target", () => {
+    const select = read("src/components/collections/StatusSelect.tsx");
+    expect(select).toContain("tap-target inline-flex items-center justify-center");
   });
 
-  // UX-1504 (Round 15) — the per-row STATUS trigger ("WISHLIST ▾") wrapped a
-  // 21px StatusPill with no padding, and the project-tag trigger
-  // ("OPEN IN ▾") was a 29px pill. Both now carry tap-target so the
-  // *trigger* (not just the open menu) clears the 44px touch floor.
-  test("the per-row STATUS trigger floors to tap-target (UX-1504)", () => {
-    const table = read("src/components/wishlist/WishlistTable.tsx");
-    expect(table).toContain('"tap-target inline-flex items-center justify-center"');
+  test("the collections project select floors to tap-target", () => {
+    const proj = read("src/components/collections/ProjectSelect.tsx");
+    expect(proj).toContain("tap-target inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 frame");
   });
 
-  test("the project-tag (OPEN IN) trigger floors to tap-target (UX-1504)", () => {
-    const menu = read("src/components/wishlist/TagToProjectMenu.tsx");
-    expect(menu).toContain("tap-target inline-flex items-center gap-1.5 text-xs font-mono px-2 py-1 frame");
+  test("the collections delete X floors to tap-target", () => {
+    const parts = read("src/components/collections/rowParts.tsx");
+    expect(parts).toContain("tap-target inline-flex items-center justify-center");
   });
 });
 
@@ -145,35 +141,36 @@ describe("UX-1305 — recipes list reflows to stacked cards below 768px", () => 
   });
 });
 
-describe("UX-1304 — wishlist rows reflow to a stacked card below 768px", () => {
-  const src = read("src/components/wishlist/WishlistTable.tsx");
+describe("UX-1304 — collections rows reflow to a stacked card below 768px", () => {
+  // COLLECTIONS rebuild — both tables (paint + model) are flex-col cards on
+  // mobile and grids at md+, and the brief requires they NEVER scroll
+  // horizontally (no overflow-x), fitting via minmax(0,…) flexible columns.
+  const paint = read("src/components/collections/PaintCollectionTable.tsx");
+  const model = read("src/components/collections/ModelCollectionTable.tsx");
 
-  test("the row is flex-col on mobile, grid at md+ (no clipped STATUS pill)", () => {
-    expect(src).toContain("flex flex-col gap-2 md:grid md:items-center md:gap-3");
+  test("paint rows are flex-col on mobile, grid at md+", () => {
+    expect(paint).toContain("flex flex-col gap-2 md:grid md:items-center md:gap-3");
   });
 
-  test("the desktop grid template is md-gated (mobile has no grid columns)", () => {
-    expect(src).toContain(
-      "md:grid-cols-[40px_minmax(0,1.6fr)_minmax(0,1fr)_80px_90px_110px_14px_140px]",
-    );
-    expect(src).not.toContain("grid-cols-[40px_minmax(0,2fr)_70px_14px_120px]");
+  test("model rows are flex-col on mobile, grid at md+", () => {
+    expect(model).toContain("flex flex-col gap-2 md:grid md:items-center md:gap-3");
   });
 
-  test("the header strip is hidden below md (card is self-labelling)", () => {
-    // UX-017 added pr-4 (status-column right pad) between px-3 and py-1.5.
-    expect(src).toContain("hidden md:grid items-center gap-3 px-3 pr-4 py-1.5");
+  test("the header strips are hidden below md (cards are self-labelling)", () => {
+    expect(paint).toContain("hidden md:grid items-center gap-3");
+    expect(model).toContain("hidden md:grid items-center gap-3");
   });
 
-  test("UX-017 — desktop grid scrolls inside the bounded panel (no edge clip)", () => {
-    // The panel is an x-scroll region and the grid floors to its natural
-    // width (md:min-w-max) so the rightmost status control renders fully.
-    expect(src).toContain("panel panel-ticks pt-1 overflow-x-auto");
-    expect(src).toMatch(/md:min-w-max/);
+  test("tables never scroll horizontally (no overflow-x escape hatch)", () => {
+    expect(paint).not.toContain("overflow-x-auto");
+    expect(paint).not.toContain("min-w-max");
+    expect(model).not.toContain("overflow-x-auto");
+    expect(model).not.toContain("min-w-max");
   });
 
   test("inner wrappers dissolve into the grid on desktop via md:contents", () => {
-    const occurrences = src.split("md:contents").length - 1;
-    expect(occurrences).toBe(2);
+    expect(paint.split("md:contents").length - 1).toBeGreaterThanOrEqual(2);
+    expect(model.split("md:contents").length - 1).toBeGreaterThanOrEqual(2);
   });
 });
 

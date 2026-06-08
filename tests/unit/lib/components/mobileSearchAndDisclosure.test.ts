@@ -74,15 +74,17 @@ describe("M2 — Library always-visible search + non-cyan Filters trigger", () =
   });
 });
 
-describe("M2 — filter disclosure parity (wishlist + user)", () => {
-  const wishlist = read("src/components/wishlist/WishlistFilters.tsx");
+describe("M2 — filter disclosure parity (collections + user)", () => {
+  // COLLECTIONS rebuild — the wishlist filter disclosure became a per-table
+  // Filter button whose popover panel works identically on mobile + desktop
+  // and shows an active-count badge.
+  const collectionsFilter = read("src/components/collections/TableFilter.tsx");
   const userBrands = read("src/components/user/LibraryBrandFilterCard.tsx");
 
-  test("wishlist filters collapse behind a mobile disclosure with a count", () => {
-    expect(wishlist).toContain("aria-controls=\"wishlist-filter-body\"");
-    expect(wishlist).toContain("activeCount");
-    // The body is hidden on mobile until expanded, shown on lg+.
-    expect(wishlist).toMatch(/mobileOpen \? "flex" : "hidden"/);
+  test("collections filter collapses behind a button with an active count", () => {
+    expect(collectionsFilter).toContain("activeCount");
+    expect(collectionsFilter).toContain("aria-expanded");
+    expect(collectionsFilter).toContain('role="dialog"');
   });
 
   test("user brand list collapses behind a disclosure with a selected count", () => {

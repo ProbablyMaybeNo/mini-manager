@@ -282,11 +282,11 @@ export default async function ProjectDetailPage({
     <div className="flex flex-wrap items-center gap-2">
       <Button
         as="a"
-        href={`/wishlist?project=${project.id}`}
+        href={`/collections?mproject=${project.id}`}
         variant="warning"
         size="sm"
       >
-        + Wishlist
+        + Collection
       </Button>
     </div>
   );

@@ -135,7 +135,7 @@ export function GlobalSearch() {
       { id: "go-library", label: "Go to Library", keywords: "library paints catalog", href: "/library", run: go("/library") },
       { id: "go-recipes", label: "Go to Recipes", keywords: "recipes schemes", href: "/recipes", run: go("/recipes") },
       { id: "go-tools", label: "Go to Tools", keywords: "tools wheel match", href: "/tools", run: go("/tools") },
-      { id: "go-wishlist", label: "Go to Wishlist", keywords: "wishlist shopping", href: "/wishlist", run: go("/wishlist") },
+      { id: "go-collections", label: "Go to Collections", keywords: "collections wishlist shopping paints models owned", href: "/collections", run: go("/collections") },
       { id: "new-project", label: "New project", keywords: "create add project army", href: "/projects/new", run: go("/projects/new") },
       {
         id: "toggle-density",
@@ -225,7 +225,7 @@ export function GlobalSearch() {
         id: hit.item.id,
         primary: hit.item.title,
         secondary: hit.item.vendor ?? "—",
-        href: `/wishlist?item=${encodeURIComponent(hit.item.id)}`,
+        href: "/collections",
       });
     }
     return out;

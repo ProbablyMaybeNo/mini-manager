@@ -37,10 +37,10 @@ const ADD_CREATE_NEW_SUCCESS: ReadonlyArray<VariantExpectation> = [
   // below) so each page has exactly one cyan lead action. Every other
   // ADD/CREATE/NEW button stays green (success).
   {
-    label: "QuickAddBar (wishlist)",
-    file: "src/components/wishlist/QuickAddBar.tsx",
+    label: "AddBar (collections)",
+    file: "src/components/collections/AddBar.tsx",
     expected: "success",
-    signature: 'aria-label="Add wishlist item"',
+    signature: 'aria-label="Add to collection"',
   },
   // P13.4 — AddNamedModelForm removed (named_model entity dropped).
   {

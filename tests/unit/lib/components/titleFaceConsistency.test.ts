@@ -26,7 +26,7 @@ const TITLED_PAGES = [
   "library/page.tsx",
   "recipes/page.tsx",
   "tools/page.tsx",
-  "wishlist/page.tsx",
+  "collections/page.tsx",
   "user/page.tsx",
   "pricing/page.tsx",
 ];

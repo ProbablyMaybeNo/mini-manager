@@ -113,9 +113,9 @@ describe("Phase 11 — decorative brackets stay retired (P11.11)", () => {
     "src/components/recipes/CloneButton.tsx",
     "src/components/recipes/QrCode.tsx",
     "src/components/user/ExportButton.tsx",
-    "src/components/wishlist/MarkBoughtModal.tsx",
-    "src/components/wishlist/QuickAddBar.tsx",
-    "src/components/wishlist/WishlistDetailDrawer.tsx",
+    // COLLECTIONS rebuild — old wishlist components replaced by the
+    // collections AddBar.
+    "src/components/collections/AddBar.tsx",
     "src/components/NewProjectForm.tsx",
     "src/components/recipes/PaintSlotPicker.tsx",
     "src/components/tools/eyedropper/DropZone.tsx",

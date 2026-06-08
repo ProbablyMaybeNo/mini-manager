@@ -29,9 +29,10 @@ const ERROR_MARKER_FILES = [
   "src/components/recipes/CloneButton.tsx",
   "src/components/recipes/QrCode.tsx",
   "src/components/user/ExportButton.tsx",
-  "src/components/wishlist/MarkBoughtModal.tsx",
-  "src/components/wishlist/QuickAddBar.tsx",
-  "src/components/wishlist/WishlistDetailDrawer.tsx",
+  // COLLECTIONS rebuild — the wishlist add bar + its components were
+  // replaced by the collections AddBar (which shows scrape/cap errors via
+  // LogTag, no bracket-bang chrome).
+  "src/components/collections/AddBar.tsx",
 ];
 
 describe("Error markers — `[ ! ] {error}` retired (P11.11)", () => {

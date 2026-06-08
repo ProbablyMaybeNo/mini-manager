@@ -10,7 +10,7 @@ import {
   Palette,
   FlaskConical,
   Wrench,
-  Heart,
+  Boxes,
   Search,
   User as UserIcon,
   PanelLeftClose,
@@ -39,7 +39,7 @@ const PRIMARY: readonly NavItem[] = [
   { href: "/library",  Icon: Palette,      label: "Library"  },
   { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
   { href: "/tools",    Icon: Wrench,       label: "Tools"    },
-  { href: "/wishlist", Icon: Heart,        label: "Wishlist" },
+  { href: "/collections", Icon: Boxes,    label: "Collections" },
 ] as const;
 
 const SECONDARY: readonly NavItem[] = [

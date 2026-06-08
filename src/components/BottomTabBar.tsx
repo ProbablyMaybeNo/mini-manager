@@ -10,7 +10,7 @@ import {
   Palette,
   FlaskConical,
   Wrench,
-  Heart,
+  Boxes,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,14 +24,14 @@ type TabItem = {
 // desktop nav item, but the mobile tab bar shipped with only 5 of the 6
 // sections reachable. Add FOCUS (/planner, Target icon) as the 6th tab so
 // every primary section is one tap away on phones, matching the desktop
-// NavRail order (Dashboard · Focus · Library · Recipes · Tools · Wishlist).
+// NavRail order (Dashboard · Focus · Library · Recipes · Tools · Collections).
 const TABS: readonly TabItem[] = [
-  { href: "/projects", Icon: Folder,       label: "Dashboard" },
-  { href: "/planner",  Icon: Target,       label: "Focus"    },
-  { href: "/library",  Icon: Palette,      label: "Library"  },
-  { href: "/recipes",  Icon: FlaskConical, label: "Recipes"  },
-  { href: "/tools",    Icon: Wrench,       label: "Tools"    },
-  { href: "/wishlist", Icon: Heart,        label: "Wishlist" },
+  { href: "/projects",    Icon: Folder,       label: "Dashboard" },
+  { href: "/planner",     Icon: Target,       label: "Focus"     },
+  { href: "/library",     Icon: Palette,      label: "Library"   },
+  { href: "/recipes",     Icon: FlaskConical, label: "Recipes"   },
+  { href: "/tools",       Icon: Wrench,       label: "Tools"     },
+  { href: "/collections", Icon: Boxes,        label: "Collections" },
 ] as const;
 
 function isActive(pathname: string | null, href: string): boolean {

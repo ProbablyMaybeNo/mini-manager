@@ -99,7 +99,7 @@ describe("BottomTabBar — terminal skin", () => {
       "/library",
       "/recipes",
       "/tools",
-      "/wishlist",
+      "/collections",
     ]) {
       expect(src).toContain(`href: "${href}"`);
     }

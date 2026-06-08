@@ -16,23 +16,27 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(ROOT, rel), "utf-8");
 }
 
-describe("D7 — wishlist persistent left filter rail", () => {
-  const page = read("src/app/wishlist/page.tsx");
-  const filters = read("src/components/wishlist/WishlistFilters.tsx");
+// COLLECTIONS rebuild — the persistent left filter rail was replaced by a
+// per-table Filter button at the far right of each table's header row, so
+// the same filters work identically on desktop + mobile (no separate rail
+// / header-disclosure split).
+describe("Collections — per-table filter button layout", () => {
+  const page = read("src/app/collections/page.tsx");
+  const filter = read("src/components/collections/TableFilter.tsx");
 
-  test("desktop renders a persistent left rail (hidden below lg)", () => {
-    expect(page).toMatch(/<aside className="hidden lg:block w-\[220px\]/);
-    expect(page).toMatch(/layout="rail"/);
+  test("each table header row carries its own Filter button", () => {
+    expect(page).toContain("<TableFilter");
+    // Two instances — paint + model.
+    expect(page.split("<TableFilter").length - 1).toBeGreaterThanOrEqual(2);
   });
 
-  test("the rail stacks the filter groups vertically", () => {
-    expect(filters).toMatch(/layout\?:\s*"bar" \| "rail"/);
-    expect(filters).toMatch(/layout === "rail"/);
-    expect(filters).toMatch(/lg:flex-col/);
+  test("the filter button opens a small panel of that table's filters", () => {
+    expect(filter).toContain('role="dialog"');
+    expect(filter).toContain("groups");
   });
 
-  test("mobile keeps the header disclosure (filters not duplicated visibly)", () => {
-    expect(page).toMatch(/<div className="lg:hidden mt-4">/);
+  test("no persistent left rail aside remains", () => {
+    expect(page).not.toMatch(/<aside className="hidden lg:block w-\[220px\]/);
   });
 });
 

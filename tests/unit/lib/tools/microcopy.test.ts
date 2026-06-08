@@ -69,13 +69,12 @@ describe("Section microcopy under primary headings (P11.12)", () => {
     expect(src).toMatch(/stack of\s+colour slots/);
   });
 
-  test("/wishlist subheading is plain-prose (no P2.5 ref)", () => {
-    const src = read("src/app/wishlist/page.tsx");
+  test("/collections subheading is plain-prose (no internal refs)", () => {
+    // COLLECTIONS rebuild — /wishlist became /collections. Subheading is
+    // plain prose describing the two collections.
+    const src = read("src/app/collections/page.tsx");
     expect(src).not.toMatch(/P2\.5/);
-    // P12.12 — wishlist split into Paints + Models tables. Subheading
-    // updated to match: "Paints and models you want to buy" replaces
-    // the earlier "Paints, kits, and tools" phrasing.
-    expect(src).toMatch(/Paints and models you want to buy/);
+    expect(src).toMatch(/paints and models/i);
   });
 
   test("/user has the multi-section header", () => {
