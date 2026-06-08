@@ -120,6 +120,36 @@ describe("ColorPicker — item 3: saturation escape from greyscale", () => {
   });
 });
 
+describe("ColorPicker — item 4: finer pixel wheel (more pixels, less blocky)", () => {
+  const src = read("src/components/ui/ColorPicker.tsx");
+
+  test("the wheel rasterises into smaller cells (WHEEL_PX <= 5)", () => {
+    // Ross: "more pixels, less blocky." The cell edge shrank from 10 -> 5
+    // so the donut is built from many more, smaller squares (crisp pixel
+    // art, not chunky blocks).
+    expect(src).toMatch(/const WHEEL_PX = 5;/);
+    expect(src).not.toContain("const WHEEL_PX = 10;");
+  });
+
+  test("hue banding is finer (more steps)", () => {
+    expect(src).toContain("const WHEEL_HUE_STEPS = 60;");
+    expect(src).not.toContain("const WHEEL_HUE_STEPS = 24;");
+  });
+
+  test("ring thickness is expressed in cells so the donut stays a ring", () => {
+    expect(src).toContain("const WHEEL_RING_CELLS = 9;");
+    expect(src).toContain("radius - WHEEL_PX * WHEEL_RING_CELLS");
+  });
+
+  test("behaviour is unchanged — hue still comes from the angle (aria-slider)", () => {
+    // The pointer/keyboard handlers compute purely from the angle about the
+    // centre, so the finer raster is a pure VISUAL change.
+    expect(src).toContain('role="slider"');
+    expect(src).toContain("Math.atan2");
+    expect(src).toContain('shapeRendering="crispEdges"');
+  });
+});
+
 describe("SlotList — flat-slot editor surface", () => {
   const src = read("src/components/recipes/SlotList.tsx");
 
