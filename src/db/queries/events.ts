@@ -77,6 +77,35 @@ export async function listEventsInMonth(
   return rows;
 }
 
+/**
+ * DASHBOARD-POLISH (fix #4) — the right-rail EVENTS list.
+ *
+ * Fetch the next `limit` upcoming events for a user, from `from` (inclusive)
+ * forward, ordered soonest-first. Owner-scoped; reuses the same `events`
+ * table + `event_user_date_idx` the calendar reads, so the rail's EVENTS
+ * section is just the calendar's data viewed as a flat upcoming list (no new
+ * backend). Returns the lean `CalendarEvent` shape the calendar already uses.
+ */
+export async function listUpcomingEvents(
+  userId: string,
+  from: Date,
+  limit = 5,
+): Promise<ReadonlyArray<CalendarEvent>> {
+  const rows = await db
+    .select({
+      id: events.id,
+      name: events.name,
+      eventDate: events.eventDate,
+      kind: events.kind,
+      notes: events.notes,
+    })
+    .from(events)
+    .where(and(eq(events.userId, userId), gte(events.eventDate, from)))
+    .orderBy(asc(events.eventDate))
+    .limit(limit);
+  return rows;
+}
+
 /** Fetch a single event by id, owner-scoped. Returns null when the
  *  row doesn't belong to the caller — same defensive shape every
  *  other ownership-checked query uses. */

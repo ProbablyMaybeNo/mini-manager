@@ -35,7 +35,7 @@ vi.mock("next/cache", () => ({
 const { createEvent, updateEvent, deleteEvent } = await import(
   "@/lib/actions/events"
 );
-const { listEventsInMonth, monthRange } = await import(
+const { listEventsInMonth, listUpcomingEvents, monthRange } = await import(
   "@/db/queries/events"
 );
 
@@ -294,5 +294,84 @@ describe("listEventsInMonth (P14.3)", () => {
     expect(r.end.getUTCFullYear()).toBe(2026);
     expect(r.end.getUTCMonth()).toBe(6);
     expect(r.end.getUTCDate()).toBe(31);
+  });
+});
+
+describe("listUpcomingEvents (DASHBOARD-POLISH fix #4)", () => {
+  // The right-rail EVENTS section: the calendar's own data surfaced as a
+  // flat "soonest first" upcoming agenda, from a lower bound forward.
+  test("returns only events at/after `from`, soonest first, capped by limit", async () => {
+    await createEvent({
+      name: "Past battle",
+      date: "2026-05-30",
+      kind: "battle",
+      notes: null,
+    });
+    await createEvent({
+      name: "Soon deadline",
+      date: "2026-06-10",
+      kind: "deadline",
+      notes: null,
+    });
+    await createEvent({
+      name: "Next tournament",
+      date: "2026-06-20",
+      kind: "tournament",
+      notes: null,
+    });
+    await createEvent({
+      name: "Far other",
+      date: "2026-08-01",
+      kind: "other",
+      notes: null,
+    });
+
+    const from = new Date(Date.UTC(2026, 5, 1)); // 1 June
+    const rows = await listUpcomingEvents(state.userId, from, 2);
+    // Past battle excluded (before `from`); capped at 2, soonest first.
+    expect(rows.map((r) => r.name)).toEqual(["Soon deadline", "Next tournament"]);
+  });
+
+  test("includes an event dated exactly at `from` (inclusive lower bound)", async () => {
+    await createEvent({
+      name: "Starts today",
+      date: "2026-06-08",
+      kind: "deadline",
+      notes: null,
+    });
+    const from = new Date(Date.UTC(2026, 5, 8));
+    const rows = await listUpcomingEvents(state.userId, from, 5);
+    expect(rows.map((r) => r.name)).toEqual(["Starts today"]);
+  });
+
+  test("ignores rows owned by other users", async () => {
+    const otherUser = await seedExtraUser(state.db!);
+    await state.db!.insert(events).values({
+      userId: otherUser,
+      name: "Not yours",
+      eventDate: new Date(Date.UTC(2026, 6, 15)),
+      kind: "tournament",
+    });
+    const rows = await listUpcomingEvents(
+      state.userId,
+      new Date(Date.UTC(2026, 0, 1)),
+      5,
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  test("returns an empty list when nothing is upcoming", async () => {
+    await createEvent({
+      name: "Old",
+      date: "2026-01-01",
+      kind: "other",
+      notes: null,
+    });
+    const rows = await listUpcomingEvents(
+      state.userId,
+      new Date(Date.UTC(2026, 5, 1)),
+      5,
+    );
+    expect(rows).toHaveLength(0);
   });
 });

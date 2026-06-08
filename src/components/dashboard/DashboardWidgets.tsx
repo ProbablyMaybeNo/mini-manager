@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import { PlannerActivityCell } from "@/components/planner/PlannerActivityCell";
 import { PlannerCalendarCell } from "@/components/planner/PlannerCalendarCell";
+import { PlannerUpcomingEventsCell } from "@/components/planner/PlannerUpcomingEventsCell";
 import {
   ActivitySkeleton,
   CalendarSkeleton,
+  EventsSkeleton,
 } from "@/components/dashboard/DashboardSkeletons";
 
 /**
@@ -28,11 +30,15 @@ import {
  *
  * DASHBOARD-REDESIGN (Part B item 3) — the widgets now form the dashboard's
  * RIGHT RAIL (Ross's mockup): a VERTICAL stack, not a wide 3-col row. From
- * the top: the compact + scrollable PLANNER calendar, then the ACTIVITY
- * tracker (PAINT / OWNED / BUILT / PRIMED recent actions). The page lays the
- * PROJECTS table beside this rail on `lg+`; on smaller screens the rail
- * stacks below the table. The cells stay verbatim — only the composition
- * (row → vertical rail) changed.
+ * the top: the compact + scrollable PLANNER calendar, then the EVENTS list,
+ * then the ACTIVITY tracker (PAINT / OWNED / BUILT / PRIMED recent actions).
+ * The page lays the PROJECTS table beside this rail on `lg+`; on smaller
+ * screens the rail stacks below the table.
+ *
+ * DASHBOARD-POLISH (fix #4) — the EVENTS section was added between the
+ * calendar and activity to match the mockup's rail (PLANNER → EVENTS →
+ * ACTIVITY). It reuses the calendar's own `events` data, surfaced as a flat
+ * upcoming-agenda list (PlannerUpcomingEventsCell) — no new backend.
  *
  * DASH-SKELETON — each async cell is wrapped in <Suspense> with an in-theme
  * skeleton that mirrors the card layout (doc §10), so first paint shows a
@@ -50,6 +56,11 @@ export function DashboardWidgets({ calYear, calMonth }: Props) {
           small PLANNER calendar). */}
       <Suspense fallback={<CalendarSkeleton />}>
         <PlannerCalendarCell calYear={calYear} calMonth={calMonth} />
+      </Suspense>
+      {/* EVENTS — the mockup's upcoming-events agenda, between the calendar
+          and activity. Reuses the calendar's own event data (fix #4). */}
+      <Suspense fallback={<EventsSkeleton />}>
+        <PlannerUpcomingEventsCell />
       </Suspense>
       {/* Activity tracker — recent PAINT / OWNED / BUILT / PRIMED actions. */}
       <Suspense fallback={<ActivitySkeleton />}>

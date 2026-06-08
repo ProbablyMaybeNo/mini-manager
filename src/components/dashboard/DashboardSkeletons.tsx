@@ -84,6 +84,24 @@ export function ActivitySkeleton() {
   );
 }
 
+/** Mirrors PlannerUpcomingEventsCell: a short vertical list of upcoming
+ *  events (kind-dot + name + countdown). DASHBOARD-POLISH (fix #4). */
+export function EventsSkeleton() {
+  return (
+    <SkeletonCard title="EVENTS" accentColor="cyan" techLabel="CAL ▸ NEXT">
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <Bar className="w-2 h-2 shrink-0 rounded-full" />
+            <Bar className="h-3 flex-1" />
+            <Bar className="w-8 h-3 shrink-0" />
+          </div>
+        ))}
+      </div>
+    </SkeletonCard>
+  );
+}
+
 /** Mirrors PlannerCalendarCell: an intro line + a 7-col month grid.
  *  DASHBOARD-REDESIGN — titled PLANNER to match the relocated, compact +
  *  scrollable right-rail calendar cell so the frame is identical before
