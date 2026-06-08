@@ -87,6 +87,33 @@ export function formatPaintTime(seconds: number): {
 }
 
 /**
+ * DASHBOARD-REDESIGN (Part B item 1) — format a session-seconds total as a
+ * zero-padded `HH:MM` clock string for the TIME TOTAL KPI card (the mockup's
+ * `05:47`). The KPI cards show ONLY a big centred number, so the compact
+ * clock reads cleaner than the "8h 12m" phrasing. Clamps negatives to 0; the
+ * hour field grows past two digits on very long weeks (e.g. `120:05`) so it
+ * never silently truncates.
+ */
+export function formatTimeTotal(seconds: number): string {
+  const totalMinutes = Math.floor(Math.max(0, seconds) / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+/**
+ * DASHBOARD-REDESIGN (Part B item 1) — zero-pad a small count to two digits
+ * for the KPI cards' big numbers (the mockup's `05` / `03`). Counts ≥ 100
+ * render verbatim so a large workbench never truncates.
+ */
+export function padCount(n: number): string {
+  const v = Math.max(0, Math.round(n));
+  return v < 100 ? String(v).padStart(2, "0") : String(v);
+}
+
+/**
  * PHASE-1 viz — dense daily-activity series for the dashboard trend graph
  * (LineGraph / Sparkline). The dashboard already fetches `getActivityByDay`
  * over a 60-day window for the streak; this re-uses that exact data (no new

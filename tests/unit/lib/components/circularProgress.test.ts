@@ -101,14 +101,8 @@ describe("CircularProgress — SSR-safe", () => {
   });
 });
 
-describe("DashboardKpiStrip wires the dial into headline KPIs", () => {
-  const src = read("src/components/dashboard/DashboardKpiStrip.tsx");
-
-  // PHASE-1 viz — the headline dial swapped CircularProgress for the
-  // bespoke ticked + glowing RadialGauge (DESIGN_LANGUAGE §13). The plain
-  // CircularProgress is retained as a primitive but no longer wired here.
-  test("renders the RadialGauge dial when a card supplies one", () => {
-    expect(src).toContain("RadialGauge");
-    expect(src).toContain("card.dial");
-  });
-});
+// DASHBOARD-REDESIGN (Part B item 1) — the KPI strip no longer renders a
+// dial. The cards are now a colour-coded title bar + a single big centred
+// number (Ross's mockup), so the prior "DashboardKpiStrip wires the dial"
+// block was removed. RadialGauge itself remains covered by the viz-kit
+// tests; the CircularProgress primitive is covered above.

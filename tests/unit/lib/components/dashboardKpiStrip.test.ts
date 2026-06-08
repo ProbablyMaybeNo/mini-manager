@@ -15,6 +15,8 @@ import {
   activeProjectCount,
   averageCompletion,
   formatPaintTime,
+  formatTimeTotal,
+  padCount,
   activityTrendSeries,
   type KpiProject,
 } from "@/components/dashboard/dashboardKpiHelpers";
@@ -142,6 +144,45 @@ describe("formatPaintTime", () => {
   });
 });
 
+describe("formatTimeTotal (DASHBOARD-REDESIGN TIME TOTAL card)", () => {
+  test("zero-padded HH:MM", () => {
+    expect(formatTimeTotal(5 * 3600 + 47 * 60)).toBe("05:47");
+  });
+
+  test("pads minutes-only under an hour", () => {
+    expect(formatTimeTotal(35 * 60)).toBe("00:35");
+  });
+
+  test("zero seconds -> 00:00", () => {
+    expect(formatTimeTotal(0)).toBe("00:00");
+  });
+
+  test("negative clamps to 00:00", () => {
+    expect(formatTimeTotal(-100)).toBe("00:00");
+  });
+
+  test("hours grow past two digits, never truncating", () => {
+    expect(formatTimeTotal(120 * 3600 + 5 * 60)).toBe("120:05");
+  });
+});
+
+describe("padCount (DASHBOARD-REDESIGN KPI big numbers)", () => {
+  test("zero-pads small counts to two digits (mockup 05 / 03)", () => {
+    expect(padCount(5)).toBe("05");
+    expect(padCount(3)).toBe("03");
+    expect(padCount(0)).toBe("00");
+  });
+
+  test("counts >= 100 render verbatim (no truncation)", () => {
+    expect(padCount(100)).toBe("100");
+    expect(padCount(123)).toBe("123");
+  });
+
+  test("clamps negatives to 00", () => {
+    expect(padCount(-4)).toBe("00");
+  });
+});
+
 describe("activityTrendSeries (PHASE-1 viz trend graph)", () => {
   // Anchor "today" in UTC so the YYYY-MM-DD keys are deterministic.
   const today = new Date("2026-06-06T12:00:00.000Z");
@@ -204,7 +245,7 @@ describe("DASHBOARD page wires the bespoke trend panel", () => {
   });
 });
 
-describe("DashboardKpiStrip component surface", () => {
+describe("DashboardKpiStrip component surface (DASHBOARD-REDESIGN)", () => {
   const src = read("src/components/dashboard/DashboardKpiStrip.tsx");
 
   test("renders a strip container with the data-kpi-strip marker", () => {
@@ -214,28 +255,36 @@ describe("DashboardKpiStrip component surface", () => {
   test("renders each KPI on the Card primitive with a big tabular-nums number", () => {
     expect(src).toContain("Card");
     expect(src).toContain("tabular-nums");
-    expect(src).toContain("text-3xl");
+    // Mockup: a big CENTERED number — text-4xl on mobile, text-5xl at lg.
+    expect(src).toContain("text-4xl");
+    expect(src).toContain("text-5xl");
   });
 
-  test("KPI numbers can take the sanctioned glow tier", () => {
-    expect(src).toContain("glowClassName");
+  test("the big number is centered and carries the sanctioned glow", () => {
+    expect(src).toContain("text-center");
+    expect(src).toContain("glow-text-strong");
+    expect(src).toContain("data-kpi-value");
   });
 
-  test("supports a third-context-layer baseline line (doc §8)", () => {
-    expect(src).toContain("data-kpi-baseline");
+  test("cards are title + number ONLY (no dial / baseline / unit caption)", () => {
+    // The redesigned strip drops the radial gauge, the baseline line, and
+    // the unit caption — the mockup is a colour-coded title bar + number.
+    expect(src).not.toContain("RadialGauge");
+    expect(src).not.toContain("data-kpi-baseline");
+    expect(src).not.toContain("card.dial");
+  });
+
+  test("each card is colour-coded (green / yellow / purple / cyan)", () => {
+    expect(src).toContain("--color-green");
+    expect(src).toContain("--color-yellow");
+    expect(src).toContain("--color-purple-pastel");
+    expect(src).toContain("--color-cyan");
   });
 
   test("UX-008 — KPI titles wrap (no truncation) at narrow widths", () => {
-    // Pass titleClassName so "AVG COMPLETION" / "PAINTING TIME" wrap to two
-    // lines instead of ellipsizing to "AVG COMPLET…" at 390px.
+    // Pass titleClassName so "COMPLETION %" / "TIME TOTAL" wrap to two
+    // lines instead of ellipsizing at 390px.
     expect(src).toMatch(/titleClassName="whitespace-normal/);
-  });
-
-  test("UX-008 — gauge stacks below the number on mobile (no overlap)", () => {
-    // The number/unit block and the radial gauge stack (flex-col) at narrow
-    // widths and only sit side-by-side at sm+, so the gauge can't land on
-    // top of the unit caption.
-    expect(src).toMatch(/flex flex-col items-start[\s\S]{0,80}sm:flex-row/);
   });
 });
 
@@ -247,11 +296,11 @@ describe("DASHBOARD page wires the KPI strip above the table", () => {
     expect(src).toContain("<DashboardKpiStrip");
   });
 
-  test("ships the four locked KPI labels", () => {
+  test("ships the four locked KPI labels (mockup wording)", () => {
     expect(src).toContain("ACTIVE PROJECTS");
-    expect(src).toContain("AVG COMPLETION");
+    expect(src).toContain("COMPLETION %");
     expect(src).toContain("STREAK");
-    expect(src).toContain("PAINTING TIME");
+    expect(src).toContain("TIME TOTAL");
   });
 
   test("derives metrics from existing data + helpers, no new tracking", () => {
@@ -267,8 +316,10 @@ describe("DASHBOARD page wires the KPI strip above the table", () => {
     );
   });
 
-  test("no cyan on the KPI numbers (cyan reserved for nav/CTA)", () => {
-    // The strip value colours are fg / green / amber / muted — never cyan.
-    expect(src).not.toContain('valueClassName: "text-[var(--color-cyan)]"');
+  test("the four cards are colour-coded green / yellow / purple / cyan (mockup)", () => {
+    expect(src).toContain('color: "green"');
+    expect(src).toContain('color: "yellow"');
+    expect(src).toContain('color: "purple"');
+    expect(src).toContain('color: "cyan"');
   });
 });

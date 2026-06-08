@@ -18,15 +18,12 @@ import {
 import {
   activeProjectCount,
   averageCompletion,
-  formatPaintTime,
+  formatTimeTotal,
+  padCount,
   activityTrendSeries,
 } from "@/components/dashboard/dashboardKpiHelpers";
 import { DashboardTrendPanel } from "@/components/dashboard/DashboardTrendPanel";
-import {
-  computeStreak,
-  computeStreakBaseline,
-  streakBaselineLine,
-} from "@/components/planner/plannerStreakHelpers";
+import { computeStreak } from "@/components/planner/plannerStreakHelpers";
 import { getActivityByDay } from "@/db/queries/activityLog";
 import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
 import { getFocusProjectId } from "@/db/queries/focus";
@@ -110,22 +107,16 @@ export default async function DashboardPage({
 
   const isEmpty = allProjects.length === 0;
 
-  // DASH-KPI (2026-06-05) — the top KPI strip (doc §14/§4/§8). Every
-  // metric is derived from the data fetched above + existing helpers; no
-  // new tracking infra. The fourth card ("painting time this week") is a
-  // SUBSTITUTE for "models painted this week" — paint_sessions records
-  // duration, not model counts, so time-at-the-desk is the closest cheaply
-  // derivable equivalent.
+  // DASH-KPI (doc §14/§4/§8) — the top KPI strip. Every metric is derived
+  // from the data fetched above + existing helpers; no new tracking infra.
+  //
+  // DASHBOARD-REDESIGN (Part B item 1) — rebuilt to Ross's mockup: four
+  // COLOR-CODED cards, each just a title bar + a big centred number. The
+  // dials / baseline lines / unit captions are dropped (the mockup is
+  // "title + number only"). The fourth card is TIME TOTAL — time at the
+  // bench this week, the closest cheaply-derivable "output" metric since
+  // paint_sessions records duration, not model counts.
   const streak = computeStreak(streakDays, now);
-  // DASH-STREAK-BASELINE (item 3, doc §8) — the streak's third context
-  // layer: a WoW painting-day trend + the best-streak benchmark, both
-  // derived from the same activity_log window the streak uses.
-  const streakBaseline = streakBaselineLine(
-    computeStreakBaseline(streakDays, now),
-  );
-  const isHotStreak = streak.streak >= 7;
-  const isActiveStreak = streak.streak >= 1;
-  const paintTime = formatPaintTime(weekSeconds);
   const avgCompletion = averageCompletion(allProjects);
   // PHASE-1 viz — the activity-trend series for the bespoke AREA GRAPH /
   // SPARKLINE (DESIGN_LANGUAGE §13). Re-uses the SAME 60-day activity_log
@@ -133,69 +124,31 @@ export default async function DashboardPage({
   // to a contiguous daily-count series, oldest → newest.
   const TREND_DAYS = 60;
   const trendSeries = activityTrendSeries(streakDays, now, TREND_DAYS);
-  // PHASE-1 — the STREAK dial reads against a 7-day "hot streak" target,
-  // so the ring fills as the painter approaches a full week and tops out
-  // (capped at 100%) once they're on a hot streak. The centre carries the
-  // raw count; the hue mirrors the number's green/amber/muted state.
-  const streakDialPercent = Math.min(100, (streak.streak / 7) * 100);
-  const streakDialTone = isHotStreak
-    ? "ok"
-    : isActiveStreak
-      ? "warning"
-      : "neutral";
+  const activeCount = activeProjectCount(allProjects);
   const kpiCards: KpiCardData[] = [
     {
       label: "ACTIVE PROJECTS",
-      value: String(activeProjectCount(allProjects)),
-      unit: "in flight",
-      valueClassName: "text-[var(--color-fg)]",
-      glowClassName: "glow-text-strong",
-      accentColor: "green",
-      valueAriaLabel: `${activeProjectCount(allProjects)} active projects`,
+      value: padCount(activeCount),
+      color: "green",
+      valueAriaLabel: `${activeCount} active projects`,
     },
     {
-      label: "AVG COMPLETION",
+      label: "COMPLETION %",
       value: `${avgCompletion}%`,
-      unit: "across projects",
-      valueClassName: "text-[var(--color-fg)]",
-      glowClassName: "glow-text-strong",
-      accentColor: "amber",
+      color: "yellow",
       valueAriaLabel: `${avgCompletion} percent average completion`,
-      dial: {
-        percent: avgCompletion,
-        // auto tone tracks the behind/mid/ahead threshold set.
-        ariaLabel: `${avgCompletion} percent average completion`,
-      },
     },
     {
       label: "STREAK",
-      value: String(streak.streak),
-      unit: streak.streak === 1 ? "day" : "days",
-      valueClassName: isHotStreak
-        ? "text-[var(--color-green)]"
-        : isActiveStreak
-          ? "text-[var(--color-amber)]"
-          : "text-[var(--color-fg-muted)]",
-      glowClassName: isActiveStreak ? "glow-text-strong" : undefined,
-      accentColor: "purple",
+      value: padCount(streak.streak),
+      color: "purple",
       valueAriaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak`,
-      baseline: streakBaseline ?? undefined,
-      dial: {
-        percent: streakDialPercent,
-        tone: streakDialTone,
-        label: String(streak.streak),
-        caption: streak.streak === 1 ? "day" : "days",
-        ariaLabel: `${streak.streak} ${streak.streak === 1 ? "day" : "days"} streak, ${Math.round(streakDialPercent)} percent toward a week`,
-      },
     },
     {
-      label: "PAINTING TIME",
-      value: paintTime.value,
-      unit: paintTime.unit,
-      valueClassName: "text-[var(--color-fg)]",
-      glowClassName: weekSeconds > 0 ? "glow-text-strong" : undefined,
-      accentColor: "neutral",
-      valueAriaLabel: `${paintTime.value} painting time this week`,
+      label: "TIME TOTAL",
+      value: formatTimeTotal(weekSeconds),
+      color: "cyan",
+      valueAriaLabel: `${formatTimeTotal(weekSeconds)} painting time this week`,
     },
   ];
 
