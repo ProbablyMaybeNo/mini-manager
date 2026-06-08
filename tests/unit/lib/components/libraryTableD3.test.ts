@@ -80,8 +80,18 @@ describe("D3 — bulk select", () => {
     expect(SRC).toMatch(/Mark wanted/);
   });
 
-  test("batch + selection are off cyan (amber); no cyan accent on selection", () => {
-    expect(SRC).toMatch(/accent-\[var\(--color-amber\)\]/);
+  test("selection accent is green — off cyan (the active row) and off amber (the wishlist hue)", () => {
+    // LIB-COLOR (2) — selection (checkbox accent + selected-row wash + batch
+    // bar) moved from amber → green so it no longer collides with the
+    // wanted/wishlist amber semantic, while staying distinct from the cyan
+    // detail-active row (DESIGN_LANGUAGE §1).
+    expect(SRC).toMatch(/accent-\[var\(--color-green\)\]/);
+    // The selected-row wash + batch bar use the green token, not amber.
+    expect(SRC).toMatch(
+      /selected &&\s*\n\s*"bg-\[color-mix\(in_srgb,var\(--color-green\)/,
+    );
+    // Selection never adopts cyan (that's reserved for the active/detail row).
+    expect(SRC).not.toMatch(/accent-\[var\(--color-cyan\)\]/);
   });
 });
 

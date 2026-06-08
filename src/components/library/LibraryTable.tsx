@@ -506,7 +506,10 @@ function SelectAllCheckbox({
         checked={allSelected}
         onChange={onToggle}
         aria-label={label}
-        className="accent-[var(--color-amber)] cursor-pointer"
+        // LIB-COLOR (2) — selection accent is green (matches the green
+        // selected-row wash + "Mark owned" batch button); amber stays the
+        // wishlist/wanted hue.
+        className="accent-[var(--color-green)] cursor-pointer"
       />
     </label>
   );
@@ -531,7 +534,10 @@ function BatchActionBar({
     <div
       role="region"
       aria-label="Batch actions"
-      className="flex items-center gap-3 px-3 py-2 border-b border-[var(--color-border-strong)] bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]"
+      // LIB-COLOR (2) — the batch bar belongs to the selection idiom, so its
+      // wash follows the green selection accent rather than amber (the
+      // wishlist hue).
+      className="flex items-center gap-3 px-3 py-2 border-b border-[var(--color-border-strong)] bg-[color-mix(in_srgb,var(--color-green)_10%,transparent)]"
     >
       <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg)] tabular-nums">
         {count} selected
@@ -684,8 +690,15 @@ function PaintRow({
         // unmistakable in the dense list.
         active &&
           "bg-[color-mix(in_srgb,var(--color-cyan)_14%,transparent)] shadow-[inset_2px_0_0_0_var(--color-cyan)]",
+        // LIB-COLOR (2) — multi-select wash is GREEN, not amber. Amber/yellow
+        // already carries the "wanted / wishlist" meaning across the Library
+        // (the ★ toggle, the grid wishlist dot, the "Mark wanted" button), so
+        // an amber selection wash read as an off-palette accent that collided
+        // with that semantic. Green = "marked for a batch action" pairs with
+        // the green "Mark owned" batch button and stays clear of the cyan
+        // detail-active row (DESIGN_LANGUAGE §1's "cyan-highlighted row").
         selected &&
-          "bg-[color-mix(in_srgb,var(--color-amber)_10%,transparent)]",
+          "bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)]",
         // LIB-COLORMAP — transient flash when the colour map scrolls here.
         // Token-based amber wash + ring; respects reduced motion.
         flash &&
@@ -714,7 +727,8 @@ function PaintRow({
             checked={selected}
             onChange={onToggleSelect}
             aria-label={`Select ${paint.name}`}
-            className="accent-[var(--color-amber)] cursor-pointer"
+            // LIB-COLOR (2) — green selection accent (see select-all + wash).
+            className="accent-[var(--color-green)] cursor-pointer"
           />
         </label>
       </span>
