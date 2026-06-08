@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/Card";
 import { WireframeGlobe } from "@/components/viz/WireframeGlobe";
 
 /**
@@ -42,14 +43,23 @@ export interface DashboardHeroProps {
 
 export function DashboardHero({ stats }: DashboardHeroProps) {
   return (
-    <section
-      className="panel panel-ticks relative overflow-hidden p-5 md:p-6"
-      aria-label="Workbench overview"
+    // DASHBOARD-POLISH (fix #2) — the hero used the standalone `.panel`
+    // surface (sharp `radius-none` corners + solid `bg-elevated` fill +
+    // edge glow) while every OTHER dashboard section uses the `Card`
+    // primitive, so its frame read heavier / different from its siblings
+    // (Ross: "border is thicker than all the other ones"). Move it onto the
+    // same `Card` primitive so it carries the identical single 1px
+    // gold-standard phosphor border + ticks + coordinate tech-label as the
+    // KPI cards, the PROJECTS table, and the rail cards — one consistent
+    // frame weight across the screen. `accentColor="cyan"` keeps the scope
+    // hue; `overflow-hidden` is preserved so the globe can't bleed out.
+    <Card
+      accentColor="cyan"
+      ticks
+      techLabel="SYS ▸ SCOPE / LIVE"
+      ariaLabel="Workbench overview"
+      className="overflow-hidden"
     >
-      <span className="panel-label" aria-hidden>
-        SYS ▸ SCOPE / LIVE
-      </span>
-
       <div className="flex items-center justify-between gap-6">
         {/* Mission-control readout (left). */}
         <div className="min-w-0 flex-1 space-y-4">
@@ -98,6 +108,6 @@ export function DashboardHero({ stats }: DashboardHeroProps) {
           />
         </div>
       </div>
-    </section>
+    </Card>
   );
 }
