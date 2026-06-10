@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { SidebarRail } from "@/components/shell/SidebarRail";
 import { MobileTopBar } from "@/components/shell/MobileTopBar";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
@@ -57,9 +58,14 @@ export default async function RootLayout({
     <html lang="en">
       <body>
         {/* D1 — apply the stored Comfortable/Compact density to <html>
-            before first paint so there is no comfortable→compact flash
-            on reload. Runs synchronously ahead of the body content. */}
-        <script dangerouslySetInnerHTML={{ __html: DENSITY_BOOTSTRAP_SCRIPT }} />
+            before first paint so there is no comfortable→compact flash on
+            reload. `beforeInteractive` hoists it into <head> so it runs
+            ahead of hydration without React's inline-<script> warning. */}
+        <Script
+          id="density-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: DENSITY_BOOTSTRAP_SCRIPT }}
+        />
         <ServiceWorkerRegistrar />
         <ToastProvider>
           {/* FIGMA-REBUILD shell (REBUILD_SPEC §2) — every authed page gets

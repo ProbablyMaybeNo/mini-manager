@@ -129,7 +129,7 @@ export function EyedropperHero({ className }: HeroProps) {
       <line x1={20} y1={68} x2={140} y2={68} stroke="var(--color-border)" strokeWidth={1} />
       {[
         { x: 52, y: 48, hex: "#9B80DC" },
-        { x: 96, y: 40, hex: "#00D2FF" },
+        { x: 96, y: 40, hex: "#7DF9FF" },
         { x: 72, y: 62, hex: "#EEF996" },
       ].map((pin) => (
         <g key={pin.hex}>

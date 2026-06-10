@@ -156,8 +156,8 @@
      Style Guide page + DESIGN_LANGUAGE §2). Any near-miss hue in a mock
      normalizes to these; no new hues. All clear WCAG-AA (≥4.5:1) on
      #0A0A0A as text AND carry crisp black text as a button fill:
-       cyan   #00D2FF  11.0:1   primary action / selected row / active nav
-                                / links / panel borders
+       cyan   #7DF9FF  16.8:1   primary action / selected row / active nav
+                                / links / panel borders (gold-standard bright)
        green  #51FD80  14.8:1   success / owned / "go" / secondary headings
        yellow #EEF996  17.4:1   warning / wishlist / highlight (sparing)
        purple #9B80DC   6.1:1   special categories / secondary accent
@@ -166,9 +166,9 @@
      not for text-on-black. `-bright` is the cyan hover-lift. */
   --color-green: #51fd80;
   --color-green-dim: #2fa455;
-  --color-cyan: #00d2ff;
-  --color-cyan-dim: #0e8aa6;
-  --color-cyan-bright: #7df9ff;
+  --color-cyan: #7df9ff;
+  --color-cyan-dim: #1ba7c4;
+  --color-cyan-bright: #b8fcff;
   --color-yellow: #eef996;
   --color-yellow-dim: #b1bc66;
   --color-amber: #eef996;
@@ -2235,7 +2235,7 @@ select.field-control {
 }
 /* Selected row — SOLID cyan fill, BLACK text (Library list + dashboard
    row idiom). Glow is dropped inside the row: black-on-cyan must stay
-   crisp (black on #00D2FF ≈ 11.7:1, WCAG-AA+). Phosphor-coloured inline
+   crisp (black on #7DF9FF ≈ 16:1, WCAG-AAA). Phosphor-coloured inline
    chips keep their own fills; plain text flips to black via color. */
 .dt tbody tr.dt-row-selected td,
 .dt tbody tr[aria-selected="true"] td {

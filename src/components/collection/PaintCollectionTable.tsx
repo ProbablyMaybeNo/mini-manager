@@ -33,10 +33,13 @@ export function PaintCollectionTable({ rows }: { rows: ReadonlyArray<PaintRow> }
   const { selected, toggle, clear } = useRowSelection();
 
   return (
-    <div className="panel panel-ticks relative overflow-x-auto">
+    <div className="panel panel-ticks relative">
       <span className="panel-label" aria-hidden>
         PAINTS · {rows.length}
       </span>
+      {/* Scroll on an inner wrapper so the panel stays non-clipping and
+          the on-border label isn't cut off by overflow. */}
+      <div className="overflow-x-auto">
       <table className="dt">
         <thead>
           <tr>
@@ -108,6 +111,7 @@ export function PaintCollectionTable({ rows }: { rows: ReadonlyArray<PaintRow> }
           router.refresh();
         }}
       />
+      </div>
     </div>
   );
 }

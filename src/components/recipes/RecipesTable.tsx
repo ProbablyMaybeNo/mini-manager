@@ -112,10 +112,13 @@ export function RecipesTable({ rows, assignProjects }: Props) {
 
       {/* Desktop — one terminal panel: cyan border, corner ticks, tech
           label; table + the trailing + RECIPE row share the frame. */}
-      <div className="hidden md:block panel panel-info panel-ticks relative overflow-x-auto">
+      <div className="hidden md:block panel panel-info panel-ticks relative">
         <span className="panel-label" aria-hidden>
           RECIPES · {sorted.length}
         </span>
+        {/* Scroll lives on an inner wrapper so the panel itself stays
+            non-clipping — otherwise overflow clips the on-border label. */}
+        <div className="overflow-x-auto">
         <table className="w-full font-mono text-sm">
           <thead>
             <tr
@@ -165,6 +168,7 @@ export function RecipesTable({ rows, assignProjects }: Props) {
           </tbody>
         </table>
         <NewRecipeButton trigger="row" />
+        </div>
       </div>
     </>
   );

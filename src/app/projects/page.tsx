@@ -216,7 +216,7 @@ export default async function DashboardPage({
       <PageHeader
         title="DASHBOARD"
         accent="green"
-        tagline="Your wargaming workbench at a glance."
+        tagline="Project hub, everything you need to manage your painting progress."
       />
 
       {isEmpty ? (

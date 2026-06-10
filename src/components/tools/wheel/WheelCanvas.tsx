@@ -144,7 +144,7 @@ export function WheelCanvas({
         ctx.beginPath();
         ctx.arc(x, y, PICKER_RADIUS, 0, Math.PI * 2);
         ctx.strokeStyle = isActive
-          ? "#00D2FF"
+          ? "#7DF9FF"
           : isPrimary
             ? "#51FD80"
             : "rgba(255,255,255,0.85)";
