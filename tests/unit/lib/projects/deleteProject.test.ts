@@ -60,18 +60,20 @@ describe("DeleteProjectButton trigger", () => {
   });
 });
 
-describe("Project detail page mounts the delete trigger", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("Project inspector mounts the delete trigger", () => {
+  // FIGMA-REBUILD §9 — the /projects/[id] detail PAGE became a slide-out
+  // ProjectInspector (the page route is now a redirect into the dashboard
+  // with `?project=<id>`). The delete trigger lives in the inspector.
+  const src = read("src/components/projects/ProjectInspector.tsx");
 
   test("imports DeleteProjectButton", () => {
     expect(src).toContain("DeleteProjectButton");
   });
 
   test("renders the solid danger trigger (not the inline text-link) with redirect-to-projects on success", () => {
-    // UX-1208 — the detail-page delete now uses the solid red
-    // variant="danger" Button so the destructive action reads as
-    // destructive. The `inline` text-link tone was indistinguishable
-    // from a benign link.
+    // UX-1208 — the inspector delete uses the solid red variant="danger"
+    // Button (no `inline`) so the destructive action reads as destructive,
+    // and redirects to /projects on success (the panel's project is gone).
     const idx = src.indexOf("<DeleteProjectButton");
     expect(idx).toBeGreaterThan(0);
     const block = src.slice(idx, src.indexOf("/>", idx));

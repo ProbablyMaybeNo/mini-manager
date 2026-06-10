@@ -101,18 +101,25 @@ describe("ProjectsDashboardTable — already uses the unified modal", () => {
   });
 });
 
-describe("project workspace page wires attachCandidates", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("project inspector wires attachCandidates (FIGMA-REBUILD §9)", () => {
+  // FIGMA-REBUILD §9 — the /projects/[id] detail page became the slide-out
+  // ProjectInspector. The attach-candidate plumbing moved into its server
+  // data action (projectInspectorActions.ts): the same lean owned-recipes
+  // list, filtered to drop recipes already on this project, surfaced as the
+  // inspector's ASSIGN dropdown candidates.
+  const action = read("src/components/projects/projectInspectorActions.ts");
+  const panel = read("src/components/projects/ProjectInspector.tsx");
 
-  test("fetches listOwnedRecipesLean for the modal candidate list", () => {
-    expect(src).toContain("listOwnedRecipesLean");
+  test("fetches listOwnedRecipesLean for the candidate list", () => {
+    expect(action).toContain("listOwnedRecipesLean");
   });
 
   test("filters out recipes already attached to this project from the candidate list", () => {
-    expect(src).toContain("r.attachedProjectId !== project.id");
+    expect(action).toContain("r.attachedProjectId !== project.id");
   });
 
-  test("passes attachCandidates to ProjectColorSchemeBox", () => {
-    expect(src).toContain("attachCandidates={attachCandidates}");
+  test("the inspector renders the attachCandidates as an ASSIGN dropdown", () => {
+    expect(action).toContain("attachCandidates:");
+    expect(panel).toContain("vm.attachCandidates");
   });
 });

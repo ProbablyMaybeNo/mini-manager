@@ -209,29 +209,15 @@ export default async function DashboardPage({
           DASHBOARD title is the stylistic terminal display face (shadow/glow
           via .title-display), sized up so it reads as the mission-control
           banner the mockup shows — terminal, not arcade. */}
+      {/* FIGMA-REBUILD §3 — the Dashboard.png header is just the title +
+          tagline; the ADD PROJECT (primary) / UPLOAD ARMY LIST (tertiary
+          outline) CTAs live UNDER the PROJECTS table (rendered by
+          DashboardProjectsTable), not duplicated up here. */}
       <PageHeader
         title="DASHBOARD"
         accent="green"
         tagline="Your wargaming workbench at a glance."
-      >
-        <Button
-          as="a"
-          href="/projects/new"
-          variant="primary"
-          size="md"
-        >
-          Add project
-        </Button>
-        <Button
-          as="a"
-          href="/projects/import"
-          variant="tertiary"
-          tone="outline"
-          size="md"
-        >
-          Upload army list
-        </Button>
-      </PageHeader>
+      />
 
       {isEmpty ? (
         <EmptyState />
@@ -306,7 +292,7 @@ function EmptyState() {
       </span>
       <div>
         <h2 className="text-lg glow-cyan mb-3">No projects yet</h2>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto">
+        <p className="text-sm text-[var(--color-fg-muted)] font-mono max-w-md mx-auto">
           Start with anything you&apos;re painting — an army, a warband, a
           single mini, or a piece of terrain. Sub-projects let you nest units
           inside armies.

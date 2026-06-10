@@ -105,43 +105,32 @@ describe("WarbandModelsTable component surface", () => {
   });
 });
 
-describe("Project detail page — Roster + Stages cards carry terminal chrome", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("WarbandModelsTable + ColorSchemeBox survive the inspector rebuild", () => {
+  // FIGMA-REBUILD §9 — the /projects/[id] PAGE (which mounted the editable
+  // Roster/Stages cards and swapped the COLOR SCHEME box for the
+  // WarbandModelsTable on a Warband) was dissolved into the compact
+  // slide-out ProjectInspector. The inspector shows a unified recipe-chip +
+  // ASSIGN section + a children UNITS summary on every project type, so the
+  // page-level Warband swap is gone. Both components are preserved for reuse
+  // (the WarbandModelsTable surface is fully pinned in the describe above);
+  // the detail route is now a redirect into the dashboard inspector.
+  const route = read("src/app/projects/[id]/page.tsx");
+  const warband = read("src/components/projects/WarbandModelsTable.tsx");
+  const colorBox = read("src/components/ProjectColorSchemeBox.tsx");
 
-  test("PHASE-2 — Roster + Stages cards get corner ticks + coordinate labels", () => {
-    expect(src).toContain('techLabel="OPS ▸ ROSTER"');
-    expect(src).toContain('techLabel="OPS ▸ STAGES"');
-  });
-});
-
-describe("Project detail page swaps the recipe box for the models table on a Warband", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
-
-  test("imports WarbandModelsTable + its row type", () => {
-    expect(src).toContain("WarbandModelsTable");
-    expect(src).toContain("WarbandModelRow");
-  });
-
-  test("gates the swap on project.type === Warband", () => {
-    expect(src).toContain('project.type === "Warband"');
-    expect(src).toContain("isWarband");
+  test("the detail route redirects into the dashboard inspector", () => {
+    expect(route).toContain("redirect(");
+    expect(route).toContain("/projects?project=");
   });
 
-  test("renders the models table instead of the ColorSchemeBox when Warband", () => {
-    // The ternary picks WarbandModelsTable on a Warband and the existing
-    // ProjectColorSchemeBox otherwise.
-    expect(src).toMatch(
-      /isWarband \? \([\s\S]{0,400}WarbandModelsTable[\s\S]{0,400}ProjectColorSchemeBox/,
-    );
+  test("WarbandModelsTable is preserved (still a real models table)", () => {
+    expect(warband).toContain("WarbandModelRow");
+    expect(warband).toContain(">Name</th>");
+    expect(warband).toContain("?parent=${warbandId}&type=Unit");
   });
 
-  test("builds per-model rows carrying modelClass + first recipe link", () => {
-    expect(src).toContain("warbandModelRows");
-    expect(src).toContain("getProjectFirstRecipeMap");
-    expect(src).toContain("modelClass: c.modelClass");
-  });
-
-  test("non-Warband projects still render the ProjectColorSchemeBox", () => {
-    expect(src).toContain("ProjectColorSchemeBox");
+  test("ProjectColorSchemeBox is preserved (still the recipe editor box)", () => {
+    expect(colorBox).toContain("attachedRecipeName");
+    expect(colorBox).toContain("AttachRecipeModal");
   });
 });

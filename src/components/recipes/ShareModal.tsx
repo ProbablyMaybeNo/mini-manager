@@ -279,7 +279,7 @@ export function ShareModal({
           ) : (
             <div className="flex flex-col gap-2">
               {isUnnamed ? (
-                <p className="font-mono text-xs text-[var(--color-amber)]">
+                <p className="font-mono text-xs text-[var(--color-yellow)]">
                   Name your recipe before sharing — currently &ldquo;Untitled
                   recipe&rdquo;.{" "}
                   <button

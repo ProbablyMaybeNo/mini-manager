@@ -70,7 +70,7 @@ export function CloneButton({ slug }: Props) {
       {error ? (
         <p
           role="alert"
-          className="flex items-start gap-2 font-mono text-xs text-[var(--color-amber)]"
+          className="flex items-start gap-2 font-mono text-xs text-[var(--color-yellow)]"
         >
           <LogTag variant="warn" />
           <span>{error}</span>
@@ -126,7 +126,7 @@ export function AutoCloneOnMount({ slug }: Props) {
   return error ? (
     <p
       role="alert"
-      className="max-w-md mx-auto mt-4 inline-flex items-start gap-2 font-mono text-xs text-[var(--color-amber)]"
+      className="max-w-md mx-auto mt-4 inline-flex items-start gap-2 font-mono text-xs text-[var(--color-yellow)]"
     >
       <LogTag variant="warn" />
       <span>{error}</span>

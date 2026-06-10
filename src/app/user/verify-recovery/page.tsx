@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { verifyRecoveryEmailToken } from "@/lib/auth/recoveryEmail";
 
@@ -27,34 +27,40 @@ export default async function VerifyRecoveryEmailPage({
     : { ok: false as const, message: "Missing verification token" };
 
   return (
-    <div className="p-6 md:p-8 max-w-md mx-auto space-y-6">
-      <Card title="Recovery email" ariaLabel="Recovery email verification">
+    <AuthShell
+      title="RECOVERY EMAIL"
+      breadcrumb="SYS ▸ VERIFY"
+      techLabel="AUTH ▸ VERIFY"
+      footer={
+        <Link
+          href="/user"
+          className="text-[var(--color-cyan)] underline-offset-2 hover:underline"
+        >
+          ← Back to settings
+        </Link>
+      }
+    >
+      <div className="space-y-3" role={result.ok ? undefined : "alert"}>
         {result.ok ? (
           <>
             <StatusPill status="ok">VERIFIED</StatusPill>
-            <p className="text-sm font-sans pt-3">
-              Your recovery email is now verified. You can use it for
-              password reset and to upgrade to a paid plan.
+            <p className="text-sm font-mono text-[var(--color-fg)] leading-snug">
+              Your recovery email is now verified. You can use it for password
+              reset and to upgrade to a paid plan.
             </p>
           </>
         ) : (
           <>
             <StatusPill status="danger">UNABLE TO VERIFY</StatusPill>
-            <p className="text-sm font-sans pt-3">{result.message}</p>
-            <p className="text-xs font-mono text-[var(--color-fg-muted)] pt-3">
+            <p className="text-sm font-mono text-[var(--color-fg)] leading-snug">
+              {result.message}
+            </p>
+            <p className="text-xs font-mono text-[var(--color-fg-muted)] leading-snug">
               Go back to settings and request a fresh verification email.
             </p>
           </>
         )}
-        <p className="pt-4">
-          <Link
-            href="/user"
-            className="text-sm font-mono text-[var(--color-accent)] underline-offset-2 hover:underline"
-          >
-            ← Back to settings
-          </Link>
-        </p>
-      </Card>
-    </div>
+      </div>
+    </AuthShell>
   );
 }

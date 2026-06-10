@@ -6,7 +6,7 @@ interface HeroProps {
 
 /** COLOR WHEEL — spiral pixel rainbow + analogous 3-swatch callout. */
 export function WheelHero({ className }: HeroProps) {
-  const swatches = ["#E63946", "#F4A261", "#2A9D8F"];
+  const swatches = ["#FF4244", "#F4A261", "#2A9D8F"];
   return (
     <svg
       viewBox="0 0 160 88"
@@ -128,9 +128,9 @@ export function EyedropperHero({ className }: HeroProps) {
       <line x1={80} y1={20} x2={80} y2={76} stroke="var(--color-border)" strokeWidth={1} />
       <line x1={20} y1={68} x2={140} y2={68} stroke="var(--color-border)" strokeWidth={1} />
       {[
-        { x: 52, y: 48, hex: "#8B5CF6" },
-        { x: 96, y: 40, hex: "#22D3EE" },
-        { x: 72, y: 62, hex: "#FACC15" },
+        { x: 52, y: 48, hex: "#9B80DC" },
+        { x: 96, y: 40, hex: "#00D2FF" },
+        { x: 72, y: 62, hex: "#EEF996" },
       ].map((pin) => (
         <g key={pin.hex}>
           <line x1={pin.x} y1={pin.y} x2={pin.x} y2={pin.y - 14} stroke="var(--color-cyan)" strokeWidth={1} />

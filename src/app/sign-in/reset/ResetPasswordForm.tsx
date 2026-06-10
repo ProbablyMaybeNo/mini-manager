@@ -44,7 +44,7 @@ export function ResetPasswordForm({ token }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 pt-3">
+    <form onSubmit={onSubmit} className="space-y-4">
       <PromptField
         label="New password"
         name="password"

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchImportForPreview } from "@/lib/actions/imports";
 import { ImportPreview } from "@/components/imports/ImportPreview";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -16,55 +17,52 @@ export default async function ImportPreviewPage({ params }: PreviewPageProps) {
   if (!result.ok) {
     if (result.error === "Import not found.") notFound();
     return (
-      <div className="p-6 md:p-8 max-w-3xl space-y-4">
-        <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
-          <Link href="/projects/import" className="hover:text-[var(--color-accent)]">
-            ← Import another list
+      <div className="p-6 md:p-8 max-w-3xl space-y-6">
+        <nav
+          className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]"
+          aria-label="Breadcrumb"
+        >
+          <Link href="/projects/import" className="hover:underline">
+            SYS ▸ IMPORT
           </Link>
+          <span className="text-[var(--color-fg-subtle)]"> / FAILED</span>
         </nav>
-        <header className="space-y-2">
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-red)] mb-2">
-            SYS ▸ IMPORT / FAILED
-          </p>
-          <h1 className="title-display text-base md:text-lg">IMPORT FAILED</h1>
-          <p
-            className="text-sm font-mono text-[var(--color-amber)] mt-3"
-            role="alert"
-          >
-            {result.error}
-          </p>
-        </header>
+        <PageHeader
+          title="IMPORT FAILED"
+          accent="red"
+          tagline="The parser couldn't read that list. Check the file or paste the text again."
+        />
+        <p
+          className="text-sm font-mono text-[var(--color-red)]"
+          role="alert"
+        >
+          {result.error}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="p-6 md:p-8 max-w-4xl space-y-6">
-      <nav className="text-xs font-mono text-[var(--color-fg-muted)]">
-        <Link href="/projects" className="hover:text-[var(--color-accent)]">
-          ← Projects
+      <nav
+        className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]"
+        aria-label="Breadcrumb"
+      >
+        <Link href="/projects" className="hover:underline">
+          SYS ▸ PROJECTS
         </Link>
-        {" > "}
-        <Link
-          href="/projects/import"
-          className="hover:text-[var(--color-accent)]"
-        >
-          Import
+        <span className="text-[var(--color-fg-subtle)]"> / </span>
+        <Link href="/projects/import" className="hover:underline">
+          IMPORT
         </Link>
-        {" > "}
-        <span className="text-[var(--color-fg)]">Preview</span>
+        <span className="text-[var(--color-fg-subtle)]"> / PREVIEW</span>
       </nav>
 
-      <header className="space-y-2">
-        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-          SYS ▸ IMPORT / PREVIEW
-        </p>
-        <h1 className="title-display text-base md:text-lg">PREVIEW</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-2xl mt-3 leading-snug">
-          Edit anything the parser got wrong. <strong>Apply</strong> creates an
-          Army project with one Unit child per row.
-        </p>
-      </header>
+      <PageHeader
+        title="PREVIEW"
+        accent="green"
+        tagline="Edit anything the parser got wrong. Apply creates an Army project with one Unit child per row."
+      />
 
       <ImportPreview
         importId={result.import.id}

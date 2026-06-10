@@ -121,22 +121,29 @@ describe("UX-1211 — sub-AA separator dots fixed", () => {
 });
 
 describe("UX-1209 — auth hero capped on mobile so the form clears the fold", () => {
-  test("sign-up caps the logo at 150px on mobile, full width at md+", () => {
-    const src = read("src/app/sign-up/page.tsx");
-    expect(src).toContain('w-full max-w-[150px] md:max-w-none');
+  // FIGMA-REBUILD §10 — every auth surface now renders through the shared
+  // AuthShell, which owns the capped CRT-logo hero (max-w-[140px] on mobile,
+  // wider at md+). The per-page logo wrapper is gone; the cap lives once in
+  // AuthShell.
+  const shell = read("src/components/auth/AuthShell.tsx");
+
+  test("AuthShell caps the logo hero on mobile, full width at md+", () => {
+    expect(shell).toContain("max-w-[140px] md:max-w-[220px]");
   });
 
-  test("sign-in mirrors the capped hero", () => {
-    const src = read("src/app/sign-in/page.tsx");
-    expect(src).toContain('w-full max-w-[150px] md:max-w-none');
+  test("sign-in + sign-up render through the shared AuthShell", () => {
+    expect(read("src/app/sign-in/page.tsx")).toContain("<AuthShell");
+    expect(read("src/app/sign-up/page.tsx")).toContain("<AuthShell");
   });
 });
 
 describe("UX-1208 — DELETE PROJECT reads as destructive + has a confirm", () => {
-  test("detail page uses the solid danger Button, not the inline text-link", () => {
-    const src = read("src/app/projects/[id]/page.tsx");
-    // The DeleteProjectButton block on the detail page no longer passes
-    // `inline`, so it falls through to the variant="danger" solid Button.
+  test("the project inspector uses the danger DeleteProjectButton, not an inline text-link", () => {
+    // FIGMA-REBUILD §9 — the /projects/[id] detail PAGE became a slide-out
+    // ProjectInspector. The delete trigger moved there: a DeleteProjectButton
+    // with redirect-to-projects-on-success and NO `inline` prop (so it falls
+    // through to the solid variant="danger" Button).
+    const src = read("src/components/projects/ProjectInspector.tsx");
     const idx = src.indexOf("<DeleteProjectButton");
     expect(idx).toBeGreaterThan(0);
     const block = src.slice(idx, src.indexOf("/>", idx));

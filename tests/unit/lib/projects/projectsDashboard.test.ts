@@ -65,8 +65,11 @@ describe("ProjectsDashboardTable component surface", () => {
 
   test("REDESIGN-CLEANUP fix 3 — PURCHASED shows as OWNED, neon green", () => {
     // Display-only relabel: the derived DisplayStatus key stays PURCHASED,
-    // but the pill renders "OWNED" with the green ("ok") tone.
-    expect(src).toContain('PURCHASED: "ok"');
+    // but the column renders "OWNED" in green.
+    // FIGMA-REBUILD §3 — the Dashboard.png reference shows STATUS as a green
+    // mono text label (not a tone-keyed pill), so the green now comes from
+    // STATUS_TEXT_CLASS rather than the old `PURCHASED: "ok"` pill tone.
+    expect(src).toContain('PURCHASED: "text-[var(--color-green)]"');
     expect(src).toContain('PURCHASED: "OWNED"');
     // The visible label flows through STATUS_LABEL, never the raw status key,
     // on both the desktop pill and the mobile comparison row.
@@ -165,15 +168,16 @@ describe("Projects page wires the dashboard table in", () => {
     expect(src).not.toContain("listActiveProjects");
   });
 
-  test("header CTAs are cyan (DASHBOARD-REDESIGN) and the search bar is dropped", () => {
-    // Part B item 5 — Ross's mockup: ADD PROJECT + UPLOAD ARMY LIST are both
-    // cyan, and the redundant quick-add / search bar is removed (the ADD
-    // PROJECT button covers it). This supersedes the prior success-green /
-    // warning-yellow header split.
-    expect(src).toContain('variant="primary"');
-    expect(src).toContain("Add project");
-    expect(src).toContain("Upload army list");
-    // The quick-add search bar is gone from the dashboard header.
+  test("ADD PROJECT / UPLOAD ARMY LIST CTAs sit under the table; no quick-add bar", () => {
+    // FIGMA-REBUILD §3 — the Dashboard.png reference moves the CTAs UNDER
+    // the PROJECTS table (rendered by DashboardProjectsTable): ADD PROJECT
+    // is the primary (cyan) solid, UPLOAD ARMY LIST the tertiary outline.
+    // The redundant quick-add / search bar is gone from the dashboard.
+    const table = read("src/components/projects/DashboardProjectsTable.tsx");
+    expect(table).toContain('variant="primary"');
+    expect(table).toContain("Add project");
+    expect(table).toContain("Upload army list");
+    // The quick-add search bar is gone from the dashboard page header.
     expect(src).not.toContain("<QuickAddBar");
   });
 

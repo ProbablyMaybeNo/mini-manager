@@ -199,7 +199,7 @@ export function AttachRecipeModal(props: Props) {
                       {c.name}
                     </span>
                     {c.attachmentLabel ? (
-                      <span className="block text-2xs font-mono text-[var(--color-amber)] uppercase tracking-wider">
+                      <span className="block text-2xs font-mono text-[var(--color-yellow)] uppercase tracking-wider">
                         moves from: {c.attachmentLabel}
                       </span>
                     ) : (
@@ -265,9 +265,9 @@ export function AttachRecipeModal(props: Props) {
       </div>
 
       {confirmMove ? (
-        <div className="border-t border-[var(--color-border)] p-4 space-y-3 bg-[color-mix(in_srgb,var(--color-amber)_6%,transparent)]">
+        <div className="border-t border-[var(--color-border)] p-4 space-y-3 bg-[color-mix(in_srgb,var(--color-yellow)_6%,transparent)]">
           <p className="text-xs font-sans text-[var(--color-fg-muted)]">
-            <strong className="text-[var(--color-amber)]">
+            <strong className="text-[var(--color-yellow)]">
               {confirmMove.name}
             </strong>{" "}
             is currently attached to{" "}

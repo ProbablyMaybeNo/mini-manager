@@ -94,7 +94,7 @@ function EmptyState() {
         RECIPES · 0
       </span>
       <h2 className="text-lg glow-cyan">No recipes yet</h2>
-      <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto leading-snug">
+      <p className="text-sm text-[var(--color-fg-muted)] font-mono max-w-md mx-auto leading-snug">
         Build your first scheme: click a + slot, pick a paint from the
         wheel / library / eyedropper, assign it a layer. Attach the
         finished recipe to an army when you&apos;re ready.

@@ -92,7 +92,7 @@ export function WheelCanvas({
       // Border ring + tick at 0/90/180/270.
       ctx.beginPath();
       ctx.arc(center, center, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(245,247,248,0.18)";
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -110,7 +110,7 @@ export function WheelCanvas({
           center + outer * Math.cos(rad),
           center + outer * Math.sin(rad),
         );
-        ctx.strokeStyle = "rgba(51,255,102,0.45)";
+        ctx.strokeStyle = "rgba(81,253,128,0.45)";
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
@@ -132,7 +132,7 @@ export function WheelCanvas({
         if (isActive) {
           ctx.beginPath();
           ctx.arc(x, y, PICKER_RADIUS + 5, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(0,229,255,0.18)";
+          ctx.fillStyle = "rgba(0,210,255,0.18)";
           ctx.fill();
         }
 
@@ -144,10 +144,10 @@ export function WheelCanvas({
         ctx.beginPath();
         ctx.arc(x, y, PICKER_RADIUS, 0, Math.PI * 2);
         ctx.strokeStyle = isActive
-          ? "#00E5FF"
+          ? "#00D2FF"
           : isPrimary
-            ? "#33FF66"
-            : "rgba(245,247,248,0.85)";
+            ? "#51FD80"
+            : "rgba(255,255,255,0.85)";
         ctx.lineWidth = isActive ? 2 : 1.5;
         ctx.stroke();
 
@@ -158,7 +158,7 @@ export function WheelCanvas({
           ctx.lineTo(x + 3, y);
           ctx.moveTo(x, y - 3);
           ctx.lineTo(x, y + 3);
-          ctx.strokeStyle = "rgba(5,6,7,0.85)";
+          ctx.strokeStyle = "rgba(10,10,10,0.85)";
           ctx.lineWidth = 1;
           ctx.stroke();
         }

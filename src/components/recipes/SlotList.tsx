@@ -279,10 +279,11 @@ export function SlotList({ recipeId, slots, inventoryByPaintId }: Props) {
             role="list"
             aria-label="Recipe slots"
           >
-            {localSlots.map((slot) => (
+            {localSlots.map((slot, index) => (
               <SlotCell
                 key={slot.id}
                 slot={slot}
+                stepNumber={index + 1}
                 coverage={coverageForSlot(slot, inventoryByPaintId)}
                 selected={editingSlotId === slot.id}
                 onSelect={() => {
@@ -590,6 +591,7 @@ function SlotEditorPanel({
  */
 function SlotCell({
   slot,
+  stepNumber,
   coverage,
   selected,
   onSelect,
@@ -601,6 +603,10 @@ function SlotCell({
   onDragEnd,
 }: {
   slot: SlotListItem;
+  /** 1-based ordered position in the recipe — rendered as the `STEP NN`
+   *  tag so the slot cards read as an ordered sequence (Focus-card idiom,
+   *  REBUILD_SPEC §5). */
+  stepNumber: number;
   coverage: SlotCoverage;
   selected: boolean;
   onSelect: () => void;
@@ -646,8 +652,8 @@ function SlotCell({
         type="button"
         onClick={onSelect}
         aria-pressed={selected}
-        aria-label={`Edit slot ${slotLabel}`}
-        title={`${slotLabel} · ${layerDisplay(slot.technique)}`}
+        aria-label={`Edit step ${stepNumber} · ${slotLabel}`}
+        title={`Step ${stepNumber} · ${slotLabel} · ${layerDisplay(slot.technique)}`}
         className={clsx(
           "w-full aspect-square flex flex-col items-stretch justify-between rounded-sm transition-all cursor-pointer p-2",
           selected && "shadow-[0_0_0_2px_var(--color-accent)]",
@@ -664,16 +670,31 @@ function SlotCell({
               : "2px dashed var(--color-border-strong)",
         }}
       >
-        <span
-          aria-hidden
-          className="self-start cursor-grab text-2xs font-mono leading-none px-1 py-0.5 rounded-sm opacity-60 group-hover:opacity-100"
-          style={{
-            color: textColor,
-            background: filled ? "rgba(0,0,0,0.2)" : "transparent",
-          }}
-          title="Drag to reorder"
-        >
-          ≡
+        <span className="flex items-center justify-between gap-1">
+          <span
+            aria-hidden
+            className="cursor-grab text-2xs font-mono leading-none px-1 py-0.5 rounded-sm opacity-60 group-hover:opacity-100"
+            style={{
+              color: textColor,
+              background: filled ? "rgba(0,0,0,0.2)" : "transparent",
+            }}
+            title="Drag to reorder"
+          >
+            ≡
+          </span>
+          {/* Ordered step index — the Focus-card `SLOT 01` idiom
+              (REBUILD_SPEC §5). Black/white text already contrasts the
+              solid paint fill via `readableTextOn`. */}
+          <span
+            aria-hidden
+            className="text-2xs font-mono uppercase tracking-[0.16em] leading-none px-1 py-0.5 rounded-sm opacity-80"
+            style={{
+              color: textColor,
+              background: filled ? "rgba(0,0,0,0.2)" : "transparent",
+            }}
+          >
+            STEP {String(stepNumber).padStart(2, "0")}
+          </span>
         </span>
         <span
           className={clsx(
@@ -751,5 +772,5 @@ function readableTextOn(hex: string): string {
   const b = parseInt(clean.slice(4, 6), 16);
   if ([r, g, b].some(Number.isNaN)) return "var(--color-fg)";
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance > 0.55 ? "#0a0a0a" : "#f5f5f5";
+  return luminance > 0.55 ? "#0a0a0a" : "#ffffff";
 }

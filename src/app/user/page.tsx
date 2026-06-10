@@ -6,6 +6,7 @@ import { LibraryBrandFilterCard } from "@/components/user/LibraryBrandFilterCard
 import { RecoveryEmailCard } from "@/components/user/RecoveryEmailCard";
 import { SignOutButton } from "@/components/user/SignOutButton";
 import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
@@ -123,19 +124,14 @@ export default async function UserPage() {
     // of one long single-column scroll [D §13]. The Plan card spans the
     // full width as the header block; the rest pack into two columns.
     <div className="content-cap p-6 md:p-8 space-y-8">
-      <header className="space-y-2">
-        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-          SYS ▸ USER / ACCOUNT
-        </p>
-        <h1 className="title-display text-base md:text-lg">USER</h1>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans leading-snug mt-3">
-          Your account, plan, and data tools. Set a recovery email to enable
-          password reset; export a full JSON backup any time.
-        </p>
-      </header>
+      <PageHeader
+        title="ACCOUNT"
+        accent="cyan"
+        tagline="Your account, plan, and data tools. Set a recovery email to enable password reset; export a full JSON backup any time."
+      />
 
       <Card title="Plan" ariaLabel="Plan tier">
-        <p className="text-xs font-sans text-[var(--color-fg-subtle)] mb-3 leading-snug">
+        <p className="text-xs font-mono text-[var(--color-fg-subtle)] mb-3 leading-snug">
           Your account tier. Free is a capped taster (1 project, 1 recipe,
           3 wishlist items); Pro and Founder lift the caps and unlock cloud
           sync + early-supporter benefits when Stripe ships.
@@ -147,11 +143,11 @@ export default async function UserPage() {
           <span className="font-mono text-sm text-[var(--color-fg)] tabular-nums">
             {PLAN_PRICE[planTier]}
           </span>
-          <span className="text-xs font-sans text-[var(--color-fg-muted)]">
+          <span className="text-xs font-mono text-[var(--color-fg-muted)]">
             {PLAN_BLURB[planTier]}
           </span>
         </div>
-        <ul className="space-y-1 text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+        <ul className="space-y-1 text-xs font-mono text-[var(--color-fg-muted)] leading-snug">
           {PLAN_FEATURES[planTier].map((feat) => (
             <li key={feat} className="flex items-start gap-2">
               <span aria-hidden className="text-[var(--color-green)]">
@@ -193,7 +189,7 @@ export default async function UserPage() {
                   <span className="block text-[var(--color-fg)] tabular-nums">
                     {PLAN_PRICE[tier]}
                   </span>
-                  <span className="block text-[var(--color-fg-muted)] mt-1 normal-case font-sans text-2xs leading-snug">
+                  <span className="block text-[var(--color-fg-muted)] mt-1 normal-case font-mono text-2xs leading-snug">
                     {PLAN_BLURB[tier]}
                   </span>
                 </li>
@@ -221,7 +217,7 @@ export default async function UserPage() {
         <DensityCard />
 
         <Card title="Backup & export" ariaLabel="Backup and export">
-          <p className="text-sm font-sans text-[var(--color-fg)] leading-snug">
+          <p className="text-sm font-mono text-[var(--color-fg)] leading-snug">
             Downloads everything you own — projects, named models, recipes
             (with colour slots and steps), palettes, inventory, and wishlist —
             as a single JSON file. The schema is versioned so a future Mini
@@ -233,7 +229,7 @@ export default async function UserPage() {
         </Card>
 
         <Card title="Session" ariaLabel="Session">
-          <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-snug mb-3">
+          <p className="text-sm font-mono text-[var(--color-fg-muted)] leading-snug mb-3">
             End your session on this device. You&apos;ll need to sign in again
             to use Mini Manager.
           </p>

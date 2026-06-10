@@ -14,8 +14,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import type { Priority, ProjectType } from "@/db/schema";
 import { priorities, projectTypes } from "@/db/schema";
-import { ProgressBar } from "@/components/ProgressBar";
-import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
+import { ProgressBar, type ProgressTone } from "@/components/ProgressBar";
 import {
   InlineCellPopover,
   InlineCellPopoverItem,
@@ -97,22 +96,39 @@ function writeExpanded(set: ReadonlySet<string>): void {
   }
 }
 
-const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
-  WISHLIST: "wishlist",
-  // REDESIGN-CLEANUP (fix 3) — Ross: "make the PURCHASED element neon green.
-  // Maybe switch it to OWNED." This is a DISPLAY-only restyle: the PURCHASED
-  // DisplayStatus is DERIVED (ownedCount > 0), never a stored DB enum, so the
-  // tone flips to "ok" (neon green = owned/go per the design language) and the
-  // visible label renders "OWNED" via STATUS_LABEL below — the computed key
-  // stays "PURCHASED" so the rest of the app (and the wishlist enum) is intact.
-  PURCHASED: "ok",
-  BUILDING: "info",
-  PRIMING: "info",
-  PAINTING: "warning",
-  BASING: "warning",
-  COMPLETE: "ok",
-  SHELVED: "neutral",
+/** FIGMA-REBUILD §3 — STATUS renders as plain phosphor-green TEXT (no
+ *  solid colour-bar pill), exactly as the Dashboard.png reference: every
+ *  status reads as a green mono label in the column. The "settled" states
+ *  (COMPLETE) sit at full green; mid-pipeline work stays green; the
+ *  hibernating SHELVED ("ON HOLD") + the not-yet-started WISHLIST drop to
+ *  a dimmer green so the active pipeline still carries the eye. The label
+ *  itself comes from STATUS_LABEL below. */
+const STATUS_TEXT_CLASS: Record<DisplayStatus, string> = {
+  WISHLIST: "text-[var(--color-green-dim)]",
+  PURCHASED: "text-[var(--color-green)]",
+  BUILDING: "text-[var(--color-green)]",
+  PRIMING: "text-[var(--color-green)]",
+  PAINTING: "text-[var(--color-green)]",
+  BASING: "text-[var(--color-green)]",
+  COMPLETE: "text-[var(--color-green)]",
+  SHELVED: "text-[var(--color-green-dim)]",
 };
+
+/** FIGMA-REBUILD §3 — the COMPLETION bar fill colour is driven by the
+ *  project's STATUS, not by its percentage (the reference shows cyan for
+ *  any in-progress row regardless of how far along it is):
+ *    - COMPLETE          → green   (full green bar)
+ *    - SHELVED ("ON HOLD")→ purple
+ *    - WISHLIST (not started, count 0 / 0%) → neutral empty track
+ *    - everything else (active pipeline)    → cyan
+ *  Maps onto the existing ProgressBar tone vocabulary so the primitive is
+ *  reused unchanged. */
+function completionTone(status: DisplayStatus, percent: number): ProgressTone {
+  if (status === "COMPLETE" || percent >= 100) return "ok";
+  if (status === "SHELVED") return "purple";
+  if (status === "WISHLIST" || percent <= 0) return "neutral";
+  return "info";
+}
 
 /** REDESIGN-CLEANUP (fix 3) — display-only status labels. The DisplayStatus
  *  KEY stays "PURCHASED" (derived from ownedCount, mirrored by the wishlist
@@ -161,10 +177,22 @@ const PRIORITY_RANK: Record<NonNullable<Priority>, number> = {
   Low: 3,
 };
 
+/** FIGMA-REBUILD §3 — PRIORITY renders as a colour-coded mono label,
+ *  per Dashboard.png: HIGH red, MEDIUM yellow, LOW green-dim. Urgent
+ *  (the rung above High in our enum) shares HIGH's red so the urgent
+ *  end of the scale stays the alarm colour. Unset priority shows a
+ *  muted dash. */
+const PRIORITY_TEXT_CLASS: Record<NonNullable<Priority>, string> = {
+  Urgent: "text-[var(--color-red)]",
+  High: "text-[var(--color-red)]",
+  Medium: "text-[var(--color-yellow)]",
+  Low: "text-[var(--color-green-dim)]",
+};
+
 const TYPE_CHIP: Readonly<Record<ProjectType, string>> = {
   Army: "type-chip-cyan",
   Warband: "type-chip-cyan",
-  Unit: "type-chip-amber",
+  Unit: "type-chip-yellow",
   Model: "type-chip-yellow",
   "Terrain Piece": "type-chip-green",
   Diorama: "type-chip-purple",
@@ -871,12 +899,20 @@ function DashboardRow({
         />
       </td>
       <td className="px-3 py-2">
+        {/* FIGMA-REBUILD §3 — STATUS is plain phosphor-green TEXT (the
+            Dashboard.png reference), not a solid colour-bar pill. Still an
+            inline editor: the green label is the popover trigger. */}
         <InlineCellPopover
           triggerLabel={`Status · ${STATUS_LABEL[row.status]}`}
           trigger={
-            <StatusPill status={STATUS_PILL[row.status]} tone="bar">
+            <span
+              className={clsx(
+                "font-mono text-xs uppercase tracking-wider",
+                STATUS_TEXT_CLASS[row.status],
+              )}
+            >
               {STATUS_LABEL[row.status]}
-            </StatusPill>
+            </span>
           }
         >
           {STATUS_ORDER.map((s) => (
@@ -891,10 +927,19 @@ function DashboardRow({
         </InlineCellPopover>
       </td>
       <td className="px-3 py-2">
+        {/* FIGMA-REBUILD §3 — PRIORITY colour-coded: HIGH red, MEDIUM
+            yellow, LOW green-dim (Urgent shares HIGH's red). */}
         <InlineCellPopover
           triggerLabel={`Priority · ${row.priority ?? "Unset"}`}
           trigger={
-            <span className="font-mono text-xs text-[var(--color-fg-muted)]">
+            <span
+              className={clsx(
+                "font-mono text-xs uppercase tracking-wider",
+                row.priority
+                  ? PRIORITY_TEXT_CLASS[row.priority]
+                  : "text-[var(--color-fg-muted)]",
+              )}
+            >
               {row.priority ?? "—"}
             </span>
           }
@@ -917,16 +962,18 @@ function DashboardRow({
         </InlineCellPopover>
       </td>
       {/* DASHBOARD-REDESIGN (Part B item 2) — completion renders as the
-          SOLID ProgressBar (the gold-standard §06 loading bar), not the
-          segmented blocks. Ross: "completion should be a solid progress bar
-          like the gold-standard, not a thin dial." Stretches to fill a fixed
-          column width with a tabular-nums readout chip so the column scans as
-          a clean column of bars + numbers. Auto tone = red <25 / yellow
-          25-74 / green ≥75. */}
+          SOLID ProgressBar (the gold-standard §06 loading bar) in a bordered
+          track + a tabular-nums % readout, so the column scans as a clean
+          stack of bars + numbers.
+          FIGMA-REBUILD §3 — the fill HUE is now driven by STATUS, not by the
+          percentage: cyan for any in-progress row, green at 100% / COMPLETE,
+          purple for ON HOLD (SHELVED), empty track for NOT STARTED (WISHLIST)
+          — exactly the Dashboard.png reference. */}
       <td className="px-3 py-2">
         <div className="flex items-center gap-2 min-w-[9rem]">
           <ProgressBar
             percent={row.progressPercent}
+            tone={completionTone(row.status, row.progressPercent)}
             stretch
             height={10}
             className="flex-1"
@@ -965,8 +1012,17 @@ function DashboardRow({
             <div
               role="menu"
               aria-label={`Actions · ${row.name}`}
-              className="absolute right-0 top-full mt-1 z-30 min-w-[150px] panel bg-[var(--color-bg-panel)] shadow-xl py-1"
+              className="absolute right-0 top-full mt-1 z-30 min-w-[170px] panel bg-[var(--color-bg-panel)] shadow-xl py-1"
             >
+              {/* FIGMA-REBUILD §3 — each row exposes a FOCUS launch to the
+                  full-page session companion at /focus?project=<id>. */}
+              <Link
+                href={`/focus?project=${encodeURIComponent(row.id)}`}
+                role="menuitem"
+                className="tap-target flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-xs uppercase tracking-wider text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)] transition-colors"
+              >
+                <span aria-hidden>►</span> Focus
+              </Link>
               <div role="none" className="px-1">
                 <DeleteProjectButton
                   projectId={row.id}
@@ -1237,7 +1293,8 @@ function MobileCompRow({
         />
       </td>
 
-      {/* Status — opens the nonmodal bottom sheet (no edge-clip). */}
+      {/* Status — plain green text (FIGMA-REBUILD §3), opening the nonmodal
+          bottom sheet to edit (no edge-clip). */}
       <td className="px-3 py-2 align-top whitespace-nowrap">
         <button
           type="button"
@@ -1247,13 +1304,19 @@ function MobileCompRow({
           aria-label={`Edit status · ${STATUS_LABEL[row.status]}`}
           className="tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <StatusPill status={STATUS_PILL[row.status]} tone="bar">
+          <span
+            className={clsx(
+              "font-mono text-2xs uppercase tracking-wider",
+              STATUS_TEXT_CLASS[row.status],
+            )}
+          >
             {STATUS_LABEL[row.status]}
-          </StatusPill>
+          </span>
         </button>
       </td>
 
-      {/* Priority — opens the nonmodal bottom sheet. */}
+      {/* Priority — colour-coded text (FIGMA-REBUILD §3), opening the
+          nonmodal bottom sheet to edit. */}
       <td className="px-3 py-2 align-top whitespace-nowrap">
         <button
           type="button"
@@ -1263,18 +1326,26 @@ function MobileCompRow({
           aria-label={`Edit priority · ${row.priority ?? "Unset"}`}
           className="tap-target inline-flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <span className="font-mono text-2xs uppercase tracking-wider text-[var(--color-fg-muted)] frame px-2 py-0.5">
+          <span
+            className={clsx(
+              "font-mono text-2xs uppercase tracking-wider",
+              row.priority
+                ? PRIORITY_TEXT_CLASS[row.priority]
+                : "text-[var(--color-fg-muted)]",
+            )}
+          >
             {row.priority ?? "—"}
           </span>
         </button>
       </td>
 
-      {/* Completion — SOLID ProgressBar (Part B item 2), matching the
-          desktop treatment. */}
+      {/* Completion — SOLID ProgressBar, status-driven hue (FIGMA-REBUILD §3),
+          matching the desktop treatment. */}
       <td className="px-3 py-2 align-top whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
           <ProgressBar
             percent={row.progressPercent}
+            tone={completionTone(row.status, row.progressPercent)}
             height={10}
             className="w-16"
           />
@@ -1309,8 +1380,16 @@ function MobileCompRow({
             <div
               role="menu"
               aria-label={`Actions · ${row.name}`}
-              className="absolute right-0 top-full mt-1 z-30 min-w-[150px] panel bg-[var(--color-bg-panel)] shadow-xl py-1"
+              className="absolute right-0 top-full mt-1 z-30 min-w-[170px] panel bg-[var(--color-bg-panel)] shadow-xl py-1"
             >
+              {/* FIGMA-REBUILD §3 — per-row FOCUS launch (matches desktop). */}
+              <Link
+                href={`/focus?project=${encodeURIComponent(row.id)}`}
+                role="menuitem"
+                className="tap-target flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-xs uppercase tracking-wider text-[var(--color-green)] hover:bg-[color-mix(in_srgb,var(--color-green)_12%,transparent)] transition-colors"
+              >
+                <span aria-hidden>►</span> Focus
+              </Link>
               <div role="none" className="px-1">
                 <DeleteProjectButton
                   projectId={row.id}

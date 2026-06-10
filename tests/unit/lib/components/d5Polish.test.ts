@@ -123,10 +123,15 @@ describe("D5 — project flows", () => {
     expect(childAddLabel("Warband")).toBe("+ Unit");
   });
 
-  test("project breadcrumb renders the ancestor chain", () => {
-    const src = read("src/app/projects/[id]/page.tsx");
-    expect(src).toContain("ancestors");
-    expect(src).toContain("ancestors.unshift(parent)");
-    expect(src).toContain("ancestors.map((a) => (");
+  test("project inspector surfaces the hierarchy as a children/Units summary", () => {
+    // FIGMA-REBUILD §9 — the /projects/[id] page (which rendered an ancestor
+    // breadcrumb chain) became the compact slide-out ProjectInspector. The
+    // panel uses the `SYS > PROJECT` breadcrumb and represents hierarchy by
+    // listing the project's direct children (the UNITS section) rather than
+    // walking the ancestor chain upward.
+    const src = read("src/components/projects/ProjectInspector.tsx");
+    expect(src).toContain('breadcrumb="SYS &gt; PROJECT"');
+    expect(src).toContain("vm.children.map");
+    expect(src).toContain("Units");
   });
 });

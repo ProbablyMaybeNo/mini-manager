@@ -51,7 +51,9 @@ describe("D4 — Commands section", () => {
     expect(src).toMatch(/label: "Go to Library"/);
     expect(src).toMatch(/label: "Go to Recipes"/);
     expect(src).toMatch(/label: "Go to Tools"/);
-    expect(src).toMatch(/label: "Go to Collections"/);
+    // FIGMA-REBUILD §8 — /collections + /wishlist merged into the singular
+    // /collection; the nav command relabelled to match.
+    expect(src).toMatch(/label: "Go to Collection"/);
   });
 
   test("surfaces action commands (New project, Toggle density)", () => {

@@ -28,9 +28,9 @@ export function ForgotPasswordForm({ initialUsername }: Props) {
 
   if (submitted) {
     return (
-      <div className="space-y-3 pt-3">
+      <div className="space-y-3">
         <StatusPill status="ok">REQUEST RECEIVED</StatusPill>
-        <p className="text-sm font-sans">
+        <p className="text-sm font-mono text-[var(--color-fg)] leading-snug">
           If an account exists, we sent a link to its recovery email. The
           link expires in one hour.
         </p>
@@ -39,7 +39,7 @@ export function ForgotPasswordForm({ initialUsername }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 pt-3">
+    <form onSubmit={onSubmit} className="space-y-4">
       <PromptField
         label="Username"
         name="username"

@@ -56,12 +56,19 @@ describe("FOCUS-DASH — table rows navigate to the project page", () => {
     expect(table).not.toMatch(/aria-selected/);
   });
 
-  test("row click navigates to /projects/[id] (guarded against controls)", () => {
-    expect(table).toMatch(/router\.push\(`\/projects\/\$\{row\.id\}`\)/);
+  test("row click opens the inspector deep-link (guarded against controls)", () => {
+    // FIGMA-REBUILD §9 — detail is now a slide-out inspector. A guarded row
+    // click pushes the `?project=<id>` deep-link (which opens the panel)
+    // instead of routing to a standalone detail page.
+    expect(table).toMatch(
+      /router\.push\(`\/projects\?project=\$\{encodeURIComponent\(row\.id\)\}`\)/,
+    );
     expect(table).toContain("isInteractiveTarget");
   });
 
-  test("project Name stays a real link to /projects/[id]", () => {
+  test("project Name stays a real link to /projects/[id] (redirects to the inspector)", () => {
+    // The Name keeps a real, deep-linkable href; the /projects/[id] route
+    // 308s into /projects?project=<id> so the inspector opens.
     expect(table).toMatch(/href=\{`\/projects\/\$\{row\.id\}`\}/);
   });
 });
@@ -69,10 +76,13 @@ describe("FOCUS-DASH — table rows navigate to the project page", () => {
 describe("FOCUS-DASH — /projects page is the DASHBOARD", () => {
   const page = read("src/app/projects/page.tsx");
 
-  test("H1 reads DASHBOARD; the projects table is titled PROJECTS", () => {
-    expect(page).toMatch(/<h1[^>]*>\s*DASHBOARD\s*<\/h1>/);
-    // DASHBOARD-REDESIGN — the PROJECTS Card is multi-line now (it sits in
-    // the table+rail grid), so match the title across whitespace.
+  test("title reads DASHBOARD; the projects table is titled PROJECTS", () => {
+    // FIGMA-REBUILD §2 — the page-top title is rendered through the shared
+    // PageHeader primitive (which owns the single PixelSplitter <h1>), not
+    // an inline <h1> in the page. The PROJECTS Card sits in the table+rail
+    // grid, so match the title across whitespace.
+    expect(page).toContain("<PageHeader");
+    expect(page).toMatch(/title="DASHBOARD"/);
     expect(page).toMatch(/<Card\s+title="PROJECTS"/);
   });
 

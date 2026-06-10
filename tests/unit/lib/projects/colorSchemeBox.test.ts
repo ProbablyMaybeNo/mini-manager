@@ -75,21 +75,30 @@ describe("ProjectColorSchemeBox component surface", () => {
   });
 });
 
-describe("Project detail page wires the Color Scheme box in", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("Project inspector wires the recipe section in (FIGMA-REBUILD §9)", () => {
+  // FIGMA-REBUILD §9 — the /projects/[id] detail PAGE became the slide-out
+  // ProjectInspector. The full COLOR SCHEME editor box (3-ghost-box recipe
+  // builder) was NOT carried into the compact inspector; the inspector
+  // shows the attached-recipe palette chips + an ASSIGN dropdown instead.
+  // Its data is loaded server-side by projectInspectorActions.ts (mined
+  // from the retired detail page).
+  const action = read("src/components/projects/projectInspectorActions.ts");
+  const panel = read("src/components/projects/ProjectInspector.tsx");
 
-  test("imports ProjectColorSchemeBox + ColorSchemeSlot type", () => {
-    expect(src).toContain("ProjectColorSchemeBox");
-    expect(src).toContain("ColorSchemeSlot");
+  test("the inspector data action fetches the attached recipes + resolves palette strips", () => {
+    expect(action).toContain("listRecipesForProject");
+    expect(action).toContain("paletteStripsForRecipes");
   });
 
-  test("fetches the attached recipe + resolves slot palette server-side", () => {
-    expect(src).toContain("listRecipesForProject");
-    expect(src).toContain("colorSchemeSlots");
+  test("the VM carries recipe chips (hexes) + assign candidates", () => {
+    expect(action).toContain("recipes:");
+    expect(action).toContain("hexes:");
+    expect(action).toContain("attachCandidates:");
   });
 
-  test("passes attachedRecipeId + slots through to the box", () => {
-    expect(src).toContain("attachedRecipeId={attachedRecipe?.id");
-    expect(src).toContain("slots={colorSchemeSlots}");
+  test("the inspector renders the recipe chips + an ASSIGN dropdown", () => {
+    expect(panel).toContain("vm.recipes");
+    expect(panel).toContain("vm.attachCandidates");
+    expect(panel).toContain("attachRecipeToProject");
   });
 });

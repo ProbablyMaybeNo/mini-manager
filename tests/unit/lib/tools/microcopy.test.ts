@@ -64,17 +64,23 @@ describe("Section microcopy under primary headings (P11.12)", () => {
     expect(src).toMatch(/Pick the kind of thing you/);
   });
 
-  test("/recipes index uses 'colour slot' vocabulary", () => {
+  test("/recipes index has a plain-prose tagline (FIGMA-REBUILD §5)", () => {
+    // FIGMA-REBUILD §5 — the recipes page tagline was rewritten to the
+    // share-focused line; the old "stack of colour slots" subheading is
+    // gone. The slot vocabulary now lives in the SlotList inline help.
     const src = read("src/app/recipes/page.tsx");
-    expect(src).toMatch(/stack of\s+colour slots/);
+    expect(src).toMatch(
+      /Build and share paint recipes for every model in your collection\./,
+    );
   });
 
-  test("/collections subheading is plain-prose (no internal refs)", () => {
-    // COLLECTIONS rebuild — /wishlist became /collections. Subheading is
-    // plain prose describing the two collections.
-    const src = read("src/app/collections/page.tsx");
+  test("/collection subheading is plain-prose (no internal refs)", () => {
+    // FIGMA-REBUILD §8 — /wishlist + /collections merged into the new
+    // singular /collection. Subheading is plain prose describing the
+    // paint + model collections.
+    const src = read("src/app/collection/page.tsx");
     expect(src).not.toMatch(/P2\.5/);
-    expect(src).toMatch(/paints and models/i);
+    expect(src).toMatch(/paint and model collections/i);
   });
 
   test("/user has the multi-section header", () => {

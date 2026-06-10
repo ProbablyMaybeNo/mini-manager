@@ -59,8 +59,12 @@ describe("M2 — Library always-visible search + non-cyan Filters trigger", () =
     expect(lib).toContain("LibrarySearchField");
   });
 
-  test("the mobile Filters trigger is a ghost outline, not cyan secondary", () => {
-    const idx = lib.indexOf('aria-label="Open filters"');
+  test("the Filters trigger is a ghost outline, not cyan secondary", () => {
+    // FIGMA-REBUILD §4 — the rail/drawer mobile-desktop split was unified
+    // into ONE Filter button that opens the FILTER SlideOutPanel on every
+    // breakpoint (no separate mobile-only "Open filters" floating button).
+    // The trigger keeps the ghost-outline (non-cyan) treatment.
+    const idx = lib.indexOf("onClick={() => setFilterOpen(true)}");
     expect(idx).toBeGreaterThan(-1);
     const win = lib.slice(Math.max(0, idx - 400), idx + 200);
     expect(win).toContain('variant="ghost"');
