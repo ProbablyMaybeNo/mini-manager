@@ -15,6 +15,9 @@ interface Props {
   projects: ReadonlyArray<AssignProjectOption>;
   /** Currently-attached project id so the menu can mark + disable it. */
   currentlyAttachedProjectId?: string | null;
+  /** Attached project name — shown on the trigger when set (mock's
+   *  purple-accent ASSIGN ▾ dropdown). */
+  attachedLabel?: string | null;
   /** Whether the trigger should stretch (mobile card) or sit inline (table). */
   block?: boolean;
 }
@@ -31,6 +34,7 @@ export function AssignToProjectMenu({
   recipeId,
   projects,
   currentlyAttachedProjectId,
+  attachedLabel,
   block = false,
 }: Props) {
   const router = useRouter();
@@ -84,18 +88,23 @@ export function AssignToProjectMenu({
         type="button"
         onClick={() => setMenuOpen((v) => !v)}
         disabled={isPending || projects.length === 0}
-        variant="success"
+        variant="ghost"
         size="sm"
-        className={clsx(block && "w-full")}
+        className={clsx(
+          block && "w-full",
+          "text-[var(--color-purple-pastel)] border-[var(--color-purple-pastel)]",
+        )}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         title={
           projects.length === 0
             ? "Create a project first"
-            : "Attach this recipe to one of your projects"
+            : attachedLabel
+              ? `Attached to ${attachedLabel} — click to reassign`
+              : "Attach this recipe to one of your projects"
         }
       >
-        Assign ▾
+        {attachedLabel ? `${attachedLabel} ▾` : "Assign ▾"}
       </Button>
       {menuOpen ? (
         <div

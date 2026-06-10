@@ -705,7 +705,7 @@ function DashboardRow({
         // project. Inline controls (caret, popovers, Name link, Delete)
         // are excluded so they keep their own behaviour.
         if (isInteractiveTarget(e.target)) return;
-        router.push(`/projects/${row.id}`);
+        router.push(`/projects?project=${encodeURIComponent(row.id)}`);
       }}
       className={clsx(
         // PHASE-1 — the cyan-highlighted hover/active row (the favourite
@@ -1108,7 +1108,7 @@ function MobileCompRow({
     <tr
       onClick={(e) => {
         if (isInteractiveTarget(e.target)) return;
-        router.push(`/projects/${row.id}`);
+        router.push(`/projects?project=${encodeURIComponent(row.id)}`);
       }}
       className={clsx(
         "transition-colors cursor-pointer",

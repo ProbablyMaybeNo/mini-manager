@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { currentUserId } from "@/lib/auth-stub";
+import { ProjectInspector } from "@/components/projects/ProjectInspector";
 import { listAllProjects } from "@/db/queries/projects";
 import {
   getProjectPalettesMap,
@@ -343,6 +345,12 @@ export default async function DashboardPage({
       )}
 
       <RecentlyBoughtLine />
+
+      {/* FIGMA-REBUILD §9 — project detail is a slide-out inspector,
+          opened when `?project=<id>` is present (row clicks land here). */}
+      <Suspense fallback={null}>
+        <ProjectInspector />
+      </Suspense>
     </div>
   );
 }
