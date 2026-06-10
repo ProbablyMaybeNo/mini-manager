@@ -97,7 +97,7 @@ export default async function CollectionsPage({
 
 function EmptyPanel({ text }: { text: string }) {
   return (
-    <div className="panel panel-ticks relative px-4 py-5 overflow-hidden">
+    <div className="panel panel-ticks relative px-4 py-5">
       <span className="panel-label" aria-hidden>
         EMPTY
       </span>

@@ -33,7 +33,7 @@ export async function DashboardEventTicker({
   return (
     <div
       className={clsx(
-        "panel panel-ticks relative overflow-hidden",
+        "panel panel-ticks relative",
         "border border-[color-mix(in_srgb,var(--color-cyan)_35%,var(--color-border))]",
       )}
       aria-label="Upcoming events"
