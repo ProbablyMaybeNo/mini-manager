@@ -8,20 +8,30 @@ import {
   type LucideProps,
 } from "lucide-react";
 
-/** Semantic panel surface — gold-standard §07.
+/** Semantic panel surface — gold-standard §07 + FIGMA-REBUILD accents.
  *  default  white border, white title, white body (the bare frame).
  *  info     cyan border + ⓘ icon + cyan title.
  *  warning  yellow border + ⚠ icon + yellow title.
  *  success  green border + ✓ icon + green title.
  *  error    red border + ✕ icon + red title.
- *  disabled dim border + dim title + dim body, no icon. */
+ *  disabled dim border + dim title + dim body, no icon.
+ *
+ *  ACCENT aliases (FIGMA-REBUILD, REBUILD_SPEC §1) — page agents tone a
+ *  panel by colour without semantic baggage (no icon rendered):
+ *  cyan / green / yellow / red / purple. Border, corner ticks, tech label
+ *  and edge glow all follow the hue via currentColor. */
 export type PanelVariant =
   | "default"
   | "info"
   | "warning"
   | "success"
   | "error"
-  | "disabled";
+  | "disabled"
+  | "cyan"
+  | "green"
+  | "yellow"
+  | "red"
+  | "purple";
 
 const VARIANT_CLASS: Record<PanelVariant, string | false> = {
   default: false,
@@ -30,10 +40,15 @@ const VARIANT_CLASS: Record<PanelVariant, string | false> = {
   success: "panel-success",
   error: "panel-error",
   disabled: "panel-disabled",
+  cyan: "panel-info",
+  green: "panel-success",
+  yellow: "panel-warning",
+  red: "panel-error",
+  purple: "panel-purple",
 };
 
-/** Icon per variant — null for default + disabled (the image shows no
- *  glyph on those two). */
+/** Icon per variant — null for default, disabled, and the plain colour
+ *  accents (only the semantic variants carry a glyph). */
 const VARIANT_ICON: Record<PanelVariant, ComponentType<LucideProps> | null> = {
   default: null,
   info: Info,
@@ -41,6 +56,11 @@ const VARIANT_ICON: Record<PanelVariant, ComponentType<LucideProps> | null> = {
   success: CircleCheck,
   error: CircleX,
   disabled: null,
+  cyan: null,
+  green: null,
+  yellow: null,
+  red: null,
+  purple: null,
 };
 
 /**

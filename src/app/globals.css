@@ -59,19 +59,27 @@
   src: url("/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
 }
 
-/* Heading 1 + TITLES — UAV OSD Mono, the squared tactical/HUD OSD face
-   (Ross's file). GOLD-STANDARD font decision: the spec image's title
-   ("VINTAGE TERMINAL UI ELEMENT PACK v1.0") is a CLEAN SQUARED TERMINAL
-   MONO — larger, letter-spaced — NOT a pixel/arcade face. PixelSplitter
-   (the pixel/techno display face) does not match the image, so it is
-   DROPPED; UAV OSD Mono now carries both H1 and the page-top title
-   (--font-display) for a single squared-mono identity. */
+/* Heading 1 / SECTION HEADERS — UAV OSD Mono, the squared tactical/HUD
+   OSD face (Ross's file). Carries `--font-tactical` (H1 + section
+   headers like PROJECTS / ACTIVITY TRACKER). */
 @font-face {
   font-family: "UAV OSD Mono";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url("/fonts/uav-osd-mono.woff2") format("woff2");
+}
+
+/* PAGE TITLES — PixelSplitter, the pixel display face. REBUILD_SPEC §1
+   (Figma rebuild, 2026-06-09) reinstates it: page-top titles (DASHBOARD,
+   LIBRARY, …) render in PixelSplitter with restrained glow; UAV OSD Mono
+   stays on H1/section headers. Top-of-page only — never body text. */
+@font-face {
+  font-family: "PixelSplitter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/pixelsplitter-bold.woff2") format("woff2");
 }
 
 /* ============================================================
@@ -107,18 +115,22 @@
      on the page is still a hair distinct from it (the doc's halation note) —
      reconciling Ross's "solid black page" with the documented "panels sit
      faintly distinct" goal: black page, near-black panels, never grey. */
-  --color-bg: #000000;
+  /* FIGMA-REBUILD (REBUILD_SPEC §1, 2026-06-09) — tokens normalized to the
+     locked Figma palette. Page base returns to NEAR-BLACK #0A0A0A (the spec
+     explicitly says "never pure #000"; the halation note in
+     DESIGN_LANGUAGE §2 agrees). Panels stay #0A0A0A / transparent — never
+     grey. */
+  --color-bg: #0a0a0a;
   --color-bg-elevated: #0a0a0a;
   --color-bg-panel: #0a0a0a;
 
-  /* Foreground + secondary text → all bright white. The former grey
-     hierarchy (#cfcfcf / #d4d4d4) is collapsed to #FFFFFF per Ross:
-     "instead of everything that is grey it should be bright white
-     across the board." Hierarchy now comes from weight / size / glow,
-     not from greying text down. */
+  /* Foreground — bright white body text; secondary/dim text steps down
+     but never below the REBUILD_SPEC §1 floor ("dim/secondary text ≥ #888
+     on near-black"): muted #c0c0c0 ≈ 12.4:1, subtle #8f8f8f ≈ 5.9:1 on
+     #0A0A0A — both clear WCAG-AA 4.5:1 for body text. */
   --color-fg: #ffffff;
-  --color-fg-muted: #ffffff;
-  --color-fg-subtle: #ffffff;
+  --color-fg-muted: #c0c0c0;
+  --color-fg-subtle: #8f8f8f;
 
   /* Disabled-only dimmed white — the ONE place white is allowed to drop.
      ~40% alpha over the near-black ground reads as a clearly muted /
@@ -140,31 +152,29 @@
      WCAG 2.2 §1.4.11: white on #0a0a0a = 19.8:1, well clear of 3:1. */
   --color-border-input: #ffffff;
 
-  /* The locked style-guide colours, treated as glowing CRT phosphor, taken
-     from the gold-standard image's "02 COLOR PALETTE" with Ross's tweaks.
-     All clear WCAG-AA (≥4.5:1) on #0A0A0A as text AND carry crisp black
-     text when used as a button fill (verified):
-       cyan   #7DF9FF  15.90:1   primary / selection / active nav / links
-                       (brighter sky-cyan than the old #00D2FF)
-       green  #8BFF8B  15.81:1   success / owned / "go"
-       yellow #F2EFA8  16.68:1   warning / wishlist / highlight — image is
-                       #F5E86C, softened MORE PASTEL per Ross to #F2EFA8
-       purple #9B80DC   6.14:1   special / featured (sparing, unchanged)
-       red    #FF5F5F   6.65:1   destructive / error / alert (sparing)
+  /* The 5 locked phosphor colours — REBUILD_SPEC §1 (matches the Figma
+     Style Guide page + DESIGN_LANGUAGE §2). Any near-miss hue in a mock
+     normalizes to these; no new hues. All clear WCAG-AA (≥4.5:1) on
+     #0A0A0A as text AND carry crisp black text as a button fill:
+       cyan   #00D2FF  11.0:1   primary action / selected row / active nav
+                                / links / panel borders
+       green  #51FD80  14.8:1   success / owned / "go" / secondary headings
+       yellow #EEF996  17.4:1   warning / wishlist / highlight (sparing)
+       purple #9B80DC   6.1:1   special categories / secondary accent
+       red    #FF4244   5.8:1   destructive / error / alert (sparing)
      `-dim` variants are the same hue darkened for borders/fills/hover —
-     not for text-on-black. `-bright` (#B8F1FF) is the light-cyan accent
-     from the image + the cyan hover-lift. */
-  --color-green: #8bff8b;
-  --color-green-dim: #4fbf57;
-  --color-cyan: #7df9ff;
-  --color-cyan-dim: #2bb8c4;
-  --color-cyan-bright: #b8f1ff;
-  --color-yellow: #f2efa8;
-  --color-yellow-dim: #bdb95f;
-  --color-amber: #f2efa8;
-  --color-amber-dim: #bdb95f;
-  --color-red: #ff5f5f;
-  --color-red-dim: #c43a3a;
+     not for text-on-black. `-bright` is the cyan hover-lift. */
+  --color-green: #51fd80;
+  --color-green-dim: #2fa455;
+  --color-cyan: #00d2ff;
+  --color-cyan-dim: #0e8aa6;
+  --color-cyan-bright: #7df9ff;
+  --color-yellow: #eef996;
+  --color-yellow-dim: #b1bc66;
+  --color-amber: #eef996;
+  --color-amber-dim: #b1bc66;
+  --color-red: #ff4244;
+  --color-red-dim: #c22e30;
   /* Pastel purple — 5th seat in the locked palette
      (cyan / pastel yellow / pastel red / neon green / pastel purple).
      Used for "special / accent / featured / unusual" semantic intent.
@@ -203,14 +213,13 @@
   /* ----- Typography -----
      mono     = body + Heading 2 + all chrome (readability floor).
      sans     = prose fallback (font-sans utility on long-form copy).
-     tactical = Heading 1 — UAV OSD Mono, the squared OSD/HUD tactical
-                mono. Falls back to the mono stack so H1 never goes
-                unstyled.
-     display  = Title — UAV OSD Mono (gold-standard: PixelSplitter dropped;
-                the spec image's title is a clean squared terminal mono,
-                not a pixel face). Page-top / hero titles render in the
-                same squared mono as H1, just larger + cyan + letter-
-                spaced, matching the image's title treatment. */
+     tactical = Heading 1 / section headers — UAV OSD Mono, the squared
+                OSD/HUD tactical mono. Falls back to the mono stack so H1
+                never goes unstyled.
+     display  = Page titles — PixelSplitter (REBUILD_SPEC §1 reinstates the
+                pixel display face for page-top titles only, in the page's
+                accent colour with restrained glow). Falls back through
+                UAV OSD Mono to the mono stack. */
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code",
     "Roboto Mono", Consolas, "Liberation Mono", monospace;
   /* DASHBOARD-REDESIGN (Part A item 4) — Ross: "ALL text → mono across the
@@ -224,7 +233,7 @@
     "Roboto Mono", Consolas, "Liberation Mono", monospace;
   --font-tactical: "UAV OSD Mono", "IBM Plex Mono", ui-monospace,
     Consolas, monospace;
-  --font-display: "UAV OSD Mono", "IBM Plex Mono",
+  --font-display: "PixelSplitter", "UAV OSD Mono", "IBM Plex Mono",
     ui-monospace, monospace;
 
   /* ----- Sizes -----
@@ -553,10 +562,11 @@ hr { border: 0; border-top: 1px solid var(--color-border); }
    48px fixed MobileHeader + 64px bottom tab bar. scroll-margin on focus
    targets is the robust per-element guard; the html-level scroll-padding
    covers programmatic scroll-into-view. */
+/* FIGMA-REBUILD shell — mobile fixed chrome is now ONLY the 48px top bar
+   (MobileTopBar); the bottom tab bar is retired, so no bottom padding. */
 @media (max-width: 767px) {
   html {
     scroll-padding-top: 52px;
-    scroll-padding-bottom: 64px;
   }
 }
 
@@ -979,7 +989,10 @@ select.field-control {
   width: 10px;
   height: 10px;
   pointer-events: none;
-  --tick: color-mix(in srgb, var(--color-cyan) 70%, transparent);
+  /* FIGMA-REBUILD — ticks follow the panel's seeded hue (currentColor):
+     a cyan panel gets cyan ticks, a green one green. Default panels seed
+     currentColor = --color-border, so bare frames tick in white. */
+  --tick: color-mix(in srgb, currentColor 70%, transparent);
 }
 .panel-ticks::before {
   top: -1px;
@@ -1008,7 +1021,10 @@ select.field-control {
   font-size: var(--text-2xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-cyan);
+  /* FIGMA-REBUILD — the tech label follows the panel's seeded hue
+     (currentColor), matching the ticks. Bare frames label in white;
+     toned panels label in their accent. */
+  color: currentColor;
   white-space: nowrap;
   pointer-events: none;
 }
@@ -1056,6 +1072,14 @@ select.field-control {
   color: var(--color-disabled);
   border-color: var(--color-disabled);
   box-shadow: none;
+}
+/* FIGMA-REBUILD — purple accent panel (the 5th phosphor seat had no §07
+   surface). Used for special/featured panels per REBUILD_SPEC §1. */
+.panel-purple,
+.card.panel-purple {
+  color: var(--color-purple-pastel);
+  border-color: var(--color-purple-pastel);
+  box-shadow: var(--glow-edge-strong);
 }
 
 /* Card variant header — when a Card carries a §07 variant, its header
@@ -2052,6 +2076,13 @@ select.field-control {
   to   { transform: translateX(0); }
 }
 
+/* FIGMA-REBUILD — left-docked twin of drawer-in, used by SlideOutPanel
+   side="left" (the mobile nav sheet). motion-safe gated by consumers. */
+@keyframes drawer-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
 /* ============================================================
    batch/viz-kit-dashboard — bespoke SVG data-viz kit (§13)
    ============================================================
@@ -2105,4 +2136,76 @@ select.field-control {
   0%   { opacity: 0.55; transform: scale(0.6); }
   70%  { opacity: 0;    transform: scale(1.8); }
   100% { opacity: 0;    transform: scale(1.8); }
+}
+
+/* ============================================================
+   FIGMA-REBUILD foundation — DataTable styling primitives
+   ============================================================
+   The mission-table idiom from REBUILD_SPEC §1/§3 + DESIGN_LANGUAGE §13
+   (moodboard group 27): GREEN mono header row, BLACK / no-fill cells,
+   cyan hover tint, and a SOLID-CYAN selected row with black text.
+
+   Pure CSS classes (not a component) so every page agent can compose
+   its own <table> markup while the look stays one source of truth:
+
+     .dt                  on the <table>
+     .dt-row-selected     on a selected <tr> (or set aria-selected="true")
+     .dt-row-link         on a clickable row (pointer cursor)
+     .dt-num              right-aligned numeric cell helper
+
+   Selection also keys off aria-selected so keyboard/AT state and the
+   visual state can never disagree. */
+.dt {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+.dt thead th {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--color-green);
+  text-shadow: var(--glow-body);
+  padding: 8px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-green) 55%, transparent);
+  white-space: nowrap;
+}
+.dt tbody td {
+  /* Black / no-fill cells — the row ground is the page. */
+  background: transparent;
+  padding: 8px 12px;
+  color: var(--color-fg);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-fg) 14%, transparent);
+  vertical-align: middle;
+}
+.dt-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.dt-row-link {
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .dt tbody tr:hover:not(.dt-row-selected):not([aria-selected="true"]) td {
+    background: color-mix(in srgb, var(--color-cyan) 8%, transparent);
+  }
+}
+/* Selected row — SOLID cyan fill, BLACK text (Library list + dashboard
+   row idiom). Glow is dropped inside the row: black-on-cyan must stay
+   crisp (black on #00D2FF ≈ 11.7:1, WCAG-AA+). Phosphor-coloured inline
+   chips keep their own fills; plain text flips to black via color. */
+.dt tbody tr.dt-row-selected td,
+.dt tbody tr[aria-selected="true"] td {
+  background: var(--color-cyan);
+  color: var(--color-bg);
+  text-shadow: none;
+}
+.dt tbody tr.dt-row-selected td a,
+.dt tbody tr[aria-selected="true"] td a {
+  color: var(--color-bg);
+  text-shadow: none;
 }

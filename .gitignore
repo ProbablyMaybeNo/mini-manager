@@ -64,3 +64,6 @@ docs/research/sources/
 
 # UX audit screenshots (local reference only)
 ux-audit/shots/
+
+# Claude Code agent worktrees (local batch checkouts — never commit)
+.claude/worktrees/

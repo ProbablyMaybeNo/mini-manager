@@ -1,11 +1,20 @@
 import { redirect } from "next/navigation";
 
 /**
- * The WISHLIST surface was rebuilt and renamed to COLLECTIONS
- * (batch/collections-rebuild). This route is kept as a permanent
- * redirect so old bookmarks, the dashboard's "top wishes" deep links,
- * and any external links continue to resolve.
+ * FIGMA-REBUILD (REBUILD_SPEC §2) — wishlist data merged into the
+ * COLLECTION page (STATUS=WISHLIST rows). Permanent redirect so old
+ * bookmarks and deep links resolve; query string forwarded.
  */
-export default function WishlistRedirect() {
-  redirect("/collections");
+export default async function WishlistRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === "string") qs.set(key, value);
+    else if (Array.isArray(value)) value.forEach((v) => qs.append(key, v));
+  }
+  redirect(qs.size > 0 ? `/collection?${qs.toString()}` : "/collection");
 }
