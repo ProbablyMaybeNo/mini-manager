@@ -101,6 +101,16 @@ export async function getWeekRollupSeconds(
 }
 
 /**
+ * Cumulative sum of session seconds across ALL of the user's completed
+ * sessions (no date floor) — the dashboard's lifetime "TIME TOTAL" KPI.
+ * In-progress sessions still don't contribute (rollupSinceMs filters on
+ * duration, which is null until stop).
+ */
+export async function getAllTimeRollupSeconds(userId: string): Promise<number> {
+  return rollupSinceMs(userId, 0);
+}
+
+/**
  * Convenience helper for the panel: returns both rollups in one
  * round-trip. The dashboard calls this in a Promise.all alongside
  * the rest of the FOCUS data.

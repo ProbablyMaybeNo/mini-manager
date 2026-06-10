@@ -25,11 +25,11 @@ import {
 } from "@/components/dashboard/dashboardKpiHelpers";
 import { computeStreak } from "@/components/planner/plannerStreakHelpers";
 import { getActivityByDay } from "@/db/queries/activityLog";
-import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
+import { getAllTimeRollupSeconds } from "@/db/queries/paintSessions";
 import { getFocusProjectId } from "@/db/queries/focus";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { displayStatus, progressPercent } from "@/lib/progress";
+import { displayStatus, progressPercent, aggregateCounters } from "@/lib/progress";
 
 const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
@@ -109,7 +109,7 @@ export default async function DashboardPage({
     firstRecipeByProjectId,
     ownedRecipes,
     streakDays,
-    weekSeconds,
+    totalSeconds,
     focusProjectId,
   ] = await Promise.all([
     listAllProjects(userId),
@@ -117,7 +117,7 @@ export default async function DashboardPage({
     getProjectFirstRecipeMap(userId),
     listOwnedRecipesLean(userId),
     getActivityByDay(userId, new Date(now.getTime() - SIXTY_DAYS_MS)),
-    getWeekRollupSeconds(userId, now.getTime()),
+    getAllTimeRollupSeconds(userId),
     // UX-006 — the focused project drives the mission table's persistent
     // cyan "active row" highlight (keyed below). Null when no focus pinned.
     getFocusProjectId(userId),
@@ -158,9 +158,9 @@ export default async function DashboardPage({
     },
     {
       label: "TIME TOTAL",
-      value: formatTimeTotal(weekSeconds),
+      value: formatTimeTotal(totalSeconds),
       color: "cyan",
-      valueAriaLabel: `${formatTimeTotal(weekSeconds)} painting time this week`,
+      valueAriaLabel: `${formatTimeTotal(totalSeconds)} total painting time`,
     },
   ];
 
@@ -184,21 +184,51 @@ export default async function DashboardPage({
     return d;
   };
 
-  const rows: ProjectDashboardRow[] = allProjects.map((p) => ({
-    id: p.id,
-    name: p.name,
-    type: p.type,
-    faction: p.faction,
-    priority: p.priority,
-    status: displayStatus(p),
-    paletteHexes: palettesByProjectId.get(p.id) ?? [],
-    progressPercent: progressPercent(p),
-    totalModels: p.count,
-    updatedAt: p.updatedAt.getTime(),
-    parentId: p.parentId,
-    depth: depthOf(p.id),
-    firstAttachedRecipeId: firstRecipeByProjectId.get(p.id) ?? null,
-  }));
+  // Container roll-up — an Army/Warband/Unit with no models of its own
+  // (count === 0) shows the AGGREGATE status + progress + model total of
+  // its whole subtree, so its row reads "how far along are all my units"
+  // instead of a flat 0% (Ross's dashboard spec: an army of 7 units shows
+  // the combined model completion). Leaf projects (count > 0) keep their
+  // own counts.
+  const childrenByParent = new Map<string, (typeof allProjects)[number][]>();
+  for (const p of allProjects) {
+    if (!p.parentId) continue;
+    const siblings = childrenByParent.get(p.parentId);
+    if (siblings) siblings.push(p);
+    else childrenByParent.set(p.parentId, [p]);
+  }
+  const descendantsOf = (id: string): (typeof allProjects)[number][] => {
+    const out: (typeof allProjects)[number][] = [];
+    const stack = [...(childrenByParent.get(id) ?? [])];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (!node) continue;
+      out.push(node);
+      const kids = childrenByParent.get(node.id);
+      if (kids) stack.push(...kids);
+    }
+    return out;
+  };
+
+  const rows: ProjectDashboardRow[] = allProjects.map((p) => {
+    const rolled =
+      p.count === 0 ? aggregateCounters(p, descendantsOf(p.id)) : null;
+    return {
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      faction: p.faction,
+      priority: p.priority,
+      status: displayStatus(rolled ? { ...rolled, isShelved: p.isShelved } : p),
+      paletteHexes: palettesByProjectId.get(p.id) ?? [],
+      progressPercent: progressPercent(rolled ?? p),
+      totalModels: rolled ? rolled.count : p.count,
+      updatedAt: p.updatedAt.getTime(),
+      parentId: p.parentId,
+      depth: depthOf(p.id),
+      firstAttachedRecipeId: firstRecipeByProjectId.get(p.id) ?? null,
+    };
+  });
 
   return (
     <div className="content-cap p-6 md:p-8 space-y-6">
