@@ -239,6 +239,7 @@ nested-border terminal panel with pixel title. Keep all current logic.
 ## 11. Quality bars
 
 - TypeScript strict, **0 type errors**; build passes; unit + Playwright green.
+- Verification gate: `npm run test:verify` (see `docs/MISSIONS.md` § FIGMA Rebuild).
 - WCAG-AA contrast on every text/bg pair; focus visible (cyan ring ≥3:1);
   44×44 touch targets; labels on every input; `prefers-reduced-motion`
   strips scanline/flicker/glow animation.

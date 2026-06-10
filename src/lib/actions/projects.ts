@@ -181,7 +181,7 @@ export async function createProject(
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${newRow.id}`);
-  redirect(`/projects/${newRow.id}`);
+  redirect(`/projects?project=${encodeURIComponent(newRow.id)}`);
 }
 
 /* ============================================================

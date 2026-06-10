@@ -22,6 +22,7 @@ import { CollectionPanel } from "./CollectionPanel";
 import { InventoryOverridesProvider } from "./inventoryOverrides";
 import { useLibraryViewMode } from "@/lib/hooks/useLibraryViewMode";
 import { Button } from "@/components/ui/Button";
+import { SlideOutPanel } from "@/components/ui/SlideOutPanel";
 
 export interface InventorySnapshot {
   ownedCount: number;
@@ -55,6 +56,8 @@ export function LibraryPageClient({
   /** LIB-COLORMAP — all catalog brands, sorted, for the map's chip row. */
   brands?: ReadonlyArray<string>;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const sp = useSearchParams();
 
   const filter = useMemo(() => {
@@ -116,101 +119,43 @@ export function LibraryPageClient({
     [scrollTarget, paints],
   );
 
-  // Mobile-only state: bottom-sheet drawer for the filter rail.
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  // Auto-close the drawer once a filter actually changes (the user has
-  // committed an intent and likely wants to see the result table).
-  useEffect(() => {
-    setMobileFilterOpen(false);
-  }, [filter]);
+  function clearAllFilters() {
+    const params = new URLSearchParams(sp?.toString() ?? "");
+    for (const key of [
+      "brand",
+      "line",
+      "type",
+      "hue",
+      "owned",
+      "hex",
+      "q",
+    ]) {
+      params.delete(key);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   return (
     <InventoryOverridesProvider>
     <div className="flex flex-1 min-h-0">
-      {/* Desktop rail — UX-1506: gated at lg (1024), not md (768). At md
-          the rail + table together exceeded the 768 viewport (922px), so
-          iPad-portrait scrolled sideways. Below lg the filters live in the
-          bottom-sheet drawer and the table gets the full width. */}
-      <div className="hidden lg:flex">
-        <FilterRail paints={paints} filter={filter} />
-      </div>
-
-      {/* Mobile filter trigger. R7-5 — defensive sweep: also hidden at
-          xl+ in case Ross's viewport sits at md/lg boundary widths where
-          the desktop rail is visible AND this button leaks into the top
-          right corner. Now hidden anywhere ≥ md (the rail's breakpoint)
-          AND anywhere ≥ xl (defence-in-depth against future breakpoint
-          drift). */}
-      {/* M2 — no cyan on the filter trigger. Was variant="secondary"
-          (solid cyan fill, reading as a primary CTA); flipped to a ghost
-          outline so it reads as a disclosure affordance, not the page's
-          main action. The active-filter count surfaces selection state by
-          label, not hue. */}
-      <Button
-        type="button"
-        onClick={() => setMobileFilterOpen(true)}
-        variant="ghost"
-        tone="outline"
-        size="sm"
-        className="lg:hidden fixed top-14 right-3 z-30"
-        aria-label="Open filters"
-        aria-expanded={mobileFilterOpen}
+      <SlideOutPanel
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        breadcrumb="SYS &gt; FILTER"
+        title="FILTER"
+        side="left"
+        width={320}
       >
-        Filters
-        {activeFilterCount > 0 ? (
-          <span
-            className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-sm bg-[var(--color-amber)] text-[var(--color-bg)] font-mono text-2xs leading-none"
-            aria-hidden
-          >
-            {activeFilterCount}
-          </span>
-        ) : null}
-        <span className="sr-only">
-          {activeFilterCount > 0
-            ? `, ${activeFilterCount} active`
-            : ""}
-        </span>
-      </Button>
-
-      {/* Mobile bottom-sheet drawer */}
-      {mobileFilterOpen ? (
-        <>
-          <button
-            type="button"
-            aria-label="Close filters"
-            onClick={() => setMobileFilterOpen(false)}
-            className="lg:hidden fixed inset-0 z-40 bg-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
-          />
-          <aside
-            className="lg:hidden fixed inset-x-0 bottom-0 z-50 max-h-[80vh] flex flex-col border-t border-[var(--color-border-strong)] bg-[var(--color-bg-panel)] shadow-2xl"
-            style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}
-            aria-label="Library filters drawer"
-          >
-            <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-panel)] z-10">
-              <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-fg-muted)]">
-                Filters
-              </span>
-              <button
-                type="button"
-                onClick={() => setMobileFilterOpen(false)}
-                className="tap-target px-3 font-mono text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)]"
-                aria-label="Close filters"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <FilterRail
-                paints={paints}
-                filter={filter}
-                className="border-r-0"
-                disableCollapse
-              />
-            </div>
-          </aside>
-        </>
-      ) : null}
+        <FilterRail
+          paints={paints}
+          filter={filter}
+          className="border-r-0"
+          disableCollapse
+        />
+      </SlideOutPanel>
 
       {/* UX-1506 — min-w-0 is load-bearing: as a flex child in the row
           flex above, the column's default `min-width:auto` refuses to
@@ -237,6 +182,27 @@ export function LibraryPageClient({
               param the FilterRail's search box uses, so the two stay in
               sync. The View toggle sits to the right. */}
           <LibrarySearchField initial={filter.textQuery} />
+          <Button
+            type="button"
+            variant="ghost"
+            tone="outline"
+            size="sm"
+            onClick={() => setFilterOpen(true)}
+            aria-expanded={filterOpen}
+          >
+            Filter
+            {activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+          </Button>
+          {activeFilterCount > 0 ? (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={clearAllFilters}
+            >
+              Clear filter
+            </Button>
+          ) : null}
           <ViewModeToggle mode={viewMode} onChange={setViewMode} />
         </div>
         {viewMode === "list" ? (

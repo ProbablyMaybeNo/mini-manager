@@ -146,7 +146,9 @@ export function ImportPreview({
         setError(result.error);
         return;
       }
-      router.push(`/projects/${result.data.armyProjectId}`);
+      router.push(
+        `/projects?project=${encodeURIComponent(result.data.armyProjectId)}`,
+      );
     } finally {
       setBusy(false);
     }

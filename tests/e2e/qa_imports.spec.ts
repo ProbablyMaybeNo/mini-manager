@@ -66,11 +66,11 @@ test.describe("M7 — Imports", () => {
       .getByRole("button", { name: /Apply.*create projects/i })
       .click();
 
-    await expect(page).toHaveURL(/\/projects\/[a-zA-Z0-9_-]{16}$/, {
+    await expect(page).toHaveURL(/\/projects\?project=[a-zA-Z0-9_-]+/, {
       timeout: 10_000,
     });
-    await expect(
-      page.getByRole("heading", { level: 1, name: /QA STRIKE FORCE/i }),
-    ).toBeVisible();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText(/QA STRIKE FORCE/i)).toBeVisible();
   });
 });

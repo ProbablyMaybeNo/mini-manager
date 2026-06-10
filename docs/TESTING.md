@@ -43,6 +43,9 @@ npm run test:coverage     # v8 coverage report → ./coverage/
 npm run test:e2e          # Headless chromium
 npm run test:e2e:headed   # See the browser
 npm run test:e2e:ui       # Playwright UI runner
+npm run test:missions     # Alias for test:e2e (qa_*.spec.ts mission specs)
+npm run test:verify       # FIGMA-rebuild gate: typecheck + unit + integration + e2e
+npm run test:verify:fast  # Same without Playwright (while UI is in flux)
 ```
 
 All commands run from the repo root (`D:\AI-Workstation\mini-manager\`).

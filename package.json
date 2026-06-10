@@ -23,7 +23,10 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:missions": "playwright test",
+    "test:verify": "node scripts/verify-rebuild.mjs",
+    "test:verify:fast": "npm run typecheck && npm run test:unit && npm run test:integration"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.0",

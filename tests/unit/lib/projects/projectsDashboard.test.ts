@@ -52,7 +52,7 @@ describe("ProjectsDashboardTable component surface", () => {
   });
 
   test("Name column links to /projects/<id>", () => {
-    expect(src).toContain("`/projects/${row.id}`");
+    expect(src).toContain("`/projects?project=${encodeURIComponent(row.id)}`");
   });
 
   test("REDESIGN-CLEANUP fix 2 — project name renders white, not cyan", () => {
@@ -177,7 +177,9 @@ describe("Projects page wires the dashboard table in", () => {
     expect(src).not.toContain("<QuickAddBar");
   });
 
-  test("header shows the big brand logo (mockup, like the sign-in lockup)", () => {
-    expect(src).toContain("<Logo");
+  test("header uses shared PageHeader with green DASHBOARD accent", () => {
+    expect(src).toContain("<PageHeader");
+    expect(src).toContain('accent="green"');
+    expect(src).toContain('title="DASHBOARD"');
   });
 });
