@@ -1,5 +1,5 @@
-import { GradientClient } from "@/components/tools/gradient/GradientClient";
+import { LayeringClient } from "@/components/tools/gradient/LayeringClient";
 
 export default function GradientToolPage() {
-  return <GradientClient />;
+  return <LayeringClient />;
 }

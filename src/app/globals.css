@@ -535,6 +535,39 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 button { cursor: pointer; background: transparent; color: inherit; border: 0; padding: 0; }
 hr { border: 0; border-top: 1px solid var(--color-border); }
 
+/* Layering glaze-mode controls — bare <button>s need their own (unlayered)
+   classes to out-cascade the `button` reset above; active state reads off
+   the aria attributes the components already set. */
+.glaze-chip {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 2px;
+  color: var(--color-fg-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: color 120ms, border-color 120ms, background-color 120ms;
+}
+.glaze-chip:hover { border-color: var(--color-cyan); color: var(--color-cyan); }
+.glaze-chip[aria-pressed="true"] {
+  border-color: var(--color-cyan);
+  color: var(--color-cyan);
+  background: color-mix(in srgb, var(--color-cyan) 15%, transparent);
+}
+.mode-tab {
+  padding: 0.375rem 0.75rem;
+  color: var(--color-fg-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  transition: color 120ms, background-color 120ms;
+}
+.mode-tab:hover { color: var(--color-cyan); }
+.mode-tab.is-active { background: var(--color-cyan); color: var(--color-bg); }
+@media (prefers-reduced-motion: reduce) {
+  .glaze-chip, .mode-tab { transition: none; }
+}
+
 /* Text selection — cyan-tinged so highlighted prose feels intentional */
 ::selection {
   background: color-mix(in srgb, var(--color-cyan) 32%, transparent);
