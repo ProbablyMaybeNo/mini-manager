@@ -5,24 +5,10 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
 import type { Paint } from "@/lib/paints/types";
-import { TypeIcon } from "./TypeIcon";
-import { HexConfidenceDot } from "./HexConfidenceDot";
 import { InventoryControls } from "./InventoryControls";
+import { findClosestPaints } from "@/lib/tools/match/find";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
 
-const PAINT_TYPE_PILL: Record<string, StatusPillKind> = {
-  Paint: "info",
-  Wash: "warning",
-  Contrast: "info",
-  Metallic: "info",
-  Air: "info",
-  Primer: "neutral",
-  Varnish: "neutral",
-  Pigment: "neutral",
-  Effect: "info",
-  Ink: "info",
-  Lacquer: "neutral",
-};
 import { _internal } from "@/lib/paints/filters";
 import {
   COLOR_PICKER_HARMONY_LABELS,
@@ -93,6 +79,13 @@ export function PaintDetailPanel({
     return fastMatchByHueBand(selectedHarmonyHex, allPaints, { limit: 12 });
   }, [selectedHarmonyHex, allPaints]);
 
+  const matchResults = useMemo(() => {
+    if (!paint || !allPaints) return [];
+    return findClosestPaints(paint.hex, allPaints, { limit: 5 }).filter(
+      (m) => m.paint.id !== paint.id,
+    );
+  }, [paint, allPaints]);
+
   function close() {
     const params = new URLSearchParams(sp?.toString() ?? "");
     params.delete("paint");
@@ -139,7 +132,7 @@ export function PaintDetailPanel({
           {/* Coordinate tag — anchors the panel as a mission-control
               readout, mirroring the page hero + map module captions. */}
           <p className="text-2xs font-mono uppercase tracking-[0.18em] text-[var(--color-cyan)] mb-1">
-            SYS ▸ PAINT
+            SYS &gt; PAINT
           </p>
           <p className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
             {paint.brand}
@@ -188,37 +181,11 @@ export function PaintDetailPanel({
           ) : null}
         </section>
 
-        <section
-          className="flex items-center gap-3"
-          aria-label="Paint type and hex confidence"
-        >
-          <span
-            className="inline-flex items-center gap-2"
-            title={`${paint.type} — paint type / medium`}
-          >
-            <TypeIcon type={paint.type} className="text-[var(--color-fg)] text-base" />
-            {/* Color-bar status (DESIGN_LANGUAGE §7.2) — the paint type reads
-                as a solid phosphor block with black text, the terminal status
-                idiom, rather than an outline chip. */}
-            <StatusPill status={PAINT_TYPE_PILL[paint.type] ?? "neutral"} tone="bar">
-              {paint.type}
-            </StatusPill>
-          </span>
-          <span className="grow" />
-          <span
-            className="inline-flex items-center gap-2"
-            title={`Hex confidence: ${paint.hexConfidence.toLowerCase()} — how sure we are this hex matches the real paint (source: ${paint.hexSource})`}
-          >
-            <HexConfidenceDot
-              confidence={paint.hexConfidence}
-              source={paint.hexSource}
-            />
-            <span
-              className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase"
-            >
-              {paint.hexConfidence} CONFIDENCE
-            </span>
-          </span>
+        <section aria-label="Paint type">
+          <h3 className="section-title">Type</h3>
+          <p className="font-mono text-sm uppercase tracking-wider text-[var(--color-fg)]">
+            {paint.type}
+          </p>
         </section>
 
         <section>
@@ -335,6 +302,34 @@ export function PaintDetailPanel({
           </div>
         </section>
 
+        {matchResults.length > 0 ? (
+          <section>
+            <h3 className="section-title">Match</h3>
+            <div className="flex flex-col gap-1">
+              {matchResults.map((m) => (
+                <div
+                  key={m.paint.id}
+                  className="flex items-center gap-2 px-2 py-1 frame"
+                >
+                  <span
+                    className="h-4 w-4 rounded-sm border border-[var(--color-border)] shrink-0"
+                    style={{ background: m.paint.hex }}
+                  />
+                  <span className="text-xs font-mono text-[var(--color-fg-muted)] truncate">
+                    {m.paint.brand}
+                  </span>
+                  <span className="text-xs font-mono text-[var(--color-fg)] truncate">
+                    {m.paint.name}
+                  </span>
+                  <span className="text-2xs font-mono text-[var(--color-fg-subtle)] ml-auto">
+                    ΔE {m.deltaE.toFixed(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {similarInOtherBrands.length > 0 ? (
           <section>
             <h3 className="section-title">Similar in other brands</h3>
@@ -360,17 +355,6 @@ export function PaintDetailPanel({
           </section>
         ) : null}
 
-        <section>
-          <h3 className="section-title">Source</h3>
-          <a
-            href={paint.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-mono text-[var(--color-cyan)] hover:underline break-all"
-          >
-            {paint.sourceUrl}
-          </a>
-        </section>
       </div>
     </aside>
   );

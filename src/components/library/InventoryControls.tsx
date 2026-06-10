@@ -238,8 +238,7 @@ export function InventoryControls({
           aria-pressed={state.isWishlisted}
           title={WANTED_TOOLTIP}
         >
-          <span aria-hidden>{state.isWishlisted ? "★" : "☆"}</span>
-          <span>{state.isWishlisted ? "Wanted" : "Mark as wanted"}</span>
+          <span>{state.isWishlisted ? "WISHLISTED" : "+ WISHLIST"}</span>
         </Button>
       </div>
       {error ? (
