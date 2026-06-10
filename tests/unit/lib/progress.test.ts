@@ -147,7 +147,7 @@ describe("displayStatus — Phase-12 locked status set", () => {
       }),
     ).toBe("WISHLIST");
   });
-  test("PURCHASED = ownedCount > 0 but nothing built", () => {
+  test("OWNED = ownedCount > 0 but nothing built", () => {
     expect(
       displayStatus({
         count: 10,
@@ -159,7 +159,7 @@ describe("displayStatus — Phase-12 locked status set", () => {
         completeCount: 0,
         isShelved: false,
       }),
-    ).toBe("PURCHASED");
+    ).toBe("OWNED");
   });
   test("BUILDING = buildCount > 0, nothing primed", () => {
     expect(

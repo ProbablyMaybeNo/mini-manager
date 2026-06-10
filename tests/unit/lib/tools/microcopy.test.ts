@@ -56,7 +56,7 @@ describe("Tool page subheadings — plain prose, no jargon (P11.12)", () => {
 describe("Section microcopy under primary headings (P11.12)", () => {
   test("/projects page has a one-line subheading", () => {
     const src = read("src/app/projects/page.tsx");
-    expect(src).toMatch(/Your wargaming workbench/);
+    expect(src).toMatch(/Project hub, everything you need/);
   });
 
   test("/projects/new explains the choice", () => {

@@ -24,7 +24,7 @@ import {
 /** Status options the selector can WRITE (bumpProjectStatus enum). */
 const STATUS_OPTIONS = [
   "WISHLIST",
-  "PURCHASED",
+  "OWNED",
   "BUILDING",
   "PRIMING",
   "PAINTING",

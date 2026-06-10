@@ -42,7 +42,7 @@ describe("ProjectHeaderStrip component surface", () => {
   test("status pill mapping covers all 8 DisplayStatus values", () => {
     for (const s of [
       "WISHLIST",
-      "PURCHASED",
+      "OWNED",
       "BUILDING",
       "PRIMING",
       "PAINTING",

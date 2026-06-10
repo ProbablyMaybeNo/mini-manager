@@ -42,7 +42,7 @@ describe("ProjectsDashboardTable component surface", () => {
 
   test("Status pill mapping covers every DisplayStatus", () => {
     expect(src).toContain("WISHLIST:");
-    expect(src).toContain("PURCHASED:");
+    expect(src).toContain("OWNED:");
     expect(src).toContain("BUILDING:");
     expect(src).toContain("PRIMING:");
     expect(src).toContain("PAINTING:");
@@ -63,14 +63,14 @@ describe("ProjectsDashboardTable component surface", () => {
     );
   });
 
-  test("REDESIGN-CLEANUP fix 3 — PURCHASED shows as OWNED, neon green", () => {
-    // Display-only relabel: the derived DisplayStatus key stays PURCHASED,
-    // but the column renders "OWNED" in green.
+  test("FIGMA-REBUILD §3 — OWNED status renders neon green", () => {
+    // The derived DisplayStatus key is OWNED and the column renders "OWNED"
+    // in green.
     // FIGMA-REBUILD §3 — the Dashboard.png reference shows STATUS as a green
-    // mono text label (not a tone-keyed pill), so the green now comes from
-    // STATUS_TEXT_CLASS rather than the old `PURCHASED: "ok"` pill tone.
-    expect(src).toContain('PURCHASED: "text-[var(--color-green)]"');
-    expect(src).toContain('PURCHASED: "OWNED"');
+    // mono text label (not a tone-keyed pill), so the green comes from
+    // STATUS_TEXT_CLASS.
+    expect(src).toContain('OWNED: "text-[var(--color-green)]"');
+    expect(src).toContain('OWNED: "OWNED"');
     // The visible label flows through STATUS_LABEL, never the raw status key,
     // on both the desktop pill and the mobile comparison row.
     expect(src).toContain("STATUS_LABEL[row.status]");
@@ -133,7 +133,7 @@ describe("displayStatus — Phase-12 vocabulary", () => {
 
   test("the DisplayStatus type union carries Ross's 8 locked stages", () => {
     expect(src).toMatch(/"WISHLIST"/);
-    expect(src).toMatch(/"PURCHASED"/);
+    expect(src).toMatch(/"OWNED"/);
     expect(src).toMatch(/"BUILDING"/);
     expect(src).toMatch(/"PRIMING"/);
     expect(src).toMatch(/"PAINTING"/);

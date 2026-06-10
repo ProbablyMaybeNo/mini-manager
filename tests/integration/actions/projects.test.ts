@@ -53,7 +53,11 @@ describe("createProject", () => {
     expect(rows[0]!.name).toBe("Test Unit");
     expect(rows[0]!.count).toBe(10);
     expect(rows[0]!.ownerId).toBe(state.userId);
-    expect(vi.mocked(redirect)).toHaveBeenCalledWith(`/projects/${rows[0]!.id}`);
+    // FIGMA-REBUILD — project detail is the dashboard slide-out inspector,
+    // opened via ?project=<id>, not a standalone /projects/<id> page.
+    expect(vi.mocked(redirect)).toHaveBeenCalledWith(
+      `/projects?project=${rows[0]!.id}`,
+    );
   });
 
   test("Item 2 — persists faction + game when supplied", async () => {
@@ -210,7 +214,7 @@ describe("createProject", () => {
     expect(child[0]!.type).toBe("Model");
     expect(child[0]!.parentId).toBe(army!.id);
     expect(vi.mocked(redirect)).toHaveBeenCalledWith(
-      `/projects/${child[0]!.id}`,
+      `/projects?project=${child[0]!.id}`,
     );
   });
 
@@ -322,15 +326,15 @@ describe("updateProjectPriority", () => {
 });
 
 describe("bumpProjectStatus", () => {
-  test("PURCHASED — sets owned ≥ 1, zeroes the rest", async () => {
+  test("OWNED — sets owned ≥ 1, zeroes the rest", async () => {
     await createProject({ name: "Squad", type: "Unit", count: 10 });
     const [row] = await state.db!.select().from(projects);
 
-    const res = await bumpProjectStatus({ id: row!.id, status: "PURCHASED" });
+    const res = await bumpProjectStatus({ id: row!.id, status: "OWNED" });
     expect(res.ok).toBe(true);
 
     const [updated] = await state.db!.select().from(projects);
-    expect(displayStatus(updated!)).toBe("PURCHASED");
+    expect(displayStatus(updated!)).toBe("OWNED");
     expect(updated!.ownedCount).toBeGreaterThanOrEqual(1);
     expect(updated!.buildCount).toBe(0);
   });

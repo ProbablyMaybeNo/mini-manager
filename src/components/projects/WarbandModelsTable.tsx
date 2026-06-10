@@ -46,7 +46,7 @@ import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
 
 const STATUS_ORDER: ReadonlyArray<DisplayStatus> = [
   "WISHLIST",
-  "PURCHASED",
+  "OWNED",
   "BUILDING",
   "PRIMING",
   "PAINTING",
@@ -57,7 +57,7 @@ const STATUS_ORDER: ReadonlyArray<DisplayStatus> = [
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
-  PURCHASED: "neutral",
+  OWNED: "neutral",
   BUILDING: "info",
   PRIMING: "info",
   PAINTING: "warning",

@@ -33,7 +33,7 @@ import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
 
 const STATUS_ORDER: ReadonlyArray<DisplayStatus> = [
   "WISHLIST",
-  "PURCHASED",
+  "OWNED",
   "BUILDING",
   "PRIMING",
   "PAINTING",
@@ -105,7 +105,7 @@ function writeExpanded(set: ReadonlySet<string>): void {
  *  itself comes from STATUS_LABEL below. */
 const STATUS_TEXT_CLASS: Record<DisplayStatus, string> = {
   WISHLIST: "text-[var(--color-green-dim)]",
-  PURCHASED: "text-[var(--color-green)]",
+  OWNED: "text-[var(--color-green)]",
   BUILDING: "text-[var(--color-green)]",
   PRIMING: "text-[var(--color-green)]",
   PAINTING: "text-[var(--color-green)]",
@@ -131,14 +131,13 @@ function completionTone(status: DisplayStatus, percent: number): ProgressTone {
 }
 
 /** REDESIGN-CLEANUP (fix 3) — display-only status labels. The DisplayStatus
- *  KEY stays "PURCHASED" (derived from ownedCount, mirrored by the wishlist
- *  "Bought -> PURCHASED" vocabulary), but the dashboard renders it as
- *  "OWNED" — Ross's preferred wording + how the state reads elsewhere. Every
- *  other status renders verbatim. Use STATUS_LABEL anywhere a status string
- *  is shown to the user (pill text, popover options, aria labels). */
+ *  KEY is "OWNED" (derived from ownedCount), and the dashboard renders it as
+ *  "OWNED" verbatim. Every status renders verbatim. Use STATUS_LABEL anywhere
+ *  a status string is shown to the user (pill text, popover options, aria
+ *  labels). */
 const STATUS_LABEL: Record<DisplayStatus, string> = {
   WISHLIST: "WISHLIST",
-  PURCHASED: "OWNED",
+  OWNED: "OWNED",
   BUILDING: "BUILDING",
   PRIMING: "PRIMING",
   PAINTING: "PAINTING",
@@ -147,12 +146,12 @@ const STATUS_LABEL: Record<DisplayStatus, string> = {
   SHELVED: "SHELVED",
 };
 
-/** Stages flow WISHLIST -> PURCHASED -> BUILDING -> PRIMING -> PAINTING
+/** Stages flow WISHLIST -> OWNED -> BUILDING -> PRIMING -> PAINTING
  *  -> BASING -> COMPLETE. SHELVED sorts last (hibernating). Used for
  *  status-column sort order. */
 const STATUS_RANK: Record<DisplayStatus, number> = {
   WISHLIST: 0,
-  PURCHASED: 1,
+  OWNED: 1,
   BUILDING: 2,
   PRIMING: 3,
   PAINTING: 4,

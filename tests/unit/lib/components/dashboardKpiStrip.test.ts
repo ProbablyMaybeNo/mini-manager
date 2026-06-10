@@ -296,7 +296,8 @@ describe("DASHBOARD page wires the KPI strip above the table", () => {
     expect(src).toContain("activeProjectCount");
     expect(src).toContain("averageCompletion");
     expect(src).toContain("computeStreak");
-    expect(src).toContain("getWeekRollupSeconds");
+    // TIME TOTAL is the lifetime session sum, not just this week.
+    expect(src).toContain("getAllTimeRollupSeconds");
   });
 
   test("KPI strip renders before (above) the PROJECTS table", () => {

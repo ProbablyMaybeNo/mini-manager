@@ -84,7 +84,7 @@ describe("markBoughtAsNewProject", () => {
       .select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, wishlistItemId));
-    expect(item!.status).toBe("PURCHASED");
+    expect(item!.status).toBe("OWNED");
     expect(item!.dateResolved).not.toBeNull();
   });
 
@@ -235,7 +235,7 @@ describe("markBoughtAsExistingUnit", () => {
       .select()
       .from(wishlistItems)
       .where(eq(wishlistItems.id, wishlistItemId));
-    expect(item!.status).toBe("PURCHASED");
+    expect(item!.status).toBe("OWNED");
   });
 
   test("rejects a delta that would exceed the roster cap", async () => {

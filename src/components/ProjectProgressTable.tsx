@@ -31,7 +31,7 @@ export interface ProgressRow {
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
-  PURCHASED: "neutral",
+  OWNED: "neutral",
   BUILDING: "info",
   PRIMING: "info",
   PAINTING: "warning",

@@ -60,7 +60,7 @@ async function loadWishlistItemOwned(
 async function stampBought(wishlistItemId: string): Promise<void> {
   await db
     .update(wishlistItems)
-    .set({ status: "PURCHASED", dateResolved: new Date() })
+    .set({ status: "OWNED", dateResolved: new Date() })
     .where(eq(wishlistItems.id, wishlistItemId));
 }
 

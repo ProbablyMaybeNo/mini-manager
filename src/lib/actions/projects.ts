@@ -456,7 +456,7 @@ const bumpStatusSchema = z.object({
   id: z.string().min(1).max(64),
   status: z.enum([
     "WISHLIST",
-    "PURCHASED",
+    "OWNED",
     "BUILDING",
     "PRIMING",
     "PAINTING",
@@ -583,7 +583,7 @@ export async function bumpProjectStatus(
     Exclude<DisplayStatus, "SHELVED" | "WISHLIST">,
     StageRule
   > = {
-    PURCHASED: { owned: ONE, build: ZERO, prime: ZERO, paint: ZERO, base: ZERO, complete: ZERO },
+    OWNED: { owned: ONE, build: ZERO, prime: ZERO, paint: ZERO, base: ZERO, complete: ZERO },
     BUILDING: { owned: ONE, build: ONE, prime: ZERO, paint: ZERO, base: ZERO, complete: ZERO },
     PRIMING: { owned: ONE, build: ONE, prime: ONE, paint: ZERO, base: ZERO, complete: ZERO },
     PAINTING: { owned: ONE, build: ONE, prime: ONE, paint: ONE, base: ZERO, complete: ZERO },
@@ -599,7 +599,7 @@ export async function bumpProjectStatus(
     Exclude<DisplayStatus, "SHELVED" | "WISHLIST">,
     ReadonlySet<keyof StageRule>
   > = {
-    PURCHASED: new Set(["build", "prime", "paint", "base", "complete"]),
+    OWNED: new Set(["build", "prime", "paint", "base", "complete"]),
     BUILDING: new Set(["prime", "paint", "base", "complete"]),
     PRIMING: new Set(["paint", "base", "complete"]),
     PAINTING: new Set(["base", "complete"]),

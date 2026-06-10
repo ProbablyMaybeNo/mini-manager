@@ -11,7 +11,7 @@ const STATUS_PILL: Record<
   StatusPillKind
 > = {
   WISHLIST: "wishlist",
-  PURCHASED: "neutral",
+  OWNED: "neutral",
   BUILDING: "info",
   PRIMING: "info",
   PAINTING: "warning",
