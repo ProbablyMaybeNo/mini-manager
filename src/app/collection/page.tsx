@@ -6,20 +6,12 @@ import {
   listModelCollection,
   buildRecipesByPaintTitle,
   recipesForPaintTitle,
-  collectionStats,
-  listPaintTypesInUse,
 } from "@/db/queries/collections";
 import { listAllProjects } from "@/db/queries/projects";
-import {
-  paintCollectionStatuses,
-  modelCollectionStatuses,
-} from "@/db/schema";
-
-import { AddBar } from "@/components/collections/AddBar";
-import { TableFilter } from "@/components/collections/TableFilter";
-import { PaintCollectionTable } from "@/components/collections/PaintCollectionTable";
-import { ModelCollectionTable } from "@/components/collections/ModelCollectionTable";
-import { StatsBar } from "@/components/collections/StatsBar";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { AddUrlBar } from "@/components/collection/AddUrlBar";
+import { PaintCollectionTable } from "@/components/collection/PaintCollectionTable";
+import { ModelCollectionTable } from "@/components/collection/ModelCollectionTable";
 
 export const dynamic = "force-dynamic";
 
@@ -28,21 +20,8 @@ function str(raw: string | string[] | undefined): string | null {
 }
 
 /**
- * COLLECTION page (/collection — FIGMA-REBUILD route; /wishlist and
- * /collections redirect here).
- *
- * TODO(collection agent, task #9): rebuild this surface per REBUILD_SPEC
- * §8 + docs/redesign-refs/Wishlist.png — COLLECTION PageHeader (yellow),
- * paste-URL add bar top-right, MY PAINT COLLECTION / MY MODEL COLLECTION
- * panels on the shared `.dt` table idiom. The markup below is the
- * PRE-rebuild surface kept functional in the interim; mine it for data
- * wiring only.
- *
- * Two tables — PAINT COLLECTION and MODEL COLLECTION — driven off the
- * single `wishlist_item` table, partitioned by `kind`. Each table has its
- * own filter button (namespaced URL params: pstatus/ptype for paints,
- * mstatus/mproject for models) and a bottom overview/stats bar sums the
- * whole collection.
+ * COLLECTION page (/collection — FIGMA-REBUILD §8).
+ * `/wishlist` and `/collections` redirect here.
  */
 export default async function CollectionsPage({
   searchParams,
@@ -57,20 +36,11 @@ export default async function CollectionsPage({
   const modelStatus = str(params.mstatus);
   const modelProject = str(params.mproject);
 
-  const [
-    paintItems,
-    modelItems,
-    recipeMap,
-    projects,
-    stats,
-    paintTypesInUse,
-  ] = await Promise.all([
+  const [paintItems, modelItems, recipeMap, projects] = await Promise.all([
     listPaintCollection(userId, { status: paintStatus, paintType }),
     listModelCollection(userId, { status: modelStatus, projectId: modelProject }),
     buildRecipesByPaintTitle(userId),
     listAllProjects(userId),
-    collectionStats(userId),
-    listPaintTypesInUse(userId),
   ]);
 
   const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));
@@ -81,92 +51,57 @@ export default async function CollectionsPage({
   }));
 
   return (
-    <div className="flex flex-col h-screen">
-      <header className="relative overflow-hidden px-6 md:px-8 pt-6 pb-4 border-b border-[var(--color-border)]">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-          <div>
-            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-              SYS ▸ COLLECTIONS / 06
-            </p>
-            <h1 className="title-display text-base md:text-lg">COLLECTIONS</h1>
-            <p className="text-xs text-[var(--color-fg-muted)] mt-3 font-sans leading-snug max-w-prose">
-              Your paints and models — wanted, owned, and in progress. Paste a
-              vendor URL to auto-fill a row, or type a name to add manually.
-            </p>
-          </div>
-          <AddBar />
-        </div>
-      </header>
+    <div className="px-4 py-6 md:px-8 space-y-8">
+      <PageHeader
+        title="COLLECTION"
+        accent="yellow"
+        tagline="Track and manage your paint and model collections — wanted, owned, and in progress."
+      >
+        <AddUrlBar />
+      </PageHeader>
 
-      <main className="flex-1 min-h-0 overflow-y-auto p-6 md:p-8 space-y-8">
-        {/* PAINT COLLECTION */}
-        <section aria-label="Paint collection" className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="section-title">Paint collection · {paintItems.length}</h2>
-            <TableFilter
-              label="Filter"
-              groups={[
-                {
-                  param: "pstatus",
-                  label: "Status",
-                  options: paintCollectionStatuses,
-                },
-                ...(paintTypesInUse.length
-                  ? [{ param: "ptype", label: "Type", options: paintTypesInUse }]
-                  : []),
-              ]}
-            />
-          </div>
-          {paintRows.length === 0 ? (
-            <EmptyPanel
-              label="PAINTS · 0"
-              text="No paints match. Add a paint from a vendor URL or by name and it'll land here."
-            />
-          ) : (
-            <PaintCollectionTable rows={paintRows} />
-          )}
-        </section>
+      <section aria-label="Paint collection" className="space-y-3">
+        <header>
+          <h2 className="section-title text-[var(--color-green)]">
+            MY PAINT COLLECTION
+          </h2>
+          <p className="mt-1 font-mono text-xs text-[var(--color-fg-muted)]">
+            TRACK AND MANAGE YOUR PAINT COLLECTION
+          </p>
+        </header>
+        {paintRows.length === 0 ? (
+          <EmptyPanel text="NO PAINTS YET — PASTE A URL OR USE + PAINT TO ADD ONE." />
+        ) : (
+          <PaintCollectionTable rows={paintRows} />
+        )}
+      </section>
 
-        {/* MODEL COLLECTION */}
-        <section aria-label="Model collection" className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="section-title">Model collection · {modelItems.length}</h2>
-            <TableFilter
-              label="Filter"
-              groups={[
-                {
-                  param: "mstatus",
-                  label: "Status",
-                  options: modelCollectionStatuses,
-                },
-              ]}
-            />
-          </div>
-          {modelItems.length === 0 ? (
-            <EmptyPanel
-              label="MODELS · 0"
-              text="No models match. Add a kit, box, or mini from a vendor URL or by name."
-            />
-          ) : (
-            <ModelCollectionTable items={modelItems} projects={projectOptions} />
-          )}
-        </section>
-      </main>
-
-      <StatsBar stats={stats} />
+      <section aria-label="Model collection" className="space-y-3">
+        <header>
+          <h2 className="section-title text-[var(--color-green)]">
+            MY MODEL COLLECTION
+          </h2>
+          <p className="mt-1 font-mono text-xs text-[var(--color-fg-muted)]">
+            TRACK AND MANAGE YOUR MODEL COLLECTION
+          </p>
+        </header>
+        {modelItems.length === 0 ? (
+          <EmptyPanel text="NO MODELS YET — PASTE A URL OR USE + MODELS TO ADD ONE." />
+        ) : (
+          <ModelCollectionTable items={modelItems} projects={projectOptions} />
+        )}
+      </section>
     </div>
   );
 }
 
-function EmptyPanel({ label, text }: { label: string; text: string }) {
+function EmptyPanel({ text }: { text: string }) {
   return (
-    <div className="relative panel panel-ticks px-4 py-5 overflow-hidden">
+    <div className="panel panel-ticks relative px-4 py-5 overflow-hidden">
       <span className="panel-label" aria-hidden>
-        {label}
+        EMPTY
       </span>
-      <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
-        {text}
-      </p>
+      <p className="font-mono text-xs text-[var(--color-fg-muted)]">{text}</p>
     </div>
   );
 }

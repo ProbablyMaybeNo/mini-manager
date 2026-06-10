@@ -7,13 +7,11 @@ import {
   getProjectFirstRecipeMap,
   listOwnedRecipesLean,
 } from "@/db/queries/recipes";
-import { Logo } from "@/components/ui/Logo";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
-import { DashboardFocusSection } from "@/components/focus/DashboardFocusSection";
-import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import {
   DashboardKpiStrip,
   type KpiCardData,
@@ -102,15 +100,6 @@ export default async function DashboardPage({
   const calMonth = Array.isArray(calMonthRaw) ? calMonthRaw[0] : calMonthRaw;
   // FOCUS-FOLD — the relocated FOCUS bench persists its recipe-tab +
   // active-slot selection in the URL, exactly as the old /planner route did.
-  const focusRecipeRaw = params.focusRecipe;
-  const focusRecipeId = Array.isArray(focusRecipeRaw)
-    ? focusRecipeRaw[0]
-    : focusRecipeRaw;
-  const focusSlotRaw = params.focusSlot;
-  const focusSlotParam = Array.isArray(focusSlotRaw)
-    ? focusSlotRaw[0]
-    : focusSlotRaw;
-
   const userId = await currentUserId();
   const now = new Date();
   const [
@@ -219,78 +208,34 @@ export default async function DashboardPage({
           DASHBOARD title is the stylistic terminal display face (shadow/glow
           via .title-display), sized up so it reads as the mission-control
           banner the mockup shows — terminal, not arcade. */}
-      <header className="flex items-end justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          {/* The brand logo, sized like the sign-in lockup so "mini-manager"
-              actually reads. mix-blend screen drops the PNG's black ground. */}
-          <Logo
-            width={56}
-            decorative
-            className="shrink-0 hidden sm:block"
-          />
-          <div className="min-w-0">
-            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-              SYS ▸ WORKBENCH / 00
-            </p>
-            <h1 className="title-display text-2xl md:text-4xl leading-none">
-              DASHBOARD
-            </h1>
-            {/* One-line subheading (research §3 — orients the 5-second
-                glance). Kept terse so the header stays the clean mockup
-                banner rather than a paragraph. */}
-            <p className="text-2xs md:text-xs text-[var(--color-fg-muted)] mt-2 tracking-wide">
-              Your wargaming workbench at a glance.
-            </p>
-          </div>
-        </div>
-        {/* Two cyan CTAs (mockup): ADD PROJECT + UPLOAD ARMY LIST. Both
-            primary-cyan per the mockup — this supersedes the prior
-            success-green / warning-yellow split for the dashboard header. */}
-        <div className="flex gap-2 w-full md:w-auto">
-          <Button
-            as="a"
-            href="/projects/new"
-            variant="primary"
-            size="md"
-            className="flex-1 md:flex-none justify-center"
-          >
-            Add project
-          </Button>
-          <Button
-            as="a"
-            href="/projects/import"
-            variant="primary"
-            tone="outline"
-            size="md"
-            className="flex-1 md:flex-none justify-center"
-          >
-            Upload army list
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title="DASHBOARD"
+        accent="green"
+        tagline="Your wargaming workbench at a glance."
+      >
+        <Button
+          as="a"
+          href="/projects/new"
+          variant="primary"
+          size="md"
+        >
+          Add project
+        </Button>
+        <Button
+          as="a"
+          href="/projects/import"
+          variant="tertiary"
+          tone="outline"
+          size="md"
+        >
+          Upload army list
+        </Button>
+      </PageHeader>
 
       {isEmpty ? (
         <EmptyState />
       ) : (
         <>
-          {/* UX-015 — the signature dashboard HERO: the bespoke WireframeGlobe
-              radar scope framed in the terminal panel language, the dashboard
-              counterpart to the sign-in CRT art so the "wow" isn't on the
-              gauges alone. Establishing shot only — the figures it shows are
-              restated from the authoritative KPI strip directly below; the
-              globe is desktop-only so it never crams the mobile column. */}
-          <DashboardHero
-            stats={[
-              {
-                label: "ACTIVE",
-                value: String(activeProjectCount(allProjects)),
-                tone: "green",
-              },
-              { label: "AVG COMPLETION", value: `${avgCompletion}%`, tone: "amber" },
-              { label: "STREAK", value: `${streak.streak}d`, tone: "purple" },
-            ]}
-          />
-
           {/* DASH-KPI — the top KPI strip: the 5-second "where do I
               stand" answer, above the granular PROJECTS table per the
               inverted pyramid (doc §14/§4). */}
@@ -331,16 +276,6 @@ export default async function DashboardPage({
             </aside>
           </div>
 
-          {/* FOCUS-FOLD (2026-06-08) — the relocated painting bench. The
-              standalone /planner route is gone; the FOCUS cockpit (TIMER +
-              focused recipe with per-paint notes + INSPO board) lives here
-              as a dedicated full-width action section below the glance/scan
-              grid, above the passive spend readout. Self-fetches its focus
-              state; we only thread the recipe-tab + active-slot params. */}
-          <DashboardFocusSection
-            focusRecipeId={focusRecipeId}
-            focusSlotParam={focusSlotParam}
-          />
         </>
       )}
 
