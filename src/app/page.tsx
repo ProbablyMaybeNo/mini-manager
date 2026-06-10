@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/Button";
@@ -67,26 +68,53 @@ function LandingNav() {
 
 function Hero() {
   return (
-    <section className="pt-10 pb-12 sm:pt-16 sm:pb-16">
-      <p
-        className="boot font-mono text-2xs sm:text-xs uppercase tracking-[0.2em] text-[var(--color-green)]"
-        style={{ animationDelay: "60ms" }}
+    <section className="pt-8 pb-12 sm:pt-12 sm:pb-16">
+      {/* Brand object: the CRT logo powers on (scanline snap + flash + glow
+          rise), reading as the monitor booting before the terminal feed
+          types out below. Motion-safe; reduced-motion shows it lit. */}
+      <div className="crt-bloom relative mb-7 inline-block">
+        <Image
+          src="/brand/logo-pixel.png"
+          alt="Mini Manager"
+          width={104}
+          height={104}
+          priority
+          className="crt-power-on [image-rendering:pixelated] h-[88px] w-[88px] sm:h-[104px] sm:w-[104px]"
+        />
+      </div>
+
+      <div
+        className="boot font-mono text-2xs sm:text-xs uppercase tracking-[0.18em] text-[var(--color-green)] space-y-1"
+        style={{ animationDelay: "820ms" }}
       >
-        <span className="text-[var(--color-fg-subtle)]">mini-manager:~$</span>{" "}
-        initialize paint-planning system
-        <span className="term-cursor" aria-hidden />
-      </p>
+        <p>
+          <span className="text-[var(--color-fg-subtle)]">mini-manager:~$</span>{" "}
+          boot paint-planning system{" "}
+          <span className="text-[var(--color-cyan)]">[ OK ]</span>
+        </p>
+        <p>
+          <span className="text-[var(--color-fg-subtle)]">mini-manager:~$</span>{" "}
+          mount library{" "}
+          <span className="text-[var(--color-fg)]">7,144 paints · 40+ brands</span>{" "}
+          <span className="text-[var(--color-cyan)]">[ OK ]</span>
+        </p>
+        <p>
+          <span className="text-[var(--color-fg-subtle)]">mini-manager:~$</span>{" "}
+          ready
+          <span className="term-cursor" aria-hidden />
+        </p>
+      </div>
 
       <h1
         className="boot mt-5 text-[2.5rem] sm:text-[3.75rem] !leading-[1.05] max-w-3xl"
-        style={{ animationDelay: "120ms" }}
+        style={{ animationDelay: "980ms" }}
       >
         The command center for miniature painters.
       </h1>
 
       <p
         className="boot mt-5 max-w-2xl font-sans text-base sm:text-lg leading-relaxed text-[var(--color-fg-muted)]"
-        style={{ animationDelay: "180ms" }}
+        style={{ animationDelay: "1040ms" }}
       >
         Plan armies, build paint recipes from a{" "}
         <span className="text-[var(--color-fg)]">7,144-colour cross-brand library</span>, and
@@ -97,7 +125,7 @@ function Hero() {
 
       <div
         className="boot mt-8 flex flex-col sm:flex-row gap-3 sm:items-center"
-        style={{ animationDelay: "240ms" }}
+        style={{ animationDelay: "1120ms" }}
       >
         <Button as="a" href="/sign-up" variant="success" size="lg">
           Start free →
@@ -112,7 +140,7 @@ function Hero() {
 
       <div
         className="boot mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-2xs uppercase tracking-[0.14em] text-[var(--color-fg-muted)]"
-        style={{ animationDelay: "300ms" }}
+        style={{ animationDelay: "1200ms" }}
       >
         <Stat>7,144 paints</Stat>
         <Dot />
@@ -188,7 +216,7 @@ const FEATURES: ReadonlyArray<Feature> = [
     glyph: "▥",
     title: "Planner",
     body: "A tournament calendar, painting streaks, and a hue-sorted coverage grid of your whole collection — spot the gaps and fill them from the wishlist.",
-    accent: "var(--color-amber)",
+    accent: "var(--color-yellow)",
   },
   {
     glyph: "★",
