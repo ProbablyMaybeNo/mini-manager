@@ -20,6 +20,14 @@ const root = path.resolve(__dirname, "../../../../src/app");
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf-8");
 
 // Static page-top section titles that must wear the title face.
+//
+// FIGMA-REBUILD §2 — the page-top lockup was centralised into the shared
+// <PageHeader> primitive, which renders the page's single <h1> in
+// PixelSplitter (`.title-display`) in the page accent colour. So the
+// contract is no longer "the page source contains a `.title-display`
+// <h1>" (the literal <h1> now lives inside PageHeader) — it's "the page
+// renders its title through PageHeader, and PageHeader renders a
+// title-display <h1>".
 const TITLED_PAGES = [
   "projects/page.tsx", // DASHBOARD
   // FOCUS-FOLD (2026-06-08) — the standalone /planner (FOCUS) page is
@@ -28,24 +36,33 @@ const TITLED_PAGES = [
   "library/page.tsx",
   "recipes/page.tsx",
   "tools/page.tsx",
-  "collections/page.tsx",
+  // FIGMA-REBUILD §8 — /collections + /wishlist merged into the singular
+  // /collection.
+  "collection/page.tsx",
   "user/page.tsx",
   "pricing/page.tsx",
 ];
 
-describe("UX-012 — title face on every static page-top H1", () => {
+describe("UX-012 — title face on every static page-top title", () => {
+  test("PageHeader renders the page-top <h1> in the title face", () => {
+    const src = fs.readFileSync(
+      path.resolve(root, "../components/ui/PageHeader.tsx"),
+      "utf-8",
+    );
+    // The single <h1> the primitive emits carries `.title-display`.
+    expect(src).toMatch(/<h1[\s\S]*?className="title-display/);
+  });
+
   for (const rel of TITLED_PAGES) {
-    test(`${rel} H1 uses .title-display`, () => {
+    test(`${rel} renders its page-top title via PageHeader`, () => {
       const src = read(rel);
-      // Find every <h1 ...> opening tag and assert at least one carries
-      // title-display, and none of the VISIBLE (non-sr-only) ones use the
-      // old plain `text-3xl tracking-wide` mono treatment.
+      expect(src).toContain("<PageHeader");
+      // No page re-rolls its own visible page-top <h1> with the old plain
+      // mono treatment (PageHeader owns the title face).
       const h1s = src.match(/<h1[^>]*className="[^"]*"/g) ?? [];
-      expect(h1s.length).toBeGreaterThan(0);
       const visible = h1s.filter((h) => !/sr-only/.test(h));
-      expect(visible.length).toBeGreaterThan(0);
       for (const h of visible) {
-        expect(h, `${rel}: visible H1 must use .title-display`).toMatch(
+        expect(h, `${rel}: any visible H1 must use .title-display`).toMatch(
           /title-display/,
         );
       }

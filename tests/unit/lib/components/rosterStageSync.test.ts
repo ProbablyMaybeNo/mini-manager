@@ -98,11 +98,19 @@ describe("StageCounter — validates BUILD against the live roster", () => {
   });
 });
 
-describe("Project detail page mounts the RosterProvider", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("RosterProvider stays a self-contained, mountable primitive", () => {
+  // FIGMA-REBUILD §9 — the leaf-project Roster/Stages WORKSPACE that
+  // wrapped its counters in <RosterProvider> on the old /projects/[id]
+  // page was dissolved (detail is now the compact slide-out inspector).
+  // The provider itself is preserved intact — a general-purpose context
+  // the Roster/Stages counter cluster wraps wherever it re-mounts — so the
+  // OWNED-sync fix can't regress when that workspace is re-introduced. Its
+  // provider/reader/publisher contract is pinned in the describe above.
+  const src = read("src/components/projects/RosterContext.tsx");
 
-  test("imports + wraps the workspace in RosterProvider", () => {
-    expect(src).toContain("RosterProvider");
-    expect(src).toContain("<RosterProvider>");
+  test("the provider renders its children under the context (mountable)", () => {
+    expect(src).toContain("export function RosterProvider");
+    expect(src).toContain(".Provider");
+    expect(src).toContain("children");
   });
 });

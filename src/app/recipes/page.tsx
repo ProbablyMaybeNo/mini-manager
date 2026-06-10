@@ -3,6 +3,7 @@ import { currentUserId } from "@/lib/auth-stub";
 import { db } from "@/db/client";
 import { listRecipesForTable } from "@/db/queries/recipes";
 import { projects } from "@/db/schema";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { NewRecipeButton } from "@/components/recipes/NewRecipeButton";
 import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
 import {
@@ -31,16 +32,11 @@ export default async function RecipesPage() {
   if (rows.length === 0) {
     return (
       <div className="p-6 md:p-8 max-w-7xl space-y-6">
-        <header className="space-y-2">
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
-            SYS ▸ RECIPES / 01
-          </p>
-          <h1 className="title-display text-base md:text-lg">RECIPES</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] max-w-xl font-sans leading-snug">
-            Paint schemes the way you mix them — each recipe is a stack of
-            colour slots, each slot a paint plus the layer you use on it.
-          </p>
-        </header>
+        <PageHeader
+          title="RECIPE"
+          accent="red"
+          tagline="Build and share paint recipes for every model in your collection."
+        />
         <EmptyState />
       </div>
     );
@@ -81,19 +77,11 @@ export default async function RecipesPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl space-y-6">
-      <header className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)]">
-            SYS ▸ RECIPES / 01
-          </p>
-          <h1 className="title-display text-base md:text-lg">RECIPES</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] mt-2 max-w-xl font-sans leading-snug">
-            Every paint scheme in your library. Click a name to edit;
-            use the row actions to assign to a project or share.
-          </p>
-        </div>
-        <NewRecipeButton />
-      </header>
+      <PageHeader
+        title="RECIPE"
+        accent="red"
+        tagline="Build and share paint recipes for every model in your collection."
+      />
       <RecipesTable rows={vm} assignProjects={assignProjects} />
     </div>
   );
@@ -106,7 +94,7 @@ function EmptyState() {
         RECIPES · 0
       </span>
       <h2 className="text-lg glow-cyan">No recipes yet</h2>
-      <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto leading-snug">
+      <p className="text-sm text-[var(--color-fg-muted)] font-mono max-w-md mx-auto leading-snug">
         Build your first scheme: click a + slot, pick a paint from the
         wheel / library / eyedropper, assign it a layer. Attach the
         finished recipe to an army when you&apos;re ready.

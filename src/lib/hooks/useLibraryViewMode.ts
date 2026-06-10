@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 export type LibraryViewMode = "list" | "grid";
 
 export const LIBRARY_VIEW_STORAGE_KEY = "mm.library.viewMode";
-const DEFAULT: LibraryViewMode = "list";
+// FIGMA-REBUILD — the Library frame leads with the swatch-wall grid, so a
+// first-time visitor opens on GRID. The choice still persists to
+// localStorage, so anyone who flips to LIST stays there.
+const DEFAULT: LibraryViewMode = "grid";
 
 export function parseStoredViewMode(raw: string | null | undefined): LibraryViewMode {
   return raw === "grid" || raw === "list" ? raw : DEFAULT;

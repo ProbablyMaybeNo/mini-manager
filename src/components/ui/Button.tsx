@@ -10,7 +10,9 @@ export type ButtonVariant =
   | "secondary"
   | "ghost"
   | "danger"
+  | "destructive"
   | "success"
+  | "tertiary"
   | "warning"
   | "purple";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -21,7 +23,9 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   secondary: "btn-secondary",
   ghost: "btn-ghost",
   danger: "btn-danger",
+  destructive: "btn-danger",
   success: "btn-success",
+  tertiary: "btn-success",
   warning: "btn-warning",
   purple: "btn-purple",
 };
@@ -62,27 +66,33 @@ export type ButtonProps = ButtonElProps | AnchorElProps;
 
 /** Button primitive — semantic variants for the locked palette.
  *
- *  GOLD-STANDARD (2026-06) reversed the P13.1 all-solid rule. The spec
- *  image (docs/design/gold-standard-ui.png §03) is the literal contract:
- *  PRIMARY is the lone solid-filled lead action; every coloured intent
- *  variant ships as a phosphor OUTLINE (transparent fill + coloured 1px
- *  border + matching coloured text + glow). `tone="solid"` is the escape
- *  hatch that refills a coloured variant for hard-commit surfaces.
+ *  FIGMA-REBUILD (REBUILD_SPEC §1) — the Style Guide button tiers map onto
+ *  these variants. Every tier ships SOLID (colour fill + black text, via
+ *  `tone="solid"`) or OUTLINE (1px coloured border + coloured text, the
+ *  default tone). Sharp corners, 1px border, phosphor glow.
+ *
+ *    SPEC TIER       → variant
+ *    Primary (cyan)  → "primary"   (solid cyan + black text by default;
+ *                       tone="outline" for the cyan-outline form)
+ *    Secondary (yel) → "warning"   (yellow outline; tone="solid" to fill)
+ *    Tertiary (grn)  → "tertiary"  (green outline, icon-first/compact;
+ *                       alias of "success" — same class)
+ *    Destructive(red)→ "destructive" (red outline; alias of "danger")
  *
  *    primary  — solid cyan + black text. The one lead action: save /
- *               confirm / sign-in / navigate.
- *    secondary— white border + white text, no fill. Supporting action,
- *               neutral so the cyan primary owns the hierarchy.
- *    ghost    — near-black fill + neutral border + white text. Tertiary /
- *               dismiss / cancel; minimal, icon-first, compact.
- *    danger   — red outline. Remove / delete / destroy.
- *    success  — green outline. ADD / CREATE / NEW / SAVE-NEW.
- *    warning  — pastel-yellow outline. SHARE / IMPORT / EXPORT / WISHLIST.
- *    purple   — pastel-purple outline. SPECIAL / FEATURED / FOUNDER.
+ *               confirm / ADD PROJECT / navigate.
+ *    secondary— white border + white text, no fill. Neutral supporting
+ *               action so the cyan primary owns the hierarchy.
+ *    ghost    — near-black fill + neutral border + white text. Dismiss /
+ *               cancel / dense inline actions.
+ *    danger | destructive — red outline. REMOVE / DELETE / CLEAR FILTER.
+ *    success | tertiary   — green outline. ADD / CREATE / UPLOAD.
+ *    warning  — pastel-yellow outline. SHARE / IMPORT / + WISHLIST.
+ *    purple   — pastel-purple outline. SPECIAL / FEATURED / ASSIGN.
  *
  *  Sizes: sm / md / lg. Pass `as="a"` to render as an anchor.
  *  Pass `tone="solid"` to refill a coloured variant with its hue + black
- *  text for the rare high-emphasis surfaces — outline stays the default. */
+ *  text — outline stays the default for non-primary variants. */
 export function Button(props: ButtonProps) {
   const variant: ButtonVariant = props.variant ?? "secondary";
   const size: ButtonSize = props.size ?? "md";

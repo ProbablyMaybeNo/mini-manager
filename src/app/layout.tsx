@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { NavRail } from "@/components/NavRail";
-import { BottomTabBar } from "@/components/BottomTabBar";
-import { MobileHeader } from "@/components/MobileHeader";
-import { StatusBarServer } from "@/components/StatusBarServer";
+import Script from "next/script";
+import { SidebarRail } from "@/components/shell/SidebarRail";
+import { MobileTopBar } from "@/components/shell/MobileTopBar";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -47,14 +46,6 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-/**
- * Read package version at module-evaluation time (server-only). Used by
- * the NavRail footer build-label.
- */
-import packageJson from "../../package.json" with { type: "json" };
-
-const APP_VERSION: string = (packageJson as { version: string }).version;
-
 export default async function RootLayout({
   children,
 }: {
@@ -63,40 +54,37 @@ export default async function RootLayout({
   const session = await auth();
   const isAuthed = Boolean(session?.user?.id);
 
-  const user = session?.user
-    ? {
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
-      }
-    : null;
-
   return (
     <html lang="en">
       <body>
         {/* D1 — apply the stored Comfortable/Compact density to <html>
-            before first paint so there is no comfortable→compact flash
-            on reload. Runs synchronously ahead of the body content. */}
-        <script dangerouslySetInnerHTML={{ __html: DENSITY_BOOTSTRAP_SCRIPT }} />
+            before first paint so there is no comfortable→compact flash on
+            reload. `beforeInteractive` hoists it into <head> so it runs
+            ahead of hydration without React's inline-<script> warning. */}
+        <Script
+          id="density-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: DENSITY_BOOTSTRAP_SCRIPT }}
+        />
         <ServiceWorkerRegistrar />
         <ToastProvider>
-          {isAuthed ? <MobileHeader user={user} /> : null}
-          {/* UI-CHROME — Phase-0 re-introduces a FUNCTIONAL top strip
-              (StatusBar): live clock + current Focus project + quick stats
-              (active projects / streak), reusing the dashboard KPI + streak
-              helpers. It sits at the top of the content column so it spans
-              the page (not the NavRail), and collapses to a compact line on
-              mobile under the fixed MobileHeader. The old dead SYS/OK strip
-              stays gone — this one earns its space. */}
+          {/* FIGMA-REBUILD shell (REBUILD_SPEC §2) — every authed page gets
+              the left sidebar rail (desktop) / fixed top bar + nav sheet
+              (mobile). The old StatusBar strip, MobileHeader and
+              BottomTabBar are retired with the rebuild. */}
+          {isAuthed ? <MobileTopBar /> : null}
           <div className="flex min-h-screen">
-            {isAuthed ? <NavRail user={user} appVersion={APP_VERSION} /> : null}
-            <main className={isAuthed ? "flex-1 min-w-0 pt-12 pb-20 md:pt-0 md:pb-0" : "flex-1 min-w-0"}>
-              {isAuthed && session?.user?.id ? (
-                <StatusBarServer userId={session.user.id} />
-              ) : null}
+            {isAuthed ? <SidebarRail /> : null}
+            <main
+              className={
+                isAuthed
+                  ? "flex-1 min-w-0 pt-12 md:pt-0"
+                  : "flex-1 min-w-0"
+              }
+            >
               {children}
             </main>
           </div>
-          {isAuthed ? <BottomTabBar /> : null}
           {isAuthed ? <GlobalSearch /> : null}
         </ToastProvider>
       </body>

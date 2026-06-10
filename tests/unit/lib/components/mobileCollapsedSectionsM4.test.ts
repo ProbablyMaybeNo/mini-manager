@@ -61,24 +61,34 @@ describe("CollapsibleSection disclosure primitive (still valid)", () => {
   });
 });
 
-describe("FOCUS-DASH — the master-detail workspace is dissolved", () => {
-  test("ProjectsWorkspace + ProjectInspector files are removed", () => {
+describe("FIGMA-REBUILD §9/§7 — master-detail dissolved, inspector + /focus added", () => {
+  // FIGMA-REBUILD supersedes the FOCUS-DASH IA:
+  //   - the D2 two-pane master-detail ProjectsWorkspace is still gone, but
+  //   - project detail is now a slide-out ProjectInspector (REBUILD_SPEC §9)
+  //     mounted on the dashboard, and
+  //   - FOCUS is a dedicated full /focus page (REBUILD_SPEC §0/§7), no longer
+  //     reusing /planner (the /planner route was retired).
+  test("the old two-pane ProjectsWorkspace is gone", () => {
     expect(
-      fs.existsSync(path.resolve(ROOT, "src/components/projects/ProjectsWorkspace.tsx")),
-    ).toBe(false);
-    expect(
-      fs.existsSync(path.resolve(ROOT, "src/components/projects/ProjectInspector.tsx")),
+      fs.existsSync(
+        path.resolve(ROOT, "src/components/projects/ProjectsWorkspace.tsx"),
+      ),
     ).toBe(false);
   });
 
-  test("the DASHBOARD page references neither", () => {
+  test("project detail is the slide-out ProjectInspector mounted on the dashboard", () => {
+    expect(
+      fs.existsSync(
+        path.resolve(ROOT, "src/components/projects/ProjectInspector.tsx"),
+      ),
+    ).toBe(true);
     const page = read("src/app/projects/page.tsx");
     expect(page).not.toContain("ProjectsWorkspace");
-    expect(page).not.toContain("ProjectInspector");
+    expect(page).toContain("<ProjectInspector");
   });
 
-  test("Decisions §1 — no dedicated app/focus route (FOCUS reuses /planner)", () => {
+  test("Decisions §1 superseded — FOCUS is a dedicated /focus route", () => {
     const focusRoute = path.resolve(ROOT, "src/app/focus/page.tsx");
-    expect(fs.existsSync(focusRoute)).toBe(false);
+    expect(fs.existsSync(focusRoute)).toBe(true);
   });
 });

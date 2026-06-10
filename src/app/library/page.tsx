@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { eq } from "drizzle-orm";
 
 import type { PaintCatalog } from "@/lib/paints/types";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   LibraryPageClient,
   type InventorySnapshot,
@@ -76,16 +77,13 @@ export default async function LibraryPage() {
       {/* Terminal hero — mirrors the dashboard banner so the Library reads
           as the same mission-control surface: a tracked-out coordinate
           caption above the display-font title, not a plain SaaS H1. */}
-      <header className="relative overflow-hidden px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-[var(--color-border)]">
-        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-          SYS ▸ CATALOG / 02
-        </p>
-        <h1 className="title-display text-base md:text-lg">LIBRARY</h1>
-        <p className="text-xs text-[var(--color-fg-muted)] mt-3 font-sans pr-24 md:pr-0">
-          {catalog.__row_count.toLocaleString()} paints across the cross-brand catalog.
-          Filter by brand, line, type, or hue. Tap a row for swatch detail.
-        </p>
-      </header>
+      <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-[var(--color-border)]">
+        <PageHeader
+          title="LIBRARY"
+          accent="purple"
+          tagline={`Growing library of ${catalog.__row_count.toLocaleString()} paints across all the major companies.`}
+        />
+      </div>
       <Suspense
         fallback={
           <div className="p-8 text-sm font-mono text-[var(--color-fg-muted)]">

@@ -60,7 +60,7 @@ async function loadWishlistItemOwned(
 async function stampBought(wishlistItemId: string): Promise<void> {
   await db
     .update(wishlistItems)
-    .set({ status: "PURCHASED", dateResolved: new Date() })
+    .set({ status: "OWNED", dateResolved: new Date() })
     .where(eq(wishlistItems.id, wishlistItemId));
 }
 
@@ -141,7 +141,7 @@ export async function markBoughtAsNewProject(
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${newRow.id}`);
-  revalidatePath("/collections");
+  revalidatePath("/collection");
   return { ok: true, data: { projectId: newRow.id } };
 }
 
@@ -190,6 +190,6 @@ export async function markBoughtAsExistingUnit(
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}`);
-  revalidatePath("/collections");
+  revalidatePath("/collection");
   return { ok: true, data: { projectId, ownedCount: newOwned } };
 }

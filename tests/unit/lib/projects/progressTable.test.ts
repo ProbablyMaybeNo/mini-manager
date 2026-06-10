@@ -60,7 +60,7 @@ describe("ProjectProgressTable component surface", () => {
   test("status pill mapping covers all 8 DisplayStatus values", () => {
     for (const s of [
       "WISHLIST",
-      "PURCHASED",
+      "OWNED",
       "BUILDING",
       "PRIMING",
       "PAINTING",
@@ -133,36 +133,32 @@ describe("updateProjectCount server action (P12.10)", () => {
   });
 });
 
-describe("Project detail page wires the Progress table in", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("Project children surface after the inspector rebuild (FIGMA-REBUILD §9)", () => {
+  // FIGMA-REBUILD §9 — the /projects/[id] PAGE (which mounted the
+  // ProjectProgressTable + the editable Roster/Stages counter cards) was
+  // dissolved into the slide-out ProjectInspector. The inspector shows a
+  // compact UNITS summary built from the project's children (name / count /
+  // status / percent) loaded by projectInspectorActions.ts; the dense
+  // ProjectProgressTable component is preserved for reuse (its surface
+  // contract is pinned in the describe above). The route is a redirect.
+  const action = read("src/components/projects/projectInspectorActions.ts");
+  const panel = read("src/components/projects/ProjectInspector.tsx");
+  const table = read("src/components/ProjectProgressTable.tsx");
 
-  test("imports ProjectProgressTable + ProgressRow", () => {
-    expect(src).toContain("ProjectProgressTable");
-    expect(src).toContain("ProgressRow");
+  test("the inspector data action builds child rows (name / count / status / percent)", () => {
+    expect(action).toContain("children:");
+    expect(action).toContain("children.map");
+    expect(action).toContain("listChildProjects");
   });
 
-  test("P13.4 — builds progressRows from sub-project children only", () => {
-    expect(src).toContain("progressRows");
-    expect(src).toContain("children.map");
+  test("the inspector renders the UNITS summary from the children", () => {
+    expect(panel).toContain("vm.children");
+    expect(panel).toContain("Units");
   });
 
-  test("fetches the project-palettes map for the recipe column", () => {
-    expect(src).toContain("getProjectPalettesMap");
-  });
-
-  test("removes the redundant Units tree + Aggregated-stages cards (2026-06-05)", () => {
-    // Ross flagged the Progress / Units / Aggregated-stages trio as
-    // saying the same thing. The Progress table is kept as the single
-    // representation; the other two cards no longer render and their
-    // imports are gone from the page.
-    expect(src).not.toContain('title="Aggregated stages"');
-    expect(src).not.toContain("AggregateCountersDisplay");
-    expect(src).not.toContain("ProjectTree");
-    expect(src).not.toContain("childNoun");
-  });
-
-  test("keeps the editable Roster + Stages counters for leaf projects", () => {
-    expect(src).toContain('title="Roster"');
-    expect(src).toContain('title="Stages"');
+  test("the ProjectProgressTable component is preserved (still a real table)", () => {
+    expect(table).toContain("<table");
+    expect(table).toContain(">Name</th>");
+    expect(table).toContain(">Progress</th>");
   });
 });

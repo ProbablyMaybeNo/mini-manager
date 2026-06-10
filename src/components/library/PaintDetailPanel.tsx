@@ -5,24 +5,11 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
 import type { Paint } from "@/lib/paints/types";
-import { TypeIcon } from "./TypeIcon";
-import { HexConfidenceDot } from "./HexConfidenceDot";
 import { InventoryControls } from "./InventoryControls";
+import { findClosestPaints } from "@/lib/tools/match/find";
 import { StatusPill, type StatusPillKind } from "@/components/ui/StatusPill";
+import { SlideOutPanel } from "@/components/ui/SlideOutPanel";
 
-const PAINT_TYPE_PILL: Record<string, StatusPillKind> = {
-  Paint: "info",
-  Wash: "warning",
-  Contrast: "info",
-  Metallic: "info",
-  Air: "info",
-  Primer: "neutral",
-  Varnish: "neutral",
-  Pigment: "neutral",
-  Effect: "info",
-  Ink: "info",
-  Lacquer: "neutral",
-};
 import { _internal } from "@/lib/paints/filters";
 import {
   COLOR_PICKER_HARMONY_LABELS,
@@ -93,6 +80,13 @@ export function PaintDetailPanel({
     return fastMatchByHueBand(selectedHarmonyHex, allPaints, { limit: 12 });
   }, [selectedHarmonyHex, allPaints]);
 
+  const matchResults = useMemo(() => {
+    if (!paint || !allPaints) return [];
+    return findClosestPaints(paint.hex, allPaints, { limit: 5 }).filter(
+      (m) => m.paint.id !== paint.id,
+    );
+  }, [paint, allPaints]);
+
   function close() {
     const params = new URLSearchParams(sp?.toString() ?? "");
     params.delete("paint");
@@ -110,8 +104,6 @@ export function PaintDetailPanel({
     }
   }
 
-  if (!paint) return null;
-
   // Inventory status for the colour-bar readout. Reflects the server-passed
   // snapshot (refreshed after a toggle via the stepper's router.refresh) —
   // a glanceable badge, not the live editing surface.
@@ -119,52 +111,25 @@ export function PaintDetailPanel({
   const isWanted = inventory?.isWishlisted ?? false;
 
   return (
-    <aside
-      className={clsx(
-        "fixed inset-y-0 right-0 z-50 w-full md:w-[420px] bg-[var(--color-bg-panel)]",
-        // Terminal side-panel: near-black fill + a 1px phosphor left border
-        // (cyan-tinted) so the slide-out reads as a CRT bezel docking onto
-        // the list rather than a grey SaaS drawer.
-        "border-l shadow-2xl",
-        "flex flex-col pb-20 md:pb-0",
-      )}
-      style={{
-        borderLeftColor:
-          "color-mix(in srgb, var(--color-cyan) 32%, var(--color-border-strong))",
-      }}
-      aria-label={`${paint.brand} ${paint.name} detail`}
+    <SlideOutPanel
+      open={paint !== null}
+      onClose={close}
+      title={paint?.name ?? ""}
+      breadcrumb="SYS > PAINT"
+      side="right"
+      width={311}
     >
-      <header className="flex items-start justify-between gap-2 p-4 border-b border-[var(--color-border-strong)]">
-        <div className="min-w-0">
-          {/* Coordinate tag — anchors the panel as a mission-control
-              readout, mirroring the page hero + map module captions. */}
-          <p className="text-2xs font-mono uppercase tracking-[0.18em] text-[var(--color-cyan)] mb-1">
-            SYS ▸ PAINT
+      {paint ? (
+      <div className="space-y-5">
+        <p className="text-2xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
+          {paint.brand}
+          {paint.line ? ` · ${paint.line}` : ""}
+        </p>
+        {paint.sku ? (
+          <p className="text-2xs font-mono text-[var(--color-fg-subtle)] -mt-3">
+            SKU {paint.sku}
           </p>
-          <p className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase tracking-wider">
-            {paint.brand}
-            {paint.line ? ` · ${paint.line}` : ""}
-          </p>
-          <h2 className="font-mono text-lg text-[var(--color-fg)] truncate mt-0.5">
-            {paint.name}
-          </h2>
-          {paint.sku ? (
-            <p className="text-2xs font-mono text-[var(--color-fg-subtle)] mt-0.5">
-              SKU {paint.sku}
-            </p>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          onClick={close}
-          className="text-base font-mono px-2 py-1 text-[var(--color-fg-muted)] hover:text-[var(--color-cyan)] tap-target"
-          aria-label="Close detail panel"
-        >
-          ×
-        </button>
-      </header>
-
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-5">
+        ) : null}
         <div
           className="h-48 w-full rounded-sm border border-[var(--color-border-strong)]"
           style={{ background: paint.hex }}
@@ -188,37 +153,11 @@ export function PaintDetailPanel({
           ) : null}
         </section>
 
-        <section
-          className="flex items-center gap-3"
-          aria-label="Paint type and hex confidence"
-        >
-          <span
-            className="inline-flex items-center gap-2"
-            title={`${paint.type} — paint type / medium`}
-          >
-            <TypeIcon type={paint.type} className="text-[var(--color-fg)] text-base" />
-            {/* Color-bar status (DESIGN_LANGUAGE §7.2) — the paint type reads
-                as a solid phosphor block with black text, the terminal status
-                idiom, rather than an outline chip. */}
-            <StatusPill status={PAINT_TYPE_PILL[paint.type] ?? "neutral"} tone="bar">
-              {paint.type}
-            </StatusPill>
-          </span>
-          <span className="grow" />
-          <span
-            className="inline-flex items-center gap-2"
-            title={`Hex confidence: ${paint.hexConfidence.toLowerCase()} — how sure we are this hex matches the real paint (source: ${paint.hexSource})`}
-          >
-            <HexConfidenceDot
-              confidence={paint.hexConfidence}
-              source={paint.hexSource}
-            />
-            <span
-              className="text-2xs font-mono text-[var(--color-fg-muted)] uppercase"
-            >
-              {paint.hexConfidence} CONFIDENCE
-            </span>
-          </span>
+        <section aria-label="Paint type">
+          <h3 className="section-title">Type</h3>
+          <p className="font-mono text-sm uppercase tracking-wider text-[var(--color-fg)]">
+            {paint.type}
+          </p>
         </section>
 
         <section>
@@ -335,6 +274,34 @@ export function PaintDetailPanel({
           </div>
         </section>
 
+        {matchResults.length > 0 ? (
+          <section>
+            <h3 className="section-title">Match</h3>
+            <div className="flex flex-col gap-1">
+              {matchResults.map((m) => (
+                <div
+                  key={m.paint.id}
+                  className="flex items-center gap-2 px-2 py-1 frame"
+                >
+                  <span
+                    className="h-4 w-4 rounded-sm border border-[var(--color-border)] shrink-0"
+                    style={{ background: m.paint.hex }}
+                  />
+                  <span className="text-xs font-mono text-[var(--color-fg-muted)] truncate">
+                    {m.paint.brand}
+                  </span>
+                  <span className="text-xs font-mono text-[var(--color-fg)] truncate">
+                    {m.paint.name}
+                  </span>
+                  <span className="text-2xs font-mono text-[var(--color-fg-subtle)] ml-auto">
+                    ΔE {m.deltaE.toFixed(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {similarInOtherBrands.length > 0 ? (
           <section>
             <h3 className="section-title">Similar in other brands</h3>
@@ -360,39 +327,10 @@ export function PaintDetailPanel({
           </section>
         ) : null}
 
-        <section>
-          <h3 className="section-title">Source</h3>
-          <a
-            href={paint.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-mono text-[var(--color-cyan)] hover:underline break-all"
-          >
-            {paint.sourceUrl}
-          </a>
-        </section>
       </div>
-    </aside>
+      ) : null}
+    </SlideOutPanel>
   );
-}
-
-/**
- * Generate eight harmony swatches by rotating around the HSL hue wheel.
- * Returns CSS `hsl()` strings so they can render without any colour lib.
- */
-function buildHarmonies(hex: string): string[] {
-  const rgb = _internal.parseHex(hex);
-  if (!rgb) return [];
-  const [r, g, b] = rgb;
-  const hsl = rgbToHsl(r, g, b);
-  if (!hsl) return [];
-  const [h, s, l] = hsl;
-  const out: string[] = [];
-  for (let i = 0; i < 8; i++) {
-    const hue = (h + i * 45) % 360;
-    out.push(`hsl(${hue.toFixed(1)} ${(s * 100).toFixed(0)}% ${(l * 100).toFixed(0)}%)`);
-  }
-  return out;
 }
 
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] | null {

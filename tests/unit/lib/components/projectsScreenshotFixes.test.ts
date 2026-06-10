@@ -33,15 +33,15 @@ describe("/projects mobile screenshot fixes (2026-06-02)", () => {
     expect(panelIdx).toBeLessThan(stopwatchIdx);
   });
 
-  test("Import / New button row fills width + flexes on mobile", () => {
-    const importIdx = page.indexOf('href="/projects/import"');
-    const newIdx = page.indexOf('href="/projects/new"');
-    // Both header CTAs carry the mobile fill class.
-    for (const idx of [importIdx, newIdx]) {
-      expect(idx).toBeGreaterThan(-1);
-      const slice = page.slice(idx, idx + 200);
-      expect(slice).toContain("flex-1");
-    }
+  test("Add project / Upload army list CTAs sit under the table (FIGMA-REBUILD §3)", () => {
+    // FIGMA-REBUILD §3 — the Dashboard.png reference puts ADD PROJECT
+    // (primary) + UPLOAD ARMY LIST (tertiary outline) UNDER the PROJECTS
+    // table, not in the page header. They live in DashboardProjectsTable now
+    // and wrap on a flex row (no per-button flex-1 fill).
+    const table = read("src/components/projects/DashboardProjectsTable.tsx");
+    expect(table).toContain('href="/projects/new"');
+    expect(table).toContain('href="/projects/import"');
+    expect(table).toContain("flex flex-wrap gap-2");
   });
 
   test("FOCUS picker select is width-contained + truncating on mobile", () => {

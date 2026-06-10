@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { AssignToProjectMenu } from "@/components/recipes/AssignToProjectMenu";
+import { NewRecipeButton } from "@/components/recipes/NewRecipeButton";
 import type { AssignProjectOption } from "@/components/recipes/RecipeActionsBar";
 
-/** One creator-sized paint square on a /recipes row — colour, paint name,
- *  layer, ownership coverage (green/yellow border), and whether it's a
- *  colour-only slot that still needs a paint assigned. */
+/** One step-colour chip on a /recipes row — colour, paint name, layer,
+ *  ownership coverage (green/yellow ring) and whether it's a colour-only
+ *  slot that still needs a paint assigned. */
 export interface RecipeTableSlotVm {
   hex: string;
   paintLabel: string | null;
@@ -29,7 +30,7 @@ export interface RecipeRowVm {
   paletteHexes: string[];
   /** Per-swatch colour + hover label (paint name, or hex for custom slots). */
   palette: { hex: string; label: string }[];
-  /** Creator-sized paint squares (paint name + layer) shown in the row. */
+  /** Step-colour chips (paint name + layer) shown in the RECIPE column. */
   slots: RecipeTableSlotVm[];
   slotCount: number;
   createdAt: number;
@@ -37,18 +38,18 @@ export interface RecipeRowVm {
   publicSlug: string | null;
 }
 
-type SortKey = "name" | "createdAt" | "updatedAt";
+type SortKey = "name" | "updatedAt";
 type SortDir = "asc" | "desc";
 
 interface Props {
   rows: ReadonlyArray<RecipeRowVm>;
   /** Every non-archived project owned by the user — powers each row's
-   *  "Assign ▾" project dropdown (attach-to-project inline). */
+   *  PROJECT assign dropdown (attach-to-project inline). */
   assignProjects: ReadonlyArray<AssignProjectOption>;
 }
 
-/** Square border colour for a slot's ownership coverage: green = owned,
- *  yellow = wanted, neutral otherwise. */
+/** Chip ring colour for a slot's ownership coverage: green = owned,
+ *  yellow = wishlisted, neutral otherwise. */
 function coverageBorder(coverage: RecipeTableSlotVm["coverage"]): string {
   if (coverage === "owned") return "var(--color-green)";
   if (coverage === "wanted") return "var(--color-yellow)";
@@ -56,24 +57,18 @@ function coverageBorder(coverage: RecipeTableSlotVm["coverage"]): string {
 }
 
 /**
- * P12.5 — Single sortable table replacing the prior two-section
- * card grid (standalone / project-attached). P13.4 collapsed the
- * "named-model-attached" branch when named models folded into Units.
+ * FIGMA-REBUILD (REBUILD_SPEC §5, `Recipe.png`) — the /recipes table,
+ * rebuilt ground-up to the mock:
  *
- * Columns (Item 2 trimmed Body + Slots):
- *   Name              click → /recipes/<id> editor
- *   Palette           creator-sized paint squares (name + layer)
- *   Attached to       chip linking to the project (when any)
- *   Updated           short ISO-ish date
- *   Actions           Assign ▾ (inline project dropdown) + Share
+ *   NAME     mono, cyan link — row click → /recipes/<id> editor
+ *   RECIPE   row of small step-colour chips (one per slot)
+ *   PROJECT  inline ASSIGN ▾ dropdown (purple accent, per the mock)
+ *   SHARE    yellow outline SHARE button (keeps the /r/[slug] flow)
  *
- * The body-type ("INFANTRY") column is gone — there's no "body" to
- * assign in the flat recipe model. The slots-count column is gone too:
- * the painter can count the squares, and the freed width feeds the
- * bigger paint squares.
- *
- * Default sort = updatedAt desc; clicking any sortable header toggles
- * asc/desc.
+ * A full-width `+ RECIPE` outline row sits under the table inside the
+ * same panel (the mock's trailing create row). NAME stays sortable
+ * (best-practice win over the static mock); default order is most
+ * recently updated first.
  */
 export function RecipesTable({ rows, assignProjects }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
@@ -82,30 +77,28 @@ export function RecipesTable({ rows, assignProjects }: Props) {
   const sorted = useMemo(() => {
     const arr = rows.slice();
     arr.sort((a, b) => {
-      const av = a[sortKey];
-      const bv = b[sortKey];
-      let cmp = 0;
-      if (typeof av === "number" && typeof bv === "number") cmp = av - bv;
-      else cmp = String(av).localeCompare(String(bv));
+      const cmp =
+        sortKey === "updatedAt"
+          ? a.updatedAt - b.updatedAt
+          : a.name.localeCompare(b.name);
       return sortDir === "asc" ? cmp : -cmp;
     });
     return arr;
   }, [rows, sortKey, sortDir]);
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
+  const handleNameSort = () => {
+    if (sortKey === "name") {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
-      setSortKey(key);
-      setSortDir(key === "name" ? "asc" : "desc");
+      setSortKey("name");
+      setSortDir("asc");
     }
   };
 
   return (
     <>
-      {/* UX-1305 — below md the horizontally-scrolling table hid the
-          Assign/Share row actions off-screen. Render a stacked card list
-          on mobile and reserve the dense sortable table for md+. */}
+      {/* UX-1305 — below md the table reflows to stacked cards so the
+          Assign/Share row actions never scroll off-screen. */}
       <div className="md:hidden flex flex-col gap-2">
         {sorted.map((row) => (
           <RecipeCardRow
@@ -114,63 +107,131 @@ export function RecipesTable({ rows, assignProjects }: Props) {
             assignProjects={assignProjects}
           />
         ))}
+        <NewRecipeButton trigger="row" />
       </div>
-      {/* Item 1 — terminal panel frame: near-black fill, 1px phosphor
-          border, corner ticks + a tiny technical label on the top border,
-          replacing the bare `.frame`. The table itself carries the
-          cyan-highlighted hover/selected row idiom below. */}
-      <div className="hidden md:block panel panel-ticks relative overflow-x-auto">
+
+      {/* Desktop — one terminal panel: cyan border, corner ticks, tech
+          label; table + the trailing + RECIPE row share the frame. */}
+      <div className="hidden md:block panel panel-info panel-ticks relative">
         <span className="panel-label" aria-hidden>
           RECIPES · {sorted.length}
         </span>
-      <table className="w-full text-xs font-mono">
-        <thead>
-          <tr
-            className="text-left text-2xs uppercase tracking-wider text-[var(--color-fg-muted)]"
-            style={{ borderBottom: "1px solid var(--color-cyan-dim)" }}
-          >
-            <Th
-              label="Name"
-              active={sortKey === "name"}
-              dir={sortDir}
-              onClick={() => handleSort("name")}
-            />
-            <th scope="col" className="px-3 py-2">
-              Palette
-            </th>
-            <th scope="col" className="px-3 py-2">
-              Attached to
-            </th>
-            <Th
-              label="Updated"
-              active={sortKey === "updatedAt"}
-              dir={sortDir}
-              onClick={() => handleSort("updatedAt")}
-            />
-            <th scope="col" className="px-3 py-2 text-right">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((row) => (
-            <RecipeRow
-              key={row.id}
-              row={row}
-              assignProjects={assignProjects}
-            />
-          ))}
-        </tbody>
-      </table>
+        {/* Scroll lives on an inner wrapper so the panel itself stays
+            non-clipping — otherwise overflow clips the on-border label. */}
+        <div className="overflow-x-auto">
+        <table className="w-full font-mono text-sm">
+          <thead>
+            <tr
+              className="text-left text-xs uppercase tracking-[0.14em] text-[var(--color-green)]"
+              style={{ borderBottom: "1px solid var(--color-cyan-dim)" }}
+            >
+              <th scope="col" className="px-4 py-2.5">
+                <button
+                  type="button"
+                  onClick={handleNameSort}
+                  className="tap-target inline-flex items-center uppercase tracking-[0.14em] text-[var(--color-green)] transition-colors hover:text-[var(--color-fg)] motion-reduce:transition-none"
+                  aria-sort={
+                    sortKey === "name"
+                      ? sortDir === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : "none"
+                  }
+                >
+                  Name
+                  {sortKey === "name" ? (
+                    <span aria-hidden className="ml-1">
+                      {sortDir === "asc" ? "▲" : "▼"}
+                    </span>
+                  ) : null}
+                </button>
+              </th>
+              <th scope="col" className="px-4 py-2.5 text-center">
+                Recipe
+              </th>
+              <th scope="col" className="px-4 py-2.5 text-center">
+                Project
+              </th>
+              <th scope="col" className="px-4 py-2.5 text-right">
+                Share
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((row) => (
+              <RecipeRow
+                key={row.id}
+                row={row}
+                assignProjects={assignProjects}
+              />
+            ))}
+          </tbody>
+        </table>
+        <NewRecipeButton trigger="row" />
+        </div>
       </div>
     </>
   );
 }
 
+/** Desktop row — the whole row is a click surface into the editor (the
+ *  NAME link is the accessible path); the PROJECT + SHARE cells stop
+ *  propagation so their own controls keep working. */
+function RecipeRow({
+  row,
+  assignProjects,
+}: {
+  row: RecipeRowVm;
+  assignProjects: ReadonlyArray<AssignProjectOption>;
+}) {
+  const router = useRouter();
+  return (
+    <tr
+      onClick={() => router.push(`/recipes/${row.id}`)}
+      className="caret-row cursor-pointer align-middle transition-colors hover:bg-[color-mix(in_srgb,var(--color-cyan)_12%,transparent)] hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] motion-reduce:transition-none"
+      style={{ borderBottom: "1px solid var(--color-border)" }}
+    >
+      <td className="px-4 py-3">
+        <Link
+          href={`/recipes/${row.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="text-[var(--color-fg)] hover:text-[var(--color-cyan)] hover:underline"
+        >
+          {row.name}
+        </Link>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex justify-center">
+          <RecipeStepChips slots={row.slots} />
+        </div>
+      </td>
+      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+        <AssignToProjectMenu
+          recipeId={row.id}
+          projects={assignProjects}
+          currentlyAttachedProjectId={row.attachedProjectId}
+          attachedLabel={row.attachmentLabel}
+        />
+      </td>
+      <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+        <Button
+          as="a"
+          href={row.publicSlug ? `/r/${row.publicSlug}` : `/recipes/${row.id}`}
+          variant="warning"
+          size="sm"
+          title={row.publicSlug ? "Open shared link" : "Open editor to share"}
+        >
+          Share
+        </Button>
+      </td>
+    </tr>
+  );
+}
+
 /**
- * UX-1305 — mobile card row. Name on its own line, body chip + palette +
- * slot/step counts beneath, and the Assign/Share actions as full-width
- * buttons so they never scroll off the right edge.
+ * UX-1305 — mobile card row. Name on its own line, step chips beneath,
+ * and the Assign/Share actions as full-width buttons so they never
+ * scroll off the right edge.
  */
 function RecipeCardRow({
   row,
@@ -180,21 +241,19 @@ function RecipeCardRow({
   assignProjects: ReadonlyArray<AssignProjectOption>;
 }) {
   return (
-    <div className="panel px-3 py-3 flex flex-col gap-2 active:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] transition-shadow">
-      <div className="flex items-start justify-between gap-2">
-        <Link
-          href={`/recipes/${row.id}`}
-          className="font-mono text-sm text-[var(--color-cyan)] hover:underline min-w-0 truncate"
-        >
-          {row.name}
-        </Link>
-      </div>
-      <RecipeSlotSquares recipeId={row.id} slots={row.slots} />
+    <div className="panel px-3 py-3 flex flex-col gap-2 active:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] transition-shadow motion-reduce:transition-none">
+      <Link
+        href={`/recipes/${row.id}`}
+        className="font-mono text-sm text-[var(--color-cyan)] hover:underline min-w-0 truncate"
+      >
+        {row.name}
+      </Link>
+      <RecipeStepChips slots={row.slots} />
       <div className="flex items-center gap-3 text-2xs font-mono text-[var(--color-fg-muted)] tabular-nums">
         <span>
-          {row.slotCount} slot{row.slotCount === 1 ? "" : "s"}
+          {row.slotCount} step{row.slotCount === 1 ? "" : "s"}
         </span>
-        <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
+        <span aria-hidden>·</span>
         <span className="truncate">{row.attachmentLabel ?? "standalone"}</span>
       </div>
       <div className="flex items-center gap-2">
@@ -202,6 +261,7 @@ function RecipeCardRow({
           recipeId={row.id}
           projects={assignProjects}
           currentlyAttachedProjectId={row.attachedProjectId}
+          attachedLabel={row.attachmentLabel}
           block
         />
         <Button
@@ -219,202 +279,51 @@ function RecipeCardRow({
   );
 }
 
-function Th({
-  label,
-  active,
-  dir,
-  align = "left",
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  dir: SortDir;
-  align?: "left" | "right";
-  onClick: () => void;
-}) {
-  return (
-    <th
-      scope="col"
-      className={clsx("px-3 py-2", align === "right" ? "text-right" : "text-left")}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        className={clsx(
-          // P15.2 — bare text sort triggers only had the text line-height
-          // as their hit-box. tap-target + inline-flex floors the button at
-          // 44px (mobile) / 32px (desktop) inside the header cell.
-          "tap-target inline-flex items-center uppercase tracking-wider transition-colors",
-          active ? "text-[var(--color-cyan)]" : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
-        )}
-        aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
-      >
-        {label}
-        {active ? (
-          <span aria-hidden className="ml-1">
-            {dir === "asc" ? "▲" : "▼"}
-          </span>
-        ) : null}
-      </button>
-    </th>
-  );
-}
-
-function RecipeRow({
-  row,
-  assignProjects,
-}: {
-  row: RecipeRowVm;
-  assignProjects: ReadonlyArray<AssignProjectOption>;
-}) {
-  return (
-    <tr
-      className="caret-row hover:bg-[color-mix(in_srgb,var(--color-cyan)_12%,transparent)] hover:[box-shadow:inset_2px_0_0_0_var(--color-cyan)] transition-colors align-top"
-      style={{ borderBottom: "1px solid var(--color-border)" }}
-    >
-      <td className="px-3 py-3">
-        <Link
-          href={`/recipes/${row.id}`}
-          className="text-[var(--color-cyan)] hover:underline"
-        >
-          {row.name}
-        </Link>
-      </td>
-      <td className="px-3 py-3">
-        <RecipeSlotSquares recipeId={row.id} slots={row.slots} />
-      </td>
-      <td className="px-3 py-3 text-[var(--color-fg-muted)]">
-        {row.attachmentLabel ?? (
-          <span className="opacity-50">standalone</span>
-        )}
-      </td>
-      <td className="px-3 py-3 text-[var(--color-fg-muted)] whitespace-nowrap">
-        {formatDate(row.updatedAt)}
-      </td>
-      <td className="px-3 py-3 text-right">
-        <div className="inline-flex items-center gap-2">
-          <AssignToProjectMenu
-            recipeId={row.id}
-            projects={assignProjects}
-            currentlyAttachedProjectId={row.attachedProjectId}
-          />
-          <Button
-            as="a"
-            href={
-              row.publicSlug ? `/r/${row.publicSlug}` : `/recipes/${row.id}`
-            }
-            variant="warning"
-            size="sm"
-            title={
-              row.publicSlug
-                ? "Open shared link"
-                : "Open editor to share"
-            }
-          >
-            Share
-          </Button>
-        </div>
-      </td>
-    </tr>
-  );
-}
-
 /**
- * Item 1 (Ross redesign) — MUCH bigger paint squares with the paint NAME
- * in the CENTRE of the square (black/white per swatch contrast) and the
- * LAYER along the BOTTOM edge of the square. The square is sized large
- * enough to fit a paint name (w-28 h-28 ≈ 112px) so /recipes reads as a
- * full, glanceable recipe — nothing stranded in a label beneath the
- * swatch.
- *
- * Clicking a square opens the creator (to assign / edit paints). A
- * colour-only slot with no paint assigned shows a "+ Assign Paint"
- * affordance — black or white text per the swatch's contrast — in place
- * of a name.
+ * RECIPE column — small step-colour chips, one per slot, in recipe
+ * order (the mock's row of colour squares). Decorative-but-labelled:
+ * each chip carries a tooltip + screen-reader text; the ROW handles
+ * navigation, so the chips don't need their own 44px targets. The
+ * green/yellow coverage ring (owned / wishlisted) is kept from the
+ * previous build; a colour-only slot renders a dashed ring.
  */
-function RecipeSlotSquares({
-  recipeId,
+function RecipeStepChips({
   slots,
 }: {
-  recipeId: string;
   slots: ReadonlyArray<RecipeTableSlotVm>;
 }) {
-  const router = useRouter();
   if (slots.length === 0) {
     return (
-      <span className="text-2xs text-[var(--color-fg-muted)] opacity-50">
+      <span className="text-2xs font-mono text-[var(--color-fg-subtle)]">
         no palette yet
       </span>
     );
   }
   return (
     <ul
-      className="flex flex-wrap items-start gap-2"
-      role="list"
-      aria-label={`Palette · ${slots.length} paint${slots.length === 1 ? "" : "s"}`}
+      className="flex flex-wrap items-center gap-1.5"
+      aria-label={`Recipe steps · ${slots.length}`}
     >
       {slots.map((slot, i) => {
-        const fg = readableTextOn(slot.hex);
-        const hover = slot.needsPaint
-          ? `Assign a paint · ${slot.hex} · ${slot.layerLabel}`
-          : `${slot.paintLabel} · ${slot.layerLabel}`;
+        const label = slot.needsPaint
+          ? `Step ${i + 1} · assign a paint · ${slot.hex} · ${slot.layerLabel}`
+          : `Step ${i + 1} · ${slot.paintLabel} · ${slot.layerLabel}`;
         return (
-          <li key={`${i}-${slot.hex}`} role="listitem">
-            <button
-              type="button"
-              onClick={() => router.push(`/recipes/${recipeId}`)}
-              title={hover}
-              aria-label={hover}
-              className="flex w-28 h-28 flex-col items-stretch justify-between rounded-sm p-1.5 text-center transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
-              style={{
-                background: slot.hex,
-                border: `2px solid ${coverageBorder(slot.coverage)}`,
-              }}
-            >
-              {/* spacer balances the bottom layer strip so the name reads
-                  as optically centred in the square */}
-              <span aria-hidden />
-              <span
-                className="font-mono text-2xs font-semibold leading-tight break-words line-clamp-3"
-                style={{ color: fg }}
-              >
-                {slot.needsPaint
-                  ? "+ Assign Paint"
-                  : slot.paintLabel ?? "No paint"}
-              </span>
-              {/* Layer along the BOTTOM edge of the square. */}
-              <span
-                className="font-mono text-2xs uppercase tracking-wider leading-none opacity-90"
-                style={{ color: fg }}
-              >
-                {slot.layerLabel}
-              </span>
-            </button>
+          <li
+            key={`${i}-${slot.hex}`}
+            title={label}
+            className={clsx("h-6 w-6 shrink-0")}
+            style={{
+              background: slot.hex,
+              border: slot.needsPaint
+                ? "1px dashed var(--color-fg-muted)"
+                : `1px solid ${coverageBorder(slot.coverage)}`,
+            }}
+          >
+            <span className="sr-only">{label}</span>
           </li>
         );
       })}
     </ul>
   );
-}
-
-/**
- * Pick black or white text for a coloured swatch background. sRGB
- * perceived-luminance threshold (~0.55) — the same trick the creator's
- * SlotCell uses for its on-swatch labels.
- */
-function readableTextOn(hex: string): string {
-  const clean = hex.startsWith("#") ? hex.slice(1) : hex;
-  if (clean.length !== 6) return "#0a0a0a";
-  const r = parseInt(clean.slice(0, 2), 16);
-  const g = parseInt(clean.slice(2, 4), 16);
-  const b = parseInt(clean.slice(4, 6), 16);
-  if ([r, g, b].some(Number.isNaN)) return "#0a0a0a";
-  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance > 0.55 ? "#0a0a0a" : "#f5f5f5";
-}
-
-function formatDate(ms: number): string {
-  const d = new Date(ms);
-  // ISO-ish: YYYY-MM-DD — short, mono-friendly, sortable.
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }

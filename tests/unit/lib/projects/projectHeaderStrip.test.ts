@@ -42,7 +42,7 @@ describe("ProjectHeaderStrip component surface", () => {
   test("status pill mapping covers all 8 DisplayStatus values", () => {
     for (const s of [
       "WISHLIST",
-      "PURCHASED",
+      "OWNED",
       "BUILDING",
       "PRIMING",
       "PAINTING",
@@ -183,19 +183,24 @@ describe("StageProgressContext — provider + hooks contract", () => {
   });
 });
 
-describe("Project detail page wraps the workspace in the progress provider", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("StageProgressProvider stays a mountable workspace primitive", () => {
+  // FIGMA-REBUILD §9 — the /projects/[id] detail PAGE (which wrapped its
+  // header + stages in <StageProgressProvider> and printed a `SYS ▸ <TYPE>`
+  // banner) was dissolved into the compact slide-out ProjectInspector. The
+  // provider primitive + the header strip components are preserved intact
+  // for reuse; their contracts are pinned in the describes above. The route
+  // is now a permanent redirect into the dashboard inspector.
+  const provider = read("src/components/projects/StageProgressContext.tsx");
+  const route = read("src/app/projects/[id]/page.tsx");
 
-  test("imports + mounts StageProgressProvider around header + stages", () => {
-    expect(src).toContain("StageProgressProvider");
-    expect(src).toContain("<StageProgressProvider>");
+  test("the provider renders children under its context (mountable)", () => {
+    expect(provider).toContain("export function StageProgressProvider");
+    expect(provider).toContain(".Provider");
   });
 
-  test("PHASE-2 — page shows a coordinate-style SYS channel caption", () => {
-    // Mirrors the dashboard's `SYS ▸ …` banner so the unit workspace
-    // reads as a mission-control screen.
-    expect(src).toContain("SYS ▸ ");
-    expect(src).toContain("project.type.toUpperCase()");
+  test("the detail route redirects into the dashboard inspector", () => {
+    expect(route).toContain("redirect(");
+    expect(route).toContain("/projects?project=");
   });
 });
 
@@ -216,34 +221,28 @@ describe("ProgressBar — stretch + height props (P12.8)", () => {
   });
 });
 
-describe("Project detail page wires the new header strip in", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("ProjectHeaderStrip + AddChildMenu gating survive the rebuild", () => {
+  // FIGMA-REBUILD §9 — the header strip was a full-PAGE element; the page is
+  // now a redirect, so the page-level "imports ProjectHeaderStrip /
+  // showAddChild / canAddChild" wiring no longer lives in the route. The
+  // strip component keeps its showAddChild prop and the Army/Warband add
+  // gating lives in AddChildMenu (canAdd), where it's containment-correct
+  // regardless of which surface mounts it.
+  const strip = read("src/components/ProjectHeaderStrip.tsx");
+  const menu = read("src/components/projects/AddChildMenu.tsx");
 
-  test("imports ProjectHeaderStrip", () => {
-    expect(src).toContain("ProjectHeaderStrip");
+  test("the strip never re-rolls a bespoke inline header pill", () => {
+    expect(strip).not.toContain("HEADER_STATUS_PILL");
   });
 
-  test("the old inline <h1> + StatusPill header block is gone", () => {
-    // The prior header had `{status} · {percent}%` in a StatusPill;
-    // P12.8 moves that into the component, so the page no longer
-    // references HEADER_STATUS_PILL.
-    expect(src).not.toContain("HEADER_STATUS_PILL");
+  test("the strip exposes a showAddChild prop (container vs leaf)", () => {
+    expect(strip).toContain("showAddChild");
   });
 
-  test("page passes showAddChild based on project.type (container vs leaf)", () => {
-    expect(src).toContain("showAddChild=");
-    expect(src).toContain('project.type === "Army"');
-  });
-
-  test("2026-06-05 — the add menu is gated to Army/Warband only (canAddChild)", () => {
-    // Containment rules: a Unit no longer shows the in-project add menu.
-    // The page derives canAddChild = Army||Warband and feeds it to
-    // showAddChild (separate from canHaveChildren, which still includes
-    // Unit so assigned models still display).
-    expect(src).toContain("const canAddChild =");
-    expect(src).toMatch(
-      /canAddChild =\s*project\.type === "Army" \|\| project\.type === "Warband"/,
-    );
-    expect(src).toContain("showAddChild={canAddChild}");
+  test("the add menu is gated to Army/Warband only (containment rule)", () => {
+    // A Unit no longer shows the in-project add menu; the gate moved into
+    // AddChildMenu so it holds on every mount surface.
+    expect(menu).toContain('parentType === "Army" || parentType === "Warband"');
+    expect(menu).toContain("if (!canAdd) return null;");
   });
 });

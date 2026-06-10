@@ -48,7 +48,7 @@ export function FinishAccountForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 pt-3">
+    <form onSubmit={onSubmit} className="space-y-4">
       <PromptField
         label="Username"
         name="username"

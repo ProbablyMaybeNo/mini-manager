@@ -1,17 +1,18 @@
+import { Suspense } from "react";
 import { currentUserId } from "@/lib/auth-stub";
+import { ProjectInspector } from "@/components/projects/ProjectInspector";
 import { listAllProjects } from "@/db/queries/projects";
 import {
   getProjectPalettesMap,
   getProjectFirstRecipeMap,
   listOwnedRecipesLean,
 } from "@/db/queries/recipes";
-import { Logo } from "@/components/ui/Logo";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
+import { DashboardEventTicker } from "@/components/dashboard/DashboardEventTicker";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
-import { DashboardFocusSection } from "@/components/focus/DashboardFocusSection";
-import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import {
   DashboardKpiStrip,
   type KpiCardData,
@@ -24,11 +25,11 @@ import {
 } from "@/components/dashboard/dashboardKpiHelpers";
 import { computeStreak } from "@/components/planner/plannerStreakHelpers";
 import { getActivityByDay } from "@/db/queries/activityLog";
-import { getWeekRollupSeconds } from "@/db/queries/paintSessions";
+import { getAllTimeRollupSeconds } from "@/db/queries/paintSessions";
 import { getFocusProjectId } from "@/db/queries/focus";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { displayStatus, progressPercent } from "@/lib/progress";
+import { displayStatus, progressPercent, aggregateCounters } from "@/lib/progress";
 
 const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
@@ -100,15 +101,6 @@ export default async function DashboardPage({
   const calMonth = Array.isArray(calMonthRaw) ? calMonthRaw[0] : calMonthRaw;
   // FOCUS-FOLD — the relocated FOCUS bench persists its recipe-tab +
   // active-slot selection in the URL, exactly as the old /planner route did.
-  const focusRecipeRaw = params.focusRecipe;
-  const focusRecipeId = Array.isArray(focusRecipeRaw)
-    ? focusRecipeRaw[0]
-    : focusRecipeRaw;
-  const focusSlotRaw = params.focusSlot;
-  const focusSlotParam = Array.isArray(focusSlotRaw)
-    ? focusSlotRaw[0]
-    : focusSlotRaw;
-
   const userId = await currentUserId();
   const now = new Date();
   const [
@@ -117,7 +109,7 @@ export default async function DashboardPage({
     firstRecipeByProjectId,
     ownedRecipes,
     streakDays,
-    weekSeconds,
+    totalSeconds,
     focusProjectId,
   ] = await Promise.all([
     listAllProjects(userId),
@@ -125,7 +117,7 @@ export default async function DashboardPage({
     getProjectFirstRecipeMap(userId),
     listOwnedRecipesLean(userId),
     getActivityByDay(userId, new Date(now.getTime() - SIXTY_DAYS_MS)),
-    getWeekRollupSeconds(userId, now.getTime()),
+    getAllTimeRollupSeconds(userId),
     // UX-006 — the focused project drives the mission table's persistent
     // cyan "active row" highlight (keyed below). Null when no focus pinned.
     getFocusProjectId(userId),
@@ -166,9 +158,9 @@ export default async function DashboardPage({
     },
     {
       label: "TIME TOTAL",
-      value: formatTimeTotal(weekSeconds),
+      value: formatTimeTotal(totalSeconds),
       color: "cyan",
-      valueAriaLabel: `${formatTimeTotal(weekSeconds)} painting time this week`,
+      valueAriaLabel: `${formatTimeTotal(totalSeconds)} total painting time`,
     },
   ];
 
@@ -192,21 +184,51 @@ export default async function DashboardPage({
     return d;
   };
 
-  const rows: ProjectDashboardRow[] = allProjects.map((p) => ({
-    id: p.id,
-    name: p.name,
-    type: p.type,
-    faction: p.faction,
-    priority: p.priority,
-    status: displayStatus(p),
-    paletteHexes: palettesByProjectId.get(p.id) ?? [],
-    progressPercent: progressPercent(p),
-    totalModels: p.count,
-    updatedAt: p.updatedAt.getTime(),
-    parentId: p.parentId,
-    depth: depthOf(p.id),
-    firstAttachedRecipeId: firstRecipeByProjectId.get(p.id) ?? null,
-  }));
+  // Container roll-up — an Army/Warband/Unit with no models of its own
+  // (count === 0) shows the AGGREGATE status + progress + model total of
+  // its whole subtree, so its row reads "how far along are all my units"
+  // instead of a flat 0% (Ross's dashboard spec: an army of 7 units shows
+  // the combined model completion). Leaf projects (count > 0) keep their
+  // own counts.
+  const childrenByParent = new Map<string, (typeof allProjects)[number][]>();
+  for (const p of allProjects) {
+    if (!p.parentId) continue;
+    const siblings = childrenByParent.get(p.parentId);
+    if (siblings) siblings.push(p);
+    else childrenByParent.set(p.parentId, [p]);
+  }
+  const descendantsOf = (id: string): (typeof allProjects)[number][] => {
+    const out: (typeof allProjects)[number][] = [];
+    const stack = [...(childrenByParent.get(id) ?? [])];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (!node) continue;
+      out.push(node);
+      const kids = childrenByParent.get(node.id);
+      if (kids) stack.push(...kids);
+    }
+    return out;
+  };
+
+  const rows: ProjectDashboardRow[] = allProjects.map((p) => {
+    const rolled =
+      p.count === 0 ? aggregateCounters(p, descendantsOf(p.id)) : null;
+    return {
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      faction: p.faction,
+      priority: p.priority,
+      status: displayStatus(rolled ? { ...rolled, isShelved: p.isShelved } : p),
+      paletteHexes: palettesByProjectId.get(p.id) ?? [],
+      progressPercent: progressPercent(rolled ?? p),
+      totalModels: rolled ? rolled.count : p.count,
+      updatedAt: p.updatedAt.getTime(),
+      parentId: p.parentId,
+      depth: depthOf(p.id),
+      firstAttachedRecipeId: firstRecipeByProjectId.get(p.id) ?? null,
+    };
+  });
 
   return (
     <div className="content-cap p-6 md:p-8 space-y-6">
@@ -217,78 +239,20 @@ export default async function DashboardPage({
           DASHBOARD title is the stylistic terminal display face (shadow/glow
           via .title-display), sized up so it reads as the mission-control
           banner the mockup shows — terminal, not arcade. */}
-      <header className="flex items-end justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          {/* The brand logo, sized like the sign-in lockup so "mini-manager"
-              actually reads. mix-blend screen drops the PNG's black ground. */}
-          <Logo
-            width={56}
-            decorative
-            className="shrink-0 hidden sm:block"
-          />
-          <div className="min-w-0">
-            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">
-              SYS ▸ WORKBENCH / 00
-            </p>
-            <h1 className="title-display text-2xl md:text-4xl leading-none">
-              DASHBOARD
-            </h1>
-            {/* One-line subheading (research §3 — orients the 5-second
-                glance). Kept terse so the header stays the clean mockup
-                banner rather than a paragraph. */}
-            <p className="text-2xs md:text-xs text-[var(--color-fg-muted)] mt-2 tracking-wide">
-              Your wargaming workbench at a glance.
-            </p>
-          </div>
-        </div>
-        {/* Two cyan CTAs (mockup): ADD PROJECT + UPLOAD ARMY LIST. Both
-            primary-cyan per the mockup — this supersedes the prior
-            success-green / warning-yellow split for the dashboard header. */}
-        <div className="flex gap-2 w-full md:w-auto">
-          <Button
-            as="a"
-            href="/projects/new"
-            variant="primary"
-            size="md"
-            className="flex-1 md:flex-none justify-center"
-          >
-            Add project
-          </Button>
-          <Button
-            as="a"
-            href="/projects/import"
-            variant="primary"
-            tone="outline"
-            size="md"
-            className="flex-1 md:flex-none justify-center"
-          >
-            Upload army list
-          </Button>
-        </div>
-      </header>
+      {/* FIGMA-REBUILD §3 — the Dashboard.png header is just the title +
+          tagline; the ADD PROJECT (primary) / UPLOAD ARMY LIST (tertiary
+          outline) CTAs live UNDER the PROJECTS table (rendered by
+          DashboardProjectsTable), not duplicated up here. */}
+      <PageHeader
+        title="DASHBOARD"
+        accent="green"
+        tagline="Project hub, everything you need to manage your painting progress."
+      />
 
       {isEmpty ? (
         <EmptyState />
       ) : (
         <>
-          {/* UX-015 — the signature dashboard HERO: the bespoke WireframeGlobe
-              radar scope framed in the terminal panel language, the dashboard
-              counterpart to the sign-in CRT art so the "wow" isn't on the
-              gauges alone. Establishing shot only — the figures it shows are
-              restated from the authoritative KPI strip directly below; the
-              globe is desktop-only so it never crams the mobile column. */}
-          <DashboardHero
-            stats={[
-              {
-                label: "ACTIVE",
-                value: String(activeProjectCount(allProjects)),
-                tone: "green",
-              },
-              { label: "AVG COMPLETION", value: `${avgCompletion}%`, tone: "amber" },
-              { label: "STREAK", value: `${streak.streak}d`, tone: "purple" },
-            ]}
-          />
-
           {/* DASH-KPI — the top KPI strip: the 5-second "where do I
               stand" answer, above the granular PROJECTS table per the
               inverted pyramid (doc §14/§4). */}
@@ -315,6 +279,9 @@ export default async function DashboardPage({
                 ticks
                 techLabel="DB ▸ PROJECTS"
               >
+                <p className="mb-3 font-mono text-2xs uppercase tracking-[0.12em] text-[var(--color-green)]">
+                  Overview of active projects and their progress
+                </p>
                 <DashboardProjectsTable
                   rows={rows}
                   ownedRecipes={ownedRecipes}
@@ -329,20 +296,17 @@ export default async function DashboardPage({
             </aside>
           </div>
 
-          {/* FOCUS-FOLD (2026-06-08) — the relocated painting bench. The
-              standalone /planner route is gone; the FOCUS cockpit (TIMER +
-              focused recipe with per-paint notes + INSPO board) lives here
-              as a dedicated full-width action section below the glance/scan
-              grid, above the passive spend readout. Self-fetches its focus
-              state; we only thread the recipe-tab + active-slot params. */}
-          <DashboardFocusSection
-            focusRecipeId={focusRecipeId}
-            focusSlotParam={focusSlotParam}
-          />
+          <DashboardEventTicker />
         </>
       )}
 
       <RecentlyBoughtLine />
+
+      {/* FIGMA-REBUILD §9 — project detail is a slide-out inspector,
+          opened when `?project=<id>` is present (row clicks land here). */}
+      <Suspense fallback={null}>
+        <ProjectInspector />
+      </Suspense>
     </div>
   );
 }
@@ -358,7 +322,7 @@ function EmptyState() {
       </span>
       <div>
         <h2 className="text-lg glow-cyan mb-3">No projects yet</h2>
-        <p className="text-sm text-[var(--color-fg-muted)] font-sans max-w-md mx-auto">
+        <p className="text-sm text-[var(--color-fg-muted)] font-mono max-w-md mx-auto">
           Start with anything you&apos;re painting — an army, a warband, a
           single mini, or a piece of terrain. Sub-projects let you nest units
           inside armies.

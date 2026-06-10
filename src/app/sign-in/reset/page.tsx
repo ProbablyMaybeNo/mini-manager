@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
-import { Logo } from "@/components/ui/Logo";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { ResetPasswordForm } from "./ResetPasswordForm";
 
 export const dynamic = "force-dynamic";
@@ -14,36 +13,25 @@ export default async function ResetPasswordPage({
   const token = (params.token ?? "").trim();
 
   return (
-    <div className="min-h-screen flex items-start md:items-center justify-center p-6 md:p-8">
-      <div className="w-full max-w-md space-y-6">
-        <h1 className="sr-only">Set a new password</h1>
-        <div className="flex flex-col items-center gap-2 pt-2 md:pt-0">
-          <Logo decorative />
-          <p
-            className="font-mono text-2xs uppercase tracking-[0.25em] text-[var(--color-cyan)]"
-            aria-hidden
+    <AuthShell
+      title="NEW PASSWORD"
+      breadcrumb="SYS ▸ RESET"
+      techLabel="AUTH ▸ RESET"
+    >
+      {token ? (
+        <ResetPasswordForm token={token} />
+      ) : (
+        <p className="text-sm font-mono text-[var(--color-fg)] leading-snug">
+          Missing reset token. Request a new link from the{" "}
+          <Link
+            href="/sign-in/forgot"
+            className="text-[var(--color-cyan)] underline-offset-2 hover:underline"
           >
-            SYS ▸ RESET
-          </p>
-        </div>
-
-        <Card title="Set a new password" ariaLabel="Set a new password">
-          {token ? (
-            <ResetPasswordForm token={token} />
-          ) : (
-            <p className="text-sm font-sans pt-2">
-              Missing reset token. Request a new link from the{" "}
-              <Link
-                href="/sign-in/forgot"
-                className="text-[var(--color-accent)] underline-offset-2 hover:underline"
-              >
-                forgot-password page
-              </Link>
-              .
-            </p>
-          )}
-        </Card>
-      </div>
-    </div>
+            forgot-password page
+          </Link>
+          .
+        </p>
+      )}
+    </AuthShell>
   );
 }

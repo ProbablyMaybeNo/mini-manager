@@ -1,5 +1,33 @@
 # Mini Manager — Test Missions Log
 
+## FIGMA Rebuild verification (2026-06-09 — `redesign/figma-rebuild`)
+
+Run the full pyramid after each rebuild slice and before calling the redesign done:
+
+```bash
+npm run test:verify        # typecheck → unit → integration → e2e missions
+npm run test:verify:fast   # skip Playwright (UI still churning)
+npm run test:missions      # Playwright qa_*.spec.ts only
+```
+
+**New / updated E2E missions for the rebuild:**
+
+| # | Run | Spec | Status |
+|---|-----|------|--------|
+| M2.* | Collection on `/collection` + legacy redirects | `qa_collections.spec.ts` | 🔄 Updated |
+| M3.1 | Project inspector (`?project=`) not `/projects/[id]` | `qa_project_workspace.spec.ts` | 🔄 Updated |
+| M6.* | Mobile hamburger nav (replaces bottom tab bar) | `qa_mobile_flows.spec.ts` | 🔄 Updated |
+| M7.1 | Import lands on inspector deep-link | `qa_imports.spec.ts` | 🔄 Updated |
+| M11 | Focus full page `/focus` | *(pending — add `qa_focus.spec.ts`)* | ⏳ Pending |
+| M12 | Dashboard inspector from table row | *(pending)* | ⏳ Pending |
+
+Integration missions (IM*) should stay green while server actions are unchanged.
+Unit sentinels under `tests/unit/lib/components/` may need bulk updates as markup
+changes — fix or retire assertions that encoded the *old* UI, keep invariants
+(touch targets, contrast tokens, a11y contracts).
+
+---
+
 Mission-based test tracker, modelled on the campaign-console QA structure
 (`apps/campaign-console-live/docs/MISSION_RUNS_PLAN.md`). Every test is a
 **Run** inside a **Mission**. Missions are grouped by layer (E2E /

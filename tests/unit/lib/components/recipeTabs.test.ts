@@ -105,15 +105,16 @@ describe("ProjectColorSchemeBox — recipe tabs wiring (UX-907)", () => {
   });
 });
 
-describe("FOCUS section — focusRecipe URL param honour (UX-907)", () => {
-  // FOCUS-FOLD (2026-06-08) — the FOCUS bench folded into the /projects
-  // dashboard. The dashboard page parses `?focusRecipe` out of its
-  // searchParams and threads it into DashboardFocusSection, which owns the
-  // getFocusedRecipeBundle + FocusPanel wiring.
-  const page = read("src/app/projects/page.tsx");
-  const section = read("src/components/focus/DashboardFocusSection.tsx");
+describe("FOCUS page — focusRecipe URL param honour (UX-907)", () => {
+  // FIGMA-REBUILD §7 — FOCUS is a full standalone page (/focus) again
+  // (superseding the brief FOCUS-FOLD onto the dashboard). The /focus page
+  // parses `?focusRecipe` out of its searchParams and threads it into
+  // FocusPageSection, which owns the getFocusedRecipeBundle + FocusPanel
+  // wiring.
+  const page = read("src/app/focus/page.tsx");
+  const section = read("src/components/focus/FocusPageSection.tsx");
 
-  test("the dashboard reads `focusRecipe` out of searchParams", () => {
+  test("the focus page reads `focusRecipe` out of searchParams", () => {
     expect(page).toContain("params.focusRecipe");
     expect(page).toContain("focusRecipeId={focusRecipeId}");
   });
@@ -128,20 +129,21 @@ describe("FOCUS section — focusRecipe URL param honour (UX-907)", () => {
   });
 });
 
-describe("/projects/[id] page — recipe URL param honour (UX-907)", () => {
-  const src = read("src/app/projects/[id]/page.tsx");
+describe("Project inspector — recipe param honour (UX-907 / FIGMA-REBUILD §9)", () => {
+  // FIGMA-REBUILD §9 — the /projects/[id] PAGE (which read `?recipe` and
+  // fed the matching recipe to the COLOR SCHEME box's RecipeTabs) became the
+  // slide-out ProjectInspector. The inspector reads `?project=<id>` and
+  // renders all attached recipes as palette-chip links (no per-recipe tab
+  // param needed in the compact panel). The RecipeTabs primitive + its
+  // focusRecipe usage are pinned in the FocusPanel + /focus describes.
+  const panel = read("src/components/projects/ProjectInspector.tsx");
 
-  test("reads `recipe` out of searchParams", () => {
-    expect(src).toContain("sp.recipe");
+  test("the inspector keys off the `?project` deep-link param", () => {
+    expect(panel).toContain('searchParams.get("project")');
   });
 
-  test("picks the matching recipe from attachedRecipes when the param is present", () => {
-    expect(src).toMatch(
-      /attachedRecipes\.find\(\(r\) => r\.id === recipeParam\)/,
-    );
-  });
-
-  test("passes attachedRecipes through to ColorSchemeBox", () => {
-    expect(src).toContain("attachedRecipes={attachedRecipes.map");
+  test("renders every attached recipe as a palette-chip link", () => {
+    expect(panel).toContain("vm.recipes.map");
+    expect(panel).toContain("/recipes/${r.id}");
   });
 });

@@ -17,9 +17,9 @@ function read(rel: string): string {
 }
 
 describe("Layering rename — visible labels", () => {
-  test("tools index card title reads 'Layering'", () => {
+  test("tools index card title reads 'Color stacking' (FIGMA §6)", () => {
     const src = read("src/app/tools/page.tsx");
-    expect(src).toContain('title: "Layering"');
+    expect(src).toContain('title: "Color stacking"');
     expect(src).not.toContain('title: "Gradient Builder"');
   });
 

@@ -50,8 +50,13 @@ describe("RecipeCard chrome — P11.7", () => {
 describe("Recipes index — readability microcopy (P11.7 + P11.12)", () => {
   const src = read("src/app/recipes/page.tsx");
 
-  test("page subheading uses 'colour slot' vocabulary, no zone references", () => {
-    expect(src).toMatch(/stack of\s+colour slots/);
+  test("page tagline is share-focused prose, no zone references (FIGMA-REBUILD §5)", () => {
+    // FIGMA-REBUILD §5 — the recipes page tagline was rewritten to the
+    // share-focused line; the old "stack of colour slots" subheading is
+    // gone. No zone/technique implementation jargon survives.
+    expect(src).toMatch(
+      /Build and share paint recipes for every model in your collection\./,
+    );
     expect(src).not.toMatch(/ordered zones × technique/);
   });
 

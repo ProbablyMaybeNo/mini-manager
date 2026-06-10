@@ -3,8 +3,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { Card } from "@/components/ui/Card";
-import { Logo } from "@/components/ui/Logo";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { FinishAccountForm } from "./FinishAccountForm";
 
 export const dynamic = "force-dynamic";
@@ -39,28 +38,19 @@ export default async function FinishAccountPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-start md:items-center justify-center p-6 md:p-8">
-      <div className="w-full max-w-md space-y-6">
-        <h1 className="sr-only">Finish setting up your Mini Manager account</h1>
-        <div className="flex flex-col items-center gap-2 pt-2 md:pt-0">
-          <Logo decorative />
-          <p
-            className="font-mono text-2xs uppercase tracking-[0.25em] text-[var(--color-cyan)]"
-            aria-hidden
-          >
-            SYS ▸ SETUP
-          </p>
-        </div>
-
-        <Card title="Finish setting up your account" ariaLabel="Finish account">
-          <p className="text-sm font-sans text-[var(--color-fg-muted)]">
-            Pick a username and password to finish setting up your account.
-            Your existing email{row?.email ? ` (${row.email})` : ""} becomes
-            your recovery address.
-          </p>
-          <FinishAccountForm />
-        </Card>
-      </div>
-    </div>
+    <AuthShell
+      title="FINISH SETUP"
+      breadcrumb="SYS ▸ SETUP"
+      techLabel="AUTH ▸ SETUP"
+      blurb={
+        <>
+          Pick a username and password to finish setting up your account. Your
+          existing email{row?.email ? ` (${row.email})` : ""} becomes your
+          recovery address.
+        </>
+      }
+    >
+      <FinishAccountForm />
+    </AuthShell>
   );
 }

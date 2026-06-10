@@ -14,20 +14,26 @@ function read(rel: string): string {
   return fs.readFileSync(path.resolve(__dirname, "../../../../", rel), "utf-8");
 }
 
-describe("UX-1313 — pricing highlights one recommended tier", () => {
+describe("UX-1313 / FIGMA-REBUILD §10 — pricing highlights one tier", () => {
   const src = read("src/app/pricing/page.tsx");
 
-  test("Pro Lifetime carries the highlight flag", () => {
-    expect(src).toMatch(/tier:\s*"pro_lifetime"[\s\S]*?highlight:\s*true/);
+  // FIGMA-REBUILD §10 — the Von Restorff anchor moved from PRO · LIFETIME
+  // ("Best value", green) to the scarce FOUNDER seat ("Limited seat",
+  // purple). The highlight is now expressed through the Panel primitive
+  // (nested inner ring + corner ticks + purple variant) rather than a
+  // bespoke green border/glow utility.
+  test("FOUNDER carries the highlight flag", () => {
+    expect(src).toMatch(/tier:\s*"founder"[\s\S]*?highlight:\s*true/);
   });
 
-  test("the highlighted card renders a 'Best value' ribbon", () => {
-    expect(src).toContain("Best value");
+  test("the highlighted card renders a 'Limited seat' ribbon", () => {
+    expect(src).toContain("Limited seat");
     expect(src).toContain("card.highlight ?");
   });
 
-  test("the highlighted card gets an accent border + glow (no other tier does)", () => {
-    expect(src).toContain("border-[var(--color-green)] shadow-[0_0_0_1px_var(--color-green)");
+  test("the highlighted card gets the nested+ticks Panel treatment (no other tier does)", () => {
+    expect(src).toContain("nested={card.highlight}");
+    expect(src).toContain("ticks={card.highlight}");
   });
 });
 
@@ -56,7 +62,11 @@ describe("UX-1311 — recipe slot delete affordance has its own corner hit box",
   });
 
   test("the slot's main click surface is a separate full-cell button", () => {
-    expect(src).toContain('aria-label={`Edit slot ${slotLabel}`}');
+    // FIGMA-REBUILD §5 — the slot now reads as an ordered STEP card, so the
+    // main edit surface labels by step number + slot ("Edit step 1 · …").
+    expect(src).toContain(
+      "aria-label={`Edit step ${stepNumber} · ${slotLabel}`}",
+    );
   });
 });
 

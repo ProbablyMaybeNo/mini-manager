@@ -11,7 +11,7 @@ import { AddChildMenu } from "@/components/projects/AddChildMenu";
 
 const STATUS_PILL: Record<DisplayStatus, StatusPillKind> = {
   WISHLIST: "wishlist",
-  PURCHASED: "neutral",
+  OWNED: "neutral",
   BUILDING: "info",
   PRIMING: "info",
   PAINTING: "warning",

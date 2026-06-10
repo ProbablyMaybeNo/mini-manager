@@ -114,7 +114,7 @@ export function isLeafProject(project: Pick<Project, "count">): boolean {
 
 /**
  * Phase-12 status set (Ross's locked answer Q3): present-tense, lead-
- * stage-derived. WISHLIST → PURCHASED → BUILDING → PRIMING → PAINTING
+ * stage-derived. WISHLIST → OWNED → BUILDING → PRIMING → PAINTING
  * → BASING → COMPLETE. Plus SHELVED for mid-stage hibernation —
  * orthogonal to the workflow stages above.
  *
@@ -130,7 +130,7 @@ export type DisplayStatus =
   | "PAINTING"
   | "PRIMING"
   | "BUILDING"
-  | "PURCHASED"
+  | "OWNED"
   | "WISHLIST";
 
 /**
@@ -163,6 +163,6 @@ export function displayStatus(
   if (project.paintCount > 0) return "PAINTING";
   if (project.primeCount > 0) return "PRIMING";
   if (project.buildCount > 0) return "BUILDING";
-  if (project.ownedCount > 0) return "PURCHASED";
+  if (project.ownedCount > 0) return "OWNED";
   return "WISHLIST";
 }

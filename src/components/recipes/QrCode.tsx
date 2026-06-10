@@ -29,8 +29,8 @@ interface Props {
 export function QrCode({
   text,
   size = 256,
-  fg = "#f5f7f8",
-  bg = "#0c0f12",
+  fg = "#ffffff",
+  bg = "#0a0a0a",
   ariaLabel = "QR code",
 }: Props) {
   const [svg, setSvg] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export function QrCode({
 
   if (error) {
     return (
-      <p className="inline-flex items-start gap-2 font-mono text-xs text-[var(--color-amber)]" role="alert">
+      <p className="inline-flex items-start gap-2 font-mono text-xs text-[var(--color-yellow)]" role="alert">
         <LogTag variant="warn" />
         <span>{error}</span>
       </p>

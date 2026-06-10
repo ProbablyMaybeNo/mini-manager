@@ -10,6 +10,9 @@ interface Props {
   attachedProjectId?: string;
   variant?: "primary" | "subtle";
   label?: string;
+  /** FIGMA-REBUILD — `row` renders the mock's full-width trailing
+   *  `+ RECIPE` outline create row inside the table panel. */
+  trigger?: "button" | "row";
 }
 
 /**
@@ -28,6 +31,7 @@ export function NewRecipeButton({
   attachedProjectId,
   variant = "primary",
   label = "New recipe",
+  trigger = "button",
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -90,14 +94,24 @@ export function NewRecipeButton({
           "primary" call site takes the cyan PRIMARY tier (was green/success,
           which let the louder per-row Share/Assign actions compete with the
           page lead). The "subtle" call site (inside modals) stays ghost. */}
-      <Button
-        type="button"
-        onClick={() => setOpen(true)}
-        variant={variant === "primary" ? "primary" : "ghost"}
-        size="sm"
-      >
-        {label}
-      </Button>
+      {trigger === "row" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full px-4 py-3 font-mono text-xs uppercase tracking-[0.14em] text-[var(--color-cyan)] border-t border-[var(--color-cyan-dim)] bg-transparent transition-colors hover:bg-[color-mix(in_srgb,var(--color-cyan)_8%,transparent)] tap-target motion-reduce:transition-none"
+        >
+          + Recipe
+        </button>
+      ) : (
+        <Button
+          type="button"
+          onClick={() => setOpen(true)}
+          variant={variant === "primary" ? "primary" : "ghost"}
+          size="sm"
+        >
+          {label}
+        </Button>
+      )}
       <dialog
         ref={dialogRef}
         onClose={close}

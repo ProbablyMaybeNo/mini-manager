@@ -61,7 +61,7 @@ export function RecipeNotes({ recipeId, initialNotes, className }: Props) {
           className={clsx(
             "text-2xs font-mono normal-case tracking-wider",
             isPending
-              ? "text-[var(--color-amber)]"
+              ? "text-[var(--color-yellow)]"
               : dirty
                 ? "text-[var(--color-fg-muted)]"
                 : "text-[var(--color-fg-subtle)]",

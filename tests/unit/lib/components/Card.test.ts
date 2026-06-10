@@ -115,9 +115,13 @@ describe("globals.css — panel/card terminal frame primitives (Phase 0)", () =>
     expect(css).toMatch(/\.panel-ticks::after/);
   });
 
-  test(".panel-label is the technical caption slot (cyan, mono)", () => {
+  test(".panel-label is the technical caption slot (follows the panel hue, mono)", () => {
+    // FIGMA-REBUILD — the tech label now inherits the panel's seeded hue
+    // via `currentColor` (matching the corner ticks) instead of being
+    // hard-pinned to cyan: bare frames label in white, toned panels label
+    // in their accent. Still mono.
     const body = /\.panel-label\s*\{([\s\S]*?)\}/.exec(css)?.[1] ?? "";
-    expect(body).toMatch(/color:\s*var\(--color-cyan\)/);
+    expect(body).toMatch(/color:\s*currentColor/);
     expect(body).toMatch(/font-family:\s*var\(--font-mono\)/);
   });
 });

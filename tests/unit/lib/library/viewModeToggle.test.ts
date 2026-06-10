@@ -53,24 +53,29 @@ describe("ViewModeToggle — terminal_ui INIT/SAVE/PAUSE button style", () => {
   });
 });
 
-describe("Library mobile filter trigger", () => {
+describe("Library filter trigger (FIGMA-REBUILD §4)", () => {
   const src = read("src/components/library/LibraryPageClient.tsx");
 
-  test("the mobile-only Filters button exists and is hidden on desktop", () => {
-    // UX-1506: the rail/drawer switch moved from md (768) to lg (1024) so
-    // iPad-portrait (768) keeps the full-width table + drawer instead of
-    // overflowing with the desktop rail. The trigger is now lg:hidden.
-    expect(src).toContain('aria-label="Open filters"');
-    expect(src).toContain("lg:hidden fixed top-14 right-3");
-    expect(src).toContain("setMobileFilterOpen(true)");
+  // FIGMA-REBUILD §4 — the old rail-on-desktop / floating-button-on-mobile
+  // split was unified: ONE Filter button opens the FILTER SlideOutPanel on
+  // every breakpoint. The bespoke `setMobileFilterOpen` / "Open filters" /
+  // "Close filters" plumbing is gone; the SlideOutPanel primitive owns the
+  // close button + backdrop-click close.
+  test("a single Filter button opens the filter panel on every breakpoint", () => {
+    expect(src).toContain("setFilterOpen(true)");
+    expect(src).not.toContain("setMobileFilterOpen");
+    expect(src).not.toContain('aria-label="Open filters"');
   });
 
-  test("the mobile filter drawer renders FilterRail with disableCollapse", () => {
+  test("the filter panel renders FilterRail with disableCollapse", () => {
     expect(src).toContain("disableCollapse");
   });
 
-  test("drawer has a close button + backdrop-click close", () => {
-    expect(src).toContain('aria-label="Close filters"');
-    expect(src).toContain("setMobileFilterOpen(false)");
+  test("the unified FILTER SlideOutPanel owns the close + backdrop", () => {
+    // The page mounts the shared SlideOutPanel (Esc / backdrop / × close,
+    // role=dialog) instead of a bespoke drawer.
+    expect(src).toContain("<SlideOutPanel");
+    expect(src).toContain('title="FILTER"');
+    expect(src).toContain("onClose={() => setFilterOpen(false)}");
   });
 });

@@ -59,9 +59,13 @@ describe("UX-912 — slot swatch bg matches stored hex (no transform)", () => {
     expect(src).not.toMatch(/lighten\(|darken\(|adjustHsl|shiftLightness/);
   });
 
-  test("projects/[id] page resolves the Recipe box hex with no transform", () => {
-    const src = read("src/app/projects/[id]/page.tsx");
-    expect(src).toContain("slot.customColorHex ?? meta?.hex");
+  test("project inspector renders the recipe chip hex with no transform", () => {
+    // FIGMA-REBUILD §9 — the /projects/[id] page became the slide-out
+    // ProjectInspector. Its recipe chips paint the server-resolved palette
+    // strip hex verbatim (`backgroundColor: hex`) — no lighten / darken /
+    // mix / hsl shift between the stored value and the swatch.
+    const src = read("src/components/projects/ProjectInspector.tsx");
+    expect(src).toContain("backgroundColor: hex");
     expect(src).not.toMatch(/lighten\(|darken\(|adjustHsl|shiftLightness/);
   });
 

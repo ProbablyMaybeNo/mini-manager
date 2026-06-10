@@ -115,6 +115,22 @@ export interface FocusRecipeBundle {
   allRecipes: ReadonlyArray<{ id: string; name: string }>;
 }
 
+export async function getRecipeBundleForProject(
+  userId: string,
+  projectId: string,
+  preferredRecipeId?: string | null,
+): Promise<FocusRecipeBundle | null> {
+  const projectRows = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = projectRows[0];
+  if (!project) return null;
+
+  return loadRecipeBundleForProject(userId, project, preferredRecipeId);
+}
+
 export async function getFocusedRecipeBundle(
   userId: string,
   preferredRecipeId?: string | null,
@@ -130,9 +146,15 @@ export async function getFocusedRecipeBundle(
   const project = projectRows[0];
   if (!project) return null;
 
-  // Fetch ALL attached recipes — sorted most-recently-updated first.
-  // The default selection picks the head of that list, matching prior
-  // behaviour; the explicit URL preference can override.
+  return loadRecipeBundleForProject(userId, project, preferredRecipeId);
+}
+
+async function loadRecipeBundleForProject(
+  userId: string,
+  project: Project,
+  preferredRecipeId?: string | null,
+): Promise<FocusRecipeBundle | null> {
+
   const recipeRows = await db
     .select()
     .from(recipes)

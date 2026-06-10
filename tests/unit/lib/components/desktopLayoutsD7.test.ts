@@ -20,19 +20,24 @@ function read(rel: string): string {
 // per-table Filter button at the far right of each table's header row, so
 // the same filters work identically on desktop + mobile (no separate rail
 // / header-disclosure split).
-describe("Collections — per-table filter button layout", () => {
-  const page = read("src/app/collections/page.tsx");
-  const filter = read("src/components/collections/TableFilter.tsx");
+// FIGMA-REBUILD §8 — /collections + /wishlist merged into the new singular
+// /collection, rebuilt to Wishlist.png: a yellow COLLECTION header with the
+// PASTE-URL add bar, then two stacked sections — MY PAINT COLLECTION and MY
+// MODEL COLLECTION. The intermediate per-table Filter-button layout was
+// superseded; the page no longer mounts a TableFilter or a left rail aside.
+describe("Collection — two-section layout (FIGMA-REBUILD §8)", () => {
+  const page = read("src/app/collection/page.tsx");
 
-  test("each table header row carries its own Filter button", () => {
-    expect(page).toContain("<TableFilter");
-    // Two instances — paint + model.
-    expect(page.split("<TableFilter").length - 1).toBeGreaterThanOrEqual(2);
+  test("renders the paint + model collection sections", () => {
+    expect(page).toContain("<PaintCollectionTable");
+    expect(page).toContain("<ModelCollectionTable");
+    expect(page).toContain("MY PAINT COLLECTION");
+    expect(page).toContain("MY MODEL COLLECTION");
   });
 
-  test("the filter button opens a small panel of that table's filters", () => {
-    expect(filter).toContain('role="dialog"');
-    expect(filter).toContain("groups");
+  test("the COLLECTION header carries the PASTE-URL add bar", () => {
+    expect(page).toContain('title="COLLECTION"');
+    expect(page).toContain("<AddUrlBar");
   });
 
   test("no persistent left rail aside remains", () => {

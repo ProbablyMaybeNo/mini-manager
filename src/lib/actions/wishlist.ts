@@ -138,7 +138,7 @@ export async function createWishlistItem(
       .returning();
     const row = inserted[0];
     if (!row) return { ok: false, error: "Insert returned no row" };
-    revalidatePath("/collections");
+    revalidatePath("/collection");
     return { ok: true, data: row };
   } catch (err) {
     return {
@@ -192,7 +192,7 @@ export async function updateWishlistItem(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
-    revalidatePath("/collections");
+    revalidatePath("/collection");
     return { ok: true, data: row };
   } catch (err) {
     return {
@@ -212,7 +212,7 @@ export async function deleteWishlistItem(
     await db
       .delete(wishlistItems)
       .where(and(eq(wishlistItems.id, id.data), eq(wishlistItems.ownerId, userId)));
-    revalidatePath("/collections");
+    revalidatePath("/collection");
     return { ok: true, data: { id: id.data } };
   } catch (err) {
     return {
@@ -301,7 +301,7 @@ export async function scrapeAndCreateWishlistItem(
       .returning();
     const row = inserted[0];
     if (!row) return { ok: false, error: "Insert returned no row" };
-    revalidatePath("/collections");
+    revalidatePath("/collection");
     return { ok: true, data: row };
   } catch (err) {
     return {
@@ -340,7 +340,7 @@ export async function setWishlistStatus(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
-    revalidatePath("/collections");
+    revalidatePath("/collection");
     revalidatePath("/projects");
     return { ok: true, data: row };
   } catch (err) {
@@ -384,7 +384,7 @@ export async function setWishlistKind(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
-    revalidatePath("/collections");
+    revalidatePath("/collection");
     return { ok: true, data: row };
   } catch (err) {
     return {

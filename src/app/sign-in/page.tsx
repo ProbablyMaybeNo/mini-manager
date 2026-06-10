@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { Card } from "@/components/ui/Card";
-import { Logo } from "@/components/ui/Logo";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { SignInForm } from "./SignInForm";
 
 export const dynamic = "force-dynamic";
@@ -37,40 +36,26 @@ export default async function SignInPage({
   const redirectTarget = safeFromRaw ?? "/projects";
 
   return (
-    <div className="min-h-screen flex items-start md:items-center justify-center p-6 md:p-8">
-      <div className="w-full max-w-md space-y-6">
-        <h1 className="sr-only">Sign in to Mini Manager</h1>
-        {/* UX-1209 — cap the hero on mobile so the form stays above the
-            fold (matches /sign-up). Full panel width returns at md+. */}
-        <div className="flex flex-col items-center gap-2 pt-2 md:pt-0">
-          <div className="w-full max-w-[150px] md:max-w-none">
-            <Logo decorative />
-          </div>
-          <p
-            className="font-mono text-2xs uppercase tracking-[0.25em] text-[var(--color-cyan)]"
-            aria-hidden
-          >
-            SYS ▸ ACCESS
-          </p>
-        </div>
-
-        <Card title="Sign in" ariaLabel="Sign in">
-          <SignInForm
-            redirectTarget={redirectTarget}
-            initialError={error ? decodeURIComponent(error) : null}
-          />
-        </Card>
-
-        <p className="text-center text-xs font-mono text-[var(--color-fg-muted)]">
+    <AuthShell
+      title="SIGN IN"
+      breadcrumb="SYS ▸ ACCESS"
+      techLabel="AUTH ▸ LOGIN"
+      footer={
+        <>
           No account yet?{" "}
           <Link
             href="/sign-up"
-            className="text-[var(--color-accent)] underline-offset-2 hover:underline"
+            className="text-[var(--color-cyan)] underline-offset-2 hover:underline"
           >
             Sign up
           </Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <SignInForm
+        redirectTarget={redirectTarget}
+        initialError={error ? decodeURIComponent(error) : null}
+      />
+    </AuthShell>
   );
 }

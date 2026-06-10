@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Panel } from "@/components/ui/Panel";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { auth } from "@/auth";
 import { db } from "@/db/client";
@@ -21,13 +21,18 @@ export const metadata: Metadata = {
     "Mini Manager pricing. Free tasting menu, Pro Monthly, Pro Lifetime, and Founder seats — pick the one that fits.",
 };
 
+/** Panel accent (REBUILD_SPEC §1 tokens). Founder = purple, the Von
+ *  Restorff anchor — its panel + ribbon take the highlight, not Lifetime. */
+type TierAccent = "neutral" | "cyan" | "green" | "purple";
+
 interface TierCard {
   tier: PlanTier;
   name: string;
   price: string;
   blurb: string;
   features: ReadonlyArray<string>;
-  accent: "neutral" | "cyan" | "green" | "purple";
+  accent: TierAccent;
+  /** Von Restorff anchor — Founder, the limited supporter seat. */
   highlight?: boolean;
 }
 
@@ -67,7 +72,6 @@ const TIERS: ReadonlyArray<TierCard> = [
     price: "$36 one-time",
     blurb: "Pay once. Three months free vs monthly. Full Pro forever.",
     accent: "green",
-    highlight: true,
     features: [
       "Everything in Pro Monthly",
       "One-time payment",
@@ -81,6 +85,7 @@ const TIERS: ReadonlyArray<TierCard> = [
     price: "$26 one-time",
     blurb: "Early supporter seat — 100 only.",
     accent: "purple",
+    highlight: true,
     features: [
       "Everything in Pro Lifetime",
       "Founder badge across the app",
@@ -124,22 +129,20 @@ export default async function PricingPage() {
     // D7 — width-cap the pricing tiers with the shared .content-cap so the
     // multi-column tier row doesn't sprawl on an ultrawide [D §7, §10].
     <div className="content-cap p-6 md:p-8 space-y-8">
-      <header className="space-y-2 text-center max-w-2xl mx-auto">
-        <h1 className="title-display text-base md:text-lg">PRICING</h1>
-        <p className="text-sm font-sans text-[var(--color-fg-muted)] leading-relaxed">
-          The free tier gets you a real taste. Pro unlocks the limits. Founder
-          is the one-time supporter slot — capped at {FOUNDER_TOTAL_SEATS}.
-        </p>
-        {!inventory.soldOut ? (
-          <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-purple-pastel)]">
-            {inventory.remaining} of {FOUNDER_TOTAL_SEATS} Founder seats remaining
-          </p>
-        ) : (
-          <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-fg-muted)]">
-            Founder seats sold out
-          </p>
-        )}
-      </header>
+      <PageHeader
+        title="PRICING"
+        accent="cyan"
+        tagline={`The free tier gets you a real taste. Pro unlocks the limits. Founder is the one-time supporter slot — capped at ${FOUNDER_TOTAL_SEATS}.`}
+      />
+
+      <p
+        className="font-mono text-xs uppercase tracking-[0.14em] text-[var(--color-purple-pastel)]"
+        aria-live="polite"
+      >
+        {inventory.soldOut
+          ? "FOUNDER SEATS SOLD OUT"
+          : `${inventory.remaining} OF ${FOUNDER_TOTAL_SEATS} FOUNDER SEATS REMAINING`}
+      </p>
 
       <div
         className={`grid gap-4 ${
@@ -160,13 +163,10 @@ export default async function PricingPage() {
         ))}
       </div>
 
-      <div className="text-center text-xs font-sans text-[var(--color-fg-muted)] max-w-xl mx-auto leading-relaxed pt-4">
-        <p>
-          Checkout will ship once the Stripe wire-up lands. Until then any
-          upgrade button is informational — your data + free tier work
-          uninterrupted.
-        </p>
-      </div>
+      <p className="text-center text-xs font-mono text-[var(--color-fg-muted)] max-w-xl mx-auto leading-relaxed pt-4">
+        Checkout will ship once the Stripe wire-up lands. Until then any upgrade
+        button is informational — your data + free tier work uninterrupted.
+      </p>
     </div>
   );
 }
@@ -185,33 +185,46 @@ function TierCardView({
   inventory: { remaining: number; soldOut: boolean };
 }) {
   const founderSoldOut = card.tier === "founder" && inventory.soldOut;
+  const priceColor =
+    card.accent === "neutral"
+      ? "var(--color-fg)"
+      : card.accent === "cyan"
+        ? "var(--color-cyan)"
+        : card.accent === "green"
+          ? "var(--color-green)"
+          : "var(--color-purple-pastel)";
 
   return (
-    <div className={card.highlight ? "relative" : undefined}>
-      {/* UX-1313 — one recommended tier (Pro Lifetime) gets a "Best value"
-          ribbon + accent-glow border so the eye has an anchor, per the
-          universal pricing-table convention (Von Restorff). */}
+    <div className={card.highlight ? "relative pt-2" : undefined}>
+      {/* UX-1313 / REBUILD_SPEC §10 — Founder is the Von Restorff anchor:
+          the limited supporter seat gets the "LIMITED" ribbon + a purple
+          nested-border + glow so the eye lands on the scarce tier. */}
       {card.highlight ? (
-        <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 inline-flex items-center px-2 py-0.5 rounded-sm font-mono text-2xs uppercase tracking-wider bg-[var(--color-green)] text-[var(--color-bg)]">
-          Best value
+        <span className="absolute top-0 left-1/2 -translate-x-1/2 z-10 inline-flex items-center px-2 py-0.5 font-mono text-2xs uppercase tracking-[0.14em] bg-[var(--color-purple-pastel)] text-[var(--color-bg)]">
+          Limited seat
         </span>
       ) : null}
-      <Card
-        title={card.name}
-        ariaLabel={`${card.name} tier — ${card.price}${card.highlight ? " — recommended" : ""}`}
-        accentColor={card.accent}
-        className={
-          card.highlight
-            ? "border-[var(--color-green)] shadow-[0_0_0_1px_var(--color-green),0_0_18px_-4px_color-mix(in_srgb,var(--color-green)_50%,transparent)]"
-            : undefined
-        }
+      <Panel
+        as="section"
+        variant={card.accent === "neutral" ? "default" : card.accent}
+        nested={card.highlight}
+        ticks={card.highlight}
+        aria-label={`${card.name} tier — ${card.price}${
+          card.highlight ? " — limited supporter seat" : ""
+        }`}
+        className="h-full px-4 py-5 space-y-4"
       >
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <p className="text-2xl font-mono tabular-nums text-[var(--color-fg)]">
+        <div className="space-y-2">
+          <h2 className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-fg)]">
+            {card.name}
+          </h2>
+          <p
+            className="text-2xl font-mono tabular-nums"
+            style={{ color: priceColor }}
+          >
             {card.price}
           </p>
-          <p className="text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+          <p className="text-xs font-mono text-[var(--color-fg-muted)] leading-snug">
             {card.blurb}
           </p>
           {isCurrent ? (
@@ -220,13 +233,13 @@ function TierCardView({
             </div>
           ) : null}
           {card.tier === "founder" && !founderSoldOut ? (
-            <p className="text-2xs font-mono uppercase tracking-wider text-[var(--color-purple-pastel)] pt-1">
+            <p className="text-2xs font-mono uppercase tracking-[0.14em] text-[var(--color-purple-pastel)] pt-1">
               {inventory.remaining} / {FOUNDER_TOTAL_SEATS} left
             </p>
           ) : null}
         </div>
 
-        <ul className="space-y-1.5 text-xs font-sans text-[var(--color-fg-muted)] leading-snug">
+        <ul className="space-y-1.5 text-xs font-mono text-[var(--color-fg-muted)] leading-snug">
           {card.features.map((feat) => (
             <li key={feat} className="flex items-start gap-2">
               <span aria-hidden className="text-[var(--color-green)] mt-0.5">
@@ -246,8 +259,7 @@ function TierCardView({
             soldOut={founderSoldOut}
           />
         </div>
-      </div>
-      </Card>
+      </Panel>
     </div>
   );
 }
@@ -318,7 +330,7 @@ function TierCta({
         <Button as="a" href="/user" variant="warning" size="sm">
           Verify email to upgrade
         </Button>
-        <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
+        <p className="text-2xs font-mono text-[var(--color-fg-muted)]">
           Add + verify a recovery email first.
         </p>
       </div>
@@ -331,7 +343,7 @@ function TierCta({
       <Button variant="secondary" tone="outline" disabled size="sm">
         Checkout coming soon
       </Button>
-      <p className="text-2xs font-sans text-[var(--color-fg-muted)]">
+      <p className="text-2xs font-mono text-[var(--color-fg-muted)]">
         Stripe wire-up shipping shortly.
       </p>
     </div>
