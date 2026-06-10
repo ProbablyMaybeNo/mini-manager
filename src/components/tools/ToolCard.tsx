@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
+import type { ReactNode } from "react";
 import { clsx } from "clsx";
 
 export type ToolTone = "cyan" | "yellow" | "green" | "purple" | "red";
@@ -9,6 +10,8 @@ interface Props {
   glyph: string;
   title: string;
   blurb: string;
+  /** Bespoke SVG hero (REBUILD_SPEC §6) — replaces the glyph chip when set. */
+  hero?: ReactNode;
   /** Per-tool palette tone (P11.8) — drives the glyph colour, the
    *  hover-border, and the trailing `→` arrow. Each tool gets one
    *  colour from the locked 5-color palette so the index reads as
@@ -60,6 +63,7 @@ export function ToolCard({
   glyph,
   title,
   blurb,
+  hero,
   tone = "cyan",
   techLabel,
 }: Props) {
@@ -88,16 +92,26 @@ export function ToolCard({
           {techLabel}
         </span>
       ) : null}
-      <div className="flex items-start gap-3">
-        <span
+      {hero ? (
+        <div
           aria-hidden
-          className={clsx(
-            "grid place-items-center w-10 h-10 shrink-0 font-mono text-xl text-black",
-            toneBar,
-          )}
+          className="mb-3 overflow-hidden rounded-sm border border-[color-mix(in_srgb,var(--color-cyan)_25%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-fg)_3%,transparent)] px-2 py-2"
         >
-          {glyph}
-        </span>
+          {hero}
+        </div>
+      ) : null}
+      <div className="flex items-start gap-3">
+        {!hero ? (
+          <span
+            aria-hidden
+            className={clsx(
+              "grid place-items-center w-10 h-10 shrink-0 font-mono text-xl text-black",
+              toneBar,
+            )}
+          >
+            {glyph}
+          </span>
+        ) : null}
         <div className="min-w-0 flex-1">
           <h2
             className={clsx(

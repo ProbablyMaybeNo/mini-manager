@@ -5,6 +5,7 @@ import {
   ProjectsDashboardTable,
   type ProjectDashboardRow,
 } from "@/components/ProjectsDashboardTable";
+import { Button } from "@/components/ui/Button";
 
 /**
  * FOCUS-DASH (2026-06-04) — full-width PROJECTS table for the DASHBOARD.
@@ -85,6 +86,20 @@ export function DashboardProjectsTable({
         projectNameById={projectNameById}
         focusProjectId={focusProjectId}
       />
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Button as="a" href="/projects/new" variant="primary" size="sm">
+          Add project
+        </Button>
+        <Button
+          as="a"
+          href="/projects/import"
+          variant="tertiary"
+          tone="outline"
+          size="sm"
+        >
+          Upload army list
+        </Button>
+      </div>
     </div>
   );
 }

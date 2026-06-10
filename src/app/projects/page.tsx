@@ -9,6 +9,7 @@ import {
 } from "@/db/queries/recipes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { RecentlyBoughtLine } from "@/components/dashboard/RecentlyBoughtLine";
+import { DashboardEventTicker } from "@/components/dashboard/DashboardEventTicker";
 import { type ProjectDashboardRow } from "@/components/ProjectsDashboardTable";
 import { DashboardProjectsTable } from "@/components/projects/DashboardProjectsTable";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
@@ -262,6 +263,9 @@ export default async function DashboardPage({
                 ticks
                 techLabel="DB ▸ PROJECTS"
               >
+                <p className="mb-3 font-mono text-2xs uppercase tracking-[0.12em] text-[var(--color-green)]">
+                  Overview of active projects and their progress
+                </p>
                 <DashboardProjectsTable
                   rows={rows}
                   ownedRecipes={ownedRecipes}
@@ -276,6 +280,7 @@ export default async function DashboardPage({
             </aside>
           </div>
 
+          <DashboardEventTicker />
         </>
       )}
 

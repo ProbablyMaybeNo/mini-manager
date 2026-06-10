@@ -51,20 +51,20 @@ describe("ToolCard — palette tone contract (P11.8)", () => {
 describe("Tools page — per-tool tone assignments (P11.8)", () => {
   const src = read("src/app/tools/page.tsx");
 
-  test("wheel claims pastel-purple (the 'special / unusual' slot)", () => {
-    expect(src).toMatch(/\/tools\/wheel[\s\S]*?tone:\s*"purple"/);
+  test("wheel claims green (FIGMA-REBUILD §6 COLOR WHEEL)", () => {
+    expect(src).toMatch(/\/tools\/wheel[\s\S]*?tone:\s*"green"/);
   });
 
-  test("match claims cyan (the primary-action slot)", () => {
-    expect(src).toMatch(/\/tools\/match[\s\S]*?tone:\s*"cyan"/);
+  test("match claims yellow (FIGMA-REBUILD §6 COLOR MATCH)", () => {
+    expect(src).toMatch(/\/tools\/match[\s\S]*?tone:\s*"yellow"/);
   });
 
-  test("eyedropper claims neon green (the capture / complete slot)", () => {
-    expect(src).toMatch(/\/tools\/eyedropper[\s\S]*?tone:\s*"green"/);
+  test("eyedropper claims purple (FIGMA-REBUILD §6 COLOR DROPPER)", () => {
+    expect(src).toMatch(/\/tools\/eyedropper[\s\S]*?tone:\s*"purple"/);
   });
 
-  test("gradient claims pastel yellow (the planning slot)", () => {
-    expect(src).toMatch(/\/tools\/gradient[\s\S]*?tone:\s*"yellow"/);
+  test("gradient claims cyan (FIGMA-REBUILD §6 COLOR STACKING)", () => {
+    expect(src).toMatch(/\/tools\/gradient[\s\S]*?tone:\s*"cyan"/);
   });
 
   test("every tool blurb is ≤ 80 chars (plain-prose tightening)", () => {

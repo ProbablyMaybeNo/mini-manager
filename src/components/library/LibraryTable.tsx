@@ -684,12 +684,8 @@ function PaintRow({
           "bg-[color-mix(in_srgb,var(--color-fg)_2%,transparent)]",
         "hover:bg-[color-mix(in_srgb,var(--color-cyan)_6%,transparent)]",
         "focus:outline-none focus-visible:bg-[color-mix(in_srgb,var(--color-cyan)_10%,transparent)]",
-        // Selected / detail-open row reads as a clear cyan-highlighted band
-        // (DESIGN_LANGUAGE §1: "a cyan-highlighted row"): a phosphor wash +
-        // an inset cyan rail down the left edge so the active row is
-        // unmistakable in the dense list.
-        active &&
-          "bg-[color-mix(in_srgb,var(--color-cyan)_14%,transparent)] shadow-[inset_2px_0_0_0_var(--color-cyan)]",
+        // FIGMA-REBUILD §4 — selected row = solid cyan fill + black text.
+        active && "bg-[var(--color-cyan)] text-[var(--color-bg)]",
         // LIB-COLOR (2) — multi-select wash is GREEN, not amber. Amber/yellow
         // already carries the "wanted / wishlist" meaning across the Library
         // (the ★ toggle, the grid wishlist dot, the "Mark wanted" button), so
@@ -747,12 +743,19 @@ function PaintRow({
         <div
           className={clsx(
             "truncate text-sm leading-tight",
-            active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]",
+            active ? "text-[var(--color-bg)]" : "text-[var(--color-fg)]",
           )}
         >
           {paint.name}
         </div>
-        <div className="flex items-center gap-2 text-2xs text-[var(--color-fg-muted)] leading-tight mt-0.5">
+        <div
+          className={clsx(
+            "flex items-center gap-2 text-2xs leading-tight mt-0.5",
+            active
+              ? "text-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
+              : "text-[var(--color-fg-muted)]",
+          )}
+        >
           <span className="truncate max-w-[45%]">{paint.brand}</span>
           <span aria-hidden className="text-[var(--color-fg-muted)]">·</span>
           <span className="inline-flex items-center shrink-0">
@@ -773,7 +776,7 @@ function PaintRow({
         aria-colindex={3}
         className={clsx(
           "hidden md:inline truncate",
-          active ? "text-[var(--color-accent)]" : "text-[var(--color-fg)]",
+          active ? "text-[var(--color-bg)]" : "text-[var(--color-fg)]",
         )}
       >
         {paint.name}
@@ -781,24 +784,46 @@ function PaintRow({
       <span
         role="gridcell"
         aria-colindex={4}
-        className="hidden md:inline text-[var(--color-fg-muted)] truncate"
+        className={clsx(
+          "hidden md:inline truncate",
+          active
+            ? "text-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
+            : "text-[var(--color-fg-muted)]",
+        )}
       >
         {paint.brand}
       </span>
       <span
         role="gridcell"
         aria-colindex={5}
-        className="hidden md:inline truncate text-[var(--color-fg-subtle)]"
+        className={clsx(
+          "hidden md:inline truncate",
+          active
+            ? "text-[color-mix(in_srgb,var(--color-bg)_55%,transparent)]"
+            : "text-[var(--color-fg-subtle)]",
+        )}
       >
         {paint.line ?? "—"}
       </span>
       <span role="gridcell" aria-colindex={6} className="hidden md:inline">
-        <TypeIcon type={paint.type} className="text-[var(--color-fg-muted)]" />
+        <TypeIcon
+          type={paint.type}
+          className={
+            active
+              ? "text-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
+              : "text-[var(--color-fg-muted)]"
+          }
+        />
       </span>
       <span
         role="gridcell"
         aria-colindex={7}
-        className="hidden md:inline-flex items-center gap-1 uppercase text-[var(--color-fg-muted)] min-w-0"
+        className={clsx(
+          "hidden md:inline-flex items-center gap-1 uppercase min-w-0",
+          active
+            ? "text-[color-mix(in_srgb,var(--color-bg)_70%,transparent)]"
+            : "text-[var(--color-fg-muted)]",
+        )}
       >
         <HexConfidenceDot confidence={paint.hexConfidence} source={paint.hexSource} />
         <span className="truncate">{paint.hex.slice(1)}</span>
