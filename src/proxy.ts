@@ -11,8 +11,24 @@ import { auth } from "@/auth";
  * after sign-in (NextAuth honours `callbackUrl` natively; we mirror it
  * as `from` for any custom UI that wants to read it).
  */
+/**
+ * Public marketing surfaces a signed-out visitor must be able to reach.
+ * The landing (`/`) and pricing pages own their own auth handling (the
+ * landing bounces *authed* users to /projects); gating them here defeats
+ * them entirely. `/sign-in` / `/sign-up` / `/r` are already matcher-
+ * excluded, so they don't need listing.
+ */
+function isPublicPath(pathname: string): boolean {
+  return (
+    pathname === "/" ||
+    pathname === "/pricing" ||
+    pathname.startsWith("/pricing/")
+  );
+}
+
 export default auth((req) => {
   if (req.auth?.user) return;
+  if (isPublicPath(req.nextUrl.pathname)) return;
 
   const url = req.nextUrl.clone();
   const from = url.pathname + (url.search || "");
@@ -45,6 +61,6 @@ export default auth((req) => {
  */
 export const config = {
   matcher: [
-    "/((?!sign-in|sign-up|api/auth|api/test|r/|brand/|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)).*)",
+    "/((?!sign-in|sign-up|api/auth|api/test|r/|brand/|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf)).*)",
   ],
 };
