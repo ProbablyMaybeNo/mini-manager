@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type {
   ActivityEntry,
   CalendarEvent,
@@ -11,6 +18,8 @@ import type {
   Recipe,
   SessionStats,
 } from "@/lib/types";
+import { loadPaints } from "@/lib/paints/loader";
+import { toPaint } from "@/lib/viewmodel/paint";
 import * as fx from "./fixtures";
 
 /**
@@ -74,4 +83,51 @@ export function MockProvider({
 
 export function useMockData() {
   return useContext(MockContext);
+}
+
+/* ----------------------------------------------------------------------------
+ * Real data provider — the production replacement for MockProvider.
+ * The server assembles user-scoped data (`AppServerData`, via loadAppData) and
+ * passes it in; the heavy paint catalog loads client-side through the existing
+ * Dexie read-through cache and is merged with the painter's inventory flags.
+ * Pages keep reading the same `useMockData()` hook — same shape, real data.
+ * ------------------------------------------------------------------------- */
+
+export interface AppServerData {
+  data: Omit<MockData, "paints">;
+  inventory: Record<string, { ownedCount: number; isWishlisted: boolean }>;
+}
+
+export function AppDataProvider({
+  server,
+  children,
+}: {
+  server: AppServerData;
+  children: ReactNode;
+}) {
+  const [paints, setPaints] = useState<Paint[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    loadPaints()
+      .then((catalog) => {
+        if (!alive) return;
+        setPaints(catalog.map((p) => toPaint(p, server.inventory[p.id])));
+      })
+      .catch(() => {
+        // Catalog unavailable offline / pre-cache — render with an empty
+        // library; the UI already handles the empty state.
+        if (alive) setPaints([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [server.inventory]);
+
+  const value = useMemo<MockData>(
+    () => ({ ...server.data, paints }),
+    [server.data, paints],
+  );
+
+  return <MockContext.Provider value={value}>{children}</MockContext.Provider>;
 }

@@ -1,9 +1,12 @@
-import { hexHue } from "@/lib/palette";
+import { deltaE2000Hex } from "@/lib/tools/match/deltaE";
 import type { DashboardSummary, MatchResult, Paint, Project, SessionStats } from "@/lib/types";
 
 /**
- * Host-side derivation (lives in the mock layer, NOT in UI components). The real host
- * computes these roll-ups; the UI only renders the resulting DashboardSummary.
+ * Host-side derivation (lives in the data layer, NOT in UI components). The host
+ * computes these roll-ups + colour matches; the UI only renders the result.
+ *
+ * Colour matching uses the real perceptual metric (CIEDE2000 in Lab space) via
+ * `deltaE2000Hex` — the same engine the Match tool uses — not hue distance.
  */
 export function deriveDashboardSummary(
   projects: Project[],
@@ -28,26 +31,21 @@ export function deriveDashboardSummary(
   };
 }
 
-function hueDistance(a: string, b: string): number {
-  const d = Math.abs(hexHue(a) - hexHue(b));
-  return Math.min(d, 360 - d);
-}
-
 /** Host-provided ranked matches: closest paints across all brands (excluding self). */
 export function nearestMatches(target: Paint, pool: Paint[], n = 4): MatchResult[] {
   return pool
     .filter((p) => p.id !== target.id)
-    .map((p) => ({ paint: p, distanceScore: hueDistance(target.hex, p.hex) }))
+    .map((p) => ({ paint: p, distanceScore: deltaE2000Hex(target.hex, p.hex) }))
     .sort((a, b) => a.distanceScore - b.distanceScore)
     .slice(0, n);
 }
 
-/** Single closest paint to an arbitrary hex (host-provided matching). */
+/** Single closest paint to an arbitrary hex (real ΔE2000 matching). */
 export function closestPaint(hex: string, pool: Paint[]): Paint | null {
   let best: Paint | null = null;
   let bestD = Infinity;
   for (const p of pool) {
-    const d = hueDistance(hex, p.hex);
+    const d = deltaE2000Hex(hex, p.hex);
     if (d < bestD) {
       bestD = d;
       best = p;
@@ -60,7 +58,7 @@ export function closestPaint(hex: string, pool: Paint[]): Paint | null {
 export function rankMatches(hex: string, pool: Paint[], brand?: string, n = 8): MatchResult[] {
   return pool
     .filter((p) => !brand || p.brand === brand)
-    .map((p) => ({ paint: p, distanceScore: hueDistance(hex, p.hex) }))
+    .map((p) => ({ paint: p, distanceScore: deltaE2000Hex(hex, p.hex) }))
     .sort((a, b) => a.distanceScore - b.distanceScore)
     .slice(0, n);
 }
@@ -69,7 +67,7 @@ export function rankMatches(hex: string, pool: Paint[], brand?: string, n = 8): 
 export function similarInOtherBrands(target: Paint, pool: Paint[], n = 4): Paint[] {
   return pool
     .filter((p) => p.id !== target.id && p.brand !== target.brand)
-    .map((p) => ({ p, d: hueDistance(target.hex, p.hex) }))
+    .map((p) => ({ p, d: deltaE2000Hex(target.hex, p.hex) }))
     .sort((a, b) => a.d - b.d)
     .slice(0, n)
     .map((x) => x.p);

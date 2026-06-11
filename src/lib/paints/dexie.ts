@@ -10,9 +10,8 @@ import Dexie, { type Table } from "dexie";
 
 import type { Paint } from "./types";
 
-interface PaintRow extends Paint {
-  /** Mirrors Paint.id; Dexie indexes by id. */
-}
+/** Mirrors Paint (Dexie indexes by id). */
+type PaintRow = Paint;
 
 interface CacheMeta {
   key: "paints";

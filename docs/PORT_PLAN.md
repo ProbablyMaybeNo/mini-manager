@@ -35,13 +35,16 @@ Keep **only the old backend** (db, server actions, auth, Stripe, colour engine, 
 - [x] Removed 122 dead old-UI tests (structural/microcopy/style/component-path reads that ENOENT'd on deleted source); backend-logic + integration tests retained.
 - [x] **Gate GREEN:** typecheck 0 errors · eslint exit 0 · vitest 81 files / 865 passed / 5 skipped · `next build` exit 0 (all routes incl. backend api + proxy).
 
-## Phase 1 — Adapter + data provider (read paths)
+## Phase 1 — Adapter + data provider (read paths) ✅ DONE (2026-06-11)
 
-- [ ] `src/lib/viewmodel/*` mappers (DB → contract): `toProject` (incl. host-rolled `completionPercent` from stage counts + `recipeSwatches` from attached recipe + nested `children`), `toRecipe`/`toRecipeSlot`, `toPaint` (catalog + inventory owned/wishlisted), `toCollectionItem` (wishlistItem, by `kind`), `toSessionStats`, `toCalendarEvent`, `toActivityEntry`, `toMatchResult`.
-- [ ] Replace `MockProvider` with `AppDataProvider`: server components fetch via existing `src/db/queries/*`, hand real data to client views in the **same `MockData` shape**; keep `useMockData()` (or rename to `useAppData()`). `signedIn` from the NextAuth session.
-- [ ] `deriveDashboardSummary` → real roll-ups (`src/lib/focus/rollup.ts` + counters + `getAllTimeRollupSeconds`).
-- [ ] `filterPaints` → over the real catalog+inventory (reuse `src/lib/paints/filters.ts` + `hue.ts`); decide server-filter vs Dexie client-filter for 7,144 rows.
-- [ ] Colour fns (`closestPaint`/`rankMatches`/`nearestMatches`/`similarInOtherBrands`) → wrap `deltaE2000` + `findClosestPaints`. `MatchResult.distanceScore` becomes ΔE2000 (UI already prints `Δ{n.toFixed(1)}`).
+- [x] `src/lib/viewmodel/*` mappers (DB → contract): `toProject` (host-rolled status via `displayStatus`, `completionPercent` via `progressPercent`/`aggregateCounters`, swatches via `getProjectPalettesMap`, nested `children`), `toRecipe`/`toRecipeSlot` (slot paint resolved through cached server catalog map + `techniqueLabel`), `toPaint` (catalog + inventory flags + lossy catalog→contract `PaintType` map), `toCollectionItem` (wishlist→collection, status map, cents→price), `toSessionStats` + `streakFromDays`, `toCalendarEvent`, `toActivityEntry` (icon+text+relative-when built here — no lib helper existed), `toMatchResult`.
+- [x] `AppDataProvider` (in `MockProvider.tsx`) replaces the mock at `(app)/layout.tsx` (now an async server component): `currentUserId()` gates, `loadAppData(userId)` assembles the real `MockData` from `src/db/queries/*`, catalog hydrates client-side via the Dexie loader + inventory merge. `useMockData()` hook unchanged → pages render real data. `(app)` routes are now ƒ (dynamic).
+- [x] Colour fns in `derive.ts` rewired to real **CIEDE2000** (`deltaE2000Hex`); `MatchResult.distanceScore` is now ΔE2000. `deriveDashboardSummary` stays pure over real projects/stats.
+- [x] Cleanup surfaced by the strict gate: removed 4 dead old-UI hooks (`src/lib/hooks/*`) + their test; fixed `dexie.ts` empty-interface; **fixed the eslint config** — it was linting stale `.claude/worktrees/*/.next` build output (22k phantom problems → real source is 0 errors / 13 warnings). Restored the `public/sw.js` `__BUILD_ID__` template (Phase 0 had committed a build-stamped copy).
+- [x] **Gate GREEN:** eslint 0 errors · typecheck 0 · vitest 80 files / 861 passed / 5 skipped · `next build` exit 0.
+- [ ] *Deferred to Phase 2/3:* `filterPaints` still runs client-side over the contract `Paint[]` (works on real merged catalog; server-side search optimization is optional). `loadAppData` fetches full recipes per-nav (fine for now; optimize if recipe counts grow).
+
+> **Footgun for Phase 5:** the prebuild `stamp-sw-build-id.mjs` mutates `public/sw.js` in place — never `git add` after a build, or you commit a stamped (non-template) SW and break `sw/strategy.test.ts`. Real fix = the Serwist SW reconcile.
 
 ## Phase 2 — Mutations (callbacks → existing server actions)
 

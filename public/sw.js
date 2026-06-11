@@ -35,7 +35,7 @@
  * hydration mismatch: old cached shell vs new JS bundle).
  *
  * The fix: derive every cache name from a per-deploy BUILD_ID. The
- * `20260611214238` token is stamped at build time by
+ * `__BUILD_ID__` token is stamped at build time by
  * `scripts/stamp-sw-build-id.mjs` (the `postbuild` npm hook) with the
  * Vercel commit SHA / a timestamp fallback, so each deploy gets brand-new
  * cache names. On `activate` every cache NOT in KEEP_CACHES (i.e. every
@@ -43,11 +43,11 @@
  * clients.claim() make the new worker take over immediately — a fresh
  * deploy now reaches returning users WITHOUT a manual cache clear.
  *
- * The literal token must stay exactly `20260611214238` so the stamp script's
+ * The literal token must stay exactly `__BUILD_ID__` so the stamp script's
  * replace finds it; in dev (unstamped) it falls back to "dev", which still
  * produces valid, namespaced cache names.
  */
-const BUILD_ID = "20260611214238".startsWith("__") ? "dev" : "20260611214238";
+const BUILD_ID = "__BUILD_ID__".startsWith("__") ? "dev" : "__BUILD_ID__";
 
 const SHELL_CACHE = `mm-shell-${BUILD_ID}`;
 const DATA_CACHE = `mm-data-${BUILD_ID}`;
