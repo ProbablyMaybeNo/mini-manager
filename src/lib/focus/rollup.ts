@@ -1,5 +1,27 @@
-import type { Project, RecipeSlot } from "@/db/schema";
-import type { FocusSlotView } from "@/components/focus/FocusPanel";
+import type { Project, RecipeSlot, TechniqueKey } from "@/db/schema";
+
+/**
+ * FOCUS slot view-model (relocated out of the old UI layer during the UI port
+ * so the backend stays headless). The transplanted presentation layer consumes
+ * this shape via the adapter; the host builds it.
+ */
+export interface FocusSlotView {
+  id: string;
+  /** Position within the recipe (sort key only — not displayed). */
+  position: number;
+  technique: TechniqueKey;
+  paintHex: string | null;
+  paintLabel: string | null;
+  /** The catalog paint id this slot pins, if any. Custom-mix slots (no
+   *  paint, only a hex) are null and don't get a per-paint note editor. */
+  paintId: string | null;
+  /** The paint's GLOBAL per-paint note (keyed on the paint, not the
+   *  slot). Threaded from `paint_notes`; the same value decorates every
+   *  slot that pins this paint. Null when no note or no paint. */
+  paintNote: string | null;
+  /** Per-painter done-state for this slot. */
+  done: boolean;
+}
 
 /**
  * P15.0 — FOCUS header project-state pill rollup.

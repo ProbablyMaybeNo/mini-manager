@@ -1,8 +1,9 @@
 import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 /**
- * Vitest config — two projects:
+ * Vitest config — three projects:
  *
  *   "unit"        — pure-function tests. Fast. Node env. No DB, no fetch.
  *                   Covers scrape parsers, cascade rules, quickAdd parser,
@@ -12,8 +13,13 @@ import path from "node:path";
  *                   in-memory libsql instance with migrations applied
  *                   via tests/integration/_setup.ts. Slower (~5s).
  *
+ *   "ui"          — component + UI-unit tests for the transplanted Figma
+ *                   presentation layer. jsdom env, React plugin, Testing
+ *                   Library matchers via src/test/setup.ts. Covers
+ *                   src/**\/*.test.{ts,tsx} (kit, views, color, derive).
+ *
  * Run with:
- *   npm test                  both projects
+ *   npm test                  all projects
  *   npm run test:unit         unit only
  *   npm run test:integration  integration only
  *   npm run test:watch        unit project in watch mode
@@ -50,6 +56,18 @@ export default defineConfig({
           testTimeout: 15_000,
           hookTimeout: 15_000,
           setupFiles: ["./tests/integration/_setup.ts"],
+        },
+      },
+      {
+        extends: true,
+        plugins: [react()],
+        test: {
+          name: "ui",
+          include: ["src/**/*.{test,spec}.{ts,tsx}"],
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./src/test/setup.ts"],
+          css: true,
         },
       },
     ],
