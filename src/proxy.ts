@@ -27,6 +27,12 @@ function isPublicPath(pathname: string): boolean {
 }
 
 export default auth((req) => {
+  // REBUILD-WIP — auth gating is temporarily OFF while the redesign is wired
+  // to real auth (phase 3). Until the kit's AuthView posts to the real
+  // sign-in, gating would bounce every preview visitor to /sign-in with no
+  // way through. Restore the redirect below the moment auth is wired.
+  return;
+
   if (req.auth?.user) return;
   if (isPublicPath(req.nextUrl.pathname)) return;
 
