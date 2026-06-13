@@ -51,6 +51,18 @@ const TONE_BAR: Record<ToolTone, string> = {
   red:    "bg-[var(--color-red)]",
 };
 
+/* FIGMA-REBUILD §6 — the card heading is colour-coded AT REST (not just on
+ * hover): COLOR WHEEL green, COLOR MATCH yellow, COLOR DROPPER purple,
+ * COLOR STACKING cyan. Literal per-tone classes so Tailwind's JIT picks them
+ * up. Hover stays a brighten/glow-up (§1), not a colour swap. */
+const TONE_TEXT: Record<ToolTone, string> = {
+  cyan:   "text-[var(--color-cyan)]",
+  yellow: "text-[var(--color-yellow)]",
+  green:  "text-[var(--color-green)]",
+  purple: "text-[var(--color-purple-pastel)]",
+  red:    "text-[var(--color-red)]",
+};
+
 /**
  * One card on the Tools landing page, re-skinned to the terminal language
  * (batch/redesign-tools): a near-black `.panel` tile carrying corner ticks
@@ -70,6 +82,7 @@ export function ToolCard({
   const toneGlyphHover = TONE_GLYPH_HOVER[tone];
   const toneHoverBorder = TONE_HOVER_BORDER[tone];
   const toneBar = TONE_BAR[tone];
+  const toneText = TONE_TEXT[tone];
   return (
     <Link
       href={href}
@@ -115,8 +128,9 @@ export function ToolCard({
         <div className="min-w-0 flex-1">
           <h2
             className={clsx(
-              "font-mono text-base text-[var(--color-fg)] transition-colors",
-              toneGlyphHover,
+              "font-mono text-base transition-[filter] motion-reduce:transition-none",
+              "motion-safe:group-hover:brightness-125 motion-safe:group-focus-visible:brightness-125",
+              toneText,
             )}
           >
             {title}
