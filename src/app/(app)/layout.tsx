@@ -1,12 +1,32 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/shell";
 import { MockProvider } from "@/mock/MockProvider";
+import { auth } from "@/auth";
+import { loadAppData } from "@/lib/appData";
 
-/** Signed-in surface: mock data + full app chrome (rail / top bar). */
-export default function AppGroupLayout({ children }: { children: ReactNode }) {
+/**
+ * Signed-in surface. Server component: resolves the real session, loads the
+ * owner-scoped data behind the kit's data seam, and hands it to the provider
+ * (which merges it over the fixtures). Signed-out visitors (e.g. the preview)
+ * get `signedIn=false` + pure fixtures so the redesign still demos end-to-end.
+ *
+ * REBUILD-WIP — auth gating is enforced in proxy.ts (currently pass-through
+ * while the kit's AuthView is wired to the real sign-in). Once that lands,
+ * this layout can assume a signed-in user.
+ */
+export default async function AppGroupLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  const data = userId ? await loadAppData(userId) : undefined;
+  const signedIn = Boolean(userId);
+
   return (
-    <MockProvider variant="populated" signedIn>
-      <AppShell signedIn>{children}</AppShell>
+    <MockProvider variant="populated" signedIn={signedIn} data={data}>
+      <AppShell signedIn={signedIn}>{children}</AppShell>
     </MockProvider>
   );
 }

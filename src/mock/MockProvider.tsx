@@ -62,13 +62,21 @@ export function MockProvider({
   children,
   variant = "populated",
   signedIn = true,
+  data,
 }: {
   children: ReactNode;
   variant?: "populated" | "empty";
   signedIn?: boolean;
+  /** Real, server-loaded data merged over the fixtures. Any field omitted
+   *  falls back to the mock, so pages light up as their loaders land
+   *  (src/lib/appData.ts). When undefined, pure fixtures render. */
+  data?: Partial<MockData>;
 }) {
-  const [state] = useState(variant === "empty" ? empty : populated);
-  const value = useMemo(() => ({ ...state, signedIn }), [state, signedIn]);
+  const [base] = useState(variant === "empty" ? empty : populated);
+  const value = useMemo(
+    () => ({ ...base, ...data, signedIn }),
+    [base, data, signedIn],
+  );
   return <MockContext.Provider value={value}>{children}</MockContext.Provider>;
 }
 
