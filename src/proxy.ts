@@ -27,12 +27,6 @@ function isPublicPath(pathname: string): boolean {
 }
 
 export default auth((req) => {
-  // REBUILD-WIP — auth gating is temporarily OFF while the redesign is wired
-  // to real auth (phase 3). Until the kit's AuthView posts to the real
-  // sign-in, gating would bounce every preview visitor to /sign-in with no
-  // way through. Restore the redirect below the moment auth is wired.
-  return;
-
   if (req.auth?.user) return;
   if (isPublicPath(req.nextUrl.pathname)) return;
 
@@ -67,6 +61,6 @@ export default auth((req) => {
  */
 export const config = {
   matcher: [
-    "/((?!sign-in|sign-up|api/auth|api/test|r/|brand/|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf)).*)",
+    "/((?!sign-in|sign-up|reset|gallery|api/auth|api/test|r/|brand/|data/|icons/|tools/|logo.png|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf|webmanifest)).*)",
   ],
 };
