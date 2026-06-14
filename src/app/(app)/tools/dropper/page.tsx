@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EyedropperTool } from "@/components/tools/EyedropperTool";
 import { ToolShell } from "@/components/tools/ToolShell";
-import { useMockData } from "@/mock/MockProvider";
-import { closestPaint } from "@/mock/derive";
-
-// Host-provided extraction result (stubbed). Real extraction happens host-side after upload.
-const MOCK_EXTRACTED = ["#7a4a2b", "#caa05a", "#3a5a78", "#1c2433", "#b5c4cc", "#5a6b3a"];
+import { closestPaint } from "@/lib/toolMatch";
+import { useCatalog } from "../useCatalog";
+import { imageToPixels, validateImageBlob } from "@/lib/tools/eyedropper/sample";
+import { extractDominantColors } from "@/lib/tools/eyedropper/kmeans";
 
 export default function EyedropperPage() {
-  const data = useMockData();
+  const paints = useCatalog();
   const router = useRouter();
   const [extracted, setExtracted] = useState<string[]>([]);
 
@@ -19,8 +18,14 @@ export default function EyedropperPage() {
     <ToolShell title="COLOR DROPPER" blurb="Use uploaded images to find the perfect paints.">
       <EyedropperTool
         extractedColors={extracted}
-        closestPaint={(hex) => closestPaint(hex, data.paints)}
-        onImageDropped={() => setExtracted(MOCK_EXTRACTED)}
+        closestPaint={(hex) => closestPaint(hex, paints)}
+        onImageDropped={async (file) => {
+          if (validateImageBlob(file)) return;
+          const img = await imageToPixels(file);
+          setExtracted(
+            extractDominantColors(img.pixels, img.width, img.height, { k: 6 }),
+          );
+        }}
         onSavePalette={() => {}}
         onSendToRecipe={() => router.push("/recipes")}
       />
