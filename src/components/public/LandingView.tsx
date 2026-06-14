@@ -11,7 +11,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   { title: "Army projects", blurb: "Track every unit from wishlist to complete with rolled-up progress." },
   { title: "Focus bench", blurb: "One screen for the session — recipe, timer, progress, inspiration." },
   { title: "Planner", blurb: "Tournaments and deadlines on a calendar that fits your bench." },
-  { title: "Wishlist & budget", blurb: "Paste a store link to track what you own, want, and spent." },
+  { title: "Collection & budget", blurb: "Paste a store link to track what you own, want, and spent." },
 ];
 
 export function LandingView() {
@@ -40,7 +40,7 @@ export function LandingView() {
           and the focus bench — one terminal.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/dashboard">
+          <Link href="/sign-up">
             <Button size="lg">Start free — no email required</Button>
           </Link>
           <Link href="/pricing">
@@ -92,6 +92,14 @@ export function LandingView() {
         ·{" "}
         <Link href="/sign-in" className="text-cyan hover:underline">
           Sign in
+        </Link>{" "}
+        ·{" "}
+        <Link href="/privacy" className="text-cyan hover:underline">
+          Privacy
+        </Link>{" "}
+        ·{" "}
+        <Link href="/terms" className="text-cyan hover:underline">
+          Terms
         </Link>
       </footer>
     </div>
