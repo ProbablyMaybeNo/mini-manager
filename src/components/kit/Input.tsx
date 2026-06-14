@@ -33,8 +33,10 @@ export function Input({
       )}
       <div
         className={cn(
-          "flex items-center gap-2 border bg-bg px-2 py-1.5",
-          error ? "border-red" : "border-cyan/50 focus-within:border-cyan",
+          "flex items-center gap-2 border bg-bg px-2 py-1.5 transition-[border-color,box-shadow] duration-150",
+          error
+            ? "border-red focus-within:shadow-[0_0_0_3px_rgba(255,66,66,0.12)]"
+            : "border-cyan/50 focus-within:border-cyan focus-within:shadow-[0_0_0_3px_rgba(0,210,255,0.12)]",
         )}
       >
         {leading}

@@ -44,7 +44,7 @@ export function PaintListTable({
         </thead>
         <tbody>
           {paints.map((p) => (
-            <tr key={p.id} className="border-b border-fg/10 hover:bg-cyan/5">
+            <tr key={p.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
               <td className="px-3 py-2">
                 <button
                   type="button"

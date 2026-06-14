@@ -38,7 +38,7 @@ export function ColourMatchTool({
           <select
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            className="mt-1 w-full border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+            className="mt-1 w-full border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-cyan focus:shadow-[0_0_0_3px_rgba(0,210,255,0.12)] focus:outline-none"
           >
             <option value="">All brands</option>
             {brandOptions.map((b) => (

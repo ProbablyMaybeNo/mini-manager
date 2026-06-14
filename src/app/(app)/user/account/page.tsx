@@ -1,13 +1,22 @@
-"use client";
+import { eq } from "drizzle-orm";
+import { currentUserId } from "@/lib/auth-stub";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { AccountClient } from "./AccountClient";
 
-import { AccountView } from "@/components/user/AccountView";
-
-export default function AccountPage() {
+export default async function AccountPage() {
+  const userId = await currentUserId();
+  const row = (
+    await db
+      .select({ username: users.username, recoveryEmail: users.recoveryEmail })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+  )[0];
   return (
-    <AccountView
-      profile={{ username: "painter_01", recoveryEmail: "painter@example.com" }}
-      onSave={() => {}}
-      onChangePassword={() => {}}
+    <AccountClient
+      username={row?.username ?? ""}
+      recoveryEmail={row?.recoveryEmail ?? ""}
     />
   );
 }

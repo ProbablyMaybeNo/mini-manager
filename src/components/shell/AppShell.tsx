@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SidebarRail } from "./SidebarRail";
 import { MobileTopBar } from "./MobileTopBar";
+import { RouteTransition } from "./RouteTransition";
 
 /**
  * App chrome. `signedIn` is a simple boolean prop (the host owns auth):
@@ -29,7 +30,7 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileTopBar />
         <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto outline-none">
-          {children}
+          <RouteTransition>{children}</RouteTransition>
         </main>
       </div>
     </div>
