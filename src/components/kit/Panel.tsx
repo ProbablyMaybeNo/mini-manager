@@ -28,7 +28,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "relative border bg-bg/60",
+        "relative border bg-bg/60 panel-depth",
         accentBorder[accent],
         glow && "glow-cyan",
         className,

@@ -80,7 +80,7 @@ export function SlideOutPanel({
         aria-label={title}
         tabIndex={-1}
         className={cn(
-          "absolute top-0 h-full w-full border-cyan bg-bg shadow-[0_0_30px_rgba(0,210,255,0.15)] outline-none",
+          "absolute top-0 h-full w-full border-cyan bg-bg shadow-[0_0_36px_rgba(0,210,255,0.14),-18px_0_50px_-18px_rgba(0,0,0,0.9)] outline-none",
           width,
           side === "right" ? "right-0 border-l" : "left-0 border-r",
         )}
