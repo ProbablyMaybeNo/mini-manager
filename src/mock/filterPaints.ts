@@ -19,6 +19,16 @@ function inRange(hue: number, [min, max]: [number, number]): boolean {
   return min > max ? hue >= min || hue < max : hue >= min && hue < max;
 }
 
+/** Map a hue (0–360°) to its named colour family — the inverse of the
+ *  filter checkboxes. Used by the library's hue rail to jump the filter. */
+export function colorFamilyForHue(hue: number): string {
+  const h = ((hue % 360) + 360) % 360;
+  for (const [name, range] of Object.entries(COLOR_RANGES)) {
+    if (inRange(h, range)) return name;
+  }
+  return "RED";
+}
+
 /**
  * Host-side filtering (mock layer, NOT in UI). The real host would do this server-side;
  * the UI just renders the resulting list and emits the filter object.

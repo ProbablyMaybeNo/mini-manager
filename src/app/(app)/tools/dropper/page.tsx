@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EyedropperTool } from "@/components/tools/EyedropperTool";
 import { ToolShell } from "@/components/tools/ToolShell";
+import { usePaletteSaver } from "@/components/tools/usePaletteSaver";
 import { closestPaint } from "@/lib/toolMatch";
 import { useCatalog } from "../useCatalog";
 import { imageToPixels, validateImageBlob } from "@/lib/tools/eyedropper/sample";
@@ -13,6 +14,7 @@ export default function EyedropperPage() {
   const paints = useCatalog();
   const router = useRouter();
   const [extracted, setExtracted] = useState<string[]>([]);
+  const { save, dialog } = usePaletteSaver("eyedropper");
 
   return (
     <ToolShell title="COLOR DROPPER" blurb="Use uploaded images to find the perfect paints.">
@@ -26,9 +28,10 @@ export default function EyedropperPage() {
             extractDominantColors(img.pixels, img.width, img.height, { k: 6 }),
           );
         }}
-        onSavePalette={() => {}}
+        onSavePalette={save}
         onSendToRecipe={() => router.push("/recipes")}
       />
+      {dialog}
     </ToolShell>
   );
 }

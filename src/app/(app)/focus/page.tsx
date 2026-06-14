@@ -36,7 +36,7 @@ function FocusRoute() {
         });
       }}
       onStepChange={() => {}}
-      onAddPaint={() => {}}
+      onAddPaint={() => router.push(recipe ? `/recipes/${recipe.id}` : "/recipes")}
       onAddInspo={() => {}}
       onRemoveInspo={() => {}}
     />
