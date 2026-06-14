@@ -235,3 +235,49 @@ export async function endSession(
   revalidatePath("/projects");
   return { ok: true, data: { sessionId, durationSeconds } };
 }
+
+/**
+ * REBUILD — log a completed painting session of a fixed duration (the
+ * redesign's Focus stopwatch reports elapsed seconds on LOG). Inserts a
+ * closed paint_sessions row so the dashboard time totals + streak pick it up.
+ */
+export async function logSession(
+  raw: { projectId: string; seconds: number },
+): Promise<ActionResult<{ sessionId: string }>> {
+  const schema = z.object({
+    projectId: z.string().min(1).max(32),
+    seconds: z.number().int().min(1).max(86_400),
+  });
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "Invalid session" };
+  const userId = await currentUserId();
+  const { projectId, seconds } = parsed.data;
+
+  const owner = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)))
+    .limit(1);
+  if (!owner[0]) return { ok: false, error: "Project not found" };
+
+  const endedAt = new Date();
+  const startedAt = new Date(endedAt.getTime() - seconds * 1000);
+  const inserted = await db
+    .insert(paintSessions)
+    .values({
+      userId,
+      projectId,
+      startedAt,
+      endedAt,
+      durationSeconds: seconds,
+      pausedMs: 0,
+    })
+    .returning({ id: paintSessions.id });
+  const sessionId = inserted[0]?.id;
+  if (!sessionId) return { ok: false, error: "Failed to log session" };
+
+  await logActivity(userId, "paint_session", projectId);
+  revalidatePath("/focus");
+  revalidatePath("/dashboard");
+  return { ok: true, data: { sessionId } };
+}

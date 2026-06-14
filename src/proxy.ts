@@ -61,6 +61,6 @@ export default auth((req) => {
  */
 export const config = {
   matcher: [
-    "/((?!sign-in|sign-up|api/auth|api/test|r/|brand/|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf)).*)",
+    "/((?!sign-in|sign-up|reset|gallery|api/auth|api/test|r/|brand/|data/|icons/|tools/|logo.png|_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf|webmanifest)).*)",
   ],
 };

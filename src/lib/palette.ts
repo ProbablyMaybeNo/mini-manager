@@ -1,0 +1,73 @@
+import type { Priority, ProjectStatus, ProjectType } from "./types";
+
+/** Accent keys map 1:1 onto the Tailwind token colours generated from globals.css. */
+export type Accent = "cyan" | "green" | "yellow" | "purple" | "red" | "dim";
+
+export const accentText: Record<Accent, string> = {
+  cyan: "text-cyan",
+  green: "text-green",
+  yellow: "text-yellow",
+  purple: "text-purple",
+  red: "text-red",
+  dim: "text-fg-dim",
+};
+
+export const accentBorder: Record<Accent, string> = {
+  cyan: "border-cyan",
+  green: "border-green",
+  yellow: "border-yellow",
+  purple: "border-purple",
+  red: "border-red",
+  dim: "border-fg-faint",
+};
+
+export const projectTypeAccent: Record<ProjectType, Accent> = {
+  Army: "cyan",
+  Warband: "purple",
+  Unit: "green",
+  Model: "yellow",
+  Terrain: "dim",
+};
+
+export const statusAccent: Record<ProjectStatus, Accent> = {
+  WISHLIST: "yellow",
+  OWNED: "dim",
+  BUILDING: "cyan",
+  PRIMING: "purple",
+  PAINTING: "cyan",
+  BASING: "green",
+  COMPLETE: "green",
+  SHELVED: "dim",
+};
+
+export const priorityAccent: Record<Priority, Accent> = {
+  Low: "dim",
+  Med: "yellow",
+  High: "red",
+};
+
+/** Minutes → "H:MM" for the dashboard time-total / focus totals. */
+export function formatMinutes(total: number): string {
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return `${h}:${m.toString().padStart(2, "0")}`;
+}
+
+/** Hue (0–360) of a #rrggbb colour — used to position swatches on the coverage map. */
+export function hexHue(hex: string): number {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return 0;
+  const r = parseInt(m[1], 16) / 255;
+  const g = parseInt(m[2], 16) / 255;
+  const b = parseInt(m[3], 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  if (d === 0) return 0;
+  let h: number;
+  if (max === r) h = ((g - b) / d) % 6;
+  else if (max === g) h = (b - r) / d + 2;
+  else h = (r - g) / d + 4;
+  h *= 60;
+  return h < 0 ? h + 360 : h;
+}

@@ -1,4 +1,4 @@
-import { techniqueLabel } from "@/components/recipes/TechniqueLabel";
+import { techniqueLabel } from "./techniqueLabel";
 import type { TechniqueKey } from "@/db/schema";
 
 export interface MarkdownSlot {

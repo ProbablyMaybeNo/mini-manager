@@ -1,39 +1,38 @@
-import type { Route } from "next";
+import type { NavKey } from "@/lib/types";
 
-/** Shared nav model for the app shell (FIGMA-REBUILD, REBUILD_SPEC §2).
- *  One source of truth for the desktop SidebarRail and the mobile sheet. */
-export type NavItem = {
-  href: Route;
+export interface NavItem {
+  key: NavKey;
   label: string;
-};
+  path: string;
+}
 
-/** Primary rail group — DASHBOARD · LIBRARY · RECIPE · TOOLS · COLLECTION. */
-export const PRIMARY_NAV: readonly NavItem[] = [
-  { href: "/projects" as Route, label: "DASHBOARD" },
-  { href: "/library" as Route, label: "LIBRARY" },
-  { href: "/recipes" as Route, label: "RECIPE" },
-  { href: "/tools" as Route, label: "TOOLS" },
-  { href: "/collection" as Route, label: "COLLECTION" },
-] as const;
+/** Primary rail items (top). */
+export const MAIN_NAV: NavItem[] = [
+  { key: "dashboard", label: "DASHBOARD", path: "/dashboard" },
+  { key: "library", label: "LIBRARY", path: "/library" },
+  { key: "recipe", label: "RECIPE", path: "/recipes" },
+  { key: "tools", label: "TOOLS", path: "/tools" },
+  { key: "collection", label: "COLLECTION", path: "/collection" },
+];
 
-/** Lower pinned group — SETTINGS · ACCOUNT. Both resolve to /user until a
- *  dedicated split exists (flagged for the undesigned-pages agent). */
-export const SECONDARY_NAV: readonly NavItem[] = [
-  { href: "/user" as Route, label: "SETTINGS" },
-  { href: "/user" as Route, label: "ACCOUNT" },
-] as const;
+/** Pinned-bottom rail items. */
+export const FOOTER_NAV: NavItem[] = [
+  { key: "settings", label: "SETTINGS", path: "/user" },
+  { key: "account", label: "ACCOUNT", path: "/user/account" },
+];
 
-export function isNavActive(pathname: string | null, href: string): boolean {
-  if (!pathname) return false;
-  if (href === "/projects") {
-    // /projects IS the dashboard; the root path lands there too.
-    return pathname === "/" || pathname.startsWith("/projects");
+export const ALL_NAV = [...MAIN_NAV, ...FOOTER_NAV];
+
+/**
+ * Resolve which nav item is active for a pathname: the item whose path is the longest
+ * prefix of the current path. Deterministic ties broken by declaration order.
+ */
+export function activeNavKey(pathname: string): NavKey | null {
+  let best: NavItem | null = null;
+  for (const item of ALL_NAV) {
+    if (pathname === item.path || pathname.startsWith(item.path + "/")) {
+      if (!best || item.path.length > best.path.length) best = item;
+    }
   }
-  if (href === "/collection") {
-    // Legacy routes redirect here; light the item during the hop too.
-    return (
-      pathname.startsWith("/collection") || pathname.startsWith("/wishlist")
-    );
-  }
-  return pathname.startsWith(href);
+  return best?.key ?? null;
 }

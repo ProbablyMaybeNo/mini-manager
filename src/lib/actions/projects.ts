@@ -179,9 +179,10 @@ export async function createProject(
   // P14.1 — feed the PLANNER activity stream.
   await logActivity(userId, "project_created", newRow.id);
 
-  revalidatePath("/projects");
-  revalidatePath(`/projects/${newRow.id}`);
-  redirect(`/projects?project=${encodeURIComponent(newRow.id)}`);
+  // REBUILD — return the new id (the redesign drives navigation client-side);
+  // the old server redirect targeted the retired /projects route.
+  revalidatePath("/dashboard");
+  return { ok: true, data: { id: newRow.id } };
 }
 
 /* ============================================================

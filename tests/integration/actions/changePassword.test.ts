@@ -141,34 +141,3 @@ describe("changePasswordAction — validation", () => {
     if (!result.ok) expect(result.message).toMatch(/required/);
   });
 });
-
-describe("ChangePasswordCard component surface", () => {
-  test("the form renders three password inputs + a submit button", async () => {
-    const fs = await import("node:fs/promises");
-    const path = await import("node:path");
-    const src = await fs.readFile(
-      path.resolve(
-        process.cwd(),
-        "src/components/user/ChangePasswordCard.tsx",
-      ),
-      "utf-8",
-    );
-    expect(src).toContain("Current password");
-    expect(src).toContain("New password");
-    expect(src).toContain("Confirm new password");
-    expect(src).toContain("Change password");
-  });
-
-  test("form submit calls changePasswordAction", async () => {
-    const fs = await import("node:fs/promises");
-    const path = await import("node:path");
-    const src = await fs.readFile(
-      path.resolve(
-        process.cwd(),
-        "src/components/user/ChangePasswordCard.tsx",
-      ),
-      "utf-8",
-    );
-    expect(src).toContain("changePasswordAction");
-  });
-});

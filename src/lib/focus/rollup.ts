@@ -1,5 +1,17 @@
 import type { Project, RecipeSlot } from "@/db/schema";
-import type { FocusSlotView } from "@/components/focus/FocusPanel";
+
+/** Flat slot view-model the FOCUS bench renders — defined here (pure lib)
+ *  so the rollup has no dependency on the presentational layer. */
+export interface FocusSlotView {
+  id: string;
+  position: number;
+  technique: RecipeSlot["technique"];
+  paintHex: string | null;
+  paintLabel: string | null;
+  paintId: string | null;
+  paintNote: string | null;
+  done: boolean;
+}
 
 /**
  * P15.0 — FOCUS header project-state pill rollup.
