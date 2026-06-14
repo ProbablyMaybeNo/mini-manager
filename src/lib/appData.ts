@@ -5,6 +5,8 @@ import {
   getProjectPalettesMap,
   getPaintMetaMap,
   getRecipeWithSlots,
+  getInspoMapForOwner,
+  listInspoForRecipe,
   listRecipesForTable,
 } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/lib/recipes/techniqueLabel";
@@ -44,9 +46,10 @@ export async function loadEditorRecipe(
   userId: string,
   recipeId: string,
 ): Promise<KitRecipe | null> {
-  const [bundle, paintMeta] = await Promise.all([
+  const [bundle, paintMeta, inspoRows] = await Promise.all([
     getRecipeWithSlots(userId, recipeId),
     getPaintMetaMap(),
+    listInspoForRecipe(recipeId),
   ]);
   if (!bundle) return null;
   return {
@@ -64,7 +67,7 @@ export async function loadEditorRecipe(
         note: s.notesMd ?? undefined,
       };
     }),
-    inspoLinks: [],
+    inspo: inspoRows.map((r) => ({ id: r.id, url: r.url })),
     assignedProjectId: bundle.attachedProjectId ?? undefined,
     notes: bundle.notesMd ?? undefined,
   };
@@ -188,13 +191,16 @@ function activitySentence(row: {
 /** Map a RecipeTableRow onto the kit's Recipe view-model. The index only
  *  renders name + swatch strip + attached project, so slots carry the
  *  palette hex/label (paintId/brand/layer aren't surfaced on the index). */
-function mapRecipe(row: {
-  id: string;
-  name: string;
-  attachedProjectId: string | null;
-  palette: { hex: string; label: string }[];
-  publicSlug: string | null;
-}): KitRecipe {
+function mapRecipe(
+  row: {
+    id: string;
+    name: string;
+    attachedProjectId: string | null;
+    palette: { hex: string; label: string }[];
+    publicSlug: string | null;
+  },
+  inspo: { id: string; url: string }[],
+): KitRecipe {
   return {
     id: row.id,
     name: row.name,
@@ -205,7 +211,7 @@ function mapRecipe(row: {
       name: p.label,
       layer: "",
     })),
-    inspoLinks: [],
+    inspo,
     assignedProjectId: row.attachedProjectId ?? undefined,
     shareUrl: row.publicSlug ? `/r/${row.publicSlug}` : undefined,
   };
@@ -265,6 +271,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     projects,
     palettes,
     recipeRows,
+    inspoMap,
     collectionPaints,
     collectionModels,
     activityRows,
@@ -276,6 +283,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     listAllProjects(userId),
     getProjectPalettesMap(userId),
     listRecipesForTable(userId),
+    getInspoMapForOwner(userId),
     listPaintCollection(userId),
     listModelCollection(userId),
     getRecentActivity(userId, 20),
@@ -309,7 +317,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
   return {
     signedIn: true,
     projects: projects.map((p) => mapProject(p, palettes.get(p.id) ?? [])),
-    recipes: recipeRows.map(mapRecipe),
+    recipes: recipeRows.map((r) => mapRecipe(r, inspoMap.get(r.id) ?? [])),
     collectionPaints: collectionPaints.map(mapCollectionItem),
     collectionModels: collectionModels.map(mapCollectionItem),
     events: mappedEvents,

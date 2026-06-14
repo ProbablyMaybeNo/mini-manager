@@ -50,6 +50,7 @@ export function RecipeEditorClient({
           hex: s.swatch,
           layer: s.layer,
         })),
+        inspo: recipe.inspo.map((r) => r.url),
       });
       if (res.ok) router.push("/recipes");
     });

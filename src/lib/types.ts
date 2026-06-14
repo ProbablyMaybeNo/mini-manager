@@ -50,11 +50,17 @@ export interface RecipeSlot {
   note?: string;
 }
 
+export interface InspoRef {
+  /** recipe_inspo row id; empty string for an unsaved (editor-local) entry. */
+  id: string;
+  url: string;
+}
+
 export interface Recipe {
   id: string;
   name: string;
   slots: RecipeSlot[];
-  inspoLinks: string[];
+  inspo: InspoRef[];
   assignedProjectId?: string;
   shareUrl?: string;
   /** Recipe-level notes (the editor's Notes panel). */

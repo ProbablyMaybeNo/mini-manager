@@ -170,7 +170,7 @@ export function RecipeEditorView({
                 containerClassName="flex-1"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && inspoUrl.trim()) {
-                    update({ inspoLinks: [...recipe.inspoLinks, inspoUrl.trim()] });
+                    update({ inspo: [...recipe.inspo, { id: "", url: inspoUrl.trim() }] });
                     setInspoUrl("");
                   }
                 }}
@@ -179,30 +179,30 @@ export function RecipeEditorView({
                 variant="secondary"
                 onClick={() => {
                   if (!inspoUrl.trim()) return;
-                  update({ inspoLinks: [...recipe.inspoLinks, inspoUrl.trim()] });
+                  update({ inspo: [...recipe.inspo, { id: "", url: inspoUrl.trim() }] });
                   setInspoUrl("");
                 }}
               >
                 Add
               </Button>
             </div>
-            {recipe.inspoLinks.length === 0 ? (
+            {recipe.inspo.length === 0 ? (
               <p className="font-mono text-[11px] text-fg-faint">
                 No references yet — paste image or page URLs.
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {recipe.inspoLinks.map((url, i) => (
+                {recipe.inspo.map((ref, i) => (
                   <div
-                    key={i}
+                    key={ref.id || i}
                     className="group relative flex aspect-square items-center justify-center border border-cyan/40 bg-bg-raised/40 p-1"
                   >
-                    <span className="truncate font-mono text-[9px] text-fg-dim">{url}</span>
+                    <span className="truncate font-mono text-[9px] text-fg-dim">{ref.url}</span>
                     <button
                       type="button"
                       aria-label={`Remove reference ${i + 1}`}
                       onClick={() =>
-                        update({ inspoLinks: recipe.inspoLinks.filter((_, k) => k !== i) })
+                        update({ inspo: recipe.inspo.filter((_, k) => k !== i) })
                       }
                       className="absolute right-0.5 top-0.5 font-osd text-[10px] text-fg-faint hover:text-red"
                     >
