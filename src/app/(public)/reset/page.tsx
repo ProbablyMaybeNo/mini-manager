@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button, Input, Panel } from "@/components/kit";
 import { Logo } from "@/components/shell";
+import { requestPasswordReset } from "@/lib/auth/passwordReset";
 
 export default function ResetPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [sent, setSent] = useState(false);
-  const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+  const [, startTransition] = useTransition();
+  const valid = username.trim().length >= 3;
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-6">
@@ -20,22 +22,29 @@ export default function ResetPage() {
 
         {sent ? (
           <p className="font-mono text-sm text-green text-glow-green">
-            ▸ If that email exists, a reset link is on its way.
+            ▸ If that account has a verified recovery email, a reset link is on
+            its way.
           </p>
         ) : (
           <form
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              if (valid) setSent(true);
+              if (!valid) return;
+              startTransition(async () => {
+                // Always resolves ok (no account enumeration); the link, if
+                // any, goes to the account's verified recovery email.
+                await requestPasswordReset({ username: username.trim() });
+                setSent(true);
+              });
             }}
           >
             <Input
-              label="Recovery email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              label="Username"
+              name="username"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
             <Button type="submit" className="w-full" disabled={!valid}>
               Send reset link

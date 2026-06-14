@@ -1,0 +1,126 @@
+import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import Stripe from "stripe";
+import { z } from "zod";
+import { currentUserId } from "@/lib/auth-stub";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import {
+  isOneTimePriceKey,
+  STRIPE_PRICE_KEYS,
+} from "@/lib/billing/checkout";
+import { stripePriceId, stripeSecretKey } from "@/lib/billing/env";
+
+/**
+ * P10.4 — Stripe Checkout session creation.
+ *
+ * POST /api/billing/checkout  { priceKey: StripePriceKey }
+ *
+ * Resolves the signed-in user, ensures a Stripe customer exists for them
+ * (creating + persisting one on first checkout), then opens a Checkout
+ * Session for the requested price and hands the redirect URL back to the
+ * client. The client does `window.location.href = url`.
+ *
+ * Returns 503 when Stripe isn't configured yet (no secret key / no price id
+ * for the requested tier) so the /pricing page can fall back to /sign-up
+ * pre-wire-up.
+ */
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const BodySchema = z.object({
+  priceKey: z.enum(STRIPE_PRICE_KEYS as unknown as [string, ...string[]]),
+});
+
+/** Derive the request origin (scheme + host) from forwarding headers,
+ *  falling back to the standard Host header. Used for success/cancel URLs. */
+function originFromHeaders(req: Request): string {
+  const headers = req.headers;
+  const forwardedHost = headers.get("x-forwarded-host");
+  const host = forwardedHost ?? headers.get("host");
+  const proto =
+    headers.get("x-forwarded-proto") ??
+    (host?.startsWith("localhost") || host?.startsWith("127.0.0.1")
+      ? "http"
+      : "https");
+  if (host) return `${proto}://${host}`;
+  // Last resort — let Stripe reject a bad URL rather than crash here.
+  return new URL(req.url).origin;
+}
+
+export async function POST(req: Request): Promise<Response> {
+  // Parse + validate the body first so a malformed request fails fast.
+  let priceKey: (typeof STRIPE_PRICE_KEYS)[number];
+  try {
+    const json = await req.json();
+    const parsed = BodySchema.parse(json);
+    priceKey = parsed.priceKey as (typeof STRIPE_PRICE_KEYS)[number];
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const secret = stripeSecretKey();
+  const priceId = stripePriceId(priceKey);
+  if (!secret || !priceId) {
+    return NextResponse.json(
+      { error: "Billing is not configured" },
+      { status: 503 },
+    );
+  }
+
+  // Auth — redirects to /sign-in if there's no session.
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      username: users.username,
+      stripeCustomerId: users.stripeCustomerId,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  const user = rows[0];
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  const stripe = new Stripe(secret);
+
+  // Ensure the user has a Stripe customer, creating + persisting on first
+  // checkout. Email is nullable on the free tier — pass what we have so the
+  // Stripe dashboard has something human-readable.
+  let customerId = user.stripeCustomerId;
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email ?? undefined,
+      name: user.username ?? undefined,
+      metadata: { userId },
+    });
+    customerId = customer.id;
+    await db
+      .update(users)
+      .set({ stripeCustomerId: customerId })
+      .where(eq(users.id, userId));
+  }
+
+  const origin = originFromHeaders(req);
+  const mode: Stripe.Checkout.SessionCreateParams.Mode = isOneTimePriceKey(
+    priceKey,
+  )
+    ? "payment"
+    : "subscription";
+
+  const session = await stripe.checkout.sessions.create({
+    mode,
+    customer: customerId,
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: `${origin}/user?upgraded=1`,
+    cancel_url: `${origin}/pricing`,
+    client_reference_id: userId,
+    metadata: { userId, priceKey },
+  });
+
+  return NextResponse.json({ url: session.url });
+}
