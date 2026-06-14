@@ -15,7 +15,11 @@ export function StatBox({
 }) {
   return (
     <div
-      className={cn("border bg-bg/60 px-4 py-3", accentBorder.cyan, className)}
+      className={cn(
+        "border bg-bg/60 px-4 py-3 panel-depth transition-shadow duration-200 hover:panel-depth-glow",
+        accentBorder.cyan,
+        className,
+      )}
       style={{ borderRadius: "var(--radius-panel)" }}
     >
       <div className="font-osd text-[11px] uppercase tracking-[0.18em] text-fg-dim">
