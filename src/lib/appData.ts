@@ -1,6 +1,10 @@
 import "server-only";
 import { listAllProjects } from "@/db/queries/projects";
-import { getProjectPalettesMap } from "@/db/queries/recipes";
+import { getProjectPalettesMap, listRecipesForTable } from "@/db/queries/recipes";
+import {
+  listPaintCollection,
+  listModelCollection,
+} from "@/db/queries/collections";
 import { getRecentActivity, getActivityByDay } from "@/db/queries/activityLog";
 import { listUpcomingEvents } from "@/db/queries/events";
 import {
@@ -9,14 +13,21 @@ import {
 } from "@/db/queries/paintSessions";
 import { displayStatus, progressPercent } from "@/lib/progress";
 import { computeStreak } from "@/lib/streak";
-import type { Project as DbProject, ActivityLogKind } from "@/db/schema";
+import type {
+  Project as DbProject,
+  ActivityLogKind,
+  WishlistItem,
+} from "@/db/schema";
 import type { MockData } from "@/mock/MockProvider";
 import type {
   ActivityEntry,
   CalendarEvent,
+  CollectionItem,
   Priority,
   Project as KitProject,
+  ProjectStatus,
   ProjectType as KitProjectType,
+  Recipe as KitRecipe,
   SessionStats,
 } from "@/lib/types";
 
@@ -104,6 +115,61 @@ function activitySentence(row: {
   }
 }
 
+/** Map a RecipeTableRow onto the kit's Recipe view-model. The index only
+ *  renders name + swatch strip + attached project, so slots carry the
+ *  palette hex/label (paintId/brand/layer aren't surfaced on the index). */
+function mapRecipe(row: {
+  id: string;
+  name: string;
+  attachedProjectId: string | null;
+  palette: { hex: string; label: string }[];
+  publicSlug: string | null;
+}): KitRecipe {
+  return {
+    id: row.id,
+    name: row.name,
+    slots: row.palette.map((p) => ({
+      paintId: "",
+      swatch: p.hex,
+      brand: "",
+      name: p.label,
+      layer: "",
+    })),
+    inspoLinks: [],
+    assignedProjectId: row.attachedProjectId ?? undefined,
+    shareUrl: row.publicSlug ? `/r/${row.publicSlug}` : undefined,
+  };
+}
+
+/** DB wishlist status → kit ProjectStatus (collection rows reuse the
+ *  project-stage lifecycle for their status pill). */
+const COLLECTION_STATUS_MAP: Record<string, ProjectStatus> = {
+  WISHLIST: "WISHLIST",
+  OWNED: "OWNED",
+  HOLD: "SHELVED",
+  BUILT: "BUILDING",
+  PRIMED: "PRIMING",
+  PAINTED: "PAINTING",
+  BASED: "BASING",
+  COMPLETE: "COMPLETE",
+  PURCHASED: "OWNED",
+};
+
+function mapCollectionItem(i: WishlistItem): CollectionItem {
+  return {
+    id: i.id,
+    kind: i.kind,
+    thumbnail: i.imageUrl ?? "",
+    name: i.title,
+    company: i.company ?? i.army ?? i.game ?? "",
+    vendor: i.vendor ?? "",
+    price: i.price != null ? `$${(i.price / 100).toFixed(2)}` : "",
+    status: COLLECTION_STATUS_MAP[i.status ?? "WISHLIST"] ?? "OWNED",
+    sourceUrl: i.sourceUrl ?? "",
+    projectId: i.projectId ?? undefined,
+  };
+}
+
 /** Short relative time ("<1m", "12m", "3h", "2d") for the activity column. */
 function relativeWhen(then: Date, now: Date): string {
   const ms = now.getTime() - then.getTime();
@@ -128,6 +194,9 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
   const [
     projects,
     palettes,
+    recipeRows,
+    collectionPaints,
+    collectionModels,
     activityRows,
     events,
     rollups,
@@ -136,6 +205,9 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
   ] = await Promise.all([
     listAllProjects(userId),
     getProjectPalettesMap(userId),
+    listRecipesForTable(userId),
+    listPaintCollection(userId),
+    listModelCollection(userId),
     getRecentActivity(userId, 20),
     listUpcomingEvents(userId, startOfUtcDay(now), 8),
     getSessionRollups(userId, now.getTime()),
@@ -167,6 +239,9 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
   return {
     signedIn: true,
     projects: projects.map((p) => mapProject(p, palettes.get(p.id) ?? [])),
+    recipes: recipeRows.map(mapRecipe),
+    collectionPaints: collectionPaints.map(mapCollectionItem),
+    collectionModels: collectionModels.map(mapCollectionItem),
     events: mappedEvents,
     activity: mappedActivity,
     sessionStats,
