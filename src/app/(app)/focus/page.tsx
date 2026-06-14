@@ -1,13 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FocusView } from "@/components/focus/FocusView";
 import { useMockData } from "@/mock/MockProvider";
+import { logSession } from "@/lib/actions/paintSessions";
 
 function FocusRoute() {
   const data = useMockData();
   const params = useSearchParams();
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const projectId = params.get("project");
   const isEmpty = params.get("state") === "empty";
 
@@ -25,7 +28,13 @@ function FocusRoute() {
       recipe={recipe}
       stats={data.sessionStats}
       modelCount={10}
-      onLogSession={() => {}}
+      onLogSession={(seconds) => {
+        if (!project || seconds <= 0) return;
+        startTransition(async () => {
+          await logSession({ projectId: project.id, seconds });
+          router.refresh();
+        });
+      }}
       onStepChange={() => {}}
       onAddPaint={() => {}}
       onAddInspo={() => {}}
