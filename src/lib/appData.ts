@@ -1,7 +1,13 @@
 import "server-only";
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { listAllProjects } from "@/db/queries/projects";
-import { getProjectPalettesMap, listRecipesForTable } from "@/db/queries/recipes";
+import {
+  getProjectPalettesMap,
+  getPaintMetaMap,
+  getRecipeWithSlots,
+  listRecipesForTable,
+} from "@/db/queries/recipes";
+import { techniqueLabel } from "@/lib/recipes/techniqueLabel";
 import {
   listPaintCollection,
   listModelCollection,
@@ -31,6 +37,47 @@ import type {
   Recipe as KitRecipe,
   SessionStats,
 } from "@/lib/types";
+
+/** Load one recipe (with its real slots resolved to swatch + label) for the
+ *  editor, so saving preserves catalog paint links + layer/technique. */
+export async function loadEditorRecipe(
+  userId: string,
+  recipeId: string,
+): Promise<KitRecipe | null> {
+  const [bundle, paintMeta] = await Promise.all([
+    getRecipeWithSlots(userId, recipeId),
+    getPaintMetaMap(),
+  ]);
+  if (!bundle) return null;
+  return {
+    id: bundle.id,
+    name: bundle.name,
+    slots: bundle.slots.map((s) => {
+      const meta = s.paintId ? paintMeta.get(s.paintId) : null;
+      const hex = meta?.hex ?? s.customColorHex ?? "#888888";
+      return {
+        paintId: s.paintId ?? "",
+        swatch: hex,
+        brand: "",
+        name: meta?.label ?? hex,
+        layer: techniqueLabel(s.technique),
+        note: s.notesMd ?? undefined,
+      };
+    }),
+    inspoLinks: [],
+    assignedProjectId: bundle.attachedProjectId ?? undefined,
+    notes: bundle.notesMd ?? undefined,
+  };
+}
+
+/** All of the user's projects mapped to the kit shape (for the editor's
+ *  attach-to-project picker; swatches aren't needed there). */
+export async function loadProjectsForPicker(
+  userId: string,
+): Promise<KitProject[]> {
+  const projects = await listAllProjects(userId);
+  return projects.map((p) => mapProject(p, []));
+}
 
 /** The signed-in user's owned / wishlisted paint ids — the small,
  *  serializable slice the Library route sends to the client, which loads the

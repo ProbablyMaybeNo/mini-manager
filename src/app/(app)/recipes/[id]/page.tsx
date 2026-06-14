@@ -1,64 +1,40 @@
-"use client";
-
-import { Suspense, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { RecipeEditorView } from "@/components/recipe/RecipeEditorView";
-import { PageHeader } from "@/components/shell";
-import { Button, Panel } from "@/components/kit";
-import { useMockData } from "@/mock/MockProvider";
+import { auth } from "@/auth";
+import { loadEditorRecipe, loadProjectsForPicker } from "@/lib/appData";
 import type { Recipe } from "@/lib/types";
+import { RecipeEditorClient } from "./RecipeEditorClient";
+import { RecipeNotFound } from "./RecipeNotFound";
 
 function blankRecipe(name: string): Recipe {
   return { id: "new", name: name || "Untitled recipe", slots: [], inspoLinks: [], notes: "" };
 }
 
-function EditorRoute() {
-  const data = useMockData();
-  const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const nameParam = useSearchParams().get("name") ?? "";
+/**
+ * Recipe editor route — server component. Loads the real recipe (with its
+ * slots resolved to swatches/labels) + the user's projects, then hands them to
+ * the client editor. `id === "new"` starts a blank recipe (name pre-fillable
+ * via ?name=).
+ */
+export default async function RecipeEditorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { id } = await params;
+  const sp = await searchParams;
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
 
-  const id = params.id;
-  const initial = useMemo<Recipe | null>(() => {
-    if (id === "new") return blankRecipe(nameParam);
-    return data.recipes.find((r) => r.id === id) ?? null;
-  }, [id, nameParam, data.recipes]);
+  const nameParam = typeof sp.name === "string" ? sp.name : "";
+  const projects = userId ? await loadProjectsForPicker(userId) : [];
 
-  const [recipe, setRecipe] = useState<Recipe | null>(initial);
-
-  if (!recipe) {
-    return (
-      <div className="flex flex-col gap-6 p-6">
-        <PageHeader title="RECIPE NOT FOUND" />
-        <Panel label="ERROR" accent="red" className="max-w-md p-6">
-          <p className="font-mono text-sm text-red">▸ No recipe with id “{id}”.</p>
-          <div className="mt-4">
-            <Button variant="secondary" onClick={() => router.push("/recipes")}>
-              ← Back to recipes
-            </Button>
-          </div>
-        </Panel>
-      </div>
-    );
+  if (id === "new") {
+    return <RecipeEditorClient initial={blankRecipe(nameParam)} projects={projects} />;
   }
 
-  return (
-    <RecipeEditorView
-      recipe={recipe}
-      projects={data.projects}
-      paints={data.paints}
-      onChange={setRecipe}
-      onShare={() => {}}
-      onSave={() => router.push("/recipes")}
-      onBack={() => router.push("/recipes")}
-    />
-  );
-}
+  const recipe = userId ? await loadEditorRecipe(userId, id) : null;
+  if (!recipe) return <RecipeNotFound id={id} />;
 
-export default function RecipeEditorPage() {
-  return (
-    <Suspense fallback={null}>
-      <EditorRoute />
-    </Suspense>
-  );
+  return <RecipeEditorClient initial={recipe} projects={projects} />;
 }
