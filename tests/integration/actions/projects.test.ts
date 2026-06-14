@@ -45,19 +45,18 @@ afterEach(() => {
 });
 
 describe("createProject", () => {
-  test("inserts a row and redirects to the new workspace", async () => {
-    await createProject({ name: "Test Unit", type: "Unit", count: 10 });
+  test("inserts a row and returns the new id", async () => {
+    const res = await createProject({ name: "Test Unit", type: "Unit", count: 10 });
 
     const rows = await state.db!.select().from(projects);
     expect(rows).toHaveLength(1);
     expect(rows[0]!.name).toBe("Test Unit");
     expect(rows[0]!.count).toBe(10);
     expect(rows[0]!.ownerId).toBe(state.userId);
-    // FIGMA-REBUILD — project detail is the dashboard slide-out inspector,
-    // opened via ?project=<id>, not a standalone /projects/<id> page.
-    expect(vi.mocked(redirect)).toHaveBeenCalledWith(
-      `/projects?project=${rows[0]!.id}`,
-    );
+    // REBUILD — createProject returns the new id (the redesign drives
+    // navigation client-side) instead of redirecting.
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.id).toBe(rows[0]!.id);
   });
 
   test("Item 2 — persists faction + game when supplied", async () => {
@@ -213,9 +212,6 @@ describe("createProject", () => {
     expect(child).toHaveLength(1);
     expect(child[0]!.type).toBe("Model");
     expect(child[0]!.parentId).toBe(army!.id);
-    expect(vi.mocked(redirect)).toHaveBeenCalledWith(
-      `/projects?project=${child[0]!.id}`,
-    );
   });
 
   test("P13.4 — parent that isn't Army/Warband/Unit is rejected (e.g. Terrain Piece can't parent)", async () => {

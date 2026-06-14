@@ -116,10 +116,10 @@ afterEach(() => {
 
 describe("createProject — free tier cap (1 project)", () => {
   test("first project succeeds on a fresh free account", async () => {
-    await createProject({ name: "First", type: "Unit", count: 1 });
+    const result = await createProject({ name: "First", type: "Unit", count: 1 });
     const rows = await state.db!.select().from(projects);
     expect(rows).toHaveLength(1);
-    expect(vi.mocked(redirect)).toHaveBeenCalled();
+    expect(result.ok).toBe(true);
   });
 
   itWhenEnforced("second project is blocked with the free-tier error + upgrade URL", async () => {
