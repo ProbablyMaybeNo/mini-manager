@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { LibraryView } from "@/components/library/LibraryView";
 import { nearestMatches, similarInOtherBrands } from "@/mock/derive";
 import { COLOR_OPTIONS, filterPaints } from "@/mock/filterPaints";
 import { EMPTY_LIBRARY_FILTER, type LibraryFilter, type Paint, type PaintType } from "@/lib/types";
 import { loadPaints } from "@/lib/paints/loader";
+import { setOwnedCount, toggleWishlistedPaint } from "@/lib/actions/inventory";
 import type { InventoryFlags } from "@/lib/appData";
 
 /** Catalog paint type → kit PaintType (the kit chip set is narrower). */
@@ -33,7 +34,16 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
   const [library, setLibrary] = useState<Paint[] | null>(null);
   const [filter, setFilter] = useState<LibraryFilter>(EMPTY_LIBRARY_FILTER);
   const [selected, setSelected] = useState<Paint | null>(null);
-  const [ownedCount, setOwnedCount] = useState(0);
+  const [ownedCount, setOwnedCount_] = useState(0);
+  const [, startTransition] = useTransition();
+
+  /** Patch one paint's flags in the loaded catalog (optimistic). */
+  function patchPaint(id: string, fields: Partial<Paint>) {
+    setLibrary((lib) =>
+      lib ? lib.map((p) => (p.id === id ? { ...p, ...fields } : p)) : lib,
+    );
+    setSelected((s) => (s && s.id === id ? { ...s, ...fields } : s));
+  }
 
   useEffect(() => {
     let alive = true;
@@ -81,7 +91,36 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
 
   function openPaint(p: Paint) {
     setSelected(p);
-    setOwnedCount(p.owned ? 1 : 0);
+    setOwnedCount_(p.owned ? 1 : 0);
+  }
+
+  function toggleOwned(p: Paint) {
+    const nextOwned = !p.owned;
+    const count = nextOwned ? 1 : 0;
+    patchPaint(p.id, { owned: nextOwned });
+    if (selected?.id === p.id) setOwnedCount_(count);
+    startTransition(async () => {
+      await setOwnedCount({ paintId: p.id, count });
+    });
+  }
+
+  function toggleWishlist(p: Paint) {
+    patchPaint(p.id, { wishlisted: !p.wishlisted });
+    startTransition(async () => {
+      await toggleWishlistedPaint({ paintId: p.id });
+    });
+  }
+
+  function stepOwned(delta: number) {
+    const next = Math.max(0, ownedCount + delta);
+    setOwnedCount_(next);
+    if (selected) {
+      patchPaint(selected.id, { owned: next > 0 });
+      const id = selected.id;
+      startTransition(async () => {
+        await setOwnedCount({ paintId: id, count: next });
+      });
+    }
   }
 
   return (
@@ -100,10 +139,12 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
       onClearFilter={() => setFilter(EMPTY_LIBRARY_FILTER)}
       onOpenPaint={openPaint}
       onClosePaint={() => setSelected(null)}
-      onToggleOwned={() => {}}
-      onToggleWishlist={() => {}}
-      onStepOwned={(d) => setOwnedCount((c) => Math.max(0, c + d))}
-      onWishlist={() => {}}
+      onToggleOwned={toggleOwned}
+      onToggleWishlist={toggleWishlist}
+      onStepOwned={stepOwned}
+      onWishlist={() => {
+        if (selected) toggleWishlist(selected);
+      }}
       onCopyHex={() => {
         if (selected) void navigator.clipboard?.writeText(selected.hex);
       }}
