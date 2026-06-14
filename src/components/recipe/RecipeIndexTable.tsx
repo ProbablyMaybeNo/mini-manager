@@ -52,7 +52,7 @@ export function RecipeIndexTable({
         </thead>
         <tbody>
           {recipes.map((r) => (
-            <tr key={r.id} className="border-b border-fg/10 hover:bg-cyan/5">
+            <tr key={r.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
               <td className="px-3 py-3">
                 <button
                   type="button"
@@ -72,7 +72,7 @@ export function RecipeIndexTable({
                   value={r.assignedProjectId ?? ""}
                   onChange={(e) => onAssignProject(r, e.target.value)}
                   aria-label={`Assign ${r.name} to a project`}
-                  className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+                  className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-cyan focus:shadow-[0_0_0_3px_rgba(0,210,255,0.12)] focus:outline-none"
                 >
                   <option value="">Assign…</option>
                   {projects.map((p) => (

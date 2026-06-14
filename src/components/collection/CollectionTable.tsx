@@ -71,7 +71,7 @@ export function CollectionTable({
             </tr>
           ) : (
             items.map((item) => (
-              <tr key={item.id} className="border-b border-fg/10 hover:bg-cyan/5">
+              <tr key={item.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
                 <td className="px-3 py-2">
                   <Thumb src={item.thumbnail} alt={item.name} />
                 </td>
@@ -103,7 +103,7 @@ export function CollectionTable({
                       value={item.projectId ?? ""}
                       aria-label={`Assign ${item.name} to a project`}
                       onChange={(e) => onAssignProject(item, e.target.value)}
-                      className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+                      className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-cyan focus:shadow-[0_0_0_3px_rgba(0,210,255,0.12)] focus:outline-none"
                     >
                       <option value="">—</option>
                       {projects.map((p) => (

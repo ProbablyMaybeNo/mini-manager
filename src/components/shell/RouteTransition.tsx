@@ -1,0 +1,15 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
+
+/** Re-keys on route change so each page settles in with a brief fade + rise
+ *  (the content-in keyframe). Reduced-motion users get the end state instantly. */
+export function RouteTransition({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  return (
+    <div key={pathname} className="h-full motion-safe:animate-[content-in_280ms_ease-out]">
+      {children}
+    </div>
+  );
+}

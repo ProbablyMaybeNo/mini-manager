@@ -30,8 +30,8 @@ export function NavLinks({
               className={cn(
                 "block border-l-2 px-4 py-2 font-osd text-sm uppercase tracking-[0.18em] transition-colors",
                 isActive
-                  ? "border-cyan text-cyan text-glow-cyan"
-                  : "border-transparent text-fg-dim hover:border-cyan/40 hover:text-cyan",
+                  ? "border-cyan bg-cyan/10 text-cyan text-glow-cyan"
+                  : "border-transparent text-fg-dim hover:border-cyan/40 hover:bg-cyan/5 hover:text-cyan",
               )}
             >
               {item.label}
