@@ -1,0 +1,1 @@
+ALTER TABLE `wishlist_item` ADD `recipe_id` text REFERENCES recipe(id) ON DELETE set null;

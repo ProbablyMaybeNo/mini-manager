@@ -4,6 +4,7 @@ import { Suspense, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CollectionView, type CollectionStatus } from "@/components/collection/CollectionView";
 import { PromptDialog, useToast } from "@/components/kit";
+import { RecipePickerDialog } from "@/components/recipe/RecipePickerDialog";
 import { useMockData } from "@/mock/MockProvider";
 import type { CollectionItem, CollectionKind, ProjectStatus } from "@/lib/types";
 import {
@@ -80,6 +81,17 @@ function CollectionRoute() {
   /** Which manual-add dialog is open ("paint"/"model") — null when closed. */
   const [adding, setAdding] = useState<CollectionKind | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  /** The paint row whose recipe-attach picker is open — null when closed. */
+  const [attaching, setAttaching] = useState<CollectionItem | null>(null);
+
+  /** Recipe options + swatch resolver, derived from the loaded recipes. */
+  const recipeOptions = data.recipes.map((r) => ({
+    id: r.id,
+    name: r.name,
+    swatches: r.slots.map((s) => s.swatch),
+  }));
+  const recipeSwatches = (recipeId: string) =>
+    data.recipes.find((r) => r.id === recipeId)?.slots.map((s) => s.swatch) ?? [];
 
   const patch = (item: CollectionItem, fields: Partial<CollectionItem>) => {
     const apply = (list: CollectionItem[]) =>
@@ -122,6 +134,19 @@ function CollectionRoute() {
     });
   }
 
+  function attachRecipe(recipeId: string) {
+    const item = attaching;
+    if (!item) return;
+    patch(item, { recipeId });
+    setAttaching(null);
+    const name = data.recipes.find((r) => r.id === recipeId)?.name ?? "recipe";
+    startTransition(async () => {
+      const res = await updateWishlistItem({ id: item.id, recipeId });
+      if (res.ok) toast(`Attached ${name}`, "green");
+      else toast(res.error, "red");
+    });
+  }
+
   return (
     <>
     <CollectionView
@@ -129,6 +154,7 @@ function CollectionRoute() {
       models={models}
       projects={data.projects}
       status={status}
+      recipeSwatches={recipeSwatches}
       onAddUrl={(url) => addUrl(url)}
       onStatusChange={(item, s: ProjectStatus) => {
         patch(item, { status: s });
@@ -142,7 +168,7 @@ function CollectionRoute() {
           await updateWishlistItem({ id: item.id, projectId: projectId || null });
         });
       }}
-      onAttachRecipe={() => {}}
+      onAttachRecipe={(item) => setAttaching(item)}
       onRemove={(item) => {
         if (item.kind === "paint") setPaints((l) => l.filter((x) => x.id !== item.id));
         else setModels((l) => l.filter((x) => x.id !== item.id));
@@ -167,6 +193,12 @@ function CollectionRoute() {
         setAdding(null);
         setAddError(null);
       }}
+    />
+    <RecipePickerDialog
+      open={attaching !== null}
+      recipes={recipeOptions}
+      onPick={attachRecipe}
+      onClose={() => setAttaching(null)}
     />
     {node}
     </>

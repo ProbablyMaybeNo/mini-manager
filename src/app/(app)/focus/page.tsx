@@ -8,6 +8,7 @@ import { useMockData } from "@/mock/MockProvider";
 import type { InspoRef } from "@/lib/types";
 import { logSession } from "@/lib/actions/paintSessions";
 import { addInspo, deleteInspo } from "@/lib/actions/recipeInspo";
+import { setProjectComplete } from "@/lib/actions/projects";
 
 function FocusRoute() {
   const data = useMockData();
@@ -40,7 +41,7 @@ function FocusRoute() {
         project={project}
         recipe={recipe}
         stats={data.sessionStats}
-        modelCount={10}
+        modelCount={project?.modelCount ?? 0}
         inspo={inspo}
         onLogSession={(seconds) => {
           if (!project || seconds <= 0) return;
@@ -49,7 +50,12 @@ function FocusRoute() {
             router.refresh();
           });
         }}
-        onStepChange={() => {}}
+        onStepChange={(step) => {
+          if (!project) return;
+          startTransition(async () => {
+            await setProjectComplete({ id: project.id, complete: step });
+          });
+        }}
         onAddPaint={() => router.push(recipe ? `/recipes/${recipe.id}` : "/recipes")}
         onAddInspo={(url) => {
           if (!recipe) {

@@ -21,6 +21,7 @@ export function CollectionView({
   onAddPaint,
   onAddModel,
   onRetry,
+  recipeSwatches,
 }: {
   paints: CollectionItem[];
   models: CollectionItem[];
@@ -34,6 +35,8 @@ export function CollectionView({
   onAddPaint: () => void;
   onAddModel: () => void;
   onRetry?: () => void;
+  /** Resolve a recipe id to its palette swatches for the RECIPE column. */
+  recipeSwatches?: (recipeId: string) => string[];
 }) {
   return (
     <div className="flex h-full flex-col gap-6 p-6">
@@ -69,6 +72,7 @@ export function CollectionView({
               onAttachRecipe={onAttachRecipe}
               onRemove={onRemove}
               onAdd={onAddPaint}
+              recipeSwatches={recipeSwatches}
             />
           </Panel>
 

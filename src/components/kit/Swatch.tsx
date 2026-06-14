@@ -51,11 +51,26 @@ export function SwatchStrip({
       </button>
     );
   }
-  return (
-    <span className={cn("inline-flex gap-0.5", className)}>
+  const strip = (
+    <span className="inline-flex gap-0.5">
       {swatches.map((hex, i) => (
         <Swatch key={`${hex}-${i}`} hex={hex} size="sm" />
       ))}
     </span>
   );
+  // When an onAttach handler is supplied, the populated strip stays
+  // interactive so the painter can change the attached recipe.
+  if (onAttach) {
+    return (
+      <button
+        type="button"
+        onClick={onAttach}
+        aria-label="Change attached recipe"
+        className={cn("inline-flex rounded-none hover:opacity-80", className)}
+      >
+        {strip}
+      </button>
+    );
+  }
+  return <span className={cn("inline-flex gap-0.5", className)}>{strip}</span>;
 }

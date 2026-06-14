@@ -28,6 +28,7 @@ const {
   deleteProject,
   countProjectDescendants,
   setModelClass,
+  setProjectComplete,
 } = await import("@/lib/actions/projects");
 const { redirect } = await import("next/navigation");
 const { displayStatus } = await import("@/lib/progress");
@@ -616,5 +617,49 @@ describe("setModelClass", () => {
     // Original owner's row is untouched.
     const [unchanged] = await state.db!.select().from(projects);
     expect(unchanged!.modelClass).toBeNull();
+  });
+});
+
+describe("setProjectComplete (focus bench models stepper)", () => {
+  test("marking N complete raises the prior stages and respects the cascade", async () => {
+    const created = await createProject({ name: "Squad", type: "Unit", count: 10 });
+    const id = created.ok ? created.data.id : "";
+
+    const res = await setProjectComplete({ id, complete: 4 });
+    expect(res.ok).toBe(true);
+
+    const [row] = await state.db!.select().from(projects).where(eq(projects.id, id));
+    expect(row!.completeCount).toBe(4);
+    // Every prior stage raised to at least 4; total unchanged (already ≥ 4).
+    expect(row!.baseCount).toBe(4);
+    expect(row!.paintCount).toBe(4);
+    expect(row!.primeCount).toBe(4);
+    expect(row!.buildCount).toBe(4);
+    expect(row!.ownedCount).toBe(4);
+    expect(row!.count).toBe(10);
+  });
+
+  test("does not regress a stage the painter already advanced further", async () => {
+    const created = await createProject({ name: "Squad", type: "Unit", count: 10 });
+    const id = created.ok ? created.data.id : "";
+    // Advance build to 8 first via the cascade-aware count path is overkill;
+    // set it directly to simulate prior progress.
+    await state.db!
+      .update(projects)
+      .set({ ownedCount: 10, buildCount: 8 })
+      .where(eq(projects.id, id));
+
+    const res = await setProjectComplete({ id, complete: 3 });
+    expect(res.ok).toBe(true);
+
+    const [row] = await state.db!.select().from(projects).where(eq(projects.id, id));
+    expect(row!.completeCount).toBe(3);
+    expect(row!.buildCount).toBe(8); // preserved, not lowered
+    expect(row!.ownedCount).toBe(10);
+  });
+
+  test("rejects an unknown project", async () => {
+    const res = await setProjectComplete({ id: "nope", complete: 1 });
+    expect(res.ok).toBe(false);
   });
 });

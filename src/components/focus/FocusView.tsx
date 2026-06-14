@@ -32,7 +32,8 @@ export function FocusView({
   onRemoveInspo?: (id: string) => void;
 }) {
   const initialStep = project
-    ? Math.round((project.completionPercent / 100) * modelCount)
+    ? (project.modelsComplete ??
+      Math.round((project.completionPercent / 100) * modelCount))
     : 0;
   const [step, setStep] = useState(initialStep);
   const [inspoUrl, setInspoUrl] = useState("");

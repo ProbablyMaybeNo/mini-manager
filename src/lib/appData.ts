@@ -142,6 +142,8 @@ function mapProject(p: DbProject, swatches: string[]): KitProject {
     status: displayStatus(p),
     priority: PRIORITY_MAP[p.priority ?? "Medium"] ?? "Med",
     completionPercent: progressPercent(p),
+    modelCount: p.count,
+    modelsComplete: p.completeCount,
   };
 }
 
@@ -243,6 +245,7 @@ function mapCollectionItem(i: WishlistItem): CollectionItem {
     status: COLLECTION_STATUS_MAP[i.status ?? "WISHLIST"] ?? "OWNED",
     sourceUrl: i.sourceUrl ?? "",
     projectId: i.projectId ?? undefined,
+    recipeId: i.recipeId ?? undefined,
   };
 }
 

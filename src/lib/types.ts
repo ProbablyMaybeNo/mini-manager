@@ -35,6 +35,10 @@ export interface Project {
   priority: Priority;
   /** 0–100. For containers this is the host-computed roll-up. */
   completionPercent: number;
+  /** Total models in the project (the focus bench's progress denominator). */
+  modelCount?: number;
+  /** Models fully complete — seeds the focus bench's models stepper. */
+  modelsComplete?: number;
   children?: Project[];
 }
 
@@ -110,6 +114,8 @@ export interface CollectionItem {
   sourceUrl: string;
   quantity?: number;
   projectId?: string;
+  /** Attached recipe (paint rows) — the scheme this paint belongs to. */
+  recipeId?: string;
 }
 
 /* ----------------------------------------------------------------------------

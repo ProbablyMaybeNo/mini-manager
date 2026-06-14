@@ -395,6 +395,11 @@ export const wishlistItems = sqliteTable(
     projectId: text("project_id").references(() => projects.id, {
       onDelete: "set null",
     }),
+    /** COLLECTIONS — optional recipe attached to a paint row (the scheme it
+     *  belongs to). Cleared if the recipe is deleted. */
+    recipeId: text("recipe_id").references(() => recipes.id, {
+      onDelete: "set null",
+    }),
     title: text("title").notNull(),
     imageUrl: text("image_url"),
     sourceUrl: text("source_url"),

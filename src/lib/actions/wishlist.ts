@@ -45,6 +45,7 @@ const baseFields = {
   status: z.enum(wishlistStatuses).optional(),
   priority: z.enum(priorities).optional(),
   projectId: z.string().min(1).max(64).nullish(),
+  recipeId: z.string().min(1).max(64).nullish(),
   notesMd: z.string().max(10000).nullish(),
 } as const;
 
@@ -182,6 +183,7 @@ export async function updateWishlistItem(
   if (patch.status !== undefined) patchValues.status = patch.status;
   if (patch.priority !== undefined) patchValues.priority = patch.priority;
   if (patch.projectId !== undefined) patchValues.projectId = patch.projectId ?? null;
+  if (patch.recipeId !== undefined) patchValues.recipeId = patch.recipeId ?? null;
   if (patch.notesMd !== undefined) patchValues.notesMd = patch.notesMd ?? null;
 
   try {
