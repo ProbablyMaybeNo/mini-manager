@@ -25,13 +25,22 @@ export function ColourWheelTool({
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
       <Panel label="PICK" className="flex flex-col items-center gap-4 p-5">
+        {/* UX audit — a STEPPED conic (12 hard hue wedges) reads as the
+            brief's retro/pixel colour wheel rather than a smooth SaaS HSL
+            gradient. Concentric ring masks add the segmented "dial" look. */}
         <div
           className="h-40 w-40 rounded-full border border-cyan/40"
-          style={{ background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }}
+          style={{
+            background:
+              "conic-gradient(#ff0000 0deg 30deg,#ff8000 30deg 60deg,#ffe000 60deg 90deg,#80ff00 90deg 120deg,#00ff40 120deg 150deg,#00ffc0 150deg 180deg,#00e0ff 180deg 210deg,#0080ff 210deg 240deg,#2000ff 240deg 270deg,#8000ff 270deg 300deg,#ff00e0 300deg 330deg,#ff0060 330deg 360deg)",
+          }}
         >
           <div
             className="relative h-full w-full rounded-full"
-            style={{ background: "radial-gradient(circle, #06080a 18%, transparent 60%)" }}
+            style={{
+              background:
+                "radial-gradient(circle, #06080a 16%, transparent 17% 38%, rgba(6,8,10,0.55) 39% 40%, transparent 41% 62%, rgba(6,8,10,0.55) 63% 64%, transparent 65%)",
+            }}
           />
         </div>
         <label className="w-full">

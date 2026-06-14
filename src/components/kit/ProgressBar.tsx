@@ -10,7 +10,9 @@ const fillColor: Record<Accent, string> = {
   dim: "bg-fg-faint",
 };
 
-/** Solid progress bar + percent label. Accent shifts to green at 100%. */
+/** Solid progress bar + percent label. When no accent is given, the fill
+ *  ramps with completion (UX audit #1, matching the Figma mission-table):
+ *  red early → yellow mid → green near-done; empty bars stay dim. */
 export function ProgressBar({
   percent,
   accent,
@@ -23,7 +25,9 @@ export function ProgressBar({
   className?: string;
 }) {
   const pct = Math.max(0, Math.min(100, percent));
-  const tone: Accent = accent ?? (pct >= 100 ? "green" : "cyan");
+  const tone: Accent =
+    accent ??
+    (pct >= 67 ? "green" : pct >= 34 ? "yellow" : pct > 0 ? "red" : "dim");
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div

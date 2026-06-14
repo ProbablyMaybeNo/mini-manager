@@ -103,7 +103,7 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "text-[10px]",
+        "flex h-5 w-5 items-center justify-center text-xs leading-none",
         disabled ? "text-fg-faint/30" : "text-cyan hover:text-glow-cyan",
       )}
     >
