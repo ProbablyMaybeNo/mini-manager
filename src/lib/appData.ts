@@ -1,4 +1,5 @@
 import "server-only";
+import { listInventoryByUser } from "@/db/queries/inventory";
 import { listAllProjects } from "@/db/queries/projects";
 import { getProjectPalettesMap, listRecipesForTable } from "@/db/queries/recipes";
 import {
@@ -30,6 +31,28 @@ import type {
   Recipe as KitRecipe,
   SessionStats,
 } from "@/lib/types";
+
+/** The signed-in user's owned / wishlisted paint ids — the small,
+ *  serializable slice the Library route sends to the client, which loads the
+ *  catalog itself (static asset) and merges these flags in. */
+export interface InventoryFlags {
+  ownedIds: string[];
+  wishlistedIds: string[];
+}
+
+export async function loadInventoryFlags(
+  userId: string | null,
+): Promise<InventoryFlags> {
+  if (!userId) return { ownedIds: [], wishlistedIds: [] };
+  const inventory = await listInventoryByUser(userId);
+  const ownedIds: string[] = [];
+  const wishlistedIds: string[] = [];
+  for (const [paintId, entry] of inventory) {
+    if (entry.ownedCount > 0) ownedIds.push(paintId);
+    if (entry.isWishlisted) wishlistedIds.push(paintId);
+  }
+  return { ownedIds, wishlistedIds };
+}
 
 /**
  * APP-DATA — the real-backend implementation of the kit's data seam.
