@@ -33,7 +33,7 @@ export function AuthView({
           <BootSequence
             lines={[
               "MINI-MANAGER OS v1.0",
-              isSignUp ? "NEW USER REGISTRATION" : "AUTHENTICATING…",
+              isSignUp ? "NEW USER REGISTRATION" : "AWAITING CREDENTIALS",
             ]}
           />
         </div>

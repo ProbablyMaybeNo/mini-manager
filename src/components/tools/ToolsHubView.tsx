@@ -32,7 +32,7 @@ export function ToolsHubView() {
             <Panel
               label={t.title.toUpperCase()}
               cornerTicks
-              className="flex h-full flex-col gap-4 overflow-hidden p-6 transition-colors group-hover:border-cyan group-hover:glow-cyan"
+              className="flex h-full flex-col gap-4 p-6 transition-colors group-hover:border-cyan group-hover:glow-cyan"
             >
               <div className="relative aspect-[16/9] w-full overflow-hidden border border-cyan/20 bg-black">
                 <Image
