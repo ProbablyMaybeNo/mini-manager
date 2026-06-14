@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { LibraryView } from "@/components/library/LibraryView";
+import { AssignToRecipeDialog } from "@/components/recipe/AssignToRecipeDialog";
+import { useToast } from "@/components/kit";
 import { nearestMatches, similarInOtherBrands } from "@/mock/derive";
-import { COLOR_OPTIONS, filterPaints } from "@/mock/filterPaints";
+import { COLOR_OPTIONS, colorFamilyForHue, filterPaints } from "@/mock/filterPaints";
 import { EMPTY_LIBRARY_FILTER, type LibraryFilter, type Paint, type PaintType } from "@/lib/types";
 import { loadPaints } from "@/lib/paints/loader";
 import { setOwnedCount, toggleWishlistedPaint } from "@/lib/actions/inventory";
@@ -31,10 +33,13 @@ const PAINT_TYPE_MAP: Record<string, PaintType> = {
  * mutations are wired in a later phase; browse / filter / inspect is live.
  */
 export function LibraryClient({ flags }: { flags: InventoryFlags }) {
+  const { toast, node } = useToast();
   const [library, setLibrary] = useState<Paint[] | null>(null);
   const [filter, setFilter] = useState<LibraryFilter>(EMPTY_LIBRARY_FILTER);
   const [selected, setSelected] = useState<Paint | null>(null);
   const [ownedCount, setOwnedCount_] = useState(0);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [assigning, setAssigning] = useState<Paint | null>(null);
   const [, startTransition] = useTransition();
 
   /** Patch one paint's flags in the loaded catalog (optimistic). */
@@ -72,7 +77,7 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
     return () => {
       alive = false;
     };
-  }, [flags]);
+  }, [flags, reloadKey]);
 
   const paints = library ?? [];
   const filtered = useMemo(() => filterPaints(paints, filter), [paints, filter]);
@@ -124,6 +129,7 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
   }
 
   return (
+    <>
     <LibraryView
       paints={filtered}
       totalCount={paints.length}
@@ -148,9 +154,26 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
       onCopyHex={() => {
         if (selected) void navigator.clipboard?.writeText(selected.hex);
       }}
-      onAssignPaint={() => {}}
-      onJumpHue={() => {}}
-      onRetry={() => {}}
+      onAssignPaint={(p) => setAssigning(p)}
+      onJumpHue={(hue) =>
+        setFilter((f) => ({ ...f, colors: [colorFamilyForHue(hue)] }))
+      }
+      onRetry={() => {
+        setLibrary(null);
+        setReloadKey((k) => k + 1);
+      }}
     />
+    <AssignToRecipeDialog
+      open={assigning !== null}
+      swatches={
+        assigning
+          ? [{ hex: assigning.hex, paintId: assigning.id, name: assigning.name }]
+          : []
+      }
+      onClose={() => setAssigning(null)}
+      onAssigned={(recipeName) => toast(`Added to ${recipeName}`, "green")}
+    />
+    {node}
+    </>
   );
 }
