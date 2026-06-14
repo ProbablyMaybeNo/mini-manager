@@ -7,6 +7,7 @@ import { useMockData } from "@/mock/MockProvider";
 import { deriveDashboardSummary } from "@/mock/derive";
 import { zeroSessionStats } from "@/mock/fixtures";
 import { NewProjectPanel } from "./NewProjectPanel";
+import { ArmyImportPanel } from "./ArmyImportPanel";
 
 function DashboardRoute() {
   const data = useMockData();
@@ -14,6 +15,7 @@ function DashboardRoute() {
   const params = useSearchParams();
   const preview = params.get("state"); // loading | error | empty
   const [newOpen, setNewOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const isEmpty = preview === "empty";
   const status: DashboardStatus =
@@ -37,10 +39,11 @@ function DashboardRoute() {
         onOpenProject={(p) => router.push(`/focus?project=${p.id}`)}
         onAttachRecipe={() => router.push("/recipes")}
         onAddProject={() => setNewOpen(true)}
-        onUploadArmyList={() => setNewOpen(true)}
+        onUploadArmyList={() => setImportOpen(true)}
         onRetry={() => router.refresh()}
       />
       <NewProjectPanel open={newOpen} onClose={() => setNewOpen(false)} />
+      <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
     </>
   );
 }
