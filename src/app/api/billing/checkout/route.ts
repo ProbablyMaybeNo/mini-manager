@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 import { z } from "zod";
-import { currentUserId } from "@/lib/auth-stub";
+import { auth } from "@/auth";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import {
@@ -21,9 +21,12 @@ import { stripePriceId, stripeSecretKey } from "@/lib/billing/env";
  * Session for the requested price and hands the redirect URL back to the
  * client. The client does `window.location.href = url`.
  *
- * Returns 503 when Stripe isn't configured yet (no secret key / no price id
- * for the requested tier) so the /pricing page can fall back to /sign-up
- * pre-wire-up.
+ * Status contract (all JSON the /pricing client can act on):
+ *   401 — no session. The client bounces to sign-in carrying the upgrade
+ *         intent, then returns here. We must NOT server-redirect a fetch.
+ *   503 — Stripe isn't configured yet (no secret key / no price id); the
+ *         page falls back to /sign-up pre-wire-up.
+ *   502 — Stripe rejected the request (bad key / price / live↔test mismatch).
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +62,16 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
+  // Auth first. An unauthenticated fetch must receive a JSON 401 it can react
+  // to — a server-side redirect here would be followed opaquely by fetch (it
+  // gets the sign-in HTML), the client couldn't tell auth from failure, and
+  // the upgrade intent would be silently lost.
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return NextResponse.json({ error: "auth_required" }, { status: 401 });
+  }
+
   const secret = stripeSecretKey();
   const priceId = stripePriceId(priceKey);
   if (!secret || !priceId) {
@@ -67,9 +80,6 @@ export async function POST(req: Request): Promise<Response> {
       { status: 503 },
     );
   }
-
-  // Auth — redirects to /sign-in if there's no session.
-  const userId = await currentUserId();
 
   const rows = await db
     .select({

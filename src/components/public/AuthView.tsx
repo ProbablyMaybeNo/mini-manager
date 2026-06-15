@@ -11,9 +11,13 @@ export type AuthMode = "sign-in" | "sign-up";
 export function AuthView({
   mode,
   onSubmit,
+  from,
 }: {
   mode: AuthMode;
   onSubmit: (username: string, password: string) => void;
+  /** Post-auth return path, preserved across the sign-in ↔ sign-up switch
+   *  link so an in-progress upgrade survives switching forms. */
+  from?: string;
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +28,10 @@ export function AuthView({
   const valid = username.trim().length >= 3 && password.length >= 8;
 
   const isSignUp = mode === "sign-up";
+  const switchTo = isSignUp ? "/sign-in" : "/sign-up";
+  const switchHref = from
+    ? `${switchTo}?from=${encodeURIComponent(from)}`
+    : switchTo;
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-6">
@@ -71,7 +79,7 @@ export function AuthView({
 
         <div className="mt-4 flex items-center justify-between font-mono text-[11px]">
           <Link
-            href={isSignUp ? "/sign-in" : "/sign-up"}
+            href={switchHref}
             className="text-cyan hover:underline"
           >
             {isSignUp ? "Have an account? Sign in" : "New here? Create account"}
