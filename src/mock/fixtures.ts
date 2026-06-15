@@ -16,9 +16,26 @@ import type {
  * ------------------------------------------------------------------------- */
 
 export const mockProjects: Project[] = [
-  { id: "p1", title: "Space Marines", type: "Army", recipeSwatches: ["#3a6ea5", "#1c2e44", "#c7c7c7", "#d4a017"], status: "PAINTING", priority: "High", completionPercent: 45 },
+  {
+    id: "p1", title: "Space Marines", type: "Army", recipeSwatches: ["#3a6ea5", "#1c2e44", "#c7c7c7", "#d4a017"], status: "PAINTING", priority: "High", completionPercent: 45, modelCount: 25,
+    children: [
+      {
+        id: "p1-u1", title: "Intercessor Squad", type: "Unit", recipeSwatches: ["#3a6ea5", "#1c2e44", "#c7c7c7"], status: "PAINTING", priority: "High", completionPercent: 60, modelCount: 10,
+        children: [
+          { id: "p1-u1-m1", title: "Sergeant Tarvix", type: "Model", recipeSwatches: ["#3a6ea5", "#d4a017", "#c7c7c7"], status: "COMPLETE", priority: "High", completionPercent: 100, modelCount: 1 },
+          { id: "p1-u1-m2", title: "Heavy Bolter", type: "Model", recipeSwatches: ["#3a6ea5", "#1c2e44"], status: "PAINTING", priority: "Med", completionPercent: 40, modelCount: 1 },
+        ],
+      },
+      { id: "p1-u2", title: "Terminator Squad", type: "Unit", recipeSwatches: ["#1c2e44", "#d4a017"], status: "PRIMING", priority: "Med", completionPercent: 15, modelCount: 5 },
+    ],
+  },
   { id: "p2", title: "Ork Boyz", type: "Unit", recipeSwatches: ["#4a7c30", "#2e4d1f", "#8b5a2b"], status: "BUILDING", priority: "Med", completionPercent: 20 },
-  { id: "p3", title: "Maggotkin", type: "Army", recipeSwatches: ["#6b7d3a", "#aab85a", "#5a3d2b", "#c4424a"], status: "BASING", priority: "High", completionPercent: 78 },
+  {
+    id: "p3", title: "Maggotkin", type: "Army", recipeSwatches: ["#6b7d3a", "#aab85a", "#5a3d2b", "#c4424a"], status: "BASING", priority: "High", completionPercent: 78, modelCount: 18,
+    children: [
+      { id: "p3-u1", title: "Putrid Blightkings", type: "Unit", recipeSwatches: ["#6b7d3a", "#5a3d2b"], status: "BASING", priority: "High", completionPercent: 85, modelCount: 5 },
+    ],
+  },
   { id: "p4", title: "Skaven Clanrats", type: "Warband", recipeSwatches: ["#7a5230", "#3a2a1a"], status: "PRIMING", priority: "Low", completionPercent: 12 },
   { id: "p5", title: "Eldar Aspect", type: "Unit", recipeSwatches: ["#1f6f6f", "#0d3b3b", "#e0c050", "#ffffff"], status: "COMPLETE", priority: "Med", completionPercent: 100 },
   { id: "p6", title: "Chaos Tank", type: "Model", recipeSwatches: ["#7a1f1f", "#2a2a2a", "#b5b5b5"], status: "OWNED", priority: "Low", completionPercent: 0 },

@@ -24,6 +24,7 @@ export interface DashboardViewProps {
   activity: ActivityEntry[];
   status?: DashboardStatus;
   onOpenProject?: (project: Project) => void;
+  onFocusProject?: (project: Project) => void;
   onAttachRecipe?: (project: Project) => void;
   onAddProject?: () => void;
   onUploadArmyList?: () => void;
@@ -40,6 +41,7 @@ export function DashboardView({
   activity,
   status = "ready",
   onOpenProject,
+  onFocusProject,
   onAttachRecipe,
   onAddProject,
   onUploadArmyList,
@@ -49,6 +51,9 @@ export function DashboardView({
   const [selected, setSelected] = useState<Project | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
 
+  // Row click manages the project (opens the inspector) — it deliberately no
+  // longer jumps to the focus bench. Reaching focus is now an explicit
+  // per-row action (the ◎ icon) or the inspector's "Start session" button.
   function openProject(p: Project) {
     setSelected(p);
     setInspectorOpen(true);
@@ -73,6 +78,7 @@ export function DashboardView({
                   projects={projects}
                   selectedId={selected?.id}
                   onOpenProject={openProject}
+                  onFocusProject={(p) => onFocusProject?.(p)}
                   onAttachRecipe={(p) => onAttachRecipe?.(p)}
                 />
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
