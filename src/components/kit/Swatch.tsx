@@ -31,10 +31,15 @@ export function Swatch({
 export function SwatchStrip({
   swatches,
   onAttach,
+  ariaLabel,
   className,
 }: {
   swatches: Hex[];
   onAttach?: () => void;
+  /** Accessible label for the interactive strip. Lets a caller describe the
+   *  action (e.g. "Edit <recipe>") instead of wrapping the strip in its own
+   *  button — nesting a <button> inside a <button> is invalid HTML. */
+  ariaLabel?: string;
   className?: string;
 }) {
   if (swatches.length === 0) {
@@ -42,6 +47,7 @@ export function SwatchStrip({
       <button
         type="button"
         onClick={onAttach}
+        aria-label={ariaLabel}
         className={cn(
           "border border-dashed border-fg-faint px-2 py-0.5 font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint hover:border-cyan hover:text-cyan",
           className,
@@ -65,7 +71,7 @@ export function SwatchStrip({
       <button
         type="button"
         onClick={onAttach}
-        aria-label="Change attached recipe"
+        aria-label={ariaLabel ?? "Change attached recipe"}
         className={cn("inline-flex rounded-none hover:opacity-80", className)}
       >
         {strip}
