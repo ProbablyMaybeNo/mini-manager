@@ -28,6 +28,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The DB client opens file:./data/local.db at import time, so unit tests
+      # that transitively import db modules need the schema to exist first.
+      - run: npm run db:migrate
       - run: npm run typecheck
       - run: npm run test:unit
       - run: npm run build
