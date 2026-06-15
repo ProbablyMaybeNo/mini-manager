@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The app reads these at boot. CI uses a throwaway local SQLite file and a
+  # deterministic, non-secret auth secret — no production credentials.
+  DATABASE_URL: "file:./data/local.db"
+  AUTH_SECRET: "ci-deterministic-not-a-secret"
+  AUTH_URL: "http://localhost:3000"
+
+jobs:
+  quality:
+    name: Typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run build
+
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    env:
+      # The test-only sign-in route is gated on this; the Playwright webServer
+      # also sets it, but we set it here so the dev server inherits it cleanly.
+      ALLOW_TEST_AUTH: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Build the SQLite schema from the committed migrations before the
+      # webServer boots (the dev server does not run migrations itself).
+      - run: npm run db:migrate
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
