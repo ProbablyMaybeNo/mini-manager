@@ -2,63 +2,71 @@ import { expect, test } from "@playwright/test";
 import { freshTestEmail, signInAs } from "./_helpers/auth";
 
 /**
- * M4 — Tools smoke E2E
+ * M4 — Tools smoke E2E (current tool set).
  *
- * Verifies the V2-BUILD-PLAN §11.4 ship criterion: every tool ends in
- * "send to recipe" in one click. This spec walks the wheel path (the
- * heaviest Phase 4 surface) end-to-end:
+ * The hub lists four colour utilities (American "Color" spelling):
+ * Color Wheel, Color Match, Color Dropper, Color Stacking. This spec
+ * checks the hub renders all four, then walks the wheel path: open
+ * /tools/wheel, confirm the harmony picker + "Send to Recipe" action,
+ * and that Send to Recipe routes to /recipes.
  *
- *   1. Navigate /tools → wheel
- *   2. Wheel canvas is interactive (drag the primary pick).
- *   3. Open the Send to recipe modal from the footer action.
+ * REBUILD note: the old "Send to recipe" MODAL is gone — the wheel's
+ * "Send to Recipe" button now navigates straight to /recipes, so we
+ * assert the navigation rather than a dialog.
  */
 
 test.describe("M4 — Tools", () => {
-  test("M4.1 — landing → wheel → send-to-recipe modal opens", async ({
+  test("M4.1 hub lists the four tools; wheel → Send to Recipe routes to /recipes", async ({
     page,
   }) => {
     await signInAs(page, freshTestEmail());
 
-    // 1. Tools landing renders the four cards.
-    await page.goto("/tools");
-    await expect(page.getByRole("heading", { name: /TOOLS/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Colour Wheel/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Match/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Eyedropper/i })).toBeVisible();
-    // Phase 12 P12.14 renamed Gradient → Layering. URL path stays
-    // /tools/gradient for back-compat; the visible label is "Layering".
-    await expect(page.getByRole("link", { name: /Layering/i })).toBeVisible();
-
-    // 2. Wheel route loads with its canvas + harmony picker.
-    await page.getByRole("link", { name: /Colour Wheel/i }).click();
+    await page.goto("/tools", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /COLOUR WHEEL/i }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole("img", { name: /Colour wheel/i })).toBeVisible();
-    await expect(
-      page.getByRole("radiogroup", { name: /Harmony mode/i }),
-    ).toBeVisible();
+      page.getByRole("heading", { name: /^TOOLS$/ }),
+    ).toBeVisible({ timeout: 30_000 });
 
-    // 3. Trigger send-to-recipe. The footer button is wired to open
-    //    the modal; with the default wheel state the button is enabled
-    //    (two complementary swatches → non-empty palette).
-    await page
-      .getByRole("button", { name: /Send to recipe/i })
-      .first()
-      .click();
-    await expect(
-      page.getByRole("dialog", { name: /SEND TO RECIPE/i }),
-    ).toBeVisible({ timeout: 10_000 });
+    // Four tool cards, addressed by their hrefs (each link's name is the
+    // uppercased tool title).
+    await expect(page.locator('a[href="/tools/wheel"]')).toBeVisible();
+    await expect(page.locator('a[href="/tools/match"]')).toBeVisible();
+    await expect(page.locator('a[href="/tools/dropper"]')).toBeVisible();
+    await expect(page.locator('a[href="/tools/stacking"]')).toBeVisible();
 
-    // The modal has both tabs; the painter starts with no recipes so
-    // the "New recipe" tab is the active surface — verify it.
-    await expect(page.getByRole("tab", { name: /New recipe/i })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /Existing recipe/i })).toBeVisible();
-
-    // Esc closes the modal.
-    await page.keyboard.press("Escape");
+    // Open the wheel.
+    await page.locator('a[href="/tools/wheel"]').click();
+    await page.waitForURL(/\/tools\/wheel/, { timeout: 30_000 });
     await expect(
-      page.getByRole("dialog", { name: /SEND TO RECIPE/i }),
-    ).not.toBeVisible();
+      page.getByRole("heading", { name: /^COLOR WHEEL$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    // Wheel controls: the hue input + harmony picker are interactive.
+    await expect(page.getByLabel(/^Hue$/i)).toBeVisible();
+    await expect(page.getByText(/^Harmony$/i)).toBeVisible();
+
+    // Send to Recipe routes to the recipes index (no modal anymore).
+    await page.getByRole("button", { name: /Send to Recipe/i }).click();
+    await page.waitForURL(/\/recipes/, { timeout: 30_000 });
+    await expect(
+      page.getByRole("heading", { name: /^RECIPE$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+  });
+
+  test("M4.2 each tool route loads its own screen", async ({ page }) => {
+    await signInAs(page, freshTestEmail("tools"));
+
+    const routes: Array<{ path: string; heading: RegExp }> = [
+      { path: "/tools/wheel", heading: /^COLOR WHEEL$/ },
+      { path: "/tools/match", heading: /^COLOR MATCH$/ },
+      { path: "/tools/dropper", heading: /^COLOR DROPPER$/ },
+      { path: "/tools/stacking", heading: /^COLOR STACKING$/ },
+    ];
+
+    for (const r of routes) {
+      await page.goto(r.path, { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByRole("heading", { name: r.heading }),
+      ).toBeVisible({ timeout: 30_000 });
+    }
   });
 });

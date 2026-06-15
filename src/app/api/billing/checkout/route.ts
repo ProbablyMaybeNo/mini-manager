@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 import { z } from "zod";
-import { currentUserId } from "@/lib/auth-stub";
+import { auth } from "@/auth";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import {
@@ -21,9 +21,12 @@ import { stripePriceId, stripeSecretKey } from "@/lib/billing/env";
  * Session for the requested price and hands the redirect URL back to the
  * client. The client does `window.location.href = url`.
  *
- * Returns 503 when Stripe isn't configured yet (no secret key / no price id
- * for the requested tier) so the /pricing page can fall back to /sign-up
- * pre-wire-up.
+ * Status contract (all JSON the /pricing client can act on):
+ *   401 — no session. The client bounces to sign-in carrying the upgrade
+ *         intent, then returns here. We must NOT server-redirect a fetch.
+ *   503 — Stripe isn't configured yet (no secret key / no price id); the
+ *         page falls back to /sign-up pre-wire-up.
+ *   502 — Stripe rejected the request (bad key / price / live↔test mismatch).
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +62,16 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
+  // Auth first. An unauthenticated fetch must receive a JSON 401 it can react
+  // to — a server-side redirect here would be followed opaquely by fetch (it
+  // gets the sign-in HTML), the client couldn't tell auth from failure, and
+  // the upgrade intent would be silently lost.
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return NextResponse.json({ error: "auth_required" }, { status: 401 });
+  }
+
   const secret = stripeSecretKey();
   const priceId = stripePriceId(priceKey);
   if (!secret || !priceId) {
@@ -67,9 +80,6 @@ export async function POST(req: Request): Promise<Response> {
       { status: 503 },
     );
   }
-
-  // Auth — redirects to /sign-in if there's no session.
-  const userId = await currentUserId();
 
   const rows = await db
     .select({
@@ -88,39 +98,59 @@ export async function POST(req: Request): Promise<Response> {
 
   const stripe = new Stripe(secret);
 
-  // Ensure the user has a Stripe customer, creating + persisting on first
-  // checkout. Email is nullable on the free tier — pass what we have so the
-  // Stripe dashboard has something human-readable.
-  let customerId = user.stripeCustomerId;
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email ?? undefined,
-      name: user.username ?? undefined,
-      metadata: { userId },
+  try {
+    // Ensure the user has a Stripe customer, creating + persisting on first
+    // checkout. Email is nullable on the free tier — pass what we have so the
+    // Stripe dashboard has something human-readable.
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email ?? undefined,
+        name: user.username ?? undefined,
+        metadata: { userId },
+      });
+      customerId = customer.id;
+      await db
+        .update(users)
+        .set({ stripeCustomerId: customerId })
+        .where(eq(users.id, userId));
+    }
+
+    const origin = originFromHeaders(req);
+    const mode: Stripe.Checkout.SessionCreateParams.Mode = isOneTimePriceKey(
+      priceKey,
+    )
+      ? "payment"
+      : "subscription";
+
+    const session = await stripe.checkout.sessions.create({
+      mode,
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${origin}/user?upgraded=1`,
+      cancel_url: `${origin}/pricing`,
+      client_reference_id: userId,
+      metadata: { userId, priceKey },
     });
-    customerId = customer.id;
-    await db
-      .update(users)
-      .set({ stripeCustomerId: customerId })
-      .where(eq(users.id, userId));
+
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "Checkout session had no redirect URL" },
+        { status: 502 },
+      );
+    }
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    // A Stripe rejection (invalid/revoked key, a price id that doesn't exist
+    // in this account, or a live/test mismatch) used to surface as an opaque
+    // 500 with an empty body. Log the full error for Vercel runtime logs and
+    // return the Stripe message so the failure is diagnosable from the client.
+    const message =
+      err instanceof Error ? err.message : "Unknown Stripe error";
+    console.error("[billing/checkout] Stripe error:", err);
+    return NextResponse.json(
+      { error: "Could not start checkout", detail: message },
+      { status: 502 },
+    );
   }
-
-  const origin = originFromHeaders(req);
-  const mode: Stripe.Checkout.SessionCreateParams.Mode = isOneTimePriceKey(
-    priceKey,
-  )
-    ? "payment"
-    : "subscription";
-
-  const session = await stripe.checkout.sessions.create({
-    mode,
-    customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/user?upgraded=1`,
-    cancel_url: `${origin}/pricing`,
-    client_reference_id: userId,
-    metadata: { userId, priceKey },
-  });
-
-  return NextResponse.json({ url: session.url });
 }

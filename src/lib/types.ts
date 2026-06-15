@@ -199,6 +199,7 @@ export interface PricingTier {
  * ------------------------------------------------------------------------- */
 export type NavKey =
   | "dashboard"
+  | "focus"
   | "library"
   | "recipe"
   | "tools"

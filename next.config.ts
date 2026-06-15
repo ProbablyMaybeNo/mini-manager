@@ -20,18 +20,20 @@ const config: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
-  // FOCUS-FOLD (2026-06-08) — the standalone /planner (Focus) route was
-  // removed and the bench folded into the /projects dashboard. Permanently
-  // redirect any inbound /planner link (bookmarks, the old PWA shortcut,
-  // shared URLs) to the dashboard so they land on the relocated FOCUS
-  // section instead of a 404.
+  // Legacy-route redirects. Each of these paths existed in an earlier
+  // information architecture; permanently redirect inbound links
+  // (bookmarks, the old PWA shortcut, shared URLs) to their current home
+  // so they land on a live page instead of a 404.
+  //   /planner     — the standalone Focus route, now served at /focus.
+  //   /projects    — the old dashboard path, now /dashboard.
+  //   /collections — plural alias of the COLLECTION route.
+  //   /wishlist    — the wishlist was folded into COLLECTION.
   async redirects() {
     return [
-      {
-        source: "/planner",
-        destination: "/projects",
-        permanent: true,
-      },
+      { source: "/planner", destination: "/focus", permanent: true },
+      { source: "/projects", destination: "/dashboard", permanent: true },
+      { source: "/collections", destination: "/collection", permanent: true },
+      { source: "/wishlist", destination: "/collection", permanent: true },
     ];
   },
   // Long-cache /data/paints.json — it's a 2-3 MB static catalog that

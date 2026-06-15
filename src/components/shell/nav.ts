@@ -9,6 +9,7 @@ export interface NavItem {
 /** Primary rail items (top). */
 export const MAIN_NAV: NavItem[] = [
   { key: "dashboard", label: "DASHBOARD", path: "/dashboard" },
+  { key: "focus", label: "FOCUS", path: "/focus" },
   { key: "library", label: "LIBRARY", path: "/library" },
   { key: "recipe", label: "RECIPE", path: "/recipes" },
   { key: "tools", label: "TOOLS", path: "/tools" },

@@ -5,10 +5,23 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FocusView } from "@/components/focus/FocusView";
 import { useToast } from "@/components/kit";
 import { useMockData } from "@/mock/MockProvider";
-import type { InspoRef } from "@/lib/types";
+import type { InspoRef, Project } from "@/lib/types";
 import { logSession } from "@/lib/actions/paintSessions";
 import { addInspo, deleteInspo } from "@/lib/actions/recipeInspo";
 import { setProjectComplete } from "@/lib/actions/projects";
+
+/** Depth-first lookup so a focus target can be any tier — an Army, or a
+ *  nested Unit / Model that only exists inside its parent's `children`. */
+function findProjectById(list: Project[], id: string): Project | undefined {
+  for (const p of list) {
+    if (p.id === id) return p;
+    if (p.children) {
+      const hit = findProjectById(p.children, id);
+      if (hit) return hit;
+    }
+  }
+  return undefined;
+}
 
 function FocusRoute() {
   const data = useMockData();
@@ -21,7 +34,7 @@ function FocusRoute() {
 
   const project = isEmpty
     ? null
-    : (projectId && data.projects.find((p) => p.id === projectId)) || data.projects[0] || null;
+    : (projectId && findProjectById(data.projects, projectId)) || data.projects[0] || null;
 
   const recipe = project
     ? data.recipes.find((r) => r.assignedProjectId === project.id) ?? data.recipes[0] ?? null

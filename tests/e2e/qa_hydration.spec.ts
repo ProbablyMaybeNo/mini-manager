@@ -2,21 +2,16 @@ import { expect, test } from "@playwright/test";
 import { freshTestEmail, signInAs } from "./_helpers/auth";
 
 /**
- * M10 — Hydration / SSR integrity
+ * M10 — Hydration / SSR integrity.
  *
- * Regression guard for the class of bug where a component renders one thing
- * on the server and another on the client, triggering a React hydration
- * mismatch (which throws away the server HTML and re-renders). These show up
- * only as console errors, so the rest of the suite stays green while the bug
- * ships. This mission loads representative pages and fails on any hydration
- * complaint.
+ * Regression guard for server/client render mismatches (a class of bug
+ * that only surfaces as a console error while the rest of the suite stays
+ * green). This mission loads the current core app routes and fails on any
+ * React hydration complaint.
  *
- * Origin: the (since-removed) desktop StatusBar derived NET status from
- * `navigator.onLine` during render. Modern Node exposes a global
- * `navigator` with `onLine === undefined`, so SSR rendered `NET · OFF`
- * while the browser hydrated to `NET · ON`. The pattern lives on as a
- * general guard: any future client-only render that leaks into SSR fails
- * this mission across the core pages below.
+ * Uses waitUntil:"domcontentloaded" (never networkidle — the dev server's
+ * first compile of each route is slow on this filesystem) plus a short
+ * settle so React can flush any hydration warning to the console.
  */
 
 const HYDRATION_PATTERN =
@@ -41,11 +36,19 @@ test.describe("M10 — Hydration / SSR integrity", () => {
 
     await signInAs(page, freshTestEmail("hydration"));
 
-    // Each carries the desktop chrome (NavRail) + its own page shell.
-    for (const path of ["/projects", "/library", "/recipes", "/tools"]) {
-      await page.goto(path, { waitUntil: "networkidle" });
+    // Each route carries the app chrome (SidebarRail / MobileTopBar) plus
+    // its own page shell.
+    for (const path of [
+      "/dashboard",
+      "/library",
+      "/recipes",
+      "/tools",
+      "/collection",
+      "/focus",
+    ]) {
+      await page.goto(path, { waitUntil: "domcontentloaded" });
       // Give React a beat to flush any hydration warning to the console.
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
     }
 
     expect(

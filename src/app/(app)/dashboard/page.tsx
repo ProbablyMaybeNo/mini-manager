@@ -35,8 +35,8 @@ function DashboardRoute() {
         events={events}
         activity={activity}
         status={status}
-        onStartSession={() => router.push("/focus")}
-        onOpenProject={(p) => router.push(`/focus?project=${p.id}`)}
+        onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
+        onFocusProject={(p) => router.push(`/focus?project=${p.id}`)}
         onAttachRecipe={() => router.push("/recipes")}
         onAddProject={() => setNewOpen(true)}
         onUploadArmyList={() => setImportOpen(true)}

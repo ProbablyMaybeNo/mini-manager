@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * M9.3 — Sign-up happy path
+ * M9.3 — Sign-up happy path (current AuthView).
  *
- * Free-tier sign-up is username + password only. After submit the
- * server action mints a session cookie and the client redirects to
- * /projects.
+ * The free-tier auth UI is username + password only (no email, no
+ * confirm-password, no live username-availability pill). The sign-up
+ * screen renders "NEW USER REGISTRATION" inside the SYS ▸ ACCESS panel
+ * and its submit button reads "Create account". On success the server
+ * action mints a session and redirects to /dashboard.
  */
 
 function freshUsername(): string {
@@ -13,36 +15,42 @@ function freshUsername(): string {
 }
 
 test.describe("M9.3 — Credentials sign-up", () => {
-  test("create account → land on /projects", async ({ page }) => {
+  test("create account → land on /dashboard", async ({ page }) => {
     const username = freshUsername();
 
-    await page.goto("/sign-up");
-    await expect(page.getByRole("region", { name: "Create account" })).toBeVisible();
+    await page.goto("/sign-up", { waitUntil: "domcontentloaded" });
 
-    // Page-level h1 names the action (UX-V3-005). Logo is decorative
-    // (alt='', aria-hidden) per UX-V3-007.
-    await expect(
-      page.getByRole("heading", { level: 1, name: /create your mini manager account/i }),
-    ).toBeAttached();
+    // The registration boot line identifies the sign-up screen.
+    await expect(page.getByText(/NEW USER REGISTRATION/i)).toBeVisible({
+      timeout: 30_000,
+    });
 
     await page.getByLabel(/username/i).fill(username);
-    await page.getByLabel(/^password$/i).fill("longenoughpw");
-    await page.getByLabel(/confirm password/i).fill("longenoughpw");
-
-    // Wait for the live-check pill to flip to "available"
-    await expect(page.getByText(/available/i)).toBeVisible({ timeout: 5_000 });
+    await page.getByLabel(/password/i).fill("longenoughpw");
 
     await page.getByRole("button", { name: /create account/i }).click();
 
-    await page.waitForURL(/\/projects/);
-    await expect(page).toHaveURL(/\/projects/);
+    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
+    await expect(
+      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+    ).toBeVisible({ timeout: 30_000 });
   });
 
-  test("rejects a reserved username", async ({ page }) => {
-    await page.goto("/sign-up");
+  test("client-side validation blocks a too-short password", async ({
+    page,
+  }) => {
+    await page.goto("/sign-up", { waitUntil: "domcontentloaded" });
+    await expect(page.getByText(/NEW USER REGISTRATION/i)).toBeVisible({
+      timeout: 30_000,
+    });
 
-    await page.getByLabel(/username/i).fill("admin");
-    // Live check pill should render the validation error
-    await expect(page.getByText(/reserved/i)).toBeVisible({ timeout: 5_000 });
+    await page.getByLabel(/username/i).fill(freshUsername());
+    await page.getByLabel(/password/i).fill("short"); // < 8 chars
+    await page.getByRole("button", { name: /create account/i }).click();
+
+    // Submit is a no-op while invalid — the inline field error appears and
+    // we stay on the sign-up screen (no redirect to /dashboard).
+    await expect(page.getByText(/min 8 characters/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/sign-up/);
   });
 });

@@ -147,6 +147,34 @@ function mapProject(p: DbProject, swatches: string[]): KitProject {
   };
 }
 
+/**
+ * Nest the flat project list into the kit's parent → children tree using
+ * `parentId`. Only top-level rows are returned; each carries its sub-projects
+ * under `children`, recursively (Army → Unit → Model). A child whose parent
+ * isn't in the list (e.g. an archived parent) is surfaced as a root so it's
+ * never silently dropped. Order within a tier follows the query order.
+ */
+function buildProjectTree(
+  rows: ReadonlyArray<DbProject>,
+  palettes: Map<string, string[]>,
+): KitProject[] {
+  const nodes = new Map<string, KitProject>();
+  for (const p of rows) {
+    nodes.set(p.id, mapProject(p, palettes.get(p.id) ?? []));
+  }
+  const roots: KitProject[] = [];
+  for (const p of rows) {
+    const node = nodes.get(p.id)!;
+    const parent = p.parentId ? nodes.get(p.parentId) : undefined;
+    if (parent) {
+      (parent.children ??= []).push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+  return roots;
+}
+
 /** ms-epoch / Date → ISO calendar day (YYYY-MM-DD, UTC). */
 function isoDay(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -319,7 +347,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
 
   return {
     signedIn: true,
-    projects: projects.map((p) => mapProject(p, palettes.get(p.id) ?? [])),
+    projects: buildProjectTree(projects, palettes),
     recipes: recipeRows.map((r) => mapRecipe(r, inspoMap.get(r.id) ?? [])),
     collectionPaints: collectionPaints.map(mapCollectionItem),
     collectionModels: collectionModels.map(mapCollectionItem),

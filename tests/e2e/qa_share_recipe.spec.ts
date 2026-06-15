@@ -2,117 +2,103 @@ import { expect, test } from "@playwright/test";
 import { freshTestEmail, signInAs } from "./_helpers/auth";
 
 /**
- * M5.1 — Share recipe (the V2-BUILD-PLAN §11.5 ship criterion)
+ * M5 — Create + share a recipe.
  *
- * Walks the end-to-end flow that defines Phase 5:
+ * The recipe create flow is name-first: "+ Recipe" on the index opens the
+ * "New recipe" slide-out → "Create & open editor" routes to the editor
+ * draft (/recipes/new?name=…). The draft only persists after SAVE, then
+ * appears on the index. Sharing is a one-click "Share" in the editor that
+ * publishes the recipe, mints a public /r/<slug>, and copies the link to
+ * the clipboard (toast: "Public link copied to clipboard").
  *
- *   1. Alice signs in → creates a recipe → opens the Share modal →
- *      publishes it → copies the URL out.
- *   2. Bob (separate browser context, isolated cookies) opens that URL
- *      in a private/no-account state, sees the recipe read-only.
- *   3. Bob signs in (still in his isolated context) → clicks the Clone
- *      CTA → lands on /recipes/<newId> with the cloned recipe content.
- *   4. The clone is independent: same content but a brand-new id, and
- *      no `publicSlug` on the clone (only the source carries one).
+ * REBUILD note: the previous publish/Share-modal + public-page Clone flow
+ * no longer exists — the public /r/<slug> page is a read-only view with
+ * no Clone CTA and no sign-in gate. We assert the create+save+publish path
+ * and that the published link renders the recipe read-only in a fresh,
+ * unauthenticated context.
  */
 
-test.describe("M5 — Share + Clone", () => {
-  test("M5.1 — Alice publishes → Bob clones in a fresh context", async ({
+test.describe("M5 — Recipe create + share", () => {
+  test("M5.1 create → save → publish → public link renders read-only", async ({
     browser,
   }) => {
-    // ---- Alice ----
-    const aliceContext = await browser.newContext();
-    const alicePage = await aliceContext.newPage();
-    await signInAs(alicePage, freshTestEmail("alice"));
-
-    // Create a recipe and grab its id from the URL. A fresh account lands
-    // on the empty state, where the create affordance reads "Create your
-    // first recipe"; a populated account shows "New recipe". Match either.
-    await alicePage.goto("/recipes");
-    await alicePage
-      .getByRole("button", { name: /New recipe|Create your first recipe/i })
-      .first()
-      .click();
-    await alicePage.waitForURL(/\/recipes\/[a-zA-Z0-9_-]+/, {
-      timeout: 10_000,
+    const ctx = await browser.newContext({
+      permissions: ["clipboard-read", "clipboard-write"],
     });
-    const aliceRecipeUrl = alicePage.url();
-    const aliceRecipeId =
-      aliceRecipeUrl.match(/\/recipes\/([a-zA-Z0-9_-]+)/)?.[1] ?? "";
-    expect(aliceRecipeId.length).toBeGreaterThan(0);
+    const page = await ctx.newPage();
+    await signInAs(page, freshTestEmail("alice"));
 
-    // Name the recipe — ShareModal disables [ publish ] when the name is
-    // empty or the default "Untitled recipe" placeholder. (Surfaced as
-    // Bug B4: migration regression — the standalone repo's recipe-create
-    // landing page no longer ships a default name; pre-split it did.)
-    await alicePage
-      .getByRole("textbox", { name: /recipe name/i })
-      .fill(`Alice Test Recipe ${Date.now()}`);
-    await alicePage.getByRole("textbox", { name: /recipe name/i }).blur();
+    const recipeName = `QA Recipe ${Date.now()}`;
 
-    // Open the share modal.
-    await alicePage
-      .getByRole("button", { name: /share recipe/i })
-      .first()
-      .click();
+    // --- Create (name-first) ---
+    await page.goto("/recipes", { waitUntil: "domcontentloaded" });
     await expect(
-      alicePage.getByRole("heading", { name: /share recipe/i }),
-    ).toBeVisible({ timeout: 10_000 });
+      page.getByRole("heading", { name: /^RECIPE$/ }),
+    ).toBeVisible({ timeout: 30_000 });
 
-    // Hit Publish.
-    await alicePage
-      .getByRole("button", { name: /^Publish$/i })
+    // Fresh account → empty-state "+ Create your first recipe"; either
+    // affordance opens the same name-first panel. Retry until the panel
+    // mounts (guards a pre-hydration click).
+    const createBtn = page
+      .getByRole("button", { name: /\+ Create your first recipe|\+ Recipe/i })
+      .first();
+    const namePanel = page.getByRole("dialog", { name: /New recipe/i });
+    await expect(async () => {
+      await createBtn.click();
+      await expect(namePanel).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    await namePanel.locator('input[name="recipe-name"]').fill(recipeName);
+    await namePanel
+      .getByRole("button", { name: /Create.*open editor/i })
       .click();
 
-    // The URL input appears with the public slug once the action settles.
-    const urlInput = alicePage
-      .locator("input[readonly]")
-      .filter({ hasText: "" })
-      .first();
-    await expect(urlInput).toBeVisible({ timeout: 10_000 });
-    const publicUrl = await urlInput.inputValue();
-    expect(publicUrl).toMatch(/\/r\/[a-z0-9]{10}$/);
+    // --- Editor draft ---
+    await page.waitForURL(/\/recipes\/new\?name=/, { timeout: 30_000 });
+    await expect(
+      page.getByRole("heading", { name: /^RECIPE EDITOR$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByLabel(/recipe name/i)).toHaveValue(recipeName);
 
-    // ---- Bob (separate context — Playwright analogue of "different
-    // device") ----
-    const bobContext = await browser.newContext();
-    const bobPage = await bobContext.newPage();
+    // --- Save → back on the index, recipe now listed ---
+    await page.getByRole("button", { name: /^Save$/ }).click();
+    await page.waitForURL(/\/recipes$/, { timeout: 30_000 });
+    // The row has both a name button and an "Edit <name>" swatch button —
+    // match the name exactly.
+    const recipeLink = page.getByRole("button", { name: recipeName, exact: true });
+    await expect(recipeLink).toBeVisible({ timeout: 15_000 });
+
+    // --- Open the saved recipe + publish via the editor's Share button ---
+    await recipeLink.click();
+    await page.waitForURL(/\/recipes\/[^/]+$/, { timeout: 30_000 });
+    await expect(
+      page.getByRole("heading", { name: /^RECIPE EDITOR$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: /^Share$/ }).click();
+
+    // The publish toast confirms the link was copied.
+    await expect(
+      page.getByText(/Public link copied to clipboard/i),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const publicUrl = await page.evaluate(() =>
+      navigator.clipboard.readText(),
+    );
+    expect(publicUrl).toMatch(/\/r\/[a-z0-9]+$/i);
     const publicPath = new URL(publicUrl).pathname;
 
-    // Unauthenticated — the public path must render the recipe.
-    await bobPage.goto(publicPath);
+    // --- Fresh, unauthenticated context reads the public recipe page ---
+    const bobCtx = await browser.newContext();
+    const bobPage = await bobCtx.newPage();
+    await bobPage.goto(publicPath, { waitUntil: "domcontentloaded" });
+
+    // Read-only public view: recipe name as the page h1, "Made with Mini
+    // Manager" footer. No auth required (the /r/* path is matcher-excluded).
     await expect(
-      bobPage.getByRole("link", { name: /Sign in/i }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(bobPage.getByRole("heading", { level: 1 })).toBeVisible();
+      bobPage.getByRole("heading", { level: 1, name: recipeName }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(bobPage.getByText(/Made with/i)).toBeVisible();
 
-    // Now Bob signs in (with a fresh email so he's not Alice).
-    await signInAs(bobPage, freshTestEmail("bob"));
-    await bobPage.goto(publicPath);
-
-    // The CloneButton renders for non-owner authenticated visitors.
-    await bobPage
-      .getByRole("button", { name: /Clone to my recipes/i })
-      .click();
-
-    // Bob lands on his own /recipes/<newId>.
-    await bobPage.waitForURL(/\/recipes\/[a-zA-Z0-9_-]+/, {
-      timeout: 15_000,
-    });
-    const bobRecipeId =
-      bobPage.url().match(/\/recipes\/([a-zA-Z0-9_-]+)/)?.[1] ?? "";
-
-    // Clone has a fresh id — NOT the same as the source.
-    expect(bobRecipeId.length).toBeGreaterThan(0);
-    expect(bobRecipeId).not.toBe(aliceRecipeId);
-
-    // The cloned recipe page renders Bob's owned editor — Share/Delete
-    // buttons should be present.
-    await expect(
-      bobPage.getByRole("button", { name: /share recipe/i }),
-    ).toBeVisible({ timeout: 10_000 });
-
-    await aliceContext.close();
-    await bobContext.close();
+    await ctx.close();
+    await bobCtx.close();
   });
 });
