@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { accentBg, accentText, eventKindAccent, type Accent } from "@/lib/palette";
 import type { CalendarEvent } from "@/lib/types";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
@@ -26,14 +27,17 @@ export function MiniCalendar({
     timeZone: "UTC",
   });
 
-  const eventDays = new Set(
-    events
-      .filter((e) => {
-        const d = new Date(e.date);
-        return d.getUTCFullYear() === year && d.getUTCMonth() === month;
-      })
-      .map((e) => new Date(e.date).getUTCDate()),
-  );
+  // Map each day-of-month in view to the accent of its (first) event. The
+  // earliest-listed event wins when a day has several; the dot/number take
+  // that kind's colour so deadlines read red, tournaments cyan, etc.
+  const dayAccent = new Map<number, Accent>();
+  for (const e of events) {
+    const d = new Date(e.date);
+    if (d.getUTCFullYear() === year && d.getUTCMonth() === month) {
+      const day = d.getUTCDate();
+      if (!dayAccent.has(day)) dayAccent.set(day, eventKindAccent[e.kind]);
+    }
+  }
 
   const cells: (number | null)[] = [
     ...Array.from({ length: firstDay }, () => null),
@@ -51,23 +55,29 @@ export function MiniCalendar({
             {d}
           </div>
         ))}
-        {cells.map((day, i) => (
-          <div
-            key={i}
-            className={cn(
-              "relative flex aspect-square items-center justify-center font-mono text-[9px] tabular-nums",
-              day == null && "opacity-0",
-              day != null && eventDays.has(day)
-                ? "text-cyan text-glow-cyan"
-                : "text-fg-dim",
-            )}
-          >
-            {day}
-            {day != null && eventDays.has(day) && (
-              <span className="absolute bottom-0.5 h-0.5 w-0.5 bg-cyan" />
-            )}
-          </div>
-        ))}
+        {cells.map((day, i) => {
+          const accent = day != null ? dayAccent.get(day) : undefined;
+          return (
+            <div
+              key={i}
+              className={cn(
+                "relative flex aspect-square items-center justify-center font-mono text-[9px] tabular-nums",
+                day == null && "opacity-0",
+                accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg-dim",
+              )}
+            >
+              {day}
+              {accent && (
+                <span
+                  className={cn(
+                    "absolute bottom-0.5 h-1 w-1 rounded-full",
+                    accentBg[accent],
+                  )}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

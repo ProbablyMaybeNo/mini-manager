@@ -1,57 +1,22 @@
-"use client";
-
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { DashboardView, type DashboardStatus } from "@/components/dashboard/DashboardView";
-import { useMockData } from "@/mock/MockProvider";
-import { deriveDashboardSummary } from "@/mock/derive";
+import { currentUserId } from "@/lib/auth-stub";
+import { loadAppData } from "@/lib/appData";
 import { zeroSessionStats } from "@/mock/fixtures";
-import { NewProjectPanel } from "./NewProjectPanel";
-import { ArmyImportPanel } from "./ArmyImportPanel";
+import { DashboardClient } from "./DashboardClient";
 
-function DashboardRoute() {
-  const data = useMockData();
-  const router = useRouter();
-  const params = useSearchParams();
-  const preview = params.get("state"); // loading | error | empty
-  const [newOpen, setNewOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
+// The dashboard reflects the signed-in user's live data, so it must render
+// per-request rather than being statically cached.
+export const dynamic = "force-dynamic";
 
-  const isEmpty = preview === "empty";
-  const status: DashboardStatus =
-    preview === "loading" ? "loading" : preview === "error" ? "error" : "ready";
-
-  const projects = isEmpty ? [] : data.projects;
-  const events = isEmpty ? [] : data.events;
-  const activity = isEmpty ? [] : data.activity;
-  const stats = isEmpty ? zeroSessionStats : data.sessionStats;
-  const summary = deriveDashboardSummary(projects, stats);
+export default async function DashboardPage() {
+  const userId = await currentUserId();
+  const data = await loadAppData(userId);
 
   return (
-    <>
-      <DashboardView
-        summary={summary}
-        projects={projects}
-        events={events}
-        activity={activity}
-        status={status}
-        onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
-        onFocusProject={(p) => router.push(`/focus?project=${p.id}`)}
-        onAttachRecipe={() => router.push("/recipes")}
-        onAddProject={() => setNewOpen(true)}
-        onUploadArmyList={() => setImportOpen(true)}
-        onRetry={() => router.refresh()}
-      />
-      <NewProjectPanel open={newOpen} onClose={() => setNewOpen(false)} />
-      <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
-    </>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={null}>
-      <DashboardRoute />
-    </Suspense>
+    <DashboardClient
+      projects={data.projects ?? []}
+      events={data.events ?? []}
+      activity={data.activity ?? []}
+      sessionStats={data.sessionStats ?? zeroSessionStats}
+    />
   );
 }
