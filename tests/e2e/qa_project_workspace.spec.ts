@@ -56,13 +56,14 @@ test.describe("M3 — Project workspace lifecycle", () => {
     const row = page.getByRole("button", { name: `Manage ${name}` });
     await expect(row).toBeVisible({ timeout: 15_000 });
 
-    // Clicking the row body opens the read-only inspector (a dialog
+    // Clicking the row body opens the project workspace inspector (a dialog
     // labelled with the project title).
     await row.click();
     const inspector = page.getByRole("dialog", { name });
     await expect(inspector).toBeVisible();
     await expect(inspector.getByRole("button", { name: /▸ Focus/i })).toBeVisible();
-    await inspector.getByRole("button", { name: /^Close$/i }).click();
+    // The panel closes via its ✕ (aria-label "Close panel").
+    await inspector.getByRole("button", { name: /close panel/i }).click();
     await expect(inspector).toBeHidden();
 
     // The per-row focus icon navigates to the focus bench for this project.

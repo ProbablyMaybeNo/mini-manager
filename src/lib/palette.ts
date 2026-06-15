@@ -1,4 +1,9 @@
-import type { Priority, ProjectStatus, ProjectType } from "./types";
+import type {
+  CalendarEventKind,
+  Priority,
+  ProjectStatus,
+  ProjectType,
+} from "./types";
 
 /** Accent keys map 1:1 onto the Tailwind token colours generated from globals.css. */
 export type Accent = "cyan" | "green" | "yellow" | "purple" | "red" | "dim";
@@ -10,6 +15,15 @@ export const accentText: Record<Accent, string> = {
   purple: "text-purple",
   red: "text-red",
   dim: "text-fg-dim",
+};
+
+export const accentBg: Record<Accent, string> = {
+  cyan: "bg-cyan",
+  green: "bg-green",
+  yellow: "bg-yellow",
+  purple: "bg-purple",
+  red: "bg-red",
+  dim: "bg-fg-faint",
 };
 
 export const accentBorder: Record<Accent, string> = {
@@ -44,6 +58,14 @@ export const priorityAccent: Record<Priority, Accent> = {
   Low: "dim",
   Med: "yellow",
   High: "red",
+};
+
+/** Calendar event kind → accent (shared by the calendar dots + the ticker). */
+export const eventKindAccent: Record<CalendarEventKind, Accent> = {
+  tournament: "cyan",
+  deadline: "red",
+  battle: "yellow",
+  other: "purple",
 };
 
 /** Minutes → "H:MM" for the dashboard time-total / focus totals. */
