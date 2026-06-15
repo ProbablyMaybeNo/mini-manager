@@ -10,10 +10,9 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * persists via createWishlistItem; the new row appears as a link in the
  * paint table and survives a reload.
  *
- * REBUILD note: the old /wishlist and /collections aliases are gone.
- * Neither is redirected in the current app (next.config only redirects
- * /planner), so both 404 when signed in. We assert that real behaviour
- * rather than the stale redirect contract.
+ * REBUILD note: the legacy /wishlist and /collections aliases now
+ * permanently redirect to /collection (next.config redirects). We assert
+ * both land on the canonical COLLECTION route.
  */
 
 test.describe("M2 — Collection add", () => {
@@ -54,25 +53,19 @@ test.describe("M2 — Collection add", () => {
     ).toBeVisible({ timeout: 30_000 });
   });
 
-  test("M2.2 /collections (plural) and /wishlist are no longer live routes", async ({
+  test("M2.2 /collections (plural) and /wishlist redirect to /collection", async ({
     page,
   }) => {
     await signInAs(page, freshTestEmail("legacy"));
 
-    // Neither alias redirects to /collection anymore — both 404 (the app
-    // serves its themed not-found page). Assert the URL does NOT bounce to
-    // /collection and the canonical route still works.
+    // Both legacy aliases permanently redirect to the canonical COLLECTION
+    // route — assert the URL lands on /collection and the page renders.
     for (const legacy of ["/collections", "/wishlist"]) {
       await page.goto(legacy, { waitUntil: "domcontentloaded" });
-      await expect(page).not.toHaveURL(/\/collection(\?|$|\/)/);
-      await expect(page.getByText(/PAGE NOT FOUND/i)).toBeVisible({
-        timeout: 30_000,
-      });
+      await expect(page).toHaveURL(/\/collection(\?|$|\/)/);
+      await expect(
+        page.getByRole("heading", { name: /^COLLECTION$/ }),
+      ).toBeVisible({ timeout: 30_000 });
     }
-
-    await page.goto("/collection", { waitUntil: "domcontentloaded" });
-    await expect(
-      page.getByRole("heading", { name: /^COLLECTION$/ }),
-    ).toBeVisible({ timeout: 30_000 });
   });
 });
