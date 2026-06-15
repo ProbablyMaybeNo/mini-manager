@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, SwatchStrip } from "@/components/kit";
+import { Button, EmptyState, SwatchStrip } from "@/components/kit";
 import type { Project, Recipe } from "@/lib/types";
 
 const COLS = ["Name", "Recipe", "Project", "Share"];
@@ -22,15 +22,12 @@ export function RecipeIndexTable({
 }) {
   if (recipes.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className="font-osd text-sm uppercase tracking-[0.18em] text-fg-dim">
-          No recipes yet
-        </p>
-        <p className="font-mono text-xs text-fg-faint">
-          A recipe is a repeatable paint scheme you can attach to a project and share.
-        </p>
-        <Button onClick={onCreate}>+ Create your first recipe</Button>
-      </div>
+      <EmptyState
+        glyph="⌖"
+        title="No recipes yet"
+        hint="A recipe is a repeatable paint scheme you can attach to a project and share."
+        action={{ label: "+ Create your first recipe", onClick: onCreate }}
+      />
     );
   }
 

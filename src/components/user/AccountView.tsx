@@ -13,10 +13,12 @@ export function AccountView({
   profile,
   onSave,
   onChangePassword,
+  onDeleteAccount,
 }: {
   profile: AccountProfile;
   onSave: (next: AccountProfile) => void;
   onChangePassword: () => void;
+  onDeleteAccount?: () => void;
 }) {
   const [username, setUsername] = useState(profile.username);
   const [email, setEmail] = useState(profile.recoveryEmail);
@@ -64,6 +66,21 @@ export function AccountView({
           </div>
         </Panel>
       </div>
+
+      {onDeleteAccount && (
+        <Panel label="DANGER ZONE" accent="red" className="flex flex-col gap-3 p-5">
+          <p className="font-mono text-xs text-fg-dim">
+            Deleting your account permanently removes your projects, recipes,
+            collection, and everything else. This can’t be undone — export your
+            data first if you want a copy.
+          </p>
+          <div>
+            <Button variant="danger" onClick={onDeleteAccount}>
+              Delete account…
+            </Button>
+          </div>
+        </Panel>
+      )}
     </div>
   );
 }
