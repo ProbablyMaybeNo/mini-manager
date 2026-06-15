@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/cn";
 import {
+  EmptyState,
   PriorityTag,
   ProgressBar,
   StatusText,
@@ -25,14 +26,11 @@ export function ProjectsTable({
 }) {
   if (projects.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 py-12 text-center">
-        <p className="font-osd text-sm uppercase tracking-[0.18em] text-fg-dim">
-          No projects yet
-        </p>
-        <p className="font-mono text-xs text-fg-faint">
-          Add a project or upload an army list to get started.
-        </p>
-      </div>
+      <EmptyState
+        glyph="◳"
+        title="No projects yet"
+        hint="Add a project or upload an army list to get started — your roster shows up here."
+      />
     );
   }
 

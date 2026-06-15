@@ -9,6 +9,7 @@ export { Input, SearchField, HexField } from "./Input";
 export { SlideOutPanel } from "./SlideOutPanel";
 export { ModalDialog } from "./ModalDialog";
 export { PromptDialog } from "./PromptDialog";
+export { EmptyState } from "./EmptyState";
 export { useToast } from "./Toast";
 export { MiniCalendar } from "./MiniCalendar";
 export { ActivityFeed } from "./ActivityFeed";

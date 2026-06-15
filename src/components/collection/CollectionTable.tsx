@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, SwatchStrip } from "@/components/kit";
+import { Button, EmptyState, SwatchStrip } from "@/components/kit";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { StatusDropdown } from "./StatusDropdown";
 
@@ -62,13 +62,14 @@ export function CollectionTable({
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={cols.length} className="px-3 py-10 text-center">
-                <p className="font-osd text-sm uppercase tracking-[0.18em] text-fg-dim">
-                  No {label.toLowerCase()}s yet
-                </p>
-                <p className="mt-1 font-mono text-xs text-fg-faint">
-                  Paste a store URL above to add your first {label.toLowerCase()}.
-                </p>
+              <td colSpan={cols.length} className="px-3 py-4">
+                <EmptyState
+                  glyph={kind === "paint" ? "▤" : "◈"}
+                  title={`No ${label.toLowerCase()}s yet`}
+                  hint={`Paste a store URL above, or add your first ${label.toLowerCase()} by hand.`}
+                  action={{ label: `+ Add ${label.toLowerCase()}`, onClick: onAdd }}
+                  className="py-8"
+                />
               </td>
             </tr>
           ) : (

@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { AccountView } from "@/components/user/AccountView";
+import { Button, Input, ModalDialog } from "@/components/kit";
 import { setRecoveryEmail } from "@/lib/auth/recoveryEmail";
 import { requestPasswordReset } from "@/lib/auth/passwordReset";
+import { deleteAccount } from "@/lib/actions/account";
 
 export function AccountClient({
   username,
@@ -13,7 +15,30 @@ export function AccountClient({
   recoveryEmail: string;
 }) {
   const [notice, setNotice] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const [, startSave] = useTransition();
+
+  // Require the exact username to be typed — guards against an accidental
+  // destructive click.
+  const confirmed = confirmText.trim() === username;
+
+  function runDelete() {
+    if (!confirmed || pending) return;
+    setDeleteError(null);
+    startTransition(async () => {
+      const res = await deleteAccount();
+      if (!res.ok) {
+        setDeleteError(res.error);
+        return;
+      }
+      // The session row cascaded away with the account; force a full reload
+      // to the landing page so no stale client state lingers.
+      window.location.href = "/";
+    });
+  }
 
   return (
     <div className="relative">
@@ -31,7 +56,7 @@ export function AccountClient({
           // Username changes aren't a supported mutation (it's the login
           // identity); persist the recovery email, which IS editable.
           setNotice(null);
-          startTransition(async () => {
+          startSave(async () => {
             const res = await setRecoveryEmail({ email: next.recoveryEmail });
             setNotice(
               res.ok
@@ -44,14 +69,68 @@ export function AccountClient({
           // The kit's flow emails a secure change link (reset link) to the
           // verified recovery email.
           setNotice(null);
-          startTransition(async () => {
+          startSave(async () => {
             await requestPasswordReset({ username });
             setNotice(
               "If your account has a verified recovery email, a password-change link is on its way.",
             );
           });
         }}
+        onDeleteAccount={() => {
+          setDeleteError(null);
+          setConfirmText("");
+          setConfirmOpen(true);
+        }}
       />
+
+      <ModalDialog
+        open={confirmOpen}
+        onClose={() => {
+          if (!pending) setConfirmOpen(false);
+        }}
+        title="Delete account"
+        breadcrumb="DANGER ZONE"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={pending}
+              onClick={() => setConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={!confirmed || pending}
+              onClick={runDelete}
+            >
+              {pending ? "Deleting…" : "Delete forever"}
+            </Button>
+          </div>
+        }
+      >
+        <p className="mb-3 font-mono text-xs text-fg-dim">
+          This permanently deletes your account and all of its data. To
+          confirm, type your username{" "}
+          <span className="text-red">{username}</span> below.
+        </p>
+        <Input
+          name="confirm-username"
+          autoFocus
+          placeholder={username}
+          value={confirmText}
+          disabled={pending}
+          onChange={(e) => setConfirmText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && runDelete()}
+        />
+        {deleteError && (
+          <p className="mt-2 font-mono text-xs text-red" role="alert">
+            ▸ {deleteError}
+          </p>
+        )}
+      </ModalDialog>
     </div>
   );
 }
