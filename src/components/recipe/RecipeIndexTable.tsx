@@ -60,9 +60,11 @@ export function RecipeIndexTable({
                 </button>
               </td>
               <td className="px-3 py-3">
-                <button type="button" onClick={() => onOpenRecipe(r)} aria-label={`Edit ${r.name}`}>
-                  <SwatchStrip swatches={r.slots.map((s) => s.swatch)} onAttach={() => onOpenRecipe(r)} />
-                </button>
+                <SwatchStrip
+                  swatches={r.slots.map((s) => s.swatch)}
+                  onAttach={() => onOpenRecipe(r)}
+                  ariaLabel={`Edit ${r.name}`}
+                />
               </td>
               <td className="px-3 py-3">
                 <select
