@@ -34,6 +34,18 @@ export interface DashboardViewProps {
 
 const TAGLINE = "Project hub, everything you need to manage your painting progress.";
 
+/** Find a project anywhere in the tree by id (rows + their sub-projects). */
+function findProject(list: Project[], id: string): Project | null {
+  for (const p of list) {
+    if (p.id === id) return p;
+    if (p.children) {
+      const hit = findProject(p.children, id);
+      if (hit) return hit;
+    }
+  }
+  return null;
+}
+
 export function DashboardView({
   summary,
   projects,
@@ -48,14 +60,18 @@ export function DashboardView({
   onStartSession,
   onRetry,
 }: DashboardViewProps) {
-  const [selected, setSelected] = useState<Project | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+
+  // Derive the selected project from the live tree (not a snapshot) so an
+  // inline edit + router.refresh() shows fresh data in the open panel.
+  const selected = selectedId ? findProject(projects, selectedId) : null;
 
   // Row click manages the project (opens the inspector) — it deliberately no
   // longer jumps to the focus bench. Reaching focus is now an explicit
   // per-row action (the ◎ icon) or the inspector's "Start session" button.
   function openProject(p: Project) {
-    setSelected(p);
+    setSelectedId(p.id);
     setInspectorOpen(true);
     onOpenProject?.(p);
   }
