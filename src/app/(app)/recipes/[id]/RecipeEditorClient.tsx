@@ -8,6 +8,25 @@ import type { Paint, Project, Recipe } from "@/lib/types";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
 import { publishRecipe } from "@/lib/actions/recipeSharing";
+import {
+  UNSAVED_CHANGES_MESSAGE,
+  useUnsavedChangesGuard,
+} from "@/lib/useUnsavedChangesGuard";
+
+/** Stable signature of the editable recipe content, for dirty-checking. */
+function recipeSignature(r: Recipe): string {
+  return JSON.stringify({
+    name: r.name,
+    assignedProjectId: r.assignedProjectId ?? null,
+    slots: r.slots.map((s) => ({
+      paintId: s.paintId,
+      swatch: s.swatch,
+      layer: s.layer,
+      note: s.note ?? null,
+    })),
+    inspo: r.inspo.map((i) => i.url),
+  });
+}
 
 /**
  * Recipe editor controller. The recipe (real slots) + projects come from the
@@ -25,7 +44,18 @@ export function RecipeEditorClient({
   const { toast, node } = useToast();
   const [recipe, setRecipe] = useState<Recipe>(initial);
   const [paints, setPaints] = useState<Paint[]>([]);
+  const [saved, setSaved] = useState(false);
   const [, startTransition] = useTransition();
+
+  // An unsaved "new" draft is dirty as soon as it has a name or any slots
+  // (leaving would discard it); an existing recipe is dirty once edited.
+  // `saved` disarms the guard for the post-save redirect.
+  const isNew = recipe.id === "new";
+  const hasContent = recipe.name.trim().length > 0 || recipe.slots.length > 0;
+  const dirty =
+    !saved &&
+    (isNew ? hasContent : recipeSignature(recipe) !== recipeSignature(initial));
+  useUnsavedChangesGuard(dirty);
 
   useEffect(() => {
     let alive = true;
@@ -52,7 +82,10 @@ export function RecipeEditorClient({
         })),
         inspo: recipe.inspo.map((r) => r.url),
       });
-      if (res.ok) router.push("/recipes");
+      if (res.ok) {
+        setSaved(true); // disarm the unsaved-changes guard for the redirect
+        router.push("/recipes");
+      }
     });
   }
 
@@ -82,7 +115,10 @@ export function RecipeEditorClient({
         onChange={setRecipe}
         onShare={share}
         onSave={persist}
-        onBack={() => router.push("/recipes")}
+        onBack={() => {
+          if (dirty && !window.confirm(UNSAVED_CHANGES_MESSAGE)) return;
+          router.push("/recipes");
+        }}
       />
       {node}
     </>
