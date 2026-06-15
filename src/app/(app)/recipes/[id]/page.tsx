@@ -5,7 +5,7 @@ import { RecipeEditorClient } from "./RecipeEditorClient";
 import { RecipeNotFound } from "./RecipeNotFound";
 
 function blankRecipe(name: string): Recipe {
-  return { id: "new", name: name || "Untitled recipe", slots: [], inspoLinks: [], notes: "" };
+  return { id: "new", name: name || "Untitled recipe", slots: [], inspo: [], notes: "" };
 }
 
 /**

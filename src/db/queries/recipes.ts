@@ -128,6 +128,33 @@ export async function listInspoForRecipe(
     .orderBy(asc(recipeInspo.position));
 }
 
+/**
+ * All inspo rows for the owner's recipes in one round-trip, grouped by
+ * recipe id and kept in position order. Used by the dashboard recipe
+ * mapper so the focus bench can render + remove existing inspo by id.
+ */
+export async function getInspoMapForOwner(
+  userId: string,
+): Promise<Map<string, { id: string; url: string }[]>> {
+  const rows = await db
+    .select({
+      id: recipeInspo.id,
+      url: recipeInspo.url,
+      recipeId: recipeInspo.recipeId,
+    })
+    .from(recipeInspo)
+    .innerJoin(recipes, eq(recipeInspo.recipeId, recipes.id))
+    .where(eq(recipes.ownerId, userId))
+    .orderBy(asc(recipeInspo.position));
+  const map = new Map<string, { id: string; url: string }[]>();
+  for (const r of rows) {
+    const list = map.get(r.recipeId);
+    if (list) list.push({ id: r.id, url: r.url });
+    else map.set(r.recipeId, [{ id: r.id, url: r.url }]);
+  }
+  return map;
+}
+
 export interface RecipesGrouped {
   standalone: ReadonlyArray<Recipe>;
   byProject: ReadonlyArray<{ projectId: string; recipes: Recipe[] }>;

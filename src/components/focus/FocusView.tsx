@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, Input, Panel, ProgressBar } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
-import type { Project, Recipe, SessionStats } from "@/lib/types";
+import type { InspoRef, Project, Recipe, SessionStats } from "@/lib/types";
 import { AddPaintCard, PaintCard } from "./PaintCard";
 import { Stopwatch } from "./Stopwatch";
 
@@ -12,6 +12,7 @@ export function FocusView({
   recipe,
   stats,
   modelCount,
+  inspo,
   onLogSession,
   onStepChange,
   onAddPaint,
@@ -22,17 +23,19 @@ export function FocusView({
   recipe: Recipe | null;
   stats: SessionStats;
   modelCount: number;
+  /** Controlled inspo list (parent owns persistence + optimistic state). */
+  inspo: InspoRef[];
   onLogSession: (seconds: number) => void;
   onStepChange?: (step: number) => void;
   onAddPaint?: () => void;
   onAddInspo?: (url: string) => void;
-  onRemoveInspo?: (index: number) => void;
+  onRemoveInspo?: (id: string) => void;
 }) {
   const initialStep = project
-    ? Math.round((project.completionPercent / 100) * modelCount)
+    ? (project.modelsComplete ??
+      Math.round((project.completionPercent / 100) * modelCount))
     : 0;
   const [step, setStep] = useState(initialStep);
-  const [inspo, setInspo] = useState<string[]>(recipe?.inspoLinks ?? []);
   const [inspoUrl, setInspoUrl] = useState("");
 
   const TAGLINE =
@@ -61,7 +64,6 @@ export function FocusView({
   function addInspo() {
     const url = inspoUrl.trim();
     if (!url) return;
-    setInspo((l) => [...l, url]);
     onAddInspo?.(url);
     setInspoUrl("");
   }
@@ -156,22 +158,19 @@ export function FocusView({
         </div>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-7">
           {Array.from({ length: Math.max(7, inspo.length) }).map((_, i) => {
-            const url = inspo[i];
+            const ref = inspo[i];
             return (
               <div
-                key={i}
+                key={ref?.id || i}
                 className="group relative flex aspect-square items-center justify-center border border-cyan/40 bg-bg-raised/30 p-1"
               >
-                {url ? (
+                {ref ? (
                   <>
-                    <span className="truncate font-mono text-[9px] text-fg-dim">{url}</span>
+                    <span className="truncate font-mono text-[9px] text-fg-dim">{ref.url}</span>
                     <button
                       type="button"
                       aria-label={`Remove reference ${i + 1}`}
-                      onClick={() => {
-                        setInspo((l) => l.filter((_, k) => k !== i));
-                        onRemoveInspo?.(i);
-                      }}
+                      onClick={() => onRemoveInspo?.(ref.id)}
                       className="absolute right-0.5 top-0.5 font-osd text-[10px] text-fg-faint hover:text-red"
                     >
                       ✕

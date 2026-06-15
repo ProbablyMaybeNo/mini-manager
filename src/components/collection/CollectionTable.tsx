@@ -28,6 +28,7 @@ export function CollectionTable({
   onAttachRecipe,
   onRemove,
   onAdd,
+  recipeSwatches,
 }: {
   kind: CollectionKind;
   items: CollectionItem[];
@@ -37,6 +38,7 @@ export function CollectionTable({
   onAttachRecipe: (item: CollectionItem) => void;
   onRemove: (item: CollectionItem) => void;
   onAdd: () => void;
+  recipeSwatches?: (recipeId: string) => string[];
 }) {
   const cols = kind === "paint" ? PAINT_COLS : MODEL_COLS;
   const label = kind === "paint" ? "Paint" : "Model";
@@ -95,7 +97,12 @@ export function CollectionTable({
                 <td className="px-3 py-2 font-mono text-xs tabular-nums text-fg">{item.price}</td>
                 {kind === "paint" ? (
                   <td className="px-3 py-2">
-                    <SwatchStrip swatches={[]} onAttach={() => onAttachRecipe(item)} />
+                    <SwatchStrip
+                      swatches={
+                        item.recipeId ? (recipeSwatches?.(item.recipeId) ?? []) : []
+                      }
+                      onAttach={() => onAttachRecipe(item)}
+                    />
                   </td>
                 ) : (
                   <td className="px-3 py-2">

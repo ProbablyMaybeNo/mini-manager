@@ -3,7 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
-import { recipes, recipeSlots, type TechniqueKey } from "@/db/schema";
+import { recipes, recipeSlots, recipeInspo, type TechniqueKey } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { createRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { addSlot } from "@/lib/actions/recipeSlots";
@@ -52,6 +52,9 @@ export async function saveRecipe(input: {
   name: string;
   attachedProjectId?: string | null;
   slots: SaveRecipeSlot[];
+  /** Inspiration URLs, in order. Omit to leave existing inspo untouched;
+   *  pass an array (even empty) to replace the recipe's inspo wholesale. */
+  inspo?: string[];
 }): Promise<ActionResult<{ id: string }>> {
   const userId = await currentUserId();
   let recipeId: string;
@@ -86,6 +89,18 @@ export async function saveRecipe(input: {
       customColorHex: usePaint ? null : slot.hex,
     });
     if (!res.ok) return res;
+  }
+
+  // Replace the inspo set wholesale when the caller supplies one (the
+  // editor is the source of truth on save). Stored in array order.
+  if (input.inspo !== undefined) {
+    await db.delete(recipeInspo).where(eq(recipeInspo.recipeId, recipeId));
+    const urls = input.inspo.map((u) => u.trim()).filter(Boolean);
+    for (let i = 0; i < urls.length; i++) {
+      await db
+        .insert(recipeInspo)
+        .values({ recipeId, position: i, url: urls[i] });
+    }
   }
 
   revalidatePath("/recipes");

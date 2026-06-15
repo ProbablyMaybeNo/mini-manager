@@ -105,7 +105,7 @@ export const mockRecipes: Recipe[] = [
     shareUrl: "https://mini.mgr/r/abc",
     notes:
       "Airbrush blue base, mix 50/50 thinner and paint.\nDry brush green over the model — keep the bristles very slightly moist.\nNuln Oil into recesses only, then edge-highlight panels.",
-    inspoLinks: ["https://example.com/ultra-1.jpg"],
+    inspo: [{ id: "ins1", url: "https://example.com/ultra-1.jpg" }],
     slots: [
       { paintId: "pt6", swatch: "#f2f2f2", brand: "Army Painter", name: "Matt White Primer", layer: "Undercoat", note: "Thin coats from 45°." },
       { paintId: "pt2", swatch: "#0d407f", brand: "Citadel", name: "Macragge Blue", layer: "Base", note: "Airbrush 50/50 thinner." },
@@ -115,7 +115,7 @@ export const mockRecipes: Recipe[] = [
   {
     id: "r2",
     name: "Speedy Ork Skin",
-    inspoLinks: [],
+    inspo: [],
     slots: [
       { paintId: "pt5", swatch: "#3f8a3a", brand: "Army Painter", name: "Speed Green", layer: "Contrast", note: "One thick coat." },
     ],

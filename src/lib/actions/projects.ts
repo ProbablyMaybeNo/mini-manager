@@ -260,6 +260,75 @@ export async function updateProjectCount(
 }
 
 /* ============================================================
+   setProjectComplete — the focus bench's "models painted" stepper.
+   Sets how many models are fully complete, raising (never lowering)
+   the earlier stage counters so the strict cascade CHECK holds. Marking
+   N complete implies at least N models reached every prior stage; an
+   existing higher stage count is preserved.
+   ============================================================ */
+
+const setCompleteSchema = z.object({
+  id: z.string().min(1).max(64),
+  complete: z.number().int().min(0).max(9999),
+});
+
+export async function setProjectComplete(
+  raw: z.infer<typeof setCompleteSchema>,
+): Promise<ActionResult<{ id: string; complete: number }>> {
+  const parsed = setCompleteSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid count",
+    };
+  }
+  const { id, complete } = parsed.data;
+  const userId = await currentUserId();
+
+  const rows = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const project = rows[0];
+  if (!project) return { ok: false, error: "Project not found" };
+
+  // Raise each prior stage to at least the next so monotonicity holds,
+  // without regressing any stage the painter already advanced further.
+  const based = Math.max(project.baseCount, complete);
+  const painted = Math.max(project.paintCount, based);
+  const primed = Math.max(project.primeCount, painted);
+  const built = Math.max(project.buildCount, primed);
+  const owned = Math.max(project.ownedCount, built);
+  const total = Math.max(project.count, owned);
+
+  try {
+    await db
+      .update(projects)
+      .set({
+        count: total,
+        ownedCount: owned,
+        buildCount: built,
+        primeCount: primed,
+        paintCount: painted,
+        baseCount: based,
+        completeCount: complete,
+      })
+      .where(eq(projects.id, id));
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${id}`);
+    revalidatePath("/focus");
+    if (project.parentId) revalidatePath(`/projects/${project.parentId}`);
+    return { ok: true, data: { id, complete } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to update progress",
+    };
+  }
+}
+
+/* ============================================================
    R7-008 — inline-rename the project from its detail page.
    Replicates the recipe header's contentEditable <h1> pattern.
    ============================================================ */

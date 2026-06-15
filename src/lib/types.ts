@@ -35,6 +35,10 @@ export interface Project {
   priority: Priority;
   /** 0–100. For containers this is the host-computed roll-up. */
   completionPercent: number;
+  /** Total models in the project (the focus bench's progress denominator). */
+  modelCount?: number;
+  /** Models fully complete — seeds the focus bench's models stepper. */
+  modelsComplete?: number;
   children?: Project[];
 }
 
@@ -50,11 +54,17 @@ export interface RecipeSlot {
   note?: string;
 }
 
+export interface InspoRef {
+  /** recipe_inspo row id; empty string for an unsaved (editor-local) entry. */
+  id: string;
+  url: string;
+}
+
 export interface Recipe {
   id: string;
   name: string;
   slots: RecipeSlot[];
-  inspoLinks: string[];
+  inspo: InspoRef[];
   assignedProjectId?: string;
   shareUrl?: string;
   /** Recipe-level notes (the editor's Notes panel). */
@@ -104,6 +114,8 @@ export interface CollectionItem {
   sourceUrl: string;
   quantity?: number;
   projectId?: string;
+  /** Attached recipe (paint rows) — the scheme this paint belongs to. */
+  recipeId?: string;
 }
 
 /* ----------------------------------------------------------------------------
