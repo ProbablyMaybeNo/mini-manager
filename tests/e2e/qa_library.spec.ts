@@ -2,57 +2,69 @@ import { expect, test } from "@playwright/test";
 import { freshTestEmail, signInAs } from "./_helpers/auth";
 
 /**
- * M1 — Library Flow 7: "do I own Mephiston Red?"
+ * M1 — Library quick-lookup: "do I own Mephiston Red?"
  *
- * V2-BUILD-PLAN §6.7 — three taps from cold start. Inventory state isn't
- * asserted (the test user starts empty, so the answer is always "no");
- * we verify the navigation + search + detail-panel round-trip works,
- * which is the meaningful regression surface.
+ * The library is client-loaded from the static ~7k paint catalog, so a
+ * fresh (empty) user still sees the full wall of colour. The default view
+ * is the GRID swatch wall; the header search filters by name/brand. The
+ * search input is `SearchField name="library-search"`; clicking a swatch
+ * opens the PaintInfoPanel slide-out (a dialog labelled with the paint
+ * name). We verify the navigate → search → detail round-trip.
  */
 
 test.describe("M1 — Library quick-lookup", () => {
-  test("M1.1 navigate, search, open detail panel", async ({ page }) => {
+  test("M1.1 navigate, search, open the paint detail panel", async ({
+    page,
+  }) => {
     await signInAs(page, freshTestEmail());
 
-    await page.goto("/library");
-    await expect(page.getByRole("heading", { name: /LIBRARY/i })).toBeVisible();
+    await page.goto("/library", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^LIBRARY$/ }),
+    ).toBeVisible({ timeout: 30_000 });
 
-    const search = page.getByPlaceholder(/Name, brand, sku/);
-    await expect(search).toBeVisible();
+    const search = page.locator('input[name="library-search"]');
+    await expect(search).toBeVisible({ timeout: 30_000 });
     await search.fill("Mephiston Red");
 
-    // Most Citadel libraries have at least one Mephiston Red row.
-    // Wait for at least one matching paint name to render.
-    const firstHit = page.getByText(/Mephiston Red/i).first();
-    await expect(firstHit).toBeVisible({ timeout: 15_000 });
-    await firstHit.click();
+    // Default GRID view: swatches are list items labelled "Name, Brand…".
+    const swatchWall = page.getByRole("list", { name: /Paint swatches/i });
+    const firstSwatch = swatchWall.getByRole("listitem").first();
+    await expect(firstSwatch).toBeVisible({ timeout: 30_000 });
 
-    // Detail panel is rendered with aria-label="{brand} {name} detail".
+    const label = (await firstSwatch.getAttribute("aria-label")) ?? "";
+    const paintName = label.split(",")[0]?.trim() ?? "";
+    expect(paintName.length).toBeGreaterThan(0);
+
+    await firstSwatch.click();
+
+    // The detail slide-out is a dialog labelled with the paint name.
     await expect(
-      page.locator('[aria-label*="Mephiston Red detail" i]'),
-    ).toBeVisible({ timeout: 10_000 });
+      page.getByRole("dialog", { name: paintName }),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
-  /* R7-5 — verify no stray "Filters" button leaks to the top-right
-   * at desktop viewport. The mobile filter trigger should ONLY appear
-   * below the md breakpoint; everything else lives inside the
-   * FilterRail's collapsible header. */
-  test("R7-5 no top-right Filters button at desktop viewport", async ({
+  test("M1.2 the desktop header carries search + view toggle (no floating filter)", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await signInAs(page, freshTestEmail("r75"));
-    await page.goto("/library");
-    await expect(page.getByRole("heading", { name: /LIBRARY/i })).toBeVisible();
+    await signInAs(page, freshTestEmail("desk"));
+    await page.goto("/library", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^LIBRARY$/ }),
+    ).toBeVisible({ timeout: 30_000 });
 
-    // The mobile filter trigger lives at fixed top-14 right-3 with
-    // `md:hidden xl:hidden`. At 1440px (xl) no Filters button should be
-    // visible — neither the mobile-only fixed trigger nor any other
-    // accidental floating affordance.
-    const filtersButtons = page.getByRole("button", { name: /^Filters?$/i });
-    const total = await filtersButtons.count();
-    for (let i = 0; i < total; i++) {
-      await expect(filtersButtons.nth(i)).toBeHidden();
-    }
+    // The view-mode toggle + the single Filter trigger live in the header.
+    await expect(
+      page.getByRole("radiogroup", { name: /View mode/i }),
+    ).toBeVisible();
+    await expect(page.getByRole("radio", { name: /^Grid$/i })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /^List$/i })).toBeVisible();
+
+    // Exactly one Filter affordance (the header button) — no stray floating
+    // duplicate at desktop width.
+    await expect(
+      page.getByRole("button", { name: /^Filter/i }),
+    ).toHaveCount(1);
   });
 });
