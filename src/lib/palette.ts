@@ -45,7 +45,9 @@ export const projectTypeAccent: Record<ProjectType, Accent> = {
 
 export const statusAccent: Record<ProjectStatus, Accent> = {
   WISHLIST: "yellow",
-  OWNED: "dim",
+  // OWNED reads neon green — the "you have this" status, mirroring the green
+  // owned-state used in the library/collection (bKcN: PURCHASED → OWNED green).
+  OWNED: "green",
   BUILDING: "cyan",
   PRIMING: "purple",
   PAINTING: "cyan",
@@ -96,18 +98,18 @@ export function activityAccentFor(icon: string): Accent {
 /**
  * Per-stat-box accent (D5 / MM-49 — "give each tracker box's total its own
  * palette colour"). The four dashboard KPI boxes each read in a distinct
- * style-guide hue rather than the old cyan/green-only split, so the row
+ * style-guide hue per Ross's tracker comments (qHYZN/4g3I/JxHyr), so the row
  * scans as four separate readouts:
- *   Active projects → cyan   (primary count)
- *   Completion %    → green  (positive progress)
- *   Streak         → yellow (a streak you don't want to break — warm)
- *   Time Total      → purple (special / cumulative)
+ *   Active projects → green  (something live / in progress)
+ *   Completion %    → yellow (progress toward done)
+ *   Streak         → purple (a streak you don't want to break)
+ *   Time Total      → cyan   (base; flips red past a long session — see StatRow)
  */
 export const statBoxAccents = {
-  active: "cyan",
-  completion: "green",
-  streak: "yellow",
-  time: "purple",
+  active: "green",
+  completion: "yellow",
+  streak: "purple",
+  time: "cyan",
 } as const satisfies Record<string, Accent>;
 
 /** Minutes → "H:MM" for the dashboard time-total / focus totals. */

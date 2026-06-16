@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Swatch } from "@/components/kit";
+import { Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { harmonies, HARMONY_SCHEMES, type HarmonyScheme } from "@/lib/color";
 import type { MatchResult, Paint } from "@/lib/types";
@@ -76,7 +76,15 @@ export function PaintInfoPanelContent({
 
       <Field label="Inventory">
         <div className="flex items-center gap-3">
-          <div className="flex items-center border border-cyan/50">
+          {/* Owned counter — labelled + tooltipped so it's clear the number is
+              how many of this paint you already OWN (MM-19). */}
+          <div
+            className="flex items-center border border-cyan/50"
+            title="How many of this paint you already own"
+          >
+            <span className="px-2 font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+              Owned
+            </span>
             <button
               type="button"
               aria-label="Decrease owned count"
@@ -85,7 +93,10 @@ export function PaintInfoPanelContent({
             >
               −
             </button>
-            <span className="w-8 text-center font-mono text-sm tabular-nums text-fg">
+            <span
+              className="w-8 text-center font-mono text-sm tabular-nums text-fg"
+              aria-label={`Owned: ${ownedCount}`}
+            >
               {ownedCount}
             </span>
             <button
@@ -97,9 +108,21 @@ export function PaintInfoPanelContent({
               +
             </button>
           </div>
-          <Button variant="secondary" size="sm" onClick={onWishlist}>
-            + Wishlist
-          </Button>
+          {/* Wishlist toggle (MM-19): yellow, with a filled/active state when
+              the paint is on the wishlist. onWishlist persists the toggle. */}
+          <button
+            type="button"
+            aria-pressed={paint.wishlisted}
+            onClick={onWishlist}
+            className={cn(
+              "inline-flex items-center gap-1 border px-3 py-1 font-osd text-[10px] uppercase tracking-[0.15em] transition-colors",
+              paint.wishlisted
+                ? "border-yellow bg-yellow/20 text-yellow"
+                : "border-yellow/60 text-yellow hover:bg-yellow/10",
+            )}
+          >
+            {paint.wishlisted ? "★ Wishlisted" : "☆ Wishlist"}
+          </button>
         </div>
       </Field>
 

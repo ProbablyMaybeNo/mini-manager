@@ -5,13 +5,38 @@ import { BootSequence, Button, Panel } from "@/components/kit";
 import { Logo } from "@/components/shell";
 import { PublicHeader } from "./PublicHeader";
 
+// Feature copy per Ross's landing comments (j5Iy, BjDV, L2LW, eVjJ, XCq8, TXM5).
 const FEATURES: { title: string; blurb: string }[] = [
-  { title: "Cross-brand library", blurb: "7,144 paints across every major company, searchable by colour." },
-  { title: "Paint recipes", blurb: "Capture repeatable schemes, attach them to armies, and share." },
-  { title: "Army projects", blurb: "Track every unit from wishlist to complete with rolled-up progress." },
-  { title: "Focus bench", blurb: "One screen for the session — recipe, timer, progress, inspiration." },
-  { title: "Planner", blurb: "Tournaments and deadlines on a calendar that fits your bench." },
-  { title: "Collection & budget", blurb: "Paste a store link to track what you own, want, and spent." },
+  {
+    title: "Library",
+    blurb:
+      "Search, filter, track, match, and collect with our growing library of 7,144 paints across all major brands.",
+  },
+  {
+    title: "Paint recipes",
+    blurb:
+      "Pick your paints and plan your projects. Save them for later or share them with friends.",
+  },
+  {
+    title: "Project Dashboard",
+    blurb:
+      "Plan and track your painting projects using the Mini-Manager dashboard — your whole roster, progress, and deadlines in one place.",
+  },
+  {
+    title: "Focus",
+    blurb:
+      "Paint recipes, color schemes, notes, techniques, and a timer provide maximum productivity when session painting.",
+  },
+  {
+    title: "Planner",
+    blurb:
+      "Plan and track your painting progress for upcoming tournaments with deadlines, events, and a built-in calendar.",
+  },
+  {
+    title: "Collection",
+    blurb:
+      "Plan, manage, and budget your paint and model collections all in one place.",
+  },
 ];
 
 export function LandingView() {
@@ -20,8 +45,9 @@ export function LandingView() {
       <PublicHeader />
 
       {/* Hero — the boot sequence now plays inside the enlarged logo's CRT
-          screen, so the standalone title + animation panel are gone (the
-          "MINI-MANAGER" title is legible on the logo itself). */}
+          screen, so the standalone "MINI MANAGER" heading (yIZB) and the
+          separate boot-sequence panel (c2Ess) are gone; the title is legible
+          on the logo itself. */}
       <section className="scanlines flex flex-col items-center gap-6 px-6 py-16 text-center">
         <Logo
           href="/"
@@ -39,18 +65,14 @@ export function LandingView() {
             />
           }
         />
-        <p className="max-w-md font-mono text-sm text-fg-dim">
-          The command center for miniature &amp; wargaming painters. Projects, paints, recipes,
-          and the focus bench — one terminal.
+        {/* Tagline (8rIb) — larger + more stylized display type. */}
+        <p className="max-w-2xl font-display text-xl leading-relaxed text-cyan text-glow-cyan sm:text-2xl">
+          Plan your projects. Track your paints. Manage your minis.
         </p>
+        {/* Single CTA — the secondary "See the plans" button is removed (wN7E). */}
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
-            <Button size="lg">Start free — no email required</Button>
-          </Link>
-          <Link href="/pricing">
-            <Button variant="secondary" size="lg">
-              See the plans
-            </Button>
+            <Button size="lg">Start for Free</Button>
           </Link>
         </div>
       </section>
@@ -80,11 +102,17 @@ export function LandingView() {
         </Panel>
       </section>
 
-      {/* Final CTA */}
+      {/* Final CTA — copy per REDm6, button per QrK3. */}
       <section className="flex flex-col items-center gap-4 px-6 pb-16 text-center">
-        <h2 className="font-display text-lg text-cyan text-glow-cyan">Power on your paint table.</h2>
-        <Link href="/dashboard">
-          <Button size="lg">Start free — no email required</Button>
+        <h2 className="max-w-xl font-display text-lg text-cyan text-glow-cyan">
+          Ready to take your hobbying to the next level?
+        </h2>
+        <p className="max-w-md font-mono text-sm text-fg-dim">
+          Gain access to a range of awesome features and tools. Founders receive a big
+          discount. Limited availability.
+        </p>
+        <Link href="/sign-up">
+          <Button size="lg">Start for Free</Button>
         </Link>
       </section>
 

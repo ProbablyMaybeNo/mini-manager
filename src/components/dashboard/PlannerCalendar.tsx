@@ -122,11 +122,14 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         </button>
       </div>
 
+      {/* Cap the grid to a small, glanceable size (r-N-8) so the calendar
+          stays compact within the rail rather than stretching to fill it. */}
       <MiniCalendar
         year={view.year}
         month={view.month}
         events={events}
         onDayClick={openAddForDay}
+        className="mx-auto w-full max-w-[170px]"
       />
 
       {adding ? (

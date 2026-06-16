@@ -146,7 +146,9 @@ export function ProjectsTable({
                 // Spacer keeps leaf titles aligned with their expandable siblings.
                 <span className="h-5 w-5 shrink-0" aria-hidden />
               )}
-              <span>{p.title}</span>
+              {/* Name stays white so it's clearly distinct from the coloured
+                  TYPE chip — even on the cyan-highlighted selected row (JRH4). */}
+              <span className="text-fg">{p.title}</span>
             </div>
           </td>
           <td className="px-3 py-2.5">
@@ -165,7 +167,13 @@ export function ProjectsTable({
             <PriorityTag priority={p.priority} />
           </td>
           <td className="w-40 px-3 py-2.5">
-            <ProgressBar percent={p.completionPercent} />
+            {/* Solid single-colour fill to match the GOLDEN STANDARD progress
+                bars (C_T1) — green when complete, otherwise a solid cyan fill
+                rather than the red→yellow ramp. */}
+            <ProgressBar
+              percent={p.completionPercent}
+              accent={p.completionPercent >= 100 ? "green" : "cyan"}
+            />
             {/* D4 — surface the underlying model progress so the bar isn't
                 just a colour: "12/40 models" beneath the percentage. */}
             {p.modelCount != null && p.modelCount > 0 && (
