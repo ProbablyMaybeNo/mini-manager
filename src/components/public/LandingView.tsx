@@ -13,7 +13,7 @@ const FEATURES: { title: string; blurb: string }[] = [
       "Search, filter, track, match, and collect with our growing library of 7,144 paints across all major brands.",
   },
   {
-    title: "Paint recipes",
+    title: "Color tools",
     blurb:
       "Test your color schemes and pick your paints, using a wide variety of color tools and features.",
   },
