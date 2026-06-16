@@ -1,31 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Panel, SearchField, SlideOutPanel, Swatch } from "@/components/kit";
+import { Button, Input, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
-import type { Paint, Project, Recipe, RecipeSlot } from "@/lib/types";
+import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
+import type { Project, Recipe, RecipeSlot } from "@/lib/types";
+import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { SlotRow } from "./SlotRow";
 
 export function RecipeEditorView({
   recipe,
   projects,
-  paints,
   onChange,
   onShare,
   onBack,
   onSave,
+  resolvePaintMeta,
 }: {
   recipe: Recipe;
   projects: Project[];
-  paints: Paint[];
   onChange: (next: Recipe) => void;
   onShare: () => void;
   onBack: () => void;
   onSave: () => void;
+  /** Resolve a picked paint id → display brand/name (catalog lives in the
+   *  picker; the editor only needs the labels for the slot row). */
+  resolvePaintMeta?: (paintId: string) => { brand: string; name: string } | null;
 }) {
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
-  const [pickQuery, setPickQuery] = useState("");
-  const [inspoUrl, setInspoUrl] = useState("");
 
   const update = (patch: Partial<Recipe>) => onChange({ ...recipe, ...patch });
   const updateSlots = (slots: RecipeSlot[]) => update({ slots });
@@ -43,16 +45,25 @@ export function RecipeEditorView({
     setPickingSlot(recipe.slots.length);
   }
 
-  function pickPaint(paint: Paint) {
+  /** Apply a ColorPicker selection to the slot being edited. A library pick
+   *  carries a paintId (resolved to brand/name); a raw hex (wheel / harmony /
+   *  eyedropper) lands as a custom-colour slot. The panel stays open so the
+   *  painter can keep adding (old multi-add behaviour, MM-25). */
+  function applySelection(sel: ColorPickerSelection) {
     if (pickingSlot == null) return;
+    const meta = sel.paintId ? resolvePaintMeta?.(sel.paintId) ?? null : null;
     const slots = recipe.slots.map((s, i) =>
       i === pickingSlot
-        ? { ...s, paintId: paint.id, swatch: paint.hex, brand: paint.brand, name: paint.name }
+        ? {
+            ...s,
+            paintId: sel.paintId ?? "",
+            swatch: sel.hex,
+            brand: meta?.brand ?? (sel.paintId ? s.brand : "Custom"),
+            name: meta?.name ?? (sel.paintId ? s.name : sel.hex),
+          }
         : s,
     );
     updateSlots(slots);
-    setPickingSlot(null);
-    setPickQuery("");
   }
 
   function moveSlot(i: number, dir: -1 | 1) {
@@ -63,13 +74,7 @@ export function RecipeEditorView({
     updateSlots(slots);
   }
 
-  const filteredPaints = paints
-    .filter((p) =>
-      pickQuery.trim()
-        ? `${p.name} ${p.brand}`.toLowerCase().includes(pickQuery.trim().toLowerCase())
-        : true,
-    )
-    .slice(0, 60);
+  const editing = pickingSlot != null ? recipe.slots[pickingSlot] : null;
 
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto p-6">
@@ -79,7 +84,10 @@ export function RecipeEditorView({
         </Button>
       </div>
 
-      <PageHeader title="RECIPE EDITOR" tagline="Capture a repeatable scheme, attach it to a project, and share it." />
+      <PageHeader
+        title="RECIPE EDITOR"
+        tagline="Capture a repeatable scheme, attach it to a project, and share it."
+      />
 
       {/* Title + assign + share */}
       <Panel label="DETAILS" className="flex flex-col gap-4 p-4 md:flex-row md:items-end">
@@ -98,7 +106,7 @@ export function RecipeEditorView({
           <select
             value={recipe.assignedProjectId ?? ""}
             onChange={(e) => update({ assignedProjectId: e.target.value || undefined })}
-            className="border border-cyan/50 bg-bg px-2 py-1.5 font-mono text-sm text-fg focus:border-cyan focus:outline-none"
+            className="border border-cyan/40 bg-bg px-2 py-1.5 font-mono text-sm text-fg focus:border-cyan focus:outline-none"
           >
             <option value="">Unassigned</option>
             {projects.map((p) => (
@@ -114,141 +122,64 @@ export function RecipeEditorView({
         <Button onClick={onSave}>Save</Button>
       </Panel>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        {/* Slots */}
-        <Panel label="SLOTS" cornerTicks className="flex flex-col gap-3 p-4">
-          {recipe.slots.length === 0 ? (
-            <p className="py-6 text-center font-mono text-xs text-fg-faint">
-              No slots yet — add your first paint layer.
-            </p>
-          ) : (
-            recipe.slots.map((slot, i) => (
-              <SlotRow
-                key={i}
-                slot={slot}
-                index={i}
-                isFirst={i === 0}
-                isLast={i === recipe.slots.length - 1}
-                onPick={() => setPickingSlot(i)}
-                onRemove={() => updateSlots(recipe.slots.filter((_, k) => k !== i))}
-                onMove={(dir) => moveSlot(i, dir)}
-                onLayerChange={(layer) =>
-                  updateSlots(recipe.slots.map((s, k) => (k === i ? { ...s, layer } : s)))
-                }
-                onNoteChange={(note) =>
-                  updateSlots(recipe.slots.map((s, k) => (k === i ? { ...s, note } : s)))
-                }
-              />
-            ))
-          )}
-          <Button variant="secondary" onClick={addSlot}>
-            + Add slot
-          </Button>
-        </Panel>
-
-        <div className="flex flex-col gap-6">
-          {/* Notes */}
-          <Panel label="NOTES" className="p-4">
-            <textarea
-              value={recipe.notes ?? ""}
-              onChange={(e) => update({ notes: e.target.value })}
-              aria-label="Recipe notes"
-              rows={5}
-              placeholder="General notes — varnish, basing, sub-assembly order…"
-              className="w-full resize-y border border-cyan/40 bg-bg p-2 font-mono text-xs text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+      {/* ndZ9 — inspiration removed from the creator; the freed space lets the
+          slots + notes use the full width (luPYg). zfnUz — borders thinned to
+          cyan/20 across the editor sections. */}
+      <Panel label="SLOTS" cornerTicks className="flex flex-col gap-3 p-4">
+        {recipe.slots.length === 0 ? (
+          <p className="py-6 text-center font-mono text-xs text-fg-faint">
+            No slots yet — add your first paint layer.
+          </p>
+        ) : (
+          recipe.slots.map((slot, i) => (
+            <SlotRow
+              key={i}
+              slot={slot}
+              index={i}
+              isFirst={i === 0}
+              isLast={i === recipe.slots.length - 1}
+              onPick={() => setPickingSlot(i)}
+              onRemove={() => updateSlots(recipe.slots.filter((_, k) => k !== i))}
+              onMove={(dir) => moveSlot(i, dir)}
+              onLayerChange={(layer) =>
+                updateSlots(recipe.slots.map((s, k) => (k === i ? { ...s, layer } : s)))
+              }
+              onNoteChange={(note) =>
+                updateSlots(recipe.slots.map((s, k) => (k === i ? { ...s, note } : s)))
+              }
             />
-          </Panel>
+          ))
+        )}
+        <Button variant="secondary" onClick={addSlot}>
+          + Add slot
+        </Button>
+      </Panel>
 
-          {/* Inspiration */}
-          <Panel label="INSPIRATION" className="flex flex-col gap-3 p-4">
-            <div className="flex gap-2">
-              <Input
-                name="inspo"
-                placeholder="Paste reference URL"
-                value={inspoUrl}
-                onChange={(e) => setInspoUrl(e.target.value)}
-                containerClassName="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && inspoUrl.trim()) {
-                    update({ inspo: [...recipe.inspo, { id: "", url: inspoUrl.trim() }] });
-                    setInspoUrl("");
-                  }
-                }}
-              />
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  if (!inspoUrl.trim()) return;
-                  update({ inspo: [...recipe.inspo, { id: "", url: inspoUrl.trim() }] });
-                  setInspoUrl("");
-                }}
-              >
-                Add
-              </Button>
-            </div>
-            {recipe.inspo.length === 0 ? (
-              <p className="font-mono text-[11px] text-fg-faint">
-                No references yet — paste image or page URLs.
-              </p>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {recipe.inspo.map((ref, i) => (
-                  <div
-                    key={ref.id || i}
-                    className="group relative flex aspect-square items-center justify-center border border-cyan/40 bg-bg-raised/40 p-1"
-                  >
-                    <span className="truncate font-mono text-[9px] text-fg-dim">{ref.url}</span>
-                    <button
-                      type="button"
-                      aria-label={`Remove reference ${i + 1}`}
-                      onClick={() =>
-                        update({ inspo: recipe.inspo.filter((_, k) => k !== i) })
-                      }
-                      className="absolute right-0.5 top-0.5 font-osd text-[10px] text-fg-faint hover:text-red"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Panel>
-        </div>
-      </div>
+      {/* -bxkX — Notes shortened (rows 3) so the panel sits symmetric with the
+          slot rows above rather than towering over them. */}
+      <Panel label="NOTES" className="p-4">
+        <textarea
+          value={recipe.notes ?? ""}
+          onChange={(e) => update({ notes: e.target.value })}
+          aria-label="Recipe notes"
+          rows={3}
+          placeholder="General notes — varnish, basing, sub-assembly order…"
+          className="w-full resize-y border border-cyan/40 bg-bg p-2 font-mono text-xs text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+        />
+      </Panel>
 
-      {/* Paint picker (library) */}
-      <SlideOutPanel
+      {/* MM-25 — the shared 3-panel ColorPicker (wheel + library + eyedropper)
+          replaces the old text-only "Pick a paint" search. Stays open for
+          multi-add. */}
+      <ColorPickerPanel
         open={pickingSlot != null}
         onClose={() => setPickingSlot(null)}
-        title="Pick a paint"
-        breadcrumb="RECIPE ▸ LIBRARY PICKER"
-      >
-        <div className="flex flex-col gap-3">
-          <SearchField
-            name="pick-search"
-            value={pickQuery}
-            onChange={(e) => setPickQuery(e.target.value)}
-          />
-          <p className="font-mono text-[10px] text-fg-faint">
-            ▸ Or pick visually from the Wheel / Eyedropper in Tools.
-          </p>
-          <ul className="flex flex-col gap-1">
-            {filteredPaints.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  onClick={() => pickPaint(p)}
-                  className="flex w-full items-center gap-2 border border-transparent px-1 py-1 text-left hover:border-cyan/40 hover:bg-cyan/5"
-                >
-                  <Swatch hex={p.hex} size="sm" />
-                  <span className="flex-1 truncate font-mono text-xs text-fg">{p.name}</span>
-                  <span className="font-osd text-[9px] uppercase text-fg-faint">{p.brand}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </SlideOutPanel>
+        onSelect={applySelection}
+        contextLabel={pickingSlot != null ? `Slot ${pickingSlot + 1}` : undefined}
+        mode={editing && editing.paintId ? "edit-slot" : "add-slot"}
+        initialHex={editing?.swatch ?? null}
+        initialPaintId={editing?.paintId || null}
+      />
     </div>
   );
 }

@@ -1,24 +1,76 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ColourWheelTool } from "@/components/tools/ColourWheelTool";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { usePaletteSaver } from "@/components/tools/usePaletteSaver";
+import { useToast } from "@/components/kit";
+import { AssignToRecipeDialog, type AssignSwatch } from "@/components/recipe/AssignToRecipeDialog";
 import { closestPaint } from "@/lib/toolMatch";
+import type { Paint } from "@/lib/types";
 import { useCatalog } from "../useCatalog";
 
-export default function ColourWheelPage() {
+/** Resolve a free-text paint title → hex over the kit catalog (exact name,
+ *  then "Brand Name" exact, then name substring). Mirrors the wheel tool's
+ *  `?name=` deep-link fallback. */
+function resolveHexByName(paints: Paint[], rawTitle: string): string | null {
+  const q = rawTitle.trim().toLowerCase();
+  if (!q) return null;
+  const hit =
+    paints.find((p) => p.name.toLowerCase() === q) ??
+    paints.find((p) => `${p.brand} ${p.name}`.toLowerCase() === q) ??
+    paints.find((p) => p.name.toLowerCase().includes(q));
+  return hit?.hex ?? null;
+}
+
+function ColourWheelRoute() {
   const paints = useCatalog();
   const router = useRouter();
+  const params = useSearchParams();
   const { save, dialog } = usePaletteSaver("wheel");
+  const { toast, node } = useToast();
+  const [assigning, setAssigning] = useState<AssignSwatch | null>(null);
+
+  // MM-53 — `?hex` (canonical) and `?name` (catalog-resolved fallback) seed
+  // the primary pick. Both read once; mid-session URL edits don't re-seed.
+  const seedHex = useMemo(() => {
+    const hex = params.get("hex");
+    if (hex && /^#?[0-9a-fA-F]{6}$/.test(hex)) return hex.startsWith("#") ? hex : `#${hex}`;
+    const name = params.get("name");
+    if (name && paints.length) return resolveHexByName(paints, name);
+    return null;
+  }, [params, paints]);
+
   return (
     <ToolShell title="COLOR WHEEL" blurb="Explore, experiment, and find the perfect colour combos.">
       <ColourWheelTool
+        seedHex={seedHex}
         closestPaint={(hex) => closestPaint(hex, paints)}
         onSavePalette={save}
         onSendToRecipe={() => router.push("/recipes")}
+        // Per-swatch "assign paint" → assign that planned colour into a recipe.
+        onAssignPaint={(hex) => {
+          const p = closestPaint(hex, paints);
+          setAssigning({ hex, paintId: p?.id ?? null, name: p?.name });
+        }}
+      />
+      <AssignToRecipeDialog
+        open={assigning != null}
+        swatches={assigning ? [assigning] : []}
+        onClose={() => setAssigning(null)}
+        onAssigned={(recipeName) => toast(`Added to ${recipeName}`, "green")}
       />
       {dialog}
+      {node}
     </ToolShell>
+  );
+}
+
+export default function ColourWheelPage() {
+  return (
+    <Suspense fallback={null}>
+      <ColourWheelRoute />
+    </Suspense>
   );
 }

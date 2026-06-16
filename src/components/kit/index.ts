@@ -2,6 +2,7 @@ export { Panel } from "./Panel";
 export { Button, type ButtonProps } from "./Button";
 export { Chip, TypeChip, StatusText, PriorityTag } from "./tags";
 export { Swatch, SwatchStrip } from "./Swatch";
+export { RecipePaintTile, RecipePaintStrip } from "./RecipePaintTile";
 export { ProgressBar } from "./ProgressBar";
 export { StatBox } from "./StatBox";
 export { SegmentedToggle, type SegmentOption } from "./SegmentedToggle";

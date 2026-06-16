@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, EmptyState, SwatchStrip } from "@/components/kit";
+import { Button, EmptyState, RecipePaintStrip } from "@/components/kit";
 import type { Project, Recipe } from "@/lib/types";
 
 const COLS = ["Name", "Recipe", "Project", "Share"];
@@ -12,6 +12,7 @@ export function RecipeIndexTable({
   onAssignProject,
   onShare,
   onCreate,
+  onOpenPaint,
 }: {
   recipes: Recipe[];
   projects: Project[];
@@ -19,6 +20,8 @@ export function RecipeIndexTable({
   onAssignProject: (recipe: Recipe, projectId: string) => void;
   onShare: (recipe: Recipe) => void;
   onCreate: () => void;
+  /** MM-51 — open the shared ColorPicker for a specific paint in a recipe. */
+  onOpenPaint?: (recipe: Recipe, slotIndex: number) => void;
 }) {
   if (recipes.length === 0) {
     return (
@@ -49,24 +52,47 @@ export function RecipeIndexTable({
         </thead>
         <tbody>
           {recipes.map((r) => (
-            <tr key={r.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
+            // MM-28 — the whole row is clickable → opens the recipe page.
+            // Interactive cells (paint tiles, project select, share, name)
+            // stop propagation so they keep their own behaviour.
+            <tr
+              key={r.id}
+              onClick={() => onOpenRecipe(r)}
+              className="cursor-pointer border-b border-fg/10 transition-colors hover:bg-cyan/5"
+            >
               <td className="px-3 py-3">
                 <button
                   type="button"
-                  onClick={() => onOpenRecipe(r)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenRecipe(r);
+                  }}
                   className="font-mono text-sm text-fg hover:text-cyan"
                 >
                   {r.name}
                 </button>
               </td>
-              <td className="px-3 py-3">
-                <SwatchStrip
-                  swatches={r.slots.map((s) => s.swatch)}
-                  onAttach={() => onOpenRecipe(r)}
-                  ariaLabel={`Edit ${r.name}`}
-                />
+              <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                {r.slots.length === 0 ? (
+                  <Button variant="tertiary" size="sm" onClick={() => onOpenRecipe(r)}>
+                    + attach
+                  </Button>
+                ) : (
+                  // l9-Ep / C1Dj / -zP2IB / XBqE — large legible tiles with
+                  // company top, name centre, layer bottom in black/white.
+                  // MM-51 — clicking a tile opens the shared ColorPicker.
+                  <RecipePaintStrip
+                    slots={r.slots.map((s) => ({
+                      hex: s.swatch,
+                      name: s.name,
+                      brand: s.brand,
+                      layer: s.layer,
+                    }))}
+                    onPaintClick={onOpenPaint ? (i) => onOpenPaint(r, i) : undefined}
+                  />
+                )}
               </td>
-              <td className="px-3 py-3">
+              <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                 <select
                   value={r.assignedProjectId ?? ""}
                   onChange={(e) => onAssignProject(r, e.target.value)}
@@ -81,7 +107,7 @@ export function RecipeIndexTable({
                   ))}
                 </select>
               </td>
-              <td className="px-3 py-3">
+              <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                 <Button variant="secondary" size="sm" onClick={() => onShare(r)}>
                   Share
                 </Button>

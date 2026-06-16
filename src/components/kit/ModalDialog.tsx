@@ -29,6 +29,12 @@ export function ModalDialog({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
+  // MM-24 — keep `onClose` out of the focus-trap effect deps (see
+  // SlideOutPanel): a fresh inline `onClose` each render would otherwise
+  // re-run this effect and steal focus from a field inside the dialog after
+  // every keystroke.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -38,7 +44,7 @@ export function ModalDialog({
 
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab" || !panel) return;
@@ -62,7 +68,7 @@ export function ModalDialog({
       document.removeEventListener("keydown", onKey);
       lastFocused.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

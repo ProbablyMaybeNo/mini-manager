@@ -1,6 +1,6 @@
 "use client";
 
-import { Swatch } from "@/components/kit";
+import { RecipePaintTile } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { RecipeSlot } from "@/lib/types";
 
@@ -38,14 +38,18 @@ export function SlotRow({
         </ReorderBtn>
       </div>
 
-      <button
-        type="button"
+      {/* l9-Ep / C1Dj / -zP2IB — large legible tile: company top, paint name
+          centre, layer bottom in black/white. Clicking opens the picker. */}
+      <RecipePaintTile
+        hex={slot.swatch}
+        name={slot.name}
+        brand={slot.brand}
+        layer={slot.layer}
+        size="lg"
         onClick={onPick}
-        aria-label={`Change paint for slot ${index + 1}`}
-        className="mt-0.5 shrink-0 hover:opacity-80"
-      >
-        <Swatch hex={slot.swatch} size="lg" />
-      </button>
+        ariaLabel={`Change paint for slot ${index + 1}`}
+        className="mt-0.5 shrink-0"
+      />
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <button type="button" onClick={onPick} className="text-left">
