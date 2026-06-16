@@ -45,7 +45,9 @@ export const projectTypeAccent: Record<ProjectType, Accent> = {
 
 export const statusAccent: Record<ProjectStatus, Accent> = {
   WISHLIST: "yellow",
-  OWNED: "dim",
+  // OWNED reads neon green — the "you have this" status, mirroring the green
+  // owned-state used in the library/collection (bKcN: PURCHASED → OWNED green).
+  OWNED: "green",
   BUILDING: "cyan",
   PRIMING: "purple",
   PAINTING: "cyan",

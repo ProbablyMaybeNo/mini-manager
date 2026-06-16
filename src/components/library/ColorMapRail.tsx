@@ -23,7 +23,14 @@ export function ColorMapRail({
   }));
 
   return (
-    <Panel label="COLOR MAP" className="flex w-full shrink-0 flex-col p-3 lg:w-[180px]">
+    // min-h-0 lets the spectrum flex-fill the panel; on desktop the whole map
+    // fits inside the rail without scrolling (hASzc).
+    <Panel
+      label="COLOR MAP"
+      accent="green"
+      cornerTicks
+      className="flex min-h-0 w-full shrink-0 flex-col p-3 lg:w-[180px]"
+    >
       <div className="mb-2 flex flex-col gap-1 font-osd text-[9px] uppercase tracking-[0.15em] text-fg-dim">
         <span className="text-fg-faint">1 cell = 1 paint</span>
         <span className="flex items-center gap-1">
@@ -39,7 +46,9 @@ export function ColorMapRail({
           const ratio = (e.clientY - rect.top) / rect.height;
           onJumpHue?.(Math.max(0, Math.min(1, ratio)) * 360);
         }}
-        className="relative h-72 w-full cursor-pointer border border-fg/20 lg:h-full lg:min-h-[420px]"
+        // On mobile a fixed height; on desktop flex-fill the remaining panel
+        // height so the entire spectrum is visible without scrolling.
+        className="relative h-72 w-full min-h-0 flex-1 cursor-pointer border border-fg/20 lg:h-auto"
         style={{
           background:
             "linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)",

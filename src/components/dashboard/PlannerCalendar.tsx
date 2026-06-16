@@ -78,7 +78,14 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         </button>
       </div>
 
-      <MiniCalendar year={view.year} month={view.month} events={events} />
+      {/* Cap the grid to a small, glanceable size (r-N-8) so the calendar
+          stays compact within the rail rather than stretching to fill it. */}
+      <MiniCalendar
+        year={view.year}
+        month={view.month}
+        events={events}
+        className="mx-auto w-full max-w-[170px]"
+      />
 
       {adding ? (
         <form onSubmit={submit} className="flex flex-col gap-2 border-t border-cyan/20 pt-2">

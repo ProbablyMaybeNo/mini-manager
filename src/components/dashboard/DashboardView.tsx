@@ -13,7 +13,6 @@ import { ProjectInspector } from "./ProjectInspector";
 import { ProjectsTable } from "./ProjectsTable";
 import { RightRail } from "./RightRail";
 import { StatRow } from "./StatRow";
-import { UpcomingEventsBar } from "./UpcomingEventsBar";
 
 export type DashboardStatus = "ready" | "loading" | "error";
 
@@ -31,8 +30,6 @@ export interface DashboardViewProps {
   onStartSession?: (project: Project) => void;
   onRetry?: () => void;
 }
-
-const TAGLINE = "Project hub, everything you need to manage your painting progress.";
 
 /** Find a project anywhere in the tree by id (rows + their sub-projects). */
 function findProject(list: Project[], id: string): Project | null {
@@ -56,7 +53,6 @@ export function DashboardView({
   onFocusProject,
   onAttachRecipe,
   onAddProject,
-  onUploadArmyList,
   onStartSession,
   onRetry,
 }: DashboardViewProps) {
@@ -77,9 +73,13 @@ export function DashboardView({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    // Solid black canvas (vZsx) — overrides the near-black page token for this
+    // surface so the dashboard reads as a true terminal background.
+    <div className="flex h-full flex-col bg-black">
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-        <PageHeader title="DASHBOARD" tagline={TAGLINE} />
+        {/* No tagline text bar — the "+ New Project" button + the obvious
+            PROJECTS panel already make the page's purpose clear (drev). */}
+        <PageHeader title="DASHBOARD" />
 
         {status === "error" ? (
           <ErrorState onRetry={onRetry} />
@@ -97,11 +97,10 @@ export function DashboardView({
                   onFocusProject={(p) => onFocusProject?.(p)}
                   onAttachRecipe={(p) => onAttachRecipe?.(p)}
                 />
+                {/* Upload-Army-List section removed for now (8TkH) — it can
+                    come back later; the primary action is creating a project. */}
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-                  <Button onClick={onAddProject}>+ Add Project</Button>
-                  <Button variant="secondary" onClick={onUploadArmyList}>
-                    ⬆ Upload Army List
-                  </Button>
+                  <Button onClick={onAddProject}>+ New Project</Button>
                 </div>
               </Panel>
             </div>
@@ -110,7 +109,8 @@ export function DashboardView({
         )}
       </div>
 
-      <UpcomingEventsBar events={status === "ready" ? events : []} />
+      {/* Bottom UPCOMING-EVENTS ticker removed (hA-bz) — it duplicated the
+          PLANNER calendar's events, which already surfaces the same dates. */}
 
       <ProjectInspector
         project={selected}
