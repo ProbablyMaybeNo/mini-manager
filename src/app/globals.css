@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
-/* Self-hosted fonts (no runtime fetch) */
-@import "@fontsource/press-start-2p/400.css";
+/* Self-hosted fonts (no runtime fetch) — all OFL / self-hosted via @fontsource.
+   Display = VT323 (vintage CRT terminal face; replaces the "straight arcade"
+   Press Start 2P per thread wwiRkmlTX1qp — see docs "Defaults chosen").
+   OSD/heading = Share Tech Mono. Body = IBM Plex Mono (readability floor). */
+@import "@fontsource/vt323/400.css";
 @import "@fontsource/share-tech-mono/400.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
@@ -26,7 +29,7 @@
   --color-fg-faint: #7d8f95;
 
   /* Type families */
-  --font-display: "Press Start 2P", "Courier New", monospace;
+  --font-display: "VT323", "Courier New", monospace;
   --font-osd: "Share Tech Mono", "Courier New", monospace;
   --font-mono: "IBM Plex Mono", "Courier New", monospace;
 
@@ -56,10 +59,34 @@ body {
   );
 }
 
+/* Form controls do NOT inherit font-family by default (UA stylesheets reset
+   them to a system font). Force them onto the body mono so every raw
+   <input>/<select>/<textarea>/<button> renders in IBM Plex Mono app-wide
+   (body-font audit — thread Q6fs2DHiGvnM). */
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
+}
+
+/* Native <option> popups (rendered by the OS) — keep them mono where supported. */
+select,
+option {
+  font-family: var(--font-mono);
+}
+
 /* Visible focus ring everywhere (WCAG 2.2) */
 :focus-visible {
   outline: 2px solid var(--color-cyan);
   outline-offset: 2px;
+}
+
+/* VT323 is a tall, narrow CRT face. A hair of tracking on display text keeps
+   uppercase titles from feeling cramped without hurting the terminal feel. */
+.font-display {
+  letter-spacing: 0.04em;
 }
 
 /* ----------------------------------------------------------------------------
@@ -91,6 +118,19 @@ body {
     0 18px 44px -20px rgba(0, 0, 0, 0.9),
     0 0 28px -10px rgba(0, 210, 255, 0.25);
 }
+@utility glow-green {
+  box-shadow: 0 0 6px rgba(81, 253, 128, 0.4), 0 0 1px rgba(81, 253, 128, 0.75);
+}
+@utility glow-yellow {
+  box-shadow: 0 0 6px rgba(238, 249, 150, 0.4), 0 0 1px rgba(238, 249, 150, 0.75);
+}
+@utility glow-purple {
+  box-shadow: 0 0 6px rgba(155, 128, 220, 0.45), 0 0 1px rgba(155, 128, 220, 0.8);
+}
+@utility glow-red {
+  box-shadow: 0 0 6px rgba(255, 66, 66, 0.4), 0 0 1px rgba(255, 66, 66, 0.75);
+}
+
 /* UX audit #3 — dialed back from an 8px/0.55 bloom: the heavy halation on
    the big PixelSplitter titles read as "toy cyberpunk" (esp. on mobile).
    This keeps a restrained low-glow phosphor edge, readability-floored. */
@@ -99,6 +139,27 @@ body {
 }
 @utility text-glow-green {
   text-shadow: 0 0 4px rgba(81, 253, 128, 0.35), 0 0 1px rgba(81, 253, 128, 0.6);
+}
+@utility text-glow-yellow {
+  text-shadow: 0 0 4px rgba(238, 249, 150, 0.35), 0 0 1px rgba(238, 249, 150, 0.6);
+}
+@utility text-glow-purple {
+  text-shadow: 0 0 4px rgba(155, 128, 220, 0.4), 0 0 1px rgba(155, 128, 220, 0.65);
+}
+@utility text-glow-red {
+  text-shadow: 0 0 4px rgba(255, 66, 66, 0.38), 0 0 1px rgba(255, 66, 66, 0.6);
+}
+
+/* Display title shadow/outline — the "something with a shadow or outline"
+   ask (thread wwiRkmlTX1qp). A hard offset CRT drop-shadow + a thin dark
+   contour so big VT323 titles read as a stylized terminal headline, not flat
+   text. Pair with a text-glow-* token for the phosphor bloom. Use `currentColor`
+   so it inherits the title's accent. */
+@utility text-display-shadow {
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.85),
+    -1px 0 0 rgba(0, 0, 0, 0.55),
+    0 0 6px color-mix(in srgb, currentColor 45%, transparent);
 }
 
 /* Scanline overlay for a specific surface (e.g. hero) */
