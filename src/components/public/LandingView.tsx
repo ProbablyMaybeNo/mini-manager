@@ -19,22 +19,26 @@ export function LandingView() {
     <div className="flex min-h-dvh flex-col">
       <PublicHeader />
 
-      {/* Hero */}
+      {/* Hero — the boot sequence now plays inside the enlarged logo's CRT
+          screen, so the standalone title + animation panel are gone (the
+          "MINI-MANAGER" title is legible on the logo itself). */}
       <section className="scanlines flex flex-col items-center gap-6 px-6 py-16 text-center">
-        <Logo href="/" size={120} className="animate-power-on" />
-        <h1 className="max-w-2xl font-display text-2xl leading-relaxed text-cyan text-glow-cyan sm:text-3xl">
-          MINI MANAGER
-        </h1>
-        <Panel className="w-full max-w-md p-4 text-left">
-          <BootSequence
-            lines={[
-              "BOOT /mini-manager",
-              "MOUNT paint-db … 7,144 colours",
-              "LOAD projects · recipes · bench",
-              "READY ▸ welcome, painter",
-            ]}
-          />
-        </Panel>
+        <Logo
+          href="/"
+          size={320}
+          className="animate-power-on"
+          overlay={
+            <BootSequence
+              className="text-[7px] leading-snug sm:text-[9px]"
+              lines={[
+                "BOOT /mini-manager",
+                "MOUNT paint-db",
+                "LOAD bench",
+                "READY ▸",
+              ]}
+            />
+          }
+        />
         <p className="max-w-md font-mono text-sm text-fg-dim">
           The command center for miniature &amp; wargaming painters. Projects, paints, recipes,
           and the focus bench — one terminal.

@@ -2,6 +2,16 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { accentBorder, type Accent } from "@/lib/palette";
 
+/** Accent → the matching phosphor box-glow utility (palette adoption). */
+const accentGlow: Record<Accent, string> = {
+  cyan: "glow-cyan",
+  green: "glow-green",
+  yellow: "glow-yellow",
+  purple: "glow-purple",
+  red: "glow-red",
+  dim: "",
+};
+
 interface PanelProps {
   children: ReactNode;
   /** Small mono "tech label" rendered on the top border (e.g. PROJECTS, FILE). */
@@ -30,7 +40,7 @@ export function Panel({
       className={cn(
         "relative border bg-bg/60 panel-depth",
         accentBorder[accent],
-        glow && "glow-cyan",
+        glow && accentGlow[accent],
         className,
       )}
       style={{ borderRadius: "var(--radius-panel)" }}

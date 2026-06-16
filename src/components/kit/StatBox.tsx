@@ -1,7 +1,9 @@
 import { cn } from "@/lib/cn";
 import { accentBorder, accentText, type Accent } from "@/lib/palette";
 
-/** Compact cyan-bordered stat box: sentence-case label + big accent number. */
+/** Compact stat box: sentence-case label + big accent number. The border now
+ *  follows the accent so a row of stat boxes reads multi-colour (palette
+ *  adoption — defaults to cyan, so existing call sites are unchanged). */
 export function StatBox({
   label,
   value,
@@ -17,7 +19,7 @@ export function StatBox({
     <div
       className={cn(
         "border bg-bg/60 px-4 py-3 panel-depth transition-shadow duration-200 hover:panel-depth-glow",
-        accentBorder.cyan,
+        accentBorder[accent],
         className,
       )}
       style={{ borderRadius: "var(--radius-panel)" }}
