@@ -20,7 +20,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Project Dashboard",
     blurb:
-      "Plan and track your painting projects using the Mini-Manager dashboard, calendar, and activity list. Maximize your painting productivity.",
+      "Plan and track your painting projects using the Mini-Manager dashboard. Set important deadlines, review your activity feed, and record your painting totals across all projects.",
   },
   {
     title: "Focus",
