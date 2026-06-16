@@ -8,6 +8,7 @@ import type {
   CalendarEvent,
   DashboardSummary,
   Project,
+  ProjectType,
 } from "@/lib/types";
 import { ProjectInspector } from "./ProjectInspector";
 import { ProjectsTable } from "./ProjectsTable";
@@ -29,6 +30,7 @@ export interface DashboardViewProps {
   onAddProject?: () => void;
   onUploadArmyList?: () => void;
   onStartSession?: (project: Project) => void;
+  onAddSubProject?: (parent: Project, childType: ProjectType, name: string) => void;
   onRetry?: () => void;
 }
 
@@ -58,6 +60,7 @@ export function DashboardView({
   onAddProject,
   onUploadArmyList,
   onStartSession,
+  onAddSubProject,
   onRetry,
 }: DashboardViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -96,6 +99,7 @@ export function DashboardView({
                   onOpenProject={openProject}
                   onFocusProject={(p) => onFocusProject?.(p)}
                   onAttachRecipe={(p) => onAttachRecipe?.(p)}
+                  onAddSubProject={onAddSubProject}
                 />
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
                   <Button onClick={onAddProject}>+ Add Project</Button>

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { useToast } from "@/components/kit";
 import { deriveDashboardSummary } from "@/mock/derive";
+import { createProject } from "@/lib/actions/projects";
 import type {
   ActivityEntry,
   CalendarEvent,
@@ -32,6 +34,8 @@ export function DashboardClient({
   sessionStats: SessionStats;
 }) {
   const router = useRouter();
+  const { toast, node } = useToast();
+  const [, startTransition] = useTransition();
   const [newOpen, setNewOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -49,10 +53,29 @@ export function DashboardClient({
         onAttachRecipe={() => router.push("/recipes")}
         onAddProject={() => setNewOpen(true)}
         onUploadArmyList={() => setImportOpen(true)}
+        onAddSubProject={(parent, childType, name) => {
+          // D3 / OR6fdf — add a Unit under an Army/Warband, or a Model under a
+          // Unit. The picker only ever yields "Unit" / "Model" (both valid DB
+          // project types); guard the rest so the cast is sound.
+          if (childType !== "Unit" && childType !== "Model") return;
+          startTransition(async () => {
+            const res = await createProject({
+              name,
+              type: childType,
+              // Seed a single model so the new sub-project has a non-zero
+              // denominator; the painter can adjust the count later.
+              count: 1,
+              parentId: parent.id,
+            });
+            if (res.ok) router.refresh();
+            else toast(res.error, "red");
+          });
+        }}
         onRetry={() => router.refresh()}
       />
       <NewProjectPanel open={newOpen} onClose={() => setNewOpen(false)} />
       <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
+      {node}
     </>
   );
 }

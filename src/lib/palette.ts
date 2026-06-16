@@ -68,6 +68,48 @@ export const eventKindAccent: Record<CalendarEventKind, Accent> = {
   other: "purple",
 };
 
+/**
+ * Activity icon-key → accent (D5 / MM-45). The ActivityFeed used to render
+ * every row green; colour-coding by the move's type makes the tracker
+ * glanceable using the full style-guide palette:
+ *   add    → green  (something new — project / slot created)
+ *   cart   → yellow (a purchase / wishlist add — "spend" warning hue)
+ *   build  → cyan   (a stage bump — primary "progress" colour)
+ *   prime  → purple (special prep stage)
+ *   paint  → cyan   (logged a painting session — core action)
+ *   check  → green  (a recipe / completion — positive)
+ * Unknown keys fall back to dim so a new icon never crashes the feed.
+ */
+export const activityAccent: Record<string, Accent> = {
+  add: "green",
+  cart: "yellow",
+  build: "cyan",
+  prime: "purple",
+  paint: "cyan",
+  check: "green",
+};
+
+export function activityAccentFor(icon: string): Accent {
+  return activityAccent[icon] ?? "dim";
+}
+
+/**
+ * Per-stat-box accent (D5 / MM-49 — "give each tracker box's total its own
+ * palette colour"). The four dashboard KPI boxes each read in a distinct
+ * style-guide hue rather than the old cyan/green-only split, so the row
+ * scans as four separate readouts:
+ *   Active projects → cyan   (primary count)
+ *   Completion %    → green  (positive progress)
+ *   Streak         → yellow (a streak you don't want to break — warm)
+ *   Time Total      → purple (special / cumulative)
+ */
+export const statBoxAccents = {
+  active: "cyan",
+  completion: "green",
+  streak: "yellow",
+  time: "purple",
+} as const satisfies Record<string, Accent>;
+
 /** Minutes → "H:MM" for the dashboard time-total / focus totals. */
 export function formatMinutes(total: number): string {
   const h = Math.floor(total / 60);

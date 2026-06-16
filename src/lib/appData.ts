@@ -343,6 +343,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     date: isoDay(e.eventDate),
     name: e.name,
     kind: e.kind,
+    notes: e.notes ?? null,
   }));
 
   return {
