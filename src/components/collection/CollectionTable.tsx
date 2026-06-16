@@ -1,23 +1,41 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { Button, EmptyState, SwatchStrip } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { StatusDropdown } from "./StatusDropdown";
 
-const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Price", "Recipe", "Status", "Link"];
-const MODEL_COLS = ["Image", "Name", "Qty", "Company", "Vendor", "Price", "Project", "Status", "Link"];
+/** Coarse status buckets the filter panel exposes (2OWF: Wishlist/Owned/Hold). */
+type StatusFilter = "WISHLIST" | "OWNED" | "HOLD";
+const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
+  { value: "WISHLIST", label: "Wishlist" },
+  { value: "OWNED", label: "Owned" },
+  { value: "HOLD", label: "Hold" },
+];
+
+/** Map a fine ProjectStatus onto its coarse filter bucket. Everything
+ *  past OWNED in the build lifecycle still counts as "owned". */
+function statusBucket(s: ProjectStatus): StatusFilter {
+  if (s === "WISHLIST") return "WISHLIST";
+  if (s === "SHELVED") return "HOLD";
+  return "OWNED";
+}
 
 function Thumb({ src, alt }: { src: string; alt: string }) {
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} className="h-9 w-9 border border-cyan/30 object-cover" />;
+    return <img src={src} alt={alt} className="h-10 w-10 border border-cyan/30 object-cover" />;
   }
   return (
-    <span className="flex h-9 w-9 items-center justify-center border border-cyan/30 bg-bg-raised/40 font-osd text-[10px] text-fg-faint">
+    <span className="flex h-10 w-10 items-center justify-center border border-cyan/30 bg-bg-raised/40 font-osd text-[10px] text-fg-faint">
       ▦
     </span>
   );
 }
+
+const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Price", "Recipe", "Status", "Link", ""];
+const MODEL_COLS = ["Image", "Name", "Game", "Army", "Price", "Project", "Status", "Link", ""];
 
 export function CollectionTable({
   kind,
@@ -42,119 +60,236 @@ export function CollectionTable({
 }) {
   const cols = kind === "paint" ? PAINT_COLS : MODEL_COLS;
   const label = kind === "paint" ? "Paint" : "Model";
+  const title = kind === "paint" ? "PAINTS" : "MODELS";
+
+  const [filterOpen, setFilterOpen] = useState(false);
+  // Empty set = no filter (show all); otherwise show only matching buckets.
+  const [active, setActive] = useState<Set<StatusFilter>>(new Set());
+
+  const visible = useMemo(
+    () => (active.size === 0 ? items : items.filter((i) => active.has(statusBucket(i.status)))),
+    [items, active],
+  );
+
+  function toggleFilter(f: StatusFilter) {
+    setActive((prev) => {
+      const next = new Set(prev);
+      if (next.has(f)) next.delete(f);
+      else next.add(f);
+      return next;
+    });
+  }
+
+  // Active projects only (wyeWv): a model can't be assigned to a finished
+  // or shelved project, and we never list the wishlist placeholder.
+  const activeProjects = useMemo(
+    () => projects.filter((p) => p.status !== "COMPLETE" && p.status !== "SHELVED"),
+    [projects],
+  );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] border-collapse">
-        <thead>
-          <tr className="border-b border-cyan/30">
-            {cols.map((c) => (
-              <th
-                key={c}
-                scope="col"
-                className="px-3 py-2 text-left font-osd text-[10px] uppercase tracking-[0.18em] text-fg-faint"
-              >
-                {c}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.length === 0 ? (
-            <tr>
-              <td colSpan={cols.length} className="px-3 py-4">
-                <EmptyState
-                  glyph={kind === "paint" ? "▤" : "◈"}
-                  title={`No ${label.toLowerCase()}s yet`}
-                  hint={`Paste a store URL above, or add your first ${label.toLowerCase()} by hand.`}
-                  action={{ label: `+ Add ${label.toLowerCase()}`, onClick: onAdd }}
-                  className="py-8"
-                />
-              </td>
-            </tr>
-          ) : (
-            items.map((item) => (
-              <tr key={item.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
-                <td className="px-3 py-2">
-                  <Thumb src={item.thumbnail} alt={item.name} />
-                </td>
-                <td className="px-3 py-2">
-                  <a
-                    href={item.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-sm text-fg hover:text-cyan hover:underline"
+    <div className="flex flex-col gap-3">
+      {/* Header row — title + count on the left, Filter button far right (KpdEP). */}
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-osd text-xs uppercase tracking-[0.18em] text-cyan">
+          {title} <span className="text-fg-faint">{items.length}</span>
+        </h3>
+        <div className="relative">
+          <Button
+            variant={active.size > 0 ? "primary" : "secondary"}
+            size="sm"
+            aria-expanded={filterOpen}
+            aria-label={`Filter ${label.toLowerCase()} table`}
+            onClick={() => setFilterOpen((o) => !o)}
+          >
+            ▾ Filter{active.size > 0 ? ` (${active.size})` : ""}
+          </Button>
+          {filterOpen && (
+            <div
+              className="absolute right-0 top-full z-20 mt-2 w-48 border border-purple bg-bg p-3 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)]"
+              style={{ borderRadius: "var(--radius-panel)" }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+                  {title} · Status
+                </span>
+                {active.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setActive(new Set())}
+                    className="font-mono text-[10px] text-red hover:underline"
                   >
-                    {item.name}
-                  </a>
-                </td>
-                {kind === "model" && (
-                  <td className="px-3 py-2 font-mono text-xs tabular-nums text-fg-dim">
-                    ×{item.quantity ?? 1}
-                  </td>
+                    Clear
+                  </button>
                 )}
-                <td className="px-3 py-2 font-mono text-xs text-fg-dim">{item.company}</td>
-                <td className="px-3 py-2 font-mono text-xs text-fg-dim">{item.vendor}</td>
-                <td className="px-3 py-2 font-mono text-xs tabular-nums text-fg">{item.price}</td>
-                {kind === "paint" ? (
-                  <td className="px-3 py-2">
-                    <SwatchStrip
-                      swatches={
-                        item.recipeId ? (recipeSwatches?.(item.recipeId) ?? []) : []
-                      }
-                      onAttach={() => onAttachRecipe(item)}
-                    />
-                  </td>
-                ) : (
-                  <td className="px-3 py-2">
-                    <select
-                      value={item.projectId ?? ""}
-                      aria-label={`Assign ${item.name} to a project`}
-                      onChange={(e) => onAssignProject(item, e.target.value)}
-                      className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-cyan focus:shadow-[0_0_0_3px_rgba(0,210,255,0.12)] focus:outline-none"
-                    >
-                      <option value="">—</option>
-                      {projects.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.title}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                )}
-                <td className="px-3 py-2">
-                  <StatusDropdown
-                    value={item.status}
-                    ariaLabel={`Status for ${item.name}`}
-                    onChange={(s) => onStatusChange(item, s)}
+              </div>
+              <ul className="flex flex-col gap-1.5">
+                {STATUS_FILTERS.map((f) => (
+                  <li key={f.value}>
+                    <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-fg">
+                      <input
+                        type="checkbox"
+                        checked={active.has(f.value)}
+                        onChange={() => toggleFilter(f.value)}
+                        className="accent-purple"
+                      />
+                      {f.label}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* x-auto only as a fallback; columns are sized to fit so no scroll
+          is needed at normal widths (77YGg). */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-cyan/30">
+              {cols.map((c, i) => (
+                <th
+                  key={c || `c${i}`}
+                  scope="col"
+                  className="px-3 py-2 text-left font-osd text-[10px] uppercase tracking-[0.18em] text-fg-faint"
+                >
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {visible.length === 0 ? (
+              <tr>
+                <td colSpan={cols.length} className="px-3 py-4">
+                  <EmptyState
+                    glyph={kind === "paint" ? "▤" : "◈"}
+                    title={
+                      items.length === 0
+                        ? `No ${label.toLowerCase()}s yet`
+                        : "No matches for this filter"
+                    }
+                    hint={
+                      items.length === 0
+                        ? `Paste a store URL above, or add your first ${label.toLowerCase()} by hand.`
+                        : "Adjust the status filter to see more."
+                    }
+                    action={
+                      items.length === 0
+                        ? { label: `+ Add ${label.toLowerCase()}`, onClick: onAdd }
+                        : undefined
+                    }
+                    className="py-8"
                   />
                 </td>
-                <td className="px-3 py-2">
-                  <a
-                    href={item.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Open source for ${item.name}`}
-                    className="font-osd text-cyan hover:text-glow-cyan"
-                  >
-                    ↗
-                  </a>
-                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              visible.map((item) => (
+                <tr key={item.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
+                  <td className="px-3 py-2">
+                    <Thumb src={item.thumbnail} alt={item.name} />
+                  </td>
+                  <td className="px-3 py-2">
+                    {item.sourceUrl ? (
+                      <a
+                        href={item.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-sm font-medium text-fg hover:text-cyan hover:underline"
+                      >
+                        {item.name}
+                      </a>
+                    ) : (
+                      <span className="font-mono text-sm font-medium text-fg">{item.name}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 font-mono text-xs text-fg-dim">
+                    {kind === "model" ? (item.game ?? "") : item.company}
+                  </td>
+                  <td className="px-3 py-2 font-mono text-xs text-fg-dim">
+                    {kind === "model" ? (item.army ?? "") : item.vendor}
+                  </td>
+                  <td className="px-3 py-2 font-mono text-xs tabular-nums text-fg">{item.price}</td>
+                  {kind === "paint" ? (
+                    <td className="px-3 py-2">
+                      <SwatchStrip
+                        swatches={item.recipeId ? (recipeSwatches?.(item.recipeId) ?? []) : []}
+                        onAttach={() => onAttachRecipe(item)}
+                      />
+                    </td>
+                  ) : (
+                    <td className="px-3 py-2">
+                      <select
+                        value={item.projectId ?? ""}
+                        aria-label={`Assign ${item.name} to a project`}
+                        onChange={(e) => onAssignProject(item, e.target.value)}
+                        className="max-w-[160px] border border-purple/60 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-purple focus:shadow-[0_0_0_3px_rgba(155,128,220,0.18)] focus:outline-none"
+                      >
+                        <option value="">— Unassigned —</option>
+                        {activeProjects.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.title}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  )}
+                  <td className="px-3 py-2">
+                    <StatusDropdown
+                      kind={kind}
+                      value={item.status}
+                      ariaLabel={`Status for ${item.name}`}
+                      onChange={(s) => onStatusChange(item, s)}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    {item.sourceUrl ? (
+                      <a
+                        href={item.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Open source for ${item.name}`}
+                        className="font-mono text-xs text-cyan underline-offset-2 hover:underline"
+                      >
+                        link
+                      </a>
+                    ) : (
+                      <span className="font-mono text-xs text-fg-faint">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      aria-label={`Delete ${item.name}`}
+                      onClick={() => onRemove(item)}
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center border border-red/50 font-osd text-[11px] text-red",
+                        "transition-colors hover:bg-red/15 hover:border-red",
+                      )}
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      <div className="mt-3 flex gap-2 border-t border-cyan/20 pt-3">
-        <Button variant="secondary" size="sm" onClick={onAdd}>
-          + {label}
+      {/* Restyled add button — shared kit Button (R493). Neon green, the
+          collection accent the painter confirmed (MM-37/38/42/43). */}
+      <div className="flex border-t border-cyan/20 pt-3">
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onAdd}
+          className="border-green bg-green/15 text-green hover:bg-green/25"
+        >
+          + Add {label.toLowerCase()}
         </Button>
-        {items.length > 0 && (
-          <Button variant="tertiary" size="sm" onClick={() => onRemove(items[items.length - 1])}>
-            Remove {label}
-          </Button>
-        )}
       </div>
     </div>
   );

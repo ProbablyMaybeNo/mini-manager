@@ -231,13 +231,20 @@ export async function deleteWishlistItem(
  * a broken parse.
  */
 export async function scrapeAndCreateWishlistItem(
-  raw: { url: string },
+  raw: { url: string; kind?: (typeof wishlistKinds)[number] },
 ): Promise<ActionResult<WishlistItem>> {
   const urlParse = z
     .string()
     .url()
     .safeParse(raw.url);
   if (!urlParse.success) return { ok: false, error: "Invalid URL" };
+
+  // MM-36 — honour the Paint/Model toggle the painter selected. When
+  // provided, the explicit kind wins over the title/vendor heuristic so
+  // a model URL never lands in the paint table (and vice-versa).
+  const kindParse = z.enum(wishlistKinds).optional().safeParse(raw.kind);
+  if (!kindParse.success) return { ok: false, error: "Invalid item type" };
+  const selectedKind = kindParse.data;
 
   const userId = await currentUserId();
   let url: URL;
@@ -297,7 +304,7 @@ export async function scrapeAndCreateWishlistItem(
         category,
         priority: "Medium",
         status: "WISHLIST",
-        kind: inferWishlistKind({ title, vendor, category }),
+        kind: selectedKind ?? inferWishlistKind({ title, vendor, category }),
         scrapedMetadata: metadata,
       })
       .returning();

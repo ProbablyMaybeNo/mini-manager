@@ -21,12 +21,15 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 // The scrape pipeline is tested separately — stub it so the wishlist
 // actions don't accidentally fetch real vendor URLs in this suite.
-vi.mock("@/lib/scrape", () => ({
-  scrapeUrl: vi.fn(),
-}));
+const scrapeMock = vi.hoisted(() => ({ scrapeUrl: vi.fn() }));
+vi.mock("@/lib/scrape", () => scrapeMock);
 
-const { createWishlistItem, updateWishlistItem, setWishlistStatus } =
-  await import("@/lib/actions/wishlist");
+const {
+  createWishlistItem,
+  updateWishlistItem,
+  setWishlistStatus,
+  scrapeAndCreateWishlistItem,
+} = await import("@/lib/actions/wishlist");
 
 beforeEach(async () => {
   const { db, userId } = await makeTestDb();
@@ -109,6 +112,55 @@ describe("updateWishlistItem", () => {
       title: "Hijacked",
     });
     expect(res.ok).toBe(false);
+  });
+});
+
+describe("scrapeAndCreateWishlistItem — kind routing (MM-36)", () => {
+  beforeEach(() => {
+    // A title the heuristic classifies as a paint (no model terms, a
+    // non-mini vendor). Proves the explicit kind override wins.
+    scrapeMock.scrapeUrl.mockResolvedValue({
+      title: "Mephiston Red",
+      vendor: "Some Shop",
+      raw: { parser: "og" },
+    });
+  });
+
+  afterEach(() => {
+    scrapeMock.scrapeUrl.mockReset();
+  });
+
+  test("routes a pasted URL to the MODEL table when model is selected", async () => {
+    const res = await scrapeAndCreateWishlistItem({
+      url: "https://example.com/p",
+      kind: "model",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.kind).toBe("model");
+  });
+
+  test("routes a pasted URL to the PAINT table when paint is selected", async () => {
+    const res = await scrapeAndCreateWishlistItem({
+      url: "https://example.com/p",
+      kind: "paint",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.kind).toBe("paint");
+  });
+
+  test("falls back to the title heuristic when no kind is supplied", async () => {
+    scrapeMock.scrapeUrl.mockResolvedValueOnce({
+      title: "Ork Boyz Box",
+      vendor: "Some Shop",
+      raw: { parser: "og" },
+    });
+    const res = await scrapeAndCreateWishlistItem({ url: "https://example.com/box" });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    // "box" → model via inferWishlistKind.
+    expect(res.data.kind).toBe("model");
   });
 });
 

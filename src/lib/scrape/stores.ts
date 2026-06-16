@@ -1,0 +1,87 @@
+/**
+ * Supported-store registry — the single source of truth for which
+ * vendor domains the scrape pipeline can auto-populate from.
+ *
+ * This module is deliberately framework-neutral (no `server-only`) so
+ * the collection UI can import it to (a) render the "these stores
+ * auto-fill" helper text and (b) flag a pasted URL whose host isn't
+ * supported (MM-40). The server-side parsers in `./parsers` reference
+ * the same hostnames so the two never drift.
+ */
+
+export interface SupportedStore {
+  /** Display name shown in the helper text / vendor column. */
+  name: string;
+  /** Registrable hostnames this store covers (matched by suffix). */
+  hostnames: string[];
+}
+
+export const SUPPORTED_STORES: ReadonlyArray<SupportedStore> = [
+  { name: "Games Workshop", hostnames: ["games-workshop.com"] },
+  { name: "Element Games", hostnames: ["elementgames.co.uk"] },
+  { name: "Wayland Games", hostnames: ["waylandgames.co.uk"] },
+  { name: "Goblin Gaming", hostnames: ["goblingaming.co.uk"] },
+  { name: "Noble Knight Games", hostnames: ["nobleknight.com"] },
+  { name: "Miniature Market", hostnames: ["miniaturemarket.com"] },
+  { name: "Game Kastle", hostnames: ["gamekastle.com"] },
+  { name: "Gamers Roll", hostnames: ["gamersroll.com"] },
+  {
+    name: "Amazon",
+    hostnames: [
+      "amazon.com",
+      "amazon.co.uk",
+      "amazon.de",
+      "amazon.fr",
+      "amazon.it",
+      "amazon.es",
+      "amazon.ca",
+      "amazon.com.au",
+      "amazon.co.jp",
+    ],
+  },
+  {
+    name: "eBay",
+    hostnames: [
+      "ebay.com",
+      "ebay.co.uk",
+      "ebay.de",
+      "ebay.fr",
+      "ebay.it",
+      "ebay.es",
+      "ebay.ca",
+    ],
+  },
+];
+
+/** Display names of every supported store, in helper-text order. */
+export const SUPPORTED_STORE_NAMES: ReadonlyArray<string> =
+  SUPPORTED_STORES.map((s) => s.name);
+
+/** Normalise a hostname: lowercase + strip a leading `www.`. */
+function normalizeHost(host: string): string {
+  return host.toLowerCase().replace(/^www\./, "");
+}
+
+/**
+ * Resolve a pasted URL to its supported store, or `null` when no parser
+ * covers it. Matches by exact host or registrable-suffix so subdomains
+ * (e.g. `us.games-workshop.com`) resolve to the same store. Never throws.
+ */
+export function matchSupportedStore(input: string): SupportedStore | null {
+  let host: string;
+  try {
+    host = normalizeHost(new URL(input).hostname);
+  } catch {
+    return null;
+  }
+  return (
+    SUPPORTED_STORES.find((store) =>
+      store.hostnames.some((h) => host === h || host.endsWith(`.${h}`)),
+    ) ?? null
+  );
+}
+
+/** Convenience predicate for the paste field's unsupported-link flag. */
+export function isSupportedStoreUrl(input: string): boolean {
+  return matchSupportedStore(input) !== null;
+}
