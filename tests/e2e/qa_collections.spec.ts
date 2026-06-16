@@ -43,15 +43,16 @@ test.describe("M2 — Collection add", () => {
     await dialog.locator('input[name="prompt-value"]').fill(title);
     await dialog.getByRole("button", { name: /^Add$/ }).click();
 
-    // The new paint renders as a name link in the paint table (the row
-    // also has an "Open source" ↗ link, so match the name exactly).
+    // The new paint renders as a row in the paint table. A manual entry has
+    // no source URL, so its name is plain text (only scraped rows with a
+    // sourceUrl render the name as a link) — match the name text exactly.
     await expect(
-      page.getByRole("link", { name: title, exact: true }),
+      page.getByText(title, { exact: true }),
     ).toBeVisible({ timeout: 15_000 });
 
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("link", { name: title, exact: true }),
+      page.getByText(title, { exact: true }),
     ).toBeVisible({ timeout: 30_000 });
   });
 

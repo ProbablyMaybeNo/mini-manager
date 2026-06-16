@@ -14,6 +14,7 @@ import { ProjectInspector } from "./ProjectInspector";
 import { ProjectsTable } from "./ProjectsTable";
 import { RightRail } from "./RightRail";
 import { StatRow } from "./StatRow";
+import { UpcomingEventsBar } from "./UpcomingEventsBar";
 
 export type DashboardStatus = "ready" | "loading" | "error";
 
@@ -55,6 +56,7 @@ export function DashboardView({
   onFocusProject,
   onAttachRecipe,
   onAddProject,
+  onUploadArmyList,
   onStartSession,
   onAddSubProject,
   onRetry,
@@ -101,10 +103,13 @@ export function DashboardView({
                   onAttachRecipe={(p) => onAttachRecipe?.(p)}
                   onAddSubProject={onAddSubProject}
                 />
-                {/* Upload-Army-List section removed for now (8TkH) — it can
-                    come back later; the primary action is creating a project. */}
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
                   <Button onClick={onAddProject}>+ New Project</Button>
+                  {/* Upload-Army-List restored — opens the ArmyImportPanel
+                      slide-out wired through onUploadArmyList. */}
+                  <Button variant="secondary" onClick={onUploadArmyList}>
+                    ⬆ Upload Army List
+                  </Button>
                 </div>
               </Panel>
             </div>
@@ -113,8 +118,9 @@ export function DashboardView({
         )}
       </div>
 
-      {/* Bottom UPCOMING-EVENTS ticker removed (hA-bz) — it duplicated the
-          PLANNER calendar's events, which already surfaces the same dates. */}
+      {/* Bottom UPCOMING-EVENTS ticker restored — surfaces the dashboard's
+          calendar events so newly-added dates show up immediately. */}
+      <UpcomingEventsBar events={status === "ready" ? events : []} />
 
       <ProjectInspector
         project={selected}

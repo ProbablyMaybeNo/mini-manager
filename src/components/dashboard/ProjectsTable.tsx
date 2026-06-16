@@ -97,9 +97,12 @@ export function ProjectsTable({
       const childType = SUB_TYPE[p.type];
       const canAddSub = !!childType && !!onAddSubProject;
       const isAdding = addingFor === p.id;
-      // A container is "expandable" if it has children OR can grow new ones —
-      // so an empty Army still gets a reveal-arrow once you can add Units.
-      const showCaret = hasChildren || canAddSub;
+      // The caret expands/collapses existing sub-projects, so only rows that
+      // actually have children render it. Leaf rows (incl. empty containers
+      // like a childless Army) render no chevron — adding a first sub-project
+      // is done via the dedicated "+" action button, which then makes the
+      // caret appear (honours the documented leaf contract, M3.2).
+      const showCaret = hasChildren;
 
       const row = (
         <tr
