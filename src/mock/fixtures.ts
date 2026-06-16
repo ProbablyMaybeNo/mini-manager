@@ -145,8 +145,8 @@ export const mockCollectionPaints: CollectionItem[] = [
 ];
 
 export const mockCollectionModels: CollectionItem[] = [
-  { id: "m1", kind: "model", thumbnail: "", name: "Primaris Captain", company: "Games Workshop", vendor: "Element Games", price: "$29.99", quantity: 1, status: "OWNED", projectId: "p1", sourceUrl: "https://example.com/m1" },
-  { id: "m2", kind: "model", thumbnail: "", name: "Ork Boyz Box", company: "Games Workshop", vendor: "Wayland", price: "$49.99", quantity: 2, status: "BUILDING", projectId: "p2", sourceUrl: "https://example.com/m2" },
+  { id: "m1", kind: "model", thumbnail: "", name: "Primaris Captain", company: "Games Workshop", vendor: "Element Games", game: "Warhammer 40,000", army: "Space Marines", price: "$29.99", quantity: 1, status: "OWNED", projectId: "p1", sourceUrl: "https://example.com/m1" },
+  { id: "m2", kind: "model", thumbnail: "", name: "Ork Boyz Box", company: "Games Workshop", vendor: "Wayland", game: "Warhammer 40,000", army: "Orks", price: "$49.99", quantity: 2, status: "BUILDING", projectId: "p2", sourceUrl: "https://example.com/m2" },
 ];
 
 /* ----------------------------------------------------------------------------

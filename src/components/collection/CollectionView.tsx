@@ -4,6 +4,7 @@ import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { CollectionTable } from "./CollectionTable";
+import { CollectionStatsBar } from "./CollectionStatsBar";
 import { PasteUrlBar } from "./PasteUrlBar";
 
 export type CollectionStatus = "ready" | "loading" | "error";
@@ -39,7 +40,8 @@ export function CollectionView({
   recipeSwatches?: (recipeId: string) => string[];
 }) {
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <div className="flex h-full flex-col p-6">
+      <div className="flex flex-1 flex-col gap-6 pb-4">
       <PageHeader
         title="COLLECTION"
         tagline="Track what you own, want, and what each cost — paints and models."
@@ -62,7 +64,7 @@ export function CollectionView({
         <div className="h-64 animate-pulse border border-cyan/20 bg-cyan/5" aria-busy="true" />
       ) : (
         <>
-          <Panel label="MY PAINT COLLECTION" cornerTicks className="p-4">
+          <Panel label="MY PAINT COLLECTION" cornerTicks className="p-4 pt-5">
             <CollectionTable
               kind="paint"
               items={paints}
@@ -76,7 +78,7 @@ export function CollectionView({
             />
           </Panel>
 
-          <Panel label="MY MODEL COLLECTION" cornerTicks className="p-4">
+          <Panel label="MY MODEL COLLECTION" cornerTicks className="p-4 pt-5">
             <CollectionTable
               kind="model"
               items={models}
@@ -90,6 +92,9 @@ export function CollectionView({
           </Panel>
         </>
       )}
+      </div>
+
+      {status === "ready" && <CollectionStatsBar paints={paints} models={models} />}
     </div>
   );
 }

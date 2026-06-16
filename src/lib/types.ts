@@ -107,6 +107,7 @@ export interface CollectionItem {
   kind: CollectionKind;
   thumbnail: string;
   name: string;
+  /** Paint manufacturer (paint rows). */
   company: string;
   vendor: string;
   price: string;
@@ -114,6 +115,9 @@ export interface CollectionItem {
   sourceUrl: string;
   quantity?: number;
   projectId?: string;
+  /** Game system + faction/army (model rows) — shown as Game/Army columns. */
+  game?: string;
+  army?: string;
   /** Attached recipe (paint rows) — the scheme this paint belongs to. */
   recipeId?: string;
 }
