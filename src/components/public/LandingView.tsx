@@ -25,7 +25,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Focus",
     blurb:
-      "Paint recipes, color schemes, notes, techniques, and a timer provide maximum productivity when session painting.",
+      "Maximize your painting productivity with easy access to your paint recipes, notes, techniques, inspiration, and a timer. Focus on the session at hand.",
   },
   {
     title: "Planner",
