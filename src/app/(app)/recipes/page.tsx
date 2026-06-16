@@ -40,6 +40,12 @@ function RecipesRoute() {
         });
       }}
       onRetry={() => router.refresh()}
+      onEditPaint={(recipe) => {
+        // MM-51 — the index view-model carries no per-slot ids to persist an
+        // in-place edit, so route into the recipe editor (same shared picker,
+        // full persistence) rather than silently dropping the change.
+        router.push(`/recipes/${recipe.id}`);
+      }}
     />
   );
 }

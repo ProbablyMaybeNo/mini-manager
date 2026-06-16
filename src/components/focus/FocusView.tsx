@@ -166,12 +166,33 @@ export function FocusView({
               >
                 {ref ? (
                   <>
-                    <span className="truncate font-mono text-[9px] text-fg-dim">{ref.url}</span>
+                    {/* MM-26 — render the pasted reference as an actual image.
+                        Plain <img> (not next/image) so arbitrary external hosts
+                        load without the optimizer's host allowlist; on a load
+                        error we fall back to showing the URL text. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ref.url}
+                      alt={`Reference ${i + 1}`}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        el.style.display = "none";
+                        const fallback = el.nextElementSibling as HTMLElement | null;
+                        if (fallback) fallback.style.display = "block";
+                      }}
+                    />
+                    <span
+                      className="truncate px-1 font-mono text-[9px] text-fg-dim"
+                      style={{ display: "none" }}
+                    >
+                      {ref.url}
+                    </span>
                     <button
                       type="button"
                       aria-label={`Remove reference ${i + 1}`}
                       onClick={() => onRemoveInspo?.(ref.id)}
-                      className="absolute right-0.5 top-0.5 font-osd text-[10px] text-fg-faint hover:text-red"
+                      className="absolute right-0.5 top-0.5 z-10 bg-bg/70 px-0.5 font-osd text-[10px] text-fg-faint hover:text-red"
                     >
                       ✕
                     </button>

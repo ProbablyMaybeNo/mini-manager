@@ -50,6 +50,13 @@ export function RecipeEditorClient({
   // An unsaved "new" draft is dirty as soon as it has a name or any slots
   // (leaving would discard it); an existing recipe is dirty once edited.
   // `saved` disarms the guard for the post-save redirect.
+  // Resolve a picked paint id → brand/name for the slot row. The shared
+  // ColorPicker carries the id; the editor only needs the display labels.
+  const resolvePaintMeta = (paintId: string) => {
+    const p = paints.find((x) => x.id === paintId);
+    return p ? { brand: p.brand, name: p.name } : null;
+  };
+
   const isNew = recipe.id === "new";
   const hasContent = recipe.name.trim().length > 0 || recipe.slots.length > 0;
   const dirty =
@@ -111,7 +118,7 @@ export function RecipeEditorClient({
       <RecipeEditorView
         recipe={recipe}
         projects={projects}
-        paints={paints}
+        resolvePaintMeta={resolvePaintMeta}
         onChange={setRecipe}
         onShare={share}
         onSave={persist}

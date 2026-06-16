@@ -19,6 +19,15 @@ const config: NextConfig = {
   // this halves the bytes for those on modern phones.
   images: {
     formats: ["image/avif", "image/webp"],
+    // MM-26 — inspiration tiles render painter-pasted reference image URLs
+    // from arbitrary hosts. next/image blocks unknown remote hosts by
+    // default, so a pasted URL silently failed to render. Allow any
+    // remote image (these are user-supplied references shown small) via
+    // the documented remotePatterns wildcard.
+    remotePatterns: [
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
+    ],
   },
   // Legacy-route redirects. Each of these paths existed in an earlier
   // information architecture; permanently redirect inbound links
