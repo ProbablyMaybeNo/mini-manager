@@ -15,7 +15,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Paint recipes",
     blurb:
-      "Pick your paints and plan your projects. Save them for later or share them with friends.",
+      "Test your color schemes and pick your paints, using a wide variety of color tools and features.",
   },
   {
     title: "Project Dashboard",
