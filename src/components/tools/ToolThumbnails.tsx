@@ -15,10 +15,14 @@ export function WheelThumb() {
           const a0 = (i * 30 - 90) * (Math.PI / 180);
           const a1 = ((i + 1) * 30 - 90) * (Math.PI / 180);
           const r = 34;
-          const x0 = Math.cos(a0) * r;
-          const y0 = Math.sin(a0) * r;
-          const x1 = Math.cos(a1) * r;
-          const y1 = Math.sin(a1) * r;
+          // Round transcendental results to a fixed precision so the SSR and
+          // client SVG attributes serialize identically (float strings like
+          // -17.000000000000004 vs ...14 otherwise trip React's hydration
+          // attribute-mismatch guard).
+          const x0 = (Math.cos(a0) * r).toFixed(3);
+          const y0 = (Math.sin(a0) * r).toFixed(3);
+          const x1 = (Math.cos(a1) * r).toFixed(3);
+          const y1 = (Math.sin(a1) * r).toFixed(3);
           return (
             <path
               key={i}
@@ -60,7 +64,8 @@ export function DropperThumb() {
             key={r}
             points={Array.from({ length: 9 }, (_, c) => {
               const x = 12 + c * 14;
-              const y = 30 + r * 9 - Math.sin(c * 0.9 + r) * 6;
+              // toFixed keeps SSR/client output bitwise-identical (see WheelThumb).
+              const y = (30 + r * 9 - Math.sin(c * 0.9 + r) * 6).toFixed(3);
               return `${x},${y}`;
             }).join(" ")}
           />

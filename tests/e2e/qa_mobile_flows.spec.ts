@@ -81,7 +81,7 @@ test.describe("M6 — Mobile primary flows", () => {
     await expectNoHorizontalScroll(page);
 
     const name = `QA Mobile Squad ${Date.now()}`;
-    const addBtn = page.getByRole("button", { name: /\+ Add Project/i });
+    const addBtn = page.getByRole("button", { name: /\+ New Project/i });
     const panel = page.getByRole("dialog", { name: /New Project/i });
     await expect(async () => {
       await addBtn.click();
