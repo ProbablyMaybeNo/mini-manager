@@ -140,6 +140,8 @@ export interface CalendarEvent {
   date: string;
   name: string;
   kind: CalendarEventKind;
+  /** Optional free-text notes, surfaced in the calendar hover tooltip (D1). */
+  notes?: string | null;
 }
 
 export interface ActivityEntry {

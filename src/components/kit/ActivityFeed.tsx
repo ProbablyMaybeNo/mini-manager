@@ -1,22 +1,16 @@
 import { cn } from "@/lib/cn";
-import type { Accent } from "@/lib/palette";
+import { accentText, activityAccentFor } from "@/lib/palette";
 import type { ActivityEntry } from "@/lib/types";
 import { StatusIcon, type StatusIconName } from "./StatusIcon";
 
-/** Activity icon key → accent, so the feed uses the full palette rather than
- *  reading as a wall of green (created=green, acquire=cyan, build=purple,
- *  prime=purple, paint=yellow, check=green). */
-const ICON_ACCENT: Record<string, Accent> = {
-  add: "green",
-  cart: "cyan",
-  build: "purple",
-  prime: "purple",
-  paint: "yellow",
-  check: "green",
-  alert: "red",
-};
-
-/** Activity tracker — each row carries a minimal sharp status icon + accent. */
+/**
+ * Activity tracker — one row per recent move. Each row is colour-coded by the
+ * move's type using the style-guide palette (D5 / MM-45) and carries a minimal
+ * sharp status icon (the Figma status glyphs the tracker was missing). The icon
+ * inherits the row's accent via `currentColor`, so the feed scans by colour at
+ * a glance instead of reading as a wall of one hue. Unknown icon keys fall back
+ * to a dim accent + check glyph, so a new move type never crashes the feed.
+ */
 export function ActivityFeed({
   entries,
   className,
@@ -34,10 +28,16 @@ export function ActivityFeed({
   return (
     <ul className={cn("flex flex-col gap-2", className)}>
       {entries.map((e) => {
-        const accent = ICON_ACCENT[e.icon] ?? "green";
+        const accent = activityAccentFor(e.icon);
         return (
-          <li key={e.id} className="flex items-center gap-2 font-mono text-[11px] text-fg-dim">
-            <StatusIcon name={e.icon as StatusIconName} accent={accent} size={13} />
+          <li
+            key={e.id}
+            className={cn(
+              "flex items-center gap-2 font-mono text-[11px]",
+              accentText[accent],
+            )}
+          >
+            <StatusIcon name={e.icon as StatusIconName} size={13} />
             <span className="flex-1 truncate">{e.text}</span>
             <span className="text-fg-faint">{e.when}</span>
           </li>

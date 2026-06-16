@@ -19,7 +19,11 @@ export function StatBox({
     <div
       className={cn(
         "border bg-bg/60 px-4 py-3 panel-depth transition-shadow duration-200 hover:panel-depth-glow",
+        // Border tracks the accent so each KPI box reads in its own hue
+        // (D5 / MM-49); the border alpha is softened so it stays a frame,
+        // not a glaring outline.
         accentBorder[accent],
+        "border-opacity-40",
         className,
       )}
       style={{ borderRadius: "var(--radius-panel)" }}
