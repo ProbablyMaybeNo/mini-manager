@@ -36,6 +36,11 @@ export function AuthView({
   return (
     <div className="flex min-h-dvh items-center justify-center p-6">
       <Panel label="SYS ▸ ACCESS" cornerTicks glow className="w-full max-w-sm p-6">
+        {/* UX-010 — a real page heading for screen readers; the terminal
+            panel label is decorative, so this stays visually hidden. */}
+        <h1 className="sr-only">
+          {isSignUp ? "Sign up for Mini Manager" : "Sign in to Mini Manager"}
+        </h1>
         <div className="mb-5 flex flex-col items-center gap-3 text-center">
           <Logo href="/" size={128} className="animate-power-on" />
           <BootSequence
