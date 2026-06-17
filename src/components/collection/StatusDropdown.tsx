@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/cn";
-import { accentBorder, accentText, statusAccent } from "@/lib/palette";
+import { Listbox } from "@/components/kit";
+import { statusAccent } from "@/lib/palette";
 import type { CollectionKind, ProjectStatus } from "@/lib/types";
 
 /**
@@ -46,24 +46,16 @@ export function StatusDropdown({
   ariaLabel: string;
   kind?: CollectionKind;
 }) {
-  const options = kind === "paint" ? PAINT_STATUSES : MODEL_STATUSES;
+  const statuses = kind === "paint" ? PAINT_STATUSES : MODEL_STATUSES;
   const accent = statusAccent[value];
   return (
-    <select
+    <Listbox
       value={value}
-      aria-label={ariaLabel}
-      onChange={(e) => onChange(e.target.value as ProjectStatus)}
-      className={cn(
-        "border bg-bg px-2 py-1 font-osd text-[10px] uppercase tracking-[0.12em] focus:outline-none",
-        accentBorder[accent],
-        accentText[accent],
-      )}
-    >
-      {options.map((s) => (
-        <option key={s} value={s} className="bg-bg text-fg">
-          {STATUS_LABEL[s]}
-        </option>
-      ))}
-    </select>
+      ariaLabel={ariaLabel}
+      accent={accent}
+      options={statuses.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
+      onChange={(s) => onChange(s)}
+      triggerClassName="uppercase tracking-[0.12em]"
+    />
   );
 }

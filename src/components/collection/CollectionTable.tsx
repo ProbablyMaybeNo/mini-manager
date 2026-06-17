@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Chip, EmptyState, SwatchStrip } from "@/components/kit";
+import { Button, Chip, EmptyState, Listbox, SwatchStrip } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { StatusDropdown } from "./StatusDropdown";
@@ -238,19 +238,18 @@ export function CollectionTable({
                     </td>
                   ) : (
                     <td className="px-3 py-2">
-                      <select
+                      <Listbox
                         value={item.projectId ?? ""}
-                        aria-label={`Assign ${item.name} to a project`}
-                        onChange={(e) => onAssignProject(item, e.target.value)}
-                        className="max-w-[160px] border border-purple/60 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-purple focus:shadow-[0_0_0_3px_rgba(155,128,220,0.18)] focus:outline-none"
-                      >
-                        <option value="">— Unassigned —</option>
-                        {activeProjects.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.title}
-                          </option>
-                        ))}
-                      </select>
+                        ariaLabel={`Assign ${item.name} to a project`}
+                        accent="purple"
+                        placeholder="— Unassigned —"
+                        onChange={(v) => onAssignProject(item, v)}
+                        options={[
+                          { value: "", label: "— Unassigned —" },
+                          ...activeProjects.map((p) => ({ value: p.id, label: p.title })),
+                        ]}
+                        triggerClassName="max-w-[160px]"
+                      />
                     </td>
                   )}
                   <td className="px-3 py-2">

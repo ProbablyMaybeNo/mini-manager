@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Button,
   Input,
+  Listbox,
   PriorityTag,
   ProgressBar,
   StatusText,
@@ -181,56 +182,39 @@ export function ProjectWorkspaceBody({
           </span>
           <TypeChip type={project.type} />
         </div>
-        <label className="flex flex-col gap-1 border border-cyan/20 p-2">
+        <div className="flex flex-col gap-1 border border-cyan/20 p-2">
           <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
             Status
           </span>
-          <select
+          <Listbox
             value={project.status}
             disabled={pending}
-            aria-label="Project status"
-            onChange={(e) =>
-              run(() =>
-                bumpProjectStatus({
-                  id: project.id,
-                  status: e.target.value as ProjectStatus,
-                }),
-              )
+            ariaLabel="Project status"
+            options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+            onChange={(s) =>
+              run(() => bumpProjectStatus({ id: project.id, status: s }))
             }
-            className="bg-bg font-mono text-xs text-fg focus:outline-none"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 border border-cyan/20 p-2">
+          />
+        </div>
+        <div className="flex flex-col gap-1 border border-cyan/20 p-2">
           <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
             Priority
           </span>
-          <select
+          <Listbox
             value={project.priority}
             disabled={pending}
-            aria-label="Project priority"
-            onChange={(e) =>
+            ariaLabel="Project priority"
+            options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p }))}
+            onChange={(p) =>
               run(() =>
                 updateProjectPriority({
                   id: project.id,
-                  priority: PRIORITY_TO_DB[e.target.value as Priority],
+                  priority: PRIORITY_TO_DB[p],
                 }),
               )
             }
-            className="bg-bg font-mono text-xs text-fg focus:outline-none"
-          >
-            {PRIORITY_OPTIONS.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </label>
+          />
+        </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
           <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
             Overall progress

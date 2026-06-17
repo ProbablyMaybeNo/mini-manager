@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Panel } from "@/components/kit";
+import { Button, Input, Listbox, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
 import type { Project, Recipe, RecipeSlot } from "@/lib/types";
@@ -103,18 +103,17 @@ export function RecipeEditorView({
           <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
             Assign to project
           </span>
-          <select
+          <Listbox
+            size="md"
             value={recipe.assignedProjectId ?? ""}
-            onChange={(e) => update({ assignedProjectId: e.target.value || undefined })}
-            className="border border-cyan/40 bg-bg px-2 py-1.5 font-mono text-sm text-fg focus:border-cyan focus:outline-none"
-          >
-            <option value="">Unassigned</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title}
-              </option>
-            ))}
-          </select>
+            ariaLabel="Assign to project"
+            placeholder="Unassigned"
+            onChange={(v) => update({ assignedProjectId: v || undefined })}
+            options={[
+              { value: "", label: "Unassigned" },
+              ...projects.map((p) => ({ value: p.id, label: p.title })),
+            ]}
+          />
         </div>
         <Button variant="secondary" onClick={onShare}>
           Share
