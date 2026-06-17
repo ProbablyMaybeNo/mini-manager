@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Button, Input, Listbox, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
-import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
 import type { Project, Recipe, RecipeSlot } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
+import { RecipePaintPicker } from "./RecipePaintPicker";
 import { SlotRow } from "./SlotRow";
 
 export function RecipeEditorView({
@@ -167,10 +167,11 @@ export function RecipeEditorView({
         />
       </Panel>
 
-      {/* MM-25 — the shared 3-panel ColorPicker (wheel + library + eyedropper)
-          replaces the old text-only "Pick a paint" search. Stays open for
-          multi-add. */}
-      <ColorPickerPanel
+      {/* UX-002 — clicking a slot opens the FULL paint-creator toolset (wheel +
+          filterable library + dropper + match + layering), matching the Figma
+          Recipe.png right-rail, not the reduced wheel-only picker. Stays open
+          for multi-add; every tool's "use" funnels through applySelection. */}
+      <RecipePaintPicker
         open={pickingSlot != null}
         onClose={() => setPickingSlot(null)}
         onSelect={applySelection}
