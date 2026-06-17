@@ -178,7 +178,7 @@ export function CollectionTable({
                     }
                     action={
                       items.length === 0
-                        ? { label: `+ Add ${label.toLowerCase()}`, onClick: onAdd }
+                        ? { label: `+ Add ${label.toLowerCase()}`, onClick: onAdd, variant: "add" as const }
                         : undefined
                     }
                     className="py-8"
@@ -282,12 +282,7 @@ export function CollectionTable({
       {/* Restyled add button — shared kit Button (R493). Neon green, the
           collection accent the painter confirmed (MM-37/38/42/43). */}
       <div className="flex border-t border-cyan/20 pt-3">
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={onAdd}
-          className="border-green bg-green/15 text-green hover:bg-green/25"
-        >
+        <Button variant="add" size="sm" onClick={onAdd}>
           + Add {label.toLowerCase()}
         </Button>
       </div>

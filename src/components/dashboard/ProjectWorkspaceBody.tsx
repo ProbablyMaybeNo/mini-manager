@@ -246,7 +246,7 @@ export function ProjectWorkspaceBody({
             <Swatch key={`${hex}-${i}`} hex={hex} size="lg" />
           ))}
           <Button
-            variant="secondary"
+            variant="add"
             size="sm"
             onClick={() => onAttachRecipe?.(project)}
           >
@@ -396,7 +396,7 @@ export function ProjectWorkspaceBody({
           </form>
         ) : (
           <Button
-            variant="secondary"
+            variant="add"
             size="sm"
             className="mt-1 self-start"
             onClick={() => setAddingChild(true)}

@@ -264,7 +264,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         </form>
       ) : (
         <Button
-          variant="secondary"
+          variant="add"
           size="sm"
           className="w-full"
           onClick={() => setAdding(true)}

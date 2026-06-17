@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { Button } from "./Button";
+import { Button, type ButtonProps } from "./Button";
 
 /**
  * The one first-run / no-data block for the app. A faint glyph, a title,
@@ -18,7 +18,7 @@ export function EmptyState({
   glyph?: ReactNode;
   title: string;
   hint?: string;
-  action?: { label: string; onClick: () => void };
+  action?: { label: string; onClick: () => void; variant?: ButtonProps["variant"] };
   className?: string;
 }) {
   return (
@@ -38,7 +38,7 @@ export function EmptyState({
         <p className="max-w-xs font-mono text-xs text-fg-faint">{hint}</p>
       )}
       {action && (
-        <Button onClick={action.onClick} className="mt-1">
+        <Button variant={action.variant} onClick={action.onClick} className="mt-1">
           {action.label}
         </Button>
       )}

@@ -29,7 +29,7 @@ export function RecipeIndexTable({
         glyph="⌖"
         title="No recipes yet"
         hint="A recipe is a repeatable paint scheme you can attach to a project and share."
-        action={{ label: "+ Create your first recipe", onClick: onCreate }}
+        action={{ label: "+ Create your first recipe", onClick: onCreate, variant: "add" }}
       />
     );
   }
@@ -116,7 +116,7 @@ export function RecipeIndexTable({
           ))}
           <tr>
             <td colSpan={COLS.length} className="px-3 py-3 text-center">
-              <Button variant="tertiary" onClick={onCreate}>
+              <Button variant="add" onClick={onCreate}>
                 + Recipe
               </Button>
             </td>

@@ -150,7 +150,7 @@ export function RecipeEditorView({
             />
           ))
         )}
-        <Button variant="secondary" onClick={addSlot}>
+        <Button variant="add" onClick={addSlot}>
           + Add slot
         </Button>
       </Panel>

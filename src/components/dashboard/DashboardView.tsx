@@ -104,7 +104,7 @@ export function DashboardView({
                   onAddSubProject={onAddSubProject}
                 />
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-                  <Button onClick={onAddProject}>+ New Project</Button>
+                  <Button variant="add" onClick={onAddProject}>+ New Project</Button>
                   {/* Upload-Army-List restored — opens the ArmyImportPanel
                       slide-out wired through onUploadArmyList. */}
                   <Button variant="secondary" onClick={onUploadArmyList}>
