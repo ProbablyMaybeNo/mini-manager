@@ -186,8 +186,16 @@ export function CollectionTable({
                 </td>
               </tr>
             ) : (
-              visible.map((item) => (
-                <tr key={item.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
+              visible.map((item, rowIndex) => (
+                <tr
+                  key={item.id}
+                  className={cn(
+                    "border-b border-fg/10 transition-colors hover:bg-cyan/5",
+                    // Subtle zebra banding so dense rows separate without
+                    // relying purely on the hairline borders (UX-015).
+                    rowIndex % 2 === 1 && "bg-fg/[0.02]",
+                  )}
+                >
                   <td className="px-3 py-2">
                     <Thumb src={item.thumbnail} alt={item.name} />
                   </td>

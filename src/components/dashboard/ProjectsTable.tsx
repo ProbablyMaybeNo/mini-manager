@@ -94,8 +94,13 @@ export function ProjectsTable({
     );
   }
 
-  function renderRows(items: Project[], depth: number): ReactNode[] {
-    return items.flatMap((p) => {
+  // `groupIndex` is the index of the top-level ancestor; it stays constant as
+  // we recurse so an Army and all its sub-projects share one banding tint and
+  // each top-level group alternates (UX-015 — separate dense row groups).
+  function renderRows(items: Project[], depth: number, groupIndex?: number): ReactNode[] {
+    return items.flatMap((p, i) => {
+      const group = groupIndex ?? i;
+      const banded = group % 2 === 1;
       const selected = p.id === selectedId;
       const hasChildren = !!p.children && p.children.length > 0;
       const isExpanded = expanded.has(p.id);
@@ -127,7 +132,7 @@ export function ProjectsTable({
             "cursor-pointer border-b border-fg/10 transition-colors focus:outline-none",
             selected
               ? "bg-cyan/10 text-cyan"
-              : "hover:bg-cyan/5 focus-visible:bg-cyan/10",
+              : cn("hover:bg-cyan/5 focus-visible:bg-cyan/10", banded && "bg-fg/[0.02]"),
           )}
         >
           <td className="px-3 py-2.5 font-mono text-sm text-fg">
@@ -277,7 +282,7 @@ export function ProjectsTable({
         ) : null;
 
       const childRows =
-        hasChildren && isExpanded ? renderRows(p.children!, depth + 1) : [];
+        hasChildren && isExpanded ? renderRows(p.children!, depth + 1, group) : [];
       return [row, ...(isExpanded && addRow ? [addRow] : []), ...childRows];
     });
   }
