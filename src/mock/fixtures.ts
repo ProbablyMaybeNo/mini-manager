@@ -49,6 +49,18 @@ export const mockSessionStats: SessionStats = {
   streakDays: 3,
 };
 
+/** Per-project lifetime logged minutes (A5qzb — Focus per-project time).
+ *  Keyed by project id; sub-projects carry their own logged time so a
+ *  parent rolls up over them. Ids absent here have no logged time. */
+export const mockProjectMinutes: Record<string, number> = {
+  p1: 420,
+  "p1-u1": 180,
+  "p1-u1-m1": 95,
+  p3: 610,
+  "p3-u1": 240,
+  p5: 320,
+};
+
 export const mockActivity: ActivityEntry[] = [
   { id: "a1", icon: "add", text: "Added Ork Boys", when: "2h ago" },
   { id: "a2", icon: "cart", text: "Bought Space Marines", when: "5h ago" },

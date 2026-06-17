@@ -127,6 +127,32 @@ export async function getSessionRollups(
 }
 
 /**
+ * Per-project lifetime logged seconds, keyed by project id. Sums
+ * `duration_seconds` for the user's completed sessions and groups by
+ * project so the FOCUS bench can show "Time" for the pinned project
+ * (and the caller can roll a parent up over its sub-projects). Projects
+ * with no logged time simply don't appear in the map.
+ */
+export async function getProjectRollupSecondsMap(
+  userId: string,
+): Promise<Map<string, number>> {
+  const rows = await db
+    .select({
+      projectId: paintSessions.projectId,
+      total: sql<number>`COALESCE(SUM(${paintSessions.durationSeconds}), 0)`,
+    })
+    .from(paintSessions)
+    .where(eq(paintSessions.userId, userId))
+    .groupBy(paintSessions.projectId);
+
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    if (r.projectId) map.set(r.projectId, Number(r.total ?? 0));
+  }
+  return map;
+}
+
+/**
  * Internal helper exposed for tests: list the user's completed
  * sessions older than the given cutoff. Not called from production
  * code paths — the rollup queries are the public surface.

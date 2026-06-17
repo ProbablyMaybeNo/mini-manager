@@ -360,3 +360,52 @@ describe("rollup helpers — today + week sums", () => {
     expect(today).toBe(0);
   });
 });
+
+describe("getProjectRollupSecondsMap — per-project lifetime totals (UX-003)", () => {
+  test("sums duration_seconds grouped by project id", async () => {
+    const projectA = await seedProject("Army A");
+    const projectB = await seedProject("Unit B");
+    const base = new Date();
+    base.setHours(9, 0, 0, 0);
+
+    await state.db!.insert(paintSessions).values([
+      {
+        id: nanoid(16),
+        userId: state.userId,
+        projectId: projectA,
+        startedAt: base,
+        endedAt: new Date(base.getTime() + 30 * 60 * 1000),
+        durationSeconds: 30 * 60,
+        pausedMs: 0,
+      },
+      {
+        id: nanoid(16),
+        userId: state.userId,
+        projectId: projectA,
+        startedAt: new Date(base.getTime() + 60 * 60 * 1000),
+        endedAt: new Date(base.getTime() + 75 * 60 * 1000),
+        durationSeconds: 15 * 60,
+        pausedMs: 0,
+      },
+      {
+        id: nanoid(16),
+        userId: state.userId,
+        projectId: projectB,
+        startedAt: base,
+        endedAt: new Date(base.getTime() + 45 * 60 * 1000),
+        durationSeconds: 45 * 60,
+        pausedMs: 0,
+      },
+    ]);
+
+    const map = await queries.getProjectRollupSecondsMap(state.userId);
+    expect(map.get(projectA)).toBe(45 * 60);
+    expect(map.get(projectB)).toBe(45 * 60);
+  });
+
+  test("projects with no logged time are absent from the map", async () => {
+    await seedProject("Untouched");
+    const map = await queries.getProjectRollupSecondsMap(state.userId);
+    expect(map.size).toBe(0);
+  });
+});

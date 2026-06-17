@@ -19,6 +19,7 @@ import { listUpcomingEvents } from "@/db/queries/events";
 import {
   getSessionRollups,
   getAllTimeRollupSeconds,
+  getProjectRollupSecondsMap,
 } from "@/db/queries/paintSessions";
 import { displayStatus, progressPercent } from "@/lib/progress";
 import { computeStreak } from "@/lib/streak";
@@ -312,6 +313,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     rollups,
     allTimeSeconds,
     activityDays,
+    projectSecondsMap,
   ] = await Promise.all([
     listAllProjects(userId),
     getProjectPalettesMap(userId),
@@ -324,6 +326,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     getSessionRollups(userId, now.getTime()),
     getAllTimeRollupSeconds(userId),
     getActivityByDay(userId, new Date(now.getTime() - SIXTY_DAYS_MS)),
+    getProjectRollupSecondsMap(userId),
   ]);
 
   const sessionStats: SessionStats = {
@@ -332,6 +335,11 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     allTimeMinutes: Math.round(allTimeSeconds / 60),
     streakDays: computeStreak(activityDays, now).streak,
   };
+
+  const projectMinutes: Record<string, number> = {};
+  for (const [projectId, seconds] of projectSecondsMap) {
+    projectMinutes[projectId] = Math.round(seconds / 60);
+  }
 
   const mappedActivity: ActivityEntry[] = activityRows.map((row) => ({
     id: row.id,
@@ -357,5 +365,6 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     events: mappedEvents,
     activity: mappedActivity,
     sessionStats,
+    projectMinutes,
   };
 }
