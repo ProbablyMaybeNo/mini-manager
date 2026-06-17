@@ -49,7 +49,9 @@ export function SwatchStrip({
         onClick={onAttach}
         aria-label={ariaLabel}
         className={cn(
-          "border border-dashed border-fg-faint px-2 py-0.5 font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint hover:border-cyan hover:text-cyan",
+          // min-h-6 keeps the hit area ≥24px (WCAG 2.2 §2.5.8) without
+          // enlarging the dense table cell (UX-008).
+          "inline-flex min-h-6 items-center border border-dashed border-fg-faint px-2 py-0.5 font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint hover:border-cyan hover:text-cyan",
           className,
         )}
       >
@@ -72,7 +74,12 @@ export function SwatchStrip({
         type="button"
         onClick={onAttach}
         aria-label={ariaLabel ?? "Change attached recipe"}
-        className={cn("inline-flex rounded-none hover:opacity-80", className)}
+        className={cn(
+          // min-h-6 lifts the 16px swatch strip's hit area to ≥24px
+          // (WCAG 2.2 §2.5.8) without resizing the swatches (UX-008).
+          "inline-flex min-h-6 items-center rounded-none hover:opacity-80",
+          className,
+        )}
       >
         {strip}
       </button>

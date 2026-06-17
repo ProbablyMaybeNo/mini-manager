@@ -139,7 +139,7 @@ export function ProjectsTable({
                     e.stopPropagation();
                     toggle(p.id);
                   }}
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15"
                 >
                   <span className={cn("transition-transform", isExpanded && "rotate-90")}>
                     ▸
@@ -147,7 +147,7 @@ export function ProjectsTable({
                 </button>
               ) : (
                 // Spacer keeps leaf titles aligned with their expandable siblings.
-                <span className="h-5 w-5 shrink-0" aria-hidden />
+                <span className="h-6 w-6 shrink-0" aria-hidden />
               )}
               {/* Name stays white so it's clearly distinct from the coloured
                   TYPE chip — even on the cyan-highlighted selected row (JRH4). */}
