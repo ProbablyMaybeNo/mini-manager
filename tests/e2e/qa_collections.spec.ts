@@ -28,10 +28,12 @@ test.describe("M2 — Collection add", () => {
 
     const title = `QA Test Paint ${Date.now()}`;
 
-    // Fresh user → the paint table shows its empty-state "+ Add paint".
+    // Fresh user → the paint table shows its empty-state "+ Add paint"
+    // action AND the always-on footer "+ Add paint" button, so the name
+    // matches two elements; the empty-state action is first in the DOM.
     // Open the modal, retrying the click until the dialog mounts (guards
     // against a click landing before the client island has hydrated).
-    const addBtn = page.getByRole("button", { name: /^\+ Add paint$/i });
+    const addBtn = page.getByRole("button", { name: /^\+ Add paint$/i }).first();
     const dialog = page.getByRole("dialog", { name: /^Add paint$/i });
     await expect(addBtn).toBeVisible({ timeout: 30_000 });
     await expect(async () => {
@@ -41,15 +43,16 @@ test.describe("M2 — Collection add", () => {
     await dialog.locator('input[name="prompt-value"]').fill(title);
     await dialog.getByRole("button", { name: /^Add$/ }).click();
 
-    // The new paint renders as a name link in the paint table (the row
-    // also has an "Open source" ↗ link, so match the name exactly).
+    // The new paint renders as a row in the paint table. A manual entry has
+    // no source URL, so its name is plain text (only scraped rows with a
+    // sourceUrl render the name as a link) — match the name text exactly.
     await expect(
-      page.getByRole("link", { name: title, exact: true }),
+      page.getByText(title, { exact: true }),
     ).toBeVisible({ timeout: 15_000 });
 
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("link", { name: title, exact: true }),
+      page.getByText(title, { exact: true }),
     ).toBeVisible({ timeout: 30_000 });
   });
 

@@ -1,28 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Panel, ProgressBar } from "@/components/kit";
+import { Panel, ProgressBar } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import { formatMinutes } from "@/lib/palette";
 import type { InspoRef, Project, Recipe, SessionStats } from "@/lib/types";
 import { AddPaintCard, PaintCard } from "./PaintCard";
+import { FocusPicker } from "./FocusPicker";
+import { InspoBoard } from "./InspoBoard";
 import { Stopwatch } from "./Stopwatch";
 
 export function FocusView({
   project,
+  projects,
   recipe,
   stats,
   modelCount,
+  projectMinutes,
   inspo,
   onLogSession,
   onStepChange,
   onAddPaint,
   onAddInspo,
   onRemoveInspo,
+  onFocusProject,
+  onClearFocus,
 }: {
   project: Project | null;
+  /** Full project tree for the "+ Focus" picker (MM-23). */
+  projects: Project[];
   recipe: Recipe | null;
   stats: SessionStats;
   modelCount: number;
+  /** Total logged minutes for the focused project (A5qzb — per-project time). */
+  projectMinutes?: number;
   /** Controlled inspo list (parent owns persistence + optimistic state). */
   inspo: InspoRef[];
   onLogSession: (seconds: number) => void;
@@ -30,25 +41,39 @@ export function FocusView({
   onAddPaint?: () => void;
   onAddInspo?: (url: string) => void;
   onRemoveInspo?: (id: string) => void;
+  /** Pin a project (or sub-project) to the bench (MM-23). */
+  onFocusProject?: (id: string) => void;
+  /** Clear the current focus (MM-23 — Remove Focus). */
+  onClearFocus?: () => void;
 }) {
   const initialStep = project
     ? (project.modelsComplete ??
       Math.round((project.completionPercent / 100) * modelCount))
     : 0;
   const [step, setStep] = useState(initialStep);
-  const [inspoUrl, setInspoUrl] = useState("");
 
   const TAGLINE =
     "Painting session companion — recipe, technique, progress, time, and inspiration, all in one place.";
+
+  const picker = (
+    <FocusPicker
+      projects={projects}
+      currentId={project?.id ?? null}
+      onSelect={(id) => onFocusProject?.(id)}
+      onClear={() => onClearFocus?.()}
+    />
+  );
 
   if (!project) {
     return (
       <div className="flex h-full flex-col gap-6 p-6">
         <PageHeader title="FOCUS" tagline={TAGLINE} />
+        <div>{picker}</div>
         <Panel label="NO SESSION" className="max-w-md p-6">
           <p className="font-mono text-sm text-fg-dim">▸ No project in focus.</p>
           <p className="mt-2 font-mono text-xs text-fg-faint">
-            Launch the bench from a project on the Dashboard.
+            Pick a project from the <span className="text-cyan">+ Focus</span> menu above, or
+            launch the bench from the Dashboard.
           </p>
         </Panel>
       </div>
@@ -61,32 +86,32 @@ export function FocusView({
     onStepChange?.(next);
   }
 
-  function addInspo() {
-    const url = inspoUrl.trim();
-    if (!url) return;
-    onAddInspo?.(url);
-    setInspoUrl("");
-  }
-
   const percent = modelCount ? Math.round((step / modelCount) * 100) : 0;
 
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto p-6">
       <PageHeader title="FOCUS" tagline={TAGLINE} />
 
-      {/* Pinned project header */}
+      {/* Focus picker — pick any project / sub-project, or remove focus. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">{picker}</div>
+
+      {/* Pinned project header — bound to the focused project (MM-21). */}
       <Panel className="flex items-center justify-between p-4" glow>
         <span className="font-display text-lg uppercase text-green text-glow-green">
           {project.title} <span className="text-cyan">×{modelCount}</span>
         </span>
-        <span aria-hidden className="font-osd text-2xl text-cyan">
-          ⛯
-        </span>
+        {projectMinutes != null && (
+          <span className="font-osd text-[11px] uppercase tracking-[0.18em] text-purple">
+            Time {formatMinutes(projectMinutes)}
+          </span>
+        )}
       </Panel>
 
-      {/* Recipe paints as cards */}
+      {/* RECIPE box — reordered to a tidy responsive grid (MM-22) instead of a
+          single horizontal-scroll strip, so the paint cards wrap on narrow
+          benches and read top-to-bottom. */}
       <Panel label="RECIPE" className="p-4">
-        <div className="flex gap-3 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-3">
           {recipe && recipe.slots.length > 0 ? (
             recipe.slots.map((slot, i) => <PaintCard key={i} slot={slot} />)
           ) : (
@@ -107,7 +132,8 @@ export function FocusView({
         </p>
       </Panel>
 
-      {/* Stopwatch + progress */}
+      {/* Stopwatch gets its own dedicated section (D7 / A5qzb); progress sits
+          beside it, bound to the focused project (MM-21). */}
       <div className="grid gap-5 lg:grid-cols-2">
         <Stopwatch stats={stats} onLogSession={onLogSession} />
         <Panel label="PROGRESS" className="flex flex-col justify-center gap-3 p-4">
@@ -141,50 +167,10 @@ export function FocusView({
         </Panel>
       </div>
 
-      {/* Inspiration board */}
+      {/* Inspiration board — thumbnails open a popup overlay on double-click
+          (ZsWm). */}
       <Panel label="INSPIRATION" className="flex flex-col gap-3 p-4">
-        <div className="flex gap-2">
-          <Input
-            name="focus-inspo"
-            placeholder="Paste URL to add inspo"
-            value={inspoUrl}
-            onChange={(e) => setInspoUrl(e.target.value)}
-            containerClassName="flex-1"
-            onKeyDown={(e) => e.key === "Enter" && addInspo()}
-          />
-          <Button variant="secondary" onClick={addInspo}>
-            Add
-          </Button>
-        </div>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-7">
-          {Array.from({ length: Math.max(7, inspo.length) }).map((_, i) => {
-            const ref = inspo[i];
-            return (
-              <div
-                key={ref?.id || i}
-                className="group relative flex aspect-square items-center justify-center border border-cyan/40 bg-bg-raised/30 p-1"
-              >
-                {ref ? (
-                  <>
-                    <span className="truncate font-mono text-[9px] text-fg-dim">{ref.url}</span>
-                    <button
-                      type="button"
-                      aria-label={`Remove reference ${i + 1}`}
-                      onClick={() => onRemoveInspo?.(ref.id)}
-                      className="absolute right-0.5 top-0.5 font-osd text-[10px] text-fg-faint hover:text-red"
-                    >
-                      ✕
-                    </button>
-                  </>
-                ) : (
-                  <span aria-hidden className="font-osd text-fg-faint/30">
-                    +
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <InspoBoard inspo={inspo} onAddInspo={onAddInspo} onRemoveInspo={onRemoveInspo} />
       </Panel>
     </div>
   );

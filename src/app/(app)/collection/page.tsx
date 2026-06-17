@@ -52,12 +52,15 @@ function toCollectionItem(i: WishlistItem): CollectionItem {
     kind: i.kind,
     thumbnail: i.imageUrl ?? "",
     name: i.title,
-    company: i.company ?? i.army ?? i.game ?? "",
+    company: i.company ?? "",
     vendor: i.vendor ?? "",
+    game: i.game ?? undefined,
+    army: i.army ?? undefined,
     price: i.price != null ? `$${(i.price / 100).toFixed(2)}` : "",
     status: FROM_DB_STATUS[i.status ?? "WISHLIST"] ?? "WISHLIST",
     sourceUrl: i.sourceUrl ?? "",
     projectId: i.projectId ?? undefined,
+    recipeId: i.recipeId ?? undefined,
   };
 }
 
@@ -122,9 +125,12 @@ function CollectionRoute() {
     });
   }
 
-  function addUrl(url: string) {
+  function addUrl(url: string, kind: CollectionKind) {
     startTransition(async () => {
-      const res = await scrapeAndCreateWishlistItem({ url });
+      // MM-36 — pass the selected Paint/Model kind so the scraped row
+      // lands in the table the painter chose, not whatever the title
+      // heuristic guessed.
+      const res = await scrapeAndCreateWishlistItem({ url, kind });
       if (!res.ok) {
         toast(res.error, "red");
         return;
@@ -155,7 +161,7 @@ function CollectionRoute() {
       projects={data.projects}
       status={status}
       recipeSwatches={recipeSwatches}
-      onAddUrl={(url) => addUrl(url)}
+      onAddUrl={(url, kind) => addUrl(url, kind)}
       onStatusChange={(item, s: ProjectStatus) => {
         patch(item, { status: s });
         startTransition(async () => {

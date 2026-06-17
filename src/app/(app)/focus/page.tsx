@@ -9,6 +9,7 @@ import type { InspoRef, Project } from "@/lib/types";
 import { logSession } from "@/lib/actions/paintSessions";
 import { addInspo, deleteInspo } from "@/lib/actions/recipeInspo";
 import { setProjectComplete } from "@/lib/actions/projects";
+import { clearFocusProject, setFocusProject } from "@/lib/actions/focus";
 
 /** Depth-first lookup so a focus target can be any tier — an Army, or a
  *  nested Unit / Model that only exists inside its parent's `children`. */
@@ -52,10 +53,25 @@ function FocusRoute() {
     <>
       <FocusView
         project={project}
+        projects={data.projects}
         recipe={recipe}
         stats={data.sessionStats}
         modelCount={project?.modelCount ?? 0}
         inspo={inspo}
+        onFocusProject={(id) => {
+          // Persist the pin server-side AND reflect it in the URL so a refresh
+          // / share lands on the same bench (MM-23).
+          startTransition(async () => {
+            await setFocusProject({ projectId: id });
+          });
+          router.push(`/focus?project=${id}`);
+        }}
+        onClearFocus={() => {
+          startTransition(async () => {
+            await clearFocusProject();
+          });
+          router.push(`/focus?state=empty`);
+        }}
         onLogSession={(seconds) => {
           if (!project || seconds <= 0) return;
           startTransition(async () => {

@@ -1,98 +1,187 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { extractDominantColors } from "@/lib/tools/eyedropper/kmeans";
+import { imageToPixels, validateImageBlob, type SampledImage } from "@/lib/tools/eyedropper/sample";
+import { placePins } from "@/lib/tools/eyedropper/pinPlacement";
 import type { Paint } from "@/lib/types";
+import { EyedropperPins, type Pin } from "./EyedropperPins";
+import { CameraSampler, isCameraSamplerSupported } from "./CameraSampler";
+
+const SWATCH_COUNT = 6;
 
 /**
- * Drop/capture an image → host extracts dominant colours → click a swatch to add it to the
- * palette. Extraction is host-provided (extractedColors); the UI only sends the file out.
+ * Color Dropper (MM-34). Drop / paste / capture an image → auto k-means
+ * extraction of 6 dominant colours, shown as draggable pins on an image
+ * preview that re-sample on drag. Live camera sampler too. Each swatch
+ * resolves its closest library paint. Ported from old
+ * `components/tools/eyedropper/*` into the terminal UI.
  */
 export function EyedropperTool({
-  extractedColors,
   closestPaint,
-  onImageDropped,
   onSavePalette,
   onSendToRecipe,
 }: {
-  extractedColors: string[];
   closestPaint: (hex: string) => Paint | null;
-  onImageDropped: (file: File) => void;
   onSavePalette: (hexes: string[]) => void;
   onSendToRecipe: (paints: Paint[]) => void;
 }) {
-  const [hasImage, setHasImage] = useState(false);
-  const [palette, setPalette] = useState<string[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [sampled, setSampled] = useState<SampledImage | null>(null);
+  const [pins, setPins] = useState<ReadonlyArray<Pin>>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
-  function handleFile(file?: File | null) {
+  // Feature-detect after mount to avoid an SSR hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const cameraAvailable = mounted && isCameraSamplerSupported;
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const swatches = pins.map((p) => p.hex);
+
+  async function handleFile(file?: File | null) {
     if (!file) return;
-    onImageDropped(file);
-    setHasImage(true);
+    const validationError = validateImageBlob(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const url = URL.createObjectURL(file);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(url);
+    setSampled(null);
+    setPins([]);
+    try {
+      const image = await imageToPixels(file, { maxEdge: 512 });
+      setSampled(image);
+      const extracted = extractDominantColors(image.pixels, image.width, image.height, {
+        k: SWATCH_COUNT,
+      });
+      setPins(placePins(image, extracted));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not decode the image.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function reset() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setSampled(null);
+    setPins([]);
+    setError(null);
+  }
+
+  function handleCameraSample(hex: string) {
+    setError(null);
+    setPins((prev) =>
+      prev.length >= SWATCH_COUNT ? prev : [...prev, { x: 0, y: 0, hex: hex.toUpperCase() }],
+    );
   }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
       <Panel label="IMAGE" className="flex flex-col gap-4 p-5">
-        <label
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            handleFile(e.dataTransfer.files?.[0]);
-          }}
-          className={cn(
-            "flex h-48 cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-cyan/50 text-center hover:border-cyan",
-          )}
-        >
-          <span className="font-osd text-sm uppercase tracking-[0.18em] text-cyan">
-            ⬚ Drop or capture image
-          </span>
-          <span className="font-mono text-[11px] text-fg-faint">
-            {hasImage ? "Image loaded — dominant colours extracted →" : "PNG / JPG · click or drag"}
-          </span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleFile(e.target.files?.[0])}
-          />
-        </label>
-
-        <div>
-          <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
-            Extracted dominant colours
-          </span>
-          <div className="mt-2 flex flex-wrap gap-1">
-            {extractedColors.length === 0 ? (
-              <span className="font-mono text-[11px] text-fg-faint">
-                Drop an image to extract a palette.
+        {previewUrl && sampled ? (
+          <>
+            <div className="border border-cyan/30">
+              <EyedropperPins
+                imageUrl={previewUrl}
+                sampled={sampled}
+                pins={pins}
+                onPinChange={(idx, next) =>
+                  setPins((prev) => prev.map((p, i) => (i === idx ? next : p)))
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-mono text-[11px] text-fg-faint">
+                {sampled.width} × {sampled.height} px · {pins.length} pins · drag to re-sample
+              </p>
+              <Button variant="danger" size="sm" onClick={reset}>
+                Clear
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <label
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                void handleFile(e.dataTransfer.files?.[0]);
+              }}
+              onPaste={(e) => {
+                for (const item of e.clipboardData?.items ?? []) {
+                  if (item.type.startsWith("image/")) {
+                    const blob = item.getAsFile();
+                    if (blob) {
+                      e.preventDefault();
+                      void handleFile(blob);
+                      return;
+                    }
+                  }
+                }
+              }}
+              className={cn(
+                "flex h-48 cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-cyan/50 text-center hover:border-cyan",
+                busy && "cursor-progress opacity-60",
+              )}
+            >
+              <span className="font-osd text-sm uppercase tracking-[0.18em] text-cyan">
+                ⬚ Drop or capture image
               </span>
-            ) : (
-              extractedColors.map((hex, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`Add ${hex} to palette`}
-                  onClick={() => setPalette((p) => (p.includes(hex) ? p : [...p, hex]))}
-                >
-                  <Swatch hex={hex} size="lg" />
-                </button>
-              ))
+              <span className="font-mono text-[11px] text-fg-faint">
+                {busy ? "Extracting dominant colours…" : "PNG / JPG / WebP · click, drag, or paste"}
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => void handleFile(e.target.files?.[0])}
+              />
+            </label>
+            {cameraAvailable && (
+              <Button
+                variant="secondary"
+                onClick={() => setCameraOpen(true)}
+                disabled={busy || pins.length >= SWATCH_COUNT}
+              >
+                Use camera
+              </Button>
             )}
-          </div>
-        </div>
+          </>
+        )}
+        {error && (
+          <p role="alert" className="font-mono text-[11px] text-red">
+            {error}
+          </p>
+        )}
       </Panel>
 
       <Panel label="PALETTE" cornerTicks className="flex flex-col gap-3 p-5">
-        {palette.length === 0 ? (
+        {swatches.length === 0 ? (
           <p className="py-8 text-center font-mono text-xs text-fg-faint">
-            Click extracted colours to drop them into your palette.
+            Drop an image to auto-extract a palette, then drag the pins to re-sample.
           </p>
         ) : (
-          palette.map((hex, i) => {
+          swatches.map((hex, i) => {
             const paint = closestPaint(hex);
             return (
-              <div key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
+              <div key={`${hex}-${i}`} className="flex items-center gap-3 border border-cyan/20 p-2">
+                <span className="w-5 font-osd text-[10px] text-fg-faint">{i + 1}</span>
                 <Swatch hex={hex} size="lg" />
                 <span aria-hidden className="font-osd text-fg-faint">→</span>
                 {paint ? (
@@ -110,8 +199,8 @@ export function EyedropperTool({
                 )}
                 <button
                   type="button"
-                  aria-label={`Remove ${hex}`}
-                  onClick={() => setPalette((p) => p.filter((_, k) => k !== i))}
+                  aria-label={`Remove swatch ${hex}`}
+                  onClick={() => setPins((prev) => prev.filter((_, k) => k !== i))}
                   className="font-osd text-fg-faint hover:text-red"
                 >
                   ✕
@@ -121,20 +210,22 @@ export function EyedropperTool({
           })
         )}
         <div className="flex flex-wrap gap-2">
-          <Button disabled={palette.length === 0} onClick={() => onSavePalette(palette)}>
+          <Button disabled={swatches.length === 0} onClick={() => onSavePalette(swatches)}>
             Save
           </Button>
           <Button
             variant="secondary"
-            disabled={palette.length === 0}
-            onClick={() =>
-              onSendToRecipe(palette.map(closestPaint).filter((p): p is Paint => p != null))
-            }
+            disabled={swatches.length === 0}
+            onClick={() => onSendToRecipe(swatches.map(closestPaint).filter((p): p is Paint => p != null))}
           >
             Send to Recipe
           </Button>
         </div>
       </Panel>
+
+      {cameraOpen && (
+        <CameraSampler onSample={handleCameraSample} onClose={() => setCameraOpen(false)} />
+      )}
     </div>
   );
 }

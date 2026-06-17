@@ -29,6 +29,14 @@ export function SlideOutPanel({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const lastFocused = useRef<HTMLElement | null>(null);
+  // MM-24 — keep `onClose` out of the focus-trap effect deps via a ref.
+  // Callers pass a fresh inline `onClose` on every render; if the effect
+  // depended on it, each parent re-render (e.g. typing in an input INSIDE
+  // the panel) tore down + re-ran this effect, which re-focused the panel
+  // and dropped focus from the field after every keystroke. The effect now
+  // runs only when `open` flips.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -38,7 +46,7 @@ export function SlideOutPanel({
 
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab" || !panel) return;
@@ -62,7 +70,7 @@ export function SlideOutPanel({
       document.removeEventListener("keydown", onKey);
       lastFocused.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

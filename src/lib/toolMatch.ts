@@ -35,3 +35,22 @@ export function rankMatches(
     .sort((a, b) => a.distanceScore - b.distanceScore)
     .slice(0, n);
 }
+
+/**
+ * Ranked CIEDE2000 matches with a multi-brand filter (empty list = all
+ * brands). Powers the Color Match tool's brand chips + pagination (it asks
+ * for a large `limit` and pages client-side).
+ */
+export function rankMatchesMulti(
+  hex: string,
+  pool: Paint[],
+  brands: string[],
+  n = 50,
+): MatchResult[] {
+  const brandSet = brands.length ? new Set(brands) : null;
+  return pool
+    .filter((p) => !brandSet || brandSet.has(p.brand))
+    .map((p) => ({ paint: p, distanceScore: deltaE2000Hex(hex, p.hex) }))
+    .sort((a, b) => a.distanceScore - b.distanceScore)
+    .slice(0, n);
+}

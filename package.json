@@ -31,8 +31,8 @@
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.0",
     "@fontsource/ibm-plex-mono": "^5.2.7",
-    "@fontsource/press-start-2p": "^5.2.7",
     "@fontsource/share-tech-mono": "^5.2.7",
+    "@fontsource/vt323": "^5.2.7",
     "@libsql/client": "^0.14.0",
     "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^2.4.3",

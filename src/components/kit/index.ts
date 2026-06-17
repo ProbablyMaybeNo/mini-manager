@@ -1,7 +1,9 @@
 export { Panel } from "./Panel";
-export { Button, type ButtonProps } from "./Button";
+export { Button, buttonVariants, type ButtonProps } from "./Button";
+export { IconButton, type IconButtonProps } from "./IconButton";
 export { Chip, TypeChip, StatusText, PriorityTag } from "./tags";
 export { Swatch, SwatchStrip } from "./Swatch";
+export { RecipePaintTile, RecipePaintStrip } from "./RecipePaintTile";
 export { ProgressBar } from "./ProgressBar";
 export { StatBox } from "./StatBox";
 export { SegmentedToggle, type SegmentOption } from "./SegmentedToggle";
@@ -13,4 +15,5 @@ export { EmptyState } from "./EmptyState";
 export { useToast } from "./Toast";
 export { MiniCalendar } from "./MiniCalendar";
 export { ActivityFeed } from "./ActivityFeed";
+export { StatusIcon, type StatusIconName } from "./StatusIcon";
 export { BootSequence } from "./BootSequence";

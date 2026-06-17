@@ -15,6 +15,13 @@ const KINDS: CalendarEventKind[] = ["tournament", "deadline", "battle", "other"]
  * form. Creating an event persists via the createEvent server action, then
  * refreshes so the dashboard re-renders with the new event coloured on the
  * grid and listed in the bottom ticker.
+ *
+ * D1/D2 behaviour:
+ *  - Clicking a day on the grid opens the add form prefilled with that day
+ *    (MM-47).
+ *  - The Date field has a popup mini-calendar date-picker (MM-46) in addition
+ *    to the native `<input type="date">`.
+ *  - The form carries a Notes field, surfaced in the calendar hover tooltip.
  */
 export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
   const router = useRouter();
@@ -26,14 +33,48 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [kind, setKind] = useState<CalendarEventKind>("tournament");
+  const [notes, setNotes] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The mini date-picker popover shows whichever month the chosen date sits
+  // in (or the calendar's current view as a fallback).
+  const pickerView = (() => {
+    if (date) {
+      const d = new Date(date);
+      if (!Number.isNaN(d.getTime())) {
+        return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
+      }
+    }
+    return view;
+  })();
 
   function shiftMonth(delta: number) {
     setView((v) => {
       const d = new Date(Date.UTC(v.year, v.month + delta, 1));
       return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
     });
+  }
+
+  /** MM-47 — clicking a day on the month grid opens the form prefilled. */
+  function openAddForDay(iso: string) {
+    setAdding(true);
+    setDate(iso);
+    setError(null);
+    // Focus the name field so the painter can start typing immediately.
+    requestAnimationFrame(() => {
+      const el = document.getElementById("event-name") as HTMLInputElement | null;
+      el?.focus();
+    });
+  }
+
+  function resetForm() {
+    setName("");
+    setDate("");
+    setKind("tournament");
+    setNotes("");
+    setPickerOpen(false);
   }
 
   async function submit(e: FormEvent) {
@@ -44,15 +85,18 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
     }
     setBusy(true);
     setError(null);
-    const res = await createEvent({ name: name.trim(), date, kind, notes: null });
+    const res = await createEvent({
+      name: name.trim(),
+      date,
+      kind,
+      notes: notes.trim() || null,
+    });
     setBusy(false);
     if (!res.ok) {
       setError(res.error);
       return;
     }
-    setName("");
-    setDate("");
-    setKind("tournament");
+    resetForm();
     setAdding(false);
     router.refresh();
   }
@@ -78,7 +122,15 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         </button>
       </div>
 
-      <MiniCalendar year={view.year} month={view.month} events={events} />
+      {/* Cap the grid to a small, glanceable size (r-N-8) so the calendar
+          stays compact within the rail rather than stretching to fill it. */}
+      <MiniCalendar
+        year={view.year}
+        month={view.month}
+        events={events}
+        onDayClick={openAddForDay}
+        className="mx-auto w-full max-w-[170px]"
+      />
 
       {adding ? (
         <form onSubmit={submit} className="flex flex-col gap-2 border-t border-cyan/20 pt-2">
@@ -89,13 +141,70 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             onChange={(e) => setName(e.target.value)}
             placeholder="MAGGOTKIN 2k"
           />
-          <Input
-            label="Date"
-            name="event-date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <div className="relative flex flex-col gap-1">
+            <div className="flex items-end gap-1">
+              <Input
+                label="Date"
+                name="event-date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                containerClassName="flex-1"
+              />
+              <button
+                type="button"
+                aria-label="Open date picker"
+                aria-expanded={pickerOpen}
+                onClick={() => setPickerOpen((o) => !o)}
+                className="mb-px shrink-0 border border-cyan/50 px-2 py-1 font-osd text-xs text-cyan hover:bg-cyan/10"
+              >
+                ▦
+              </button>
+            </div>
+            {pickerOpen && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-48 border border-cyan/50 bg-bg/95 p-2 shadow-lg">
+                <div className="mb-1 flex items-center justify-between">
+                  <button
+                    type="button"
+                    aria-label="Picker previous month"
+                    onClick={() =>
+                      setDate((d) => {
+                        const base = d ? new Date(d) : new Date(Date.UTC(view.year, view.month, 1));
+                        base.setUTCMonth(base.getUTCMonth() - 1);
+                        return base.toISOString().slice(0, 10);
+                      })
+                    }
+                    className="px-1 font-mono text-xs text-fg-faint hover:text-cyan"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Picker next month"
+                    onClick={() =>
+                      setDate((d) => {
+                        const base = d ? new Date(d) : new Date(Date.UTC(view.year, view.month, 1));
+                        base.setUTCMonth(base.getUTCMonth() + 1);
+                        return base.toISOString().slice(0, 10);
+                      })
+                    }
+                    className="px-1 font-mono text-xs text-fg-faint hover:text-cyan"
+                  >
+                    ›
+                  </button>
+                </div>
+                <MiniCalendar
+                  year={pickerView.year}
+                  month={pickerView.month}
+                  events={events}
+                  onDayClick={(iso) => {
+                    setDate(iso);
+                    setPickerOpen(false);
+                  }}
+                />
+              </div>
+            )}
+          </div>
           <label className="flex flex-col gap-1">
             <span className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
               Kind
@@ -113,7 +222,25 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
               ))}
             </select>
           </label>
-          <span className={cn("font-osd text-[9px] uppercase tracking-[0.15em]", accentText[eventKindAccent[kind]])}>
+          <label className="flex flex-col gap-1">
+            <span className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+              Notes
+            </span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              aria-label="Event notes"
+              placeholder="2000pts · Grand tournament"
+              className="resize-none border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+            />
+          </label>
+          <span
+            className={cn(
+              "font-osd text-[9px] uppercase tracking-[0.15em]",
+              accentText[eventKindAccent[kind]],
+            )}
+          >
             ▪ {kind}
           </span>
           {error && <p className="font-mono text-[11px] text-red">▸ {error}</p>}
@@ -128,6 +255,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
               onClick={() => {
                 setAdding(false);
                 setError(null);
+                resetForm();
               }}
             >
               Cancel

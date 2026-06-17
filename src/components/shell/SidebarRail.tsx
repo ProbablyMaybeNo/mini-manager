@@ -7,10 +7,10 @@ export function SidebarRail() {
   return (
     <nav
       aria-label="Primary"
-      className="hidden h-full w-[204px] shrink-0 flex-col border-r border-cyan/40 bg-bg-raised/40 py-4 md:flex"
+      className="hidden h-full w-[240px] shrink-0 flex-col border-r border-cyan/40 bg-bg-raised/40 py-4 md:flex"
     >
-      <div className="px-4 pb-6">
-        <Logo size={72} />
+      <div className="flex justify-center px-4 pb-6">
+        <Logo size={140} />
       </div>
       <NavLinks items={MAIN_NAV} />
       <div className="mt-auto border-t border-cyan/30 pt-3">

@@ -45,7 +45,9 @@ export const projectTypeAccent: Record<ProjectType, Accent> = {
 
 export const statusAccent: Record<ProjectStatus, Accent> = {
   WISHLIST: "yellow",
-  OWNED: "dim",
+  // OWNED reads neon green — the "you have this" status, mirroring the green
+  // owned-state used in the library/collection (bKcN: PURCHASED → OWNED green).
+  OWNED: "green",
   BUILDING: "cyan",
   PRIMING: "purple",
   PAINTING: "cyan",
@@ -67,6 +69,48 @@ export const eventKindAccent: Record<CalendarEventKind, Accent> = {
   battle: "yellow",
   other: "purple",
 };
+
+/**
+ * Activity icon-key → accent (D5 / MM-45). The ActivityFeed used to render
+ * every row green; colour-coding by the move's type makes the tracker
+ * glanceable using the full style-guide palette:
+ *   add    → green  (something new — project / slot created)
+ *   cart   → yellow (a purchase / wishlist add — "spend" warning hue)
+ *   build  → cyan   (a stage bump — primary "progress" colour)
+ *   prime  → purple (special prep stage)
+ *   paint  → cyan   (logged a painting session — core action)
+ *   check  → green  (a recipe / completion — positive)
+ * Unknown keys fall back to dim so a new icon never crashes the feed.
+ */
+export const activityAccent: Record<string, Accent> = {
+  add: "green",
+  cart: "yellow",
+  build: "cyan",
+  prime: "purple",
+  paint: "cyan",
+  check: "green",
+};
+
+export function activityAccentFor(icon: string): Accent {
+  return activityAccent[icon] ?? "dim";
+}
+
+/**
+ * Per-stat-box accent (D5 / MM-49 — "give each tracker box's total its own
+ * palette colour"). The four dashboard KPI boxes each read in a distinct
+ * style-guide hue per Ross's tracker comments (qHYZN/4g3I/JxHyr), so the row
+ * scans as four separate readouts:
+ *   Active projects → green  (something live / in progress)
+ *   Completion %    → yellow (progress toward done)
+ *   Streak         → purple (a streak you don't want to break)
+ *   Time Total      → cyan   (base; flips red past a long session — see StatRow)
+ */
+export const statBoxAccents = {
+  active: "green",
+  completion: "yellow",
+  streak: "purple",
+  time: "cyan",
+} as const satisfies Record<string, Accent>;
 
 /** Minutes → "H:MM" for the dashboard time-total / focus totals. */
 export function formatMinutes(total: number): string {

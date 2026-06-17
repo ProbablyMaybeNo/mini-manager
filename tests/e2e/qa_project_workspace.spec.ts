@@ -24,7 +24,7 @@ async function addProject(
   name: string,
   count: number,
 ): Promise<void> {
-  const addBtn = page.getByRole("button", { name: /\+ Add Project/i });
+  const addBtn = page.getByRole("button", { name: /\+ New Project/i });
   const panel = page.getByRole("dialog", { name: /New Project/i });
   // Retry until the slide-out mounts (guards a pre-hydration click).
   await expect(async () => {

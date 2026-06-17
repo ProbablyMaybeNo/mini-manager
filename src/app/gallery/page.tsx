@@ -7,6 +7,8 @@ import {
   BootSequence,
   Button,
   Chip,
+  IconButton,
+  StatusIcon,
   HexField,
   Input,
   MiniCalendar,
@@ -172,6 +174,24 @@ export default function GalleryPage() {
         <Button variant="secondary">Secondary</Button>
         <Button variant="tertiary">Tertiary</Button>
         <Button variant="danger">Danger</Button>
+      </Section>
+
+      <Section title="Buttons · + rule (MM-52) + palette">
+        <Button variant="add">+ Add project</Button>
+        <Button variant="addWishlist">+ Add to wishlist</Button>
+        <IconButton variant="add" aria-label="Add">+</IconButton>
+        <IconButton variant="addWishlist" aria-label="Add to wishlist">+</IconButton>
+        <Button variant="solidGreen">Solid green</Button>
+        <Button variant="solidYellow">Solid yellow</Button>
+        <Button variant="solidPurple">Solid purple</Button>
+        <Button variant="outlineYellow">Outline yellow</Button>
+        <Button variant="outlinePurple">Outline purple</Button>
+      </Section>
+
+      <Section title="Status icons">
+        {(["add", "cart", "build", "prime", "paint", "check", "alert"] as const).map((n) => (
+          <StatusIcon key={n} name={n} title={n} size={18} />
+        ))}
       </Section>
 
       <Section title="Chips · Status · Priority">

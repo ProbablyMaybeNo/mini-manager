@@ -8,6 +8,7 @@ import type {
   CalendarEvent,
   DashboardSummary,
   Project,
+  ProjectType,
 } from "@/lib/types";
 import { ProjectInspector } from "./ProjectInspector";
 import { ProjectsTable } from "./ProjectsTable";
@@ -29,10 +30,9 @@ export interface DashboardViewProps {
   onAddProject?: () => void;
   onUploadArmyList?: () => void;
   onStartSession?: (project: Project) => void;
+  onAddSubProject?: (parent: Project, childType: ProjectType, name: string) => void;
   onRetry?: () => void;
 }
-
-const TAGLINE = "Project hub, everything you need to manage your painting progress.";
 
 /** Find a project anywhere in the tree by id (rows + their sub-projects). */
 function findProject(list: Project[], id: string): Project | null {
@@ -58,6 +58,7 @@ export function DashboardView({
   onAddProject,
   onUploadArmyList,
   onStartSession,
+  onAddSubProject,
   onRetry,
 }: DashboardViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -77,9 +78,13 @@ export function DashboardView({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    // Solid black canvas (vZsx) — overrides the near-black page token for this
+    // surface so the dashboard reads as a true terminal background.
+    <div className="flex h-full flex-col bg-black">
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-        <PageHeader title="DASHBOARD" tagline={TAGLINE} />
+        {/* No tagline text bar — the "+ New Project" button + the obvious
+            PROJECTS panel already make the page's purpose clear (drev). */}
+        <PageHeader title="DASHBOARD" />
 
         {status === "error" ? (
           <ErrorState onRetry={onRetry} />
@@ -96,9 +101,12 @@ export function DashboardView({
                   onOpenProject={openProject}
                   onFocusProject={(p) => onFocusProject?.(p)}
                   onAttachRecipe={(p) => onAttachRecipe?.(p)}
+                  onAddSubProject={onAddSubProject}
                 />
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-                  <Button onClick={onAddProject}>+ Add Project</Button>
+                  <Button onClick={onAddProject}>+ New Project</Button>
+                  {/* Upload-Army-List restored — opens the ArmyImportPanel
+                      slide-out wired through onUploadArmyList. */}
                   <Button variant="secondary" onClick={onUploadArmyList}>
                     ⬆ Upload Army List
                   </Button>
@@ -110,6 +118,8 @@ export function DashboardView({
         )}
       </div>
 
+      {/* Bottom UPCOMING-EVENTS ticker restored — surfaces the dashboard's
+          calendar events so newly-added dates show up immediately. */}
       <UpcomingEventsBar events={status === "ready" ? events : []} />
 
       <ProjectInspector

@@ -267,8 +267,10 @@ function mapCollectionItem(i: WishlistItem): CollectionItem {
     kind: i.kind,
     thumbnail: i.imageUrl ?? "",
     name: i.title,
-    company: i.company ?? i.army ?? i.game ?? "",
+    company: i.company ?? "",
     vendor: i.vendor ?? "",
+    game: i.game ?? undefined,
+    army: i.army ?? undefined,
     price: i.price != null ? `$${(i.price / 100).toFixed(2)}` : "",
     status: COLLECTION_STATUS_MAP[i.status ?? "WISHLIST"] ?? "OWNED",
     sourceUrl: i.sourceUrl ?? "",
@@ -343,6 +345,7 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     date: isoDay(e.eventDate),
     name: e.name,
     kind: e.kind,
+    notes: e.notes ?? null,
   }));
 
   return {

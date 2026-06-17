@@ -37,7 +37,7 @@ export function AuthView({
     <div className="flex min-h-dvh items-center justify-center p-6">
       <Panel label="SYS ▸ ACCESS" cornerTicks glow className="w-full max-w-sm p-6">
         <div className="mb-5 flex flex-col items-center gap-3 text-center">
-          <Logo href="/" size={64} className="animate-power-on" />
+          <Logo href="/" size={128} className="animate-power-on" />
           <BootSequence
             lines={[
               "MINI-MANAGER OS v1.0",

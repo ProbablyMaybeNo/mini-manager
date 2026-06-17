@@ -12,7 +12,7 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  */
 
 async function addProject(page: Page, name: string, count: number) {
-  const addBtn = page.getByRole("button", { name: /\+ Add Project/i });
+  const addBtn = page.getByRole("button", { name: /\+ New Project/i });
   const panel = page.getByRole("dialog", { name: /New Project/i });
   await expect(async () => {
     await addBtn.click();
