@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, EmptyState, SwatchStrip } from "@/components/kit";
+import { Button, Chip, EmptyState, SwatchStrip } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { StatusDropdown } from "./StatusDropdown";
@@ -34,7 +34,7 @@ function Thumb({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Price", "Recipe", "Status", "Link", ""];
+const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Type", "Price", "Recipe", "Status", "Link", ""];
 const MODEL_COLS = ["Image", "Name", "Game", "Army", "Price", "Project", "Status", "Link", ""];
 
 export function CollectionTable({
@@ -211,6 +211,15 @@ export function CollectionTable({
                   <td className="px-3 py-2 font-mono text-xs text-fg-dim">
                     {kind === "model" ? (item.army ?? "") : item.vendor}
                   </td>
+                  {kind === "paint" && (
+                    <td className="px-3 py-2">
+                      {item.paintType ? (
+                        <Chip accent="dim">{item.paintType}</Chip>
+                      ) : (
+                        <span className="font-mono text-xs text-fg-faint">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-3 py-2 font-mono text-xs tabular-nums text-fg">{item.price}</td>
                   {kind === "paint" ? (
                     <td className="px-3 py-2">
