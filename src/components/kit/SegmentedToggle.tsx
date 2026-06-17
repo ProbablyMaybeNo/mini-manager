@@ -12,12 +12,14 @@ export function SegmentedToggle<T extends string>({
   options,
   value,
   onChange,
+  disabled = false,
   className,
   "aria-label": ariaLabel,
 }: {
   options: SegmentOption<T>[];
   value: T;
   onChange: (value: T) => void;
+  disabled?: boolean;
   className?: string;
   "aria-label"?: string;
 }) {
@@ -25,7 +27,11 @@ export function SegmentedToggle<T extends string>({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={cn("inline-flex border border-cyan/60", className)}
+      className={cn(
+        "inline-flex border border-cyan/60",
+        disabled && "opacity-40",
+        className,
+      )}
     >
       {options.map((opt) => {
         const active = opt.value === value;
@@ -35,10 +41,12 @@ export function SegmentedToggle<T extends string>({
             type="button"
             role="radio"
             aria-checked={active}
+            disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
               "px-3 py-1 font-osd text-[10px] uppercase tracking-[0.15em] transition-colors",
               active ? "bg-cyan/20 text-cyan glow-cyan" : "text-fg-dim hover:text-cyan",
+              disabled && "cursor-not-allowed",
             )}
           >
             {opt.label}

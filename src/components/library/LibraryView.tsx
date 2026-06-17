@@ -68,6 +68,10 @@ export function LibraryView(props: LibraryViewProps) {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [filterOpen, setFilterOpen] = useState(false);
 
+  // While the Dexie catalog populates (~2–3.5s) the view toggle and filter
+  // have no data to act on — disable them until paints are ready (UX-013).
+  const loading = status === "loading";
+
   const activeFilters =
     filter.colors.length + filter.brands.length + filter.status.length + (filter.hex ? 1 : 0);
 
@@ -93,8 +97,9 @@ export function LibraryView(props: LibraryViewProps) {
               ]}
               value={view}
               onChange={setView}
+              disabled={loading}
             />
-            <Button variant="secondary" onClick={() => setFilterOpen(true)}>
+            <Button variant="secondary" disabled={loading} onClick={() => setFilterOpen(true)}>
               Filter{activeFilters ? ` (${activeFilters})` : ""}
             </Button>
           </>
@@ -115,8 +120,19 @@ export function LibraryView(props: LibraryViewProps) {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
           <Panel label={view === "grid" ? "SWATCHES" : "PAINTS"} className="min-h-0 flex-1 overflow-y-auto p-4">
-            {status === "loading" ? (
-              <div className="h-full min-h-[300px] animate-pulse bg-cyan/5" aria-busy="true" />
+            {loading ? (
+              <div
+                className="flex h-full min-h-[300px] animate-pulse flex-col items-center justify-center gap-2 bg-cyan/5"
+                aria-busy="true"
+                aria-live="polite"
+              >
+                <span className="font-osd text-xs uppercase tracking-[0.18em] text-cyan text-glow-cyan">
+                  ▸ Loading{totalCount > 0 ? ` ${totalCount.toLocaleString()}` : ""} paints…
+                </span>
+                <span className="font-mono text-[10px] text-fg-faint">
+                  Building the local catalog index
+                </span>
+              </div>
             ) : view === "grid" ? (
               <SwatchWall paints={paints} onOpenPaint={onOpenPaint} />
             ) : (
