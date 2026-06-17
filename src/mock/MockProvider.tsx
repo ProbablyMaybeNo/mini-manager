@@ -25,6 +25,9 @@ export interface MockData {
   activity: ActivityEntry[];
   events: CalendarEvent[];
   sessionStats: SessionStats;
+  /** Per-project lifetime logged minutes, keyed by project id (A5qzb —
+   *  Focus per-project time). Absent ids have no logged time. */
+  projectMinutes: Record<string, number>;
   matchResults: MatchResult[];
   collectionPaints: CollectionItem[];
   collectionModels: CollectionItem[];
@@ -38,6 +41,7 @@ const populated: MockData = {
   activity: fx.mockActivity,
   events: fx.mockEvents,
   sessionStats: fx.mockSessionStats,
+  projectMinutes: fx.mockProjectMinutes,
   matchResults: fx.mockMatchResults,
   collectionPaints: fx.mockCollectionPaints,
   collectionModels: fx.mockCollectionModels,
@@ -51,6 +55,7 @@ const empty: MockData = {
   activity: fx.emptyActivity,
   events: fx.emptyEvents,
   sessionStats: fx.zeroSessionStats,
+  projectMinutes: {},
   matchResults: fx.emptyMatchResults,
   collectionPaints: fx.emptyCollection,
   collectionModels: fx.emptyCollection,

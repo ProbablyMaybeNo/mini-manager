@@ -16,9 +16,10 @@ const KIND_OPTIONS: { value: CollectionKind; label: string }[] = [
 
 /**
  * MM-39 paint/model toggle: inactive = no fill, purple border + purple
- * text; active = pastel-purple fill with black label (per the resolved
- * "default the active label to black text"). Drives the kind that the
- * scrape add path honours (MM-36).
+ * text; active = solid-purple fill with black label. The fill is full
+ * opacity (not purple/40) so the black label clears WCAG AA (UX-009 —
+ * purple/40 over the near-black canvas measured ~1.05:1). Drives the kind
+ * that the scrape add path honours (MM-36).
  */
 function KindToggle({
   value,
@@ -42,7 +43,7 @@ function KindToggle({
               "border px-4 py-1.5 font-osd text-[10px] uppercase tracking-[0.15em] transition-colors",
               "border-purple",
               active
-                ? "bg-purple/40 text-black"
+                ? "bg-purple text-bg"
                 : "bg-transparent text-purple hover:bg-purple/10",
             )}
           >

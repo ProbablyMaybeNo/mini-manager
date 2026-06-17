@@ -120,6 +120,8 @@ export interface CollectionItem {
   army?: string;
   /** Attached recipe (paint rows) — the scheme this paint belongs to. */
   recipeId?: string;
+  /** Paint medium type (paint rows) — Contrast / Wash / Acrylic / … */
+  paintType?: string;
 }
 
 /* ----------------------------------------------------------------------------

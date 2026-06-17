@@ -12,9 +12,11 @@ import {
   SwatchStrip,
   TypeChip,
 } from "@/components/kit";
+import { formatMinutes } from "@/lib/palette";
+import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project, ProjectType } from "@/lib/types";
 
-const COLS = ["Title", "Type", "Recipe", "Status", "Priority", "Completion", ""];
+const COLS = ["Title", "Type", "Recipe", "Status", "Priority", "Completion", "Time", ""];
 
 /** Per-depth indent (px) applied to the Title cell so nested sub-projects
  *  read as a tree: Army → Unit → Model. */
@@ -33,6 +35,7 @@ const SUB_TYPE: Partial<Record<ProjectType, ProjectType>> = {
 
 export function ProjectsTable({
   projects,
+  projectMinutes = {},
   selectedId,
   onOpenProject,
   onAttachRecipe,
@@ -40,6 +43,8 @@ export function ProjectsTable({
   onAddSubProject,
 }: {
   projects: Project[];
+  /** Per-project logged minutes (UX-011), rolled up over sub-projects per row. */
+  projectMinutes?: Record<string, number>;
   selectedId?: string;
   onOpenProject: (project: Project) => void;
   onAttachRecipe: (project: Project) => void;
@@ -89,8 +94,13 @@ export function ProjectsTable({
     );
   }
 
-  function renderRows(items: Project[], depth: number): ReactNode[] {
-    return items.flatMap((p) => {
+  // `groupIndex` is the index of the top-level ancestor; it stays constant as
+  // we recurse so an Army and all its sub-projects share one banding tint and
+  // each top-level group alternates (UX-015 — separate dense row groups).
+  function renderRows(items: Project[], depth: number, groupIndex?: number): ReactNode[] {
+    return items.flatMap((p, i) => {
+      const group = groupIndex ?? i;
+      const banded = group % 2 === 1;
       const selected = p.id === selectedId;
       const hasChildren = !!p.children && p.children.length > 0;
       const isExpanded = expanded.has(p.id);
@@ -122,7 +132,7 @@ export function ProjectsTable({
             "cursor-pointer border-b border-fg/10 transition-colors focus:outline-none",
             selected
               ? "bg-cyan/10 text-cyan"
-              : "hover:bg-cyan/5 focus-visible:bg-cyan/10",
+              : cn("hover:bg-cyan/5 focus-visible:bg-cyan/10", banded && "bg-fg/[0.02]"),
           )}
         >
           <td className="px-3 py-2.5 font-mono text-sm text-fg">
@@ -139,7 +149,7 @@ export function ProjectsTable({
                     e.stopPropagation();
                     toggle(p.id);
                   }}
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15"
                 >
                   <span className={cn("transition-transform", isExpanded && "rotate-90")}>
                     ▸
@@ -147,7 +157,7 @@ export function ProjectsTable({
                 </button>
               ) : (
                 // Spacer keeps leaf titles aligned with their expandable siblings.
-                <span className="h-5 w-5 shrink-0" aria-hidden />
+                <span className="h-6 w-6 shrink-0" aria-hidden />
               )}
               {/* Name stays white so it's clearly distinct from the coloured
                   TYPE chip — even on the cyan-highlighted selected row (JRH4). */}
@@ -184,6 +194,17 @@ export function ProjectsTable({
                 {p.modelsComplete ?? Math.round((p.completionPercent / 100) * p.modelCount)}/
                 {p.modelCount} models
               </span>
+            )}
+          </td>
+          <td className="w-16 px-3 py-2.5">
+            {/* Logged focus time, rolled up over sub-projects (UX-011).
+                Dim "—" when nothing's been logged so empty rows stay quiet. */}
+            {rollupProjectMinutes(p, projectMinutes) > 0 ? (
+              <span className="font-mono text-xs tabular-nums text-cyan">
+                {formatMinutes(rollupProjectMinutes(p, projectMinutes))}
+              </span>
+            ) : (
+              <span className="font-mono text-xs text-fg-faint">—</span>
             )}
           </td>
           <td className="w-20 px-3 py-2.5">
@@ -261,7 +282,7 @@ export function ProjectsTable({
         ) : null;
 
       const childRows =
-        hasChildren && isExpanded ? renderRows(p.children!, depth + 1) : [];
+        hasChildren && isExpanded ? renderRows(p.children!, depth + 1, group) : [];
       return [row, ...(isExpanded && addRow ? [addRow] : []), ...childRows];
     });
   }

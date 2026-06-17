@@ -27,11 +27,13 @@ export function DashboardClient({
   events,
   activity,
   sessionStats,
+  projectMinutes,
 }: {
   projects: Project[];
   events: CalendarEvent[];
   activity: ActivityEntry[];
   sessionStats: SessionStats;
+  projectMinutes: Record<string, number>;
 }) {
   const router = useRouter();
   const { toast, node } = useToast();
@@ -48,6 +50,7 @@ export function DashboardClient({
         projects={projects}
         events={events}
         activity={activity}
+        projectMinutes={projectMinutes}
         onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
         onFocusProject={(p) => router.push(`/focus?project=${p.id}`)}
         onAttachRecipe={() => router.push("/recipes")}

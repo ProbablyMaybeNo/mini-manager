@@ -1,5 +1,6 @@
 "use client";
 
+import { Listbox } from "@/components/kit";
 import type { Project } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { flattenFocusOptions } from "@/lib/focus/focusOptions";
@@ -33,24 +34,15 @@ export function FocusPicker({
         <span className="font-osd text-[11px] uppercase tracking-[0.18em] text-cyan">
           + Focus
         </span>
-        <select
-          aria-label="Focus on project"
+        <Listbox
+          ariaLabel="Focus on project"
           value={currentId ?? ""}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v) onSelect(v);
-          }}
-          className="max-w-[220px] border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
-        >
-          <option value="" disabled>
-            {options.length ? "Pick a project…" : "No projects yet"}
-          </option>
-          {options.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          options={options.map((o) => ({ value: o.id, label: o.label }))}
+          onChange={(v) => onSelect(v)}
+          placeholder={options.length ? "Pick a project…" : "No projects yet"}
+          disabled={options.length === 0}
+          triggerClassName="max-w-[220px]"
+        />
       </label>
       {currentId && (
         <button

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, EmptyState, SwatchStrip } from "@/components/kit";
+import { Button, Chip, EmptyState, Listbox, SwatchStrip } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { StatusDropdown } from "./StatusDropdown";
@@ -34,7 +34,7 @@ function Thumb({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Price", "Recipe", "Status", "Link", ""];
+const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Type", "Price", "Recipe", "Status", "Link", ""];
 const MODEL_COLS = ["Image", "Name", "Game", "Army", "Price", "Project", "Status", "Link", ""];
 
 export function CollectionTable({
@@ -178,7 +178,7 @@ export function CollectionTable({
                     }
                     action={
                       items.length === 0
-                        ? { label: `+ Add ${label.toLowerCase()}`, onClick: onAdd }
+                        ? { label: `+ Add ${label.toLowerCase()}`, onClick: onAdd, variant: "add" as const }
                         : undefined
                     }
                     className="py-8"
@@ -186,8 +186,16 @@ export function CollectionTable({
                 </td>
               </tr>
             ) : (
-              visible.map((item) => (
-                <tr key={item.id} className="border-b border-fg/10 transition-colors hover:bg-cyan/5">
+              visible.map((item, rowIndex) => (
+                <tr
+                  key={item.id}
+                  className={cn(
+                    "border-b border-fg/10 transition-colors hover:bg-cyan/5",
+                    // Subtle zebra banding so dense rows separate without
+                    // relying purely on the hairline borders (UX-015).
+                    rowIndex % 2 === 1 && "bg-fg/[0.02]",
+                  )}
+                >
                   <td className="px-3 py-2">
                     <Thumb src={item.thumbnail} alt={item.name} />
                   </td>
@@ -211,6 +219,15 @@ export function CollectionTable({
                   <td className="px-3 py-2 font-mono text-xs text-fg-dim">
                     {kind === "model" ? (item.army ?? "") : item.vendor}
                   </td>
+                  {kind === "paint" && (
+                    <td className="px-3 py-2">
+                      {item.paintType ? (
+                        <Chip accent="dim">{item.paintType}</Chip>
+                      ) : (
+                        <span className="font-mono text-xs text-fg-faint">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-3 py-2 font-mono text-xs tabular-nums text-fg">{item.price}</td>
                   {kind === "paint" ? (
                     <td className="px-3 py-2">
@@ -221,19 +238,18 @@ export function CollectionTable({
                     </td>
                   ) : (
                     <td className="px-3 py-2">
-                      <select
+                      <Listbox
                         value={item.projectId ?? ""}
-                        aria-label={`Assign ${item.name} to a project`}
-                        onChange={(e) => onAssignProject(item, e.target.value)}
-                        className="max-w-[160px] border border-purple/60 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-purple focus:shadow-[0_0_0_3px_rgba(155,128,220,0.18)] focus:outline-none"
-                      >
-                        <option value="">— Unassigned —</option>
-                        {activeProjects.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.title}
-                          </option>
-                        ))}
-                      </select>
+                        ariaLabel={`Assign ${item.name} to a project`}
+                        accent="purple"
+                        placeholder="— Unassigned —"
+                        onChange={(v) => onAssignProject(item, v)}
+                        options={[
+                          { value: "", label: "— Unassigned —" },
+                          ...activeProjects.map((p) => ({ value: p.id, label: p.title })),
+                        ]}
+                        triggerClassName="max-w-[160px]"
+                      />
                     </td>
                   )}
                   <td className="px-3 py-2">
@@ -282,12 +298,7 @@ export function CollectionTable({
       {/* Restyled add button — shared kit Button (R493). Neon green, the
           collection accent the painter confirmed (MM-37/38/42/43). */}
       <div className="flex border-t border-cyan/20 pt-3">
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={onAdd}
-          className="border-green bg-green/15 text-green hover:bg-green/25"
-        >
+        <Button variant="add" size="sm" onClick={onAdd}>
           + Add {label.toLowerCase()}
         </Button>
       </div>

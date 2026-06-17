@@ -4,7 +4,9 @@ import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
+  DateField,
   Input,
+  Listbox,
   PriorityTag,
   ProgressBar,
   StatusText,
@@ -25,6 +27,8 @@ import {
   updateProjectNotes,
   type ProjectDetail,
 } from "@/lib/actions/projectMeta";
+import { cn } from "@/lib/cn";
+import { formatMinutes } from "@/lib/palette";
 import type { Priority, Project, ProjectStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
@@ -82,12 +86,16 @@ function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function ProjectWorkspaceBody({
   project,
+  loggedMinutes,
   onAttachRecipe,
   onStartSession,
   onClose,
   variant = "panel",
 }: {
   project: Project;
+  /** Logged minutes for this project + sub-projects (UX-011). Shown as a Time
+   *  stat, formatted like the Focus per-project time. */
+  loggedMinutes?: number;
   onAttachRecipe?: (project: Project) => void;
   onStartSession?: (project: Project) => void;
   onClose?: () => void;
@@ -175,56 +183,39 @@ export function ProjectWorkspaceBody({
           </span>
           <TypeChip type={project.type} />
         </div>
-        <label className="flex flex-col gap-1 border border-cyan/20 p-2">
+        <div className="flex flex-col gap-1 border border-cyan/20 p-2">
           <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
             Status
           </span>
-          <select
+          <Listbox
             value={project.status}
             disabled={pending}
-            aria-label="Project status"
-            onChange={(e) =>
-              run(() =>
-                bumpProjectStatus({
-                  id: project.id,
-                  status: e.target.value as ProjectStatus,
-                }),
-              )
+            ariaLabel="Project status"
+            options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+            onChange={(s) =>
+              run(() => bumpProjectStatus({ id: project.id, status: s }))
             }
-            className="bg-bg font-mono text-xs text-fg focus:outline-none"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 border border-cyan/20 p-2">
+          />
+        </div>
+        <div className="flex flex-col gap-1 border border-cyan/20 p-2">
           <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
             Priority
           </span>
-          <select
+          <Listbox
             value={project.priority}
             disabled={pending}
-            aria-label="Project priority"
-            onChange={(e) =>
+            ariaLabel="Project priority"
+            options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p }))}
+            onChange={(p) =>
               run(() =>
                 updateProjectPriority({
                   id: project.id,
-                  priority: PRIORITY_TO_DB[e.target.value as Priority],
+                  priority: PRIORITY_TO_DB[p],
                 }),
               )
             }
-            className="bg-bg font-mono text-xs text-fg focus:outline-none"
-          >
-            {PRIORITY_OPTIONS.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </label>
+          />
+        </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
           <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
             Overall progress
@@ -246,7 +237,7 @@ export function ProjectWorkspaceBody({
             <Swatch key={`${hex}-${i}`} hex={hex} size="lg" />
           ))}
           <Button
-            variant="secondary"
+            variant="add"
             size="sm"
             onClick={() => onAttachRecipe?.(project)}
           >
@@ -255,11 +246,15 @@ export function ProjectWorkspaceBody({
         </div>
       </Section>
 
-      {/* Stat trio */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Stat row — gains a fourth Time cell when logged time is provided
+          (UX-011), formatted like the Focus per-project time. */}
+      <div className={cn("grid gap-2", loggedMinutes != null ? "grid-cols-4" : "grid-cols-3")}>
         <StatCell label="Total models" value={project.modelCount ?? 0} />
         <StatCell label="Completed" value={project.modelsComplete ?? 0} />
         <StatCell label="Sub-projects" value={children.length} />
+        {loggedMinutes != null && (
+          <StatCell label="Time" value={formatMinutes(loggedMinutes)} />
+        )}
       </div>
 
       {/* Sub-projects */}
@@ -396,7 +391,7 @@ export function ProjectWorkspaceBody({
           </form>
         ) : (
           <Button
-            variant="secondary"
+            variant="add"
             size="sm"
             className="mt-1 self-start"
             onClick={() => setAddingChild(true)}
@@ -418,22 +413,19 @@ export function ProjectWorkspaceBody({
           placeholder="Focus next on Terminators edge highlights…"
           className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
         />
-        <label className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <span className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
             Target date
           </span>
-          <input
-            type="date"
+          <DateField
             value={targetDate}
-            onChange={(e) => {
-              const v = e.target.value;
+            ariaLabel="Target date"
+            onChange={(v) => {
               setTargetDate(v);
               run(() => setProjectTargetDate({ id: project.id, date: v || null }));
             }}
-            aria-label="Target date"
-            className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:outline-none"
           />
-        </label>
+        </div>
       </Section>
 
       {/* Reference image */}

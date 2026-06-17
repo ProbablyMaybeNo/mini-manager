@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { currentUserId } from "@/lib/auth-stub";
 import { loadAppData } from "@/lib/appData";
+import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project } from "@/lib/types";
 import { ProjectPageClient } from "./ProjectPageClient";
 
@@ -28,5 +29,6 @@ export default async function ProjectPage({
   const data = await loadAppData(userId);
   const project = findProject(data.projects ?? [], id);
   if (!project) notFound();
-  return <ProjectPageClient project={project} />;
+  const loggedMinutes = rollupProjectMinutes(project, data.projectMinutes ?? {});
+  return <ProjectPageClient project={project} loggedMinutes={loggedMinutes} />;
 }

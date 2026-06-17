@@ -92,7 +92,7 @@ export function PaintListTable({
                   onClick={() => onToggleWishlist(p)}
                   className={cn(
                     "font-osd text-sm",
-                    p.wishlisted ? "text-yellow text-glow-cyan" : "text-fg-faint hover:text-yellow",
+                    p.wishlisted ? "text-yellow text-glow-yellow" : "text-fg-faint hover:text-yellow",
                   )}
                 >
                   ★

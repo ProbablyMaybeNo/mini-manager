@@ -6,6 +6,7 @@ import { FocusView } from "@/components/focus/FocusView";
 import { useToast } from "@/components/kit";
 import { useMockData } from "@/mock/MockProvider";
 import type { InspoRef, Project } from "@/lib/types";
+import { rollupProjectMinutes } from "@/lib/projectTime";
 import { logSession } from "@/lib/actions/paintSessions";
 import { addInspo, deleteInspo } from "@/lib/actions/recipeInspo";
 import { setProjectComplete } from "@/lib/actions/projects";
@@ -41,6 +42,10 @@ function FocusRoute() {
     ? data.recipes.find((r) => r.assignedProjectId === project.id) ?? data.recipes[0] ?? null
     : null;
 
+  const projectMinutes = project
+    ? rollupProjectMinutes(project, data.projectMinutes)
+    : undefined;
+
   // Inspo is edited inline on the bench, so the controller owns it (optimistic
   // add/remove backed by the recipe_inspo actions). Re-seed when the focused
   // recipe changes.
@@ -57,6 +62,7 @@ function FocusRoute() {
         recipe={recipe}
         stats={data.sessionStats}
         modelCount={project?.modelCount ?? 0}
+        projectMinutes={projectMinutes}
         inspo={inspo}
         onFocusProject={(id) => {
           // Persist the pin server-side AND reflect it in the URL so a refresh

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, EmptyState, RecipePaintStrip } from "@/components/kit";
+import { Button, EmptyState, Listbox, RecipePaintStrip } from "@/components/kit";
 import type { Project, Recipe } from "@/lib/types";
 
 const COLS = ["Name", "Recipe", "Project", "Share"];
@@ -29,7 +29,7 @@ export function RecipeIndexTable({
         glyph="⌖"
         title="No recipes yet"
         hint="A recipe is a repeatable paint scheme you can attach to a project and share."
-        action={{ label: "+ Create your first recipe", onClick: onCreate }}
+        action={{ label: "+ Create your first recipe", onClick: onCreate, variant: "add" }}
       />
     );
   }
@@ -93,19 +93,16 @@ export function RecipeIndexTable({
                 )}
               </td>
               <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                <select
+                <Listbox
                   value={r.assignedProjectId ?? ""}
-                  onChange={(e) => onAssignProject(r, e.target.value)}
-                  aria-label={`Assign ${r.name} to a project`}
-                  className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg transition-[border-color,box-shadow] duration-150 focus:border-cyan focus:shadow-[0_0_0_3px_rgba(0,210,255,0.12)] focus:outline-none"
-                >
-                  <option value="">Assign…</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title}
-                    </option>
-                  ))}
-                </select>
+                  ariaLabel={`Assign ${r.name} to a project`}
+                  placeholder="Assign…"
+                  onChange={(v) => onAssignProject(r, v)}
+                  options={[
+                    { value: "", label: "Assign…" },
+                    ...projects.map((p) => ({ value: p.id, label: p.title })),
+                  ]}
+                />
               </td>
               <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                 <Button variant="secondary" size="sm" onClick={() => onShare(r)}>
@@ -116,7 +113,7 @@ export function RecipeIndexTable({
           ))}
           <tr>
             <td colSpan={COLS.length} className="px-3 py-3 text-center">
-              <Button variant="tertiary" onClick={onCreate}>
+              <Button variant="add" onClick={onCreate}>
                 + Recipe
               </Button>
             </td>

@@ -53,7 +53,7 @@ export function RecipeIndexView({
       <PageHeader
         title="RECIPE"
         tagline="Build, manage, and share repeatable paint schemes."
-        actions={<Button onClick={() => setCreating(true)}>+ Recipe</Button>}
+        actions={<Button variant="add" onClick={() => setCreating(true)}>+ Recipe</Button>}
       />
 
       {status === "error" ? (

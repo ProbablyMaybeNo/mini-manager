@@ -195,7 +195,7 @@ export function LayeringTool({
             </div>
           ))}
           <Button
-            variant="secondary"
+            variant="add"
             disabled={layers.length >= 6}
             onClick={() => setLayers((p) => [...p, { hex: "#ffffff", alpha: 0.5 }])}
           >

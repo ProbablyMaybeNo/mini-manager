@@ -109,7 +109,8 @@ export function PaintInfoPanelContent({
             </button>
           </div>
           {/* Wishlist toggle (MM-19): yellow, with a filled/active state when
-              the paint is on the wishlist. onWishlist persists the toggle. */}
+              the paint is on the wishlist. onWishlist persists the toggle.
+              Inactive label matches the Figma "MARK AS WANTED" CTA (UX-014). */}
           <button
             type="button"
             aria-pressed={paint.wishlisted}
@@ -121,7 +122,7 @@ export function PaintInfoPanelContent({
                 : "border-yellow/60 text-yellow hover:bg-yellow/10",
             )}
           >
-            {paint.wishlisted ? "★ Wishlisted" : "☆ Wishlist"}
+            {paint.wishlisted ? "★ Wanted" : "☆ Mark as wanted"}
           </button>
         </div>
       </Field>
