@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
+  DateField,
   Input,
   Listbox,
   PriorityTag,
@@ -412,22 +413,19 @@ export function ProjectWorkspaceBody({
           placeholder="Focus next on Terminators edge highlights…"
           className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
         />
-        <label className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <span className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
             Target date
           </span>
-          <input
-            type="date"
+          <DateField
             value={targetDate}
-            onChange={(e) => {
-              const v = e.target.value;
+            ariaLabel="Target date"
+            onChange={(v) => {
               setTargetDate(v);
               run(() => setProjectTargetDate({ id: project.id, date: v || null }));
             }}
-            aria-label="Target date"
-            className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:outline-none"
           />
-        </label>
+        </div>
       </Section>
 
       {/* Reference image */}
