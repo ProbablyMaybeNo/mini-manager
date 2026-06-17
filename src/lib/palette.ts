@@ -35,6 +35,17 @@ export const accentBorder: Record<Accent, string> = {
   dim: "border-fg-faint",
 };
 
+/** Per-accent phosphor text-glow (maps onto the text-glow-* utilities in
+ *  globals.css). `dim` has no phosphor token, so it stays un-glowed. */
+export const accentTextGlow: Record<Accent, string> = {
+  cyan: "text-glow-cyan",
+  green: "text-glow-green",
+  yellow: "text-glow-yellow",
+  purple: "text-glow-purple",
+  red: "text-glow-red",
+  dim: "",
+};
+
 export const projectTypeAccent: Record<ProjectType, Accent> = {
   Army: "cyan",
   Warband: "purple",

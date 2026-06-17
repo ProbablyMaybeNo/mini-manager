@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import { accentBorder, accentText, type Accent } from "@/lib/palette";
+import { accentBorder, accentText, accentTextGlow, type Accent } from "@/lib/palette";
 
 /** Compact stat box: title + big accent number. The border follows the box's
  *  accent so a row of stat boxes reads multi-colour (palette adoption — defaults
@@ -38,7 +38,16 @@ export function StatBox({
       <div className="font-osd text-[11px] uppercase tracking-[0.18em] text-fg-dim">
         {label}
       </div>
-      <div className={cn("font-display text-xl leading-none", !center && "mt-1", accentText[accent])}>
+      <div
+        className={cn(
+          "font-display text-xl leading-none",
+          !center && "mt-1",
+          accentText[accent],
+          // Subtle per-accent phosphor glow on the hero number (UX-006) —
+          // static low-glow token, matches each box's hue.
+          accentTextGlow[accent],
+        )}
+      >
         {value}
       </div>
     </div>
