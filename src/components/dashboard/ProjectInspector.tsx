@@ -11,12 +11,15 @@ import { ProjectWorkspaceBody } from "./ProjectWorkspaceBody";
  */
 export function ProjectInspector({
   project,
+  loggedMinutes,
   open,
   onClose,
   onStartSession,
   onAttachRecipe,
 }: {
   project: Project | null;
+  /** Logged minutes for this project, rolled up over its sub-projects (UX-011). */
+  loggedMinutes?: number;
   open: boolean;
   onClose: () => void;
   onStartSession: (project: Project) => void;
@@ -34,6 +37,7 @@ export function ProjectInspector({
         <ProjectWorkspaceBody
           key={project.id}
           project={project}
+          loggedMinutes={loggedMinutes}
           onAttachRecipe={onAttachRecipe}
           onStartSession={onStartSession}
           onClose={onClose}

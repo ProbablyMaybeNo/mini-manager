@@ -25,6 +25,8 @@ import {
   updateProjectNotes,
   type ProjectDetail,
 } from "@/lib/actions/projectMeta";
+import { cn } from "@/lib/cn";
+import { formatMinutes } from "@/lib/palette";
 import type { Priority, Project, ProjectStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
@@ -82,12 +84,16 @@ function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function ProjectWorkspaceBody({
   project,
+  loggedMinutes,
   onAttachRecipe,
   onStartSession,
   onClose,
   variant = "panel",
 }: {
   project: Project;
+  /** Logged minutes for this project + sub-projects (UX-011). Shown as a Time
+   *  stat, formatted like the Focus per-project time. */
+  loggedMinutes?: number;
   onAttachRecipe?: (project: Project) => void;
   onStartSession?: (project: Project) => void;
   onClose?: () => void;
@@ -255,11 +261,15 @@ export function ProjectWorkspaceBody({
         </div>
       </Section>
 
-      {/* Stat trio */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Stat row — gains a fourth Time cell when logged time is provided
+          (UX-011), formatted like the Focus per-project time. */}
+      <div className={cn("grid gap-2", loggedMinutes != null ? "grid-cols-4" : "grid-cols-3")}>
         <StatCell label="Total models" value={project.modelCount ?? 0} />
         <StatCell label="Completed" value={project.modelsComplete ?? 0} />
         <StatCell label="Sub-projects" value={children.length} />
+        {loggedMinutes != null && (
+          <StatCell label="Time" value={formatMinutes(loggedMinutes)} />
+        )}
       </div>
 
       {/* Sub-projects */}

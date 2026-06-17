@@ -17,6 +17,7 @@ export default async function DashboardPage() {
       events={data.events ?? []}
       activity={data.activity ?? []}
       sessionStats={data.sessionStats ?? zeroSessionStats}
+      projectMinutes={data.projectMinutes ?? {}}
     />
   );
 }

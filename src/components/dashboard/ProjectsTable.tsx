@@ -12,9 +12,11 @@ import {
   SwatchStrip,
   TypeChip,
 } from "@/components/kit";
+import { formatMinutes } from "@/lib/palette";
+import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project, ProjectType } from "@/lib/types";
 
-const COLS = ["Title", "Type", "Recipe", "Status", "Priority", "Completion", ""];
+const COLS = ["Title", "Type", "Recipe", "Status", "Priority", "Completion", "Time", ""];
 
 /** Per-depth indent (px) applied to the Title cell so nested sub-projects
  *  read as a tree: Army → Unit → Model. */
@@ -33,6 +35,7 @@ const SUB_TYPE: Partial<Record<ProjectType, ProjectType>> = {
 
 export function ProjectsTable({
   projects,
+  projectMinutes = {},
   selectedId,
   onOpenProject,
   onAttachRecipe,
@@ -40,6 +43,8 @@ export function ProjectsTable({
   onAddSubProject,
 }: {
   projects: Project[];
+  /** Per-project logged minutes (UX-011), rolled up over sub-projects per row. */
+  projectMinutes?: Record<string, number>;
   selectedId?: string;
   onOpenProject: (project: Project) => void;
   onAttachRecipe: (project: Project) => void;
@@ -184,6 +189,17 @@ export function ProjectsTable({
                 {p.modelsComplete ?? Math.round((p.completionPercent / 100) * p.modelCount)}/
                 {p.modelCount} models
               </span>
+            )}
+          </td>
+          <td className="w-16 px-3 py-2.5">
+            {/* Logged focus time, rolled up over sub-projects (UX-011).
+                Dim "—" when nothing's been logged so empty rows stay quiet. */}
+            {rollupProjectMinutes(p, projectMinutes) > 0 ? (
+              <span className="font-mono text-xs tabular-nums text-cyan">
+                {formatMinutes(rollupProjectMinutes(p, projectMinutes))}
+              </span>
+            ) : (
+              <span className="font-mono text-xs text-fg-faint">—</span>
             )}
           </td>
           <td className="w-20 px-3 py-2.5">

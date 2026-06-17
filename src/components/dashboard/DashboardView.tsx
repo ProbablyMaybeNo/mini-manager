@@ -10,6 +10,7 @@ import type {
   Project,
   ProjectType,
 } from "@/lib/types";
+import { rollupProjectMinutes } from "@/lib/projectTime";
 import { ProjectInspector } from "./ProjectInspector";
 import { ProjectsTable } from "./ProjectsTable";
 import { RightRail } from "./RightRail";
@@ -23,6 +24,9 @@ export interface DashboardViewProps {
   projects: Project[];
   events: CalendarEvent[];
   activity: ActivityEntry[];
+  /** Per-project logged minutes (UX-011) — keyed by project id, rolled up
+   *  over sub-projects at render. Defaults to empty so non-data callers work. */
+  projectMinutes?: Record<string, number>;
   status?: DashboardStatus;
   onOpenProject?: (project: Project) => void;
   onFocusProject?: (project: Project) => void;
@@ -51,6 +55,7 @@ export function DashboardView({
   projects,
   events,
   activity,
+  projectMinutes = {},
   status = "ready",
   onOpenProject,
   onFocusProject,
@@ -97,6 +102,7 @@ export function DashboardView({
               <Panel label="PROJECTS" cornerTicks className="p-4">
                 <ProjectsTable
                   projects={projects}
+                  projectMinutes={projectMinutes}
                   selectedId={selected?.id}
                   onOpenProject={openProject}
                   onFocusProject={(p) => onFocusProject?.(p)}
@@ -124,6 +130,7 @@ export function DashboardView({
 
       <ProjectInspector
         project={selected}
+        loggedMinutes={selected ? rollupProjectMinutes(selected, projectMinutes) : 0}
         open={inspectorOpen}
         onClose={() => setInspectorOpen(false)}
         onStartSession={(p) => {

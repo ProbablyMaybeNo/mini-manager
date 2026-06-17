@@ -5,7 +5,13 @@ import { ProjectWorkspaceBody } from "@/components/dashboard/ProjectWorkspaceBod
 import type { Project } from "@/lib/types";
 
 /** Full-page project workspace — same body as the dashboard slide-out. */
-export function ProjectPageClient({ project }: { project: Project }) {
+export function ProjectPageClient({
+  project,
+  loggedMinutes,
+}: {
+  project: Project;
+  loggedMinutes?: number;
+}) {
   const router = useRouter();
   return (
     <div className="flex h-full flex-col overflow-y-auto p-6">
@@ -19,6 +25,7 @@ export function ProjectPageClient({ project }: { project: Project }) {
       <div className="mx-auto w-full max-w-3xl">
         <ProjectWorkspaceBody
           project={project}
+          loggedMinutes={loggedMinutes}
           variant="page"
           onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
           onAttachRecipe={() => router.push("/recipes")}

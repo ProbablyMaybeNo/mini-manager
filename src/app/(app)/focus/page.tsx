@@ -6,6 +6,7 @@ import { FocusView } from "@/components/focus/FocusView";
 import { useToast } from "@/components/kit";
 import { useMockData } from "@/mock/MockProvider";
 import type { InspoRef, Project } from "@/lib/types";
+import { rollupProjectMinutes } from "@/lib/projectTime";
 import { logSession } from "@/lib/actions/paintSessions";
 import { addInspo, deleteInspo } from "@/lib/actions/recipeInspo";
 import { setProjectComplete } from "@/lib/actions/projects";
@@ -22,19 +23,6 @@ function findProjectById(list: Project[], id: string): Project | undefined {
     }
   }
   return undefined;
-}
-
-/** Logged minutes for a project rolled up over itself + every sub-project
- *  (A5qzb — Focus per-project time). */
-function rollupProjectMinutes(
-  project: Project,
-  minutesById: Record<string, number>,
-): number {
-  let total = minutesById[project.id] ?? 0;
-  for (const child of project.children ?? []) {
-    total += rollupProjectMinutes(child, minutesById);
-  }
-  return total;
 }
 
 function FocusRoute() {
