@@ -72,6 +72,9 @@ test.describe("M6 — Mobile primary flows", () => {
   test("M6.2 create a project on mobile → focus stepper bump persists", async ({
     page,
   }) => {
+    // Same multi-step flow as M3.1 (create → focus → stepper → reload);
+    // extend the timeout so a loaded dev server doesn't exhaust the budget.
+    test.setTimeout(60_000);
     await signInAs(page, freshTestEmail("mobile-proj"));
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
@@ -100,20 +103,19 @@ test.describe("M6 — Mobile primary flows", () => {
     await expectNoHorizontalScroll(page);
 
     await expect(page.getByText(/^0\s*\/\s*3$/)).toBeVisible({ timeout: 15_000 });
-    // The stepper persists via a fire-and-forget server action (no UI
-    // confirmation), so wait for the action POST to settle before reloading.
-    const actionDone = page.waitForResponse(
-      (r) => r.request().method() === "POST" && r.url().includes("/focus"),
-      { timeout: 30_000 },
-    );
+    // Optimistic state: click bumps the UI immediately via React useState.
+    // Poll reloads until the server-side state reflects 1/3 (the server action
+    // has committed to the DB). This is more robust than waitForResponse under
+    // parallel dev-server load (MM-test-1).
     await page
       .getByRole("button", { name: /increase models painted/i })
       .click();
-    await expect(page.getByText(/^1\s*\/\s*3$/)).toBeVisible();
-    await actionDone;
+    await expect(page.getByText(/^1\s*\/\s*3$/)).toBeVisible({ timeout: 15_000 });
 
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.getByText(/^1\s*\/\s*3$/)).toBeVisible({ timeout: 30_000 });
+    await expect(async () => {
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.getByText(/^1\s*\/\s*3$/)).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 45_000 });
     await expectNoHorizontalScroll(page);
   });
 
