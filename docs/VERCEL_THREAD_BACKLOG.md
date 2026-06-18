@@ -15,27 +15,30 @@ corrected loop (PR → CI gate → merge → verify prod → **then** resolve).
 This backlog makes every outstanding thread trackable so each one goes through
 that loop instead of evaporating on a preview branch.
 
-## Status — verify pass, 2026-06-18
+## Status — verify-and-resolve COMPLETE, 2026-06-18
 
-First verify-and-resolve pass done. **24 threads resolved** (verified against shipped `main` source, each closed with a citation, not a preview):
+All 93 threads triaged: a manual landing-page pass plus a 12-agent verification workflow that checked every remaining thread against shipped `main` source. **77 of 93 resolved** (each closed with a file-level citation, not a preview claim). **16 remain open** — the genuinely-outstanding work.
 
-- All 14 `/` landing threads (copy/logo/CTA — all shipped in `LandingView`).
-- `pfKcweyeSrWA` Terrain→red (PR #25), `NzVQI3ESFmK0` (praise, no-op).
-- `USx5rvtrvdGD` Match assign→purple, `lRmu1mjMhc1Y` Match %-label+green bar, `PDySWAZSgoay` click-day→+Date, `WVWX39228b0k` popup date-picker, `JlrBYUITMqoa` +buttons-green, `p9DIDcsozQYM` tool thumbnails.
-- `5gi2AXAYb9el` (MM-24 recipe focus-loss) and `saHWeY2Y7_kY` (MM-36 model/paint routing) — both **already fixed in `main`**, just never resolved.
+**Headline finding:** ~80% of "open" threads were **already built and just never marked resolved** — including items that *read* as unbuilt features. The dropper (`EyedropperTool.tsx`, MM-34), stacking/layering (`LayeringTool.tsx`, MM-35), colour-wheel rebuild (`ColourWheelTool.tsx`, MM-53/29) and the recipe slide-out picker (`RecipePaintPicker.tsx`, MM-25/UX-002) were all shipped after their comments. This was overwhelmingly a *tracking* failure, not a backlog of unbuilt work. Root cause fixed in `docs/AGENT_ONBOARDING.md` (gated PR→merge→verify→resolve loop).
 
-`6hWtJA2oArmz` was resolved then **re-opened**: its colour ask shipped, but a later follow-up (bigger numbers + Figma font on the stat boxes) hasn't — still open.
+### The 16 still open
 
-**Key learning that changes the tag meanings below:** both items tagged as "genuine bugs" turned out already-fixed (code comments even cite the thread IDs). The **[FIX]** tags here were inferred from the comment text, not verified against code — so a large share of them are likely **already shipped but unresolved**, not outstanding work. Treat every **[FIX]/[VERIFY]** as "verify in `main` first" before assuming it needs building. The genuinely-new work is concentrated in **[FEATURE]** and **[REDESIGN]**.
+**Small real changes / awaiting input (7):**
+- `6hWtJA2oArmz` — stat-box colours done; **follow-up** (bigger numbers + Figma font) not done.
+- `KOdXd3JTo7rS` — three-tier font *structure* shipped, but the **specific named fonts** (UAV OSD Mono / 3d PIXEL / Flexi IBM VGA True) and the **app-wide size increase** need Ross to supply the woff2/ttf files + a target size.
+- `fZRWinmZ-syG` — +ATTACH should open a recipe dropdown (with +New) to attach without leaving the page.
+- `RG-egS3QAoBi` — name an uploaded army-list before import + port model count/type into the table.
+- `S3lZ40vuocCL` — projects KPI: strip to just the centered percentage / more stylistic.
+- `UF5HOwXMpJxP` — make a `/projects` section smaller + scrollable.
+- `yO830AqQH3Hu` — move the "Jun 2026" label between the calendar arrows (minor).
 
-## How to work it
+**Need a visual/screenshot check — can't confirm from source (7):**
+`8TkHnT9drEl2` (remove which section?), `FZj63NkdAnZb` (remove which paint-table element?), `Jqx4pDn-NWw1` (recolour which element?), `hA-bzgS5S98r` (remove which redundant section?), `lq5hIKKHJdVT` (remove what?), `RuYiw7plQqDV` (focus recipe-box label order), `TmE3k580uZWc` (planner progress bars per Figma group 21).
 
-1. Pick a thread. Confirm whether it's **already live in prod** (`miniaturemanager.vercel.app`) — many cosmetic/copy items below were shipped by the redesign + UX-001…015 sweep but never resolved.
-2. If already live → reply citing the `main` commit and **resolve** the thread.
-3. If not → fix on a `fix/`-branch → PR → gate → merge → verify prod → reply + resolve.
-4. Strike it here.
+**Page-scale redesign — needs a design pass first (2):**
+`ORZm2dlzzxzq` and `vYOtzW8W9ciB` — the `/planner` full UI rethink.
 
-Status legend: **[VERIFY]** likely already shipped — confirm in prod then resolve · **[FIX]** genuine outstanding change · **[FEATURE]** net-new feature build · **[REDESIGN]** page-scale rework, needs a design pass first.
+> Process going forward: any new work on these goes through the gated loop (`fix/`-branch → PR → CI → merge → verify prod → reply + resolve). Don't resolve on a preview.
 
 ---
 
