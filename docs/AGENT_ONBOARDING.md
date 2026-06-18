@@ -149,4 +149,18 @@ Three layers:
 - Action breaking? Mock pattern is in `tests/integration/actions/counters.test.ts`.
 - UI flow you need to test end-to-end? Copy `tests/e2e/qa_project_workspace.spec.ts`.
 
+## Responding to Vercel preview comments — the only correct loop
+
+If you act on a Vercel toolbar comment, **a fix is not "done" until it is live in production `main`.** A preview deploy is NOT shipped. The historical failure mode in this repo: an agent committed to a throwaway `claude/*` branch, replied "✅ Fixed — preview READY", and resolved the thread — but the branch never merged, so `miniaturemanager.vercel.app` never changed. The comment looked handled; the app was untouched.
+
+Do exactly this, in order:
+
+1. Make the change on a normal feature branch (`fix/...`, `feat/...`) — never leave work on a random `claude/<name>` preview branch as the final state.
+2. `npm run typecheck` + `npm run test:unit` locally (0 type errors).
+3. Open a PR to `main`. Let the CI gate run (`.github/workflows/ci.yml`: typecheck → unit → integration → build, plus Playwright E2E). **Wait for green.**
+4. Merge to `main`. Confirm the **production** deploy (target `production`, aliased to `miniaturemanager.vercel.app`) reaches state `READY` for your commit SHA.
+5. ONLY THEN reply on the thread, referencing the **`main` commit + PR number + prod deploy** (not a preview URL), and resolve it.
+
+Never resolve a thread on the strength of a preview build. "Fixed on a preview branch" = not fixed. Check the current design system before re-applying an old request — tokens/variants move (e.g. green CTAs use `Button variant="add"`, not a bespoke `success` variant).
+
 Welcome to Mini Manager. Read `app/docs/V2-BUILD-PLAN.md` once, then go.
