@@ -51,7 +51,7 @@ export const projectTypeAccent: Record<ProjectType, Accent> = {
   Warband: "purple",
   Unit: "green",
   Model: "yellow",
-  Terrain: "dim",
+  Terrain: "red",
 };
 
 export const statusAccent: Record<ProjectStatus, Accent> = {

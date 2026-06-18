@@ -16,7 +16,7 @@ function formatDate(iso: string): string {
 export function UpcomingEventsBar({ events }: { events: CalendarEvent[] }) {
   return (
     <div className="flex items-center gap-4 overflow-x-auto border-t border-cyan/40 bg-bg-raised/40 px-4 py-2">
-      <span className="shrink-0 font-osd text-[11px] uppercase tracking-[0.18em] text-cyan">
+      <span className="shrink-0 font-osd text-[11px] uppercase tracking-[0.18em] text-fg">
         Upcoming events:
       </span>
       {events.length === 0 ? (
