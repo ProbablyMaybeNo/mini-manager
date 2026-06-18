@@ -533,4 +533,7 @@ The mobile spec covers three missions:
 - **Component tests** — `@testing-library/react` is not installed. Component logic is currently best covered via E2E. Add if a pure component starts holding non-trivial logic.
 - **Visual regression** — no Percy / Chromatic. Playwright `screenshot()` calls are manual.
 - **Coverage gates** — coverage is reportable (`npm run test:coverage`) but no minimum threshold is enforced. Revisit when the suite is more mature.
-- **CI** — no GitHub Actions workflow yet. Local-first for now.
+- **CI** — `.github/workflows/ci.yml` runs on every PR and on push to `main`:
+  a `quality` job (typecheck → unit → integration → build) and a `e2e` job
+  (Playwright chromium, uploads the HTML report as an artifact). Local-first
+  still applies for fast iteration; CI is the merge gate.

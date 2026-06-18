@@ -10,6 +10,9 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
   test("slot picker exposes all tools and assigns a paint to the slot", async ({
     page,
   }) => {
+    // /recipes/new compiles a large editor + loads the paint catalog;
+    // give the test a generous budget under parallel dev-server load.
+    test.setTimeout(60_000);
     await signInAs(page, freshTestEmail());
 
     await page.goto("/recipes/new", { waitUntil: "domcontentloaded" });
@@ -17,11 +20,14 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
       page.getByRole("heading", { name: /^RECIPE EDITOR$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
-    // Adding a slot auto-opens the picker on that slot.
-    await page.getByRole("button", { name: "+ Add slot" }).click();
-
+    // Adding a slot auto-opens the picker via React state (setPickingSlot).
+    // Retry the click + dialog-mount check until the island has hydrated and
+    // the SlideOutPanel renders (guards a pre-hydration click miss).
     const dialog = page.getByRole("dialog", { name: "Pick a paint" });
-    await expect(dialog).toBeVisible();
+    await expect(async () => {
+      await page.getByRole("button", { name: "+ Add slot" }).click();
+      await expect(dialog).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
 
     // The full toolset is present as tabs.
     await expect(page.getByRole("tab", { name: "Wheel · Library" })).toBeVisible();
