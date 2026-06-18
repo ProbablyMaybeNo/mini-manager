@@ -6,7 +6,7 @@ import type { LibraryFilter } from "@/lib/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-block bg-green/20 px-2 py-0.5 font-osd text-[10px] uppercase tracking-[0.18em] text-green">
+    <span className="inline-block bg-green/20 px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.18em] text-green">
       {children}
     </span>
   );

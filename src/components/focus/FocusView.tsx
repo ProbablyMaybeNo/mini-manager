@@ -101,7 +101,7 @@ export function FocusView({
           {project.title} <span className="text-cyan">×{modelCount}</span>
         </span>
         {projectMinutes != null && (
-          <span className="font-osd text-[11px] uppercase tracking-[0.18em] text-purple">
+          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-purple">
             Time {formatMinutes(projectMinutes)}
           </span>
         )}
@@ -138,7 +138,7 @@ export function FocusView({
         <Stopwatch stats={stats} onLogSession={onLogSession} />
         <Panel label="PROGRESS" className="flex flex-col justify-center gap-3 p-4">
           <div className="flex items-center justify-between">
-            <span className="font-osd text-[11px] uppercase tracking-[0.18em] text-fg-dim">
+            <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
               Models
             </span>
             <div className="flex items-center gap-3">

@@ -99,7 +99,7 @@ export function ColourMatchTool({
 
         {/* MM-30 — harmony modes */}
         <label>
-          <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">Harmony</span>
+          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">Harmony</span>
           <select
             value={harmony}
             onChange={(e) => {
@@ -120,14 +120,14 @@ export function ColourMatchTool({
         {/* Multi-brand chips (restored) */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+            <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
               Brands {brands.size > 0 ? `· ${brands.size}` : "· all"}
             </span>
             {brands.size > 0 && (
               <button
                 type="button"
                 onClick={() => setBrands(new Set())}
-                className="font-mono text-[10px] text-red hover:underline"
+                className="font-mono text-[12px] text-red hover:underline"
               >
                 Clear
               </button>
@@ -143,7 +143,7 @@ export function ColourMatchTool({
                   aria-pressed={active}
                   onClick={() => toggleBrand(b)}
                   className={cn(
-                    "truncate border px-2 py-1 text-left font-mono text-[10px] transition-colors",
+                    "truncate border px-2 py-1 text-left font-mono text-[12px] transition-colors",
                     active
                       ? "border-green bg-green/15 text-green"
                       : "border-cyan/20 text-fg hover:border-cyan/60",
@@ -168,7 +168,7 @@ export function ColourMatchTool({
             {harmonyRows.map(({ hex: h, best }, i) => (
               <div key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
                 <span
-                  className="inline-flex h-10 min-w-[80px] items-center justify-center border border-fg/20 px-2 font-mono text-[11px]"
+                  className="inline-flex h-10 min-w-[80px] items-center justify-center border border-fg/20 px-2 font-mono text-[12px]"
                   style={{ backgroundColor: h, color: readableText(h) }}
                 >
                   {h}
@@ -199,7 +199,7 @@ export function ColourMatchTool({
                 >
                   ← Prev
                 </Button>
-                <span className="font-mono text-[11px] text-fg-faint">
+                <span className="font-mono text-[12px] text-fg-faint">
                   Page {pageSafe + 1} / {pageCount}
                 </span>
                 <Button
@@ -243,7 +243,7 @@ function MatchRow({
           <span aria-hidden className={cn("inline-block h-2 w-2 rounded-full", dotColor)} />
           <span className="truncate font-mono text-sm text-fg">{result.paint.name}</span>
         </div>
-        <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+        <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
           {result.paint.brand}
         </div>
         {/* MM-31 — neon-green bar + "NN% color match" label */}
@@ -251,12 +251,12 @@ function MatchRow({
           <div className="h-1.5 flex-1 bg-bg-raised">
             <div className="h-full bg-green" style={{ width: `${pct}%` }} />
           </div>
-          <span className="shrink-0 font-mono text-[10px] tabular-nums text-green">
+          <span className="shrink-0 font-mono text-[12px] tabular-nums text-green">
             {pct}% color match
           </span>
         </div>
       </div>
-      <span className="font-mono text-[11px] tabular-nums text-fg-faint" title="CIEDE2000 distance (lower = closer)">
+      <span className="font-mono text-[12px] tabular-nums text-fg-faint" title="CIEDE2000 distance (lower = closer)">
         Δ{dE.toFixed(1)}
       </span>
       {/* MM-32 — USE is neon green (host-styled via the green token). */}

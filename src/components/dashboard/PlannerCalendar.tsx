@@ -206,7 +206,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             )}
           </div>
           <label className="flex flex-col gap-1">
-            <span className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+            <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
               Kind
             </span>
             <select
@@ -223,7 +223,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             </select>
           </label>
           <label className="flex flex-col gap-1">
-            <span className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+            <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
               Notes
             </span>
             <textarea
@@ -237,13 +237,13 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
           </label>
           <span
             className={cn(
-              "font-osd text-[9px] uppercase tracking-[0.15em]",
+              "font-osd text-[12px] uppercase tracking-[0.15em]",
               accentText[eventKindAccent[kind]],
             )}
           >
             ▪ {kind}
           </span>
-          {error && <p className="font-mono text-[11px] text-red">▸ {error}</p>}
+          {error && <p className="font-mono text-[12px] text-red">▸ {error}</p>}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={busy}>
               {busy ? "Adding…" : "Add"}

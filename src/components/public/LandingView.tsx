@@ -55,7 +55,7 @@ export function LandingView() {
           className="animate-power-on"
           overlay={
             <BootSequence
-              className="text-[7px] leading-snug sm:text-[9px]"
+              className="text-[12px] leading-snug sm:text-[12px]"
               lines={[
                 "BOOT /mini-manager",
                 "MOUNT paint-db",
@@ -116,7 +116,7 @@ export function LandingView() {
         </Link>
       </section>
 
-      <footer className="border-t border-cyan/20 px-6 py-6 text-center font-mono text-[11px] text-fg-faint">
+      <footer className="border-t border-cyan/20 px-6 py-6 text-center font-mono text-[12px] text-fg-faint">
         ▸ MINI-MANAGER OS · made for painters · {" "}
         <Link href="/pricing" className="text-cyan hover:underline">
           Pricing

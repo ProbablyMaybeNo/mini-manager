@@ -57,6 +57,14 @@
   --font-mono: "Flexi IBM VGA True", "IBM Plex Mono", "Courier New", monospace;
   --font-body2: "VT323", "IBM Plex Mono", "Courier New", monospace;
 
+  /* Readability floor (KOdXd3JTo7rS): nudge the two workhorse sizes up ~1px
+     (xs 12→13, sm 14→15) WITHOUT changing the root size — a root bump would
+     also scale every rem-based padding/gap and disturb the dense tables.
+     Hardcoded text-[≤11px] are lifted to text-[12px] in components so nothing
+     renders below 12px. */
+  --text-xs: 0.8125rem; /* 13px (was 12) */
+  --text-sm: 0.9375rem; /* 15px (was 14) */
+
   /* Border + glow */
   --radius-panel: 2px;
 }

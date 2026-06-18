@@ -71,12 +71,12 @@ export function MiniCalendar({
 
   return (
     <div className={cn("select-none", className)}>
-      <div className="mb-1 text-center font-osd text-[10px] uppercase tracking-[0.2em] text-cyan">
+      <div className="mb-1 text-center font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
         {monthLabel}
       </div>
       <div className="grid grid-cols-7 gap-px">
         {DOW.map((d, i) => (
-          <div key={i} className="text-center font-osd text-[8px] text-fg-faint">
+          <div key={i} className="text-center font-osd text-[12px] text-fg-faint">
             {d}
           </div>
         ))}
@@ -96,18 +96,18 @@ export function MiniCalendar({
                       <span
                         className={cn("h-1.5 w-1.5 rounded-full", accentBg[eventKindAccent[e.kind]])}
                       />
-                      <span className="truncate font-mono text-[10px] text-fg">{e.name}</span>
+                      <span className="truncate font-mono text-[12px] text-fg">{e.name}</span>
                     </div>
                     <div
                       className={cn(
-                        "font-osd text-[8px] uppercase tracking-[0.15em]",
+                        "font-osd text-[12px] uppercase tracking-[0.15em]",
                         accentText[eventKindAccent[e.kind]],
                       )}
                     >
                       {e.kind}
                     </div>
                     {e.notes && (
-                      <div className="mt-0.5 line-clamp-2 font-mono text-[9px] text-fg-dim">
+                      <div className="mt-0.5 line-clamp-2 font-mono text-[12px] text-fg-dim">
                         {e.notes}
                       </div>
                     )}
@@ -132,7 +132,7 @@ export function MiniCalendar({
           );
 
           const base = cn(
-            "relative flex aspect-square items-center justify-center font-mono text-[9px] tabular-nums",
+            "relative flex aspect-square items-center justify-center font-mono text-[12px] tabular-nums",
             day == null && "opacity-0",
             accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg-dim",
           );

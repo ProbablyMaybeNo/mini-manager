@@ -52,7 +52,7 @@ const button = cva(
         outlineRed: "border border-red/60 bg-transparent text-red hover:bg-red/10 hover:border-red",
       },
       size: {
-        sm: "px-3 py-1 text-[10px]",
+        sm: "px-3 py-1 text-[12px]",
         md: "px-4 py-2 text-xs",
         lg: "px-6 py-3 text-sm",
       },

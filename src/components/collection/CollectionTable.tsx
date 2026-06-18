@@ -28,7 +28,7 @@ function Thumb({ src, alt }: { src: string; alt: string }) {
     return <img src={src} alt={alt} className="h-10 w-10 border border-cyan/30 object-cover" />;
   }
   return (
-    <span className="flex h-10 w-10 items-center justify-center border border-cyan/30 bg-bg-raised/40 font-osd text-[10px] text-fg-faint">
+    <span className="flex h-10 w-10 items-center justify-center border border-cyan/30 bg-bg-raised/40 font-osd text-[12px] text-fg-faint">
       ▦
     </span>
   );
@@ -110,14 +110,14 @@ export function CollectionTable({
               style={{ borderRadius: "var(--radius-panel)" }}
             >
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+                <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
                   {title} · Status
                 </span>
                 {active.size > 0 && (
                   <button
                     type="button"
                     onClick={() => setActive(new Set())}
-                    className="font-mono text-[10px] text-red hover:underline"
+                    className="font-mono text-[12px] text-red hover:underline"
                   >
                     Clear
                   </button>
@@ -153,7 +153,7 @@ export function CollectionTable({
                 <th
                   key={c || `c${i}`}
                   scope="col"
-                  className="px-3 py-2 text-left font-osd text-[10px] uppercase tracking-[0.18em] text-fg-faint"
+                  className="px-3 py-2 text-left font-osd text-[12px] uppercase tracking-[0.18em] text-fg-faint"
                 >
                   {c}
                 </th>
@@ -281,7 +281,7 @@ export function CollectionTable({
                       aria-label={`Delete ${item.name}`}
                       onClick={() => onRemove(item)}
                       className={cn(
-                        "flex h-6 w-6 items-center justify-center border border-red/50 font-osd text-[11px] text-red",
+                        "flex h-6 w-6 items-center justify-center border border-red/50 font-osd text-[12px] text-red",
                         "transition-colors hover:bg-red/15 hover:border-red",
                       )}
                     >
