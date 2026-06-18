@@ -42,6 +42,10 @@ test.describe("M3 — Project workspace lifecycle", () => {
   test("M3.1 create → inspector opens → focus stepper bump persists", async ({
     page,
   }) => {
+    // This test has more steps than most (create → inspect → focus → stepper →
+    // reload). The default 30s test timeout is too tight when the dev server is
+    // under parallel load compiling each route for the first time.
+    test.setTimeout(60_000);
     await signInAs(page, freshTestEmail());
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
@@ -77,21 +81,25 @@ test.describe("M3 — Project workspace lifecycle", () => {
 
     // Bump the model-completion stepper. Starts at 0/5.
     await expect(page.getByText(/^0\s*\/\s*5$/)).toBeVisible({ timeout: 15_000 });
-    // The stepper persists via a fire-and-forget server action (no UI
-    // confirmation), so wait for the action POST to settle before reloading.
-    const actionDone = page.waitForResponse(
-      (r) => r.request().method() === "POST" && r.url().includes("/focus"),
-      { timeout: 30_000 },
-    );
+    // The stepper uses optimistic local state (React useState) so the UI
+    // updates immediately on click. The server action (setProjectComplete) runs
+    // in a startTransition and posts to /focus?project=<id> via Next-Action.
+    // Under parallel dev-server load the POST can take tens of seconds to
+    // respond, making waitForResponse unreliable. Instead we click, confirm the
+    // optimistic UI update, then poll reloads until the server state matches —
+    // this naturally waits for the server action to commit without a fixed timeout.
     await page
       .getByRole("button", { name: /increase models painted/i })
       .click();
-    await expect(page.getByText(/^1\s*\/\s*5$/)).toBeVisible();
-    await actionDone;
+    await expect(page.getByText(/^1\s*\/\s*5$/)).toBeVisible({ timeout: 15_000 });
 
-    // Reload the focus bench (same project) — the stepper persists.
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.getByText(/^1\s*\/\s*5$/)).toBeVisible({ timeout: 30_000 });
+    // Confirm persistence: keep reloading until the server-side state shows
+    // 1/5 (the server action has committed). Retrying the reload is more
+    // robust than waitForResponse under dev-server load (MM-test-1).
+    await expect(async () => {
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.getByText(/^1\s*\/\s*5$/)).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 45_000 });
   });
 
   test("M3.2 leaf rows render no expand chevron; the tree expands containers", async ({

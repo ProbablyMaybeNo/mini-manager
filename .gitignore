@@ -47,11 +47,14 @@ test-results/
 .dev-server.log
 dev-server.log
 
-# ux-audit run artifacts — keep findings_*.json as the record, drop
-# the screenshots (incl. per-round subfolders) + the playwright-mcp cache
+# ux-audit run artifacts — keep findings_*.json + report*.md as the record,
+# drop the screenshots (incl. per-round subfolders), the playwright-mcp cache,
+# and the throwaway driver scripts + their raw data dumps from each run
 .playwright-mcp/
 ux-audit/*.png
 ux-audit/**/*.png
+ux-audit/*.cjs
+ux-audit/evidence/
 # stray audit screenshots the auditor drops in the repo root — no legit
 # PNGs live at the repo root (app icons are under public/ and src/app/),
 # so ignore them all to stop them leaking into commits.
