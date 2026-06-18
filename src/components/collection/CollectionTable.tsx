@@ -213,10 +213,10 @@ export function CollectionTable({
                       <span className="font-mono text-sm font-medium text-fg">{item.name}</span>
                     )}
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs text-fg-dim">
+                  <td className="px-3 py-2 font-mono text-xs text-fg">
                     {kind === "model" ? (item.game ?? "") : item.company}
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs text-fg-dim">
+                  <td className="px-3 py-2 font-mono text-xs text-fg">
                     {kind === "model" ? (item.army ?? "") : item.vendor}
                   </td>
                   {kind === "paint" && (

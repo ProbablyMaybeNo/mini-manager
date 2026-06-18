@@ -118,7 +118,7 @@ export function RecipeEditorView({
         <Button variant="secondary" onClick={onShare}>
           Share
         </Button>
-        <Button onClick={onSave}>Save</Button>
+        <Button variant="add" onClick={onSave}>Save</Button>
       </Panel>
 
       {/* ndZ9 — inspiration removed from the creator; the freed space lets the
