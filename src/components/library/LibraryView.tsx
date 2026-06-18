@@ -119,19 +119,21 @@ export function LibraryView(props: LibraryViewProps) {
         </Panel>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-          <Panel label={view === "grid" ? "SWATCHES" : "PAINTS"} className="min-h-0 flex-1 overflow-y-auto p-4">
+          <Panel label={view === "grid" ? "SWATCHES" : "PAINTS"} className="min-h-0 flex-1 overflow-hidden">
             {loading ? (
-              <div
-                className="flex h-full min-h-[300px] animate-pulse flex-col items-center justify-center gap-2 bg-cyan/5"
-                aria-busy="true"
-                aria-live="polite"
-              >
-                <span className="font-osd text-xs uppercase tracking-[0.18em] text-cyan text-glow-cyan">
-                  ▸ Loading{totalCount > 0 ? ` ${totalCount.toLocaleString()}` : ""} paints…
-                </span>
-                <span className="font-mono text-[10px] text-fg-faint">
-                  Building the local catalog index
-                </span>
+              <div className="h-full overflow-y-auto p-4">
+                <div
+                  className="flex h-full min-h-[300px] animate-pulse flex-col items-center justify-center gap-2 bg-cyan/5"
+                  aria-busy="true"
+                  aria-live="polite"
+                >
+                  <span className="font-osd text-xs uppercase tracking-[0.18em] text-cyan text-glow-cyan">
+                    ▸ Loading{totalCount > 0 ? ` ${totalCount.toLocaleString()}` : ""} paints…
+                  </span>
+                  <span className="font-mono text-[10px] text-fg-faint">
+                    Building the local catalog index
+                  </span>
+                </div>
               </div>
             ) : view === "grid" ? (
               <SwatchWall paints={paints} onOpenPaint={onOpenPaint} />

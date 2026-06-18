@@ -34,6 +34,7 @@
     "@fontsource/share-tech-mono": "^5.2.7",
     "@fontsource/vt323": "^5.2.7",
     "@libsql/client": "^0.14.0",
+    "@tanstack/react-virtual": "^3.14.3",
     "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
