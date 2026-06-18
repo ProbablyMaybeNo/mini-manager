@@ -15,6 +15,19 @@ corrected loop (PR → CI gate → merge → verify prod → **then** resolve).
 This backlog makes every outstanding thread trackable so each one goes through
 that loop instead of evaporating on a preview branch.
 
+## Status — verify pass, 2026-06-18
+
+First verify-and-resolve pass done. **24 threads resolved** (verified against shipped `main` source, each closed with a citation, not a preview):
+
+- All 14 `/` landing threads (copy/logo/CTA — all shipped in `LandingView`).
+- `pfKcweyeSrWA` Terrain→red (PR #25), `NzVQI3ESFmK0` (praise, no-op).
+- `USx5rvtrvdGD` Match assign→purple, `lRmu1mjMhc1Y` Match %-label+green bar, `PDySWAZSgoay` click-day→+Date, `WVWX39228b0k` popup date-picker, `JlrBYUITMqoa` +buttons-green, `p9DIDcsozQYM` tool thumbnails.
+- `5gi2AXAYb9el` (MM-24 recipe focus-loss) and `saHWeY2Y7_kY` (MM-36 model/paint routing) — both **already fixed in `main`**, just never resolved.
+
+`6hWtJA2oArmz` was resolved then **re-opened**: its colour ask shipped, but a later follow-up (bigger numbers + Figma font on the stat boxes) hasn't — still open.
+
+**Key learning that changes the tag meanings below:** both items tagged as "genuine bugs" turned out already-fixed (code comments even cite the thread IDs). The **[FIX]** tags here were inferred from the comment text, not verified against code — so a large share of them are likely **already shipped but unresolved**, not outstanding work. Treat every **[FIX]/[VERIFY]** as "verify in `main` first" before assuming it needs building. The genuinely-new work is concentrated in **[FEATURE]** and **[REDESIGN]**.
+
 ## How to work it
 
 1. Pick a thread. Confirm whether it's **already live in prod** (`miniaturemanager.vercel.app`) — many cosmetic/copy items below were shipped by the redesign + UX-001…015 sweep but never resolved.
