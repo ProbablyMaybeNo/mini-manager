@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button, Panel, Swatch } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import {
   buildHarmony,
   getHarmonyMeta,
@@ -179,7 +180,12 @@ export function ColourWheelTool({
                   aria-pressed={isPinned}
                   aria-label={isPinned ? `Unpin ${hex}` : `Pin ${hex}`}
                   onClick={() => togglePin(hex)}
-                  className={isPinned ? "text-yellow" : "text-fg-faint hover:text-yellow"}
+                  className={cn(
+                    // min-h-11 min-w-11 → 44px target for the dense pin toggle
+                    // (was 13x24, under the WCAG 2.2 §2.5.8 floor) — UX-009.
+                    "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center transition-colors",
+                    isPinned ? "text-yellow" : "text-fg-faint hover:text-yellow",
+                  )}
                 >
                   {isPinned ? "★" : "☆"}
                 </button>
