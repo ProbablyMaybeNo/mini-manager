@@ -100,8 +100,20 @@ export function ArmyImportPanel({
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <div>
-            <div className="font-display text-sm text-cyan">{tree.armyName}</div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="import-army-name"
+              className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint"
+            >
+              Project name
+            </label>
+            <input
+              id="import-army-name"
+              value={tree.armyName}
+              onChange={(e) => setTree({ ...tree, armyName: e.target.value })}
+              placeholder="Name this army before importing"
+              className="w-full border border-cyan/50 bg-bg px-2 py-1.5 font-display text-sm text-cyan placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+            />
             {tree.faction || tree.totalPoints ? (
               <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
                 {tree.faction ?? "Army"}
@@ -128,7 +140,7 @@ export function ArmyImportPanel({
             <Button variant="secondary" onClick={reset} disabled={pending}>
               ← Back
             </Button>
-            <Button onClick={apply} disabled={pending} className="flex-1">
+            <Button onClick={apply} disabled={pending || !tree.armyName.trim()} className="flex-1">
               {pending
                 ? "Importing…"
                 : `Import ${tree.units.length} unit${tree.units.length === 1 ? "" : "s"}`}
