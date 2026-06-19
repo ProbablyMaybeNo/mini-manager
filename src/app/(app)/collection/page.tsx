@@ -205,6 +205,7 @@ function CollectionRoute() {
       open={attaching !== null}
       recipes={recipeOptions}
       onPick={attachRecipe}
+      onCreateNew={() => router.push("/recipes/new")}
       onClose={() => setAttaching(null)}
     />
     {node}
