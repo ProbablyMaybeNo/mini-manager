@@ -107,7 +107,7 @@ export function EyedropperTool({
               />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-[11px] text-fg-faint">
+              <p className="font-mono text-[12px] text-fg-faint">
                 {sampled.width} × {sampled.height} px · {pins.length} pins · drag to re-sample
               </p>
               <Button variant="danger" size="sm" onClick={reset}>
@@ -143,7 +143,7 @@ export function EyedropperTool({
               <span className="font-osd text-sm uppercase tracking-[0.18em] text-cyan">
                 ⬚ Drop or capture image
               </span>
-              <span className="font-mono text-[11px] text-fg-faint">
+              <span className="font-mono text-[12px] text-fg-faint">
                 {busy ? "Extracting dominant colours…" : "PNG / JPG / WebP · click, drag, or paste"}
               </span>
               <input
@@ -165,7 +165,7 @@ export function EyedropperTool({
           </>
         )}
         {error && (
-          <p role="alert" className="font-mono text-[11px] text-red">
+          <p role="alert" className="font-mono text-[12px] text-red">
             {error}
           </p>
         )}
@@ -181,7 +181,7 @@ export function EyedropperTool({
             const paint = closestPaint(hex);
             return (
               <div key={`${hex}-${i}`} className="flex items-center gap-3 border border-cyan/20 p-2">
-                <span className="w-5 font-osd text-[10px] text-fg-faint">{i + 1}</span>
+                <span className="w-5 font-osd text-[12px] text-fg-faint">{i + 1}</span>
                 <Swatch hex={hex} size="lg" />
                 <span aria-hidden className="font-osd text-fg-faint">→</span>
                 {paint ? (
@@ -189,7 +189,7 @@ export function EyedropperTool({
                     <Swatch hex={paint.hex} size="lg" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
-                      <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+                      <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
                         {paint.brand}
                       </div>
                     </div>

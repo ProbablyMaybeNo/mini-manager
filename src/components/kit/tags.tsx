@@ -22,7 +22,7 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-flex items-center border px-2 py-0.5 font-osd text-[10px] uppercase tracking-[0.15em]",
+        "inline-flex items-center border px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.15em]",
         accentBorder[accent],
         accentText[accent],
         className,
@@ -42,7 +42,7 @@ export function StatusText({ status }: { status: ProjectStatus }) {
   return (
     <span
       className={cn(
-        "font-osd text-[11px] uppercase tracking-[0.15em]",
+        "font-osd text-[12px] uppercase tracking-[0.15em]",
         accentText[statusAccent[status]],
       )}
     >
@@ -55,7 +55,7 @@ export function PriorityTag({ priority }: { priority: Priority }) {
   return (
     <span
       className={cn(
-        "font-osd text-[11px] uppercase tracking-[0.15em]",
+        "font-osd text-[12px] uppercase tracking-[0.15em]",
         accentText[priorityAccent[priority]],
       )}
     >

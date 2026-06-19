@@ -138,14 +138,14 @@ export default function GalleryPage() {
         <div className="flex flex-col gap-3">
           {PAGES.map((p) => (
             <div key={p.path} className="flex flex-wrap items-center gap-2">
-              <span className="w-28 font-osd text-[11px] uppercase tracking-[0.15em] text-fg-dim">
+              <span className="w-28 font-osd text-[12px] uppercase tracking-[0.15em] text-fg-dim">
                 {p.label}
               </span>
               {p.states.map((s) => (
                 <Link
                   key={s.label}
                   href={s.href}
-                  className="border border-cyan/50 px-2 py-0.5 font-osd text-[10px] uppercase tracking-[0.12em] text-cyan hover:bg-cyan/10"
+                  className="border border-cyan/50 px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.12em] text-cyan hover:bg-cyan/10"
                 >
                   {s.label}
                 </Link>

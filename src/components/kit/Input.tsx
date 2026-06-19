@@ -26,7 +26,7 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim"
+          className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim"
         >
           {label}
         </label>
@@ -51,7 +51,7 @@ export function Input({
         />
         {trailing}
       </div>
-      {error && <span className="font-mono text-[11px] text-red">{error}</span>}
+      {error && <span className="font-mono text-[12px] text-red">{error}</span>}
     </div>
   );
 }

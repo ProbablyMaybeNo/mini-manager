@@ -64,10 +64,10 @@ function Section({
 }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="font-osd text-[11px] uppercase tracking-[0.2em] text-cyan">
+      <h3 className="font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
         {label}
       </h3>
-      {hint && <p className="-mt-1 font-mono text-[10px] text-fg-faint">{hint}</p>}
+      {hint && <p className="-mt-1 font-mono text-[12px] text-fg-faint">{hint}</p>}
       {children}
     </section>
   );
@@ -77,7 +77,7 @@ function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-1 border border-cyan/20 px-2 py-3">
       <span className="font-display text-lg text-fg tabular-nums">{value}</span>
-      <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+      <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
         {label}
       </span>
     </div>
@@ -178,13 +178,13 @@ export function ProjectWorkspaceBody({
       {/* Meta row: type · status · priority · progress */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
             Type
           </span>
           <TypeChip type={project.type} />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
             Status
           </span>
           <Listbox
@@ -198,7 +198,7 @@ export function ProjectWorkspaceBody({
           />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
             Priority
           </span>
           <Listbox
@@ -217,7 +217,7 @@ export function ProjectWorkspaceBody({
           />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
             Overall progress
           </span>
           <ProgressBar percent={project.completionPercent} />
@@ -225,7 +225,7 @@ export function ProjectWorkspaceBody({
       </div>
 
       {(detail?.faction || detail?.game) && (
-        <p className="font-mono text-[11px] text-fg-dim">
+        <p className="font-mono text-[12px] text-fg-dim">
           {[detail.faction, detail.game].filter(Boolean).join(" · ")}
         </p>
       )}
@@ -266,7 +266,7 @@ export function ProjectWorkspaceBody({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-cyan/30 font-osd text-[9px] uppercase tracking-[0.12em] text-fg-faint">
+                <tr className="border-b border-cyan/30 font-osd text-[12px] uppercase tracking-[0.12em] text-fg-faint">
                   <th className="py-1 pr-2">Name</th>
                   <th className="px-1">Type</th>
                   <th className="px-1">Status</th>
@@ -280,7 +280,7 @@ export function ProjectWorkspaceBody({
                   const total = c.modelCount ?? 0;
                   const done = c.modelsComplete ?? 0;
                   return (
-                    <tr key={c.id} className="border-b border-fg/10 font-mono text-[11px]">
+                    <tr key={c.id} className="border-b border-fg/10 font-mono text-[12px]">
                       <td className="py-1.5 pr-2 text-fg">{c.title}</td>
                       <td className="px-1">
                         <TypeChip type={c.type} />
@@ -340,7 +340,7 @@ export function ProjectWorkspaceBody({
             </table>
           </div>
         ) : (
-          <p className="font-mono text-[11px] text-fg-faint">No sub-projects yet.</p>
+          <p className="font-mono text-[12px] text-fg-faint">No sub-projects yet.</p>
         )}
 
         {addingChild ? (
@@ -365,7 +365,7 @@ export function ProjectWorkspaceBody({
               ))}
             </select>
             <label className="flex flex-col gap-1">
-              <span className="font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+              <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
                 Models
               </span>
               <input
@@ -414,7 +414,7 @@ export function ProjectWorkspaceBody({
           className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
         />
         <div className="flex items-center gap-2">
-          <span className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
             Target date
           </span>
           <DateField
@@ -460,7 +460,7 @@ export function ProjectWorkspaceBody({
         </div>
       </Section>
 
-      {error && <p className="font-mono text-[11px] text-red">▸ {error}</p>}
+      {error && <p className="font-mono text-[12px] text-red">▸ {error}</p>}
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2 border-t border-cyan/20 pt-4">

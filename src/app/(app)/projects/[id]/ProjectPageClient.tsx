@@ -18,7 +18,7 @@ export function ProjectPageClient({
       <button
         type="button"
         onClick={() => router.push("/dashboard")}
-        className="mb-4 self-start font-osd text-[11px] uppercase tracking-[0.2em] text-fg-faint hover:text-cyan"
+        className="mb-4 self-start font-osd text-[12px] uppercase tracking-[0.2em] text-fg-faint hover:text-cyan"
       >
         ‹ Dashboard
       </button>

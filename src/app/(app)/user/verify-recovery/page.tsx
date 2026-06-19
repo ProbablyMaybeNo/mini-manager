@@ -56,7 +56,7 @@ function Verify() {
         <div className="mt-4">
           <Link
             href="/user/account"
-            className="font-osd text-[11px] uppercase tracking-[0.15em] text-cyan hover:underline"
+            className="font-osd text-[12px] uppercase tracking-[0.15em] text-cyan hover:underline"
           >
             ← Back to account
           </Link>

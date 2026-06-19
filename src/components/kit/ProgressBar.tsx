@@ -40,7 +40,7 @@ export function ProgressBar({
         <div className={cn("h-full", fillColor[tone])} style={{ width: `${pct}%` }} />
       </div>
       {showLabel && (
-        <span className="w-9 text-right font-mono text-[11px] tabular-nums text-fg-dim">
+        <span className="w-9 text-right font-mono text-[12px] tabular-nums text-fg-dim">
           {pct}%
         </span>
       )}

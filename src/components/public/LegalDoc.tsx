@@ -20,7 +20,7 @@ export function LegalDoc({
       <PublicHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12">
         <h1 className="font-display text-2xl text-cyan text-glow-cyan">{title}</h1>
-        <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.18em] text-fg-faint">
+        <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.18em] text-fg-faint">
           Last updated {updated}
         </p>
         <Panel cornerTicks className="mt-6 p-6">
@@ -38,7 +38,7 @@ export function LegalDoc({
             ))}
           </div>
         </Panel>
-        <p className="mt-6 font-mono text-[11px] text-fg-faint">
+        <p className="mt-6 font-mono text-[12px] text-fg-faint">
           This is a starting template — review it with legal counsel before
           relying on it.
         </p>

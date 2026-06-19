@@ -67,7 +67,7 @@ export function PromptDialog({
       }
     >
       {label && (
-        <label className="mb-2 block font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+        <label className="mb-2 block font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
           {label}
         </label>
       )}

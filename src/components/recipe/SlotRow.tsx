@@ -32,7 +32,7 @@ export function SlotRow({
         <ReorderBtn label="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
           ▲
         </ReorderBtn>
-        <span className="font-mono text-[10px] text-fg-faint">{index + 1}</span>
+        <span className="font-mono text-[12px] text-fg-faint">{index + 1}</span>
         <ReorderBtn label="Move down" disabled={isLast} onClick={() => onMove(1)}>
           ▼
         </ReorderBtn>
@@ -54,7 +54,7 @@ export function SlotRow({
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <button type="button" onClick={onPick} className="text-left">
           <div className="font-mono text-sm text-fg hover:text-cyan">{slot.name}</div>
-          <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+          <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
             {slot.brand}
           </div>
         </button>

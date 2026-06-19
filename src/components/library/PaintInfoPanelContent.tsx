@@ -9,7 +9,7 @@ import type { MatchResult, Paint } from "@/lib/types";
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-osd text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+      <span className="font-osd text-[12px] uppercase tracking-[0.2em] text-fg-faint">
         {label}
       </span>
       {children}
@@ -49,7 +49,7 @@ export function PaintInfoPanelContent({
       />
       <span
         className={cn(
-          "inline-flex w-fit items-center gap-1 font-osd text-[10px] uppercase tracking-[0.18em]",
+          "inline-flex w-fit items-center gap-1 font-osd text-[12px] uppercase tracking-[0.18em]",
           paint.owned ? "text-green" : "text-fg-faint",
         )}
       >
@@ -67,7 +67,7 @@ export function PaintInfoPanelContent({
             type="button"
             onClick={onCopyHex}
             aria-label="Copy hex"
-            className="border border-cyan/50 px-2 py-0.5 font-osd text-[9px] uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
+            className="border border-cyan/50 px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
           >
             Copy
           </button>
@@ -82,7 +82,7 @@ export function PaintInfoPanelContent({
             className="flex items-center border border-cyan/50"
             title="How many of this paint you already own"
           >
-            <span className="px-2 font-osd text-[9px] uppercase tracking-[0.15em] text-fg-faint">
+            <span className="px-2 font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
               Owned
             </span>
             <button
@@ -116,7 +116,7 @@ export function PaintInfoPanelContent({
             aria-pressed={paint.wishlisted}
             onClick={onWishlist}
             className={cn(
-              "inline-flex items-center gap-1 border px-3 py-1 font-osd text-[10px] uppercase tracking-[0.15em] transition-colors",
+              "inline-flex items-center gap-1 border px-3 py-1 font-osd text-[12px] uppercase tracking-[0.15em] transition-colors",
               paint.wishlisted
                 ? "border-yellow bg-yellow/20 text-yellow"
                 : "border-yellow/60 text-yellow hover:bg-yellow/10",
@@ -155,13 +155,13 @@ export function PaintInfoPanelContent({
               <span className="flex-1 truncate font-mono text-xs text-fg-dim">
                 {m.paint.name} · {m.paint.brand}
               </span>
-              <span className="font-mono text-[10px] tabular-nums text-fg-faint">
+              <span className="font-mono text-[12px] tabular-nums text-fg-faint">
                 Δ{m.distanceScore.toFixed(1)}
               </span>
               <button
                 type="button"
                 onClick={() => onAssignPaint(m.paint)}
-                className="border border-cyan/50 px-1.5 font-osd text-[9px] uppercase text-cyan hover:bg-cyan/10"
+                className="border border-cyan/50 px-1.5 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
               >
                 Use
               </button>
@@ -181,7 +181,7 @@ export function PaintInfoPanelContent({
               <button
                 type="button"
                 onClick={() => onAssignPaint(p)}
-                className="border border-cyan/50 px-1.5 font-osd text-[9px] uppercase text-cyan hover:bg-cyan/10"
+                className="border border-cyan/50 px-1.5 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
               >
                 Use
               </button>

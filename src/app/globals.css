@@ -1,14 +1,36 @@
 @import "tailwindcss";
 
-/* Self-hosted fonts (no runtime fetch) — all OFL / self-hosted via @fontsource.
-   Display = VT323 (vintage CRT terminal face; replaces the "straight arcade"
-   Press Start 2P per thread wwiRkmlTX1qp — see docs "Defaults chosen").
-   OSD/heading = Share Tech Mono. Body = IBM Plex Mono (readability floor). */
+/* Fonts — Ross's four-tier scheme (thread KOdXd3JTo7rS):
+   H1 / page titles       → 3D Pixel            (--font-display)
+   H2 / menu / headers    → UAV OSD Mono        (--font-osd)
+   body-1 / tables / text → Flexi IBM VGA True  (--font-mono, app default)
+   body-2 / buttons / log → VT323               (--font-body2)
+   The three custom faces are self-hosted woff2 in /public/fonts; VT323 +
+   IBM Plex Mono (glyph-coverage fallback) + Share Tech Mono come via @fontsource. */
 @import "@fontsource/vt323/400.css";
 @import "@fontsource/share-tech-mono/400.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
 @import "@fontsource/ibm-plex-mono/600.css";
+
+@font-face {
+  font-family: "3D Pixel";
+  src: url("/fonts/3d-pixel.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "UAV OSD Mono";
+  src: url("/fonts/uav-osd-mono.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Flexi IBM VGA True";
+  src: url("/fonts/flexi-ibm-vga-true.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
 
 /* ----------------------------------------------------------------------------
    Design tokens — exact values from the Figma Style Guide (page 0:1)
@@ -28,10 +50,20 @@
   --color-fg-dim: #b6c6cc;
   --color-fg-faint: #7d8f95;
 
-  /* Type families */
-  --font-display: "VT323", "Courier New", monospace;
-  --font-osd: "Share Tech Mono", "Courier New", monospace;
-  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+  /* Type families (KOdXd3JTo7rS four-tier scheme). IBM Plex Mono trails each
+     pixel face as a glyph-coverage fallback so missing glyphs stay readable. */
+  --font-display: "3D Pixel", "VT323", "IBM Plex Mono", monospace;
+  --font-osd: "UAV OSD Mono", "Share Tech Mono", "IBM Plex Mono", monospace;
+  --font-mono: "Flexi IBM VGA True", "IBM Plex Mono", "Courier New", monospace;
+  --font-body2: "VT323", "IBM Plex Mono", "Courier New", monospace;
+
+  /* Readability floor (KOdXd3JTo7rS): nudge the two workhorse sizes up ~1px
+     (xs 12→13, sm 14→15) WITHOUT changing the root size — a root bump would
+     also scale every rem-based padding/gap and disturb the dense tables.
+     Hardcoded text-[≤11px] are lifted to text-[12px] in components so nothing
+     renders below 12px. */
+  --text-xs: 0.8125rem; /* 13px (was 12) */
+  --text-sm: 0.9375rem; /* 15px (was 14) */
 
   /* Border + glow */
   --radius-panel: 2px;

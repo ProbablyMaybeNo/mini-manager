@@ -103,7 +103,7 @@ export function ArmyImportPanel({
           <div>
             <div className="font-display text-sm text-cyan">{tree.armyName}</div>
             {tree.faction || tree.totalPoints ? (
-              <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+              <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
                 {tree.faction ?? "Army"}
                 {tree.totalPoints ? ` · ${tree.totalPoints} pts` : ""}
               </div>

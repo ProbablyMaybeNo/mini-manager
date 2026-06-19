@@ -112,7 +112,7 @@ export function RecipeIndexView({
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
           />
-          <p className="font-mono text-[11px] text-fg-faint">
+          <p className="font-mono text-[12px] text-fg-faint">
             ▸ Name it first, then add paint slots and notes in the editor.
           </p>
         </div>

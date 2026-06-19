@@ -69,14 +69,14 @@ export function LayeringTool({
       {/* ===================== LAYERING ===================== */}
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="LAYERING" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-[11px] text-fg-faint">
+          <p className="font-mono text-[12px] text-fg-faint">
             Perceptual Lab-space ramp — even transitions across the eye.
           </p>
           <LaneField label="Shadow" value={shadow} onChange={setShadow} onPick={() => setPickingLane("shadow")} />
           <LaneField label="Base" value={base} onChange={setBase} onPick={() => setPickingLane("base")} />
           <LaneField label="Highlight" value={highlight} onChange={setHighlight} onPick={() => setPickingLane("highlight")} />
           <label>
-            <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">Steps {steps}</span>
+            <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">Steps {steps}</span>
             <input
               type="range"
               min={MIN_STEPS}
@@ -104,7 +104,7 @@ export function LayeringTool({
                     className="flex h-14 flex-1 items-center justify-center"
                     style={{ backgroundColor: hex, color: readableText(hex) }}
                   >
-                    <span className="font-mono text-[9px]">{hex}</span>
+                    <span className="font-mono text-[12px]">{hex}</span>
                   </div>
                 ))}
               </div>
@@ -113,7 +113,7 @@ export function LayeringTool({
                   const paint = closestPaint(hex);
                   return (
                     <li key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
-                      <span className="w-6 font-osd text-[10px] text-fg-faint">{i + 1}</span>
+                      <span className="w-6 font-osd text-[12px] text-fg-faint">{i + 1}</span>
                       <Swatch hex={hex} />
                       <span aria-hidden className="font-osd text-fg-faint">→</span>
                       {paint ? (
@@ -147,7 +147,7 @@ export function LayeringTool({
       {/* ===================== STACKING ===================== */}
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="STACKING" accent="purple" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-[11px] text-fg-faint">
+          <p className="font-mono text-[12px] text-fg-faint">
             Stack transparent glaze layers over a substrate to predict the
             painted result (optical mix, bottom → top).
           </p>
@@ -155,7 +155,7 @@ export function LayeringTool({
           {layers.map((layer, i) => (
             <div key={i} className="flex flex-col gap-2 border border-purple/20 p-2">
               <div className="flex items-center justify-between">
-                <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+                <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
                   Layer {i + 1}
                 </span>
                 <button
@@ -175,7 +175,7 @@ export function LayeringTool({
                 }
               />
               <label>
-                <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+                <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
                   Opacity {Math.round(layer.alpha * 100)}%
                 </span>
                 <input
@@ -220,7 +220,7 @@ export function LayeringTool({
                 <Swatch hex={paint.hex} size="lg" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
-                  <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+                  <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
                     {paint.brand}
                   </div>
                 </div>

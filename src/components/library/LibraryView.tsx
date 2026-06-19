@@ -130,7 +130,7 @@ export function LibraryView(props: LibraryViewProps) {
                   <span className="font-osd text-xs uppercase tracking-[0.18em] text-cyan text-glow-cyan">
                     ▸ Loading{totalCount > 0 ? ` ${totalCount.toLocaleString()}` : ""} paints…
                   </span>
-                  <span className="font-mono text-[10px] text-fg-faint">
+                  <span className="font-mono text-[12px] text-fg-faint">
                     Building the local catalog index
                   </span>
                 </div>
