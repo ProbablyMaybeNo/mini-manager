@@ -58,6 +58,10 @@ const SIZES: { v: string; label: string; min: number; max: number }[] = [
   { v: "--text-2xl", label: "text-2xl · titles", min: 16, max: 60 },
   { v: "--text-3xl", label: "text-3xl · big titles", min: 18, max: 80 },
   { v: "--text-4xl", label: "text-4xl · stat numbers", min: 20, max: 100 },
+  // Role-specific sizes (independent of the body scale).
+  { v: "--text-button", label: "Buttons", min: 8, max: 28 },
+  { v: "--text-dropdown", label: "Dropdown menus", min: 8, max: 28 },
+  { v: "--text-element", label: "Tools / activity (feature)", min: 8, max: 28 },
 ];
 
 /** Sane fallbacks so the sliders seed correctly even if a token isn't emitted. */
@@ -70,6 +74,9 @@ const SIZE_DEFAULT: Record<string, string> = {
   "--text-2xl": "1.5rem",
   "--text-3xl": "1.875rem",
   "--text-4xl": "2.25rem",
+  "--text-button": "0.75rem",
+  "--text-dropdown": "0.8125rem",
+  "--text-element": "0.75rem",
 };
 
 // The full canonical button set — every variant the app has. Anything that

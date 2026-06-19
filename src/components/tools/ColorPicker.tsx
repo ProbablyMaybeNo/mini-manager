@@ -135,7 +135,7 @@ export function ColorPicker({
       role="region"
       aria-label={contextLabel ? `Color picker for ${contextLabel}` : "Color picker"}
     >
-      <p className="font-mono text-[12px] text-fg-faint">
+      <p className="font-mono text-element text-fg-faint">
         {mode === "edit-slot"
           ? "▸ Picking a colour REPLACES this slot's paint."
           : "▸ Picking a colour ADDS a new slot."}
@@ -194,7 +194,7 @@ export function ColorPicker({
 
         <Slider label="Saturation" value={Math.round(sat)} onChange={setSat} />
         {sat === 0 && (
-          <p className="font-mono text-[12px] text-fg-faint">
+          <p className="font-mono text-element text-fg-faint">
             Greyscale — drag saturation up to pick a colour from the wheel.
           </p>
         )}
@@ -388,7 +388,7 @@ function PickerDropZone({
       )}
     >
       <p className="font-osd text-xs uppercase tracking-[0.18em] text-cyan">⬚ Drop image</p>
-      <p className="mt-1 font-mono text-[12px] text-fg-faint">
+      <p className="mt-1 font-mono text-element text-fg-faint">
         click to pick · or paste (Ctrl/⌘+V) · JPG/PNG/WebP/GIF
       </p>
       <input

@@ -88,7 +88,7 @@ export function LayeringTool({
       {/* ===================== LAYERING ===================== */}
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="LAYERING" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-[12px] text-fg-faint">
+          <p className="font-mono text-element text-fg-faint">
             Perceptual Lab-space ramp — even transitions across the eye.
           </p>
           <LaneField label="Shadow" value={shadow} onChange={setShadow} onPick={() => setPickingLane("shadow")} />
@@ -166,7 +166,7 @@ export function LayeringTool({
       {/* ===================== STACKING ===================== */}
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="STACKING" accent="purple" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-[12px] text-fg-faint">
+          <p className="font-mono text-element text-fg-faint">
             Stack transparent glaze layers over a substrate to predict the
             painted result (optical mix, bottom → top).
           </p>

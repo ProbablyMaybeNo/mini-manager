@@ -139,7 +139,8 @@ export function Listbox<T extends string>({
     }
   }
 
-  const pad = size === "md" ? "px-3 py-1.5 text-sm" : "px-2 py-1 text-xs";
+  // Font size is the shared --text-dropdown token; size only changes padding.
+  const pad = size === "md" ? "px-3 py-1.5 text-dropdown" : "px-2 py-1 text-dropdown";
 
   return (
     <div ref={rootRef} className={cn("relative inline-block", className)}>
@@ -196,7 +197,7 @@ export function Listbox<T extends string>({
                 onPointerEnter={() => !opt.disabled && setActiveIndex(i)}
                 onClick={() => choose(i)}
                 className={cn(
-                  "cursor-pointer px-2 py-1 font-mono text-xs transition-colors",
+                  "cursor-pointer px-2 py-1 font-mono text-dropdown transition-colors",
                   opt.disabled && "cursor-not-allowed text-fg-faint/60",
                   !opt.disabled && isActive && "bg-cyan/10",
                   !opt.disabled && isSelected ? accentText[accent] : !opt.disabled && "text-fg",

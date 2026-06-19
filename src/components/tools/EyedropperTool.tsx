@@ -107,7 +107,7 @@ export function EyedropperTool({
               />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-[12px] text-fg-faint">
+              <p className="font-mono text-element text-fg-faint">
                 {sampled.width} × {sampled.height} px · {pins.length} pins · drag to re-sample
               </p>
               <Button variant="danger" size="sm" onClick={reset}>
