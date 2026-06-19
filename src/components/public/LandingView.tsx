@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BootSequence, Button, Panel } from "@/components/kit";
+import { Button, Panel } from "@/components/kit";
 import { Logo } from "@/components/shell";
 import { PublicHeader } from "./PublicHeader";
 
@@ -44,27 +44,11 @@ export function LandingView() {
     <div className="flex min-h-dvh flex-col">
       <PublicHeader />
 
-      {/* Hero — the boot sequence now plays inside the enlarged logo's CRT
-          screen, so the standalone "MINI MANAGER" heading (yIZB) and the
-          separate boot-sequence panel (c2Ess) are gone; the title is legible
-          on the logo itself. */}
+      {/* Hero — the high-res logo already shows "Mini-Manager" on its CRT
+          screen, so it stands alone; the boot-sequence overlay was removed to
+          avoid stamping green text over the baked-in title. */}
       <section className="scanlines flex flex-col items-center gap-6 px-6 py-16 text-center">
-        <Logo
-          href="/"
-          size={320}
-          className="animate-power-on"
-          overlay={
-            <BootSequence
-              className="text-[12px] leading-snug sm:text-[12px]"
-              lines={[
-                "BOOT /mini-manager",
-                "MOUNT paint-db",
-                "LOAD bench",
-                "READY ▸",
-              ]}
-            />
-          }
-        />
+        <Logo href="/" size={320} className="animate-power-on" />
         {/* Tagline (8rIb) — larger + more stylized display type. */}
         <p className="max-w-2xl font-display text-xl leading-relaxed text-cyan text-glow-cyan sm:text-2xl">
           Plan your projects. Track your paints. Manage your minis.
