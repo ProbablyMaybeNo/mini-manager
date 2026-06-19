@@ -1,7 +1,7 @@
 "use client";
 
 import { Listbox } from "@/components/kit";
-import { statusAccent } from "@/lib/palette";
+import { STATUS_LABEL, statusAccent } from "@/lib/palette";
 import type { CollectionKind, ProjectStatus } from "@/lib/types";
 
 /**
@@ -21,18 +21,6 @@ const MODEL_STATUSES: ProjectStatus[] = [
   "BASING",
   "COMPLETE",
 ];
-
-/** Spec labels for the lifecycle values (BUILDING→BUILT, etc.). */
-const STATUS_LABEL: Record<ProjectStatus, string> = {
-  WISHLIST: "WISHLIST",
-  OWNED: "OWNED",
-  BUILDING: "BUILT",
-  PRIMING: "PRIMED",
-  PAINTING: "PAINTED",
-  BASING: "BASED",
-  COMPLETE: "COMPLETE",
-  SHELVED: "HOLD",
-};
 
 /** Vibrant status select — border + text tinted by the status accent. */
 export function StatusDropdown({

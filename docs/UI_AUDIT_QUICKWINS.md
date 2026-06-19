@@ -30,7 +30,7 @@ with the canonical primitive so the same concept renders one way everywhere.
   Confirm consumers still render correctly: `ProjectsTable.tsx`,
   `ProjectWorkspaceBody.tsx`. (Audit: status/type indicators, **high**.)
 
-- [ ] **2 — Promote `STATUS_LABEL` to a shared export.** The inspector shows the
+- [x] **2 — Promote `STATUS_LABEL` to a shared export.** The inspector shows the
   raw enum (`BUILDING/PRIMING/PAINTING`) while the collection shows spec wording
   (`BUILT/PRIMED/PAINTED`) for the *same* state. Export `STATUS_LABEL` from
   `StatusDropdown.tsx` (find it under `src/components/`), and use it in the

@@ -28,7 +28,7 @@ import {
   type ProjectDetail,
 } from "@/lib/actions/projectMeta";
 import { cn } from "@/lib/cn";
-import { formatMinutes } from "@/lib/palette";
+import { formatMinutes, statusAccent, STATUS_LABEL } from "@/lib/palette";
 import type { Priority, Project, ProjectStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
@@ -191,7 +191,8 @@ export function ProjectWorkspaceBody({
             value={project.status}
             disabled={pending}
             ariaLabel="Project status"
-            options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+            accent={statusAccent[project.status]}
+            options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
             onChange={(s) =>
               run(() => bumpProjectStatus({ id: project.id, status: s }))
             }

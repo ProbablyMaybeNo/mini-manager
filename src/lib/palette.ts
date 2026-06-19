@@ -54,6 +54,24 @@ export const projectTypeAccent: Record<ProjectType, Accent> = {
   Terrain: "red",
 };
 
+/**
+ * Spec wording for each lifecycle status (BUILDING→BUILT, …). Shared so the
+ * inspector Listbox, the collection StatusDropdown and StatusText all read the
+ * SAME word for a given state — the enum value stays internal, the painter only
+ * ever sees the spec label. Lives here (not in a "use client" component) so kit
+ * primitives can import it without a client-boundary / import cycle.
+ */
+export const STATUS_LABEL: Record<ProjectStatus, string> = {
+  WISHLIST: "WISHLIST",
+  OWNED: "OWNED",
+  BUILDING: "BUILT",
+  PRIMING: "PRIMED",
+  PAINTING: "PAINTED",
+  BASING: "BASED",
+  COMPLETE: "COMPLETE",
+  SHELVED: "HOLD",
+};
+
 export const statusAccent: Record<ProjectStatus, Accent> = {
   WISHLIST: "yellow",
   // OWNED reads neon green — the "you have this" status, mirroring the green
