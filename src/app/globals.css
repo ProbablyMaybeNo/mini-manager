@@ -179,6 +179,22 @@ option {
 }
 
 /* ----------------------------------------------------------------------------
+   Typography utilities
+   ------------------------------------------------------------------------- */
+
+/* Canonical OSD section/meta label — kills the 7-way tracking sprawl
+   (0.08–0.25em) on font-osd uppercase labels. Mirrors the kit Chip/StatusText
+   typography exactly (font-osd, 12px, uppercase, tracking-[0.15em]) so every
+   eyebrow/section/meta label reads identically. text-[12px] (not text-xs,
+   which is floored to 13px) preserves the dominant label size. */
+@utility label-osd {
+  font-family: var(--font-osd);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* ----------------------------------------------------------------------------
    CRT / phosphor utilities
    ------------------------------------------------------------------------- */
 

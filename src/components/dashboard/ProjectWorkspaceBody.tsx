@@ -64,7 +64,7 @@ function Section({
 }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
+      <h3 className="label-osd text-cyan">
         {label}
       </h3>
       {hint && <p className="-mt-1 font-mono text-[12px] text-fg-faint">{hint}</p>}
@@ -77,7 +77,7 @@ function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-1 border border-cyan/20 px-2 py-3">
       <span className="font-display text-lg text-fg tabular-nums">{value}</span>
-      <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+      <span className="label-osd text-fg-faint">
         {label}
       </span>
     </div>
@@ -178,13 +178,13 @@ export function ProjectWorkspaceBody({
       {/* Meta row: type · status · priority · progress */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="label-osd text-fg-faint">
             Type
           </span>
           <TypeChip type={project.type} />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="label-osd text-fg-faint">
             Status
           </span>
           <Listbox
@@ -199,7 +199,7 @@ export function ProjectWorkspaceBody({
           />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="label-osd text-fg-faint">
             Priority
           </span>
           <Listbox
@@ -218,7 +218,7 @@ export function ProjectWorkspaceBody({
           />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="label-osd text-fg-faint">
             Overall progress
           </span>
           <ProgressBar percent={project.completionPercent} />
@@ -267,7 +267,7 @@ export function ProjectWorkspaceBody({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-cyan/30 font-osd text-[12px] uppercase tracking-[0.12em] text-fg-faint">
+                <tr className="border-b border-cyan/30 label-osd text-fg-faint">
                   <th className="py-1 pr-2">Name</th>
                   <th className="px-1">Type</th>
                   <th className="px-1">Status</th>
@@ -366,7 +366,7 @@ export function ProjectWorkspaceBody({
               ))}
             </select>
             <label className="flex flex-col gap-1">
-              <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+              <span className="label-osd text-fg-faint">
                 Models
               </span>
               <input
@@ -415,7 +415,7 @@ export function ProjectWorkspaceBody({
           className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
         />
         <div className="flex items-center gap-2">
-          <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+          <span className="label-osd text-fg-faint">
             Target date
           </span>
           <DateField

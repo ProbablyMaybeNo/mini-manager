@@ -42,7 +42,7 @@ with the canonical primitive so the same concept renders one way everywhere.
   and `src/app/(app)/dashboard/ArmyImportPanel.tsx` still use `text-[10px]`,
   breaking the 12px readability floor. Change each to `text-[12px]`. (Audit, **high**.)
 
-- [ ] **4 — Add a `label-osd` utility + adopt it.** Many OSD section labels repeat
+- [x] **4 — Add a `label-osd` utility + adopt it.** Many OSD section labels repeat
   `font-osd text-xs uppercase tracking-[...]` with the tracking drifting across ~7
   values (0.08–0.25em). Add a single `@utility label-osd` in `globals.css`
   (`font-osd text-xs uppercase tracking-[0.15em]`) and replace the ad-hoc strings

@@ -4,7 +4,7 @@
 export default function Error({ reset }: { error: Error; reset: () => void }) {
   return (
     <main className="flex min-h-[60vh] flex-col items-center justify-center gap-5 p-6 text-center">
-      <p className="font-osd text-[12px] uppercase tracking-[0.25em] text-red">
+      <p className="label-osd text-red">
         SYS ▸ FAULT
       </p>
       <h1 className="font-display text-xl text-red">SOMETHING BROKE</h1>
