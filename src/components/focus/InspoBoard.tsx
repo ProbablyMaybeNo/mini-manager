@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button, CloseButton, Input } from "@/components/kit";
+import { resolveInspoImage } from "@/lib/actions/recipeInspo";
 import type { InspoRef } from "@/lib/types";
 
 /**
@@ -21,6 +22,31 @@ export function InspoBoard({
 }) {
   const [url, setUrl] = useState("");
   const [zoomed, setZoomed] = useState<InspoRef | null>(null);
+  // og:image URLs resolved client-side for rows that arrived without one (saved
+  // before image resolution existed). The action persists them server-side too.
+  const [resolved, setResolved] = useState<Record<string, string>>({});
+  const attempted = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    const pending = inspo.filter((r) => r.id && !r.imageUrl && !attempted.current.has(r.id));
+    if (pending.length === 0) return;
+    pending.forEach((r) => attempted.current.add(r.id));
+    (async () => {
+      for (const r of pending) {
+        const res = await resolveInspoImage({ id: r.id });
+        if (cancelled) return;
+        if (res.ok && res.data.imageUrl) {
+          setResolved((prev) => ({ ...prev, [r.id]: res.data.imageUrl as string }));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [inspo]);
+
+  const srcFor = (r: InspoRef) => resolved[r.id] ?? r.imageUrl ?? r.url;
 
   function add() {
     const v = url.trim();
@@ -59,7 +85,7 @@ export function InspoBoard({
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={ref.url}
+                    src={srcFor(ref)}
                     alt="Inspiration reference"
                     onDoubleClick={() => setZoomed(ref)}
                     title="Double-click to enlarge"
@@ -99,13 +125,13 @@ export function InspoBoard({
         })}
       </div>
 
-      {zoomed && <InspoZoom ref_={zoomed} onClose={() => setZoomed(null)} />}
+      {zoomed && <InspoZoom src={srcFor(zoomed)} url={zoomed.url} onClose={() => setZoomed(null)} />}
     </div>
   );
 }
 
 /** Full-size popup overlay; closes on outside-click or Escape. */
-function InspoZoom({ ref_, onClose }: { ref_: InspoRef; onClose: () => void }) {
+function InspoZoom({ src, url, onClose }: { src: string; url: string; onClose: () => void }) {
   const frameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -139,11 +165,11 @@ function InspoZoom({ ref_, onClose }: { ref_: InspoRef; onClose: () => void }) {
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={ref_.url}
+          src={src}
           alt="Inspiration reference (enlarged)"
           className="max-h-[85vh] max-w-[85vw] object-contain"
         />
-        <p className="mt-1 truncate font-mono text-[12px] text-fg-dim">{ref_.url}</p>
+        <p className="mt-1 truncate font-mono text-[12px] text-fg-dim">{url}</p>
       </div>
     </div>
   );

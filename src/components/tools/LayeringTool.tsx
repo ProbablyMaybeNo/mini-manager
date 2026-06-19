@@ -8,6 +8,7 @@ import { mixLayers, DEFAULT_SUBSTRATE, type GlazeLayer } from "@/lib/tools/layer
 import type { Paint } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { ColorPickerPanel } from "./ColorPickerPanel";
+import { GlazeVenn } from "./GlazeVenn";
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/;
 
@@ -36,6 +37,8 @@ export function LayeringTool({
   const [steps, setSteps] = useState(5);
   // Per-lane colour picker — which lane the shared ColorPicker is editing.
   const [pickingLane, setPickingLane] = useState<"shadow" | "base" | "highlight" | null>(null);
+  // Per-stacking-target colour picker — the substrate or a glaze-layer index.
+  const [pickingStack, setPickingStack] = useState<number | "substrate" | null>(null);
 
   const valid = [shadow, base, highlight].every((h) => HEX6.test(h));
   const ladder = valid ? buildRamp({ shadow, base, highlight, steps }) : [];
@@ -63,6 +66,22 @@ export function LayeringTool({
     { hex: "#c01010", alpha: 0.85 },
   ]);
   const stackResult = mixLayers(layers, substrate);
+
+  const stackHex =
+    pickingStack === "substrate"
+      ? substrate
+      : typeof pickingStack === "number"
+        ? (layers[pickingStack]?.hex ?? null)
+        : null;
+
+  function applyStack(sel: ColorPickerSelection) {
+    const hex = sel.hex.toUpperCase();
+    if (pickingStack === "substrate") setSubstrate(hex);
+    else if (typeof pickingStack === "number") {
+      const idx = pickingStack;
+      setLayers((p) => p.map((l, k) => (k === idx ? { ...l, hex } : l)));
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -151,7 +170,18 @@ export function LayeringTool({
             Stack transparent glaze layers over a substrate to predict the
             painted result (optical mix, bottom → top).
           </p>
-          <HexField label="Substrate" name="substrate" value={substrate} onChange={(e) => setSubstrate(e.target.value)} />
+          <div className="flex items-end gap-2">
+            <HexField
+              label="Substrate"
+              name="substrate"
+              value={substrate}
+              onChange={(e) => setSubstrate(e.target.value)}
+              containerClassName="flex-1"
+            />
+            <Button variant="tertiary" size="sm" onClick={() => setPickingStack("substrate")} aria-label="Pick substrate colour">
+              Pick
+            </Button>
+          </div>
           {layers.map((layer, i) => (
             <div key={i} className="flex flex-col gap-2 border border-purple/20 p-2">
               <div className="flex items-center justify-between">
@@ -164,13 +194,19 @@ export function LayeringTool({
                   onClick={() => setLayers((p) => p.filter((_, k) => k !== i))}
                 />
               </div>
-              <HexField
-                name={`layer-${i}`}
-                value={layer.hex}
-                onChange={(e) =>
-                  setLayers((p) => p.map((l, k) => (k === i ? { ...l, hex: e.target.value } : l)))
-                }
-              />
+              <div className="flex items-end gap-2">
+                <HexField
+                  name={`layer-${i}`}
+                  value={layer.hex}
+                  onChange={(e) =>
+                    setLayers((p) => p.map((l, k) => (k === i ? { ...l, hex: e.target.value } : l)))
+                  }
+                  containerClassName="flex-1"
+                />
+                <Button variant="tertiary" size="sm" onClick={() => setPickingStack(i)} aria-label={`Pick layer ${i + 1} colour`}>
+                  Pick
+                </Button>
+              </div>
               <label>
                 <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
                   Opacity {Math.round(layer.alpha * 100)}%
@@ -226,6 +262,22 @@ export function LayeringTool({
               <span className="font-mono text-xs text-fg-faint">No close paint match.</span>
             );
           })()}
+          {layers.length >= 2 && (
+            <div className="flex flex-col gap-1 border-t border-purple/20 pt-3">
+              <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+                Optical mix — undercoat ∩ top glaze
+              </span>
+              <GlazeVenn
+                undercoat={{ ...layers[0]!, label: "UNDERCOAT" }}
+                top={{ ...layers[1]!, label: "TOP GLAZE" }}
+                substrate={substrate}
+                onPick={(_region, hex) => onSavePalette([hex.toUpperCase()])}
+              />
+              <span className="text-center font-mono text-[12px] text-fg-faint">
+                Click a region to save its colour.
+              </span>
+            </div>
+          )}
           <Button variant="secondary" onClick={() => onSavePalette([stackResult.toUpperCase()])}>
             Save result
           </Button>
@@ -242,6 +294,24 @@ export function LayeringTool({
         initialHex={laneHex}
         closeOnSelect
         onSelect={applyLane}
+      />
+
+      {/* Shared ColorPicker for the stacking substrate + glaze layers. */}
+      <ColorPickerPanel
+        open={pickingStack != null}
+        onClose={() => setPickingStack(null)}
+        title="Pick a colour"
+        breadcrumb="STACKING ▸ COLOR PICKER"
+        contextLabel={
+          pickingStack === "substrate"
+            ? "substrate"
+            : typeof pickingStack === "number"
+              ? `layer ${pickingStack + 1}`
+              : undefined
+        }
+        initialHex={stackHex}
+        closeOnSelect
+        onSelect={applyStack}
       />
     </div>
   );

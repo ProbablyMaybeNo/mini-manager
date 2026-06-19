@@ -135,22 +135,24 @@ export async function listInspoForRecipe(
  */
 export async function getInspoMapForOwner(
   userId: string,
-): Promise<Map<string, { id: string; url: string }[]>> {
+): Promise<Map<string, { id: string; url: string; imageUrl: string | null }[]>> {
   const rows = await db
     .select({
       id: recipeInspo.id,
       url: recipeInspo.url,
+      imageUrl: recipeInspo.imageUrl,
       recipeId: recipeInspo.recipeId,
     })
     .from(recipeInspo)
     .innerJoin(recipes, eq(recipeInspo.recipeId, recipes.id))
     .where(eq(recipes.ownerId, userId))
     .orderBy(asc(recipeInspo.position));
-  const map = new Map<string, { id: string; url: string }[]>();
+  const map = new Map<string, { id: string; url: string; imageUrl: string | null }[]>();
   for (const r of rows) {
+    const entry = { id: r.id, url: r.url, imageUrl: r.imageUrl };
     const list = map.get(r.recipeId);
-    if (list) list.push({ id: r.id, url: r.url });
-    else map.set(r.recipeId, [{ id: r.id, url: r.url }]);
+    if (list) list.push(entry);
+    else map.set(r.recipeId, [entry]);
   }
   return map;
 }

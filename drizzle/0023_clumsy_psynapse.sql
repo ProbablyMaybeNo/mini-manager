@@ -1,0 +1,1 @@
+ALTER TABLE `recipe_inspo` ADD `image_url` text;

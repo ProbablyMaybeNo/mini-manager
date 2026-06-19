@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { recipeInspo, recipes, type RecipeInspo } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { resolveOgImage } from "@/lib/inspo/ogImage";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
@@ -82,6 +83,10 @@ export async function addInspo(
   const currentMax = positionRows[0]?.maxPos ?? null;
   const nextPosition = currentMax === null ? 0 : currentMax + 1;
 
+  // Best-effort: resolve the page's og:image so links render as thumbnails.
+  // Never blocks the add — failures just leave imageUrl null.
+  const imageUrl = await resolveOgImage(d.url).catch(() => null);
+
   try {
     const inserted = await db
       .insert(recipeInspo)
@@ -89,6 +94,7 @@ export async function addInspo(
         recipeId: d.recipeId,
         position: nextPosition,
         url: d.url,
+        imageUrl,
         label: d.label && d.label.length > 0 ? d.label : null,
       })
       .returning();
@@ -102,6 +108,39 @@ export async function addInspo(
       error: err instanceof Error ? err.message : "Failed to add inspo",
     };
   }
+}
+
+const resolveSchema = z.object({ id: inspoIdSchema });
+
+/**
+ * Lazily resolve (and cache) the og:image for an existing inspo row — used by
+ * the board to back-fill rows saved before image resolution existed. Idempotent:
+ * returns the cached value without re-fetching once set.
+ */
+export async function resolveInspoImage(
+  raw: z.infer<typeof resolveSchema>,
+): Promise<ActionResult<{ id: string; imageUrl: string | null }>> {
+  const parsed = resolveSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid id" };
+  }
+  const userId = await currentUserId();
+  const owned = await getInspoWithOwnerCheck(userId, parsed.data.id);
+  if (!owned) return { ok: false, error: "Inspo not found" };
+
+  if (owned.row.imageUrl) {
+    return { ok: true, data: { id: owned.row.id, imageUrl: owned.row.imageUrl } };
+  }
+  const imageUrl = await resolveOgImage(owned.row.url).catch(() => null);
+  if (imageUrl) {
+    try {
+      await db.update(recipeInspo).set({ imageUrl }).where(eq(recipeInspo.id, owned.row.id));
+      revalidateForRecipe(owned.recipeId);
+    } catch {
+      // Caching is best-effort — still return the resolved URL to the caller.
+    }
+  }
+  return { ok: true, data: { id: owned.row.id, imageUrl } };
 }
 
 export async function deleteInspo(

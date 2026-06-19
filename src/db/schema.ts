@@ -637,6 +637,10 @@ export const recipeInspo = sqliteTable(
     position: integer("position").notNull(),
     /** The link or image URL the painter saved. */
     url: text("url").notNull(),
+    /** Resolved og:image / direct-image URL for `url`, cached so page links
+     *  (Pinterest / IG / ArtStation) render as thumbnails instead of raw text.
+     *  Null = not resolved yet or no image found → fall back to <img src={url}>. */
+    imageUrl: text("image_url"),
     /** Optional human caption (e.g. "Duncan's edge highlight tutorial"). */
     label: text("label"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
