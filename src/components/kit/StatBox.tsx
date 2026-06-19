@@ -40,7 +40,10 @@ export function StatBox({
       </div>
       <div
         className={cn(
-          "font-display text-xl leading-none",
+          // Hero tracker number — bumped up so the totals read large and
+          // glanceable (6hWtJA2oArmz follow-up). Font family stays on
+          // --font-display; only the size grows here.
+          "font-display text-3xl leading-none lg:text-4xl",
           !center && "mt-1",
           accentText[accent],
           // Subtle per-accent phosphor glow on the hero number (UX-006) —

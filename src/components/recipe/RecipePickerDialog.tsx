@@ -17,23 +17,41 @@ export function RecipePickerDialog({
   open,
   recipes,
   onPick,
+  onCreateNew,
   onClose,
   busy = false,
 }: {
   open: boolean;
   recipes: RecipePickerOption[];
   onPick: (recipeId: string) => void;
+  /** Pinned "+ New" entry — routes to the recipe create page when supplied. */
+  onCreateNew?: () => void;
   onClose: () => void;
   busy?: boolean;
 }) {
+  const newEntry = onCreateNew ? (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={onCreateNew}
+      className="flex items-center gap-2 border border-dashed border-purple px-3 py-2 text-left font-osd text-xs uppercase tracking-[0.15em] text-purple hover:bg-purple/10 disabled:opacity-50"
+    >
+      + New
+    </button>
+  ) : null;
+
   return (
     <ModalDialog open={open} onClose={onClose} title="Attach a recipe" breadcrumb="COLLECTION">
       {recipes.length === 0 ? (
-        <p className="font-mono text-xs text-fg-faint">
-          No recipes yet — create one from the Recipes tab first.
-        </p>
+        <div className="flex flex-col gap-2">
+          {newEntry}
+          <p className="font-mono text-xs text-fg-faint">
+            No recipes yet — create one with “+ New”.
+          </p>
+        </div>
       ) : (
         <div className="flex max-h-72 flex-col gap-1 overflow-y-auto">
+          {newEntry}
           {recipes.map((r) => (
             <button
               key={r.id}

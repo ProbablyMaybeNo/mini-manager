@@ -29,12 +29,16 @@ export function MiniCalendar({
   month = 8, // 0-indexed → September (the MAGGOTKIN tournament)
   events = [],
   onDayClick,
+  showMonthLabel = true,
   className,
 }: {
   year?: number;
   month?: number;
   events?: CalendarEvent[];
   onDayClick?: (iso: string) => void;
+  /** When the host renders the month label itself (e.g. between nav arrows,
+   *  yO830AqQH3Hu) set this false to drop the duplicate internal heading. */
+  showMonthLabel?: boolean;
   className?: string;
 }) {
   const [hovered, setHovered] = useState<number | null>(null);
@@ -71,9 +75,11 @@ export function MiniCalendar({
 
   return (
     <div className={cn("select-none", className)}>
-      <div className="mb-1 text-center font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
-        {monthLabel}
-      </div>
+      {showMonthLabel && (
+        <div className="mb-1 text-center font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
+          {monthLabel}
+        </div>
+      )}
       <div className="grid grid-cols-7 gap-px">
         {DOW.map((d, i) => (
           <div key={i} className="text-center font-osd text-[12px] text-fg-faint">

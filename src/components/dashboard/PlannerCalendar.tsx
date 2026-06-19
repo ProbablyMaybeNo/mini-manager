@@ -50,6 +50,13 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
     return view;
   })();
 
+  // Match MiniCalendar's "Jun 2026" label exactly (same locale + options).
+  const monthLabel = new Date(Date.UTC(view.year, view.month, 1)).toLocaleString("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
   function shiftMonth(delta: number) {
     setView((v) => {
       const d = new Date(Date.UTC(v.year, v.month + delta, 1));
@@ -112,6 +119,10 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         >
           ‹
         </button>
+        {/* Month label sits between the nav arrows, not below them (yO830AqQH3Hu). */}
+        <span className="font-osd text-[10px] uppercase tracking-[0.2em] text-cyan">
+          {monthLabel}
+        </span>
         <button
           type="button"
           onClick={() => shiftMonth(1)}
@@ -123,12 +134,14 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
       </div>
 
       {/* Cap the grid to a small, glanceable size (r-N-8) so the calendar
-          stays compact within the rail rather than stretching to fill it. */}
+          stays compact within the rail rather than stretching to fill it.
+          showMonthLabel=false — the label now lives between the arrows above. */}
       <MiniCalendar
         year={view.year}
         month={view.month}
         events={events}
         onDayClick={openAddForDay}
+        showMonthLabel={false}
         className="mx-auto w-full max-w-[170px]"
       />
 
