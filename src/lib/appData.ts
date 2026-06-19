@@ -68,7 +68,7 @@ export async function loadEditorRecipe(
         note: s.notesMd ?? undefined,
       };
     }),
-    inspo: inspoRows.map((r) => ({ id: r.id, url: r.url })),
+    inspo: inspoRows.map((r) => ({ id: r.id, url: r.url, imageUrl: r.imageUrl })),
     assignedProjectId: bundle.attachedProjectId ?? undefined,
     notes: bundle.notesMd ?? undefined,
   };
@@ -230,7 +230,7 @@ function mapRecipe(
     palette: { hex: string; label: string }[];
     publicSlug: string | null;
   },
-  inspo: { id: string; url: string }[],
+  inspo: { id: string; url: string; imageUrl: string | null }[],
 ): KitRecipe {
   return {
     id: row.id,

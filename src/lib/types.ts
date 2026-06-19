@@ -58,6 +58,9 @@ export interface InspoRef {
   /** recipe_inspo row id; empty string for an unsaved (editor-local) entry. */
   id: string;
   url: string;
+  /** Resolved og:image / direct-image URL, if known — render this as the thumb
+   *  and fall back to `url` when null. */
+  imageUrl?: string | null;
 }
 
 export interface Recipe {
