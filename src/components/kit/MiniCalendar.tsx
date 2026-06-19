@@ -138,7 +138,9 @@ export function MiniCalendar({
           );
 
           const base = cn(
-            "relative flex aspect-square items-center justify-center font-mono text-[12px] tabular-nums",
+            // min-h-6/min-w-6 clears the WCAG 2.2 §2.5.8 24px target floor
+            // (cells were 23x23) while keeping the dense glanceable grid.
+            "relative flex aspect-square min-h-6 min-w-6 items-center justify-center font-mono text-[12px] tabular-nums",
             day == null && "opacity-0",
             accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg-dim",
           );

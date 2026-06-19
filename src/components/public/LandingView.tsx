@@ -48,6 +48,9 @@ export function LandingView() {
           screen, so it stands alone; the boot-sequence overlay was removed to
           avoid stamping green text over the baked-in title. */}
       <section className="scanlines flex flex-col items-center gap-6 px-6 py-16 text-center">
+        {/* The logo's CRT screen is the visual title; give AT + the heading
+            outline a real top-level <h1> (UX-008). */}
+        <h1 className="sr-only">Mini Manager — paint &amp; project manager for miniatures</h1>
         <Logo href="/" size={320} className="animate-power-on" />
         {/* Tagline (8rIb) — larger + more stylized display type. */}
         <p className="max-w-2xl font-display text-xl leading-relaxed text-cyan text-glow-cyan sm:text-2xl">

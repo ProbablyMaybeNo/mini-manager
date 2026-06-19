@@ -161,7 +161,7 @@ export function PaintInfoPanelContent({
               <button
                 type="button"
                 onClick={() => onAssignPaint(m.paint)}
-                className="border border-cyan/50 px-1.5 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
               >
                 Use
               </button>
@@ -181,7 +181,7 @@ export function PaintInfoPanelContent({
               <button
                 type="button"
                 onClick={() => onAssignPaint(p)}
-                className="border border-cyan/50 px-1.5 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
               >
                 Use
               </button>

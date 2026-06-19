@@ -28,7 +28,9 @@ export function CloseButton({
     <button
       type={type}
       className={cn(
-        "font-osd text-fg-dim transition-colors",
+        // ≥24px hit area (WCAG 2.2 §2.5.8) without enlarging the glyph — the
+        // ✕ stays its resting size, the tap target is the padded box.
+        "inline-flex min-h-6 min-w-6 items-center justify-center font-osd leading-none text-fg-dim transition-colors",
         tone === "destructive" ? "hover:text-red" : "hover:text-cyan",
         className,
       )}

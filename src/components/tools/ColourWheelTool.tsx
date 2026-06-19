@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button, Panel, Swatch } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import {
   buildHarmony,
   getHarmonyMeta,
@@ -114,8 +115,11 @@ export function ColourWheelTool({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-      <Panel label="PICK" className="flex flex-col items-center gap-4 p-5">
-        <div className="relative border border-cyan/30 p-2">
+      <Panel label="PICK" className="flex min-w-0 flex-col items-center gap-4 p-5">
+        {/* Constrain the wheel to the column width on mobile so it never
+            forces horizontal overflow (UX-002). The canvas keeps its 300px
+            intrinsic size but scales down via max-w-full inside this box. */}
+        <div className="relative aspect-square w-[min(100%,320px)] border border-cyan/30 p-2">
           <WheelCanvas
             size={300}
             lightness={light}
@@ -168,7 +172,7 @@ export function ColourWheelTool({
         </div>
       </Panel>
 
-      <Panel label="HARMONY · CLOSEST PAINTS" cornerTicks className="flex flex-col gap-4 p-5">
+      <Panel label="HARMONY · CLOSEST PAINTS" cornerTicks className="flex min-w-0 flex-col gap-4 p-5">
         <div className="flex flex-col gap-2">
           {picks.map(({ hex, paint }, i) => {
             const isPinned = pinned.has(hex);
@@ -179,7 +183,12 @@ export function ColourWheelTool({
                   aria-pressed={isPinned}
                   aria-label={isPinned ? `Unpin ${hex}` : `Pin ${hex}`}
                   onClick={() => togglePin(hex)}
-                  className={isPinned ? "text-yellow" : "text-fg-faint hover:text-yellow"}
+                  className={cn(
+                    // min-h-11 min-w-11 → 44px target for the dense pin toggle
+                    // (was 13x24, under the WCAG 2.2 §2.5.8 floor) — UX-009.
+                    "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center transition-colors",
+                    isPinned ? "text-yellow" : "text-fg-faint hover:text-yellow",
+                  )}
                 >
                   {isPinned ? "★" : "☆"}
                 </button>

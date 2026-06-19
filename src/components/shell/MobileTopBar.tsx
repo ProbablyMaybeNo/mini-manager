@@ -18,7 +18,7 @@ export function MobileTopBar() {
           onClick={() => setOpen(true)}
           aria-label="Open menu"
           aria-expanded={open}
-          className="border border-cyan/60 px-3 py-1.5 font-osd text-xs uppercase tracking-[0.18em] text-cyan hover:bg-cyan/10"
+          className="inline-flex min-h-11 items-center border border-cyan/60 px-3 py-1.5 font-osd text-xs uppercase tracking-[0.18em] text-cyan hover:bg-cyan/10"
         >
           ☰ Menu
         </button>

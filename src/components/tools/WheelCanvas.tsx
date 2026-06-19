@@ -248,7 +248,7 @@ export function WheelCanvas({
       ref={canvasRef}
       width={size}
       height={size}
-      className="max-w-full cursor-crosshair touch-none select-none"
+      className="h-full w-full max-w-full cursor-crosshair touch-none select-none"
       role="img"
       aria-label="Colour wheel"
       onPointerDown={handlePointerDown}

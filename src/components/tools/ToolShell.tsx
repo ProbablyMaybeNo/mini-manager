@@ -13,7 +13,7 @@ export function ToolShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-full flex-col gap-6 overflow-y-auto p-6">
+    <div className="flex h-full flex-col gap-6 overflow-x-hidden overflow-y-auto p-6">
       <Link href="/tools">
         <Button variant="tertiary">← Tools</Button>
       </Link>
