@@ -100,24 +100,29 @@
   --color-fg-dim: #b6c6cc;
   --color-fg-faint: #7d8f95;
 
-  /* Type families (KOdXd3JTo7rS four-tier scheme). IBM Plex Mono trails each
-     pixel face as a glyph-coverage fallback so missing glyphs stay readable. */
-  --font-display: "Unbutton", "Flexi IBM VGA True", monospace;
-  --font-osd: "UAV OSD Mono", "Flexi IBM VGA True", monospace;
-  --font-mono: "VT323", "Flexi IBM VGA True", monospace;
-  --font-button: "VT323", "Flexi IBM VGA True", monospace;
-  --font-body2: "VT323", "VT323", "Courier New", monospace;
+  /* Type families — Ross's Theme Studio picks. IBM Plex Mono trails each pixel
+     face as a glyph-coverage fallback so missing glyphs stay readable. */
+  --font-display: "Unbutton", "IBM Plex Mono", monospace;
+  --font-osd: "IBM BIOS", "IBM Plex Mono", monospace;
+  --font-mono: "VT323", "IBM Plex Mono", monospace;
+  --font-button: "DePixel Klein", "IBM Plex Mono", monospace;
+  --font-body2: "VT323", "IBM Plex Mono", monospace;
   /* Extra loaded faces — type `font-lightpixel` / `font-unbutton` on any element. */
-  --font-lightpixel: "Light Pixel 7", "VT323", "IBM Plex Mono", monospace;
+  --font-lightpixel: "Light Pixel 7", "IBM Plex Mono", monospace;
   --font-unbutton: "Unbutton", "VT323", "IBM Plex Mono", monospace;
 
-  /* Readability floor (KOdXd3JTo7rS): nudge the two workhorse sizes up ~1px
-     (xs 12→13, sm 14→15) WITHOUT changing the root size — a root bump would
-     also scale every rem-based padding/gap and disturb the dense tables.
-     Hardcoded text-[≤11px] are lifted to text-[12px] in components so nothing
-     renders below 12px. */
-  --text-xs: 0.8125rem; /* 13px (was 12) */
-  --text-sm: 0.9375rem; /* 15px (was 14) */
+  /* Type scale — Ross's Theme Studio sizing. xs=12px is the readability floor;
+     the rest scale up from there. NOTE: the default Button size (md) uses
+     --text-xs, so button + body text currently share this token (decouple TODO
+     so button size is independent of body size). */
+  --text-xs: 0.75rem; /* 12px (floor) */
+  --text-sm: 0.9688rem; /* ~15.5px */
+  --text-base: 1.0938rem; /* ~17.5px */
+  --text-lg: 1.25rem; /* 20px */
+  --text-xl: 1.5313rem; /* ~24.5px */
+  --text-2xl: 1.8438rem; /* ~29.5px */
+  --text-3xl: 2.1875rem; /* 35px */
+  --text-4xl: 2.9688rem; /* ~47.5px */
 
   /* Border + glow */
   --radius-panel: 2px;
@@ -172,10 +177,10 @@ option {
   outline-offset: 2px;
 }
 
-/* VT323 is a tall, narrow CRT face. A hair of tracking on display text keeps
-   uppercase titles from feeling cramped without hurting the terminal feel. */
+/* Display titles (Unbutton). Generous tracking (~5px at title sizes) so the
+   pixel face has breathing room between glyphs. Per Ross — tune the em value. */
 .font-display {
-  letter-spacing: 0.04em;
+  letter-spacing: 0.14em;
 }
 
 /* ----------------------------------------------------------------------------
