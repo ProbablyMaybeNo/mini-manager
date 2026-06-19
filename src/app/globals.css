@@ -31,6 +31,56 @@
   font-weight: 400;
   font-display: swap;
 }
+/* Extra loaded faces — not assigned to a role yet; use the family name directly
+   in a component className via font-[...] or swap into a --font-* token. */
+@font-face {
+  font-family: "Light Pixel 7";
+  src: url("/fonts/light-pixel-7.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbutton";
+  src: url("/fonts/unbutton.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DePixel Klein";
+  src: url("/fonts/depixel-klein.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DePixel Breit";
+  src: url("/fonts/depixel-breit.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pixeland";
+  src: url("/fonts/pixeland.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM BIOS";
+  src: url("/fonts/ibm-bios.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Apricot 256L";
+  src: url("/fonts/apricot-256l.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM XGA-AI";
+  src: url("/fonts/ibm-xga-ai.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
 
 /* ----------------------------------------------------------------------------
    Design tokens — exact values from the Figma Style Guide (page 0:1)
@@ -52,10 +102,14 @@
 
   /* Type families (KOdXd3JTo7rS four-tier scheme). IBM Plex Mono trails each
      pixel face as a glyph-coverage fallback so missing glyphs stay readable. */
-  --font-display: "3D Pixel", "VT323", "IBM Plex Mono", monospace;
-  --font-osd: "UAV OSD Mono", "Share Tech Mono", "IBM Plex Mono", monospace;
-  --font-mono: "Flexi IBM VGA True", "IBM Plex Mono", "Courier New", monospace;
-  --font-body2: "VT323", "IBM Plex Mono", "Courier New", monospace;
+  --font-display: "Unbutton", "Flexi IBM VGA True", monospace;
+  --font-osd: "UAV OSD Mono", "Flexi IBM VGA True", monospace;
+  --font-mono: "VT323", "Flexi IBM VGA True", monospace;
+  --font-button: "VT323", "Flexi IBM VGA True", monospace;
+  --font-body2: "VT323", "VT323", "Courier New", monospace;
+  /* Extra loaded faces — type `font-lightpixel` / `font-unbutton` on any element. */
+  --font-lightpixel: "Light Pixel 7", "VT323", "IBM Plex Mono", monospace;
+  --font-unbutton: "Unbutton", "VT323", "IBM Plex Mono", monospace;
 
   /* Readability floor (KOdXd3JTo7rS): nudge the two workhorse sizes up ~1px
      (xs 12→13, sm 14→15) WITHOUT changing the root size — a root bump would
@@ -92,15 +146,18 @@ body {
 }
 
 /* Form controls do NOT inherit font-family by default (UA stylesheets reset
-   them to a system font). Force them onto the body mono so every raw
-   <input>/<select>/<textarea>/<button> renders in IBM Plex Mono app-wide
-   (body-font audit — thread Q6fs2DHiGvnM). */
-button,
+   them to a system font). Inputs/selects/textareas follow the body font;
+   BUTTONS get their own dedicated --font-button token so the button typeface
+   is independent of the body typeface — change it on its own in the Theme
+   Studio without touching the body. (body-font audit — thread Q6fs2DHiGvnM.) */
 input,
 select,
 textarea,
 optgroup {
   font-family: inherit;
+}
+button {
+  font-family: var(--font-button);
 }
 
 /* Native <option> popups (rendered by the OS) — keep them mono where supported. */
