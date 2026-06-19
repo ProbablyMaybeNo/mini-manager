@@ -24,7 +24,10 @@ function isPublicPath(pathname: string): boolean {
     pathname === "/pricing" ||
     pathname.startsWith("/pricing/") ||
     pathname === "/privacy" ||
-    pathname === "/terms"
+    pathname === "/terms" ||
+    // Dev-only theme studio (/dev/*) — public in dev so it needs no sign-in;
+    // the page itself 404s in production, so this is a no-op there.
+    (process.env.NODE_ENV !== "production" && pathname.startsWith("/dev"))
   );
 }
 
