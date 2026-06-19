@@ -5,6 +5,7 @@ import {
   priorityAccent,
   projectTypeAccent,
   statusAccent,
+  STATUS_LABEL,
   type Accent,
 } from "@/lib/palette";
 import type { Priority, ProjectStatus, ProjectType } from "@/lib/types";
@@ -37,18 +38,11 @@ export function TypeChip({ type }: { type: ProjectType }) {
   return <Chip accent={projectTypeAccent[type]}>{type}</Chip>;
 }
 
-/** Colour-coded status word (no border — the design renders status as coloured text). */
+/** Colour-coded status badge — rendered as a bordered Chip so every status
+ *  reads as a consistent badge (WISHLIST gets the bordered yellow treatment
+ *  rather than bare text). */
 export function StatusText({ status }: { status: ProjectStatus }) {
-  return (
-    <span
-      className={cn(
-        "font-osd text-[12px] uppercase tracking-[0.15em]",
-        accentText[statusAccent[status]],
-      )}
-    >
-      {status}
-    </span>
-  );
+  return <Chip accent={statusAccent[status]}>{STATUS_LABEL[status]}</Chip>;
 }
 
 export function PriorityTag({ priority }: { priority: Priority }) {

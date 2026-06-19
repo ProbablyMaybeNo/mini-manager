@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button, Input } from "@/components/kit";
+import { Button, CloseButton, Input } from "@/components/kit";
 import type { InspoRef } from "@/lib/types";
 
 /**
@@ -80,14 +80,12 @@ export function InspoBoard({
                   >
                     <span className="truncate font-mono text-[12px] text-fg-dim">{ref.url}</span>
                   </span>
-                  <button
-                    type="button"
+                  <CloseButton
+                    tone="destructive"
                     aria-label={`Remove reference ${i + 1}`}
                     onClick={() => onRemoveInspo?.(ref.id)}
-                    className="absolute right-0.5 top-0.5 bg-bg/70 px-1 font-osd text-[12px] text-fg-faint opacity-0 transition-opacity hover:text-red group-hover:opacity-100"
-                  >
-                    ✕
-                  </button>
+                    className="absolute right-0.5 top-0.5 bg-bg/70 px-1 text-[12px] opacity-0 group-hover:opacity-100"
+                  />
                 </>
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
@@ -134,14 +132,11 @@ function InspoZoom({ ref_, onClose }: { ref_: InspoRef; onClose: () => void }) {
         ref={frameRef}
         className="relative max-h-[90vh] max-w-[90vw] border border-cyan/60 bg-bg p-2 shadow-[0_0_40px_rgba(0,210,255,0.25)]"
       >
-        <button
-          type="button"
+        <CloseButton
           aria-label="Close preview"
           onClick={onClose}
-          className="absolute right-1 top-1 z-10 bg-bg/70 px-2 py-0.5 font-osd text-xs text-cyan hover:text-red"
-        >
-          ✕
-        </button>
+          className="absolute right-1 top-1 z-10 bg-bg/70 px-2 py-0.5 text-xs"
+        />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={ref_.url}

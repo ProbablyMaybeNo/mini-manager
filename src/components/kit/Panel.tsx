@@ -46,7 +46,7 @@ export function Panel({
       style={{ borderRadius: "var(--radius-panel)" }}
     >
       {label && (
-        <span className="absolute -top-2 left-3 bg-bg px-1.5 font-osd text-[12px] uppercase tracking-[0.2em] text-fg-dim">
+        <span className="absolute -top-2 left-3 bg-bg px-1.5 label-osd text-fg-dim">
           {label}
         </span>
       )}

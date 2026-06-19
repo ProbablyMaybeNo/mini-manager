@@ -29,7 +29,7 @@ function money(n: number): string {
 function Stat({ label, value, accent = "cyan" }: { label: string; value: string; accent?: Accent }) {
   return (
     <div className="flex items-baseline gap-2">
-      <span className="font-osd text-[12px] uppercase tracking-[0.16em] text-fg-faint">{label}</span>
+      <span className="label-osd text-fg-faint">{label}</span>
       <span className={cn("font-mono text-sm tabular-nums", accentText[accent])}>{value}</span>
     </div>
   );
@@ -77,7 +77,7 @@ export function CollectionStatsBar({
         "bg-bg/90 px-4 py-2.5 backdrop-blur-sm",
       )}
     >
-      <span className="font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">▸ COLLECTION</span>
+      <span className="label-osd text-cyan">▸ COLLECTION</span>
 
       <Stat label="Paints owned" value={`${stats.paintsOwned}/${stats.paintTotal}`} accent="green" />
       <Stat label="Paint spend" value={money(stats.paintSpend)} accent="green" />

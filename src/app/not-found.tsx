@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-5 p-6 text-center">
-      <p className="font-osd text-[12px] uppercase tracking-[0.25em] text-red">
+      <p className="label-osd text-red">
         SYS ▸ ERROR / 404
       </p>
       <h1 className="font-display text-2xl text-cyan text-glow-cyan">

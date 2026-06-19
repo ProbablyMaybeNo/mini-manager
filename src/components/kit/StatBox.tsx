@@ -35,7 +35,7 @@ export function StatBox({
       )}
       style={{ borderRadius: "var(--radius-panel)" }}
     >
-      <div className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+      <div className="label-osd text-fg-dim">
         {label}
       </div>
       <div

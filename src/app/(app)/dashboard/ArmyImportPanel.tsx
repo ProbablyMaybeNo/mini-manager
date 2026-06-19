@@ -103,7 +103,7 @@ export function ArmyImportPanel({
           <div className="flex flex-col gap-1">
             <label
               htmlFor="import-army-name"
-              className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint"
+              className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint"
             >
               Project name
             </label>

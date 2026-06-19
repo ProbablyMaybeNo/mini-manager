@@ -26,7 +26,7 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim"
+          className="label-osd text-fg-dim"
         >
           {label}
         </label>

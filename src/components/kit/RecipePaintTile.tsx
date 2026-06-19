@@ -41,13 +41,13 @@ export function RecipePaintTile({
       )}
       style={{ backgroundColor: hex, color: ink }}
     >
-      <span className="truncate font-osd text-[12px] uppercase tracking-[0.08em] opacity-90">
+      <span className="truncate label-osd opacity-90">
         {brand ?? " "}
       </span>
       <span className="line-clamp-2 break-words font-mono text-[12px] font-semibold">
         {name}
       </span>
-      <span className="truncate font-osd text-[12px] uppercase tracking-[0.08em] opacity-90">
+      <span className="truncate label-osd opacity-90">
         {layer || " "}
       </span>
     </span>

@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 import {
   Button,
   EmptyState,
+  IconButton,
   Input,
   PriorityTag,
   ProgressBar,
@@ -210,31 +211,31 @@ export function ProjectsTable({
           <td className="w-20 px-3 py-2.5">
             <div className="flex items-center justify-end gap-1">
               {canAddSub && (
-                <button
-                  type="button"
+                <IconButton
+                  variant="add"
+                  size="sm"
                   aria-label={`Add ${childType} to ${p.title}`}
                   title={`Add ${childType}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     openAddSub(p);
                   }}
-                  className="flex h-7 w-7 items-center justify-center rounded-sm border border-green/40 text-green transition-colors hover:bg-green/15 focus:outline-none focus-visible:bg-green/15"
                 >
                   +
-                </button>
+                </IconButton>
               )}
-              <button
-                type="button"
+              <IconButton
+                variant="outlineCyan"
+                size="sm"
                 aria-label={`Open ${p.title} in focus`}
                 title="Open in focus bench"
                 onClick={(e) => {
                   e.stopPropagation();
                   onFocusProject(p);
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded-sm border border-cyan/30 text-cyan transition-colors hover:bg-cyan/15 focus:outline-none focus-visible:bg-cyan/15"
               >
                 ◎
-              </button>
+              </IconButton>
             </div>
           </td>
         </tr>

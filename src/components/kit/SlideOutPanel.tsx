@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { CloseButton } from "./CloseButton";
 
 /**
  * The one slide-out language for the whole app: detail / inspector / filter surfaces all use
@@ -104,14 +105,7 @@ export function SlideOutPanel({
               {title}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close panel"
-            className="font-osd text-fg-dim hover:text-cyan"
-          >
-            ✕
-          </button>
+          <CloseButton onClick={onClose} aria-label="Close panel" />
         </header>
         <div className="h-[calc(100%-7rem)] overflow-y-auto px-4 py-4">{children}</div>
         {footer && (
