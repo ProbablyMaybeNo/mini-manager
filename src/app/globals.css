@@ -112,9 +112,7 @@
   --font-unbutton: "Unbutton", "VT323", "IBM Plex Mono", monospace;
 
   /* Type scale — Ross's Theme Studio sizing. xs=12px is the readability floor;
-     the rest scale up from there. NOTE: the default Button size (md) uses
-     --text-xs, so button + body text currently share this token (decouple TODO
-     so button size is independent of body size). */
+     the rest scale up from there. */
   --text-xs: 0.75rem; /* 12px (floor) */
   --text-sm: 0.9688rem; /* ~15.5px */
   --text-base: 1.0938rem; /* ~17.5px */
@@ -123,6 +121,13 @@
   --text-2xl: 1.8438rem; /* ~29.5px */
   --text-3xl: 2.1875rem; /* 35px */
   --text-4xl: 2.9688rem; /* ~47.5px */
+
+  /* Role-specific font sizes — independent of the body scale so each can be
+     tuned on its own in the Theme Studio (no more shrinking body text to size
+     buttons). Applied via text-button / text-dropdown / text-element. */
+  --text-button: 0.75rem; /* button labels */
+  --text-dropdown: 0.8125rem; /* Listbox trigger + options */
+  --text-element: 0.75rem; /* tools / activity tracker / feature text */
 
   /* Border + glow */
   --radius-panel: 2px;
