@@ -8,6 +8,7 @@ import { mixLayers, DEFAULT_SUBSTRATE, type GlazeLayer } from "@/lib/tools/layer
 import type { Paint } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { ColorPickerPanel } from "./ColorPickerPanel";
+import { GlazeVenn } from "./GlazeVenn";
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/;
 
@@ -226,6 +227,22 @@ export function LayeringTool({
               <span className="font-mono text-xs text-fg-faint">No close paint match.</span>
             );
           })()}
+          {layers.length >= 2 && (
+            <div className="flex flex-col gap-1 border-t border-purple/20 pt-3">
+              <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+                Optical mix — undercoat ∩ top glaze
+              </span>
+              <GlazeVenn
+                undercoat={{ ...layers[0]!, label: "UNDERCOAT" }}
+                top={{ ...layers[1]!, label: "TOP GLAZE" }}
+                substrate={substrate}
+                onPick={(_region, hex) => onSavePalette([hex.toUpperCase()])}
+              />
+              <span className="text-center font-mono text-[12px] text-fg-faint">
+                Click a region to save its colour.
+              </span>
+            </div>
+          )}
           <Button variant="secondary" onClick={() => onSavePalette([stackResult.toUpperCase()])}>
             Save result
           </Button>
