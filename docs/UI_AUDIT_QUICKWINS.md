@@ -23,7 +23,7 @@ with the canonical primitive so the same concept renders one way everywhere.
 
 ## Items
 
-- [ ] **1 — Dashboard WISHLIST status → bordered chip.** `StatusText` in
+- [x] **1 — Dashboard WISHLIST status → bordered chip.** `StatusText` in
   `src/components/kit/tags.tsx` renders WISHLIST (and other statuses) as bare
   coloured text. Render through the existing `<Chip accent={statusAccent[status]}>`
   so every status reads as a bordered badge consistent with the rest of the app.
