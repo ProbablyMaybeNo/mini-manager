@@ -93,7 +93,7 @@ export function ColourMatchTool({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-      <Panel label="INPUT" className="flex flex-col gap-4 p-5">
+      <Panel label="INPUT" className="flex min-w-0 flex-col gap-4 p-5">
         <HexField label="Target hex" name="match-hex" value={hex} onChange={(e) => setHex(e.target.value)} />
         <div className="h-24 w-full border border-fg/20" style={{ backgroundColor: valid ? hex : "transparent" }} />
 
@@ -133,7 +133,7 @@ export function ColourMatchTool({
               </button>
             )}
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-1">
+          <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
             {brandOptions.map((b) => {
               const active = brands.has(b);
               return (
@@ -157,7 +157,7 @@ export function ColourMatchTool({
         </div>
       </Panel>
 
-      <Panel label="RANKED MATCHES" cornerTicks className="flex flex-col gap-2 p-5">
+      <Panel label="RANKED MATCHES" cornerTicks className="flex min-w-0 flex-col gap-2 p-5">
         {!valid ? (
           <p className="py-8 text-center font-mono text-xs text-fg-faint">
             Enter a valid 6-digit hex to see matches.
