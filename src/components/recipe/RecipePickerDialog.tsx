@@ -1,6 +1,6 @@
 "use client";
 
-import { ModalDialog, Swatch } from "@/components/kit";
+import { Button, ModalDialog, Swatch } from "@/components/kit";
 
 export interface RecipePickerOption {
   id: string;
@@ -30,14 +30,15 @@ export function RecipePickerDialog({
   busy?: boolean;
 }) {
   const newEntry = onCreateNew ? (
-    <button
-      type="button"
+    <Button
+      variant="add"
+      size="sm"
       disabled={busy}
       onClick={onCreateNew}
-      className="flex items-center gap-2 border border-dashed border-purple px-3 py-2 text-left font-osd text-xs uppercase tracking-[0.15em] text-purple hover:bg-purple/10 disabled:opacity-50"
+      className="self-start"
     >
       + New
-    </button>
+    </Button>
   ) : null;
 
   return (

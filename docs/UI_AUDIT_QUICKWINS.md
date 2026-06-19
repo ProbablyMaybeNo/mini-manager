@@ -49,7 +49,7 @@ with the canonical primitive so the same concept renders one way everywhere.
   at the call sites listed in the audit's typography section. Keep visual output
   on the canonical `0.15em`. (Audit — **high churn, do carefully**.)
 
-- [ ] **5 — Route bespoke add-`+` buttons through the canonical variant.**
+- [x] **5 — Route bespoke add-`+` buttons through the canonical variant.**
   `ProjectsTable.tsx` rolls its own green/dashed `+` add buttons (and `rounded-sm`);
   `RecipePickerDialog.tsx` "+ New" is dashed purple. Use `IconButton`/`Button`
   `variant="add"` (the canonical neon-green add per MM-52) and drop `rounded-sm`.
