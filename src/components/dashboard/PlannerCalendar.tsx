@@ -120,7 +120,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
           ‹
         </button>
         {/* Month label sits between the nav arrows, not below them (yO830AqQH3Hu). */}
-        <span className="font-osd text-[10px] uppercase tracking-[0.2em] text-cyan">
+        <span className="font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
           {monthLabel}
         </span>
         <button

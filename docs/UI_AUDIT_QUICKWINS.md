@@ -38,7 +38,7 @@ with the canonical primitive so the same concept renders one way everywhere.
   identical everywhere. While there, pass `accent={statusAccent[...]}` to the
   inspector Listbox if it's currently untinted. (Audit, **high**.)
 
-- [ ] **3 — Fix the two sub-12px labels.** `src/components/dashboard/PlannerCalendar.tsx`
+- [x] **3 — Fix the two sub-12px labels.** `src/components/dashboard/PlannerCalendar.tsx`
   and `src/app/(app)/dashboard/ArmyImportPanel.tsx` still use `text-[10px]`,
   breaking the 12px readability floor. Change each to `text-[12px]`. (Audit, **high**.)
 
