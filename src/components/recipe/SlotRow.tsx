@@ -1,6 +1,6 @@
 "use client";
 
-import { RecipePaintTile } from "@/components/kit";
+import { CloseButton, RecipePaintTile } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { RecipeSlot } from "@/lib/types";
 
@@ -77,14 +77,11 @@ export function SlotRow({
         </div>
       </div>
 
-      <button
-        type="button"
+      <CloseButton
+        tone="destructive"
         onClick={onRemove}
         aria-label={`Remove slot ${index + 1}`}
-        className="font-osd text-fg-faint hover:text-red"
-      >
-        ✕
-      </button>
+      />
     </div>
   );
 }

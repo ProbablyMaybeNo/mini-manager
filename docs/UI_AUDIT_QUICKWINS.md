@@ -55,7 +55,7 @@ with the canonical primitive so the same concept renders one way everywhere.
   `variant="add"` (the canonical neon-green add per MM-52) and drop `rounded-sm`.
   (Audit: button-likes, **high**.)
 
-- [ ] **6 — Add a kit `CloseButton` and replace the hand-rolled `✕`.** The dismiss/
+- [x] **6 — Add a kit `CloseButton` and replace the hand-rolled `✕`.** The dismiss/
   remove `✕` is hand-built in ~8 places with two different glyphs (`✕` U+2715 vs
   `×` U+00D7) and clashing hover colours. Add a `CloseButton` primitive in `kit`
   (one `✕` glyph; `tone="dismiss"`→`hover:text-cyan`, `tone="destructive"`→

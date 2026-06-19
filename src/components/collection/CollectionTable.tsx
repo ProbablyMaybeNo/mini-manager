@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Chip, EmptyState, Listbox, SwatchStrip } from "@/components/kit";
+import { Button, Chip, CloseButton, EmptyState, Listbox, SwatchStrip } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { StatusDropdown } from "./StatusDropdown";
@@ -276,17 +276,11 @@ export function CollectionTable({
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <button
-                      type="button"
+                    <CloseButton
+                      tone="destructive"
                       aria-label={`Delete ${item.name}`}
                       onClick={() => onRemove(item)}
-                      className={cn(
-                        "flex h-6 w-6 items-center justify-center border border-red/50 font-osd text-[12px] text-red",
-                        "transition-colors hover:bg-red/15 hover:border-red",
-                      )}
-                    >
-                      ✕
-                    </button>
+                    />
                   </td>
                 </tr>
               ))

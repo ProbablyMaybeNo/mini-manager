@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CloseButton } from "@/components/kit";
 import { cn } from "@/lib/cn";
 
 /** Module-level feature-detect so unsupported devices hide the button. */
@@ -99,14 +100,11 @@ export function CameraSampler({
       <div className="w-full max-w-md border border-cyan bg-bg p-3">
         <header className="flex items-center justify-between">
           <h2 className="font-osd text-xs uppercase tracking-[0.18em] text-cyan">Camera sampler</h2>
-          <button
-            type="button"
+          <CloseButton
             onClick={onClose}
             aria-label="Close camera sampler"
-            className="font-osd text-sm text-fg-dim hover:text-cyan"
-          >
-            ×
-          </button>
+            className="text-sm"
+          />
         </header>
         {error && (
           <p role="alert" className="mt-2 border border-yellow/40 bg-yellow/5 px-3 py-2 font-mono text-xs text-yellow">

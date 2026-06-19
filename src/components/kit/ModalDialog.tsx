@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { CloseButton } from "./CloseButton";
 
 /**
  * Centered, focus-trapped modal overlay — the dialog counterpart to
@@ -101,14 +102,7 @@ export function ModalDialog({
               {title}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="font-osd text-fg-dim hover:text-cyan"
-          >
-            ✕
-          </button>
+          <CloseButton onClick={onClose} aria-label="Close dialog" />
         </header>
         <div className="px-4 py-4">{children}</div>
         {footer && (

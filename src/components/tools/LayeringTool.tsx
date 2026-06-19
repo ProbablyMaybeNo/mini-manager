@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, HexField, Panel, Swatch } from "@/components/kit";
+import { Button, CloseButton, HexField, Panel, Swatch } from "@/components/kit";
 import { readableText } from "@/lib/color";
 import { buildRamp, MAX_STEPS, MIN_STEPS } from "@/lib/tools/gradient/interpolate";
 import { mixLayers, DEFAULT_SUBSTRATE, type GlazeLayer } from "@/lib/tools/layering/opticalMix";
@@ -158,14 +158,11 @@ export function LayeringTool({
                 <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
                   Layer {i + 1}
                 </span>
-                <button
-                  type="button"
+                <CloseButton
+                  tone="destructive"
                   aria-label={`Remove layer ${i + 1}`}
                   onClick={() => setLayers((p) => p.filter((_, k) => k !== i))}
-                  className="font-osd text-fg-faint hover:text-red"
-                >
-                  ✕
-                </button>
+                />
               </div>
               <HexField
                 name={`layer-${i}`}

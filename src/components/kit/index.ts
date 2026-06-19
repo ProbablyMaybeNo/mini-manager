@@ -1,6 +1,7 @@
 export { Panel } from "./Panel";
 export { Button, buttonVariants, type ButtonProps } from "./Button";
 export { IconButton, type IconButtonProps } from "./IconButton";
+export { CloseButton, type CloseButtonProps } from "./CloseButton";
 export { Chip, TypeChip, StatusText, PriorityTag } from "./tags";
 export { Swatch, SwatchStrip } from "./Swatch";
 export { RecipePaintTile, RecipePaintStrip } from "./RecipePaintTile";

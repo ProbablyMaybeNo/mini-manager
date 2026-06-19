@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Panel, Swatch } from "@/components/kit";
+import { Button, CloseButton, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { extractDominantColors } from "@/lib/tools/eyedropper/kmeans";
 import { imageToPixels, validateImageBlob, type SampledImage } from "@/lib/tools/eyedropper/sample";
@@ -197,14 +197,11 @@ export function EyedropperTool({
                 ) : (
                   <span className="flex-1 font-mono text-xs text-fg-faint">No match</span>
                 )}
-                <button
-                  type="button"
+                <CloseButton
+                  tone="destructive"
                   aria-label={`Remove swatch ${hex}`}
                   onClick={() => setPins((prev) => prev.filter((_, k) => k !== i))}
-                  className="font-osd text-fg-faint hover:text-red"
-                >
-                  ✕
-                </button>
+                />
               </div>
             );
           })
