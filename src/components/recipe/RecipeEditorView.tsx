@@ -100,7 +100,7 @@ export function RecipeEditorView({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
             Assign to project
           </span>
           <Listbox

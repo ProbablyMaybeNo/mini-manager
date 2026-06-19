@@ -133,7 +133,7 @@ export function ColourWheelTool({
         <Slider label="Lightness" value={light} suffix="%" min={10} max={90} onChange={setLight} />
 
         <div className="w-full">
-          <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
             Harmony
           </span>
           <div role="radiogroup" aria-label="Harmony" className="mt-1 flex flex-col gap-1">
@@ -184,7 +184,7 @@ export function ColourWheelTool({
                   {isPinned ? "★" : "☆"}
                 </button>
                 <span
-                  className="inline-flex h-10 min-w-[88px] items-center justify-center border border-fg/20 px-2 font-mono text-[11px]"
+                  className="inline-flex h-10 min-w-[88px] items-center justify-center border border-fg/20 px-2 font-mono text-[12px]"
                   style={{ backgroundColor: hex, color: readableText(hex) }}
                   title={hex}
                 >
@@ -196,7 +196,7 @@ export function ColourWheelTool({
                     <Swatch hex={paint.hex} size="lg" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
-                      <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+                      <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
                         {paint.brand}
                       </div>
                     </div>
@@ -246,7 +246,7 @@ function Slider({
 }) {
   return (
     <label className="w-full">
-      <span className="font-osd text-[10px] uppercase tracking-[0.18em] text-fg-dim">
+      <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
         {label} {value}
         {suffix}
       </span>

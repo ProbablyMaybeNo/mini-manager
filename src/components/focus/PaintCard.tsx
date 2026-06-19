@@ -9,11 +9,11 @@ export function PaintCard({ slot }: { slot: RecipeSlot }) {
       className="flex min-h-[120px] w-40 shrink-0 flex-col items-center justify-center gap-2 border border-cyan/40 p-3 text-center"
       style={{ backgroundColor: slot.swatch, color: fg }}
     >
-      <span className="font-osd text-[11px] uppercase tracking-[0.12em] opacity-90">
+      <span className="font-osd text-[12px] uppercase tracking-[0.12em] opacity-90">
         {slot.brand}
       </span>
       <span className="font-mono text-sm font-medium">{slot.name}</span>
-      <span className="font-osd text-[10px] uppercase tracking-[0.15em] opacity-80">
+      <span className="font-osd text-[12px] uppercase tracking-[0.15em] opacity-80">
         {slot.layer}
       </span>
     </div>

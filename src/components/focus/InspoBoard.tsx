@@ -78,13 +78,13 @@ export function InspoBoard({
                     onDoubleClick={() => setZoomed(ref)}
                     className="absolute inset-0 cursor-zoom-in items-center justify-center p-1 text-center"
                   >
-                    <span className="truncate font-mono text-[9px] text-fg-dim">{ref.url}</span>
+                    <span className="truncate font-mono text-[12px] text-fg-dim">{ref.url}</span>
                   </span>
                   <button
                     type="button"
                     aria-label={`Remove reference ${i + 1}`}
                     onClick={() => onRemoveInspo?.(ref.id)}
-                    className="absolute right-0.5 top-0.5 bg-bg/70 px-1 font-osd text-[10px] text-fg-faint opacity-0 transition-opacity hover:text-red group-hover:opacity-100"
+                    className="absolute right-0.5 top-0.5 bg-bg/70 px-1 font-osd text-[12px] text-fg-faint opacity-0 transition-opacity hover:text-red group-hover:opacity-100"
                   >
                     ✕
                   </button>
@@ -148,7 +148,7 @@ function InspoZoom({ ref_, onClose }: { ref_: InspoRef; onClose: () => void }) {
           alt="Inspiration reference (enlarged)"
           className="max-h-[85vh] max-w-[85vw] object-contain"
         />
-        <p className="mt-1 truncate font-mono text-[10px] text-fg-dim">{ref_.url}</p>
+        <p className="mt-1 truncate font-mono text-[12px] text-fg-dim">{ref_.url}</p>
       </div>
     </div>
   );

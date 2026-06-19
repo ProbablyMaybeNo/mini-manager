@@ -64,7 +64,7 @@ export default async function PublicRecipePage({
                   <Swatch hex={hex} size="lg" />
                   <div className="min-w-0">
                     <div className="font-mono text-sm text-fg">{meta?.label ?? hex}</div>
-                    <div className="font-osd text-[10px] uppercase tracking-[0.15em] text-fg-faint">
+                    <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
                       {techniqueLabel(s.technique)}
                     </div>
                   </div>
@@ -83,7 +83,7 @@ export default async function PublicRecipePage({
         </Panel>
       ) : null}
 
-      <footer className="text-center font-mono text-[11px] text-fg-faint">
+      <footer className="text-center font-mono text-[12px] text-fg-faint">
         Made with{" "}
         <a href="/" className="text-cyan hover:underline">
           Mini Manager

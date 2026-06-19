@@ -52,7 +52,7 @@ export default function ResetPage() {
           </form>
         )}
 
-        <div className="mt-4 text-center font-mono text-[11px]">
+        <div className="mt-4 text-center font-mono text-[12px]">
           <Link href="/sign-in" className="text-cyan hover:underline">
             ← Back to sign in
           </Link>

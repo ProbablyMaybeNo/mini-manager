@@ -20,7 +20,7 @@ export function ActivityFeed({
 }) {
   if (entries.length === 0) {
     return (
-      <p className={cn("font-mono text-[11px] text-fg-faint", className)}>
+      <p className={cn("font-body2 text-[12px] text-fg-faint", className)}>
         No activity yet — your painting moves will show here.
       </p>
     );
@@ -33,7 +33,7 @@ export function ActivityFeed({
           <li
             key={e.id}
             className={cn(
-              "flex items-center gap-2 font-mono text-[11px]",
+              "flex items-center gap-2 font-body2 text-[12px]",
               accentText[accent],
             )}
           >

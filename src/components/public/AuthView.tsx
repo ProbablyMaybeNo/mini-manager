@@ -82,7 +82,7 @@ export function AuthView({
           </Button>
         </form>
 
-        <div className="mt-4 flex items-center justify-between font-mono text-[11px]">
+        <div className="mt-4 flex items-center justify-between font-mono text-[12px]">
           <Link
             href={switchHref}
             className="text-cyan hover:underline"

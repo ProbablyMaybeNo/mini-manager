@@ -71,7 +71,7 @@ export function Stopwatch({
             type="button"
             onClick={toggle}
             className={cn(
-              "border px-3 py-1.5 font-osd text-[11px] uppercase tracking-[0.15em]",
+              "border px-3 py-1.5 font-osd text-[12px] uppercase tracking-[0.15em]",
               running
                 ? "border-red text-red hover:bg-red/10"
                 : "border-green text-green hover:bg-green/10",
@@ -82,21 +82,21 @@ export function Stopwatch({
           <button
             type="button"
             onClick={logSession}
-            className="border border-cyan/60 px-3 py-1.5 font-osd text-[11px] uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
+            className="border border-cyan/60 px-3 py-1.5 font-osd text-[12px] uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
           >
             Log
           </button>
         </div>
       </div>
 
-      <div className="flex gap-4 font-mono text-[11px] text-fg-dim">
+      <div className="flex gap-4 font-mono text-[12px] text-fg-dim">
         <span>Today {formatMinutes(stats.todayMinutes)}</span>
         <span>Week {formatMinutes(stats.weekMinutes)}</span>
         <span className="text-purple">Streak {stats.streakDays}d</span>
       </div>
 
       {log.length > 0 && (
-        <ul className="flex flex-col gap-0.5 border-t border-cyan/20 pt-2 font-mono text-[11px] text-fg-faint">
+        <ul className="flex flex-col gap-0.5 border-t border-cyan/20 pt-2 font-mono text-[12px] text-fg-faint">
           {log.map((secs, i) => (
             <li key={i}>▸ logged {fmt(secs)}</li>
           ))}

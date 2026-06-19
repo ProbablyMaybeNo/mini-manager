@@ -36,7 +36,7 @@ export function PricingView({
               {t.featured && (
                 <div className="flex items-center justify-between">
                   <Chip accent="purple">Limited seat</Chip>
-                  <span className="font-mono text-[11px] text-yellow">
+                  <span className="font-mono text-[12px] text-yellow">
                     {t.seatsLeft}/{t.seatsTotal} left
                   </span>
                 </div>

@@ -96,7 +96,7 @@ export function SlideOutPanel({
         <header className="flex items-start justify-between border-b border-cyan/40 px-4 py-3">
           <div>
             {breadcrumb && (
-              <div className="font-osd text-[10px] uppercase tracking-[0.2em] text-fg-faint">
+              <div className="font-osd text-[12px] uppercase tracking-[0.2em] text-fg-faint">
                 {breadcrumb}
               </div>
             )}

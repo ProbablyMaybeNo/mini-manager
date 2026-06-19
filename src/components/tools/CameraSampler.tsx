@@ -128,7 +128,7 @@ export function CameraSampler({
           <span aria-hidden className="absolute left-1/2 top-1/2 h-12 w-px -translate-x-1/2 -translate-y-1/2 bg-cyan" />
           <span aria-hidden className="absolute left-1/2 top-1/2 h-px w-12 -translate-x-1/2 -translate-y-1/2 bg-cyan" />
         </button>
-        <p className="mt-2 font-osd text-[10px] uppercase tracking-[0.18em] text-fg-faint">
+        <p className="mt-2 font-osd text-[12px] uppercase tracking-[0.18em] text-fg-faint">
           Tap the viewfinder to sample under the crosshair
         </p>
       </div>

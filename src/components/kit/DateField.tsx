@@ -153,7 +153,7 @@ export function DateField({
                 onChange("");
                 setOpen(false);
               }}
-              className="mt-2 w-full border border-red/40 py-1 font-osd text-[10px] uppercase tracking-[0.15em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
+              className="mt-2 w-full border border-red/40 py-1 font-osd text-[12px] uppercase tracking-[0.15em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
             >
               Clear date
             </button>

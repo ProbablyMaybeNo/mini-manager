@@ -58,7 +58,7 @@ export function NewProjectPanel({
           onChange={(e) => setName(e.target.value)}
           placeholder="Salamanders 2k"
         />
-        <label className="flex flex-col gap-1 font-osd text-[10px] uppercase tracking-[0.15em] text-fg-dim">
+        <label className="flex flex-col gap-1 font-osd text-[12px] uppercase tracking-[0.15em] text-fg-dim">
           Type
           <select
             value={type}
