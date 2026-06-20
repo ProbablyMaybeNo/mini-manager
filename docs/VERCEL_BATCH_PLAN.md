@@ -37,7 +37,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M9 — Bright-white text** (`1Xq1P5W3Yvzq`, `mWGF8f6O1IEQ`): make the flagged page subtitle / text bright white (`text-fg`), and for `mWGF` write a short, informative per-page description under the title (1–2 lines summarising that page's features). Target via the threads' selectors.
 
-- [ ] **M10 — Backgrounds to pure black** (`T4nuELRRnFtJ` "crept toward blue"; `BRFouQHNaUUx` side panel). The blue is likely the faint cyan scanline gradient on `body` in `globals.css` and/or `bg-bg-raised` panels. Cut the tint toward pure `--color-bg` where flagged; side-panel/nav background → `bg-bg`. Keep scanlines subtle if removing entirely changes the vibe — match the threads.
+- [x] **M10 — Backgrounds to pure black** (`T4nuELRRnFtJ` "crept toward blue"; `BRFouQHNaUUx` side panel). The blue is likely the faint cyan scanline gradient on `body` in `globals.css` and/or `bg-bg-raised` panels. Cut the tint toward pure `--color-bg` where flagged; side-panel/nav background → `bg-bg`. Keep scanlines subtle if removing entirely changes the vibe — match the threads.
 
 - [ ] **M11 — Harmony dropdown + brand-name font size** (`2tgkNEd6g32w`): increase the harmony dropdown + brand-name text size, nothing else.
 

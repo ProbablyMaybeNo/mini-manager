@@ -87,8 +87,10 @@
    ------------------------------------------------------------------------- */
 @theme {
   /* Palette */
-  --color-bg: #06080a;
-  --color-bg-raised: #0b0f12;
+  /* Pure black canvas (T4nuELRRnFtJ — the bg had crept toward blue). bg-raised
+     is a near-neutral lift (no blue cast) for panels/inputs. */
+  --color-bg: #000000;
+  --color-bg-raised: #0d0d0f;
   --color-cyan: #00d2ff;
   --color-green: #51fd80;
   --color-yellow: #eef996;
@@ -147,11 +149,12 @@ body {
   background-color: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-mono);
-  /* faint global scanline texture */
+  /* Faint global scanline texture — neutral white tint (was cyan, which read
+     as a blue cast on the black canvas, T4nuELRRnFtJ). */
   background-image: repeating-linear-gradient(
     0deg,
-    rgba(0, 210, 255, 0.025) 0px,
-    rgba(0, 210, 255, 0.025) 1px,
+    rgba(255, 255, 255, 0.02) 0px,
+    rgba(255, 255, 255, 0.02) 1px,
     transparent 1px,
     transparent 3px
   );
