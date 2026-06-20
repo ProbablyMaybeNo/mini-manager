@@ -23,7 +23,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M2 — Dashboard stat colours** (`icu1mlFtJeya` time-total → pastel **purple**; `awIApwrPCRs3` streak # → pastel **yellow**; `zsgMLZrqO_ha` completion % → neon **green**; `_tsKQEEUbfvT` active-projects # → neon **cyan**). Colour each dashboard stat number via the StatBox/StatRow accent. Map to palette tokens (`--color-purple/yellow/green/cyan`).
 
-- [ ] **M3 — Calendar "deadline" date does nothing** (`d9cfJYAVIx0C`): adding a deadline date had no effect, but "tournament" worked. Investigate the add-event/event-kind path (`MiniCalendar` / planner add-date form / the event `kind` enum) — likely the "deadline" kind isn't wired into add or render. Fix so a deadline date saves + shows a dot like other kinds. **Real bug.**
+- [x] **M3 — Calendar "deadline" date does nothing** (`d9cfJYAVIx0C`): adding a deadline date had no effect, but "tournament" worked. Investigate the add-event/event-kind path (`MiniCalendar` / planner add-date form / the event `kind` enum) — likely the "deadline" kind isn't wired into add or render. Fix so a deadline date saves + shows a dot like other kinds. **Real bug.**
 
 - [ ] **M4 — All dropdowns → distinct menu style + bigger font** (`8GfWoKTUukde`, `0o2HEmQzVjyU`, `w5cZimrBYgGh`). In kit `Listbox`: apply the recipe-"+Attach" treatment (thinner font + **dotted** border) and raise the dropdown font ~25% so it's on par with the project-table title-column cells (per `w5cZ`). Every Listbox consumer inherits it.
 
