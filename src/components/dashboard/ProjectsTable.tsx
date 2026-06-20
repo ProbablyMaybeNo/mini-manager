@@ -136,7 +136,7 @@ export function ProjectsTable({
               : cn("hover:bg-cyan/5 focus-visible:bg-cyan/10", banded && "bg-fg/[0.02]"),
           )}
         >
-          <td className="px-3 py-2.5 font-mono text-sm text-fg">
+          <td className="px-3 py-2.5 font-mono text-lg text-fg">
             <div
               className="flex items-center gap-1.5"
               style={{ paddingLeft: depth * INDENT_PX }}
