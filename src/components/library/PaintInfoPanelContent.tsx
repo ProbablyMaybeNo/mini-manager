@@ -68,9 +68,20 @@ export function PaintInfoPanelContent({
             onClick={onCopyHex}
             aria-label="Copy hex"
             title="Copy hex"
-            className="border border-green/50 px-2 py-1 text-sm leading-none text-green hover:bg-green/10"
+            className="border border-green/50 p-1.5 text-green hover:bg-green/10"
           >
-            ⧉
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden="true"
+            >
+              <rect x="9" y="9" width="11" height="11" />
+              <path d="M5 15V4h11" />
+            </svg>
           </button>
         </div>
       </Field>
