@@ -41,7 +41,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M11 — Harmony dropdown + brand-name font size** (`2tgkNEd6g32w`): increase the harmony dropdown + brand-name text size, nothing else.
 
-- [ ] **M12 — Priority indicator font matches Status/Type** (`U3vAGGyt-AjD`): make the PRIORITY indicator use the same font/size/treatment as the STATUS and TYPE chips.
+- [x] **M12 — Priority indicator font matches Status/Type** (`U3vAGGyt-AjD`): make the PRIORITY indicator use the same font/size/treatment as the STATUS and TYPE chips.
 
 - [ ] **M13 — Bigger WISHLIST/OWNED indicators on the colour map** (`rg1uauzAsVG4`): enlarge them on the library colour map for at-a-glance coverage (ok if they cover slightly more than the single paint).
 

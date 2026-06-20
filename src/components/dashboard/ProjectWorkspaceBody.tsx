@@ -28,7 +28,7 @@ import {
   type ProjectDetail,
 } from "@/lib/actions/projectMeta";
 import { cn } from "@/lib/cn";
-import { formatMinutes, statusAccent, STATUS_LABEL } from "@/lib/palette";
+import { formatMinutes, priorityAccent, statusAccent, STATUS_LABEL } from "@/lib/palette";
 import type { Priority, Project, ProjectStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
@@ -202,11 +202,14 @@ export function ProjectWorkspaceBody({
           <span className="label-osd text-fg-faint">
             Priority
           </span>
+          {/* PRIORITY matches STATUS/TYPE (U3vAGGyt-AjD): same accent-tinted,
+              UPPERCASE Listbox treatment as the Status control above. */}
           <Listbox
             value={project.priority}
             disabled={pending}
             ariaLabel="Project priority"
-            options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p }))}
+            accent={priorityAccent[project.priority]}
+            options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p.toUpperCase() }))}
             onChange={(p) =>
               run(() =>
                 updateProjectPriority({
