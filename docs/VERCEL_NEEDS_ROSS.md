@@ -1,7 +1,9 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-06-20 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
-**25 unresolved threads.** This is the single durable home for the "blocked" list — the `vercel-comment-loop` routine regenerates it each run (its NEEDS-ROSS output). Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-06-20 (run 2) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
+**~18 unresolved threads** after this run. This is the single durable home for the "blocked" list — the `vercel-comment-loop` routine regenerates it each run (its NEEDS-ROSS output). Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+
+> **This run (PR #43):** shipped 5 clear `/library` threads — `sscZQl83q23A` + `zK02tKyENQm3` (remove clipped SWATCHES/PAINTS label + bump LIBRARY subtitle), `o5znIgUUa5kB` (OWNED counter neon green), `vIHF_GBc6mqo` (COPY → green glyph), `7o0saVEXxaBJ` (standard +Wishlist button). Resolved after prod verify. Prior run's `iqf9wTFo-zHm` (dashboard Title +25%, PR #41) is now merged + live — resolved.
 
 ---
 
