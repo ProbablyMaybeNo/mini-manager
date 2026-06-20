@@ -19,7 +19,7 @@
 
 - [x] **M5 — /projects KPI → centered percentage only** (`S3lZ40vuocCL`, /projects). Strip the flagged `/projects` KPI tracker(s) down to just the **percentage number, centered** (drop the surrounding label/bar chrome Ross flagged as too busy). Keep it a Number category. Confirm on the current `/projects` page.
 
-- [ ] **M6 — ± Dropper buttons on the Colour Dropper tool** (`wBJeqQHQLK4g`, /tools/dropper). New feature, best-guessed: let the user add/remove dropper slots — start at **3**, with **+ / − dropper buttons**. Move the Save / Send-to-Recipe buttons to the right and put the +/− controls in their place (per Ross's sketch). Persist the count in component state; clamp to a sane min (1) / max (e.g. 8). Keep the existing palette-extraction behaviour for each dropper.
+- [x] **M6 — ± Dropper buttons on the Colour Dropper tool** (`wBJeqQHQLK4g`, /tools/dropper). New feature, best-guessed: let the user add/remove dropper slots — start at **3**, with **+ / − dropper buttons**. Move the Save / Send-to-Recipe buttons to the right and put the +/− controls in their place (per Ross's sketch). Persist the count in component state; clamp to a sane min (1) / max (e.g. 8). Keep the existing palette-extraction behaviour for each dropper.
 
 ## Resolve-only — addressed by the typography migration (#47), no code needed
 These need a reply + thread resolve once #47 is live in prod (handled by the comment routine, not this builder): `MXYr3npJ-vPG`, `pj1NxDMT6Eeq`, `2Jw51D8ETR0t`, `D5rNizh_a_aV`, `YYVDgCQcd0ma`, `e-j6I1OfIINp`, `aPHdSR4h7a_Z` (all "body too small / font / bigger" → Flexi 23.5px now), plus `swThO7pd9NE4` (SHARE button font — buttons are now unified at the single Buttons size, 11.5px).
