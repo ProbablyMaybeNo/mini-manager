@@ -82,7 +82,7 @@ export function AuthView({
           </Button>
         </form>
 
-        <div className="mt-4 flex items-center justify-between font-mono text-[12px]">
+        <div className="mt-4 flex items-center justify-between font-body text-body">
           <Link
             href={switchHref}
             className="text-cyan hover:underline"
@@ -90,7 +90,7 @@ export function AuthView({
             {isSignUp ? "Have an account? Sign in" : "New here? Create account"}
           </Link>
           {!isSignUp && (
-            <Link href="/reset" className="text-fg-faint hover:text-cyan">
+            <Link href="/reset" className="text-fg hover:text-cyan">
               Forgot?
             </Link>
           )}

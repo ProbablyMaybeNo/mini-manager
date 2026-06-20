@@ -36,10 +36,10 @@ export function SettingsView({
           <div className="flex items-baseline justify-between">
             <span className="font-display text-base text-cyan">{plan.name}</span>
             {plan.renews && (
-              <span className="font-mono text-[12px] text-fg-faint">Renews {plan.renews}</span>
+              <span className="font-body text-body text-fg">Renews {plan.renews}</span>
             )}
           </div>
-          <p className="font-mono text-xs text-fg-dim">
+          <p className="font-body text-body text-fg">
             {plan.name === "Free"
               ? "Upgrade for unlimited projects, sharing, and the full tool suite."
               : "Thanks for supporting Mini Manager."}
@@ -51,7 +51,7 @@ export function SettingsView({
 
         <Panel label="PREFERENCES" className="flex flex-col gap-4 p-5">
           <div className="flex items-center justify-between">
-            <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+            <span className="label-osd text-fg">
               Table density
             </span>
             <SegmentedToggle
@@ -64,13 +64,13 @@ export function SettingsView({
               onChange={onDensityChange}
             />
           </div>
-          <p className="font-mono text-[12px] text-fg-faint">
+          <p className="font-body text-body text-fg">
             ▸ Motion respects your system “reduce motion” setting automatically.
           </p>
         </Panel>
 
         <Panel label="DATA" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-xs text-fg-dim">
+          <p className="font-body text-body text-fg">
             Import a roster or paint list, or export your whole collection.
           </p>
           <div className="flex gap-2">
@@ -84,7 +84,7 @@ export function SettingsView({
         </Panel>
 
         <Panel label="SESSION" accent="red" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-xs text-fg-dim">Sign out of this device.</p>
+          <p className="font-body text-body text-fg">Sign out of this device.</p>
           <div>
             <Button variant="danger" onClick={onSignOut}>
               Sign out

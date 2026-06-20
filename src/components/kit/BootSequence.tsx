@@ -33,7 +33,7 @@ export function BootSequence({
   }, [visible, lines.length, lineDelayMs]);
 
   return (
-    <div className={cn("font-mono text-xs leading-relaxed text-green", className)} aria-live="polite">
+    <div className={cn("font-body text-body leading-relaxed text-green", className)} aria-live="polite">
       {lines.slice(0, visible).map((line, i) => (
         <div key={i} className="text-glow-green">
           <span className="text-fg-faint">▸ </span>

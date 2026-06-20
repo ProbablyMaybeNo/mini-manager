@@ -45,7 +45,7 @@ export function AccountClient({
       {notice ? (
         <div
           role="status"
-          className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] border border-cyan bg-bg px-4 py-2 text-center font-mono text-xs text-cyan glow-cyan"
+          className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] border border-cyan bg-bg px-4 py-2 text-center font-body text-body text-cyan glow-cyan"
         >
           ▸ {notice}
         </div>
@@ -111,7 +111,7 @@ export function AccountClient({
           </div>
         }
       >
-        <p className="mb-3 font-mono text-xs text-fg-dim">
+        <p className="mb-3 font-body text-body text-fg">
           This permanently deletes your account and all of its data. To
           confirm, type your username{" "}
           <span className="text-red">{username}</span> below.
@@ -126,7 +126,7 @@ export function AccountClient({
           onKeyDown={(e) => e.key === "Enter" && runDelete()}
         />
         {deleteError && (
-          <p className="mt-2 font-mono text-xs text-red" role="alert">
+          <p className="mt-2 font-body text-body text-red" role="alert">
             ▸ {deleteError}
           </p>
         )}

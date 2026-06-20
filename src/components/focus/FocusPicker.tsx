@@ -31,7 +31,7 @@ export function FocusPicker({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <label className="flex items-center gap-2">
-        <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-cyan">
+        <span className="label-osd text-cyan">
           + Focus
         </span>
         <Listbox
@@ -48,7 +48,7 @@ export function FocusPicker({
         <button
           type="button"
           onClick={onClear}
-          className="border border-red/50 px-2 py-1 font-osd text-[12px] uppercase tracking-[0.15em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
+          className="border border-red/50 px-2 py-1 font-button text-button uppercase tracking-[0.15em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
         >
           Remove Focus
         </button>

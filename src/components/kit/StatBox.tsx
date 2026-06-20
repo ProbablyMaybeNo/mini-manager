@@ -36,15 +36,13 @@ export function StatBox({
       style={{ borderRadius: "var(--radius-panel)" }}
     >
       {/* H2 tracker title (0uxze0Chc7dB) — one step above the H3 table headers. */}
-      <div className="label-osd-h2 text-fg-dim">
+      <div className="label-osd-h2 text-fg">
         {label}
       </div>
       <div
         className={cn(
-          // Hero tracker number — bumped up so the totals read large and
-          // glanceable (6hWtJA2oArmz follow-up). Font family stays on
-          // --font-display; only the size grows here.
-          "font-display text-3xl leading-none lg:text-4xl",
+          // Hero tracker number (Number 1 category).
+          "font-num1 text-num1 leading-none",
           !center && "mt-1",
           accentText[accent],
           // Subtle per-accent phosphor glow on the hero number (UX-006) —

@@ -9,7 +9,7 @@ import type { MatchResult, Paint } from "@/lib/types";
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-osd text-[12px] uppercase tracking-[0.2em] text-fg-faint">
+      <span className="label-osd text-fg">
         {label}
       </span>
       {children}
@@ -49,7 +49,7 @@ export function PaintInfoPanelContent({
       />
       <span
         className={cn(
-          "inline-flex w-fit items-center gap-1 font-osd text-[12px] uppercase tracking-[0.18em]",
+          "inline-flex w-fit items-center gap-1 label-osd",
           paint.owned ? "text-green" : "text-fg-faint",
         )}
       >
@@ -57,12 +57,12 @@ export function PaintInfoPanelContent({
       </span>
 
       <Field label="Type">
-        <span className="font-mono text-base text-fg">{paint.type}</span>
+        <span className="font-body text-body text-fg">{paint.type}</span>
       </Field>
 
       <Field label="Hex">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-base uppercase text-fg">{paint.hex}</span>
+          <span className="font-body text-body uppercase text-fg">{paint.hex}</span>
           <button
             type="button"
             onClick={onCopyHex}
@@ -94,19 +94,19 @@ export function PaintInfoPanelContent({
             className="flex items-center border border-green/50"
             title="How many of this paint you already own"
           >
-            <span className="px-2 font-osd text-[12px] uppercase tracking-[0.15em] text-green">
+            <span className="px-2 label-osd text-green">
               Owned
             </span>
             <button
               type="button"
               aria-label="Decrease owned count"
               onClick={() => onStepOwned(-1)}
-              className="px-2 py-1 font-osd text-green hover:bg-green/10"
+              className="px-2 py-1 font-button text-button text-green hover:bg-green/10"
             >
               −
             </button>
             <span
-              className="w-8 text-center font-mono text-sm tabular-nums text-green"
+              className="w-8 text-center font-num2 text-num2 tabular-nums text-green"
               aria-label={`Owned: ${ownedCount}`}
             >
               {ownedCount}
@@ -115,7 +115,7 @@ export function PaintInfoPanelContent({
               type="button"
               aria-label="Increase owned count"
               onClick={() => onStepOwned(1)}
-              className="px-2 py-1 font-osd text-green hover:bg-green/10"
+              className="px-2 py-1 font-button text-button text-green hover:bg-green/10"
             >
               +
             </button>
@@ -139,7 +139,7 @@ export function PaintInfoPanelContent({
           value={scheme}
           onChange={(e) => setScheme(e.target.value as HarmonyScheme)}
           aria-label="Harmony scheme"
-          className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+          className="border border-cyan/50 bg-bg px-2 py-1 font-body text-body text-fg focus:border-cyan focus:outline-none"
         >
           {HARMONY_SCHEMES.map((s) => (
             <option key={s} value={s}>
@@ -159,16 +159,16 @@ export function PaintInfoPanelContent({
           {matchResults.map((m) => (
             <li key={m.paint.id} className="flex items-center gap-2">
               <Swatch hex={m.paint.hex} size="sm" />
-              <span className="flex-1 truncate font-mono text-xs text-fg-dim">
+              <span className="flex-1 truncate font-body text-body text-fg">
                 {m.paint.name} · {m.paint.brand}
               </span>
-              <span className="font-mono text-[12px] tabular-nums text-fg-faint">
+              <span className="font-num2 text-num2 tabular-nums text-fg">
                 Δ{m.distanceScore.toFixed(1)}
               </span>
               <button
                 type="button"
                 onClick={() => onAssignPaint(m.paint)}
-                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan hover:bg-cyan/10"
               >
                 Use
               </button>
@@ -182,13 +182,13 @@ export function PaintInfoPanelContent({
           {similar.map((p) => (
             <li key={p.id} className="flex items-center gap-2">
               <Swatch hex={p.hex} size="sm" />
-              <span className="flex-1 truncate font-mono text-xs text-fg-dim">
+              <span className="flex-1 truncate font-body text-body text-fg">
                 {p.name} · {p.brand}
               </span>
               <button
                 type="button"
                 onClick={() => onAssignPaint(p)}
-                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-osd text-[12px] uppercase text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan hover:bg-cyan/10"
               >
                 Use
               </button>

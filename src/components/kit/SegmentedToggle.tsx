@@ -44,7 +44,7 @@ export function SegmentedToggle<T extends string>({
             disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "px-3 py-1 font-osd text-[12px] uppercase tracking-[0.15em] transition-colors",
+              "px-3 py-1 font-button text-button uppercase tracking-[0.15em] transition-colors",
               active ? "bg-cyan/20 text-cyan glow-cyan" : "text-fg-dim hover:text-cyan",
               disabled && "cursor-not-allowed",
             )}

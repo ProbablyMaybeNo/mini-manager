@@ -108,7 +108,7 @@ export function RecipePaintPicker({
       width="max-w-2xl"
     >
       <div className="flex flex-col gap-4">
-        <p className="font-mono text-[12px] text-fg-faint">
+        <p className="font-body text-body text-fg">
           {mode === "edit-slot"
             ? "▸ Choosing a paint REPLACES this slot's paint."
             : "▸ Choosing a paint fills this slot."}
@@ -125,7 +125,7 @@ export function RecipePaintPicker({
                 aria-selected={active}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "border px-3 py-1.5 font-osd text-[12px] uppercase tracking-[0.15em] transition-colors",
+                  "border px-3 py-1.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
                   active
                     ? "border-cyan bg-cyan/10 text-cyan"
                     : "border-cyan/20 text-fg-dim hover:border-cyan/60 hover:text-cyan",

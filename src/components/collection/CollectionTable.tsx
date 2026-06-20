@@ -28,7 +28,7 @@ function Thumb({ src, alt }: { src: string; alt: string }) {
     return <img src={src} alt={alt} className="h-10 w-10 border border-cyan/30 object-cover" />;
   }
   return (
-    <span className="flex h-10 w-10 items-center justify-center border border-cyan/30 bg-bg-raised/40 font-osd text-[12px] text-fg-faint">
+    <span className="flex h-10 w-10 items-center justify-center border border-cyan/30 bg-bg-raised/40 font-body text-body text-fg-faint">
       ▦
     </span>
   );
@@ -91,8 +91,8 @@ export function CollectionTable({
     <div className="flex flex-col gap-3">
       {/* Header row — title + count on the left, Filter button far right (KpdEP). */}
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-osd text-xs uppercase tracking-[0.18em] text-cyan">
-          {title} <span className="text-fg-faint">{items.length}</span>
+        <h3 className="label-osd text-cyan">
+          {title} <span className="text-fg">{items.length}</span>
         </h3>
         <div className="relative">
           <Button
@@ -110,14 +110,14 @@ export function CollectionTable({
               style={{ borderRadius: "var(--radius-panel)" }}
             >
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+                <span className="label-osd text-fg">
                   {title} · Status
                 </span>
                 {active.size > 0 && (
                   <button
                     type="button"
                     onClick={() => setActive(new Set())}
-                    className="font-mono text-[12px] text-red hover:underline"
+                    className="font-body text-body text-red hover:underline"
                   >
                     Clear
                   </button>
@@ -126,7 +126,7 @@ export function CollectionTable({
               <ul className="flex flex-col gap-1.5">
                 {STATUS_FILTERS.map((f) => (
                   <li key={f.value}>
-                    <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-fg">
+                    <label className="flex cursor-pointer items-center gap-2 font-body text-body text-fg">
                       <input
                         type="checkbox"
                         checked={active.has(f.value)}
@@ -153,7 +153,7 @@ export function CollectionTable({
                 <th
                   key={c || `c${i}`}
                   scope="col"
-                  className="px-3 py-2 text-left font-osd text-[12px] uppercase tracking-[0.18em] text-fg-faint"
+                  className="px-3 py-2 text-left label-osd tracking-[0.18em] text-fg"
                 >
                   {c}
                 </th>
@@ -205,18 +205,18 @@ export function CollectionTable({
                         href={item.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-sm font-medium text-fg hover:text-cyan hover:underline"
+                        className="font-body text-body font-medium text-fg hover:text-cyan hover:underline"
                       >
                         {item.name}
                       </a>
                     ) : (
-                      <span className="font-mono text-sm font-medium text-fg">{item.name}</span>
+                      <span className="font-body text-body font-medium text-fg">{item.name}</span>
                     )}
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs text-fg">
+                  <td className="px-3 py-2 font-body text-body text-fg">
                     {kind === "model" ? (item.game ?? "") : item.company}
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs text-fg">
+                  <td className="px-3 py-2 font-body text-body text-fg">
                     {kind === "model" ? (item.army ?? "") : item.vendor}
                   </td>
                   {kind === "paint" && (
@@ -224,11 +224,11 @@ export function CollectionTable({
                       {item.paintType ? (
                         <Chip accent="dim">{item.paintType}</Chip>
                       ) : (
-                        <span className="font-mono text-xs text-fg-faint">—</span>
+                        <span className="font-body text-body text-fg-faint">—</span>
                       )}
                     </td>
                   )}
-                  <td className="px-3 py-2 font-mono text-xs tabular-nums text-fg">{item.price}</td>
+                  <td className="px-3 py-2 font-body text-body tabular-nums text-fg">{item.price}</td>
                   {kind === "paint" ? (
                     <td className="px-3 py-2">
                       <SwatchStrip
@@ -267,12 +267,12 @@ export function CollectionTable({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`Open source for ${item.name}`}
-                        className="font-mono text-xs text-cyan underline-offset-2 hover:underline"
+                        className="font-body text-body text-cyan underline-offset-2 hover:underline"
                       >
                         link
                       </a>
                     ) : (
-                      <span className="font-mono text-xs text-fg-faint">—</span>
+                      <span className="font-body text-body text-fg-faint">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2">

@@ -80,7 +80,7 @@ export function LibraryView(props: LibraryViewProps) {
       <PageHeader
         title="LIBRARY"
         tagline={`Growing library of ${totalCount.toLocaleString()} paints across all the major companies.`}
-        taglineClassName="text-sm"
+        taglineClassName="font-body text-body"
         actions={
           <>
             <div className="w-44">
@@ -109,7 +109,7 @@ export function LibraryView(props: LibraryViewProps) {
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">
-          <p className="font-mono text-sm text-red">▸ Couldn’t load the library.</p>
+          <p className="font-body text-body text-red">▸ Couldn’t load the library.</p>
           {onRetry && (
             <div className="mt-4">
               <Button variant="danger" onClick={onRetry}>
@@ -128,10 +128,10 @@ export function LibraryView(props: LibraryViewProps) {
                   aria-busy="true"
                   aria-live="polite"
                 >
-                  <span className="font-osd text-xs uppercase tracking-[0.18em] text-cyan text-glow-cyan">
+                  <span className="label-osd text-cyan text-glow-cyan">
                     ▸ Loading{totalCount > 0 ? ` ${totalCount.toLocaleString()}` : ""} paints…
                   </span>
-                  <span className="font-mono text-[12px] text-fg-faint">
+                  <span className="font-body text-body text-fg">
                     Building the local catalog index
                   </span>
                 </div>

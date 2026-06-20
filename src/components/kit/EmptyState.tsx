@@ -31,11 +31,11 @@ export function EmptyState({
       <span aria-hidden className="font-osd text-3xl text-fg-faint/40">
         {glyph}
       </span>
-      <p className="font-osd text-sm uppercase tracking-[0.18em] text-fg-dim">
+      <p className="label-osd tracking-[0.18em] text-fg">
         {title}
       </p>
       {hint && (
-        <p className="max-w-xs font-mono text-xs text-fg-faint">{hint}</p>
+        <p className="max-w-xs font-body text-body text-fg">{hint}</p>
       )}
       {action && (
         <Button variant={action.variant} onClick={action.onClick} className="mt-1">

@@ -137,7 +137,7 @@ export function ColourWheelTool({
         <Slider label="Lightness" value={light} suffix="%" min={10} max={90} onChange={setLight} />
 
         <div className="w-full">
-          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+          <span className="label-osd text-fg">
             Harmony
           </span>
           <div role="radiogroup" aria-label="Harmony" className="mt-1 flex flex-col gap-1">
@@ -164,7 +164,7 @@ export function ColourWheelTool({
                       <span key={i} className="flex-1" style={{ backgroundColor: hex }} />
                     ))}
                   </span>
-                  <span className="flex-1 truncate font-mono text-xs text-fg">{meta.label}</span>
+                  <span className="flex-1 truncate font-body text-body text-fg">{meta.label}</span>
                 </button>
               );
             })}
@@ -193,7 +193,7 @@ export function ColourWheelTool({
                   {isPinned ? "★" : "☆"}
                 </button>
                 <span
-                  className="inline-flex h-10 min-w-[88px] items-center justify-center border border-fg/20 px-2 font-mono text-[12px]"
+                  className="inline-flex h-10 min-w-[88px] items-center justify-center border border-fg/20 px-2 font-body text-body"
                   style={{ backgroundColor: hex, color: readableText(hex) }}
                   title={hex}
                 >
@@ -208,14 +208,14 @@ export function ColourWheelTool({
                     <>
                       <Swatch hex={paint.hex} size="lg" />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
-                        <div className="truncate font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+                        <div className="truncate font-body text-body text-fg">{paint.name}</div>
+                        <div className="truncate label-osd text-fg">
                           {paint.brand}
                         </div>
                       </div>
                     </>
                   ) : (
-                    <span className="font-mono text-xs text-fg-faint">No match</span>
+                    <span className="font-body text-body text-fg">No match</span>
                   )}
                 </div>
                 {onAssignPaint && (
@@ -268,7 +268,7 @@ function Slider({
 }) {
   return (
     <label className="w-full">
-      <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+      <span className="label-osd text-fg">
         {label} {value}
         {suffix}
       </span>

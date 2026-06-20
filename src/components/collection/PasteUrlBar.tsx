@@ -40,7 +40,7 @@ function KindToggle({
             aria-checked={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "border px-4 py-1.5 font-osd text-[12px] uppercase tracking-[0.15em] transition-colors",
+              "border px-4 py-1.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
               "border-purple",
               active
                 ? "bg-purple text-bg"
@@ -94,7 +94,7 @@ export function PasteUrlBar({
         />
         <Button onClick={submit}>Enter</Button>
       </div>
-      <p id="paste-url-stores" className="font-mono text-[12px] leading-snug text-fg-faint">
+      <p id="paste-url-stores" className="font-body text-body leading-snug text-fg">
         {unsupported ? (
           <span className="text-red">
             ▸ That store isn&apos;t supported yet — the entry will be added with just

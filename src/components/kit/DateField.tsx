@@ -103,7 +103,7 @@ export function DateField({
           }
         }}
         className={cn(
-          "inline-flex w-full items-center justify-between gap-2 border border-cyan/60 bg-bg px-2 py-1 font-mono text-xs transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+          "inline-flex w-full items-center justify-between gap-2 border border-cyan/60 bg-bg px-2 py-1 font-button text-button transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
           display ? "text-fg" : "text-fg-faint",
         )}
       >
@@ -125,7 +125,7 @@ export function DateField({
               type="button"
               aria-label="Previous month"
               onClick={() => stepMonth(-1)}
-              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-osd text-xs text-cyan hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
+              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-button text-button text-cyan hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
             >
               ‹
             </button>
@@ -133,7 +133,7 @@ export function DateField({
               type="button"
               aria-label="Next month"
               onClick={() => stepMonth(1)}
-              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-osd text-xs text-cyan hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
+              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-button text-button text-cyan hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
             >
               ›
             </button>
@@ -153,7 +153,7 @@ export function DateField({
                 onChange("");
                 setOpen(false);
               }}
-              className="mt-2 w-full border border-red/40 py-1 font-osd text-[12px] uppercase tracking-[0.15em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
+              className="mt-2 w-full border border-red/40 py-1 font-button text-button uppercase tracking-[0.15em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
             >
               Clear date
             </button>

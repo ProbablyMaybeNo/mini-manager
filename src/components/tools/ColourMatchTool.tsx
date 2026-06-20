@@ -99,15 +99,14 @@ export function ColourMatchTool({
 
         {/* MM-30 — harmony modes */}
         <label>
-          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">Harmony</span>
+          <span className="label-osd text-fg">Harmony</span>
           <select
             value={harmony}
             onChange={(e) => {
               setHarmony(e.target.value as HarmonyKey | "off");
               setPage(0);
             }}
-            /* Harmony dropdown font bumped per-element (2tgkNEd6g32w). */
-            className="mt-1 w-full border border-cyan/50 bg-bg px-2 py-1.5 font-mono text-base text-fg focus:border-cyan focus:outline-none"
+            className="mt-1 w-full border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-fg focus:border-cyan focus:outline-none"
           >
             <option value="off">Single match</option>
             {harmonyKeys.map((k) => (
@@ -121,14 +120,14 @@ export function ColourMatchTool({
         {/* Multi-brand chips (restored) */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+            <span className="label-osd text-fg">
               Brands {brands.size > 0 ? `· ${brands.size}` : "· all"}
             </span>
             {brands.size > 0 && (
               <button
                 type="button"
                 onClick={() => setBrands(new Set())}
-                className="font-mono text-[12px] text-red hover:underline"
+                className="font-button text-button text-red hover:underline"
               >
                 Clear
               </button>
@@ -144,8 +143,7 @@ export function ColourMatchTool({
                   aria-pressed={active}
                   onClick={() => toggleBrand(b)}
                   className={cn(
-                    // Brand-name buttons bumped per-element (2tgkNEd6g32w).
-                    "truncate border px-2 py-1 text-left font-mono text-base transition-colors",
+                    "truncate border px-2 py-1 text-left font-button text-button transition-colors",
                     active
                       ? "border-green bg-green/15 text-green"
                       : "border-cyan/20 text-fg hover:border-cyan/60",
@@ -161,7 +159,7 @@ export function ColourMatchTool({
 
       <Panel label="RANKED MATCHES" cornerTicks className="flex min-w-0 flex-col gap-2 p-5">
         {!valid ? (
-          <p className="py-8 text-center font-mono text-xs text-fg-faint">
+          <p className="py-8 text-center font-body text-body text-fg">
             Enter a valid 6-digit hex to see matches.
           </p>
         ) : harmony !== "off" ? (
@@ -170,7 +168,7 @@ export function ColourMatchTool({
             {harmonyRows.map(({ hex: h, best }, i) => (
               <div key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
                 <span
-                  className="inline-flex h-10 min-w-[80px] items-center justify-center border border-fg/20 px-2 font-mono text-[12px]"
+                  className="inline-flex h-10 min-w-[80px] items-center justify-center border border-fg/20 px-2 font-body text-body"
                   style={{ backgroundColor: h, color: readableText(h) }}
                 >
                   {h}
@@ -179,7 +177,7 @@ export function ColourMatchTool({
                 {best ? (
                   <MatchRow result={best} onUse={onUse} onAssign={onAssign} />
                 ) : (
-                  <span className="flex-1 font-mono text-xs text-fg-faint">No match</span>
+                  <span className="flex-1 font-body text-body text-fg">No match</span>
                 )}
               </div>
             ))}
@@ -201,7 +199,7 @@ export function ColourMatchTool({
                 >
                   ← Prev
                 </Button>
-                <span className="font-mono text-[12px] text-fg-faint">
+                <span className="font-body text-body text-fg">
                   Page {pageSafe + 1} / {pageCount}
                 </span>
                 <Button
@@ -243,10 +241,9 @@ function MatchRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span aria-hidden className={cn("inline-block h-2 w-2 rounded-full", dotColor)} />
-          <span className="truncate font-mono text-sm text-fg">{result.paint.name}</span>
+          <span className="truncate font-body text-body text-fg">{result.paint.name}</span>
         </div>
-        {/* Brand name in match rows bumped per-element (2tgkNEd6g32w). */}
-        <div className="font-osd text-sm uppercase tracking-[0.15em] text-fg-faint">
+        <div className="label-osd text-fg">
           {result.paint.brand}
         </div>
         {/* MM-31 — neon-green bar + "NN% color match" label */}
@@ -254,12 +251,12 @@ function MatchRow({
           <div className="h-1.5 flex-1 bg-bg-raised">
             <div className="h-full bg-green" style={{ width: `${pct}%` }} />
           </div>
-          <span className="shrink-0 font-mono text-[12px] tabular-nums text-green">
+          <span className="shrink-0 font-body text-body tabular-nums text-green">
             {pct}% color match
           </span>
         </div>
       </div>
-      <span className="font-mono text-[12px] tabular-nums text-fg-faint" title="CIEDE2000 distance (lower = closer)">
+      <span className="font-num2 text-num2 tabular-nums text-fg" title="CIEDE2000 distance (lower = closer)">
         Δ{dE.toFixed(1)}
       </span>
       {/* MM-32 — USE is neon green (host-styled via the green token). */}

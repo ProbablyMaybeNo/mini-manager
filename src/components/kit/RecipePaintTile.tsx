@@ -45,10 +45,10 @@ export function RecipePaintTile({
       <span className="truncate label-osd opacity-90">
         {brand ?? " "}
       </span>
-      <span className="line-clamp-2 break-words font-mono text-[18px] font-semibold">
+      <span className="line-clamp-2 break-words font-body text-body font-semibold">
         {name}
       </span>
-      <span className="truncate font-body2 text-[14px] uppercase tracking-[0.12em] opacity-90">
+      <span className="truncate font-body text-body uppercase tracking-[0.12em] opacity-90">
         {layer || " "}
       </span>
     </span>

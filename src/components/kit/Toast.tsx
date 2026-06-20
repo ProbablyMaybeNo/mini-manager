@@ -57,7 +57,7 @@ export function useToast(): {
       >
         <div
           className={cn(
-            "border bg-bg px-4 py-2 font-mono text-xs motion-safe:animate-[content-in_280ms_ease-out]",
+            "border bg-bg px-4 py-2 font-body text-body motion-safe:animate-[content-in_280ms_ease-out]",
             toneClass,
           )}
         >

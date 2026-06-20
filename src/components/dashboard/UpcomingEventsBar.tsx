@@ -16,11 +16,11 @@ function formatDate(iso: string): string {
 export function UpcomingEventsBar({ events }: { events: CalendarEvent[] }) {
   return (
     <div className="flex items-center gap-4 overflow-x-auto border-t border-cyan/40 bg-bg-raised/40 px-4 py-2">
-      <span className="shrink-0 font-osd text-[12px] uppercase tracking-[0.18em] text-fg">
+      <span className="shrink-0 label-osd text-fg">
         Upcoming events:
       </span>
       {events.length === 0 ? (
-        <span className="font-mono text-xs text-fg-faint">Nothing scheduled.</span>
+        <span className="font-body text-body text-fg">Nothing scheduled.</span>
       ) : (
         <ul className="flex items-center gap-6">
           {events.map((e) => {
@@ -31,20 +31,20 @@ export function UpcomingEventsBar({ events }: { events: CalendarEvent[] }) {
               <li
                 key={e.id}
                 title={tip}
-                className="group relative flex shrink-0 items-center gap-3 font-mono text-xs"
+                className="group relative flex shrink-0 items-center gap-3 font-body text-body"
               >
                 <span
                   className={cn(
-                    "font-osd uppercase tracking-[0.15em]",
+                    "label-osd",
                     accentText[eventKindAccent[e.kind]],
                   )}
                 >
                   {e.kind}
                 </span>
                 <span className="text-fg">{e.name}</span>
-                <span className="text-fg-faint">{formatDate(e.date)}</span>
+                <span className="text-fg">{formatDate(e.date)}</span>
                 {e.notes && (
-                  <span className="pointer-events-none absolute bottom-full left-0 z-30 mb-1 hidden w-56 border border-cyan/50 bg-bg/95 p-2 font-mono text-[12px] text-fg-dim shadow-lg group-hover:block">
+                  <span className="pointer-events-none absolute bottom-full left-0 z-30 mb-1 hidden w-56 border border-cyan/50 bg-bg/95 p-2 font-body text-body text-fg shadow-lg group-hover:block">
                     {e.notes}
                   </span>
                 )}

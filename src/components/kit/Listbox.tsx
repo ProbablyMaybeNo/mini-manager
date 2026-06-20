@@ -139,8 +139,8 @@ export function Listbox<T extends string>({
     }
   }
 
-  // Font size is the shared --text-dropdown token; size only changes padding.
-  const pad = size === "md" ? "px-3 py-1.5 text-dropdown" : "px-2 py-1 text-dropdown";
+  // Trigger = Buttons category; size only changes padding.
+  const pad = size === "md" ? "px-3 py-1.5 text-button" : "px-2 py-1 text-button";
 
   return (
     <div ref={rootRef} className={cn("relative inline-block", className)}>
@@ -158,7 +158,7 @@ export function Listbox<T extends string>({
           // Distinct "+Attach" dropdown treatment (8GfWoKTUukde): a thinner
           // pixel face (font-osd) + a DOTTED border, so a dropdown always reads
           // differently from a solid-bordered DePixel-Klein button app-wide.
-          "inline-flex w-full items-center justify-between gap-2 border border-dotted bg-bg font-osd tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+          "inline-flex w-full items-center justify-between gap-2 border border-dotted bg-bg font-button tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
           pad,
           accentBorder[accent],
           "border-opacity-60",
@@ -200,7 +200,7 @@ export function Listbox<T extends string>({
                 onPointerEnter={() => !opt.disabled && setActiveIndex(i)}
                 onClick={() => choose(i)}
                 className={cn(
-                  "cursor-pointer px-2 py-1 font-osd tracking-[0.08em] text-dropdown transition-colors",
+                  "cursor-pointer px-2 py-1 font-body text-body tracking-[0.08em] transition-colors",
                   opt.disabled && "cursor-not-allowed text-fg-faint/60",
                   !opt.disabled && isActive && "bg-cyan/10",
                   !opt.disabled && isSelected ? accentText[accent] : !opt.disabled && "text-fg",

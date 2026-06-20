@@ -104,7 +104,7 @@ export function InspoBoard({
                     onDoubleClick={() => setZoomed(ref)}
                     className="absolute inset-0 cursor-zoom-in items-center justify-center p-1 text-center"
                   >
-                    <span className="truncate font-mono text-[12px] text-fg-dim">{ref.url}</span>
+                    <span className="truncate font-body text-body text-fg">{ref.url}</span>
                   </span>
                   <CloseButton
                     tone="destructive"
@@ -169,7 +169,7 @@ function InspoZoom({ src, url, onClose }: { src: string; url: string; onClose: (
           alt="Inspiration reference (enlarged)"
           className="max-h-[85vh] max-w-[85vw] object-contain"
         />
-        <p className="mt-1 truncate font-mono text-[12px] text-fg-dim">{url}</p>
+        <p className="mt-1 truncate font-body text-body text-fg">{url}</p>
       </div>
     </div>
   );

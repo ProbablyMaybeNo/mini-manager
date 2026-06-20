@@ -115,7 +115,7 @@ const PAGES: { label: string; path: string; states: { label: string; href: strin
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-osd text-xs uppercase tracking-[0.25em] text-fg-faint">{title}</h2>
+      <h2 className="label-osd text-fg">{title}</h2>
       <div className="flex flex-wrap items-center gap-4">{children}</div>
     </section>
   );
@@ -128,8 +128,8 @@ export default function GalleryPage() {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-10 p-8">
       <header>
-        <h1 className="font-display text-2xl text-cyan text-glow-cyan">KIT GALLERY</h1>
-        <p className="mt-2 font-mono text-xs text-fg-dim">
+        <h1 className="font-title text-title text-cyan text-glow-cyan">KIT GALLERY</h1>
+        <p className="mt-2 font-body text-body text-fg">
           Shared presentational kit — every component renders from props, emits via callbacks.
         </p>
       </header>
@@ -138,14 +138,14 @@ export default function GalleryPage() {
         <div className="flex flex-col gap-3">
           {PAGES.map((p) => (
             <div key={p.path} className="flex flex-wrap items-center gap-2">
-              <span className="w-28 font-osd text-[12px] uppercase tracking-[0.15em] text-fg-dim">
+              <span className="label-osd w-28 text-fg">
                 {p.label}
               </span>
               {p.states.map((s) => (
                 <Link
                   key={s.label}
                   href={s.href}
-                  className="border border-cyan/50 px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.12em] text-cyan hover:bg-cyan/10"
+                  className="border border-cyan/50 px-2 py-0.5 font-button text-button uppercase tracking-[0.12em] text-cyan hover:bg-cyan/10"
                 >
                   {s.label}
                 </Link>
@@ -242,7 +242,7 @@ export default function GalleryPage() {
 
       <Section title="Panels">
         <Panel label="PROJECTS" cornerTicks className="w-72 p-4">
-          <p className="font-mono text-xs text-fg-dim">Cyan-bordered panel with tech label + corner ticks.</p>
+          <p className="font-body text-body text-fg">Cyan-bordered panel with tech label + corner ticks.</p>
         </Panel>
         <Panel label="PLANNER" accent="cyan" className="w-56 p-3">
           <MiniCalendar events={mockEvents} />
@@ -258,7 +258,7 @@ export default function GalleryPage() {
         </Panel>
         <Button onClick={() => setOpen(true)}>Open slide-out</Button>
         <SlideOutPanel open={open} onClose={() => setOpen(false)} breadcrumb="LIBRARY ▸ PAINT" title="Macragge Blue">
-          <p className="font-mono text-xs text-fg-dim">The one slide-out language for filter / inspector / detail.</p>
+          <p className="font-body text-body text-fg">The one slide-out language for filter / inspector / detail.</p>
         </SlideOutPanel>
       </Section>
     </main>

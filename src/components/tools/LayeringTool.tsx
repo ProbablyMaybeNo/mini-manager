@@ -88,14 +88,14 @@ export function LayeringTool({
       {/* ===================== LAYERING ===================== */}
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="LAYERING" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-element text-fg-faint">
+          <p className="font-body text-body text-fg">
             Perceptual Lab-space ramp — even transitions across the eye.
           </p>
           <LaneField label="Shadow" value={shadow} onChange={setShadow} onPick={() => setPickingLane("shadow")} />
           <LaneField label="Base" value={base} onChange={setBase} onPick={() => setPickingLane("base")} />
           <LaneField label="Highlight" value={highlight} onChange={setHighlight} onPick={() => setPickingLane("highlight")} />
           <label>
-            <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">Steps {steps}</span>
+            <span className="label-osd text-fg">Steps {steps}</span>
             <input
               type="range"
               min={MIN_STEPS}
@@ -110,7 +110,7 @@ export function LayeringTool({
 
         <Panel label="RAMP" cornerTicks className="flex flex-col gap-4 p-5">
           {!valid ? (
-            <p className="py-8 text-center font-mono text-xs text-fg-faint">
+            <p className="py-8 text-center font-body text-body text-fg">
               Enter valid shadow / base / highlight hexes.
             </p>
           ) : (
@@ -123,7 +123,7 @@ export function LayeringTool({
                     className="flex h-14 flex-1 items-center justify-center"
                     style={{ backgroundColor: hex, color: readableText(hex) }}
                   >
-                    <span className="font-mono text-[12px]">{hex}</span>
+                    <span className="font-body text-body">{hex}</span>
                   </div>
                 ))}
               </div>
@@ -132,18 +132,18 @@ export function LayeringTool({
                   const paint = closestPaint(hex);
                   return (
                     <li key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
-                      <span className="w-6 font-osd text-[12px] text-fg-faint">{i + 1}</span>
+                      <span className="w-6 font-num2 text-num2 text-fg">{i + 1}</span>
                       <Swatch hex={hex} />
                       <span aria-hidden className="font-osd text-fg-faint">→</span>
                       {paint ? (
                         <>
                           <Swatch hex={paint.hex} />
-                          <span className="flex-1 truncate font-mono text-xs text-fg">
+                          <span className="flex-1 truncate font-body text-body text-fg">
                             {paint.name} · {paint.brand}
                           </span>
                         </>
                       ) : (
-                        <span className="flex-1 font-mono text-xs text-fg-faint">No match</span>
+                        <span className="flex-1 font-body text-body text-fg">No match</span>
                       )}
                     </li>
                   );
@@ -167,7 +167,7 @@ export function LayeringTool({
       {/* ===================== STACKING ===================== */}
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="STACKING" accent="purple" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-element text-fg-faint">
+          <p className="font-body text-body text-fg">
             Stack transparent glaze layers over a substrate to predict the
             painted result (optical mix, bottom → top).
           </p>
@@ -186,7 +186,7 @@ export function LayeringTool({
           {layers.map((layer, i) => (
             <div key={i} className="flex flex-col gap-2 border border-purple/20 p-2">
               <div className="flex items-center justify-between">
-                <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+                <span className="label-osd text-fg">
                   Layer {i + 1}
                 </span>
                 <CloseButton
@@ -209,7 +209,7 @@ export function LayeringTool({
                 </Button>
               </div>
               <label>
-                <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+                <span className="label-osd text-fg">
                   Opacity {Math.round(layer.alpha * 100)}%
                 </span>
                 <input
@@ -245,7 +245,7 @@ export function LayeringTool({
               color: readableText(stackResult),
             }}
           >
-            <span className="font-mono text-sm">{stackResult.toUpperCase()}</span>
+            <span className="font-body text-body">{stackResult.toUpperCase()}</span>
           </div>
           {(() => {
             const paint = closestPaint(stackResult);
@@ -253,19 +253,19 @@ export function LayeringTool({
               <div className="flex items-center gap-3 border border-purple/20 p-2">
                 <Swatch hex={paint.hex} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
-                  <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+                  <div className="truncate font-body text-body text-fg">{paint.name}</div>
+                  <div className="label-osd text-fg">
                     {paint.brand}
                   </div>
                 </div>
               </div>
             ) : (
-              <span className="font-mono text-xs text-fg-faint">No close paint match.</span>
+              <span className="font-body text-body text-fg">No close paint match.</span>
             );
           })()}
           {layers.length >= 2 && (
             <div className="flex flex-col gap-1 border-t border-purple/20 pt-3">
-              <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+              <span className="label-osd text-fg">
                 Optical mix — undercoat ∩ top glaze
               </span>
               <GlazeVenn
@@ -274,7 +274,7 @@ export function LayeringTool({
                 substrate={substrate}
                 onPick={(_region, hex) => onSavePalette([hex.toUpperCase()])}
               />
-              <span className="text-center font-mono text-[12px] text-fg-faint">
+              <span className="text-center font-body text-body text-fg">
                 Click a region to save its colour.
               </span>
             </div>

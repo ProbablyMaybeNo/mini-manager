@@ -55,10 +55,10 @@ export function SwatchWall({
     return (
       <div className="h-full overflow-y-auto p-4">
         <div className="flex flex-col items-center gap-2 py-16 text-center">
-          <p className="font-osd text-sm uppercase tracking-[0.18em] text-fg-dim">
+          <p className="label-osd text-fg">
             No paints match
           </p>
-          <p className="font-mono text-xs text-fg-faint">
+          <p className="font-body text-body text-fg">
             Adjust your filters or clear them to see the full library.
           </p>
         </div>

@@ -29,8 +29,8 @@ function money(n: number): string {
 function Stat({ label, value, accent = "cyan" }: { label: string; value: string; accent?: Accent }) {
   return (
     <div className="flex items-baseline gap-2">
-      <span className="label-osd text-fg-faint">{label}</span>
-      <span className={cn("font-mono text-sm tabular-nums", accentText[accent])}>{value}</span>
+      <span className="label-osd text-fg">{label}</span>
+      <span className={cn("font-num2 text-num2 tabular-nums", accentText[accent])}>{value}</span>
     </div>
   );
 }

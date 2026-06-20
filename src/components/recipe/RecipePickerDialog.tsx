@@ -46,7 +46,7 @@ export function RecipePickerDialog({
       {recipes.length === 0 ? (
         <div className="flex flex-col gap-2">
           {newEntry}
-          <p className="font-mono text-xs text-fg-faint">
+          <p className="font-body text-body text-fg">
             No recipes yet — create one with “+ New”.
           </p>
         </div>
@@ -59,7 +59,7 @@ export function RecipePickerDialog({
               type="button"
               disabled={busy}
               onClick={() => onPick(r.id)}
-              className="flex items-center justify-between gap-3 border border-cyan/30 px-3 py-2 text-left font-mono text-sm text-fg hover:border-cyan hover:bg-cyan/10 disabled:opacity-50"
+              className="flex items-center justify-between gap-3 border border-cyan/30 px-3 py-2 text-left font-body text-body text-fg hover:border-cyan hover:bg-cyan/10 disabled:opacity-50"
             >
               <span className="truncate">{r.name}</span>
               <span className="inline-flex shrink-0 gap-0.5">

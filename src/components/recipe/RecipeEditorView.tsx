@@ -100,7 +100,7 @@ export function RecipeEditorView({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+          <span className="label-osd text-fg">
             Assign to project
           </span>
           <Listbox
@@ -127,7 +127,7 @@ export function RecipeEditorView({
           cyan/20 across the editor sections. */}
       <Panel label="SLOTS" cornerTicks className="flex flex-col gap-3 p-4">
         {recipe.slots.length === 0 ? (
-          <p className="py-6 text-center font-mono text-xs text-fg-faint">
+          <p className="py-6 text-center font-body text-body text-fg">
             No slots yet — add your first paint layer.
           </p>
         ) : (
@@ -164,7 +164,7 @@ export function RecipeEditorView({
           aria-label="Recipe notes"
           rows={3}
           placeholder="General notes — varnish, basing, sub-assembly order…"
-          className="w-full resize-y border border-cyan/40 bg-bg p-2 font-mono text-xs text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+          className="w-full resize-y border border-cyan/40 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
         />
       </Panel>
 

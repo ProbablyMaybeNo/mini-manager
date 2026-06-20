@@ -45,18 +45,18 @@ function Verify() {
         className="max-w-md p-6"
       >
         {status === "pending" ? (
-          <p className="font-mono text-sm text-fg-dim">▸ Verifying…</p>
+          <p className="font-body text-body text-fg">▸ Verifying…</p>
         ) : status === "ok" ? (
-          <p className="font-mono text-sm text-green text-glow-green">
+          <p className="font-body text-body text-green text-glow-green">
             ▸ Recovery email verified. Password resets can now be sent to it.
           </p>
         ) : (
-          <p className="font-mono text-sm text-red">▸ {message}</p>
+          <p className="font-body text-body text-red">▸ {message}</p>
         )}
         <div className="mt-4">
           <Link
             href="/user/account"
-            className="font-osd text-[12px] uppercase tracking-[0.15em] text-cyan hover:underline"
+            className="label-osd text-cyan hover:underline"
           >
             ← Back to account
           </Link>

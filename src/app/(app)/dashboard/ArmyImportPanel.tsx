@@ -82,7 +82,7 @@ export function ArmyImportPanel({
     >
       {!tree ? (
         <div className="flex flex-col gap-3">
-          <p className="font-mono text-xs text-fg-dim">
+          <p className="font-body text-body text-fg">
             Paste an army list — BattleScribe text, a points list, or plain
             unit lines. We&apos;ll turn it into an Army with a project per unit.
           </p>
@@ -91,9 +91,9 @@ export function ArmyImportPanel({
             onChange={(e) => setRaw(e.target.value)}
             rows={12}
             placeholder={"10x Intercessors\n5x Terminators\n1x Captain"}
-            className="w-full resize-y border border-cyan/50 bg-bg p-2 font-mono text-xs text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+            className="w-full resize-y border border-cyan/50 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
           />
-          {error ? <p className="font-mono text-xs text-red">▸ {error}</p> : null}
+          {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
           <Button onClick={parse} disabled={pending || !raw.trim()} className="w-full">
             {pending ? "Parsing…" : "Parse list"}
           </Button>
@@ -103,7 +103,7 @@ export function ArmyImportPanel({
           <div className="flex flex-col gap-1">
             <label
               htmlFor="import-army-name"
-              className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint"
+              className="label-osd text-fg"
             >
               Project name
             </label>
@@ -112,10 +112,10 @@ export function ArmyImportPanel({
               value={tree.armyName}
               onChange={(e) => setTree({ ...tree, armyName: e.target.value })}
               placeholder="Name this army before importing"
-              className="w-full border border-cyan/50 bg-bg px-2 py-1.5 font-display text-sm text-cyan placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+              className="w-full border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-cyan placeholder:text-fg-faint focus:border-cyan focus:outline-none"
             />
             {tree.faction || tree.totalPoints ? (
-              <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+              <div className="label-osd text-fg">
                 {tree.faction ?? "Army"}
                 {tree.totalPoints ? ` · ${tree.totalPoints} pts` : ""}
               </div>
@@ -125,17 +125,17 @@ export function ArmyImportPanel({
             {tree.units.map((u, i) => (
               <li
                 key={i}
-                className="flex items-baseline justify-between gap-2 font-mono text-xs"
+                className="flex items-baseline justify-between gap-2 font-body text-body"
               >
                 <span className="min-w-0 truncate text-fg">{u.name}</span>
-                <span className="shrink-0 text-fg-faint">
+                <span className="shrink-0 text-fg">
                   ×{u.count}
                   {u.points ? ` · ${u.points}p` : ""}
                 </span>
               </li>
             ))}
           </ul>
-          {error ? <p className="font-mono text-xs text-red">▸ {error}</p> : null}
+          {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
           <div className="flex gap-2">
             <Button variant="secondary" onClick={reset} disabled={pending}>
               ← Back

@@ -94,11 +94,11 @@ export function ModalDialog({
         <header className="flex items-start justify-between border-b border-cyan/40 px-4 py-3">
           <div>
             {breadcrumb && (
-              <div className="font-osd text-[12px] uppercase tracking-[0.2em] text-fg-faint">
+              <div className="label-osd tracking-[0.2em] text-fg">
                 {breadcrumb}
               </div>
             )}
-            <h2 className="font-osd text-sm uppercase tracking-[0.18em] text-cyan">
+            <h2 className="label-osd-h2 text-cyan">
               {title}
             </h2>
           </div>

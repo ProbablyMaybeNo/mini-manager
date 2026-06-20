@@ -43,8 +43,8 @@ export default async function PublicRecipePage({
       <header className="flex items-center gap-3">
         <Logo href="/" size={48} />
         <div>
-          <h1 className="font-display text-xl text-cyan text-glow-cyan">{recipe.name}</h1>
-          <p className="font-mono text-xs text-fg-dim">
+          <h1 className="font-title text-title text-cyan text-glow-cyan">{recipe.name}</h1>
+          <p className="font-body text-body text-fg">
             Shared paint recipe · {recipe.slots.length} slot
             {recipe.slots.length === 1 ? "" : "s"}
           </p>
@@ -53,7 +53,7 @@ export default async function PublicRecipePage({
 
       <Panel label="RECIPE" cornerTicks className="p-4">
         {recipe.slots.length === 0 ? (
-          <p className="font-mono text-xs text-fg-faint">No slots in this recipe yet.</p>
+          <p className="font-body text-body text-fg">No slots in this recipe yet.</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {recipe.slots.map((s) => {
@@ -63,8 +63,8 @@ export default async function PublicRecipePage({
                 <li key={s.id} className="flex items-center gap-3">
                   <Swatch hex={hex} size="lg" />
                   <div className="min-w-0">
-                    <div className="font-mono text-sm text-fg">{meta?.label ?? hex}</div>
-                    <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+                    <div className="font-body text-body text-fg">{meta?.label ?? hex}</div>
+                    <div className="label-osd text-fg">
                       {techniqueLabel(s.technique)}
                     </div>
                   </div>
@@ -77,13 +77,13 @@ export default async function PublicRecipePage({
 
       {recipe.notesMd ? (
         <Panel label="NOTES" className="p-4">
-          <p className="whitespace-pre-wrap font-mono text-xs text-fg-dim">
+          <p className="whitespace-pre-wrap font-body text-body text-fg">
             {recipe.notesMd}
           </p>
         </Panel>
       ) : null}
 
-      <footer className="text-center font-mono text-[12px] text-fg-faint">
+      <footer className="text-center font-body text-body text-fg">
         Made with{" "}
         <a href="/" className="text-cyan hover:underline">
           Mini Manager

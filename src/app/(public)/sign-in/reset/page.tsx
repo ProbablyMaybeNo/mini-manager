@@ -20,11 +20,11 @@ function ResetConfirm() {
       <Panel label="SYS ▸ RESET" cornerTicks glow className="w-full max-w-sm p-6">
         <div className="mb-5 flex flex-col items-center gap-2 text-center">
           <Logo href="/" size={56} />
-          <p className="font-mono text-xs text-fg-dim">Set a new password</p>
+          <p className="font-body text-body text-fg">Set a new password</p>
         </div>
 
         {!token ? (
-          <p className="font-mono text-sm text-red">
+          <p className="font-body text-body text-red">
             ▸ Missing or invalid reset link.
           </p>
         ) : (
@@ -58,14 +58,14 @@ function ResetConfirm() {
               error={password && !valid ? "Min 8 characters" : undefined}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {error ? <p className="font-mono text-xs text-red">▸ {error}</p> : null}
+            {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
             <Button type="submit" className="w-full" disabled={!valid}>
               Set password
             </Button>
           </form>
         )}
 
-        <div className="mt-4 text-center font-mono text-[12px]">
+        <div className="mt-4 text-center font-body text-body">
           <Link href="/sign-in" className="text-cyan hover:underline">
             ← Back to sign in
           </Link>

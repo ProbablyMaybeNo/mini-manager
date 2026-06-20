@@ -58,12 +58,12 @@ export function NewProjectPanel({
           onChange={(e) => setName(e.target.value)}
           placeholder="Salamanders 2k"
         />
-        <label className="flex flex-col gap-1 font-osd text-[12px] uppercase tracking-[0.15em] text-fg-dim">
+        <label className="flex flex-col gap-1 label-osd text-fg">
           Type
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="border border-cyan/50 bg-bg px-2 py-1.5 font-mono text-sm text-fg focus:border-cyan focus:outline-none"
+            className="border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-fg focus:border-cyan focus:outline-none"
           >
             {TYPES.map((t) => (
               <option key={t} value={t} className="bg-bg text-fg">
@@ -79,7 +79,7 @@ export function NewProjectPanel({
           value={count}
           onChange={(e) => setCount(e.target.value)}
         />
-        {error ? <p className="font-mono text-xs text-red">▸ {error}</p> : null}
+        {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
         <Button
           onClick={submit}
           disabled={pending || !name.trim()}

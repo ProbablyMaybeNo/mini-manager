@@ -51,7 +51,7 @@ export function SwatchStrip({
         className={cn(
           // min-h-6 keeps the hit area ≥24px (WCAG 2.2 §2.5.8) without
           // enlarging the dense table cell (UX-008).
-          "inline-flex min-h-6 items-center border border-dashed border-purple px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.15em] text-purple hover:border-purple hover:text-purple",
+          "inline-flex min-h-6 items-center border border-dashed border-purple px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] text-purple hover:border-purple hover:text-purple",
           className,
         )}
       >
