@@ -39,7 +39,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M10 — Backgrounds to pure black** (`T4nuELRRnFtJ` "crept toward blue"; `BRFouQHNaUUx` side panel). The blue is likely the faint cyan scanline gradient on `body` in `globals.css` and/or `bg-bg-raised` panels. Cut the tint toward pure `--color-bg` where flagged; side-panel/nav background → `bg-bg`. Keep scanlines subtle if removing entirely changes the vibe — match the threads.
 
-- [ ] **M11 — Harmony dropdown + brand-name font size** (`2tgkNEd6g32w`): increase the harmony dropdown + brand-name text size, nothing else.
+- [x] **M11 — Harmony dropdown + brand-name font size** (`2tgkNEd6g32w`): increase the harmony dropdown + brand-name text size, nothing else.
 
 - [ ] **M12 — Priority indicator font matches Status/Type** (`U3vAGGyt-AjD`): make the PRIORITY indicator use the same font/size/treatment as the STATUS and TYPE chips.
 

@@ -106,7 +106,8 @@ export function ColourMatchTool({
               setHarmony(e.target.value as HarmonyKey | "off");
               setPage(0);
             }}
-            className="mt-1 w-full border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+            /* Harmony dropdown font bumped per-element (2tgkNEd6g32w). */
+            className="mt-1 w-full border border-cyan/50 bg-bg px-2 py-1.5 font-mono text-base text-fg focus:border-cyan focus:outline-none"
           >
             <option value="off">Single match</option>
             {harmonyKeys.map((k) => (
@@ -143,7 +144,8 @@ export function ColourMatchTool({
                   aria-pressed={active}
                   onClick={() => toggleBrand(b)}
                   className={cn(
-                    "truncate border px-2 py-1 text-left font-mono text-[12px] transition-colors",
+                    // Brand-name buttons bumped per-element (2tgkNEd6g32w).
+                    "truncate border px-2 py-1 text-left font-mono text-base transition-colors",
                     active
                       ? "border-green bg-green/15 text-green"
                       : "border-cyan/20 text-fg hover:border-cyan/60",
@@ -243,7 +245,8 @@ function MatchRow({
           <span aria-hidden className={cn("inline-block h-2 w-2 rounded-full", dotColor)} />
           <span className="truncate font-mono text-sm text-fg">{result.paint.name}</span>
         </div>
-        <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+        {/* Brand name in match rows bumped per-element (2tgkNEd6g32w). */}
+        <div className="font-osd text-sm uppercase tracking-[0.15em] text-fg-faint">
           {result.paint.brand}
         </div>
         {/* MM-31 — neon-green bar + "NN% color match" label */}
