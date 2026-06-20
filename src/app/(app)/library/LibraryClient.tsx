@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { LibraryView } from "@/components/library/LibraryView";
 import { AssignToRecipeDialog } from "@/components/recipe/AssignToRecipeDialog";
 import { useToast } from "@/components/kit";
-import { nearestMatches, similarInOtherBrands } from "@/mock/derive";
+import { nearestMatches, similarInOtherBrands } from "@/lib/toolMatch";
 import { COLOR_OPTIONS, colorFamilyForHue, filterPaints } from "@/mock/filterPaints";
 import { EMPTY_LIBRARY_FILTER, type LibraryFilter, type Paint, type PaintType } from "@/lib/types";
 import { loadPaints } from "@/lib/paints/loader";

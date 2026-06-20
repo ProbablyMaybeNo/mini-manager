@@ -57,12 +57,12 @@ export function PaintInfoPanelContent({
       </span>
 
       <Field label="Type">
-        <span className="font-mono text-sm text-fg">{paint.type}</span>
+        <span className="font-mono text-base text-fg">{paint.type}</span>
       </Field>
 
       <Field label="Hex">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm uppercase text-fg">{paint.hex}</span>
+          <span className="font-mono text-base uppercase text-fg">{paint.hex}</span>
           <button
             type="button"
             onClick={onCopyHex}

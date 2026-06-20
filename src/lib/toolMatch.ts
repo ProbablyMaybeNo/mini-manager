@@ -37,6 +37,31 @@ export function rankMatches(
 }
 
 /**
+ * Closest paints to a given catalog paint, across ALL brands, excluding the
+ * paint itself. CIEDE2000-ranked — the library detail panel's "Match — closest
+ * across brands" list. (Replaces the hue-only `mock/derive` heuristic, which
+ * ranked greys/black/white as the top match for any saturated colour because
+ * they share hue 0 — O9MuXo7ZQdM-.)
+ */
+export function nearestMatches(target: Paint, pool: Paint[], n = 4): MatchResult[] {
+  return pool
+    .filter((p) => p.id !== target.id)
+    .map((p) => ({ paint: p, distanceScore: deltaE2000Hex(target.hex, p.hex) }))
+    .sort((a, b) => a.distanceScore - b.distanceScore)
+    .slice(0, n);
+}
+
+/** Closest CIEDE2000 equivalents from OTHER brands (excludes self + same brand). */
+export function similarInOtherBrands(target: Paint, pool: Paint[], n = 4): Paint[] {
+  return pool
+    .filter((p) => p.id !== target.id && p.brand !== target.brand)
+    .map((p) => ({ p, d: deltaE2000Hex(target.hex, p.hex) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, n)
+    .map((x) => x.p);
+}
+
+/**
  * Ranked CIEDE2000 matches with a multi-brand filter (empty list = all
  * brands). Powers the Color Match tool's brand chips + pagination (it asks
  * for a large `limit` and pages client-side).
