@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { closestPaint, rankMatches, rankMatchesMulti } from "@/lib/toolMatch";
+import {
+  closestPaint,
+  nearestMatches,
+  rankMatches,
+  rankMatchesMulti,
+  similarInOtherBrands,
+} from "@/lib/toolMatch";
 import type { Paint } from "@/lib/types";
 
 function paint(id: string, brand: string, hex: string): Paint {
@@ -59,5 +65,49 @@ describe("rankMatchesMulti", () => {
 
   test("respects the limit", () => {
     expect(rankMatchesMulti("#0000ff", pool, [], 2)).toHaveLength(2);
+  });
+});
+
+describe("nearestMatches (library panel)", () => {
+  // O9MuXo7ZQdM- — a saturated red must surface reddish paints, never
+  // black/white. The old hue-only heuristic ranked greys first because they
+  // share hue 0 with pure red.
+  const red = paint("red", "Citadel", "#ff0000");
+  const withGreys: Paint[] = [
+    red,
+    paint("black", "Vallejo", "#000000"),
+    paint("white", "Vallejo", "#ffffff"),
+    paint("crimson", "Army Painter", "#e01818"),
+    paint("blue", "Citadel", "#0000ff"),
+  ];
+
+  test("excludes the paint itself", () => {
+    expect(nearestMatches(red, withGreys, 4).some((m) => m.paint.id === "red")).toBe(false);
+  });
+
+  test("ranks a perceptually-near red above black and white", () => {
+    const top = nearestMatches(red, withGreys, 1)[0];
+    expect(top?.paint.id).toBe("crimson");
+  });
+
+  test("does not rank black or white as the closest match to red", () => {
+    expect(nearestMatches(red, withGreys, 1)[0]?.paint.id).not.toBe("black");
+    expect(nearestMatches(red, withGreys, 1)[0]?.paint.id).not.toBe("white");
+  });
+});
+
+describe("similarInOtherBrands", () => {
+  const red = paint("red", "Citadel", "#ff0000");
+  const withGreys: Paint[] = [
+    red,
+    paint("citadel-crimson", "Citadel", "#e01818"), // same brand → excluded
+    paint("ap-crimson", "Army Painter", "#e01818"),
+    paint("vallejo-black", "Vallejo", "#000000"),
+  ];
+
+  test("excludes self and same-brand paints, ranks by perceptual distance", () => {
+    const res = similarInOtherBrands(red, withGreys, 4);
+    expect(res.every((p) => p.brand !== "Citadel")).toBe(true);
+    expect(res[0]?.id).toBe("ap-crimson");
   });
 });
