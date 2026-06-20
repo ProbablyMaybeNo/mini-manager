@@ -45,7 +45,9 @@ test.describe("M11 — Dashboard real-data features", () => {
 
     await nameField.fill(eventName);
     await page.locator('input[name="event-date"]').fill("2026-12-25");
-    await page.getByLabel(/event kind/i).selectOption("tournament");
+    // Event kind is a kit Listbox (combobox), not a native <select>.
+    await page.getByRole("combobox", { name: /event kind/i }).click();
+    await page.getByRole("option", { name: /tournament/i }).click();
     await page.getByRole("button", { name: /^Add$/ }).click();
 
     // The new event renders in the bottom "Upcoming events" ticker.
