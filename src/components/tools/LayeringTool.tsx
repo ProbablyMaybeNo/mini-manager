@@ -150,9 +150,10 @@ export function LayeringTool({
                 })}
               </ol>
               <div className="flex flex-wrap gap-2">
-                <Button onClick={() => onSavePalette(ladder)}>Save Palette</Button>
+                {/* +COLOR SCHEME → neon green; +RECIPE → pastel purple (CiBUwVgwwQRD). */}
+                <Button variant="add" onClick={() => onSavePalette(ladder)}>Save Palette</Button>
                 <Button
-                  variant="secondary"
+                  variant="attach"
                   onClick={() => onSendToRecipe(ladder.map(closestPaint).filter((p): p is Paint => p != null))}
                 >
                   Send to Recipe

@@ -36,6 +36,12 @@ const button = cva(
           "border border-green bg-green text-bg hover:bg-green/85 glow-green hover:shadow-[0_0_6px_rgba(81,253,128,0.45),0_8px_18px_-6px_rgba(81,253,128,0.5)]",
         addWishlist:
           "border border-yellow bg-yellow text-bg hover:bg-yellow/85 glow-yellow hover:shadow-[0_0_6px_rgba(238,249,150,0.45),0_8px_18px_-6px_rgba(238,249,150,0.5)]",
+        // Canonical "+ Attach" affordance — pastel purple, so an attach/assign
+        // action reads distinctly from a neon-green add (9lgIwII2oBy7 / foqbcZx93a6F
+        // / t7doCednL8MP / CiBUwVgwwQRD). Button FONT stays DePixel Klein (the
+        // VT323 ask in those threads is superseded by Ross's ruling #1).
+        attach:
+          "border border-purple bg-purple text-bg hover:bg-purple/85 glow-purple hover:shadow-[0_0_6px_rgba(155,128,220,0.45),0_8px_18px_-6px_rgba(155,128,220,0.5)]",
 
         /* ---- Solid fills (colour fill + black text) ---- */
         solidCyan: "border border-cyan bg-cyan text-bg hover:bg-cyan/85 glow-cyan",

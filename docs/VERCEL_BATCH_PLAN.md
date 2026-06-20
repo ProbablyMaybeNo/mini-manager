@@ -33,7 +33,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M7 — Paint cards: bigger squares + fonts** (`1wGf-tbEKkh_`, `9OIIQF3jUrz2`): increase the paint/colour square size; set the **layer** text to VT323 (`font-body2`) and the **paint name** to "Flexi IBM VGA True" (`font-mono`); increase the Flexi (paint-name) size ~50%. Brand-acronym-in-corner idea from `9OIIQF3jUrz2` is optional — only if straightforward, else note it.
 
-- [ ] **M8 — "+ Attach" / add-button consolidation** (`9lgIwII2oBy7`, `foqbcZx93a6F`, `t7doCednL8MP`, `CiBUwVgwwQRD`): standardise attach/add affordances as **pastel purple "+ Attach"** (KEEP the DePixel Klein button font — do NOT use VT323). `+COLOR SCHEME` → neon green; `+RECIPE` → pastel purple; `share` → neon green. Use the canonical `Button`/`IconButton` variants where possible.
+- [x] **M8 — "+ Attach" / add-button consolidation** (`9lgIwII2oBy7`, `foqbcZx93a6F`, `t7doCednL8MP`, `CiBUwVgwwQRD`): standardise attach/add affordances as **pastel purple "+ Attach"** (KEEP the DePixel Klein button font — do NOT use VT323). `+COLOR SCHEME` → neon green; `+RECIPE` → pastel purple; `share` → neon green. Use the canonical `Button`/`IconButton` variants where possible.
 
 - [ ] **M9 — Bright-white text** (`1Xq1P5W3Yvzq`, `mWGF8f6O1IEQ`): make the flagged page subtitle / text bright white (`text-fg`), and for `mWGF` write a short, informative per-page description under the title (1–2 lines summarising that page's features). Target via the threads' selectors.
 
