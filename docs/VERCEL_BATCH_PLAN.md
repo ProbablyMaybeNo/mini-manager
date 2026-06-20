@@ -31,7 +31,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M6 — Completion bar + % font +50%** (`kdV6XB6eFsRS`) on /projects (the progress bar value + label). Per-element size bump only.
 
-- [ ] **M7 — Paint cards: bigger squares + fonts** (`1wGf-tbEKkh_`, `9OIIQF3jUrz2`): increase the paint/colour square size; set the **layer** text to VT323 (`font-body2`) and the **paint name** to "Flexi IBM VGA True" (`font-mono`); increase the Flexi (paint-name) size ~50%. Brand-acronym-in-corner idea from `9OIIQF3jUrz2` is optional — only if straightforward, else note it.
+- [x] **M7 — Paint cards: bigger squares + fonts** (`1wGf-tbEKkh_`, `9OIIQF3jUrz2`): increase the paint/colour square size; set the **layer** text to VT323 (`font-body2`) and the **paint name** to "Flexi IBM VGA True" (`font-mono`); increase the Flexi (paint-name) size ~50%. Brand-acronym-in-corner idea from `9OIIQF3jUrz2` is optional — only if straightforward, else note it.
 
 - [ ] **M8 — "+ Attach" / add-button consolidation** (`9lgIwII2oBy7`, `foqbcZx93a6F`, `t7doCednL8MP`, `CiBUwVgwwQRD`): standardise attach/add affordances as **pastel purple "+ Attach"** (KEEP the DePixel Klein button font — do NOT use VT323). `+COLOR SCHEME` → neon green; `+RECIPE` → pastel purple; `share` → neon green. Use the canonical `Button`/`IconButton` variants where possible.
 

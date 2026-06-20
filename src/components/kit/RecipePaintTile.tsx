@@ -29,8 +29,9 @@ export function RecipePaintTile({
   className?: string;
 }) {
   const ink = readableText(hex);
+  // Bigger paint squares (1wGf-tbEKkh_) so the name reads comfortably inside.
   const dim =
-    size === "sm" ? "h-16 w-16" : size === "lg" ? "h-28 w-28" : "h-20 w-20";
+    size === "sm" ? "h-20 w-20" : size === "lg" ? "h-36 w-36" : "h-28 w-28";
 
   const content = (
     <span
@@ -44,10 +45,10 @@ export function RecipePaintTile({
       <span className="truncate label-osd opacity-90">
         {brand ?? " "}
       </span>
-      <span className="line-clamp-2 break-words font-mono text-[12px] font-semibold">
+      <span className="line-clamp-2 break-words font-mono text-[18px] font-semibold">
         {name}
       </span>
-      <span className="truncate label-osd opacity-90">
+      <span className="truncate font-body2 text-[14px] uppercase tracking-[0.12em] opacity-90">
         {layer || " "}
       </span>
     </span>
