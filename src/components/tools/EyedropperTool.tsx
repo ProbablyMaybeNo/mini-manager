@@ -10,14 +10,21 @@ import type { Paint } from "@/lib/types";
 import { EyedropperPins, type Pin } from "./EyedropperPins";
 import { CameraSampler, isCameraSamplerSupported } from "./CameraSampler";
 
-const SWATCH_COUNT = 6;
+// Dropper-slot count is user-controllable via the + / − buttons (wBJeqQHQLK4g):
+// start at 3, clamp 1–8. Drives how many dominant colours we extract.
+const DEFAULT_DROPPERS = 3;
+const MIN_DROPPERS = 1;
+const MAX_DROPPERS = 8;
+
+const clampDroppers = (n: number) =>
+  Math.max(MIN_DROPPERS, Math.min(MAX_DROPPERS, n));
 
 /**
  * Color Dropper (MM-34). Drop / paste / capture an image → auto k-means
- * extraction of 6 dominant colours, shown as draggable pins on an image
- * preview that re-sample on drag. Live camera sampler too. Each swatch
- * resolves its closest library paint. Ported from old
- * `components/tools/eyedropper/*` into the terminal UI.
+ * extraction of N dominant colours (N set by the + / − dropper controls,
+ * default 3), shown as draggable pins on an image preview that re-sample on
+ * drag. Live camera sampler too. Each swatch resolves its closest library
+ * paint. Ported from old `components/tools/eyedropper/*` into the terminal UI.
  */
 export function EyedropperTool({
   closestPaint,
@@ -34,6 +41,7 @@ export function EyedropperTool({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [dropperCount, setDropperCount] = useState(DEFAULT_DROPPERS);
 
   // Feature-detect after mount to avoid an SSR hydration mismatch.
   const [mounted, setMounted] = useState(false);
@@ -47,6 +55,26 @@ export function EyedropperTool({
   }, [previewUrl]);
 
   const swatches = pins.map((p) => p.hex);
+
+  // Extract `count` dominant colours from an already-sampled image and place
+  // them as pins — shared by the initial drop and the + / − re-extraction so
+  // every dropper slot keeps the identical palette-extraction behaviour.
+  function extractPins(image: SampledImage, count: number) {
+    const extracted = extractDominantColors(image.pixels, image.width, image.height, {
+      k: count,
+    });
+    setPins(placePins(image, extracted));
+  }
+
+  // + / − dropper slot controls: clamp 1–8, then re-extract against the current
+  // image (if any) so the palette immediately reflects the new slot count.
+  function changeDroppers(delta: number) {
+    setDropperCount((prev) => {
+      const next = clampDroppers(prev + delta);
+      if (next !== prev && sampled) extractPins(sampled, next);
+      return next;
+    });
+  }
 
   async function handleFile(file?: File | null) {
     if (!file) return;
@@ -65,10 +93,7 @@ export function EyedropperTool({
     try {
       const image = await imageToPixels(file, { maxEdge: 512 });
       setSampled(image);
-      const extracted = extractDominantColors(image.pixels, image.width, image.height, {
-        k: SWATCH_COUNT,
-      });
-      setPins(placePins(image, extracted));
+      extractPins(image, dropperCount);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not decode the image.");
     } finally {
@@ -87,7 +112,7 @@ export function EyedropperTool({
   function handleCameraSample(hex: string) {
     setError(null);
     setPins((prev) =>
-      prev.length >= SWATCH_COUNT ? prev : [...prev, { x: 0, y: 0, hex: hex.toUpperCase() }],
+      prev.length >= dropperCount ? prev : [...prev, { x: 0, y: 0, hex: hex.toUpperCase() }],
     );
   }
 
@@ -157,7 +182,7 @@ export function EyedropperTool({
               <Button
                 variant="secondary"
                 onClick={() => setCameraOpen(true)}
-                disabled={busy || pins.length >= SWATCH_COUNT}
+                disabled={busy || pins.length >= dropperCount}
               >
                 Use camera
               </Button>
@@ -206,17 +231,44 @@ export function EyedropperTool({
             );
           })
         )}
-        <div className="flex flex-wrap gap-2">
-          <Button disabled={swatches.length === 0} onClick={() => onSavePalette(swatches)}>
-            Save
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={swatches.length === 0}
-            onClick={() => onSendToRecipe(swatches.map(closestPaint).filter((p): p is Paint => p != null))}
-          >
-            Send to Recipe
-          </Button>
+        {/* + / − dropper controls on the left (where Save/Send used to sit per
+            Ross's sketch), Save / Send pushed to the right (wBJeqQHQLK4g). */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Remove a dropper"
+              disabled={dropperCount <= MIN_DROPPERS}
+              onClick={() => changeDroppers(-1)}
+              className="font-button text-button h-7 w-7 border border-cyan/40 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+            >
+              −
+            </button>
+            <span className="font-num2 text-num2 min-w-[3.5rem] text-center text-fg tabular-nums">
+              {dropperCount} {dropperCount === 1 ? "dropper" : "droppers"}
+            </span>
+            <button
+              type="button"
+              aria-label="Add a dropper"
+              disabled={dropperCount >= MAX_DROPPERS}
+              onClick={() => changeDroppers(1)}
+              className="font-button text-button h-7 w-7 border border-cyan/40 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+            >
+              +
+            </button>
+          </div>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button disabled={swatches.length === 0} onClick={() => onSavePalette(swatches)}>
+              Save
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={swatches.length === 0}
+              onClick={() => onSendToRecipe(swatches.map(closestPaint).filter((p): p is Paint => p != null))}
+            >
+              Send to Recipe
+            </Button>
+          </div>
         </div>
       </Panel>
 

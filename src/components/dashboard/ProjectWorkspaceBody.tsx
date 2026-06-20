@@ -220,11 +220,13 @@ export function ProjectWorkspaceBody({
             }
           />
         </div>
-        <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="label-osd text-fg">
-            Overall progress
+        {/* Overall-progress KPI stripped to a centered percentage number only
+            (S3lZ40vuocCL) — the label + bar chrome Ross flagged as too busy is
+            dropped; the number stays a Number-1 category readout. */}
+        <div className="flex items-center justify-center border border-cyan/20 p-2">
+          <span className="font-num1 text-num1 leading-none text-fg tabular-nums">
+            {project.completionPercent}%
           </span>
-          <ProgressBar percent={project.completionPercent} />
         </div>
       </div>
 

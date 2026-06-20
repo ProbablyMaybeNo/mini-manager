@@ -32,10 +32,10 @@ export function ColorMapRail({
       className="flex min-h-0 w-full shrink-0 flex-col p-3 lg:w-[180px]"
     >
       <div className="mb-2 flex flex-col gap-1 label-osd text-fg">
-        <span className="text-fg">1 cell = 1 paint</span>
+        <span className="text-fg">1 dot = 1 paint</span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 bg-yellow" /> Wishlist
-          <span className="ml-2 h-2 w-2 bg-green" /> Owned
+          <span className="h-2.5 w-2.5 rounded-full border border-black bg-yellow" /> Wishlist
+          <span className="ml-2 h-2.5 w-2.5 rounded-full border border-black bg-green" /> Owned
         </span>
       </div>
       <button
@@ -64,11 +64,11 @@ export function ColorMapRail({
           .map((m) => (
             <span
               key={m.id}
-              // Bigger coverage indicators (rg1uauzAsVG4): a wider, taller block
-              // that spans most of the rail so owned/wishlist coverage — and the
-              // holes between — read at a glance, even if one block visually
-              // covers a little more than its single paint's exact hue.
-              className="absolute right-0 left-1 h-2 -translate-y-1/2 rounded-[1px]"
+              // Circle/dot coverage indicators (7RFkgNxn5Cl6): green = owned,
+              // yellow = wishlist, each with a 2px black stroke so they read at a
+              // glance against the spectrum. Sized a touch larger than the exact
+              // paint position for scannability — owned dots sort on top.
+              className="absolute left-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-black"
               style={{
                 top: `${m.top}%`,
                 backgroundColor: m.owned ? "#51fd80" : "#eef996",

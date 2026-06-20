@@ -109,8 +109,11 @@ export function FocusView({
 
       {/* RECIPE box — reordered to a tidy responsive grid (MM-22) instead of a
           single horizontal-scroll strip, so the paint cards wrap on narrow
-          benches and read top-to-bottom. */}
-      <Panel label="RECIPE" className="p-4">
+          benches and read top-to-bottom. Reading order (RuYiw7plQqDV): the
+          "RECIPE BOX" heading sits first, then the empty-state line, then the
+          cards below. */}
+      <Panel label="RECIPE" className="flex flex-col gap-3 p-4">
+        <h2 className="font-h2 text-h2 uppercase text-fg">Recipe Box</h2>
         <div className="flex flex-wrap gap-3">
           {recipe && recipe.slots.length > 0 ? (
             recipe.slots.map((slot, i) => <PaintCard key={i} slot={slot} />)
