@@ -67,7 +67,7 @@ export function PromptDialog({
       }
     >
       {label && (
-        <label className="mb-2 block font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+        <label className="mb-2 block label-osd tracking-[0.18em] text-fg">
           {label}
         </label>
       )}
@@ -81,7 +81,7 @@ export function PromptDialog({
         onKeyDown={(e) => e.key === "Enter" && submit()}
       />
       {error && (
-        <p className="mt-2 font-mono text-xs text-red" role="alert">
+        <p className="mt-2 font-body text-body text-red" role="alert">
           ▸ {error}
         </p>
       )}

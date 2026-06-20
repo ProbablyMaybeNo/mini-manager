@@ -50,8 +50,8 @@ export function PaintListTable({
     return (
       <div className="h-full overflow-y-auto p-4">
         <div className="flex flex-col items-center gap-2 py-16 text-center">
-          <p className="font-osd text-sm uppercase tracking-[0.18em] text-fg-dim">No paints match</p>
-          <p className="font-mono text-xs text-fg-faint">Adjust or clear your filters.</p>
+          <p className="label-osd text-fg">No paints match</p>
+          <p className="font-body text-body text-fg">Adjust or clear your filters.</p>
         </div>
       </div>
     );
@@ -69,7 +69,7 @@ export function PaintListTable({
                 key={i}
                 role="columnheader"
                 style={cellStyle(c)}
-                className="px-3 py-2 text-left font-osd text-[12px] uppercase tracking-[0.18em] text-fg-faint"
+                className="px-3 py-2 text-left label-osd tracking-[0.18em] text-fg"
               >
                 {c.label}
               </div>
@@ -107,7 +107,7 @@ export function PaintListTable({
                   <button
                     type="button"
                     onClick={() => onOpenPaint(p)}
-                    className="truncate font-mono text-sm text-fg hover:text-cyan"
+                    className="truncate font-body text-body text-fg hover:text-cyan"
                   >
                     {p.name}
                   </button>
@@ -115,14 +115,14 @@ export function PaintListTable({
                 <div
                   role="cell"
                   style={cellStyle(COLS[2]!)}
-                  className="truncate px-3 py-2 font-mono text-xs text-fg-dim"
+                  className="truncate px-3 py-2 font-body text-body text-fg"
                 >
                   {p.brand}
                 </div>
                 <div
                   role="cell"
                   style={cellStyle(COLS[3]!)}
-                  className="truncate px-3 py-2 font-mono text-xs text-fg-dim"
+                  className="truncate px-3 py-2 font-body text-body text-fg"
                 >
                   {p.line}
                 </div>
@@ -132,7 +132,7 @@ export function PaintListTable({
                 <div
                   role="cell"
                   style={cellStyle(COLS[5]!)}
-                  className="px-3 py-2 font-mono text-xs uppercase tabular-nums text-fg-dim"
+                  className="px-3 py-2 font-body text-body uppercase tabular-nums text-fg"
                 >
                   {p.hex}
                 </div>

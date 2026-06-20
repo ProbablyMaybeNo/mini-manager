@@ -35,7 +35,7 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-flex items-center border px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.15em]",
+        "inline-flex items-center border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em]",
         accentBorder[accent],
         accentText[accent],
         className,
@@ -68,7 +68,7 @@ export function PriorityTag({ priority }: { priority: Priority }) {
   return (
     <span
       className={cn(
-        "font-osd text-[12px] uppercase tracking-[0.15em]",
+        "font-button text-button uppercase tracking-[0.15em]",
         accentText[priorityAccent[priority]],
       )}
     >

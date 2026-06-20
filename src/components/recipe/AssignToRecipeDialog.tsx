@@ -82,7 +82,7 @@ export function AssignToRecipeDialog({
       title={count === 1 ? "Assign to recipe" : "Send palette to recipe"}
       breadcrumb="RECIPES"
     >
-      <p className="mb-3 font-mono text-xs text-fg-dim">
+      <p className="mb-3 font-body text-body text-fg">
         {count === 1
           ? "Add this paint to an existing recipe, or start a new one."
           : `Add ${count} colours to a recipe, or start a new one.`}
@@ -90,9 +90,9 @@ export function AssignToRecipeDialog({
 
       <div className="mb-4 flex flex-col gap-2">
         {recipes === null ? (
-          <p className="font-mono text-xs text-fg-faint">▸ Loading recipes…</p>
+          <p className="font-body text-body text-fg">▸ Loading recipes…</p>
         ) : recipes.length === 0 ? (
-          <p className="font-mono text-xs text-fg-faint">
+          <p className="font-body text-body text-fg">
             No recipes yet — create one below.
           </p>
         ) : (
@@ -103,7 +103,7 @@ export function AssignToRecipeDialog({
                 type="button"
                 disabled={pending}
                 onClick={() => send({ targetRecipeId: r.id }, r.name)}
-                className="border border-cyan/30 px-3 py-2 text-left font-mono text-sm text-fg hover:border-cyan hover:bg-cyan/10 disabled:opacity-50"
+                className="border border-cyan/30 px-3 py-2 text-left font-body text-body text-fg hover:border-cyan hover:bg-cyan/10 disabled:opacity-50"
               >
                 {r.name}
               </button>
@@ -136,7 +136,7 @@ export function AssignToRecipeDialog({
       </div>
 
       {error && (
-        <p className="mt-3 font-mono text-xs text-red" role="alert">
+        <p className="mt-3 font-body text-body text-red" role="alert">
           ▸ {error}
         </p>
       )}

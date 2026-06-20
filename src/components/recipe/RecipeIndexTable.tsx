@@ -43,7 +43,7 @@ export function RecipeIndexTable({
               <th
                 key={c}
                 scope="col"
-                className="px-3 py-2 text-left font-osd text-[12px] uppercase tracking-[0.18em] text-fg-faint"
+                className="px-3 py-2 text-left label-osd uppercase tracking-[0.18em] text-fg-faint"
               >
                 {c}
               </th>
@@ -67,7 +67,7 @@ export function RecipeIndexTable({
                     e.stopPropagation();
                     onOpenRecipe(r);
                   }}
-                  className="font-mono text-base text-fg hover:text-cyan"
+                  className="font-body text-body text-fg hover:text-cyan"
                 >
                   {r.name}
                 </button>

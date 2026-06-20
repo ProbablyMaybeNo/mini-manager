@@ -67,7 +67,7 @@ function Section({
       <h3 className="label-osd text-cyan">
         {label}
       </h3>
-      {hint && <p className="-mt-1 font-mono text-[12px] text-fg-faint">{hint}</p>}
+      {hint && <p className="-mt-1 font-body text-body text-fg">{hint}</p>}
       {children}
     </section>
   );
@@ -76,8 +76,8 @@ function Section({
 function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-1 border border-cyan/20 px-2 py-3">
-      <span className="font-display text-lg text-fg tabular-nums">{value}</span>
-      <span className="label-osd text-fg-faint">
+      <span className="font-num2 text-num2 text-fg tabular-nums">{value}</span>
+      <span className="label-osd text-fg">
         {label}
       </span>
     </div>
@@ -171,20 +171,20 @@ export function ProjectWorkspaceBody({
   return (
     <div className="flex flex-col gap-5">
       {/* Project name */}
-      <h2 className="font-display text-2xl text-green text-glow-green">
+      <h2 className="font-h1 text-h1 text-green text-glow-green">
         {project.title}
       </h2>
 
       {/* Meta row: type · status · priority · progress */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="label-osd text-fg-faint">
+          <span className="label-osd text-fg">
             Type
           </span>
           <TypeChip type={project.type} />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="label-osd text-fg-faint">
+          <span className="label-osd text-fg">
             Status
           </span>
           <Listbox
@@ -199,7 +199,7 @@ export function ProjectWorkspaceBody({
           />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="label-osd text-fg-faint">
+          <span className="label-osd text-fg">
             Priority
           </span>
           {/* PRIORITY matches STATUS/TYPE (U3vAGGyt-AjD): same accent-tinted,
@@ -221,7 +221,7 @@ export function ProjectWorkspaceBody({
           />
         </div>
         <div className="flex flex-col gap-1 border border-cyan/20 p-2">
-          <span className="label-osd text-fg-faint">
+          <span className="label-osd text-fg">
             Overall progress
           </span>
           <ProgressBar percent={project.completionPercent} />
@@ -229,7 +229,7 @@ export function ProjectWorkspaceBody({
       </div>
 
       {(detail?.faction || detail?.game) && (
-        <p className="font-mono text-[12px] text-fg-dim">
+        <p className="font-body text-body text-fg">
           {[detail.faction, detail.game].filter(Boolean).join(" · ")}
         </p>
       )}
@@ -270,7 +270,7 @@ export function ProjectWorkspaceBody({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-cyan/30 label-osd text-fg-faint">
+                <tr className="border-b border-cyan/30 label-osd text-fg">
                   <th className="py-1 pr-2">Name</th>
                   <th className="px-1">Type</th>
                   <th className="px-1">Status</th>
@@ -284,7 +284,7 @@ export function ProjectWorkspaceBody({
                   const total = c.modelCount ?? 0;
                   const done = c.modelsComplete ?? 0;
                   return (
-                    <tr key={c.id} className="border-b border-fg/10 font-mono text-[12px]">
+                    <tr key={c.id} className="border-b border-fg/10 font-body text-body">
                       <td className="py-1.5 pr-2 text-fg">{c.title}</td>
                       <td className="px-1">
                         <TypeChip type={c.type} />
@@ -309,11 +309,11 @@ export function ProjectWorkspaceBody({
                                 }),
                               )
                             }
-                            className="border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                            className="font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
                           >
                             −
                           </button>
-                          <span className="min-w-[2.5rem] text-center text-fg-dim">
+                          <span className="font-num2 text-num2 min-w-[2.5rem] text-center text-fg">
                             {done}/{total}
                           </span>
                           <button
@@ -328,7 +328,7 @@ export function ProjectWorkspaceBody({
                                 }),
                               )
                             }
-                            className="border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                            className="font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
                           >
                             +
                           </button>
@@ -344,7 +344,7 @@ export function ProjectWorkspaceBody({
             </table>
           </div>
         ) : (
-          <p className="font-mono text-[12px] text-fg-faint">No sub-projects yet.</p>
+          <p className="font-body text-body text-fg">No sub-projects yet.</p>
         )}
 
         {addingChild ? (
@@ -360,7 +360,7 @@ export function ProjectWorkspaceBody({
               value={childType}
               onChange={(e) => setChildType(e.target.value as SubProjectType)}
               aria-label="Sub-project type"
-              className="border border-cyan/50 bg-bg px-2 py-1.5 font-mono text-xs text-fg focus:outline-none"
+              className="border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-fg focus:outline-none"
             >
               {SUBPROJECT_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -369,7 +369,7 @@ export function ProjectWorkspaceBody({
               ))}
             </select>
             <label className="flex flex-col gap-1">
-              <span className="label-osd text-fg-faint">
+              <span className="label-osd text-fg">
                 Models
               </span>
               <input
@@ -378,7 +378,7 @@ export function ProjectWorkspaceBody({
                 value={childCount}
                 onChange={(e) => setChildCount(Number(e.target.value) || 1)}
                 aria-label="Sub-project model count"
-                className="w-16 border border-cyan/50 bg-bg px-2 py-1.5 font-mono text-xs text-fg focus:outline-none"
+                className="w-16 border border-cyan/50 bg-bg px-2 py-1.5 font-num2 text-num2 text-fg focus:outline-none"
               />
             </label>
             <Button type="submit" size="sm" disabled={pending}>
@@ -415,10 +415,10 @@ export function ProjectWorkspaceBody({
           }
           rows={3}
           placeholder="Focus next on Terminators edge highlights…"
-          className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+          className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-body text-body text-fg focus:border-cyan focus:outline-none"
         />
         <div className="flex items-center gap-2">
-          <span className="label-osd text-fg-faint">
+          <span className="label-osd text-fg">
             Target date
           </span>
           <DateField
@@ -464,7 +464,7 @@ export function ProjectWorkspaceBody({
         </div>
       </Section>
 
-      {error && <p className="font-mono text-[12px] text-red">▸ {error}</p>}
+      {error && <p className="font-body text-body text-red">▸ {error}</p>}
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2 border-t border-cyan/20 pt-4">

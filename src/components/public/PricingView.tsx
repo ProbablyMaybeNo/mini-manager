@@ -17,8 +17,8 @@ export function PricingView({
       <PublicHeader />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 p-6">
         <div className="text-center">
-          <h1 className="font-display text-2xl text-cyan text-glow-cyan sm:text-3xl">PRICING</h1>
-          <p className="mt-3 font-mono text-sm text-fg-dim">
+          <h1 className="font-title text-title text-cyan text-glow-cyan">PRICING</h1>
+          <p className="mt-3 font-body text-body text-fg">
             Start free. Upgrade when your paint table outgrows it.
           </p>
         </div>
@@ -36,18 +36,18 @@ export function PricingView({
               {t.featured && (
                 <div className="flex items-center justify-between">
                   <Chip accent="purple">Limited seat</Chip>
-                  <span className="font-mono text-[12px] text-yellow">
+                  <span className="font-body text-body text-yellow">
                     {t.seatsLeft}/{t.seatsTotal} left
                   </span>
                 </div>
               )}
               <div className="flex items-baseline gap-1">
-                <span className="font-display text-xl text-fg">{t.price}</span>
-                <span className="font-mono text-xs text-fg-faint">{t.cadence}</span>
+                <span className="font-num1 text-num1 text-fg">{t.price}</span>
+                <span className="font-body text-body text-fg">{t.cadence}</span>
               </div>
               <ul className="flex flex-1 flex-col gap-2">
                 {t.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 font-mono text-xs text-fg-dim">
+                  <li key={f} className="flex items-start gap-2 font-body text-body text-fg">
                     <span className="text-green">✓</span>
                     {f}
                   </li>
@@ -72,7 +72,7 @@ export function PricingView({
           ))}
         </div>
 
-        <p className="text-center font-mono text-xs text-fg-faint">
+        <p className="text-center font-body text-body text-fg">
           Questions?{" "}
           <Link href="/" className="text-cyan hover:underline">
             Back to home

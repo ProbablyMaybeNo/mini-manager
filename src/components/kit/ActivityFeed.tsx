@@ -20,7 +20,7 @@ export function ActivityFeed({
 }) {
   if (entries.length === 0) {
     return (
-      <p className={cn("font-body2 text-element text-fg-faint", className)}>
+      <p className={cn("font-body text-body text-fg", className)}>
         No activity yet — your painting moves will show here.
       </p>
     );
@@ -33,13 +33,13 @@ export function ActivityFeed({
           <li
             key={e.id}
             className={cn(
-              "flex items-center gap-2 font-body2 text-element",
+              "flex items-center gap-2 font-body text-body",
               accentText[accent],
             )}
           >
             <StatusIcon name={e.icon as StatusIconName} size={13} />
             <span className="flex-1 truncate">{e.text}</span>
-            <span className="text-fg-faint">{e.when}</span>
+            <span className="text-fg">{e.when}</span>
           </li>
         );
       })}

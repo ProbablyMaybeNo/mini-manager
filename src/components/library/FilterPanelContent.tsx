@@ -6,7 +6,7 @@ import type { LibraryFilter } from "@/lib/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-block bg-green/20 px-2 py-0.5 font-osd text-[12px] uppercase tracking-[0.18em] text-green">
+    <span className="inline-block bg-green/20 px-2 py-0.5 label-osd text-green">
       {children}
     </span>
   );
@@ -22,7 +22,7 @@ function CheckRow({
   onToggle: () => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between py-1 font-mono text-xs text-fg-dim hover:text-fg">
+    <label className="flex cursor-pointer items-center justify-between py-1 font-body text-body text-fg hover:text-fg">
       <span className="uppercase tracking-[0.1em]">{label}</span>
       <button
         type="button"

@@ -115,19 +115,19 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
           type="button"
           onClick={() => shiftMonth(-1)}
           aria-label="Previous month"
-          className="inline-flex h-6 min-w-6 items-center justify-center px-2 font-mono text-sm text-fg-faint hover:text-cyan"
+          className="inline-flex h-6 min-w-6 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
         >
           ‹
         </button>
         {/* Month label sits between the nav arrows, not below them (yO830AqQH3Hu). */}
-        <span className="font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
+        <span className="label-osd text-cyan">
           {monthLabel}
         </span>
         <button
           type="button"
           onClick={() => shiftMonth(1)}
           aria-label="Next month"
-          className="inline-flex h-6 min-w-6 items-center justify-center px-2 font-mono text-sm text-fg-faint hover:text-cyan"
+          className="inline-flex h-6 min-w-6 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
         >
           ›
         </button>
@@ -169,7 +169,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                 aria-label="Open date picker"
                 aria-expanded={pickerOpen}
                 onClick={() => setPickerOpen((o) => !o)}
-                className="mb-px shrink-0 border border-cyan/50 px-2 py-1 font-osd text-xs text-cyan hover:bg-cyan/10"
+                className="mb-px shrink-0 border border-cyan/50 px-2 py-1 font-button text-button text-cyan hover:bg-cyan/10"
               >
                 ▦
               </button>
@@ -187,7 +187,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                         return base.toISOString().slice(0, 10);
                       })
                     }
-                    className="inline-flex h-6 min-w-6 items-center justify-center px-1 font-mono text-xs text-fg-faint hover:text-cyan"
+                    className="inline-flex h-6 min-w-6 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
                   >
                     ‹
                   </button>
@@ -201,7 +201,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                         return base.toISOString().slice(0, 10);
                       })
                     }
-                    className="inline-flex h-6 min-w-6 items-center justify-center px-1 font-mono text-xs text-fg-faint hover:text-cyan"
+                    className="inline-flex h-6 min-w-6 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
                   >
                     ›
                   </button>
@@ -219,7 +219,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             )}
           </div>
           <label className="flex flex-col gap-1">
-            <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+            <span className="label-osd text-fg">
               Kind
             </span>
             {/* Native <select> → kit Listbox so the +DATE kind picker inherits
@@ -236,7 +236,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+            <span className="label-osd text-fg">
               Notes
             </span>
             <textarea
@@ -245,18 +245,18 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
               rows={2}
               aria-label="Event notes"
               placeholder="2000pts · Grand tournament"
-              className="resize-none border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+              className="resize-none border border-cyan/50 bg-bg px-2 py-1 font-body text-body text-fg focus:border-cyan focus:outline-none"
             />
           </label>
           <span
             className={cn(
-              "font-osd text-[12px] uppercase tracking-[0.15em]",
+              "label-osd",
               accentText[eventKindAccent[kind]],
             )}
           >
             ▪ {kind}
           </span>
-          {error && <p className="font-mono text-[12px] text-red">▸ {error}</p>}
+          {error && <p className="font-body text-body text-red">▸ {error}</p>}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={busy}>
               {busy ? "Adding…" : "Add"}

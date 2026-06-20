@@ -9,13 +9,13 @@ export function PublicHeader() {
       <nav className="flex items-center gap-5">
         <Link
           href="/pricing"
-          className="font-osd text-xs uppercase tracking-[0.18em] text-fg-dim hover:text-cyan"
+          className="font-h1 text-h1 uppercase tracking-[0.18em] text-fg hover:text-cyan"
         >
           Pricing
         </Link>
         <Link
           href="/sign-in"
-          className="font-osd text-xs uppercase tracking-[0.18em] text-fg-dim hover:text-cyan"
+          className="font-h1 text-h1 uppercase tracking-[0.18em] text-fg hover:text-cyan"
         >
           Sign in
         </Link>

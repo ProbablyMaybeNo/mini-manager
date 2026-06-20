@@ -107,7 +107,7 @@ export function EyedropperTool({
               />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-element text-fg-faint">
+              <p className="font-body text-body text-fg">
                 {sampled.width} × {sampled.height} px · {pins.length} pins · drag to re-sample
               </p>
               <Button variant="danger" size="sm" onClick={reset}>
@@ -140,10 +140,10 @@ export function EyedropperTool({
                 busy && "cursor-progress opacity-60",
               )}
             >
-              <span className="font-osd text-sm uppercase tracking-[0.18em] text-cyan">
+              <span className="label-osd text-cyan">
                 ⬚ Drop or capture image
               </span>
-              <span className="font-mono text-[12px] text-fg-faint">
+              <span className="font-body text-body text-fg">
                 {busy ? "Extracting dominant colours…" : "PNG / JPG / WebP · click, drag, or paste"}
               </span>
               <input
@@ -165,7 +165,7 @@ export function EyedropperTool({
           </>
         )}
         {error && (
-          <p role="alert" className="font-mono text-[12px] text-red">
+          <p role="alert" className="font-body text-body text-red">
             {error}
           </p>
         )}
@@ -173,7 +173,7 @@ export function EyedropperTool({
 
       <Panel label="PALETTE" cornerTicks className="flex flex-col gap-3 p-5">
         {swatches.length === 0 ? (
-          <p className="py-8 text-center font-mono text-xs text-fg-faint">
+          <p className="py-8 text-center font-body text-body text-fg">
             Drop an image to auto-extract a palette, then drag the pins to re-sample.
           </p>
         ) : (
@@ -181,21 +181,21 @@ export function EyedropperTool({
             const paint = closestPaint(hex);
             return (
               <div key={`${hex}-${i}`} className="flex items-center gap-3 border border-cyan/20 p-2">
-                <span className="w-5 font-osd text-[12px] text-fg-faint">{i + 1}</span>
+                <span className="w-5 font-num2 text-num2 text-fg">{i + 1}</span>
                 <Swatch hex={hex} size="lg" />
                 <span aria-hidden className="font-osd text-fg-faint">→</span>
                 {paint ? (
                   <>
                     <Swatch hex={paint.hex} size="lg" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
-                      <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+                      <div className="truncate font-body text-body text-fg">{paint.name}</div>
+                      <div className="label-osd text-fg">
                         {paint.brand}
                       </div>
                     </div>
                   </>
                 ) : (
-                  <span className="flex-1 font-mono text-xs text-fg-faint">No match</span>
+                  <span className="flex-1 font-body text-body text-fg">No match</span>
                 )}
                 <CloseButton
                   tone="destructive"

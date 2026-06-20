@@ -136,7 +136,7 @@ export function ProjectsTable({
               : cn("hover:bg-cyan/5 focus-visible:bg-cyan/10", banded && "bg-fg/[0.02]"),
           )}
         >
-          <td className="px-3 py-2.5 font-mono text-lg text-fg">
+          <td className="px-3 py-2.5 font-body text-body text-fg">
             <div
               className="flex items-center gap-1.5"
               style={{ paddingLeft: depth * INDENT_PX }}
@@ -191,7 +191,7 @@ export function ProjectsTable({
             {/* D4 — surface the underlying model progress so the bar isn't
                 just a colour: "12/40 models" beneath the percentage. */}
             {p.modelCount != null && p.modelCount > 0 && (
-              <span className="mt-0.5 block font-mono text-[12px] tabular-nums text-fg-faint">
+              <span className="mt-0.5 block font-body text-body tabular-nums text-fg">
                 {p.modelsComplete ?? Math.round((p.completionPercent / 100) * p.modelCount)}/
                 {p.modelCount} models
               </span>
@@ -201,11 +201,11 @@ export function ProjectsTable({
             {/* Logged focus time, rolled up over sub-projects (UX-011).
                 Dim "—" when nothing's been logged so empty rows stay quiet. */}
             {rollupProjectMinutes(p, projectMinutes) > 0 ? (
-              <span className="font-mono text-xs tabular-nums text-cyan">
+              <span className="font-num2 text-num2 tabular-nums text-cyan">
                 {formatMinutes(rollupProjectMinutes(p, projectMinutes))}
               </span>
             ) : (
-              <span className="font-mono text-xs text-fg-faint">—</span>
+              <span className="font-body text-body text-fg">—</span>
             )}
           </td>
           <td className="w-20 px-3 py-2.5">
@@ -249,7 +249,7 @@ export function ProjectsTable({
                 className="flex items-center gap-2"
                 style={{ paddingLeft: (depth + 1) * INDENT_PX }}
               >
-                <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-green">
+                <span className="label-osd text-green">
                   + {childType}
                 </span>
                 <Input
@@ -297,7 +297,7 @@ export function ProjectsTable({
               <th
                 key={c || `col-${i}`}
                 scope="col"
-                className="px-3 py-2 text-left font-osd text-[12px] uppercase tracking-[0.18em] text-fg-faint"
+                className="px-3 py-2 text-left label-osd tracking-[0.18em] text-fg"
               >
                 {c}
               </th>

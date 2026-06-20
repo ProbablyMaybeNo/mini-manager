@@ -135,7 +135,7 @@ export function ColorPicker({
       role="region"
       aria-label={contextLabel ? `Color picker for ${contextLabel}` : "Color picker"}
     >
-      <p className="font-mono text-element text-fg-faint">
+      <p className="font-body text-body text-fg">
         {mode === "edit-slot"
           ? "▸ Picking a colour REPLACES this slot's paint."
           : "▸ Picking a colour ADDS a new slot."}
@@ -143,7 +143,7 @@ export function ColorPicker({
 
       {/* Sub-panel 1 — wheel + harmony + sliders */}
       <section aria-labelledby="cp-wheel-heading" className="flex flex-col gap-3">
-        <h3 id="cp-wheel-heading" className="font-osd text-[12px] uppercase tracking-[0.18em] text-cyan">
+        <h3 id="cp-wheel-heading" className="label-osd text-cyan">
           Wheel
         </h3>
         <PixelWheelRing hue={hue} onChange={setHue} />
@@ -153,9 +153,9 @@ export function ColorPicker({
             className="block h-8 w-8 border-2 border-fg/30"
             style={{ background: pickedHex }}
           />
-          <span className="font-mono text-xs text-fg-dim">
+          <span className="font-body text-body text-fg">
             {pickedHex}
-            {band ? <span className="text-fg-faint"> · {band}</span> : null}
+            {band ? <span className="text-fg"> · {band}</span> : null}
           </span>
           <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
             Use this colour
@@ -163,11 +163,11 @@ export function ColorPicker({
         </div>
 
         <label className="flex items-center gap-2">
-          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">Harmony</span>
+          <span className="label-osd text-fg">Harmony</span>
           <select
             value={harmony}
             onChange={(e) => setHarmony(e.target.value as ColorPickerHarmony)}
-            className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
+            className="border border-cyan/50 bg-bg px-2 py-1 font-body text-body text-fg focus:border-cyan focus:outline-none"
           >
             {COLOR_PICKER_HARMONY_LABELS.map((h) => (
               <option key={h.key} value={h.key}>
@@ -194,7 +194,7 @@ export function ColorPicker({
 
         <Slider label="Saturation" value={Math.round(sat)} onChange={setSat} />
         {sat === 0 && (
-          <p className="font-mono text-element text-fg-faint">
+          <p className="font-body text-body text-fg">
             Greyscale — drag saturation up to pick a colour from the wheel.
           </p>
         )}
@@ -205,7 +205,7 @@ export function ColorPicker({
 
       {/* Sub-panel 2 — library */}
       <section aria-labelledby="cp-library-heading" className="flex flex-col gap-3">
-        <h3 id="cp-library-heading" className="font-osd text-[12px] uppercase tracking-[0.18em] text-cyan">
+        <h3 id="cp-library-heading" className="label-osd text-cyan">
           Library
         </h3>
         <input
@@ -214,10 +214,10 @@ export function ColorPicker({
           onChange={(e) => setTextQuery(e.target.value)}
           placeholder="Search by paint name, brand, or line…"
           aria-label="Filter library paints"
-          className="w-full border border-cyan/50 bg-bg px-3 py-2 font-mono text-xs text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+          className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
         />
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[12px] text-fg-faint">
+          <span className="font-body text-body text-fg">
             {catalogLoading
               ? "Loading catalog…"
               : `${libraryRows.length} match${libraryRows.length === 1 ? "" : "es"} · ΔE ≤ ${
@@ -242,20 +242,20 @@ export function ColorPicker({
               >
                 <Swatch hex={m.paint.hex} />
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate font-mono text-xs text-fg">{m.paint.name}</span>
-                  <span className="truncate font-mono text-[12px] text-fg-faint">
+                  <span className="truncate font-body text-body text-fg">{m.paint.name}</span>
+                  <span className="truncate font-body text-body text-fg">
                     {m.paint.brand}
                     {m.paint.line ? ` · ${m.paint.line}` : ""}
                   </span>
                 </span>
-                <span className="shrink-0 font-mono text-[12px] tabular-nums text-fg-faint">
+                <span className="shrink-0 font-body text-body tabular-nums text-fg">
                   ΔE {m.deltaE.toFixed(1)}
                 </span>
               </button>
             </li>
           ))}
           {!catalogLoading && libraryRows.length === 0 && (
-            <li className="px-2 py-3 text-center font-mono text-[12px] text-fg-faint">
+            <li className="px-2 py-3 text-center font-body text-body text-fg">
               No paints within ΔE {showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE}.
               {!showFurther ? ' Try "Show more matches".' : ""}
             </li>
@@ -267,12 +267,12 @@ export function ColorPicker({
 
       {/* Sub-panel 3 — eyedropper */}
       <section aria-labelledby="cp-eyedrop-heading" className="flex flex-col gap-3">
-        <h3 id="cp-eyedrop-heading" className="font-osd text-[12px] uppercase tracking-[0.18em] text-cyan">
+        <h3 id="cp-eyedrop-heading" className="label-osd text-cyan">
           Eyedropper
         </h3>
         <PickerDropZone onFile={handleEyeFile} disabled={eyeBusy} />
         {eyeError && (
-          <p role="alert" className="font-mono text-[12px] text-red">
+          <p role="alert" className="font-body text-body text-red">
             {eyeError}
           </p>
         )}
@@ -317,8 +317,8 @@ function Slider({
   return (
     <label className="flex flex-col gap-1">
       <span className="flex items-center justify-between">
-        <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">{label}</span>
-        <span className="font-mono text-[12px] tabular-nums text-fg-faint">{value}</span>
+        <span className="label-osd text-fg">{label}</span>
+        <span className="font-num2 text-num2 tabular-nums text-fg">{value}</span>
       </span>
       <input
         type="range"
@@ -387,8 +387,8 @@ function PickerDropZone({
         disabled && "cursor-progress opacity-60",
       )}
     >
-      <p className="font-osd text-xs uppercase tracking-[0.18em] text-cyan">⬚ Drop image</p>
-      <p className="mt-1 font-mono text-element text-fg-faint">
+      <p className="label-osd text-cyan">⬚ Drop image</p>
+      <p className="mt-1 font-body text-body text-fg">
         click to pick · or paste (Ctrl/⌘+V) · JPG/PNG/WebP/GIF
       </p>
       <input

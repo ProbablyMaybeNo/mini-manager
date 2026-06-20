@@ -26,7 +26,7 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="label-osd text-fg-dim"
+          className="label-osd text-fg"
         >
           {label}
         </label>
@@ -44,14 +44,14 @@ export function Input({
           id={inputId}
           aria-invalid={error ? true : undefined}
           className={cn(
-            "w-full bg-transparent font-mono text-sm text-fg placeholder:text-fg-faint focus:outline-none",
+            "w-full bg-transparent font-body text-body text-fg placeholder:text-fg-faint focus:outline-none",
             className,
           )}
           {...props}
         />
         {trailing}
       </div>
-      {error && <span className="font-mono text-[12px] text-red">{error}</span>}
+      {error && <span className="font-body text-body text-red">{error}</span>}
     </div>
   );
 }

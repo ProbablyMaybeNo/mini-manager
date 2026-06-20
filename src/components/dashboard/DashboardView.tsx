@@ -158,7 +158,7 @@ function LoadingState() {
         ))}
       </div>
       <div className="h-72 animate-pulse border border-cyan/20 bg-cyan/5" />
-      <span className="font-mono text-xs text-fg-faint">▸ Loading dashboard…</span>
+      <span className="font-body text-body text-fg">▸ Loading dashboard…</span>
     </div>
   );
 }
@@ -166,8 +166,8 @@ function LoadingState() {
 function ErrorState({ onRetry }: { onRetry?: () => void }) {
   return (
     <Panel label="ERROR" accent="red" className="max-w-md p-6">
-      <p className="font-mono text-sm text-red">▸ Couldn’t load your dashboard.</p>
-      <p className="mt-2 font-mono text-xs text-fg-dim">
+      <p className="font-body text-body text-red">▸ Couldn’t load your dashboard.</p>
+      <p className="mt-2 font-body text-body text-fg">
         The connection dropped. Check your network and try again.
       </p>
       {onRetry && (

@@ -43,7 +43,7 @@ export function ProgressBar({
       </div>
       {showLabel && (
         // % label +50% (12px → 18px); widen the box so the larger digits fit.
-        <span className="w-12 text-right font-mono text-[18px] tabular-nums text-fg-dim">
+        <span className="w-12 text-right font-num2 text-num2 tabular-nums text-fg">
           {pct}%
         </span>
       )}

@@ -60,7 +60,7 @@ export function Stopwatch({
       <div className="flex items-center justify-between">
         <span
           className={cn(
-            "font-display text-xl tabular-nums",
+            "font-num1 text-num1 tabular-nums",
             running ? "text-green text-glow-green" : "text-cyan",
           )}
         >
@@ -71,7 +71,7 @@ export function Stopwatch({
             type="button"
             onClick={toggle}
             className={cn(
-              "border px-3 py-1.5 font-osd text-[12px] uppercase tracking-[0.15em]",
+              "border px-3 py-1.5 font-button text-button uppercase tracking-[0.15em]",
               running
                 ? "border-red text-red hover:bg-red/10"
                 : "border-green text-green hover:bg-green/10",
@@ -82,21 +82,21 @@ export function Stopwatch({
           <button
             type="button"
             onClick={logSession}
-            className="border border-cyan/60 px-3 py-1.5 font-osd text-[12px] uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
+            className="border border-cyan/60 px-3 py-1.5 font-button text-button uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
           >
             Log
           </button>
         </div>
       </div>
 
-      <div className="flex gap-4 font-mono text-[12px] text-fg-dim">
+      <div className="flex gap-4 font-num2 text-num2 text-fg">
         <span>Today {formatMinutes(stats.todayMinutes)}</span>
         <span>Week {formatMinutes(stats.weekMinutes)}</span>
         <span className="text-purple">Streak {stats.streakDays}d</span>
       </div>
 
       {log.length > 0 && (
-        <ul className="flex flex-col gap-0.5 border-t border-cyan/20 pt-2 font-mono text-[12px] text-fg-faint">
+        <ul className="flex flex-col gap-0.5 border-t border-cyan/20 pt-2 font-body text-body text-fg">
           {log.map((secs, i) => (
             <li key={i}>▸ logged {fmt(secs)}</li>
           ))}

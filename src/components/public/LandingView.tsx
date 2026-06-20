@@ -53,7 +53,7 @@ export function LandingView() {
         <h1 className="sr-only">Mini Manager — paint &amp; project manager for miniatures</h1>
         <Logo href="/" size={320} className="animate-power-on" />
         {/* Tagline (8rIb) — larger + more stylized display type. */}
-        <p className="max-w-2xl font-display text-xl leading-relaxed text-cyan text-glow-cyan sm:text-2xl">
+        <p className="max-w-2xl font-title text-title leading-relaxed text-cyan text-glow-cyan">
           Plan your projects. Track your paints. Manage your minis.
         </p>
         {/* Single CTA — the secondary "See the plans" button is removed (wN7E). */}
@@ -69,8 +69,8 @@ export function LandingView() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <Panel key={f.title} label={f.title.toUpperCase()} className="p-5">
-              <h2 className="font-osd text-sm uppercase tracking-[0.15em] text-cyan">{f.title}</h2>
-              <p className="mt-2 font-mono text-xs text-fg-dim">{f.blurb}</p>
+              <h2 className="label-osd text-cyan">{f.title}</h2>
+              <p className="mt-2 font-body text-body text-fg">{f.blurb}</p>
             </Panel>
           ))}
         </div>
@@ -79,8 +79,8 @@ export function LandingView() {
       {/* Pricing teaser */}
       <section className="mx-auto w-full max-w-3xl px-6 pb-16 text-center">
         <Panel label="PLANS" accent="purple" cornerTicks className="flex flex-col items-center gap-4 p-8">
-          <h2 className="font-display text-lg text-purple">Free forever. Pro when you’re ready.</h2>
-          <p className="max-w-md font-mono text-xs text-fg-dim">
+          <h2 className="font-h1 text-h1 text-purple">Free forever. Pro when you’re ready.</h2>
+          <p className="max-w-md font-body text-body text-fg">
             Start with one army and the full library at no cost. Founder seats are limited.
           </p>
           <Link href="/pricing">
@@ -91,10 +91,10 @@ export function LandingView() {
 
       {/* Final CTA — copy per REDm6, button per QrK3. */}
       <section className="flex flex-col items-center gap-4 px-6 pb-16 text-center">
-        <h2 className="max-w-xl font-display text-lg text-cyan text-glow-cyan">
+        <h2 className="max-w-xl font-h1 text-h1 text-cyan text-glow-cyan">
           Ready to take your hobbying to the next level?
         </h2>
-        <p className="max-w-md font-mono text-sm text-fg-dim">
+        <p className="max-w-md font-body text-body text-fg">
           Gain access to a range of awesome features and tools. Founders receive a big
           discount. Limited availability.
         </p>
@@ -103,7 +103,7 @@ export function LandingView() {
         </Link>
       </section>
 
-      <footer className="border-t border-cyan/20 px-6 py-6 text-center font-mono text-[12px] text-fg-faint">
+      <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
         ▸ MINI-MANAGER OS · made for painters · {" "}
         <Link href="/pricing" className="text-cyan hover:underline">
           Pricing

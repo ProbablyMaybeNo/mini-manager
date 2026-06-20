@@ -99,7 +99,7 @@ export function CameraSampler({
     >
       <div className="w-full max-w-md border border-cyan bg-bg p-3">
         <header className="flex items-center justify-between">
-          <h2 className="font-osd text-xs uppercase tracking-[0.18em] text-cyan">Camera sampler</h2>
+          <h2 className="font-h1 text-h1 uppercase tracking-[0.18em] text-cyan">Camera sampler</h2>
           <CloseButton
             onClick={onClose}
             aria-label="Close camera sampler"
@@ -107,7 +107,7 @@ export function CameraSampler({
           />
         </header>
         {error && (
-          <p role="alert" className="mt-2 border border-yellow/40 bg-yellow/5 px-3 py-2 font-mono text-xs text-yellow">
+          <p role="alert" className="mt-2 border border-yellow/40 bg-yellow/5 px-3 py-2 font-body text-body text-yellow">
             {error}
           </p>
         )}
@@ -126,7 +126,7 @@ export function CameraSampler({
           <span aria-hidden className="absolute left-1/2 top-1/2 h-12 w-px -translate-x-1/2 -translate-y-1/2 bg-cyan" />
           <span aria-hidden className="absolute left-1/2 top-1/2 h-px w-12 -translate-x-1/2 -translate-y-1/2 bg-cyan" />
         </button>
-        <p className="mt-2 font-osd text-[12px] uppercase tracking-[0.18em] text-fg-faint">
+        <p className="mt-2 label-osd text-fg">
           Tap the viewfinder to sample under the crosshair
         </p>
       </div>

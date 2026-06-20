@@ -16,9 +16,9 @@ export interface IconButtonProps
 }
 
 const sizePad: Record<NonNullable<VariantProps<typeof buttonVariants>["size"]>, string> = {
-  sm: "h-7 w-7 text-sm",
-  md: "h-9 w-9 text-base",
-  lg: "h-11 w-11 text-lg",
+  sm: "h-7 w-7 text-button",
+  md: "h-9 w-9 text-button",
+  lg: "h-11 w-11 text-button",
 };
 
 export function IconButton({ className, variant, size = "md", ...props }: IconButtonProps) {

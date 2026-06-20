@@ -15,7 +15,7 @@ export function PagePlaceholder({
     <div className="flex flex-col gap-6 p-6">
       <PageHeader title={title} tagline={tagline} />
       <Panel label="STATUS" cornerTicks className="max-w-md p-6">
-        <p className="font-mono text-xs text-fg-dim">
+        <p className="font-body text-body text-fg">
           ▸ Screen scaffolded. Full build {phase ? `lands in ${phase}.` : "pending."}
         </p>
       </Panel>

@@ -30,10 +30,10 @@ export function NavLinks({
               className={cn(
                 // min-h-11 → 44px comfortable touch target (UX-010); flex
                 // keeps the label vertically centred in the taller row.
-                "flex min-h-11 items-center border-l-2 px-4 py-2 font-osd text-sm uppercase tracking-[0.18em] transition-colors",
+                "flex min-h-11 items-center border-l-2 px-4 py-2 font-h1 text-h1 uppercase tracking-[0.18em] transition-colors",
                 isActive
                   ? "border-cyan bg-cyan/10 text-cyan text-glow-cyan"
-                  : "border-transparent text-fg-dim hover:border-cyan/40 hover:bg-cyan/5 hover:text-cyan",
+                  : "border-transparent text-fg hover:border-cyan/40 hover:bg-cyan/5 hover:text-cyan",
               )}
             >
               {item.label}

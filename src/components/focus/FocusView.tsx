@@ -70,8 +70,8 @@ export function FocusView({
         <PageHeader title="FOCUS" tagline={TAGLINE} />
         <div>{picker}</div>
         <Panel label="NO SESSION" className="max-w-md p-6">
-          <p className="font-mono text-sm text-fg-dim">▸ No project in focus.</p>
-          <p className="mt-2 font-mono text-xs text-fg-faint">
+          <p className="font-body text-body text-fg">▸ No project in focus.</p>
+          <p className="mt-2 font-body text-body text-fg">
             Pick a project from the <span className="text-cyan">+ Focus</span> menu above, or
             launch the bench from the Dashboard.
           </p>
@@ -97,11 +97,11 @@ export function FocusView({
 
       {/* Pinned project header — bound to the focused project (MM-21). */}
       <Panel className="flex items-center justify-between p-4" glow>
-        <span className="font-display text-lg uppercase text-green text-glow-green">
+        <span className="font-h1 text-h1 uppercase text-green text-glow-green">
           {project.title} <span className="text-cyan">×{modelCount}</span>
         </span>
         {projectMinutes != null && (
-          <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-purple">
+          <span className="label-osd text-purple">
             Time {formatMinutes(projectMinutes)}
           </span>
         )}
@@ -115,7 +115,7 @@ export function FocusView({
           {recipe && recipe.slots.length > 0 ? (
             recipe.slots.map((slot, i) => <PaintCard key={i} slot={slot} />)
           ) : (
-            <p className="py-8 font-mono text-xs text-fg-faint">
+            <p className="py-8 font-body text-body text-fg">
               No recipe attached — add paints to build this scheme.
             </p>
           )}
@@ -125,7 +125,7 @@ export function FocusView({
 
       {/* Notes */}
       <Panel label="NOTES" className="p-4">
-        <p className="whitespace-pre-line font-mono text-sm leading-relaxed text-fg-dim">
+        <p className="whitespace-pre-line font-body text-body leading-relaxed text-fg">
           {recipe?.notes?.trim()
             ? recipe.notes
             : "No notes yet — add technique notes in the recipe editor."}
@@ -138,7 +138,7 @@ export function FocusView({
         <Stopwatch stats={stats} onLogSession={onLogSession} />
         <Panel label="PROGRESS" className="flex flex-col justify-center gap-3 p-4">
           <div className="flex items-center justify-between">
-            <span className="font-osd text-[12px] uppercase tracking-[0.18em] text-fg-dim">
+            <span className="label-osd text-fg">
               Models
             </span>
             <div className="flex items-center gap-3">
@@ -146,18 +146,18 @@ export function FocusView({
                 type="button"
                 aria-label="Decrease models painted"
                 onClick={() => bumpStep(-1)}
-                className="border border-cyan/60 px-2 font-osd text-cyan hover:bg-cyan/10"
+                className="border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10"
               >
                 −
               </button>
-              <span className="font-mono text-sm tabular-nums text-fg">
+              <span className="font-num2 text-num2 tabular-nums text-fg">
                 {step}/{modelCount}
               </span>
               <button
                 type="button"
                 aria-label="Increase models painted"
                 onClick={() => bumpStep(1)}
-                className="border border-cyan/60 px-2 font-osd text-cyan hover:bg-cyan/10"
+                className="border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10"
               >
                 +
               </button>

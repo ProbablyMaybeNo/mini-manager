@@ -30,6 +30,30 @@ const twMerge = extendTailwindMerge<"mm-text-glow" | "mm-box-glow">({
         "panel-depth",
         "panel-depth-glow",
       ],
+      // Typography-category + role SIZE utilities — register as font-size so
+      // tailwind-merge stops misclassifying them as text-color and stripping
+      // them next to a colour class (the role-token "unlock"; same failure mode
+      // as the glow bug above).
+      "font-size": [
+        "text-title",
+        "text-h1",
+        "text-h2",
+        "text-body",
+        "text-num1",
+        "text-num2",
+        "text-button",
+        "text-dropdown",
+        "text-element",
+      ],
+      // Typography-category FAMILY utilities.
+      "font-family": [
+        "font-title",
+        "font-h1",
+        "font-h2",
+        "font-body",
+        "font-num1",
+        "font-num2",
+      ],
     },
   },
 });

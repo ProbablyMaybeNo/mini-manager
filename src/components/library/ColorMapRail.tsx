@@ -31,8 +31,8 @@ export function ColorMapRail({
       cornerTicks
       className="flex min-h-0 w-full shrink-0 flex-col p-3 lg:w-[180px]"
     >
-      <div className="mb-2 flex flex-col gap-1 font-osd text-[12px] uppercase tracking-[0.15em] text-fg-dim">
-        <span className="text-fg-faint">1 cell = 1 paint</span>
+      <div className="mb-2 flex flex-col gap-1 label-osd text-fg">
+        <span className="text-fg">1 cell = 1 paint</span>
         <span className="flex items-center gap-1">
           <span className="h-2 w-2 bg-yellow" /> Wishlist
           <span className="ml-2 h-2 w-2 bg-green" /> Owned

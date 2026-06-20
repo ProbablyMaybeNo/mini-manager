@@ -18,12 +18,12 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
       <div>
-        <h1 className="font-display text-2xl leading-tight text-cyan text-glow-cyan sm:text-3xl">
+        <h1 className="font-title text-title leading-tight text-cyan text-glow-cyan">
           {title}
         </h1>
         {/* Sub-title bright white (1Xq1P5W3Yvzq / mWGF8f6O1IEQ) — was text-fg-dim. */}
         {tagline && (
-          <p className={cn("mt-2 max-w-2xl font-mono text-xs text-fg", taglineClassName)}>{tagline}</p>
+          <p className={cn("mt-2 max-w-2xl font-body text-body text-fg", taglineClassName)}>{tagline}</p>
         )}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

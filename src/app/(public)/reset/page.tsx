@@ -17,11 +17,11 @@ export default function ResetPage() {
       <Panel label="SYS ▸ RECOVER" cornerTicks glow className="w-full max-w-sm p-6">
         <div className="mb-5 flex flex-col items-center gap-2 text-center">
           <Logo href="/" size={56} />
-          <p className="font-mono text-xs text-fg-dim">Reset your password</p>
+          <p className="font-body text-body text-fg">Reset your password</p>
         </div>
 
         {sent ? (
-          <p className="font-mono text-sm text-green text-glow-green">
+          <p className="font-body text-body text-green text-glow-green">
             ▸ If that account has a verified recovery email, a reset link is on
             its way.
           </p>
@@ -52,7 +52,7 @@ export default function ResetPage() {
           </form>
         )}
 
-        <div className="mt-4 text-center font-mono text-[12px]">
+        <div className="mt-4 text-center font-body text-body">
           <Link href="/sign-in" className="text-cyan hover:underline">
             ← Back to sign in
           </Link>

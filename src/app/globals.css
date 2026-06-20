@@ -87,10 +87,10 @@
    ------------------------------------------------------------------------- */
 @theme {
   /* Palette */
-  /* Pure black canvas (T4nuELRRnFtJ — the bg had crept toward blue). bg-raised
-     is a near-neutral lift (no blue cast) for panels/inputs. */
-  --color-bg: #000000;
-  --color-bg-raised: #0d0d0f;
+  /* Near-black canvas (Theme Builder pick — a hair off pure black). bg-raised
+     is a near-neutral lift for panels/inputs. */
+  --color-bg: #06080a;
+  --color-bg-raised: #0b0f12;
   --color-cyan: #00d2ff;
   --color-green: #51fd80;
   --color-yellow: #eef996;
@@ -129,7 +129,7 @@
   /* Role-specific font sizes — independent of the body scale so each can be
      tuned on its own in the Theme Studio (no more shrinking body text to size
      buttons). Applied via text-button / text-dropdown / text-element. */
-  --text-button: 0.75rem; /* button labels */
+  --text-button: 0.7188rem; /* ~11.5px (Buttons category) */
   --text-dropdown: 1.02rem; /* Listbox trigger + options — +25% (w5cZimrBYgGh), on par with the project title-column cells */
   --text-element: 0.75rem; /* tools / activity tracker / feature text */
 
@@ -140,17 +140,17 @@
      Theme Builder (/dev/theme) renders them so faces + sizes can be locked in. */
   --font-title: "Unbutton", "IBM Plex Mono", monospace; /* page titles */
   --font-h1: "IBM BIOS", "IBM Plex Mono", monospace; /* section headers + nav + modal titles */
-  --font-h2: "IBM BIOS", "IBM Plex Mono", monospace; /* column headers + in-section labels */
-  --font-body: "VT323", "IBM Plex Mono", monospace; /* all regular text */
+  --font-h2: "Flexi IBM VGA True", "IBM Plex Mono", monospace; /* column headers + in-section labels */
+  --font-body: "Flexi IBM VGA True", "IBM Plex Mono", monospace; /* all regular text */
   --font-num1: "Unbutton", "IBM Plex Mono", monospace; /* hero numbers */
-  --font-num2: "VT323", "IBM Plex Mono", monospace; /* standard numbers (defaults to body) */
+  --font-num2: "VT323", "IBM Plex Mono", monospace; /* standard numbers */
 
-  --text-title: 1.8438rem; /* ~29.5px */
-  --text-h1: 1rem; /* 16px */
-  --text-h2: 0.75rem; /* 12px */
-  --text-body: 0.9688rem; /* ~15.5px */
-  --text-num1: 2.1875rem; /* 35px */
-  --text-num2: 0.9688rem; /* ~15.5px (= body) */
+  --text-title: 2.3438rem; /* ~37.5px */
+  --text-h1: 1.0938rem; /* ~17.5px */
+  --text-h2: 1.375rem; /* 22px */
+  --text-body: 1.4688rem; /* ~23.5px */
+  --text-num1: 1.7188rem; /* ~27.5px */
+  --text-num2: 1.4688rem; /* ~23.5px */
 
   /* Border + glow */
   --radius-panel: 2px;
@@ -167,7 +167,7 @@ body {
 body {
   background-color: var(--color-bg);
   color: var(--color-fg);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   /* Faint global scanline texture — neutral white tint (was cyan, which read
      as a blue cast on the black canvas, T4nuELRRnFtJ). */
   background-image: repeating-linear-gradient(
@@ -197,7 +197,7 @@ button {
 /* Native <option> popups (rendered by the OS) — keep them mono where supported. */
 select,
 option {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
 }
 
 /* Visible focus ring everywhere (WCAG 2.2) */
@@ -222,8 +222,8 @@ option {
    eyebrow/section/meta label reads identically. text-[12px] (not text-xs,
    which is floored to 13px) preserves the dominant label size. */
 @utility label-osd {
-  font-family: var(--font-osd);
-  font-size: 12px;
+  font-family: var(--font-h2);
+  font-size: var(--text-h2);
   text-transform: uppercase;
   letter-spacing: 0.15em;
 }
@@ -233,8 +233,8 @@ option {
    column headers + table indicators (label-osd, 12px) and below the H1 page
    title. Same OSD face, ~+33% size. */
 @utility label-osd-h2 {
-  font-family: var(--font-osd);
-  font-size: 16px;
+  font-family: var(--font-h1);
+  font-size: var(--text-h1);
   text-transform: uppercase;
   letter-spacing: 0.15em;
 }

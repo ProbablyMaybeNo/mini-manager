@@ -32,7 +32,7 @@ export function SlotRow({
         <ReorderBtn label="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
           ▲
         </ReorderBtn>
-        <span className="font-mono text-[12px] text-fg-faint">{index + 1}</span>
+        <span className="font-num2 text-num2 text-fg">{index + 1}</span>
         <ReorderBtn label="Move down" disabled={isLast} onClick={() => onMove(1)}>
           ▼
         </ReorderBtn>
@@ -53,8 +53,8 @@ export function SlotRow({
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <button type="button" onClick={onPick} className="text-left">
-          <div className="font-mono text-sm text-fg hover:text-cyan">{slot.name}</div>
-          <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+          <div className="font-body text-body text-fg hover:text-cyan">{slot.name}</div>
+          <div className="font-body text-body uppercase tracking-[0.15em] text-fg">
             {slot.brand}
           </div>
         </button>
@@ -65,14 +65,14 @@ export function SlotRow({
             onChange={(e) => onLayerChange(e.target.value)}
             aria-label={`Layer for slot ${index + 1}`}
             placeholder="Layer / technique"
-            className="w-36 border border-cyan/40 bg-bg px-2 py-1 font-mono text-xs text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+            className="w-36 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
           />
           <input
             value={slot.note ?? ""}
             onChange={(e) => onNoteChange(e.target.value)}
             aria-label={`Note for slot ${index + 1}`}
             placeholder="Note (e.g. thin 2:1, recess only)"
-            className="min-w-[160px] flex-1 border border-cyan/40 bg-bg px-2 py-1 font-mono text-xs text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+            className="min-w-[160px] flex-1 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
           />
         </div>
       </div>
@@ -104,7 +104,7 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex h-5 w-5 items-center justify-center text-xs leading-none",
+        "flex h-5 w-5 items-center justify-center font-button text-button leading-none",
         disabled ? "text-fg-faint/30" : "text-cyan hover:text-glow-cyan",
       )}
     >

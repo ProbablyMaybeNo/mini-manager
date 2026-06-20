@@ -76,13 +76,13 @@ export function MiniCalendar({
   return (
     <div className={cn("select-none", className)}>
       {showMonthLabel && (
-        <div className="mb-1 text-center font-osd text-[12px] uppercase tracking-[0.2em] text-cyan">
+        <div className="mb-1 text-center label-osd tracking-[0.2em] text-cyan">
           {monthLabel}
         </div>
       )}
       <div className="grid grid-cols-7 gap-px">
         {DOW.map((d, i) => (
-          <div key={i} className="text-center font-osd text-[12px] text-fg-faint">
+          <div key={i} className="text-center label-osd text-fg">
             {d}
           </div>
         ))}
@@ -102,18 +102,18 @@ export function MiniCalendar({
                       <span
                         className={cn("h-1.5 w-1.5 rounded-full", accentBg[eventKindAccent[e.kind]])}
                       />
-                      <span className="truncate font-mono text-[12px] text-fg">{e.name}</span>
+                      <span className="truncate font-body text-body text-fg">{e.name}</span>
                     </div>
                     <div
                       className={cn(
-                        "font-osd text-[12px] uppercase tracking-[0.15em]",
+                        "label-osd",
                         accentText[eventKindAccent[e.kind]],
                       )}
                     >
                       {e.kind}
                     </div>
                     {e.notes && (
-                      <div className="mt-0.5 line-clamp-2 font-mono text-[12px] text-fg-dim">
+                      <div className="mt-0.5 line-clamp-2 font-body text-body text-fg">
                         {e.notes}
                       </div>
                     )}
@@ -140,9 +140,9 @@ export function MiniCalendar({
           const base = cn(
             // min-h-6/min-w-6 clears the WCAG 2.2 §2.5.8 24px target floor
             // (cells were 23x23) while keeping the dense glanceable grid.
-            "relative flex aspect-square min-h-6 min-w-6 items-center justify-center font-mono text-[12px] tabular-nums",
+            "relative flex aspect-square min-h-6 min-w-6 items-center justify-center font-num2 text-num2 tabular-nums",
             day == null && "opacity-0",
-            accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg-dim",
+            accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg",
           );
 
           if (interactive) {

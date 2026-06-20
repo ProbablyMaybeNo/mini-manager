@@ -86,7 +86,7 @@ function PricingInner() {
       {error ? (
         <div
           role="alert"
-          className="mx-auto max-w-2xl px-4 pt-4 font-mono text-[12px] text-red"
+          className="mx-auto max-w-2xl px-4 pt-4 font-body text-body text-red"
         >
           {error}
         </div>

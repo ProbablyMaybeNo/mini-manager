@@ -56,7 +56,7 @@ export function AccountView({
         </Panel>
 
         <Panel label="SECURITY" className="flex flex-col gap-4 p-5">
-          <p className="font-mono text-xs text-fg-dim">
+          <p className="font-body text-body text-fg">
             Passwords are never entered here — we’ll email you a secure change link.
           </p>
           <div>
@@ -69,7 +69,7 @@ export function AccountView({
 
       {onDeleteAccount && (
         <Panel label="DANGER ZONE" accent="red" className="flex flex-col gap-3 p-5">
-          <p className="font-mono text-xs text-fg-dim">
+          <p className="font-body text-body text-fg">
             Deleting your account permanently removes your projects, recipes,
             collection, and everything else. This can’t be undone — export your
             data first if you want a copy.

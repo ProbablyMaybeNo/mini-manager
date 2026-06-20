@@ -22,7 +22,7 @@ export function AppShell({
     <div className="flex h-dvh flex-col md:flex-row">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:border focus:border-cyan focus:bg-bg focus:px-3 focus:py-1.5 focus:font-osd focus:text-xs focus:uppercase focus:tracking-[0.15em] focus:text-cyan"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:border focus:border-cyan focus:bg-bg focus:px-3 focus:py-1.5 focus:font-button focus:text-button focus:uppercase focus:tracking-[0.15em] focus:text-cyan"
       >
         Skip to content
       </a>
