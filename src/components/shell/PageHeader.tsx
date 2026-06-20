@@ -7,11 +7,13 @@ export function PageHeader({
   tagline,
   actions,
   className,
+  taglineClassName,
 }: {
   title: string;
   tagline?: string;
   actions?: ReactNode;
   className?: string;
+  taglineClassName?: string;
 }) {
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
@@ -21,7 +23,7 @@ export function PageHeader({
         </h1>
         {/* Sub-title bright white (1Xq1P5W3Yvzq / mWGF8f6O1IEQ) — was text-fg-dim. */}
         {tagline && (
-          <p className="mt-2 max-w-2xl font-mono text-xs text-fg">{tagline}</p>
+          <p className={cn("mt-2 max-w-2xl font-mono text-xs text-fg", taglineClassName)}>{tagline}</p>
         )}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

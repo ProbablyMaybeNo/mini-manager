@@ -80,6 +80,7 @@ export function LibraryView(props: LibraryViewProps) {
       <PageHeader
         title="LIBRARY"
         tagline={`Growing library of ${totalCount.toLocaleString()} paints across all the major companies.`}
+        taglineClassName="text-sm"
         actions={
           <>
             <div className="w-44">
@@ -119,7 +120,7 @@ export function LibraryView(props: LibraryViewProps) {
         </Panel>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-          <Panel label={view === "grid" ? "SWATCHES" : "PAINTS"} className="min-h-0 flex-1 overflow-hidden">
+          <Panel className="min-h-0 flex-1 overflow-hidden">
             {loading ? (
               <div className="h-full overflow-y-auto p-4">
                 <div
