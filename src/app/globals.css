@@ -209,6 +209,17 @@ option {
   letter-spacing: 0.15em;
 }
 
+/* H2 section title (0uxze0Chc7dB heading hierarchy): the table/panel titles
+   (e.g. PROJECTS) and the four stat-box titles sit one step above the H3
+   column headers + table indicators (label-osd, 12px) and below the H1 page
+   title. Same OSD face, ~+33% size. */
+@utility label-osd-h2 {
+  font-family: var(--font-osd);
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
 /* ----------------------------------------------------------------------------
    CRT / phosphor utilities
    ------------------------------------------------------------------------- */

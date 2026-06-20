@@ -45,7 +45,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M13 — Bigger WISHLIST/OWNED indicators on the colour map** (`rg1uauzAsVG4`): enlarge them on the library colour map for at-a-glance coverage (ok if they cover slightly more than the single paint).
 
-- [ ] **M14 — Heading hierarchy** (`0uxze0Chc7dB`): table indicator text too large → match column-title size; column headers = H3 scale, table/stat-box titles = H2 scale, page titles = H1 scale. Apply the named scale consistently.
+- [x] **M14 — Heading hierarchy** (`0uxze0Chc7dB`): table indicator text too large → match column-title size; column headers = H3 scale, table/stat-box titles = H2 scale, page titles = H1 scale. Apply the named scale consistently.
 
 ---
 

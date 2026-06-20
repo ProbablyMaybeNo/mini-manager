@@ -35,7 +35,8 @@ export function StatBox({
       )}
       style={{ borderRadius: "var(--radius-panel)" }}
     >
-      <div className="label-osd text-fg-dim">
+      {/* H2 tracker title (0uxze0Chc7dB) — one step above the H3 table headers. */}
+      <div className="label-osd-h2 text-fg-dim">
         {label}
       </div>
       <div
