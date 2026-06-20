@@ -13,7 +13,7 @@
 
 - [x] **M2 — Colour-map OWNED/WISHLIST circle indicators** (`7RFkgNxn5Cl6`, /library). The font part is done by #47. Replace the "glitchy bars" marking owned/wishlist paints on the library colour map (`library/ColorMapRail.tsx`) with **circle/dot indicators**: green = owned, yellow = wishlist, each with a **1–2px black stroke** (`stroke`/`border`), sized a touch larger than before for at-a-glance scanning (ok if slightly bigger than the exact paint position). Keep the colour-map title inside its border (no overflow).
 
-- [ ] **M3 — Recipe-box label order** (`RuYiw7plQqDV` / MM-22, /focus). On the Focus recipe box, reorder so the label reads **"RECIPE BOX"** first, then **"No Recipe Attached"**, then the box/card — i.e. heading above the empty-state text. Best-guess this order (Ross's confirmed read).
+- [x] **M3 — Recipe-box label order** (`RuYiw7plQqDV` / MM-22, /focus). On the Focus recipe box, reorder so the label reads **"RECIPE BOX"** first, then **"No Recipe Attached"**, then the box/card — i.e. heading above the empty-state text. Best-guess this order (Ross's confirmed read).
 
 - [ ] **M4 — Make the /projects activity section smaller + scrollable** (`UF5HOwXMpJxP`, /projects). The flagged section on `/projects` (the ACTIVITY card / the over-tall section) should be capped in height and scroll internally: add a `max-h-*` + `overflow-y-auto` so it doesn't dominate the page. Confirm against the current `/projects` layout (the pin references an older layout — target the equivalent current section).
 
