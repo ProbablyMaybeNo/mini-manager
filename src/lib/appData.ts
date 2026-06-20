@@ -181,10 +181,12 @@ function isoDay(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-function startOfUtcDay(d: Date): Date {
-  return new Date(
-    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
-  );
+/** First ms of the current UTC month — the dashboard calendar's lower bound so
+ *  an event added earlier *this* month (e.g. a near-term deadline) still draws
+ *  its dot on the grid (d9cfJYAVIx0C). Fetching from start-of-today instead hid
+ *  any same-month event whose day had already passed. */
+function startOfUtcMonth(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
 
 /** Activity kind → the kit ActivityFeed icon key (add/cart/build/prime/paint/check). */
@@ -323,7 +325,10 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     listPaintCollection(userId),
     listModelCollection(userId),
     getRecentActivity(userId, 20),
-    listUpcomingEvents(userId, startOfUtcDay(now), 8),
+    // From the first of the current month (not today) so a deadline added
+    // earlier this month still renders on the calendar grid (d9cfJYAVIx0C);
+    // larger limit so a busy month isn't truncated before its later events.
+    listUpcomingEvents(userId, startOfUtcMonth(now), 24),
     getSessionRollups(userId, now.getTime()),
     getAllTimeRollupSeconds(userId),
     getActivityByDay(userId, new Date(now.getTime() - SIXTY_DAYS_MS)),

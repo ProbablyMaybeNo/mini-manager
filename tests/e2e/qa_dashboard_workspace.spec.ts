@@ -45,7 +45,9 @@ test.describe("M11 — Dashboard real-data features", () => {
 
     await nameField.fill(eventName);
     await page.locator('input[name="event-date"]').fill("2026-12-25");
-    await page.getByLabel(/event kind/i).selectOption("tournament");
+    // Event kind defaults to "tournament" (now a kit Listbox, not a <select>),
+    // which is what this test asserts — leave the dropdown closed so its popup
+    // doesn't overlap the Add button below it.
     await page.getByRole("button", { name: /^Add$/ }).click();
 
     // The new event renders in the bottom "Upcoming events" ticker.

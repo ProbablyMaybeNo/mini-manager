@@ -73,6 +73,12 @@ export function DashboardView({
   // inline edit + router.refresh() shows fresh data in the open panel.
   const selected = selectedId ? findProject(projects, selectedId) : null;
 
+  // The calendar grid receives the whole current month (so a deadline added
+  // earlier this month still draws its dot — d9cfJYAVIx0C). The bottom ticker
+  // is a true "upcoming" list, so it filters that same set to today-forward.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const upcomingEvents = events.filter((e) => e.date >= todayIso);
+
   // Row click manages the project (opens the inspector) — it deliberately no
   // longer jumps to the focus bench. Reaching focus is now an explicit
   // per-row action (the ◎ icon) or the inspector's "Start session" button.
@@ -126,7 +132,7 @@ export function DashboardView({
 
       {/* Bottom UPCOMING-EVENTS ticker restored — surfaces the dashboard's
           calendar events so newly-added dates show up immediately. */}
-      <UpcomingEventsBar events={status === "ready" ? events : []} />
+      <UpcomingEventsBar events={status === "ready" ? upcomingEvents : []} />
 
       <ProjectInspector
         project={selected}

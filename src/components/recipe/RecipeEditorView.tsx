@@ -115,10 +115,11 @@ export function RecipeEditorView({
             ]}
           />
         </div>
-        <Button variant="secondary" onClick={onShare}>
+        {/* Share → neon green (t7doCednL8MP). Font stays DePixel Klein. */}
+        <Button variant="add" onClick={onShare}>
           Share
         </Button>
-        <Button variant="add" onClick={onSave}>Save</Button>
+        <Button variant="solidCyan" onClick={onSave}>Save</Button>
       </Panel>
 
       {/* ndZ9 — inspiration removed from the creator; the freed space lets the

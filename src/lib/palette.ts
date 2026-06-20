@@ -6,12 +6,20 @@ import type {
 } from "./types";
 
 /** Accent keys map 1:1 onto the Tailwind token colours generated from globals.css. */
-export type Accent = "cyan" | "green" | "yellow" | "purple" | "red" | "dim";
+export type Accent =
+  | "cyan"
+  | "green"
+  | "yellow"
+  | "orange"
+  | "purple"
+  | "red"
+  | "dim";
 
 export const accentText: Record<Accent, string> = {
   cyan: "text-cyan",
   green: "text-green",
   yellow: "text-yellow",
+  orange: "text-orange",
   purple: "text-purple",
   red: "text-red",
   dim: "text-fg-dim",
@@ -21,6 +29,7 @@ export const accentBg: Record<Accent, string> = {
   cyan: "bg-cyan",
   green: "bg-green",
   yellow: "bg-yellow",
+  orange: "bg-orange",
   purple: "bg-purple",
   red: "bg-red",
   dim: "bg-fg-faint",
@@ -30,6 +39,7 @@ export const accentBorder: Record<Accent, string> = {
   cyan: "border-cyan",
   green: "border-green",
   yellow: "border-yellow",
+  orange: "border-orange",
   purple: "border-purple",
   red: "border-red",
   dim: "border-fg-faint",
@@ -41,6 +51,7 @@ export const accentTextGlow: Record<Accent, string> = {
   cyan: "text-glow-cyan",
   green: "text-glow-green",
   yellow: "text-glow-yellow",
+  orange: "text-glow-yellow",
   purple: "text-glow-purple",
   red: "text-glow-red",
   dim: "",
@@ -85,9 +96,10 @@ export const statusAccent: Record<ProjectStatus, Accent> = {
   SHELVED: "dim",
 };
 
+/** Priority → accent (ynb3l8JdxhaE): Red = High, orange = Med, Yellow = Low. */
 export const priorityAccent: Record<Priority, Accent> = {
-  Low: "dim",
-  Med: "yellow",
+  Low: "yellow",
+  Med: "orange",
   High: "red",
 };
 
@@ -129,16 +141,18 @@ export function activityAccentFor(icon: string): Accent {
  * palette colour"). The four dashboard KPI boxes each read in a distinct
  * style-guide hue per Ross's tracker comments (qHYZN/4g3I/JxHyr), so the row
  * scans as four separate readouts:
- *   Active projects → green  (something live / in progress)
- *   Completion %    → yellow (progress toward done)
- *   Streak         → purple (a streak you don't want to break)
- *   Time Total      → cyan   (base; flips red past a long session — see StatRow)
+ * Per Ross's per-stat colour calls (icu1mlFtJeya / awIApwrPCRs3 / zsgMLZrqO_ha /
+ * _tsKQEEUbfvT):
+ *   Active projects → cyan   (neon — a live readout)
+ *   Completion %    → green  (neon — progress toward done)
+ *   Streak         → yellow  (pastel — a streak you don't want to break)
+ *   Time Total      → purple (pastel — base; flips red past a long session)
  */
 export const statBoxAccents = {
-  active: "green",
-  completion: "yellow",
-  streak: "purple",
-  time: "cyan",
+  active: "cyan",
+  completion: "green",
+  streak: "yellow",
+  time: "purple",
 } as const satisfies Record<string, Accent>;
 
 /** Minutes → "H:MM" for the dashboard time-total / focus totals. */

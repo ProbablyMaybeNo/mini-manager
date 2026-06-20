@@ -43,7 +43,10 @@ function ColourWheelRoute() {
   }, [params, paints]);
 
   return (
-    <ToolShell title="COLOR WHEEL" blurb="Explore, experiment, and find the perfect colour combos.">
+    <ToolShell
+      title="COLOR WHEEL"
+      blurb="Test colour harmonies to find the perfect scheme. Spin the wheel and switch harmony to see complementary, triadic, and analogous combos — then match each pick to real paints, save the palette, or send it straight to a recipe."
+    >
       <ColourWheelTool
         seedHex={seedHex}
         closestPaint={(hex) => closestPaint(hex, paints)}

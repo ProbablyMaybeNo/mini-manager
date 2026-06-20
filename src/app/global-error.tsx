@@ -15,7 +15,7 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
           alignItems: "center",
           justifyContent: "center",
           gap: "1rem",
-          background: "#06080a",
+          background: "#000000",
           color: "#b6c6cc",
           fontFamily: "monospace",
           textAlign: "center",

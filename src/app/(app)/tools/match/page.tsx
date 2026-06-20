@@ -17,7 +17,10 @@ export default function ColourMatchPage() {
     [paints],
   );
   return (
-    <ToolShell title="COLOR MATCH" blurb="Match paints across companies and harmonies.">
+    <ToolShell
+      title="COLOR MATCH"
+      blurb="Enter or pick any colour to find the nearest paints across every brand you own and wishlist. Compare ranked matches side by side, then save the best as a palette or send it to a recipe."
+    >
       <ColourMatchTool
         rankMatches={(hex, brands, limit) => rankMatchesMulti(hex, paints, brands, limit)}
         brandOptions={brandOptions}

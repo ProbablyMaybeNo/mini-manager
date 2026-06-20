@@ -5,6 +5,7 @@ const fillColor: Record<Accent, string> = {
   cyan: "bg-cyan",
   green: "bg-green",
   yellow: "bg-yellow",
+  orange: "bg-orange",
   purple: "bg-purple",
   red: "bg-red",
   dim: "bg-fg-faint",
@@ -31,7 +32,8 @@ export function ProgressBar({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div
-        className="h-2 flex-1 border border-fg/20 bg-bg"
+        // Bar height +50% (h-2 → h-3) to match the larger % label (kdV6XB6eFsRS).
+        className="h-3 flex-1 border border-fg/20 bg-bg"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
@@ -40,7 +42,8 @@ export function ProgressBar({
         <div className={cn("h-full", fillColor[tone])} style={{ width: `${pct}%` }} />
       </div>
       {showLabel && (
-        <span className="w-9 text-right font-mono text-[12px] tabular-nums text-fg-dim">
+        // % label +50% (12px → 18px); widen the box so the larger digits fit.
+        <span className="w-12 text-right font-mono text-[18px] tabular-nums text-fg-dim">
           {pct}%
         </span>
       )}

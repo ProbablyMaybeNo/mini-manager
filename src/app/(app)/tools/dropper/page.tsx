@@ -13,7 +13,10 @@ export default function EyedropperPage() {
   const { save, dialog } = usePaletteSaver("eyedropper");
 
   return (
-    <ToolShell title="COLOR DROPPER" blurb="Use uploaded images to find the perfect paints.">
+    <ToolShell
+      title="COLOR DROPPER"
+      blurb="Upload a reference photo and eyedrop any pixel to read its exact colour. Each sample is matched to the closest real paints across brands, ready to save as a palette or build into a recipe."
+    >
       <EyedropperTool
         closestPaint={(hex) => closestPaint(hex, paints)}
         onSavePalette={save}

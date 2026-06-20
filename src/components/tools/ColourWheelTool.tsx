@@ -223,9 +223,12 @@ export function ColourWheelTool({
           })}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => onSavePalette(ordered)}>Save Palette</Button>
+          {/* Save Palette = +COLOR SCHEME → neon green; Send to Recipe = +RECIPE
+              → pastel purple attach (9lgIwII2oBy7 / CiBUwVgwwQRD). DePixel Klein
+              font kept (ruling #1). */}
+          <Button variant="add" onClick={() => onSavePalette(ordered)}>Save Palette</Button>
           <Button
-            variant="secondary"
+            variant="attach"
             onClick={() =>
               onSendToRecipe(picks.map((p) => p.paint).filter((p): p is Paint => p != null))
             }

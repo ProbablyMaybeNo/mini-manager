@@ -54,16 +54,27 @@ export function ColorMapRail({
             "linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)",
         }}
       >
-        {markers.map((m) => (
-          <span
-            key={m.id}
-            className="absolute right-0.5 h-1 w-1"
-            style={{
-              top: `${m.top}%`,
-              backgroundColor: m.owned ? "#51fd80" : m.wishlisted ? "#eef996" : "transparent",
-            }}
-          />
-        ))}
+        {markers
+          // Only owned/wishlisted paints get a marker — no-status cells stay
+          // bare so the spectrum reads cleanly behind the coverage dots.
+          .filter((m) => m.owned || m.wishlisted)
+          // Render owned (green) after wishlist so it sits on top where hues
+          // collide — owned coverage is the stronger signal.
+          .sort((a, b) => Number(a.owned) - Number(b.owned))
+          .map((m) => (
+            <span
+              key={m.id}
+              // Bigger coverage indicators (rg1uauzAsVG4): a wider, taller block
+              // that spans most of the rail so owned/wishlist coverage — and the
+              // holes between — read at a glance, even if one block visually
+              // covers a little more than its single paint's exact hue.
+              className="absolute right-0 left-1 h-2 -translate-y-1/2 rounded-[1px]"
+              style={{
+                top: `${m.top}%`,
+                backgroundColor: m.owned ? "#51fd80" : "#eef996",
+              }}
+            />
+          ))}
       </button>
     </Panel>
   );

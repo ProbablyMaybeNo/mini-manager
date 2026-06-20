@@ -74,8 +74,8 @@ export function RecipeIndexTable({
               </td>
               <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                 {r.slots.length === 0 ? (
-                  <Button variant="tertiary" size="sm" onClick={() => onOpenRecipe(r)}>
-                    + attach
+                  <Button variant="attach" size="sm" onClick={() => onOpenRecipe(r)}>
+                    + Attach
                   </Button>
                 ) : (
                   // l9-Ep / C1Dj / -zP2IB / XBqE — large legible tiles with
@@ -105,7 +105,8 @@ export function RecipeIndexTable({
                 />
               </td>
               <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                <Button variant="secondary" size="sm" onClick={() => onShare(r)}>
+                {/* Share → neon green (t7doCednL8MP). Font stays DePixel Klein. */}
+                <Button variant="add" size="sm" onClick={() => onShare(r)}>
                   Share
                 </Button>
               </td>
@@ -113,7 +114,8 @@ export function RecipeIndexTable({
           ))}
           <tr>
             <td colSpan={COLS.length} className="px-3 py-3 text-center">
-              <Button variant="add" onClick={onCreate}>
+              {/* + Recipe → pastel purple attach affordance (CiBUwVgwwQRD). */}
+              <Button variant="attach" onClick={onCreate}>
                 + Recipe
               </Button>
             </td>

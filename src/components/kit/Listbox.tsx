@@ -155,7 +155,10 @@ export function Listbox<T extends string>({
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={onTriggerKeyDown}
         className={cn(
-          "inline-flex w-full items-center justify-between gap-2 border bg-bg font-mono transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+          // Distinct "+Attach" dropdown treatment (8GfWoKTUukde): a thinner
+          // pixel face (font-osd) + a DOTTED border, so a dropdown always reads
+          // differently from a solid-bordered DePixel-Klein button app-wide.
+          "inline-flex w-full items-center justify-between gap-2 border border-dotted bg-bg font-osd tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
           pad,
           accentBorder[accent],
           "border-opacity-60",
@@ -178,7 +181,7 @@ export function Listbox<T extends string>({
           aria-activedescendant={activeIndex >= 0 ? `${listId}-opt-${activeIndex}` : undefined}
           tabIndex={-1}
           className={cn(
-            "absolute left-0 top-full z-30 mt-1 max-h-60 min-w-full overflow-y-auto border bg-bg py-1 panel-depth",
+            "absolute left-0 top-full z-30 mt-1 max-h-60 min-w-full overflow-y-auto border border-dotted bg-bg py-1 panel-depth",
             accentBorder[accent],
           )}
           style={{ borderRadius: "var(--radius-panel)" }}
@@ -197,7 +200,7 @@ export function Listbox<T extends string>({
                 onPointerEnter={() => !opt.disabled && setActiveIndex(i)}
                 onClick={() => choose(i)}
                 className={cn(
-                  "cursor-pointer px-2 py-1 font-mono text-dropdown transition-colors",
+                  "cursor-pointer px-2 py-1 font-osd tracking-[0.08em] text-dropdown transition-colors",
                   opt.disabled && "cursor-not-allowed text-fg-faint/60",
                   !opt.disabled && isActive && "bg-cyan/10",
                   !opt.disabled && isSelected ? accentText[accent] : !opt.disabled && "text-fg",

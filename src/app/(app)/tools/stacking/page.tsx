@@ -12,7 +12,10 @@ export default function LayeringPage() {
   const router = useRouter();
   const { save, dialog } = usePaletteSaver("gradient");
   return (
-    <ToolShell title="COLOR STACKING" blurb="Stack paints and determine the perfect layering.">
+    <ToolShell
+      title="COLOR STACKING"
+      blurb="Build a layering ladder from base to highlight and preview how glazes and washes stack on a substrate. Dial in each layer, then save the result as a palette or turn the stack into a recipe."
+    >
       <LayeringTool
         closestPaint={(hex) => closestPaint(hex, paints)}
         onSavePalette={save}
