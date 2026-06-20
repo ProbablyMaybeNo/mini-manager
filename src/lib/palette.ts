@@ -6,12 +6,20 @@ import type {
 } from "./types";
 
 /** Accent keys map 1:1 onto the Tailwind token colours generated from globals.css. */
-export type Accent = "cyan" | "green" | "yellow" | "purple" | "red" | "dim";
+export type Accent =
+  | "cyan"
+  | "green"
+  | "yellow"
+  | "orange"
+  | "purple"
+  | "red"
+  | "dim";
 
 export const accentText: Record<Accent, string> = {
   cyan: "text-cyan",
   green: "text-green",
   yellow: "text-yellow",
+  orange: "text-orange",
   purple: "text-purple",
   red: "text-red",
   dim: "text-fg-dim",
@@ -21,6 +29,7 @@ export const accentBg: Record<Accent, string> = {
   cyan: "bg-cyan",
   green: "bg-green",
   yellow: "bg-yellow",
+  orange: "bg-orange",
   purple: "bg-purple",
   red: "bg-red",
   dim: "bg-fg-faint",
@@ -30,6 +39,7 @@ export const accentBorder: Record<Accent, string> = {
   cyan: "border-cyan",
   green: "border-green",
   yellow: "border-yellow",
+  orange: "border-orange",
   purple: "border-purple",
   red: "border-red",
   dim: "border-fg-faint",
@@ -41,6 +51,7 @@ export const accentTextGlow: Record<Accent, string> = {
   cyan: "text-glow-cyan",
   green: "text-glow-green",
   yellow: "text-glow-yellow",
+  orange: "text-glow-yellow",
   purple: "text-glow-purple",
   red: "text-glow-red",
   dim: "",
@@ -85,9 +96,10 @@ export const statusAccent: Record<ProjectStatus, Accent> = {
   SHELVED: "dim",
 };
 
+/** Priority → accent (ynb3l8JdxhaE): Red = High, orange = Med, Yellow = Low. */
 export const priorityAccent: Record<Priority, Accent> = {
-  Low: "dim",
-  Med: "yellow",
+  Low: "yellow",
+  Med: "orange",
   High: "red",
 };
 

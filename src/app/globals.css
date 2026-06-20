@@ -94,6 +94,8 @@
   --color-yellow: #eef996;
   --color-purple: #9b80dc;
   --color-red: #ff4242;
+  /* Mid-priority hue (ynb3l8JdxhaE — Red=High, orange=Med, Yellow=Low). */
+  --color-orange: #ff9d3c;
 
   /* Foreground ramp (all ≥ AA on --color-bg) */
   --color-fg: #ffffff;

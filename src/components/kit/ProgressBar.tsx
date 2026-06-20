@@ -5,6 +5,7 @@ const fillColor: Record<Accent, string> = {
   cyan: "bg-cyan",
   green: "bg-green",
   yellow: "bg-yellow",
+  orange: "bg-orange",
   purple: "bg-purple",
   red: "bg-red",
   dim: "bg-fg-faint",

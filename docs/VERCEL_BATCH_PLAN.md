@@ -27,7 +27,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M4 — All dropdowns → distinct menu style + bigger font** (`8GfWoKTUukde`, `0o2HEmQzVjyU`, `w5cZimrBYgGh`). In kit `Listbox`: apply the recipe-"+Attach" treatment (thinner font + **dotted** border) and raise the dropdown font ~25% so it's on par with the project-table title-column cells (per `w5cZ`). Every Listbox consumer inherits it.
 
-- [ ] **M5 — Priority dropdown** (`ynb3l8JdxhaE`): give it the +Attach dropdown style + dotted border, and colour it by priority — **Red = High, orange = mid, Yellow = Low**.
+- [x] **M5 — Priority dropdown** (`ynb3l8JdxhaE`): give it the +Attach dropdown style + dotted border, and colour it by priority — **Red = High, orange = mid, Yellow = Low**.
 
 - [ ] **M6 — Completion bar + % font +50%** (`kdV6XB6eFsRS`) on /projects (the progress bar value + label). Per-element size bump only.
 

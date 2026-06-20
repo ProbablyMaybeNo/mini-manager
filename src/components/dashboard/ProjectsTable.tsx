@@ -7,7 +7,6 @@ import {
   EmptyState,
   IconButton,
   Input,
-  PriorityTag,
   ProgressBar,
   StatusText,
   SwatchStrip,
@@ -16,6 +15,7 @@ import {
 import { formatMinutes } from "@/lib/palette";
 import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project, ProjectType } from "@/lib/types";
+import { PriorityDropdown } from "./PriorityDropdown";
 
 const COLS = ["Title", "Type", "Recipe", "Status", "Priority", "Completion", "Time", ""];
 
@@ -178,7 +178,7 @@ export function ProjectsTable({
             <StatusText status={p.status} />
           </td>
           <td className="px-3 py-2.5">
-            <PriorityTag priority={p.priority} />
+            <PriorityDropdown projectId={p.id} value={p.priority} />
           </td>
           <td className="w-40 px-3 py-2.5">
             {/* Solid single-colour fill to match the GOLDEN STANDARD progress

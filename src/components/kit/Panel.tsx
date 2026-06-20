@@ -7,6 +7,7 @@ const accentGlow: Record<Accent, string> = {
   cyan: "glow-cyan",
   green: "glow-green",
   yellow: "glow-yellow",
+  orange: "glow-yellow",
   purple: "glow-purple",
   red: "glow-red",
   dim: "",
