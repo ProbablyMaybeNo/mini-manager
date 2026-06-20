@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, type ButtonProps } from "@/components/kit";
+import { Button } from "@/components/kit";
 import { THEME_OVERRIDE_KEY, applyThemeOverrides } from "@/components/dev/ThemeOverrides";
 
 type Tok = { v: string; label: string };
@@ -19,89 +19,67 @@ const COLORS: Tok[] = [
   { v: "--color-fg-faint", label: "Foreground faint" },
 ];
 
-const FONTS: Tok[] = [
-  { v: "--font-display", label: "Display · titles" },
-  { v: "--font-osd", label: "OSD · headers / menu" },
-  { v: "--font-mono", label: "Body · tables / text" },
-  { v: "--font-button", label: "Buttons" },
-  { v: "--font-body2", label: "Activity / log" },
-  { v: "--font-lightpixel", label: "font-lightpixel" },
-  { v: "--font-unbutton", label: "font-unbutton" },
+/**
+ * The 7-category typography taxonomy (locked with Ross 2026-06-20). Each category
+ * = one font token + one size token, no cross-category sharing. Buttons reuse the
+ * existing --font-button / --text-button. Number 2 defaults to Body 1.
+ */
+type Cat = {
+  key: string;
+  label: string;
+  desc: string;
+  font: string;
+  size: string;
+  min: number;
+  max: number;
+};
+
+const CATEGORIES: Cat[] = [
+  { key: "title", label: "Title", desc: "Page titles", font: "--font-title", size: "--text-title", min: 16, max: 80 },
+  { key: "h1", label: "Header 1", desc: "Section headers · nav · modal titles", font: "--font-h1", size: "--text-h1", min: 10, max: 48 },
+  { key: "h2", label: "Header 2", desc: "Column headers · in-section labels", font: "--font-h2", size: "--text-h2", min: 8, max: 32 },
+  { key: "body", label: "Body 1", desc: "All regular text · dropdown options · inputs", font: "--font-body", size: "--text-body", min: 8, max: 30 },
+  { key: "button", label: "Buttons", desc: "Buttons · chips · status · priority · dropdown trigger", font: "--font-button", size: "--text-button", min: 8, max: 28 },
+  { key: "num1", label: "Number 1 · Hero", desc: "Big stat numbers · stopwatch timer", font: "--font-num1", size: "--text-num1", min: 16, max: 100 },
+  { key: "num2", label: "Number 2 · Standard", desc: "Calendar · progress % · counters (defaults to Body 1)", font: "--font-num2", size: "--text-num2", min: 8, max: 30 },
 ];
 
 /** The faces currently loaded in the app (globals.css @font-face / @fontsource). */
 const FONT_CHOICES = [
-  "3D Pixel",
+  "Flexi IBM VGA True",
+  "VT323",
+  "IBM BIOS",
   "Unbutton",
-  "Light Pixel 7",
+  "3D Pixel",
+  "UAV OSD Mono",
   "DePixel Klein",
   "DePixel Breit",
+  "Light Pixel 7",
   "Pixeland",
-  "IBM BIOS",
   "Apricot 256L",
   "IBM XGA-AI",
-  "VT323",
-  "UAV OSD Mono",
   "Share Tech Mono",
-  "Flexi IBM VGA True",
   "IBM Plex Mono",
   "Courier New",
   "monospace",
 ];
 
-const SIZES: { v: string; label: string; min: number; max: number }[] = [
-  { v: "--text-xs", label: "text-xs · body / tables", min: 8, max: 22 },
-  { v: "--text-sm", label: "text-sm · emphasis", min: 8, max: 26 },
-  { v: "--text-base", label: "text-base", min: 10, max: 30 },
-  { v: "--text-lg", label: "text-lg · subheads", min: 12, max: 36 },
-  { v: "--text-xl", label: "text-xl · subtitles", min: 14, max: 44 },
-  { v: "--text-2xl", label: "text-2xl · titles", min: 16, max: 60 },
-  { v: "--text-3xl", label: "text-3xl · big titles", min: 18, max: 80 },
-  { v: "--text-4xl", label: "text-4xl · stat numbers", min: 20, max: 100 },
-  // Role-specific sizes (independent of the body scale).
-  { v: "--text-button", label: "Buttons", min: 8, max: 28 },
-  { v: "--text-dropdown", label: "Dropdown menus", min: 8, max: 28 },
-  { v: "--text-element", label: "Tools / activity (feature)", min: 8, max: 28 },
-];
-
-/** Sane fallbacks so the sliders seed correctly even if a token isn't emitted. */
+/** Fallback seeds so sliders/selects seed correctly even before @theme resolves. */
 const SIZE_DEFAULT: Record<string, string> = {
-  "--text-xs": "0.8125rem",
-  "--text-sm": "0.9375rem",
-  "--text-base": "1rem",
-  "--text-lg": "1.125rem",
-  "--text-xl": "1.25rem",
-  "--text-2xl": "1.5rem",
-  "--text-3xl": "1.875rem",
-  "--text-4xl": "2.25rem",
+  "--text-title": "1.8438rem",
+  "--text-h1": "1rem",
+  "--text-h2": "0.75rem",
+  "--text-body": "0.9688rem",
   "--text-button": "0.75rem",
-  "--text-dropdown": "0.8125rem",
-  "--text-element": "0.75rem",
+  "--text-num1": "2.1875rem",
+  "--text-num2": "0.9688rem",
 };
 
-// The full canonical button set — every variant the app has. Anything that
-// looks like a button anywhere (chips, type indicators, dropdown triggers)
-// should use one of these, not bespoke styling.
-const BTN_VARIANTS: NonNullable<ButtonProps["variant"]>[] = [
-  "primary",
-  "secondary",
-  "tertiary",
-  "danger",
-  "add",
-  "addWishlist",
-  "solidCyan",
-  "solidGreen",
-  "solidYellow",
-  "solidPurple",
-  "solidRed",
-  "outlineCyan",
-  "outlineGreen",
-  "outlineYellow",
-  "outlinePurple",
-  "outlineRed",
+const ALL_VARS = [
+  ...COLORS.map((t) => t.v),
+  ...CATEGORIES.map((c) => c.font),
+  ...CATEGORIES.map((c) => c.size),
 ];
-
-const ALL_VARS = [...COLORS, ...FONTS, ...SIZES].map((t) => t.v);
 
 const read = (v: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -113,20 +91,17 @@ const firstFamily = (stack: string) =>
   (stack.split(",")[0] ?? "").trim().replace(/^["']|["']$/g, "");
 
 const fontStack = (family: string) =>
-  family === "monospace"
-    ? "monospace"
-    : `"${family}", "IBM Plex Mono", monospace`;
+  family === "monospace" ? "monospace" : `"${family}", "IBM Plex Mono", monospace`;
 
 const remToPx = (rem: string) => Math.round((parseFloat(rem) || 0) * 16);
-const pxToRem = (px: number) => `${(px / 16).toFixed(4).replace(/0+$/, "").replace(/\.$/, "")}rem`;
+const pxToRem = (px: number) =>
+  `${(px / 16).toFixed(4).replace(/0+$/, "").replace(/\.$/, "")}rem`;
 
 export function ThemeStudio() {
   // varName -> current value (colour hex, font stack, or size rem)
   const [vals, setVals] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
 
-  // Apply any saved overrides to this page, then seed the controls from the
-  // live computed styles (which now reflect those overrides).
   useEffect(() => {
     applyThemeOverrides();
     const seed: Record<string, string> = {};
@@ -152,6 +127,20 @@ export function ThemeStudio() {
     setCopied(false);
   }
 
+  /** Number 2 → match Body 1 (font + size). */
+  function matchBody() {
+    const next = {
+      ...vals,
+      "--font-num2": vals["--font-body"] ?? "",
+      "--text-num2": vals["--text-body"] ?? "",
+    };
+    set("--font-num2", next["--font-num2"]);
+    set("--text-num2", next["--text-num2"]);
+    setVals(next);
+    persist(next);
+    setCopied(false);
+  }
+
   function reset() {
     for (const v of ALL_VARS) document.documentElement.style.removeProperty(v);
     try {
@@ -172,11 +161,11 @@ export function ThemeStudio() {
       "  /* palette */",
       ...COLORS.map((t) => line(t.v)),
       "",
-      "  /* type families */",
-      ...FONTS.map((t) => line(t.v)),
+      "  /* type categories — families */",
+      ...CATEGORIES.map((c) => line(c.font)),
       "",
-      "  /* text sizes */",
-      ...SIZES.map((t) => line(t.v)),
+      "  /* type categories — sizes */",
+      ...CATEGORIES.map((c) => line(c.size)),
       "}",
     ].join("\n");
   }, [vals]);
@@ -190,13 +179,20 @@ export function ThemeStudio() {
     }
   }
 
+  const catStyle = (c: Cat): React.CSSProperties => ({
+    fontFamily: `var(${c.font})`,
+    fontSize: `var(${c.size})`,
+  });
+  const cat = (key: string) => CATEGORIES.find((c) => c.key === key)!;
+
   return (
     <div className="min-h-screen bg-bg text-fg">
       <header className="flex items-center justify-between border-b border-cyan/40 px-6 py-3">
         <div>
-          <h1 className="font-display text-2xl text-cyan text-glow-cyan">Theme Studio</h1>
+          <h1 className="font-display text-2xl text-cyan text-glow-cyan">Theme Builder · Typography</h1>
           <p className="font-mono text-xs text-fg-dim">
-            Dev-only · edit tokens live, then copy the @theme block into src/app/globals.css
+            Dev-only · 7-category font taxonomy. Tune face + size per category and watch the
+            preview. Live app is untouched until the migration — copy the @theme block when locked.
           </p>
         </div>
         <div className="flex gap-2">
@@ -209,28 +205,51 @@ export function ThemeStudio() {
         </div>
       </header>
 
-      <div className="grid gap-6 p-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 p-6 lg:grid-cols-[380px_1fr]">
         {/* ───────────────────────── Controls ───────────────────────── */}
         <div className="flex flex-col gap-6">
-          <Section title="Fonts">
-            {FONTS.map((t) => (
-              <label key={t.v} className="flex items-center justify-between gap-3">
-                <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-dim">
-                  {t.label}
-                </span>
-                <select
-                  value={firstFamily(vals[t.v] ?? "")}
-                  onChange={(e) => update(t.v, fontStack(e.target.value))}
-                  className="min-w-[150px] border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg"
-                >
-                  {FONT_CHOICES.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ))}
+          <Section title="Font categories">
+            {CATEGORIES.map((c) => {
+              const px = remToPx(vals[c.size] ?? SIZE_DEFAULT[c.size] ?? "1rem");
+              return (
+                <div key={c.key} className="flex flex-col gap-1.5 border-t border-cyan/15 pt-2.5 first:border-0 first:pt-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-cyan">{c.label}</span>
+                    <span className="font-mono text-[11px] text-fg-faint">{px}px</span>
+                  </div>
+                  <span className="font-mono text-[11px] leading-tight text-fg-faint">{c.desc}</span>
+                  <select
+                    value={firstFamily(vals[c.font] ?? "")}
+                    onChange={(e) => update(c.font, fontStack(e.target.value))}
+                    className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg"
+                  >
+                    {FONT_CHOICES.map((f) => (
+                      <option key={f} value={f}>
+                        {f}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="range"
+                    min={c.min}
+                    max={c.max}
+                    step={0.5}
+                    value={px}
+                    onChange={(e) => update(c.size, pxToRem(parseFloat(e.target.value)))}
+                    className="accent-cyan"
+                  />
+                  {c.key === "num2" && (
+                    <button
+                      type="button"
+                      onClick={matchBody}
+                      className="self-start font-osd text-[11px] uppercase tracking-[0.12em] text-purple hover:text-cyan"
+                    >
+                      = match Body 1
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </Section>
 
           <Section title="Colours">
@@ -255,34 +274,11 @@ export function ThemeStudio() {
             ))}
           </Section>
 
-          <Section title="Sizes">
-            {SIZES.map((t) => {
-              const px = remToPx(vals[t.v] ?? "0.75rem");
-              return (
-                <label key={t.v} className="flex flex-col gap-1">
-                  <span className="flex justify-between font-mono text-xs text-fg-dim">
-                    <span>{t.label}</span>
-                    <span className="text-cyan">{px}px</span>
-                  </span>
-                  <input
-                    type="range"
-                    min={t.min}
-                    max={t.max}
-                    step={0.5}
-                    value={px}
-                    onChange={(e) => update(t.v, pxToRem(parseFloat(e.target.value)))}
-                    className="accent-cyan"
-                  />
-                </label>
-              );
-            })}
-          </Section>
-
           <Section title="Output">
             <textarea
               readOnly
               value={cssBlock}
-              rows={12}
+              rows={14}
               className="w-full resize-y border border-cyan/40 bg-bg p-2 font-mono text-[12px] text-fg-dim"
             />
           </Section>
@@ -290,104 +286,167 @@ export function ThemeStudio() {
 
         {/* ───────────────────────── Preview ───────────────────────── */}
         <div className="flex flex-col gap-6">
-          <Panel label="Type scale">
-            <h1 className="font-display text-4xl text-cyan text-glow-cyan">Mini-Manager</h1>
-            {FONTS.map((t) => (
-              <div key={t.v} className="border-t border-cyan/15 pt-2">
-                <div className="font-mono text-[12px] text-fg-faint">{t.label}</div>
-                <div style={{ fontFamily: `var(${t.v})` }} className="text-xl text-fg">
-                  AaBbCc 0123 — The quick brown fox
-                </div>
+          <Panel label="Categories — each in action">
+            {CATEGORIES.map((c) => (
+              <div key={c.key} className="flex flex-col gap-1 border-t border-cyan/15 pt-2 first:border-0 first:pt-0 sm:flex-row sm:items-baseline sm:gap-4">
+                <span className="w-40 shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-fg-faint">
+                  {c.label}
+                </span>
+                <span style={catStyle(c)} className="text-fg">
+                  {SAMPLE[c.key]}
+                </span>
               </div>
             ))}
-            <p className="font-mono text-sm text-fg-dim">
-              Body copy (font-mono / text-sm): plan your projects, track your paints, manage
-              your minis across a 7,144-paint cross-brand library.
-            </p>
           </Panel>
 
-          <Panel label="Size scale">
-            {[
-              ["text-xs", "body / tables"],
-              ["text-sm", "emphasis"],
-              ["text-base", "base"],
-              ["text-lg", "subheads"],
-              ["text-xl", "subtitles"],
-              ["text-2xl", "titles"],
-              ["text-3xl", "big titles"],
-            ].map(([cls, role]) => (
-              <div key={cls} className="flex items-baseline gap-3 border-t border-cyan/15 pt-1">
-                <span className="w-24 shrink-0 font-mono text-[12px] text-fg-faint">{cls}</span>
-                <span className={`${cls} text-fg`}>{role} — Mini-Manager 0123</span>
+          <Panel label="In context — a project card">
+            <div className="border border-cyan/30 bg-bg p-4">
+              <div style={catStyle(cat("title"))} className="text-cyan text-glow-cyan">
+                Ultramarines · 2nd Company
               </div>
-            ))}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span style={catStyle(cat("h2"))} className="uppercase tracking-[0.15em] text-fg-dim">
+                  Status
+                </span>
+                <span
+                  style={catStyle(cat("button"))}
+                  className="inline-flex items-center border border-cyan px-2 py-0.5 uppercase tracking-[0.12em] text-cyan"
+                >
+                  Painting
+                </span>
+                <span
+                  style={catStyle(cat("button"))}
+                  className="inline-flex items-center border border-yellow px-2 py-0.5 uppercase tracking-[0.12em] text-yellow"
+                >
+                  Wishlist
+                </span>
+                <span
+                  style={catStyle(cat("button"))}
+                  className="inline-flex items-center border border-red px-2 py-0.5 uppercase tracking-[0.12em] text-red"
+                >
+                  High
+                </span>
+              </div>
+              <p style={catStyle(cat("body"))} className="mt-3 text-fg-dim">
+                Squad of 10 marines, mostly based. Notes: edge-highlight the armour with
+                Fenrisian Grey, then glaze the recesses. No recipes attached yet.
+              </p>
+              <div className="mt-4 flex items-end gap-6">
+                <div className="flex flex-col">
+                  <span style={catStyle(cat("h2"))} className="uppercase tracking-[0.15em] text-fg-faint">
+                    Complete
+                  </span>
+                  <span style={catStyle(cat("num1"))} className="leading-none text-green text-glow-green">
+                    67%
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span style={catStyle(cat("h2"))} className="uppercase tracking-[0.15em] text-fg-faint">
+                    Models owned
+                  </span>
+                  <span style={catStyle(cat("num2"))} className="leading-none text-fg">
+                    23
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span style={catStyle(cat("button"))} className="inline-flex items-center border border-purple bg-purple px-3 py-1 uppercase tracking-[0.12em] text-bg">
+                  + Attach
+                </span>
+                <span style={catStyle(cat("button"))} className="inline-flex items-center border border-green bg-green px-3 py-1 uppercase tracking-[0.12em] text-bg">
+                  + Slot
+                </span>
+                <span style={catStyle(cat("button"))} className="inline-flex items-center border border-cyan px-3 py-1 uppercase tracking-[0.12em] text-cyan">
+                  Save
+                </span>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel label="In context — table + hero stats">
+            <div className="flex flex-wrap gap-6">
+              {([
+                ["Active", "07", "text-cyan text-glow-cyan"],
+                ["Done", "3%", "text-green text-glow-green"],
+                ["Streak", "5d", "text-yellow text-glow-yellow"],
+                ["Time", "0:00", "text-purple text-glow-purple"],
+              ] as const).map(([label, value, cls]) => (
+                <div key={label} className="flex flex-col">
+                  <span style={catStyle(cat("h2"))} className="uppercase tracking-[0.15em] text-fg-faint">
+                    {label}
+                  </span>
+                  <span style={catStyle(cat("num1"))} className={`leading-none ${cls}`}>
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <table className="mt-3 w-full border-collapse">
+              <thead>
+                <tr className="border-b border-cyan/20 text-left">
+                  {["Name", "Brand", "Price"].map((h) => (
+                    <th key={h} style={catStyle(cat("h2"))} className="px-3 py-1 uppercase tracking-[0.15em] text-fg-faint">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {([
+                  ["Macragge Blue", "Citadel", "4.55"],
+                  ["Mephiston Red", "Citadel", "4.55"],
+                ] as const).map(([name, brand, price]) => (
+                  <tr key={name} className="border-b border-fg/10">
+                    <td style={catStyle(cat("body"))} className="px-3 py-1.5 text-fg">{name}</td>
+                    <td style={catStyle(cat("body"))} className="px-3 py-1.5 text-fg-dim">{brand}</td>
+                    <td style={catStyle(cat("num2"))} className="px-3 py-1.5 tabular-nums text-fg">${price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mt-2 flex items-center gap-3">
+              <span style={catStyle(cat("button"))} className="inline-flex items-center border border-dotted border-purple px-3 py-1 uppercase tracking-[0.1em] text-purple">
+                + Attach ▾
+              </span>
+              <span style={catStyle(cat("body"))} className="text-fg-dim">
+                ← trigger is Buttons; the open option list below is Body 1:
+              </span>
+            </div>
+            <div className="w-48 border border-dotted border-cyan/40 bg-bg">
+              {["Macragge Blue", "Mephiston Red", "Abaddon Black"].map((o) => (
+                <div key={o} style={catStyle(cat("body"))} className="px-2 py-1 text-fg hover:bg-cyan/10">
+                  {o}
+                </div>
+              ))}
+            </div>
           </Panel>
 
           <Panel label="Palette">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
               {COLORS.map((t) => (
                 <div key={t.v} className="flex flex-col items-center gap-1">
-                  <div
-                    className="h-12 w-full border border-fg/20"
-                    style={{ background: `var(${t.v})` }}
-                  />
+                  <div className="h-12 w-full border border-fg/20" style={{ background: `var(${t.v})` }} />
                   <span className="font-mono text-[12px] text-fg-faint">{t.label}</span>
                 </div>
               ))}
             </div>
-          </Panel>
-
-          <Panel label="Buttons">
-            <div className="flex flex-wrap gap-2">
-              {BTN_VARIANTS.map((variant) => (
-                <Button key={variant} variant={variant} size="sm">
-                  {variant}
-                </Button>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel label="Controls + table">
-            <div className="flex flex-wrap items-center gap-3">
-              <input
-                placeholder="Sample input"
-                className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg placeholder:text-fg-faint"
-              />
-              {/* The attach affordance + the row status indicators are real
-                  Button variants now (outlinePurple / outlineGreen / …), not
-                  hand-rolled chips — so every "button-shaped" thing here maps
-                  back to the Buttons section above. */}
-              <Button variant="outlinePurple" size="sm">
-                + attach
-              </Button>
-            </div>
-            <table className="mt-2 w-full border-collapse font-mono text-xs">
-              <tbody>
-                {(
-                  [
-                    ["Macragge Blue", "Citadel", "$4.55", "outlineGreen"],
-                    ["Mephiston Red", "Citadel", "$4.55", "outlineYellow"],
-                  ] as const
-                ).map(([name, brand, price, variant]) => (
-                  <tr key={name} className="border-b border-fg/10">
-                    <td className="px-3 py-2 text-fg">{name}</td>
-                    <td className="px-3 py-2 text-fg-dim">{brand}</td>
-                    <td className="px-3 py-2 tabular-nums text-fg">{price}</td>
-                    <td className="px-3 py-2">
-                      <Button variant={variant} size="sm">
-                        owned
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </Panel>
         </div>
       </div>
     </div>
   );
 }
+
+/** Representative sample text per category for the "each in action" panel. */
+const SAMPLE: Record<string, React.ReactNode> = {
+  title: "My Paint Collection",
+  h1: "PROJECTS · COLLECTION · LIBRARY",
+  h2: "NAME · BRAND · UPCOMING EVENTS · MODELS",
+  body: "Plan your projects and track your paints across a 7,144-paint library.",
+  button: "+ NEW PROJECT   SAVE   WISHLIST   HIGH",
+  num1: "07  ·  3%  ·  12:34",
+  num2: "14 15 16  ·  67%  ·  OWNED 23",
+};
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -401,9 +460,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Panel({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="border border-cyan/40 bg-bg-raised/40 p-4">
-      <div className="mb-3 font-osd text-[12px] uppercase tracking-[0.2em] text-fg-faint">
-        {label}
-      </div>
+      <div className="mb-3 font-osd text-[12px] uppercase tracking-[0.2em] text-fg-faint">{label}</div>
       <div className="flex flex-col gap-3">{children}</div>
     </div>
   );
