@@ -15,7 +15,7 @@
 
 - [x] **M3 — Recipe-box label order** (`RuYiw7plQqDV` / MM-22, /focus). On the Focus recipe box, reorder so the label reads **"RECIPE BOX"** first, then **"No Recipe Attached"**, then the box/card — i.e. heading above the empty-state text. Best-guess this order (Ross's confirmed read).
 
-- [ ] **M4 — Make the /projects activity section smaller + scrollable** (`UF5HOwXMpJxP`, /projects). The flagged section on `/projects` (the ACTIVITY card / the over-tall section) should be capped in height and scroll internally: add a `max-h-*` + `overflow-y-auto` so it doesn't dominate the page. Confirm against the current `/projects` layout (the pin references an older layout — target the equivalent current section).
+- [x] **M4 — Make the /projects activity section smaller + scrollable** (`UF5HOwXMpJxP`, /projects). The flagged section on `/projects` (the ACTIVITY card / the over-tall section) should be capped in height and scroll internally: add a `max-h-*` + `overflow-y-auto` so it doesn't dominate the page. Confirm against the current `/projects` layout (the pin references an older layout — target the equivalent current section).
 
 - [ ] **M5 — /projects KPI → centered percentage only** (`S3lZ40vuocCL`, /projects). Strip the flagged `/projects` KPI tracker(s) down to just the **percentage number, centered** (drop the surrounding label/bar chrome Ross flagged as too busy). Keep it a Number category. Confirm on the current `/projects` page.
 

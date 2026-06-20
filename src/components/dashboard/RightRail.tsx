@@ -18,10 +18,12 @@ export function RightRail({
       <Panel label="PLANNER" className="p-3">
         <PlannerCalendar events={events} />
       </Panel>
-      {/* Activity feed kept compact + scrollable (UF5H): a fixed max height
-          with internal overflow so a long history never stretches the rail. */}
+      {/* Activity feed kept compact + scrollable (UF5HOwXMpJxP): capped height
+          with internal overflow so a long history scrolls in place and never
+          stretches the rail or dominates the page. The cap also shrinks on
+          short viewports (min of 14rem / 30vh) so it stays glanceable. */}
       <Panel label="ACTIVITY TRACKER" className="p-3">
-        <div className="max-h-56 overflow-y-auto pr-1">
+        <div className="max-h-[min(14rem,30vh)] overflow-y-auto pr-1">
           <ActivityFeed entries={activity} />
         </div>
       </Panel>
