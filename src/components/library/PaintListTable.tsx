@@ -6,15 +6,16 @@ import { cn } from "@/lib/cn";
 import { Chip, Swatch } from "@/components/kit";
 import type { Paint } from "@/lib/types";
 
-// Column layout — flex-basis (px) + grow factor, tuned to match the original
-// auto-sized <td> widths while letting Name absorb slack like before.
-const COLS: { label: string; basis: number; grow: number }[] = [
+// Column layout — flex-basis (px), grow factor, and an optional max width.
+// Name no longer absorbs all slack: a cap stops the oversized NAME→BRAND gap,
+// and the freed space is shared so Type/Hex/Brand each get breathing room.
+const COLS: { label: string; basis: number; grow: number; max?: number }[] = [
   { label: "", basis: 40, grow: 0 },
-  { label: "Name", basis: 160, grow: 1 },
-  { label: "Brand", basis: 120, grow: 0 },
-  { label: "Line", basis: 120, grow: 0 },
-  { label: "Type", basis: 90, grow: 0 },
-  { label: "Hex", basis: 80, grow: 0 },
+  { label: "Name", basis: 180, grow: 2, max: 320 },
+  { label: "Brand", basis: 130, grow: 1 },
+  { label: "Line", basis: 130, grow: 1 },
+  { label: "Type", basis: 110, grow: 1 },
+  { label: "Hex", basis: 96, grow: 0 },
   { label: "Own", basis: 56, grow: 0 },
   { label: "Wish", basis: 56, grow: 0 },
 ];
@@ -23,7 +24,11 @@ const ROW_HEIGHT = 37; // px-3 py-2 + text + 1px border — matches the original
 const OVERSCAN = 12;
 
 function cellStyle(col: (typeof COLS)[number]): React.CSSProperties {
-  return { flex: `${col.grow} 0 ${col.basis}px`, minWidth: 0 };
+  return {
+    flex: `${col.grow} 0 ${col.basis}px`,
+    minWidth: 0,
+    ...(col.max ? { maxWidth: `${col.max}px` } : {}),
+  };
 }
 
 export function PaintListTable({
