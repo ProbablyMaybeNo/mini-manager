@@ -133,6 +133,25 @@
   --text-dropdown: 1.02rem; /* Listbox trigger + options — +25% (w5cZimrBYgGh), on par with the project title-column cells */
   --text-element: 0.75rem; /* tools / activity tracker / feature text */
 
+  /* ─────────────────────────────────────────────────────────────────────────
+     Typography categories — the 7-category taxonomy the Theme Builder drives.
+     Buttons reuse --font-button / --text-button above. Number 2 defaults to
+     Body 1. App surfaces migrate onto these in the typography pass; for now the
+     Theme Builder (/dev/theme) renders them so faces + sizes can be locked in. */
+  --font-title: "Unbutton", "IBM Plex Mono", monospace; /* page titles */
+  --font-h1: "IBM BIOS", "IBM Plex Mono", monospace; /* section headers + nav + modal titles */
+  --font-h2: "IBM BIOS", "IBM Plex Mono", monospace; /* column headers + in-section labels */
+  --font-body: "VT323", "IBM Plex Mono", monospace; /* all regular text */
+  --font-num1: "Unbutton", "IBM Plex Mono", monospace; /* hero numbers */
+  --font-num2: "VT323", "IBM Plex Mono", monospace; /* standard numbers (defaults to body) */
+
+  --text-title: 1.8438rem; /* ~29.5px */
+  --text-h1: 1rem; /* 16px */
+  --text-h2: 0.75rem; /* 12px */
+  --text-body: 0.9688rem; /* ~15.5px */
+  --text-num1: 2.1875rem; /* 35px */
+  --text-num2: 0.9688rem; /* ~15.5px (= body) */
+
   /* Border + glow */
   --radius-panel: 2px;
 }
