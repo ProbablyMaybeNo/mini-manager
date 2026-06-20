@@ -177,7 +177,7 @@ export function ColourWheelTool({
           {picks.map(({ hex, paint }, i) => {
             const isPinned = pinned.has(hex);
             return (
-              <div key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
+              <div className="flex flex-wrap items-center gap-3 gap-y-2 border border-cyan/20 p-2" key={i}>
                 <button
                   type="button"
                   aria-pressed={isPinned}
@@ -200,21 +200,31 @@ export function ColourWheelTool({
                   {hex}
                 </span>
                 <span aria-hidden className="font-osd text-fg-faint">→</span>
-                {paint ? (
-                  <>
-                    <Swatch hex={paint.hex} size="lg" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
-                      <div className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
-                        {paint.brand}
+                {/* Paint identity stays one unit with a min width, so the Assign
+                    button reflows onto its own line at ≤390px instead of
+                    overlapping the brand label (UX-003). */}
+                <div className="flex min-w-[8rem] flex-1 items-center gap-3">
+                  {paint ? (
+                    <>
+                      <Swatch hex={paint.hex} size="lg" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-mono text-sm text-fg">{paint.name}</div>
+                        <div className="truncate font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
+                          {paint.brand}
+                        </div>
                       </div>
-                    </div>
-                  </>
-                ) : (
-                  <span className="flex-1 font-mono text-xs text-fg-faint">No match</span>
-                )}
+                    </>
+                  ) : (
+                    <span className="font-mono text-xs text-fg-faint">No match</span>
+                  )}
+                </div>
                 {onAssignPaint && (
-                  <Button size="sm" variant="secondary" onClick={() => onAssignPaint(hex)}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="ml-auto shrink-0"
+                    onClick={() => onAssignPaint(hex)}
+                  >
                     Assign
                   </Button>
                 )}
