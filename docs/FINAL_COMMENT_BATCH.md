@@ -17,7 +17,7 @@
 
 - [x] **M4 — Make the /projects activity section smaller + scrollable** (`UF5HOwXMpJxP`, /projects). The flagged section on `/projects` (the ACTIVITY card / the over-tall section) should be capped in height and scroll internally: add a `max-h-*` + `overflow-y-auto` so it doesn't dominate the page. Confirm against the current `/projects` layout (the pin references an older layout — target the equivalent current section).
 
-- [ ] **M5 — /projects KPI → centered percentage only** (`S3lZ40vuocCL`, /projects). Strip the flagged `/projects` KPI tracker(s) down to just the **percentage number, centered** (drop the surrounding label/bar chrome Ross flagged as too busy). Keep it a Number category. Confirm on the current `/projects` page.
+- [x] **M5 — /projects KPI → centered percentage only** (`S3lZ40vuocCL`, /projects). Strip the flagged `/projects` KPI tracker(s) down to just the **percentage number, centered** (drop the surrounding label/bar chrome Ross flagged as too busy). Keep it a Number category. Confirm on the current `/projects` page.
 
 - [ ] **M6 — ± Dropper buttons on the Colour Dropper tool** (`wBJeqQHQLK4g`, /tools/dropper). New feature, best-guessed: let the user add/remove dropper slots — start at **3**, with **+ / − dropper buttons**. Move the Save / Send-to-Recipe buttons to the right and put the +/− controls in their place (per Ross's sketch). Persist the count in component state; clamp to a sane min (1) / max (e.g. 8). Keep the existing palette-extraction behaviour for each dropper.
 
