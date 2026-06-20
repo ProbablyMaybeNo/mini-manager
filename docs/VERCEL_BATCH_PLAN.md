@@ -19,7 +19,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 ## Ready to build
 
-- [ ] **M1 — Wire the status/activity icons** (`2SafK0GgPnr_`, recurring + high priority). Ross's SVGs live at `D:\AI-Workstation\mini-manager\Library\Icons` (`Wishlist.svg`, `Owned.svg`, `Priming.svg`, `Painting.svg`, `build or building.svg`, `Completed.svg`). They are NOT wired in — `kit/StatusIcon.tsx` still draws its own inline paths. Copy the SVGs into `public/icons/status/`, and render them from `StatusIcon` keyed by status/activity type (filename → type). Keep `currentColor`/accent tinting if the SVGs allow (else render as-is). Verify they appear on the dashboard activity feed + collection/projects status indicators.
+- [x] **M1 — Wire the status/activity icons** (`2SafK0GgPnr_`, recurring + high priority). Ross's SVGs live at `D:\AI-Workstation\mini-manager\Library\Icons` (`Wishlist.svg`, `Owned.svg`, `Priming.svg`, `Painting.svg`, `build or building.svg`, `Completed.svg`). They are NOT wired in — `kit/StatusIcon.tsx` still draws its own inline paths. Copy the SVGs into `public/icons/status/`, and render them from `StatusIcon` keyed by status/activity type (filename → type). Keep `currentColor`/accent tinting if the SVGs allow (else render as-is). Verify they appear on the dashboard activity feed + collection/projects status indicators.
 
 - [ ] **M2 — Dashboard stat colours** (`icu1mlFtJeya` time-total → pastel **purple**; `awIApwrPCRs3` streak # → pastel **yellow**; `zsgMLZrqO_ha` completion % → neon **green**; `_tsKQEEUbfvT` active-projects # → neon **cyan**). Colour each dashboard stat number via the StatBox/StatRow accent. Map to palette tokens (`--color-purple/yellow/green/cyan`).
 
