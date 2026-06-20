@@ -35,7 +35,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M8 — "+ Attach" / add-button consolidation** (`9lgIwII2oBy7`, `foqbcZx93a6F`, `t7doCednL8MP`, `CiBUwVgwwQRD`): standardise attach/add affordances as **pastel purple "+ Attach"** (KEEP the DePixel Klein button font — do NOT use VT323). `+COLOR SCHEME` → neon green; `+RECIPE` → pastel purple; `share` → neon green. Use the canonical `Button`/`IconButton` variants where possible.
 
-- [ ] **M9 — Bright-white text** (`1Xq1P5W3Yvzq`, `mWGF8f6O1IEQ`): make the flagged page subtitle / text bright white (`text-fg`), and for `mWGF` write a short, informative per-page description under the title (1–2 lines summarising that page's features). Target via the threads' selectors.
+- [x] **M9 — Bright-white text** (`1Xq1P5W3Yvzq`, `mWGF8f6O1IEQ`): make the flagged page subtitle / text bright white (`text-fg`), and for `mWGF` write a short, informative per-page description under the title (1–2 lines summarising that page's features). Target via the threads' selectors.
 
 - [ ] **M10 — Backgrounds to pure black** (`T4nuELRRnFtJ` "crept toward blue"; `BRFouQHNaUUx` side panel). The blue is likely the faint cyan scanline gradient on `body` in `globals.css` and/or `bg-bg-raised` panels. Cut the tint toward pure `--color-bg` where flagged; side-panel/nav background → `bg-bg`. Keep scanlines subtle if removing entirely changes the vibe — match the threads.
 
