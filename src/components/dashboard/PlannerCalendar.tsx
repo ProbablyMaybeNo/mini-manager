@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, MiniCalendar } from "@/components/kit";
+import { Button, Input, Listbox, MiniCalendar } from "@/components/kit";
 import { createEvent } from "@/lib/actions/events";
 import { accentText, eventKindAccent } from "@/lib/palette";
 import { cn } from "@/lib/cn";
@@ -222,18 +222,18 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">
               Kind
             </span>
-            <select
+            {/* Native <select> → kit Listbox so the +DATE kind picker inherits
+                the distinct dropdown style + the bigger dropdown font
+                (w5cZimrBYgGh / 8GfWoKTUukde). */}
+            <Listbox<CalendarEventKind>
               value={kind}
-              onChange={(e) => setKind(e.target.value as CalendarEventKind)}
-              aria-label="Event kind"
-              className="border border-cyan/50 bg-bg px-2 py-1 font-mono text-xs text-fg focus:border-cyan focus:outline-none"
-            >
-              {KINDS.map((k) => (
-                <option key={k} value={k}>
-                  {k}
-                </option>
-              ))}
-            </select>
+              options={KINDS.map((k) => ({ value: k, label: k }))}
+              onChange={setKind}
+              ariaLabel="Event kind"
+              accent={eventKindAccent[kind]}
+              className="w-full"
+              triggerClassName="w-full"
+            />
           </label>
           <label className="flex flex-col gap-1">
             <span className="font-osd text-[12px] uppercase tracking-[0.15em] text-fg-faint">

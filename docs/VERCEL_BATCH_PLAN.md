@@ -25,7 +25,7 @@ Implements the unresolved Vercel comments (39 threads, 2026-06-19). Built for th
 
 - [x] **M3 — Calendar "deadline" date does nothing** (`d9cfJYAVIx0C`): adding a deadline date had no effect, but "tournament" worked. Investigate the add-event/event-kind path (`MiniCalendar` / planner add-date form / the event `kind` enum) — likely the "deadline" kind isn't wired into add or render. Fix so a deadline date saves + shows a dot like other kinds. **Real bug.**
 
-- [ ] **M4 — All dropdowns → distinct menu style + bigger font** (`8GfWoKTUukde`, `0o2HEmQzVjyU`, `w5cZimrBYgGh`). In kit `Listbox`: apply the recipe-"+Attach" treatment (thinner font + **dotted** border) and raise the dropdown font ~25% so it's on par with the project-table title-column cells (per `w5cZ`). Every Listbox consumer inherits it.
+- [x] **M4 — All dropdowns → distinct menu style + bigger font** (`8GfWoKTUukde`, `0o2HEmQzVjyU`, `w5cZimrBYgGh`). In kit `Listbox`: apply the recipe-"+Attach" treatment (thinner font + **dotted** border) and raise the dropdown font ~25% so it's on par with the project-table title-column cells (per `w5cZ`). Every Listbox consumer inherits it.
 
 - [ ] **M5 — Priority dropdown** (`ynb3l8JdxhaE`): give it the +Attach dropdown style + dotted border, and colour it by priority — **Red = High, orange = mid, Yellow = Low**.
 
