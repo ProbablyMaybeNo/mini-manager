@@ -23,7 +23,7 @@ function RecipesRoute() {
       projects={data.projects}
       status={status}
       onOpenRecipe={(r) => router.push(`/recipes/${r.id}`)}
-      onCreateRecipe={(name) => router.push(`/recipes/new?name=${encodeURIComponent(name)}`)}
+      onNewRecipe={() => router.push("/recipes/new")}
       onAssignProject={(recipe, projectId) => {
         startTransition(async () => {
           await attachRecipeToProject({ recipeId: recipe.id, projectId });

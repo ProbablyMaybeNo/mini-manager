@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Panel, SlideOutPanel } from "@/components/kit";
+import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
 import type { Project, Recipe } from "@/lib/types";
@@ -17,7 +17,7 @@ export function RecipeIndexView({
   onOpenRecipe,
   onAssignProject,
   onShare,
-  onCreateRecipe,
+  onNewRecipe,
   onRetry,
   onEditPaint,
 }: {
@@ -27,33 +27,25 @@ export function RecipeIndexView({
   onOpenRecipe: (recipe: Recipe) => void;
   onAssignProject: (recipe: Recipe, projectId: string) => void;
   onShare: (recipe: Recipe) => void;
-  onCreateRecipe: (name: string) => void;
+  /** TXjhrdKPsrda — "+ Recipe" goes straight to the full create page; the
+   *  recipe is named in the editor, so there is no separate naming step. */
+  onNewRecipe: () => void;
   onRetry?: () => void;
   /** MM-51 — a picker selection on a recipe-table paint. The host decides
    *  how to persist (e.g. open the recipe editor focused on that slot). */
   onEditPaint?: (recipe: Recipe, slotIndex: number, selection: ColorPickerSelection) => void;
 }) {
-  const [creating, setCreating] = useState(false);
-  const [name, setName] = useState("");
   // MM-51 — which recipe paint the shared ColorPicker is editing.
   const [editingPaint, setEditingPaint] = useState<{ recipe: Recipe; index: number } | null>(
     null,
   );
-
-  function submit() {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    onCreateRecipe(trimmed);
-    setName("");
-    setCreating(false);
-  }
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
       <PageHeader
         title="RECIPE"
         tagline="Build, manage, and share repeatable paint schemes."
-        actions={<Button variant="attach" onClick={() => setCreating(true)}>+ Recipe</Button>}
+        actions={<Button variant="attach" onClick={onNewRecipe}>+ Recipe</Button>}
       />
 
       {status === "error" ? (
@@ -78,7 +70,7 @@ export function RecipeIndexView({
               onOpenRecipe={onOpenRecipe}
               onAssignProject={onAssignProject}
               onShare={onShare}
-              onCreate={() => setCreating(true)}
+              onCreate={onNewRecipe}
               onOpenPaint={
                 onEditPaint
                   ? (recipe, index) => setEditingPaint({ recipe, index })
@@ -88,35 +80,6 @@ export function RecipeIndexView({
           )}
         </Panel>
       )}
-
-      {/* Create flow — name first */}
-      <SlideOutPanel
-        open={creating}
-        onClose={() => setCreating(false)}
-        title="New recipe"
-        breadcrumb="RECIPE ▸ CREATE"
-        width="max-w-sm"
-        footer={
-          <Button className="w-full" onClick={submit} disabled={!name.trim()}>
-            Create &amp; open editor
-          </Button>
-        }
-      >
-        <div className="flex flex-col gap-3">
-          <Input
-            label="Recipe name"
-            name="recipe-name"
-            autoFocus
-            placeholder="e.g. Ultramarines Battle-Ready"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-          />
-          <p className="font-mono text-[12px] text-fg-faint">
-            ▸ Name it first, then add paint slots and notes in the editor.
-          </p>
-        </div>
-      </SlideOutPanel>
 
       {/* MM-51 — clicking a recipe-table paint opens the SAME shared
           ColorPicker (wheel + library + eyedropper) used in the recipe

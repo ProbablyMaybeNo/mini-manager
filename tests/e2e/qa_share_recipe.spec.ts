@@ -4,10 +4,10 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
 /**
  * M5 — Create + share a recipe.
  *
- * The recipe create flow is name-first: "+ Recipe" on the index opens the
- * "New recipe" slide-out → "Create & open editor" routes to the editor
- * draft (/recipes/new?name=…). The draft only persists after SAVE, then
- * appears on the index. Sharing is a one-click "Share" in the editor that
+ * The recipe create flow is editor-first (TXjhrdKPsrda): "+ Recipe" on the
+ * index routes straight to the full create page (/recipes/new) — no naming
+ * slide-out. The draft is named in the editor and only persists after SAVE,
+ * then appears on the index. Sharing is a one-click "Share" in the editor that
  * publishes the recipe, mints a public /r/<slug>, and copies the link to
  * the clipboard (toast: "Public link copied to clipboard").
  *
@@ -30,34 +30,30 @@ test.describe("M5 — Recipe create + share", () => {
 
     const recipeName = `QA Recipe ${Date.now()}`;
 
-    // --- Create (name-first) ---
+    // --- Create (editor-first) ---
     await page.goto("/recipes", { waitUntil: "domcontentloaded" });
     await expect(
       page.getByRole("heading", { name: /^RECIPE$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     // Fresh account → empty-state "+ Create your first recipe"; either
-    // affordance opens the same name-first panel. Retry until the panel
-    // mounts (guards a pre-hydration click).
+    // affordance routes straight to the full create page. Retry until the
+    // navigation lands (guards a pre-hydration click).
     const createBtn = page
       .getByRole("button", { name: /\+ Create your first recipe|\+ Recipe/i })
       .first();
-    const namePanel = page.getByRole("dialog", { name: /New recipe/i });
     await expect(async () => {
       await createBtn.click();
-      await expect(namePanel).toBeVisible({ timeout: 2_000 });
+      await page.waitForURL(/\/recipes\/new(\?|$)/, { timeout: 2_000 });
     }).toPass({ timeout: 30_000 });
-    await namePanel.locator('input[name="recipe-name"]').fill(recipeName);
-    await namePanel
-      .getByRole("button", { name: /Create.*open editor/i })
-      .click();
 
-    // --- Editor draft ---
-    await page.waitForURL(/\/recipes\/new\?name=/, { timeout: 30_000 });
+    // --- Editor draft: name it in the editor ---
     await expect(
       page.getByRole("heading", { name: /^RECIPE EDITOR$/ }),
     ).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByLabel(/recipe name/i)).toHaveValue(recipeName);
+    const nameField = page.getByLabel(/recipe name/i);
+    await nameField.fill(recipeName);
+    await expect(nameField).toHaveValue(recipeName);
 
     // --- Save → back on the index, recipe now listed ---
     await page.getByRole("button", { name: /^Save$/ }).click();
