@@ -35,10 +35,10 @@ describe("activityAccentFor — colour-code activity by type (MM-45)", () => {
 
 describe("statBoxAccents — per-tracker-box total colours (MM-49)", () => {
   test("each of the four KPI boxes reads in its own hue", () => {
-    expect(statBoxAccents.active).toBe("green");
-    expect(statBoxAccents.completion).toBe("yellow");
-    expect(statBoxAccents.streak).toBe("purple");
-    expect(statBoxAccents.time).toBe("cyan");
+    expect(statBoxAccents.active).toBe("cyan");
+    expect(statBoxAccents.completion).toBe("green");
+    expect(statBoxAccents.streak).toBe("yellow");
+    expect(statBoxAccents.time).toBe("purple");
   });
 
   test("the four accents are all distinct", () => {

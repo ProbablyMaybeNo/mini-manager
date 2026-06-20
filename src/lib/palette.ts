@@ -129,16 +129,18 @@ export function activityAccentFor(icon: string): Accent {
  * palette colour"). The four dashboard KPI boxes each read in a distinct
  * style-guide hue per Ross's tracker comments (qHYZN/4g3I/JxHyr), so the row
  * scans as four separate readouts:
- *   Active projects → green  (something live / in progress)
- *   Completion %    → yellow (progress toward done)
- *   Streak         → purple (a streak you don't want to break)
- *   Time Total      → cyan   (base; flips red past a long session — see StatRow)
+ * Per Ross's per-stat colour calls (icu1mlFtJeya / awIApwrPCRs3 / zsgMLZrqO_ha /
+ * _tsKQEEUbfvT):
+ *   Active projects → cyan   (neon — a live readout)
+ *   Completion %    → green  (neon — progress toward done)
+ *   Streak         → yellow  (pastel — a streak you don't want to break)
+ *   Time Total      → purple (pastel — base; flips red past a long session)
  */
 export const statBoxAccents = {
-  active: "green",
-  completion: "yellow",
-  streak: "purple",
-  time: "cyan",
+  active: "cyan",
+  completion: "green",
+  streak: "yellow",
+  time: "purple",
 } as const satisfies Record<string, Accent>;
 
 /** Minutes → "H:MM" for the dashboard time-total / focus totals. */
