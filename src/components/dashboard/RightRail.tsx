@@ -23,7 +23,9 @@ export function RightRail({
           stretches the rail or dominates the page. The cap also shrinks on
           short viewports (min of 14rem / 30vh) so it stays glanceable. */}
       <Panel label="ACTIVITY TRACKER" className="p-3">
-        <div className="max-h-[min(14rem,30vh)] overflow-y-auto pr-1">
+        {/* pt-1 nudges the first row down a smidge so its icon/text isn't
+            clipped against the scroll container's top edge (oRc-Pp1u9Gsk). */}
+        <div className="max-h-[min(14rem,30vh)] overflow-y-auto pr-1 pt-1">
           <ActivityFeed entries={activity} />
         </div>
       </Panel>
