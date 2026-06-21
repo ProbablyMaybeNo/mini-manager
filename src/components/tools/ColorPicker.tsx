@@ -66,6 +66,19 @@ export function ColorPicker({
   const [light, setLight] = useState(seedHsl.l);
   const [harmony, setHarmony] = useState<ColorPickerHarmony>("complementary");
 
+  // Turning the hue wheel from an achromatic colour (white / grey / black —
+  // e.g. the default "#ffffff" stacking substrate) otherwise does nothing:
+  // at saturation 0 every hue is the same grey, so the painter spins the
+  // ring and the colour never changes ("the wheel doesn't change the
+  // substrate"). When the wheel is turned and the current pick can't express
+  // hue, lift saturation to a usable floor and pull lightness off the
+  // extremes so the chosen hue becomes visible immediately.
+  const handleHueChange = (h: number) => {
+    setHue(h);
+    if (sat < 5) setSat(60);
+    if (light <= 2 || light >= 98) setLight(55);
+  };
+
   const pickedHex = useMemo(() => hslToHex(hue, sat, light), [hue, sat, light]);
   const harmonySwatches = useMemo(
     () => buildPickerHarmony(harmony, hue, sat, light),
@@ -146,7 +159,7 @@ export function ColorPicker({
         <h3 id="cp-wheel-heading" className="label-osd text-cyan">
           Wheel
         </h3>
-        <PixelWheelRing hue={hue} onChange={setHue} />
+        <PixelWheelRing hue={hue} onChange={handleHueChange} />
         <div className="flex items-center gap-3">
           <span
             aria-label="Picked colour"

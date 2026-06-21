@@ -26,6 +26,7 @@ export function ColorPickerPanel({
   contextLabel,
   initialHex,
   initialPaintId,
+  pickerKey,
   mode = "add-slot",
   closeOnSelect = false,
 }: {
@@ -37,6 +38,17 @@ export function ColorPickerPanel({
   contextLabel?: string;
   initialHex?: string | null;
   initialPaintId?: string | null;
+  /**
+   * Stable identity of the target being edited (which lane / layer / slot).
+   * The inner {@link ColorPicker} is re-keyed on this so re-opening on a
+   * different target resets the wheel — but, crucially, NOT on the live
+   * `initialHex`. When the host's `initialHex` IS the value the picker is
+   * editing (e.g. the stacking substrate), a pick updates that state, which
+   * would otherwise change the key and remount/reset the picker mid-session.
+   * Pass a target id here to key on identity instead of value. Falls back to
+   * the seed hex/paint id for callers that open one slot at a time.
+   */
+  pickerKey?: string | number | null;
   mode?: ColorPickerMode;
   /** When true, a pick closes the panel; otherwise it stays open for multi-add. */
   closeOnSelect?: boolean;
@@ -67,10 +79,13 @@ export function ColorPickerPanel({
       breadcrumb={breadcrumb}
       width="max-w-md"
     >
-      {/* Re-key on the seed so re-opening on a different slot resets the
-          wheel / sliders / search instead of bleeding the prior session. */}
+      {/* Re-key on a STABLE target identity (which slot is being edited) so
+          re-opening on a different slot resets the wheel / sliders / search,
+          while a pick that mutates this slot's own colour does NOT remount and
+          wipe the open session. Prefer the caller's `pickerKey`; fall back to
+          the seed for one-slot-at-a-time callers. */}
       <ColorPicker
-        key={initialHex ?? initialPaintId ?? "no-initial"}
+        key={pickerKey ?? initialHex ?? initialPaintId ?? "no-initial"}
         paints={paints}
         catalogLoading={loading}
         value={

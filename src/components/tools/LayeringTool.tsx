@@ -293,6 +293,7 @@ export function LayeringTool({
         breadcrumb="LAYERING ▸ COLOR PICKER"
         contextLabel={pickingLane ?? undefined}
         initialHex={laneHex}
+        pickerKey={pickingLane ? `lane:${pickingLane}` : null}
         closeOnSelect
         onSelect={applyLane}
       />
@@ -311,6 +312,7 @@ export function LayeringTool({
               : undefined
         }
         initialHex={stackHex}
+        pickerKey={pickingStack != null ? `stack:${pickingStack}` : null}
         closeOnSelect
         onSelect={applyStack}
       />
