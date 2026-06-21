@@ -169,6 +169,13 @@
       "when": 1781873564564,
       "tag": "0023_clumsy_psynapse",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1782073818030,
+      "tag": "0024_special_terrax",
+      "breakpoints": true
     }
   ]
 }

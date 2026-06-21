@@ -87,6 +87,18 @@ export const users = sqliteTable("user", {
     (): AnySQLiteColumn => projects.id,
     { onDelete: "set null" },
   ),
+  /**
+   * Browser-extension token version. The "Mini Manager Collection"
+   * Chrome extension authenticates with a signed HMAC token of the form
+   * `<userId>.<hmac(userId + "." + version, AUTH_SECRET)>`. Bumping this
+   * integer (the "Regenerate" action) invalidates every previously
+   * issued token for the user without storing the token itself —
+   * verification recomputes the HMAC from this version and rejects a
+   * mismatch. Defaults to 0; the first issued token signs version 0.
+   */
+  extensionTokenVersion: integer("extension_token_version")
+    .notNull()
+    .default(0),
 });
 
 export const accounts = sqliteTable(
