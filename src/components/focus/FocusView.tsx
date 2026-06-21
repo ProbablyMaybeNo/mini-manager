@@ -100,20 +100,20 @@ export function FocusView({
         <span className="font-h1 text-h1 uppercase text-green text-glow-green">
           {project.title} <span className="text-cyan">×{modelCount}</span>
         </span>
-        {projectMinutes != null && (
-          <span className="label-osd text-purple">
-            Time {formatMinutes(projectMinutes)}
-          </span>
-        )}
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 label-osd text-fg">
+          {projectMinutes != null && (
+            <span className="text-purple">Time {formatMinutes(projectMinutes)}</span>
+          )}
+          <span>Today {formatMinutes(stats.todayMinutes)}</span>
+          <span>Week {formatMinutes(stats.weekMinutes)}</span>
+          <span className="text-purple">Streak {stats.streakDays}d</span>
+        </div>
       </Panel>
 
-      {/* RECIPE box — reordered to a tidy responsive grid (MM-22) instead of a
-          single horizontal-scroll strip, so the paint cards wrap on narrow
-          benches and read top-to-bottom. Reading order (RuYiw7plQqDV): the
-          "RECIPE BOX" heading sits first, then the empty-state line, then the
-          cards below. */}
+      {/* RECIPE box — responsive grid (MM-22) so the paint cards wrap on narrow
+          benches. The redundant "Recipe Box" sub-heading was dropped: the panel
+          label "RECIPE" already names the section (RuYiw7plQqDV). */}
       <Panel label="RECIPE" className="flex flex-col gap-3 p-4">
-        <h2 className="font-h2 text-h2 uppercase text-fg">Recipe Box</h2>
         <div className="flex flex-wrap gap-3">
           {recipe && recipe.slots.length > 0 ? (
             recipe.slots.map((slot, i) => <PaintCard key={i} slot={slot} />)
@@ -138,7 +138,7 @@ export function FocusView({
       {/* Stopwatch gets its own dedicated section (D7 / A5qzb); progress sits
           beside it, bound to the focused project (MM-21). */}
       <div className="grid gap-5 lg:grid-cols-2">
-        <Stopwatch stats={stats} onLogSession={onLogSession} />
+        <Stopwatch onLogSession={onLogSession} />
         <Panel label="PROGRESS" className="flex flex-col justify-center gap-3 p-4">
           <div className="flex items-center justify-between">
             <span className="label-osd text-fg">
