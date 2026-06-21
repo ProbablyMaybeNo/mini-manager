@@ -104,7 +104,9 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex h-5 w-5 items-center justify-center font-button text-button leading-none",
+        // h-6 w-6 → 24px hit area (WCAG 2.2 §2.5.8) without changing the glyph
+        // (UX-003); was 20px.
+        "flex h-6 w-6 items-center justify-center font-button text-button leading-none",
         disabled ? "text-fg-faint/30" : "text-cyan hover:text-glow-cyan",
       )}
     >

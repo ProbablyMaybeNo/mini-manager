@@ -101,7 +101,7 @@ export function PaintInfoPanelContent({
               type="button"
               aria-label="Decrease owned count"
               onClick={() => onStepOwned(-1)}
-              className="px-2 py-1 font-button text-button text-green hover:bg-green/10"
+              className="inline-flex min-h-6 min-w-6 items-center justify-center px-2 py-1 font-button text-button text-green hover:bg-green/10"
             >
               −
             </button>
@@ -115,7 +115,7 @@ export function PaintInfoPanelContent({
               type="button"
               aria-label="Increase owned count"
               onClick={() => onStepOwned(1)}
-              className="px-2 py-1 font-button text-button text-green hover:bg-green/10"
+              className="inline-flex min-h-6 min-w-6 items-center justify-center px-2 py-1 font-button text-button text-green hover:bg-green/10"
             >
               +
             </button>

@@ -318,7 +318,7 @@ export function ProjectWorkspaceBody({
                                 }),
                               )
                             }
-                            className="font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                            className="inline-flex min-h-6 min-w-6 items-center justify-center font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
                           >
                             −
                           </button>
@@ -337,7 +337,7 @@ export function ProjectWorkspaceBody({
                                 }),
                               )
                             }
-                            className="font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                            className="inline-flex min-h-6 min-w-6 items-center justify-center font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
                           >
                             +
                           </button>

@@ -149,7 +149,7 @@ export function FocusView({
                 type="button"
                 aria-label="Decrease models painted"
                 onClick={() => bumpStep(-1)}
-                className="border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10"
               >
                 −
               </button>
@@ -160,7 +160,7 @@ export function FocusView({
                 type="button"
                 aria-label="Increase models painted"
                 onClick={() => bumpStep(1)}
-                className="border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10"
               >
                 +
               </button>
