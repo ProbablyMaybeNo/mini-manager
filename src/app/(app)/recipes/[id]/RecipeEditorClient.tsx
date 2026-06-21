@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RecipeEditorView } from "@/components/recipe/RecipeEditorView";
-import { useToast } from "@/components/kit";
+import { ConfirmDialog, useToast } from "@/components/kit";
 import type { Paint, Project, Recipe } from "@/lib/types";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
@@ -46,6 +46,7 @@ export function RecipeEditorClient({
   const [paints, setPaints] = useState<Paint[]>([]);
   const [saved, setSaved] = useState(false);
   const [, startTransition] = useTransition();
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
 
   // An unsaved "new" draft is dirty as soon as it has a name or any slots
   // (leaving would discard it); an existing recipe is dirty once edited.
@@ -123,7 +124,23 @@ export function RecipeEditorClient({
         onShare={share}
         onSave={persist}
         onBack={() => {
-          if (dirty && !window.confirm(UNSAVED_CHANGES_MESSAGE)) return;
+          if (dirty) {
+            setConfirmingLeave(true);
+            return;
+          }
+          router.push("/recipes");
+        }}
+      />
+      <ConfirmDialog
+        open={confirmingLeave}
+        breadcrumb="RECIPE"
+        title="Discard changes?"
+        message={UNSAVED_CHANGES_MESSAGE}
+        confirmLabel="Discard"
+        destructive
+        onClose={() => setConfirmingLeave(false)}
+        onConfirm={() => {
+          setConfirmingLeave(false);
           router.push("/recipes");
         }}
       />

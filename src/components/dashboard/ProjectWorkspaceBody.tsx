@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
+  ConfirmDialog,
   DateField,
   Input,
   Listbox,
@@ -103,6 +104,7 @@ export function ProjectWorkspaceBody({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -497,20 +499,29 @@ export function ProjectWorkspaceBody({
           variant="danger"
           size="sm"
           disabled={pending}
-          onClick={() => {
-            if (!window.confirm(`Delete "${project.title}" and its sub-projects?`)) {
-              return;
-            }
-            run(async () => {
-              const res = await deleteProject({ id: project.id });
-              if (res.ok) onClose?.();
-              return res;
-            });
-          }}
+          onClick={() => setConfirmingDelete(true)}
         >
           🗑 Delete
         </Button>
       </div>
+      <ConfirmDialog
+        open={confirmingDelete}
+        breadcrumb="PROJECT"
+        title="Delete project?"
+        message={`Delete "${project.title}" and its sub-projects? This can't be undone.`}
+        confirmLabel="Delete"
+        destructive
+        busy={pending}
+        onClose={() => setConfirmingDelete(false)}
+        onConfirm={() => {
+          setConfirmingDelete(false);
+          run(async () => {
+            const res = await deleteProject({ id: project.id });
+            if (res.ok) onClose?.();
+            return res;
+          });
+        }}
+      />
     </div>
   );
 }
