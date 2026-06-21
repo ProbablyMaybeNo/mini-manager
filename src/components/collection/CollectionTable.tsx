@@ -34,6 +34,25 @@ function Thumb({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+/**
+ * Owned / wishlist glance dot — the same coverage indicator used on the
+ * /library ColorMapRail (green = owned, yellow = wishlist, 2px black stroke),
+ * now wired into the collection rows so the state reads at a glance without
+ * parsing the status dropdown (UX-011). A WISHLIST status is a wishlist item;
+ * everything else in the collection (OWNED → COMPLETE, HOLD) counts as owned.
+ */
+function OwnershipDot({ status }: { status: ProjectStatus }) {
+  const wishlist = status === "WISHLIST";
+  return (
+    <span
+      aria-hidden
+      title={wishlist ? "Wishlist" : "Owned"}
+      className="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-black"
+      style={{ backgroundColor: wishlist ? "#eef996" : "#51fd80" }}
+    />
+  );
+}
+
 const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Type", "Price", "Recipe", "Status", "Link", ""];
 const MODEL_COLS = ["Image", "Name", "Game", "Army", "Price", "Project", "Status", "Link", ""];
 
@@ -204,18 +223,21 @@ export function CollectionTable({
                     <Thumb src={item.thumbnail} alt={item.name} />
                   </td>
                   <td className="px-3 py-2">
-                    {item.sourceUrl ? (
-                      <a
-                        href={item.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-body text-body font-medium text-fg hover:text-cyan hover:underline"
-                      >
-                        {item.name}
-                      </a>
-                    ) : (
-                      <span className="font-body text-body font-medium text-fg">{item.name}</span>
-                    )}
+                    <span className="flex items-center gap-2">
+                      <OwnershipDot status={item.status} />
+                      {item.sourceUrl ? (
+                        <a
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-body text-body font-medium text-fg hover:text-cyan hover:underline"
+                        >
+                          {item.name}
+                        </a>
+                      ) : (
+                        <span className="font-body text-body font-medium text-fg">{item.name}</span>
+                      )}
+                    </span>
                   </td>
                   <td className="px-3 py-2 font-body text-body text-fg">
                     {kind === "model" ? (item.game ?? "") : item.company}
