@@ -6,6 +6,10 @@ import { Button, Input, ModalDialog } from "@/components/kit";
 import { setRecoveryEmail } from "@/lib/auth/recoveryEmail";
 import { requestPasswordReset } from "@/lib/auth/passwordReset";
 import { deleteAccount } from "@/lib/actions/account";
+import {
+  generateExtensionToken,
+  rotateExtensionToken,
+} from "@/lib/actions/extensionToken";
 
 export function AccountClient({
   username,
@@ -80,6 +84,18 @@ export function AccountClient({
           setDeleteError(null);
           setConfirmText("");
           setConfirmOpen(true);
+        }}
+        onGenerateToken={async () => {
+          const res = await generateExtensionToken();
+          return res.ok
+            ? { ok: true as const, token: res.data }
+            : { ok: false as const, error: res.error };
+        }}
+        onRegenerateToken={async () => {
+          const res = await rotateExtensionToken();
+          return res.ok
+            ? { ok: true as const, token: res.data }
+            : { ok: false as const, error: res.error };
         }}
       />
 

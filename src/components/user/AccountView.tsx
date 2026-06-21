@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { Button, Input, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import {
+  ExtensionTokenPanel,
+  type ExtensionTokenPanelProps,
+} from "./ExtensionTokenPanel";
 
 export interface AccountProfile {
   username: string;
@@ -14,11 +18,15 @@ export function AccountView({
   onSave,
   onChangePassword,
   onDeleteAccount,
+  onGenerateToken,
+  onRegenerateToken,
 }: {
   profile: AccountProfile;
   onSave: (next: AccountProfile) => void;
   onChangePassword: () => void;
   onDeleteAccount?: () => void;
+  onGenerateToken: ExtensionTokenPanelProps["onGenerate"];
+  onRegenerateToken: ExtensionTokenPanelProps["onRegenerate"];
 }) {
   const [username, setUsername] = useState(profile.username);
   const [email, setEmail] = useState(profile.recoveryEmail);
@@ -65,6 +73,11 @@ export function AccountView({
             </Button>
           </div>
         </Panel>
+
+        <ExtensionTokenPanel
+          onGenerate={onGenerateToken}
+          onRegenerate={onRegenerateToken}
+        />
       </div>
 
       {onDeleteAccount && (

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini Manager Collection</title>
+    <style>
+      :root {
+        --bg: #04080a;
+        --panel: #0a1014;
+        --fg: #d6f5ff;
+        --fg-dim: #7fa6b3;
+        --fg-faint: #4a6670;
+        --cyan: #00d2ff;
+        --green: #38e08a;
+        --red: #ff4242;
+        --border: rgba(0, 210, 255, 0.4);
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Share Tech Mono", ui-monospace, "SFMono-Regular",
+          "Menlo", "Consolas", monospace;
+      }
+      body { width: 340px; padding: 14px; }
+      .title {
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--cyan);
+        text-transform: uppercase;
+        margin: 0 0 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .title a {
+        font-size: 11px;
+        color: var(--fg-faint);
+        text-decoration: none;
+      }
+      .title a:hover { color: var(--cyan); }
+      .panel {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        border-radius: 4px;
+        padding: 12px;
+      }
+      .row { margin-bottom: 10px; }
+      label {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+        margin-bottom: 4px;
+      }
+      input[type="password"],
+      input[type="text"] {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--fg);
+        padding: 7px 8px;
+        font: inherit;
+        font-size: 12px;
+        border-radius: 3px;
+      }
+      input:focus { outline: none; border-color: var(--cyan); }
+      button {
+        font: inherit;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        border-radius: 3px;
+        padding: 8px 10px;
+        background: var(--cyan);
+        color: var(--bg);
+        border: 1px solid var(--cyan);
+        font-weight: 600;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--cyan);
+      }
+      button:disabled { opacity: 0.5; cursor: default; }
+      button:hover:not(:disabled) { filter: brightness(1.1); }
+      .actions { display: flex; gap: 8px; }
+      .actions button { flex: 1; }
+      .product { display: flex; gap: 10px; margin-bottom: 12px; }
+      .product img {
+        width: 64px;
+        height: 64px;
+        object-fit: cover;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        background: var(--bg);
+        flex-shrink: 0;
+      }
+      .product .meta { min-width: 0; }
+      .product .name {
+        font-size: 13px;
+        color: var(--fg);
+        margin: 0 0 4px;
+        word-break: break-word;
+        line-height: 1.25;
+      }
+      .product .sub { font-size: 11px; color: var(--fg-dim); }
+      .product .price { color: var(--green); }
+      .toggle {
+        display: flex;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+      .toggle button {
+        flex: 1;
+        background: transparent;
+        color: var(--fg-dim);
+        border: none;
+        border-radius: 0;
+        font-weight: 500;
+      }
+      .toggle button[aria-pressed="true"] {
+        background: var(--cyan);
+        color: var(--bg);
+        font-weight: 600;
+      }
+      .msg { font-size: 12px; margin-top: 8px; line-height: 1.35; }
+      .msg.error { color: var(--red); }
+      .msg.ok { color: var(--green); }
+      .muted { color: var(--fg-dim); font-size: 11px; line-height: 1.4; }
+      .hidden { display: none !important; }
+      a.link { color: var(--cyan); text-decoration: none; }
+      a.link:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <h1 class="title">
+      <span>▸ Mini Manager</span>
+      <a id="open-options" href="#">settings</a>
+    </h1>
+
+    <!-- No token yet -->
+    <section id="view-auth" class="panel hidden">
+      <div class="row">
+        <label for="token">Personal token</label>
+        <input id="token" type="password" placeholder="paste your token" autocomplete="off" />
+      </div>
+      <div class="actions">
+        <button id="save-token">Save token</button>
+      </div>
+      <p class="muted" style="margin-top: 10px">
+        Generate a token in
+        <a id="settings-link" class="link" href="#" target="_blank">your account settings</a>
+        → Browser extension, then paste it here.
+      </p>
+    </section>
+
+    <!-- Loading / unsupported / preview -->
+    <section id="view-main" class="panel hidden">
+      <div id="status" class="muted">Reading page…</div>
+
+      <div id="preview" class="hidden">
+        <div class="product">
+          <img id="p-image" alt="" />
+          <div class="meta">
+            <p class="name" id="p-name"></p>
+            <div class="sub" id="p-vendor"></div>
+            <div class="sub price" id="p-price"></div>
+          </div>
+        </div>
+
+        <div class="toggle" role="group" aria-label="Status">
+          <button id="t-owned" data-status="OWNED" aria-pressed="true">Owned</button>
+          <button id="t-wishlist" data-status="WISHLIST" aria-pressed="false">Wishlist</button>
+        </div>
+
+        <div class="actions">
+          <button id="add">Add to collection</button>
+        </div>
+      </div>
+
+      <div id="msg" class="msg hidden"></div>
+    </section>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

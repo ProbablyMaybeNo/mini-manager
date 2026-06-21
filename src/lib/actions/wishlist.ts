@@ -16,8 +16,8 @@ import {
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
 import { enforceCreateLimit } from "@/lib/billing/enforce";
-import { scrapeUrl } from "@/lib/scrape";
 import { inferWishlistKind } from "@/lib/wishlist/kindInference";
+import { scrapeAndInsertWishlistItem } from "@/lib/wishlist/scrapeInsert";
 
 /* ============================================================
    Schemas
@@ -254,70 +254,17 @@ export async function scrapeAndCreateWishlistItem(
     return { ok: false, error: "Invalid URL" };
   }
 
-  // P10.2 — Same free-tier wishlist cap as the manual createWishlistItem
-  // path. Gate BEFORE the scrape so a capped free user doesn't pay the
-  // 2-5 second scrape latency just to be rejected at the insert step.
-  const ownedRows = await db
-    .select({ n: count() })
-    .from(wishlistItems)
-    .where(eq(wishlistItems.ownerId, userId));
-  const wishlistGate = await enforceCreateLimit(
+  // Delegate to the shared scrape+insert pipeline (also used by the
+  // browser-extension API route) so there's one write path. It applies
+  // the free-tier cap, server-side scrape, and the same validation.
+  const result = await scrapeAndInsertWishlistItem({
     userId,
-    "wishlist",
-    ownedRows[0]?.n ?? 0,
-  );
-  if (wishlistGate) return wishlistGate;
-
-  const hostname = url.hostname.replace(/^www\./, "");
-  const scraped = await scrapeUrl(url);
-
-  const title = scraped?.title?.trim() || hostname;
-  const vendor = scraped?.vendor ?? hostname;
-  const imageUrl = scraped?.imageUrl ?? null;
-  const price =
-    scraped?.price === undefined || scraped.price === null
-      ? null
-      : Math.round(scraped.price * 100);
-  const currency = scraped?.currency ?? "USD";
-  const category =
-    scraped?.category && (wishlistCategories as readonly string[]).includes(scraped.category)
-      ? (scraped.category as (typeof wishlistCategories)[number])
-      : "Other";
-
-  const metadata = JSON.stringify({
-    parser: scraped?.raw?.parser ?? "none",
-    raw: scraped?.raw ?? null,
-    scrapedAt: Date.now(),
+    url,
+    status: "WISHLIST",
+    kind: selectedKind,
   });
-
-  try {
-    const inserted = await db
-      .insert(wishlistItems)
-      .values({
-        ownerId: userId,
-        title,
-        sourceUrl: url.toString(),
-        vendor,
-        imageUrl,
-        price,
-        currency,
-        category,
-        priority: "Medium",
-        status: "WISHLIST",
-        kind: selectedKind ?? inferWishlistKind({ title, vendor, category }),
-        scrapedMetadata: metadata,
-      })
-      .returning();
-    const row = inserted[0];
-    if (!row) return { ok: false, error: "Insert returned no row" };
-    revalidatePath("/collection");
-    return { ok: true, data: row };
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "Failed to create item",
-    };
-  }
+  if (result.ok) revalidatePath("/collection");
+  return result;
 }
 
 export async function setWishlistStatus(

@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `extension_token_version` integer DEFAULT 0 NOT NULL;
