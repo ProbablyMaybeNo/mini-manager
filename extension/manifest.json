@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Mini Manager Collection",
+  "version": "1.0.0",
+  "description": "Add a paint or model to your Mini Manager collection straight from a supported store's product page.",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": [
+    "https://miniaturemanager.vercel.app/*",
+    "http://localhost:3000/*",
+    "http://localhost:3001/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Add to Mini Manager",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_page": "options.html",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+M",
+        "mac": "Alt+Shift+M"
+      },
+      "description": "Open the Mini Manager popup for this page"
+    }
+  }
+}
