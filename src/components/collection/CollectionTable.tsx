@@ -145,10 +145,12 @@ export function CollectionTable({
         </div>
       </div>
 
-      {/* x-auto only as a fallback; columns are sized to fit so no scroll
-          is needed at normal widths (77YGg). */}
+      {/* Below the table's natural width the wrapper scrolls horizontally
+          rather than letting w-full compress the cells and clip text
+          mid-word (UX-002). min-w mirrors the library PaintListTable pattern
+          (min-w-[680px]); the collection tables carry more columns. */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full min-w-[760px] border-collapse">
           <thead>
             <tr className="border-b border-cyan/30">
               {cols.map((c, i) => (

@@ -277,7 +277,9 @@ export function ProjectWorkspaceBody({
       >
         {children.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
+            {/* min-w so the wrapper scrolls instead of compressing + clipping
+                the PRIORITY/Progress columns at narrow widths (UX-002). */}
+            <table className="w-full min-w-[560px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-cyan/30 label-osd text-fg">
                   <th className="py-1 pr-2">Name</th>
