@@ -72,14 +72,27 @@ export function harmonies(hex: string, scheme: HarmonyScheme): string[] {
   }
 }
 
-/** Pick black or white text for legibility on a coloured background (WCAG-ish). */
+/**
+ * WCAG crossover luminance: the background luminance at which black and white
+ * text give equal contrast. contrast(black)=contrast(white) ⇒
+ * (L+0.05)/0.05 = 1.05/(L+0.05) ⇒ L = √(1.05·0.05) − 0.05 ≈ 0.1791.
+ * Picking by this threshold always selects the higher-contrast text colour.
+ */
+const READABLE_CROSSOVER = Math.sqrt(1.05 * 0.05) - 0.05;
+
+/**
+ * Pick black or white text for maximum contrast on a coloured background.
+ * The threshold is the exact WCAG black/white crossover (UX-008) — the old
+ * 0.4 cut chose white for mid-luminance swatches (e.g. #6E99C9, #F20D0D),
+ * which failed AA. At the crossover every swatch label clears 4.5:1.
+ */
 export function readableText(hex: string): "#000000" | "#ffffff" {
   const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
   if (!m) return "#ffffff";
   const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h, 16) / 255);
   const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
   const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-  return L > 0.4 ? "#000000" : "#ffffff";
+  return L > READABLE_CROSSOVER ? "#000000" : "#ffffff";
 }
 
 /** Interpolated ramp between base → shadow / highlight (Tools: layering). */
