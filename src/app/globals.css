@@ -87,9 +87,10 @@
    ------------------------------------------------------------------------- */
 @theme {
   /* Palette */
-  /* Near-black canvas (Theme Builder pick — a hair off pure black). bg-raised
-     is a near-neutral lift for panels/inputs. */
-  --color-bg: #06080a;
+  /* Pure-black canvas so every surface matches the logo's black (the CRT
+     artwork background samples #000000) — JZBOMvZVuFFf. bg-raised stays a
+     near-neutral lift for panels/inputs so they read distinct against it. */
+  --color-bg: #000000;
   --color-bg-raised: #0b0f12;
   --color-cyan: #00d2ff;
   --color-green: #51fd80;

@@ -184,18 +184,12 @@ export function ProjectsTable({
             {/* Solid single-colour fill to match the GOLDEN STANDARD progress
                 bars (C_T1) — green when complete, otherwise a solid cyan fill
                 rather than the red→yellow ramp. */}
+            {/* Just the bar + its percentage — the redundant "X/Y models"
+                line beneath it was dropped (NVOzFLAjh-vq). */}
             <ProgressBar
               percent={p.completionPercent}
               accent={p.completionPercent >= 100 ? "green" : "cyan"}
             />
-            {/* D4 — surface the underlying model progress so the bar isn't
-                just a colour: "12/40 models" beneath the percentage. */}
-            {p.modelCount != null && p.modelCount > 0 && (
-              <span className="mt-0.5 block font-body text-body tabular-nums text-fg">
-                {p.modelsComplete ?? Math.round((p.completionPercent / 100) * p.modelCount)}/
-                {p.modelCount} models
-              </span>
-            )}
           </td>
           <td className="w-16 px-3 py-2.5">
             {/* Logged focus time, rolled up over sub-projects (UX-011).
