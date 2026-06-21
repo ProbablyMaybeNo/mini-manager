@@ -65,14 +65,14 @@ export function SlotRow({
             onChange={(e) => onLayerChange(e.target.value)}
             aria-label={`Layer for slot ${index + 1}`}
             placeholder="Layer / technique"
-            className="w-36 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+            className="min-h-6 w-36 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
           />
           <input
             value={slot.note ?? ""}
             onChange={(e) => onNoteChange(e.target.value)}
             aria-label={`Note for slot ${index + 1}`}
             placeholder="Note (e.g. thin 2:1, recess only)"
-            className="min-w-[160px] flex-1 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+            className="min-h-6 min-w-[160px] flex-1 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
           />
         </div>
       </div>
@@ -104,7 +104,9 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex h-5 w-5 items-center justify-center font-button text-button leading-none",
+        // h-6 w-6 → 24px hit area (WCAG 2.2 §2.5.8) without changing the glyph
+        // (UX-003); was 20px.
+        "flex h-6 w-6 items-center justify-center font-button text-button leading-none",
         disabled ? "text-fg-faint/30" : "text-cyan hover:text-glow-cyan",
       )}
     >

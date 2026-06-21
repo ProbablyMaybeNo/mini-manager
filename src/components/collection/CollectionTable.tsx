@@ -34,6 +34,25 @@ function Thumb({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+/**
+ * Owned / wishlist glance dot — the same coverage indicator used on the
+ * /library ColorMapRail (green = owned, yellow = wishlist, 2px black stroke),
+ * now wired into the collection rows so the state reads at a glance without
+ * parsing the status dropdown (UX-011). A WISHLIST status is a wishlist item;
+ * everything else in the collection (OWNED → COMPLETE, HOLD) counts as owned.
+ */
+function OwnershipDot({ status }: { status: ProjectStatus }) {
+  const wishlist = status === "WISHLIST";
+  return (
+    <span
+      aria-hidden
+      title={wishlist ? "Wishlist" : "Owned"}
+      className="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-black"
+      style={{ backgroundColor: wishlist ? "#eef996" : "#51fd80" }}
+    />
+  );
+}
+
 const PAINT_COLS = ["Image", "Name", "Company", "Vendor", "Type", "Price", "Recipe", "Status", "Link", ""];
 const MODEL_COLS = ["Image", "Name", "Game", "Army", "Price", "Project", "Status", "Link", ""];
 
@@ -91,9 +110,11 @@ export function CollectionTable({
     <div className="flex flex-col gap-3">
       {/* Header row — title + count on the left, Filter button far right (KpdEP). */}
       <div className="flex items-center justify-between gap-3">
-        <h3 className="label-osd text-cyan">
+        {/* h2 (not h3) so the /collection outline reads h1 → h2 with no skipped
+            level — the page h1 is "COLLECTION" (UX-005). Visual styling kept. */}
+        <h2 className="label-osd text-cyan">
           {title} <span className="text-fg">{items.length}</span>
-        </h3>
+        </h2>
         <div className="relative">
           <Button
             variant={active.size > 0 ? "primary" : "secondary"}
@@ -143,10 +164,12 @@ export function CollectionTable({
         </div>
       </div>
 
-      {/* x-auto only as a fallback; columns are sized to fit so no scroll
-          is needed at normal widths (77YGg). */}
+      {/* Below the table's natural width the wrapper scrolls horizontally
+          rather than letting w-full compress the cells and clip text
+          mid-word (UX-002). min-w mirrors the library PaintListTable pattern
+          (min-w-[680px]); the collection tables carry more columns. */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full min-w-[760px] border-collapse">
           <thead>
             <tr className="border-b border-cyan/30">
               {cols.map((c, i) => (
@@ -200,18 +223,21 @@ export function CollectionTable({
                     <Thumb src={item.thumbnail} alt={item.name} />
                   </td>
                   <td className="px-3 py-2">
-                    {item.sourceUrl ? (
-                      <a
-                        href={item.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-body text-body font-medium text-fg hover:text-cyan hover:underline"
-                      >
-                        {item.name}
-                      </a>
-                    ) : (
-                      <span className="font-body text-body font-medium text-fg">{item.name}</span>
-                    )}
+                    <span className="flex items-center gap-2">
+                      <OwnershipDot status={item.status} />
+                      {item.sourceUrl ? (
+                        <a
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-body text-body font-medium text-fg hover:text-cyan hover:underline"
+                        >
+                          {item.name}
+                        </a>
+                      ) : (
+                        <span className="font-body text-body font-medium text-fg">{item.name}</span>
+                      )}
+                    </span>
                   </td>
                   <td className="px-3 py-2 font-body text-body text-fg">
                     {kind === "model" ? (item.game ?? "") : item.company}

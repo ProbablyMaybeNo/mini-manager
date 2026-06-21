@@ -168,12 +168,19 @@ export function ProjectWorkspaceBody({
     });
   }
 
+  // On the standalone /projects/[id] page this title is the document's primary
+  // heading, so it must be an h1 (the page has no other) — UX-001. In the
+  // dashboard slide-out the SlideOutPanel header already supplies the dialog
+  // title, so the inspector keeps an h2. Visual class is identical either way:
+  // semantic level is decoupled from the font-h1 sizing.
+  const TitleTag = variant === "page" ? "h1" : "h2";
+
   return (
     <div className="flex flex-col gap-5">
       {/* Project name */}
-      <h2 className="font-h1 text-h1 text-green text-glow-green">
+      <TitleTag className="font-h1 text-h1 text-green text-glow-green">
         {project.title}
-      </h2>
+      </TitleTag>
 
       {/* Meta row: type · status · priority · progress */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -270,7 +277,9 @@ export function ProjectWorkspaceBody({
       >
         {children.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
+            {/* min-w so the wrapper scrolls instead of compressing + clipping
+                the PRIORITY/Progress columns at narrow widths (UX-002). */}
+            <table className="w-full min-w-[560px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-cyan/30 label-osd text-fg">
                   <th className="py-1 pr-2">Name</th>
@@ -311,7 +320,7 @@ export function ProjectWorkspaceBody({
                                 }),
                               )
                             }
-                            className="font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                            className="inline-flex min-h-6 min-w-6 items-center justify-center font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
                           >
                             −
                           </button>
@@ -330,7 +339,7 @@ export function ProjectWorkspaceBody({
                                 }),
                               )
                             }
-                            className="font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                            className="inline-flex min-h-6 min-w-6 items-center justify-center font-button text-button border border-cyan/40 px-1 text-cyan hover:bg-cyan/10 disabled:opacity-30"
                           >
                             +
                           </button>

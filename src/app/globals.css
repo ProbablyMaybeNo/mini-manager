@@ -149,7 +149,7 @@
   --text-title: 2.7813rem; /* ~44.5px */
   --text-h1: 1rem; /* 16px */
   --text-h2: 1.2188rem; /* ~19.5px */
-  --text-body: 1rem; /* 16px */
+  --text-body: 0.75rem; /* 12px (−4px) */
   --text-num1: 2.3438rem; /* ~37.5px */
   --text-num2: 0.9688rem; /* ~15.5px */
 
