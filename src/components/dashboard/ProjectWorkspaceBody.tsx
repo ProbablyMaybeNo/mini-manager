@@ -168,12 +168,19 @@ export function ProjectWorkspaceBody({
     });
   }
 
+  // On the standalone /projects/[id] page this title is the document's primary
+  // heading, so it must be an h1 (the page has no other) — UX-001. In the
+  // dashboard slide-out the SlideOutPanel header already supplies the dialog
+  // title, so the inspector keeps an h2. Visual class is identical either way:
+  // semantic level is decoupled from the font-h1 sizing.
+  const TitleTag = variant === "page" ? "h1" : "h2";
+
   return (
     <div className="flex flex-col gap-5">
       {/* Project name */}
-      <h2 className="font-h1 text-h1 text-green text-glow-green">
+      <TitleTag className="font-h1 text-h1 text-green text-glow-green">
         {project.title}
-      </h2>
+      </TitleTag>
 
       {/* Meta row: type · status · priority · progress */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
