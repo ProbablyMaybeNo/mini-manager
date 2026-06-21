@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Panel } from "@/components/kit";
 import { cn } from "@/lib/cn";
-import { formatMinutes } from "@/lib/palette";
-import type { SessionStats } from "@/lib/types";
 
 function fmt(totalSeconds: number): string {
   const s = Math.floor(totalSeconds % 60);
@@ -15,10 +13,8 @@ function fmt(totalSeconds: number): string {
 
 /** Session stopwatch: live timer + start/stop + log, with host-provided today/week totals. */
 export function Stopwatch({
-  stats,
   onLogSession,
 }: {
-  stats: SessionStats;
   onLogSession: (seconds: number) => void;
 }) {
   const [running, setRunning] = useState(false);
@@ -87,12 +83,6 @@ export function Stopwatch({
             Log
           </button>
         </div>
-      </div>
-
-      <div className="flex gap-4 font-num2 text-num2 text-fg">
-        <span>Today {formatMinutes(stats.todayMinutes)}</span>
-        <span>Week {formatMinutes(stats.weekMinutes)}</span>
-        <span className="text-purple">Streak {stats.streakDays}d</span>
       </div>
 
       {log.length > 0 && (

@@ -31,7 +31,13 @@ export function ColorMapRail({
       cornerTicks
       className="flex min-h-0 w-full shrink-0 flex-col p-3 lg:w-[180px]"
     >
-      <div className="mb-2 flex flex-col gap-1 label-osd text-fg">
+      {/* Legend deliberately broken out of the H2 category (it sits in a narrow
+          180px rail): bespoke Flexi at a small fixed size so the lines fit
+          without wrapping one-word-per-line. */}
+      <div
+        className="mb-2 flex flex-col gap-0.5 text-[11px] leading-tight text-fg"
+        style={{ fontFamily: '"Flexi IBM VGA True", "IBM Plex Mono", monospace' }}
+      >
         <span className="text-fg">1 dot = 1 paint</span>
         <span className="flex items-center gap-1">
           <span className="h-2.5 w-2.5 rounded-full border border-black bg-yellow" /> Wishlist

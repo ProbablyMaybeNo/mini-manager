@@ -141,16 +141,16 @@
   --font-title: "Unbutton", "IBM Plex Mono", monospace; /* page titles */
   --font-h1: "IBM BIOS", "IBM Plex Mono", monospace; /* section headers + nav + modal titles */
   --font-h2: "Flexi IBM VGA True", "IBM Plex Mono", monospace; /* column headers + in-section labels */
-  --font-body: "Flexi IBM VGA True", "IBM Plex Mono", monospace; /* all regular text */
+  --font-body: "IBM Plex Mono", monospace; /* all regular text */
   --font-num1: "Unbutton", "IBM Plex Mono", monospace; /* hero numbers */
   --font-num2: "VT323", "IBM Plex Mono", monospace; /* standard numbers */
 
-  --text-title: 2.3438rem; /* ~37.5px */
-  --text-h1: 1.0938rem; /* ~17.5px */
-  --text-h2: 1.375rem; /* 22px */
-  --text-body: 1.4688rem; /* ~23.5px */
-  --text-num1: 1.7188rem; /* ~27.5px */
-  --text-num2: 1.4688rem; /* ~23.5px */
+  --text-title: 2.7813rem; /* ~44.5px */
+  --text-h1: 1rem; /* 16px */
+  --text-h2: 1.2188rem; /* ~19.5px */
+  --text-body: 1rem; /* 16px */
+  --text-num1: 2.3438rem; /* ~37.5px */
+  --text-num2: 0.9688rem; /* ~15.5px */
 
   /* Border + glow */
   --radius-panel: 2px;
