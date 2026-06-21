@@ -214,6 +214,7 @@ export function ProjectsTable({
                 <IconButton
                   variant="add"
                   size="sm"
+                  className="h-6 w-6"
                   aria-label={`Add ${childType} to ${p.title}`}
                   title={`Add ${childType}`}
                   onClick={(e) => {
@@ -227,6 +228,7 @@ export function ProjectsTable({
               <IconButton
                 variant="outlineCyan"
                 size="sm"
+                className="h-6 w-6"
                 aria-label={`Open ${p.title} in focus`}
                 title="Open in focus bench"
                 onClick={(e) => {
