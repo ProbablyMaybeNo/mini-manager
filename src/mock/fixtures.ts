@@ -185,7 +185,7 @@ export const mockPricingTiers: PricingTier[] = [
   {
     id: "pro-monthly",
     name: "Pro Monthly",
-    price: "$5",
+    price: "$3.99",
     cadence: "/month",
     features: ["Unlimited projects", "Unlimited recipes", "All four tools", "Recipe sharing", "Collection budgeting"],
     cta: "Go Pro",
@@ -193,7 +193,7 @@ export const mockPricingTiers: PricingTier[] = [
   {
     id: "pro-lifetime",
     name: "Pro Lifetime",
-    price: "$99",
+    price: "$25",
     cadence: "once",
     features: ["Everything in Pro", "Pay once, keep forever", "All future updates"],
     cta: "Buy lifetime",
@@ -201,7 +201,7 @@ export const mockPricingTiers: PricingTier[] = [
   {
     id: "founder",
     name: "Founder",
-    price: "$49",
+    price: "$19",
     cadence: "once · limited",
     features: ["Everything in Lifetime", "Founder badge", "Vote on the roadmap", "Direct line to the dev"],
     cta: "Claim Founder seat",
