@@ -171,18 +171,14 @@ export function LayeringTool({
             Stack transparent glaze layers over a substrate to predict the
             painted result (optical mix, bottom → top).
           </p>
-          <div className="flex items-end gap-2">
-            <HexField
-              label="Substrate"
-              name="substrate"
-              value={substrate}
-              onChange={(e) => setSubstrate(e.target.value)}
-              containerClassName="flex-1"
-            />
-            <Button variant="tertiary" size="sm" onClick={() => setPickingStack("substrate")} aria-label="Pick substrate colour">
-              Pick
-            </Button>
-          </div>
+          <HexField
+            label="Substrate"
+            name="substrate"
+            value={substrate}
+            onChange={(e) => setSubstrate(e.target.value)}
+            onSwatchClick={() => setPickingStack("substrate")}
+            swatchLabel="Pick substrate colour"
+          />
           {layers.map((layer, i) => (
             <div key={i} className="flex flex-col gap-2 border border-purple/20 p-2">
               <div className="flex items-center justify-between">
@@ -195,19 +191,15 @@ export function LayeringTool({
                   onClick={() => setLayers((p) => p.filter((_, k) => k !== i))}
                 />
               </div>
-              <div className="flex items-end gap-2">
-                <HexField
-                  name={`layer-${i}`}
-                  value={layer.hex}
-                  onChange={(e) =>
-                    setLayers((p) => p.map((l, k) => (k === i ? { ...l, hex: e.target.value } : l)))
-                  }
-                  containerClassName="flex-1"
-                />
-                <Button variant="tertiary" size="sm" onClick={() => setPickingStack(i)} aria-label={`Pick layer ${i + 1} colour`}>
-                  Pick
-                </Button>
-              </div>
+              <HexField
+                name={`layer-${i}`}
+                value={layer.hex}
+                onChange={(e) =>
+                  setLayers((p) => p.map((l, k) => (k === i ? { ...l, hex: e.target.value } : l)))
+                }
+                onSwatchClick={() => setPickingStack(i)}
+                swatchLabel={`Pick layer ${i + 1} colour`}
+              />
               <label>
                 <span className="label-osd text-fg">
                   Opacity {Math.round(layer.alpha * 100)}%
@@ -332,17 +324,13 @@ function LaneField({
   onPick: () => void;
 }) {
   return (
-    <div className="flex items-end gap-2">
-      <HexField
-        label={label}
-        name={label.toLowerCase()}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        containerClassName="flex-1"
-      />
-      <Button variant="tertiary" size="sm" onClick={onPick} aria-label={`Pick ${label} colour`}>
-        Pick
-      </Button>
-    </div>
+    <HexField
+      label={label}
+      name={label.toLowerCase()}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onSwatchClick={onPick}
+      swatchLabel={`Pick ${label} colour`}
+    />
   );
 }

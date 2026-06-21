@@ -70,18 +70,47 @@ export function SearchField(props: FieldProps) {
   );
 }
 
+interface HexFieldProps extends FieldProps {
+  /**
+   * When provided, the leading colour square becomes a button that fires this
+   * handler — the "click the swatch to open the colour picker" affordance.
+   * Requires `swatchLabel` for the accessible name. Omit for a decorative
+   * preview square (the default).
+   */
+  onSwatchClick?: () => void;
+  /** Accessible label for the interactive swatch, e.g. "Pick substrate colour". */
+  swatchLabel?: string;
+}
+
 /** Hex input with a live swatch preview as the leading slot. */
-export function HexField({ value, ...props }: FieldProps) {
+export function HexField({ value, onSwatchClick, swatchLabel, ...props }: HexFieldProps) {
   const hex = typeof value === "string" ? value : "";
+  const bg = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : "transparent";
+  const preview = (
+    <span
+      className="block h-4 w-4 border border-fg/20"
+      style={{ backgroundColor: bg }}
+    />
+  );
   return (
     <Input
       value={value}
       placeholder="#000000"
       leading={
-        <span
-          className="h-4 w-4 border border-fg/20"
-          style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : "transparent" }}
-        />
+        onSwatchClick ? (
+          <button
+            type="button"
+            onClick={onSwatchClick}
+            aria-label={swatchLabel}
+            // ≥24px hit area (WCAG 2.2 §2.5.8) around the 16px square, with a
+            // visible focus ring that matches the kit's cyan phosphor.
+            className="-m-1 flex h-6 w-6 items-center justify-center rounded-none p-1 transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+          >
+            {preview}
+          </button>
+        ) : (
+          preview
+        )
       }
       {...props}
     />
