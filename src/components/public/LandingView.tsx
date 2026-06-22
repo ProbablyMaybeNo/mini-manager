@@ -1,62 +1,121 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
-import { Logo } from "@/components/shell";
 import { PublicHeader } from "./PublicHeader";
 
-// Feature copy per Ross's landing comments (j5Iy, BjDV, L2LW, eVjJ, XCq8, TXM5).
+// Feature copy — benefit-led, per Ross's landing pass.
 const FEATURES: { title: string; blurb: string }[] = [
   {
-    title: "Library",
+    title: "Paint Library",
     blurb:
-      "Search, filter, track, match, and collect with our growing library of 7,144 paints across all major brands.",
+      "Browse 7,000+ paints from every major brand. Flag what you own, wishlist what you want, and drop any paint straight into a project.",
   },
   {
-    title: "Color tools",
+    title: "Color Tools",
     blurb:
-      "Test your color schemes and pick your paints, using a wide variety of color tools and features.",
+      "Match any colour to real paints, build schemes on the harmony wheel, and predict glaze layers before you commit a drop — the exact paint for the look in your head.",
   },
   {
     title: "Project Dashboard",
     blurb:
-      "Plan and track your painting projects using the Mini-Manager dashboard. Set important deadlines, review your activity feed, and record your painting totals across all projects.",
+      "Every army, unit, and model in one view. Set deadlines, watch your activity feed, and see your whole backlog at a glance.",
   },
   {
     title: "Focus",
     blurb:
-      "Maximize your painting productivity with easy access to your paint recipes, notes, techniques, inspiration, and a timer. Focus on the session at hand.",
+      "Your painting companion: recipe, notes, techniques, inspiration, and a session timer on one screen. Sit down, hit start, just paint.",
   },
   {
     title: "Planner",
     blurb:
-      "Plan and track your painting progress for upcoming tournaments with deadlines, events, and a built-in calendar.",
+      "Stay ahead of every tournament and deadline with events and a built-in hobby calendar. Never get caught priming the night before.",
   },
   {
     title: "Collection",
     blurb:
-      "Plan, manage, and budget your paint and model collections all in one place.",
+      "Catalogue your paints and models, track what you've spent, and auto-add items from the store as you browse. Know what you own — and what you still need.",
   },
 ];
 
+const FREE_PERKS = [
+  "Unlimited projects — armies, units, models, terrain",
+  "Your full collection — log every paint & model, add by pasting a store link",
+  "A recipe for every model",
+  "The focus bench — recipe, notes, inspiration & a session timer",
+  "The entire 7,000+ paint library",
+];
+
+const PRO_PERKS = [
+  "One-click adds while you browse — drop any paint or model into your collection or wishlist straight from the store page, no copy-paste",
+  "Army-list auto-build — paste an army list and it fills your whole project tree in seconds",
+  "The full colour toolkit — push matches & schemes straight into recipes, save palettes, predict glaze layers",
+  "Unlimited recipes — a recipe for every scheme, variant, and sub-unit",
+  "Recipe sharing — share any scheme with a link",
+];
+
+/** Respect the OS "reduce motion" setting — reduced users get the static poster. */
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
 export function LandingView() {
+  const reducedMotion = usePrefersReducedMotion();
+
   return (
     <div className="flex min-h-dvh flex-col">
       <PublicHeader />
 
-      {/* Hero — the high-res logo already shows "Mini-Manager" on its CRT
-          screen, so it stands alone; the boot-sequence overlay was removed to
-          avoid stamping green text over the baked-in title. */}
+      {/* Hero — the animated CRT logo IS the wordmark (its screen reads
+          "Mini-Mainframe"); reduced-motion users get the static poster frame. */}
       <section className="scanlines flex flex-col items-center gap-6 px-6 py-16 text-center">
-        {/* The logo's CRT screen is the visual title; give AT + the heading
-            outline a real top-level <h1> (UX-008). */}
-        <h1 className="sr-only">Mini Manager — paint &amp; project manager for miniatures</h1>
-        <Logo href="/" size={320} className="animate-power-on" />
-        {/* Tagline (8rIb) — larger + more stylized display type. */}
+        <h1 className="sr-only">
+          The Mini Mainframe — paint &amp; project manager for miniatures
+        </h1>
+        <div className="w-full max-w-[440px] sm:max-w-lg">
+          {reducedMotion ? (
+            <Image
+              src="/brand/mini-mainframe-logo-poster.jpg"
+              alt="The Mini Mainframe"
+              width={1080}
+              height={1080}
+              priority
+              className="h-auto w-full"
+            />
+          ) : (
+            <video
+              className="h-auto w-full"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="/brand/mini-mainframe-logo-poster.jpg"
+              aria-label="The Mini Mainframe"
+              width={1080}
+              height={1080}
+            >
+              <source src="/brand/mini-mainframe-logo.mp4" type="video/mp4" />
+            </video>
+          )}
+        </div>
         <p className="max-w-2xl font-title text-title leading-relaxed text-cyan text-glow-cyan">
           Plan your projects. Track your paints. Manage your minis.
         </p>
-        {/* Single CTA — the secondary "See the plans" button is removed (wN7E). */}
+        <p className="max-w-xl font-body text-body text-fg">
+          One command center for your whole hobby — paint library, colour tools, recipes,
+          collection, and project tracking, all in one terminal. Free forever. Pro when you
+          need it.
+        </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
             <Button size="lg">Start for Free</Button>
@@ -76,27 +135,56 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* Pricing teaser */}
-      <section className="mx-auto w-full max-w-3xl px-6 pb-16 text-center">
-        <Panel label="PLANS" accent="purple" cornerTicks className="flex flex-col items-center gap-4 p-8">
-          <h2 className="font-h1 text-h1 text-purple">Free forever. Pro when you’re ready.</h2>
-          <p className="max-w-md font-body text-body text-fg">
-            Start with one army and the full library at no cost. Founder seats are limited.
+      {/* Plans — free vs pro, with the real named benefits */}
+      <section className="mx-auto w-full max-w-5xl px-6 pb-16">
+        <div className="mb-6 text-center">
+          <h2 className="font-h1 text-h1 text-purple">Free forever. Pro when you need it.</h2>
+          <p className="mt-2 font-body text-body text-fg">
+            Run your whole hobby for free — then unlock the power features when you’re ready.
           </p>
-          <Link href="/pricing">
-            <Button>See the plans</Button>
-          </Link>
-        </Panel>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Panel label="FREE · FOREVER" cornerTicks className="flex flex-col gap-4 p-6">
+            <ul className="flex flex-col gap-2 text-left">
+              {FREE_PERKS.map((perk) => (
+                <li key={perk} className="flex gap-2 font-body text-body text-fg">
+                  <span aria-hidden className="text-green">▸</span>
+                  <span>{perk}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/sign-up" className="mt-auto">
+              <Button variant="secondary">Start for Free</Button>
+            </Link>
+          </Panel>
+          <Panel
+            label="PRO · WHEN YOU NEED IT"
+            accent="purple"
+            cornerTicks
+            className="flex flex-col gap-4 p-6"
+          >
+            <ul className="flex flex-col gap-2 text-left">
+              {PRO_PERKS.map((perk) => (
+                <li key={perk} className="flex gap-2 font-body text-body text-fg">
+                  <span aria-hidden className="text-purple">▸</span>
+                  <span>{perk}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/pricing" className="mt-auto">
+              <Button>See Pricing</Button>
+            </Link>
+          </Panel>
+        </div>
       </section>
 
-      {/* Final CTA — copy per REDm6, button per QrK3. */}
+      {/* Final CTA */}
       <section className="flex flex-col items-center gap-4 px-6 pb-16 text-center">
         <h2 className="max-w-xl font-h1 text-h1 text-cyan text-glow-cyan">
-          Ready to take your hobbying to the next level?
+          Ready to take your hobby to the next level?
         </h2>
         <p className="max-w-md font-body text-body text-fg">
-          Gain access to a range of awesome features and tools. Founders receive a big
-          discount. Limited availability.
+          Your whole painting setup, organized in one terminal. Free to start — no card needed.
         </p>
         <Link href="/sign-up">
           <Button size="lg">Start for Free</Button>
@@ -104,7 +192,7 @@ export function LandingView() {
       </section>
 
       <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
-        ▸ MINI-MANAGER OS · made for painters · {" "}
+        ▸ THE MINI MAINFRAME · made for painters ·{" "}
         <Link href="/pricing" className="text-cyan hover:underline">
           Pricing
         </Link>{" "}
