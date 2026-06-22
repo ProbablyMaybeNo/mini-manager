@@ -115,7 +115,11 @@ export function LandingView() {
               '"Flexi IBM VGA False", "Flexi IBM VGA True", "IBM Plex Mono", monospace',
           }}
         >
-          Plan your projects. Track your paints. Manage your minis.
+          Plan your projects.
+          <br />
+          Track your paints.
+          <br />
+          Manage your minis.
         </p>
         <p className="max-w-xl font-body text-body text-fg">
           One command center for your whole hobby — paint library, colour tools, recipes,
