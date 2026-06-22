@@ -108,7 +108,13 @@ export function LandingView() {
             </video>
           )}
         </div>
-        <p className="max-w-2xl font-title text-title leading-relaxed text-cyan text-glow-cyan">
+        <p
+          className="max-w-2xl text-title leading-relaxed text-cyan text-glow-cyan"
+          style={{
+            fontFamily:
+              '"Flexi IBM VGA False", "Flexi IBM VGA True", "IBM Plex Mono", monospace',
+          }}
+        >
           Plan your projects. Track your paints. Manage your minis.
         </p>
         <p className="max-w-xl font-body text-body text-fg">
@@ -128,8 +134,7 @@ export function LandingView() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <Panel key={f.title} label={f.title.toUpperCase()} className="p-5">
-              <h2 className="label-osd text-cyan">{f.title}</h2>
-              <p className="mt-2 font-body text-body text-fg">{f.blurb}</p>
+              <p className="font-body text-body text-fg">{f.blurb}</p>
             </Panel>
           ))}
         </div>
