@@ -4,14 +4,15 @@ import { ThemeOverrides } from "@/components/dev/ThemeOverrides";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mini Manager",
+  metadataBase: new URL("https://mini-mainframe.com"),
+  title: "The Mini Mainframe",
   description:
     "Command center for miniature & wargaming painters — projects, paints, recipes, and the focus bench.",
-  applicationName: "Mini Manager",
+  applicationName: "The Mini Mainframe",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Mini Manager",
+    title: "The Mini Mainframe",
     statusBarStyle: "black-translucent",
   },
   icons: {

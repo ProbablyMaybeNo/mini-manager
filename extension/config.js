@@ -3,7 +3,7 @@
 // popup and options pages.
 
 export const API_BASES = {
-  prod: "https://miniaturemanager.vercel.app",
+  prod: "https://mini-mainframe.com",
   local: "http://localhost:3000",
 };
 

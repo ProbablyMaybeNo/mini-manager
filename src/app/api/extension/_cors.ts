@@ -11,6 +11,8 @@ import { NextResponse } from "next/server";
  */
 
 const ALLOWED_APP_ORIGINS = new Set([
+  "https://mini-mainframe.com",
+  "https://www.mini-mainframe.com",
   "https://miniaturemanager.vercel.app",
   "http://localhost:3000",
   "http://localhost:3001",

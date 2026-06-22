@@ -31,6 +31,15 @@
   font-weight: 400;
   font-display: swap;
 }
+@font-face {
+  /* Square-pixel variant (vs the aspect-corrected "True") — used for the landing
+     hero title. Drop /fonts/flexi-ibm-vga-false.woff2 in to activate; falls back
+     to "True" until the file is present. */
+  font-family: "Flexi IBM VGA False";
+  src: url("/fonts/flexi-ibm-vga-false.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
 /* Extra loaded faces — not assigned to a role yet; use the family name directly
    in a component className via font-[...] or swap into a --font-* token. */
 @font-face {
