@@ -74,7 +74,7 @@ export async function resolveOgImage(rawUrl: string): Promise<string | null> {
       signal: controller.signal,
       redirect: "follow",
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; MiniManagerBot/1.0; +https://miniaturemanager.vercel.app)",
+        "User-Agent": "Mozilla/5.0 (compatible; MiniMainframeBot/1.0; +https://mini-mainframe.com)",
         Accept: "text/html,application/xhtml+xml,image/*,*/*",
       },
     });
