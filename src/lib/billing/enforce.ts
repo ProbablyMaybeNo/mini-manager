@@ -24,7 +24,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import {
+  BILLING_ENFORCED,
   FREE_TIER_LIMIT_ERROR,
+  getPlanForUser,
   isWithinLimit,
   type LimitedResource,
   type PlanRelevantUser,
@@ -55,6 +57,18 @@ export async function loadPlanUser(
     .limit(1);
   if (!row[0]) return null;
   return row[0] as PlanRelevantUser;
+}
+
+/**
+ * True when the user is on a paid plan — or whenever billing isn't enforced
+ * yet, so Pro-only features stay open for testing until Stripe goes live.
+ * Used to gate Pro-only surfaces like the browser extension.
+ */
+export async function isProUser(userId: string): Promise<boolean> {
+  if (!BILLING_ENFORCED) return true;
+  const user = await loadPlanUser(userId);
+  if (!user) return false;
+  return getPlanForUser(user) !== "free";
 }
 
 /**
