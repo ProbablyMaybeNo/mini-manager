@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalDoc } from "@/components/public/LegalDoc";
 
 export const metadata: Metadata = {
-  title: "Terms of Service · Mini Manager",
-  description: "The terms for using Mini Manager.",
+  title: "Terms of Service · The Mini Mainframe",
+  description: "The terms for using The Mini Mainframe.",
 };
 
 export default function TermsPage() {
@@ -11,7 +11,7 @@ export default function TermsPage() {
     <LegalDoc
       title="TERMS OF SERVICE"
       updated="June 2026"
-      intro="By creating an account or using Mini Manager you agree to these terms. If you don't agree, please don't use the service."
+      intro="By creating an account or using The Mini Mainframe you agree to these terms. If you don't agree, please don't use the service."
       sections={[
         {
           heading: "Your account",

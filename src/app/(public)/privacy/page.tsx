@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalDoc } from "@/components/public/LegalDoc";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · Mini Manager",
-  description: "How Mini Manager handles your data.",
+  title: "Privacy Policy · The Mini Mainframe",
+  description: "How The Mini Mainframe handles your data.",
 };
 
 export default function PrivacyPage() {
@@ -11,7 +11,7 @@ export default function PrivacyPage() {
     <LegalDoc
       title="PRIVACY POLICY"
       updated="June 2026"
-      intro="Mini Manager is a hobby paint-and-miniature management tool. This policy explains what we collect, why, and the choices you have. We aim to collect as little as possible."
+      intro="The Mini Mainframe is a hobby paint-and-miniature management tool. This policy explains what we collect, why, and the choices you have. We aim to collect as little as possible."
       sections={[
         {
           heading: "What we collect",

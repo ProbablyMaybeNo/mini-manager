@@ -3,6 +3,7 @@ import { z } from "zod";
 import { verifyExtensionToken } from "@/lib/auth/extensionToken";
 import { isSupportedStoreUrl } from "@/lib/scrape/stores";
 import { scrapeAndInsertWishlistItem } from "@/lib/wishlist/scrapeInsert";
+import { isProUser } from "@/lib/billing/enforce";
 import { bearerToken, corsJson, preflight } from "../_cors";
 
 /**
@@ -34,6 +35,21 @@ export async function POST(req: Request): Promise<NextResponse> {
   const userId = token ? await verifyExtensionToken(token) : null;
   if (!userId) {
     return corsJson(req, { error: "Invalid or missing extension token" }, 401);
+  }
+
+  // The browser extension is a Pro feature (free users add via the website's
+  // URL paste). Inactive until BILLING_ENFORCED flips on at launch, so the
+  // extension stays testable for everyone until then.
+  if (!(await isProUser(userId))) {
+    return corsJson(
+      req,
+      {
+        error:
+          "The browser extension is a Pro feature — upgrade to add items straight from a store page.",
+        upgradeUrl: "/pricing",
+      },
+      402,
+    );
   }
 
   let json: unknown;
