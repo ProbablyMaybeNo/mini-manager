@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { recipes, users } from "@/db/schema";
+import { imports, recipes, users } from "@/db/schema";
 
 /**
  * Gating-layer — Pro-only "apply / share" actions are gated on
@@ -16,7 +16,12 @@ import { recipes, users } from "@/db/schema";
  *   - publishRecipe         (recipe SHARING)
  *   - createPalette         (Save Palette — apply tool result)
  *   - sendPaletteToRecipe   (Send to Recipe — apply tool result)
- *   - applyImport           (army-list import)
+ *   - createTextImport      (army-list PARSE — pasted text)
+ *   - createFileImport      (army-list PARSE — uploaded file)
+ *   - applyImport           (army-list import — landing the preview)
+ *
+ * The two import PARSE entry points gate BEFORE parsing so a free user
+ * never reaches `parseWithLlm` (the LLM fallback that spends tokens).
  */
 
 const state = vi.hoisted(() => ({
@@ -50,6 +55,22 @@ vi.mock("@/lib/billing/plans", async (importOriginal) => {
 const { publishRecipe } = await import("@/lib/actions/recipeSharing");
 const { createPalette } = await import("@/lib/actions/palettes");
 const { sendPaletteToRecipe } = await import("@/lib/actions/sendToRecipe");
+const { createTextImport, createFileImport } = await import(
+  "@/lib/actions/imports"
+);
+
+// A list with strong, unambiguous structure so the heuristic parser is
+// confident — guarantees the only way the LLM fallback fires is if the
+// Pro gate FAILED to short-circuit first. The Pro path asserting ok:true
+// thus also proves the gate doesn't break the happy path.
+const SAMPLE_LIST = `## Ultramarines Strike Force
+Faction: Adeptus Astartes
+Points Limit: 2000
+
+10x Intercessors - 200pts
+5x Terminators - 185pts
+Captain - 105pts
+`;
 
 async function setPlan(plan: string): Promise<void> {
   await state.db!.update(users).set({ plan }).where(eq(users.id, state.userId));
@@ -153,5 +174,71 @@ describe("sendPaletteToRecipe — Pro-gated Send to Recipe", () => {
       newRecipeName: "From tool",
     });
     expect(res.ok).toBe(true);
+  });
+});
+
+describe("createTextImport — Pro-gated army-list parse (pasted text)", () => {
+  test("a FREE user is blocked with an upgrade URL and nothing is persisted", async () => {
+    await setPlan("free");
+    const res = await createTextImport({ rawText: SAMPLE_LIST });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/Pro feature/i);
+    expect(res.upgradeUrl).toBe("/pricing");
+    // Gate ran before parse + persist — no import row was created (and so
+    // the LLM fallback parser was never reached).
+    const rows = await state.db!.select().from(imports);
+    expect(rows).toHaveLength(0);
+  });
+
+  test("a PRO user can parse a pasted list", async () => {
+    await setPlan("pro_lifetime");
+    const res = await createTextImport({ rawText: SAMPLE_LIST });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.importId).toBeTruthy();
+  });
+});
+
+describe("createFileImport — Pro-gated army-list parse (uploaded file)", () => {
+  test("a FREE user is blocked with an upgrade URL and nothing is persisted", async () => {
+    await setPlan("free");
+    const list = JSON.stringify({
+      name: "JSON Strike Force",
+      faction: "Adeptus Astartes",
+      totalPoints: 2000,
+      units: [{ name: "Intercessors", models: 10, points: 200 }],
+    });
+    const base64 = Buffer.from(list, "utf-8").toString("base64");
+    const res = await createFileImport({
+      filename: "army.json",
+      base64,
+      size: list.length,
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/Pro feature/i);
+    expect(res.upgradeUrl).toBe("/pricing");
+    const rows = await state.db!.select().from(imports);
+    expect(rows).toHaveLength(0);
+  });
+
+  test("a PRO user can parse an uploaded file", async () => {
+    await setPlan("pro_monthly");
+    const list = JSON.stringify({
+      name: "JSON Strike Force",
+      faction: "Adeptus Astartes",
+      totalPoints: 2000,
+      units: [{ name: "Intercessors", models: 10, points: 200 }],
+    });
+    const base64 = Buffer.from(list, "utf-8").toString("base64");
+    const res = await createFileImport({
+      filename: "army.json",
+      base64,
+      size: list.length,
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.importId).toBeTruthy();
   });
 });
