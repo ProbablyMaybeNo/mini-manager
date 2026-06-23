@@ -29,6 +29,7 @@
     "test:verify:fast": "npm run typecheck && npm run test:unit && npm run test:integration"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
     "@auth/drizzle-adapter": "^1.7.0",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/share-tech-mono": "^5.2.7",
