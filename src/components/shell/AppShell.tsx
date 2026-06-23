@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { SidebarRail } from "./SidebarRail";
 import { MobileTopBar } from "./MobileTopBar";
 import { RouteTransition } from "./RouteTransition";
+import { FeedbackWidget } from "./FeedbackWidget";
 
 /**
  * App chrome. `signedIn` is a simple boolean prop (the host owns auth):
@@ -33,6 +34,9 @@ export function AppShell({
           <RouteTransition>{children}</RouteTransition>
         </main>
       </div>
+      {/* Tester "Report an issue" widget — signed-in surface only, button-triggered,
+          hidden from automated browsers. */}
+      <FeedbackWidget />
     </div>
   );
 }

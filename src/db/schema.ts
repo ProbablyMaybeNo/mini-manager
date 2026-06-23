@@ -1248,3 +1248,49 @@ export const metaCounters = sqliteTable("meta_counters", {
 
 export type MetaCounter = typeof metaCounters.$inferSelect;
 export type NewMetaCounter = typeof metaCounters.$inferInsert;
+
+/* ============================================================
+   Tester feedback — in-app "Report an issue" widget
+   ============================================================
+   Lets signed-in testers flag bugs / ideas straight from the app
+   shell (no Vercel comments). One row per submission; `page_url`
+   captures where they were when they hit Report, `category` buckets
+   the note. Cascade-deletes with the user so removing an account
+   tidies their reports too.
+   ============================================================ */
+
+export const feedbackCategories = ["bug", "idea", "other"] as const;
+export type FeedbackCategory = (typeof feedbackCategories)[number];
+
+export const feedback = sqliteTable(
+  "feedback",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    message: text("message").notNull(),
+    category: text("category", { enum: feedbackCategories })
+      .notNull()
+      .default("other"),
+    /** Path (+ optional query) the tester was on when reporting. */
+    pageUrl: text("page_url"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    /** Triage read: "newest reports for this user / overall". */
+    userCreatedIdx: index("feedback_user_created_idx").on(
+      t.userId,
+      t.createdAt,
+    ),
+  }),
+);
+
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  user: one(users, { fields: [feedback.userId], references: [users.id] }),
+}));
+
+export type Feedback = typeof feedback.$inferSelect;
+export type NewFeedback = typeof feedback.$inferInsert;
