@@ -7,6 +7,7 @@ import { db } from "@/db/client";
 import { imports, projects } from "@/db/schema";
 import type { Import, ImportSourceFormat } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { isProUser } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 import {
   parseBattleScribeRos,
@@ -214,6 +215,18 @@ export async function applyImport(
   }
   const userId = await currentUserId();
   const { importId, editedTree } = parsed.data;
+
+  // Gating-layer — landing an army-list import as a project hierarchy is a
+  // Pro-only feature. Inert while BILLING_ENFORCED is false (isProUser
+  // returns true for everyone until Stripe is live).
+  if (!(await isProUser(userId))) {
+    return {
+      ok: false,
+      error:
+        "Army-list import is a Pro feature. Upgrade to turn parsed lists into projects.",
+      upgradeUrl: "/pricing",
+    };
+  }
 
   const importRows = await db
     .select()

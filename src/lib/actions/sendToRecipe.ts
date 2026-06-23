@@ -6,8 +6,18 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { recipes, recipeSlots, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
+import { isProUser } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 import { validatePaletteColors } from "@/lib/palettes/cascade";
+
+/**
+ * Gating-layer — sending a tool palette to a recipe is a Pro-only "apply
+ * tool result" action (free users can USE the colour tools, not persist
+ * their output). Mirrors the free-tier limit shape so the UI can render
+ * an inline "Upgrade →". Inert while BILLING_ENFORCED is false.
+ */
+const PRO_FEATURE_ERROR =
+  "Sending palettes to a recipe is a Pro feature. Upgrade to apply your tool results.";
 
 /* ============================================================
    listRecipesForSendTo — lightweight read action surfaced to the
@@ -90,6 +100,11 @@ export async function sendPaletteToRecipe(
   }
   const d = parsed.data;
   const userId = await currentUserId();
+
+  // Gating-layer — Send to Recipe is a Pro-only "apply tool result" action.
+  if (!(await isProUser(userId))) {
+    return { ok: false, error: PRO_FEATURE_ERROR, upgradeUrl: "/pricing" };
+  }
 
   // Run the swatch hex array through the palette validator so we get the
   // same #RRGGBB normalisation + length checks the save-palette flow uses.
