@@ -33,6 +33,20 @@ export type ActionResult<T = unknown> =
       upgradeUrl?: string;
     };
 
+/**
+ * Containment rules (Ross, 2026-06-23): which child types each parent type
+ * may host. A parent type absent from this map is a leaf (Model, Terrain
+ * Piece, Diorama) and can contain nothing. Values are DB `projectTypes`
+ * literals so they validate directly against the create schema.
+ */
+const CHILD_TYPES: Partial<
+  Record<(typeof projectTypes)[number], ReadonlyArray<(typeof projectTypes)[number]>>
+> = {
+  Army: ["Unit", "Warband", "Model", "Terrain Piece"],
+  Warband: ["Model"],
+  Unit: ["Model"],
+};
+
 const createProjectSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120, "Name is too long"),
   type: z.enum(projectTypes),
@@ -99,7 +113,7 @@ export async function createProject(
   );
   if (projectGate) return projectGate;
 
-  // If a parent is supplied, validate ownership + nesting cap.
+  // If a parent is supplied, validate ownership + the containment rules.
   let finalParentId: string | null = null;
   if (parentId) {
     const parentRows = await db
@@ -111,44 +125,32 @@ export async function createProject(
     if (!parent) {
       return { ok: false, error: "Parent project not found" };
     }
-    if (parent.parentId !== null) {
+    // 2026-06-23 containment rules (Ross): an Army hosts Units, Warbands,
+    // Models and Terrain; a Unit or a Warband hosts Models only; Models +
+    // Terrain are leaves. CHILD_TYPES is the single source of truth — a
+    // parent type absent from the map is a leaf and can't contain anything.
+    const allowed = CHILD_TYPES[parent.type];
+    if (!allowed) {
+      return {
+        ok: false,
+        error: `A ${parent.type} can't contain sub-projects.`,
+      };
+    }
+    if (!allowed.includes(type)) {
+      return {
+        ok: false,
+        error: `A ${parent.type} can contain: ${allowed.join(", ")}.`,
+      };
+    }
+    // 3-level depth cap (Army → Unit/Warband → Model). A parent that is
+    // itself nested may only host leaf Models, so the tree never goes deeper
+    // than three tiers. The CHILD_TYPES map already bounds this (Unit/Warband
+    // only yield Models), but the explicit guard keeps the error legible.
+    if (parent.parentId !== null && type !== "Model") {
       return {
         ok: false,
         error:
-          "Maximum 3 levels of nesting: Army → Unit → Unit. Pick a top-level Army or Warband.",
-      };
-    }
-    if (
-      parent.type !== "Army" &&
-      parent.type !== "Warband" &&
-      parent.type !== "Unit"
-    ) {
-      return {
-        ok: false,
-        error:
-          "Only Army, Warband, or Unit parents can contain sub-projects.",
-      };
-    }
-    // 2026-06-05 — sub-projects may be a Unit OR a single Model. This
-    // guard bounds the legal sub-project type set (Terrain / Diorama can
-    // never be a child).
-    if (type !== "Unit" && type !== "Model") {
-      return {
-        ok: false,
-        error: "Sub-projects must be a Unit or a Model.",
-      };
-    }
-    // 2026-06-05 containment rules (Ross): a Unit can't contain another
-    // Unit (you can still add a Model to it, and a Model can be assigned
-    // to a Unit). A Model never hosts anything — but a Model parent is
-    // already rejected by the Army/Warband/Unit-parent guard above, so we
-    // only need the Unit→Unit case here. Army / Warband keep both Unit +
-    // Model children.
-    if (parent.type === "Unit" && type === "Unit") {
-      return {
-        ok: false,
-        error:
-          "A unit can't contain another unit. Add a model to it, or assign this unit to an army or warband.",
+          "Maximum 3 levels of nesting — only a Model can be added this deep.",
       };
     }
     finalParentId = parent.id;
@@ -863,4 +865,115 @@ export async function countProjectDescendants(
     }
   }
   return { ok: true, data: { count } };
+}
+
+/* ============================================================
+   duplicateProject — deep-copy a project + its whole sub-tree.
+
+   Clones the row's type, counters, priority, deadline, notes and
+   reference image, re-parenting each descendant under its freshly
+   minted parent so the tree shape is preserved. The root copy gets a
+   " (copy)" suffix; descendants keep their names. Attached recipes are
+   NOT cloned (a recipe stays with its original project). Owner-scoped.
+============================================================ */
+
+const duplicateSchema = z.object({ id: z.string().min(1).max(64) });
+
+export async function duplicateProject(
+  raw: z.infer<typeof duplicateSchema>,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = duplicateSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid id" };
+  }
+  const { id } = parsed.data;
+  const userId = await currentUserId();
+
+  // Pull the owner's whole tree once so we can both verify ownership and
+  // walk the sub-tree without N round-trips.
+  const all = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.ownerId, userId));
+  const root = all.find((p) => p.id === id);
+  if (!root) return { ok: false, error: "Project not found" };
+
+  // Free-tier gate mirrors createProject (no-op while BILLING_ENFORCED is off).
+  const gate = await enforceCreateLimit(userId, "projects", all.length);
+  if (gate) return gate;
+
+  const childrenByParent = new Map<string, typeof all>();
+  for (const p of all) {
+    if (!p.parentId) continue;
+    const arr = childrenByParent.get(p.parentId) ?? [];
+    arr.push(p);
+    childrenByParent.set(p.parentId, arr);
+  }
+
+  /** Copy one row under `newParentId`, returning the inserted id. */
+  async function copyRow(
+    src: (typeof all)[number],
+    newParentId: string | null,
+    nameOverride?: string,
+  ): Promise<string | null> {
+    const inserted = await db
+      .insert(projects)
+      .values({
+        ownerId: userId,
+        parentId: newParentId,
+        type: src.type,
+        name: nameOverride ?? src.name,
+        count: src.count,
+        ownedCount: src.ownedCount,
+        buildCount: src.buildCount,
+        primeCount: src.primeCount,
+        paintCount: src.paintCount,
+        baseCount: src.baseCount,
+        completeCount: src.completeCount,
+        isShelved: src.isShelved,
+        faction: src.faction,
+        game: src.game,
+        modelClass: src.modelClass,
+        priority: src.priority,
+        targetDate: src.targetDate,
+        pointsValue: src.pointsValue,
+        notesMd: src.notesMd,
+        referenceImageUrl: src.referenceImageUrl,
+      })
+      .returning({ id: projects.id });
+    return inserted[0]?.id ?? null;
+  }
+
+  try {
+    const newRootId = await copyRow(root, root.parentId, `${root.name} (copy)`);
+    if (!newRootId) return { ok: false, error: "Failed to duplicate project" };
+
+    // BFS the sub-tree, mapping each old id → its new id so children attach
+    // to the freshly minted parent.
+    const idMap = new Map<string, string>([[root.id, newRootId]]);
+    const queue: string[] = [root.id];
+    while (queue.length > 0) {
+      const oldParent = queue.shift();
+      if (oldParent === undefined) break;
+      const newParent = idMap.get(oldParent);
+      if (!newParent) continue;
+      for (const child of childrenByParent.get(oldParent) ?? []) {
+        const newChildId = await copyRow(child, newParent);
+        if (newChildId) {
+          idMap.set(child.id, newChildId);
+          queue.push(child.id);
+        }
+      }
+    }
+
+    await logActivity(userId, "project_created", newRootId);
+    revalidatePath("/dashboard");
+    if (root.parentId) revalidatePath(`/projects/${root.parentId}`);
+    return { ok: true, data: { id: newRootId } };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to duplicate project",
+    };
+  }
 }
