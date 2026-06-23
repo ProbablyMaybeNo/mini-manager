@@ -1,4 +1,5 @@
 export { AppShell } from "./AppShell";
+export { FeedbackWidget } from "./FeedbackWidget";
 export { SidebarRail } from "./SidebarRail";
 export { MobileTopBar } from "./MobileTopBar";
 export { NavLinks } from "./NavLinks";
