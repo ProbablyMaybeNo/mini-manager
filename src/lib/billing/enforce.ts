@@ -20,9 +20,9 @@
  * logic to.
  */
 
-import { eq } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { recipes, users } from "@/db/schema";
 import {
   BILLING_ENFORCED,
   FREE_TIER_LIMIT_ERROR,
@@ -107,4 +107,43 @@ export async function enforceCreateLimit(
     error: FREE_TIER_LIMIT_ERROR,
     upgradeUrl: "/pricing",
   };
+}
+
+/**
+ * Gate the next recipe insert on the free-tier PER-PROJECT-NODE cap.
+ *
+ * Unlike projects / wishlist (which are capped on the per-account total),
+ * the free recipe allowance is "1 recipe per project node": a free painter
+ * can keep one recipe on every project they own, plus one standalone
+ * recipe. The "node" is the recipe's `attachedProjectId`; standalone
+ * recipes (`attachedProjectId === null`) share one "no-project" node.
+ *
+ * So instead of counting ALL the user's recipes, this counts only the
+ * recipes already sharing the target node, then defers to
+ * `enforceCreateLimit` with the `recipes` resource (free cap = 1). The
+ * count is taken owner-scoped so it can never see another user's rows.
+ *
+ * @returns `null` when the create is allowed. Otherwise an ActionResult
+ *          payload the caller should `return` directly.
+ */
+export async function enforceRecipeNodeLimit(
+  userId: string,
+  attachedProjectId: string | null,
+): Promise<LimitDeniedResult | null> {
+  // Owner-scoped count of recipes already attached to this node. Null
+  // node (standalone) needs `IS NULL`, not `= null`, so branch the filter.
+  const nodeFilter =
+    attachedProjectId === null
+      ? and(eq(recipes.ownerId, userId), isNull(recipes.attachedProjectId))
+      : and(
+          eq(recipes.ownerId, userId),
+          eq(recipes.attachedProjectId, attachedProjectId),
+        );
+
+  const nodeRows = await db
+    .select({ n: count() })
+    .from(recipes)
+    .where(nodeFilter);
+
+  return enforceCreateLimit(userId, "recipes", nodeRows[0]?.n ?? 0);
 }
