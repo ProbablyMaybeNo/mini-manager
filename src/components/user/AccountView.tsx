@@ -20,6 +20,10 @@ export function AccountView({
   onDeleteAccount,
   onGenerateToken,
   onRegenerateToken,
+  canManageBilling = false,
+  onManageBilling,
+  billingPending = false,
+  billingError,
 }: {
   profile: AccountProfile;
   onSave: (next: AccountProfile) => void;
@@ -27,6 +31,12 @@ export function AccountView({
   onDeleteAccount?: () => void;
   onGenerateToken: ExtensionTokenPanelProps["onGenerate"];
   onRegenerateToken: ExtensionTokenPanelProps["onRegenerate"];
+  /** True only for users on a paid plan — gates the billing panel below. */
+  canManageBilling?: boolean;
+  /** POSTs to /api/billing/portal and redirects to the returned portal URL. */
+  onManageBilling?: () => void;
+  billingPending?: boolean;
+  billingError?: string | null;
 }) {
   const [username, setUsername] = useState(profile.username);
   const [email, setEmail] = useState(profile.recoveryEmail);
@@ -78,6 +88,29 @@ export function AccountView({
           onGenerate={onGenerateToken}
           onRegenerate={onRegenerateToken}
         />
+
+        {canManageBilling && (
+          <Panel label="BILLING" className="flex flex-col gap-4 p-5">
+            <p className="font-body text-body text-fg">
+              Update your payment method, view invoices, or cancel your plan in
+              the secure Stripe portal.
+            </p>
+            <div>
+              <Button
+                variant="secondary"
+                disabled={billingPending}
+                onClick={onManageBilling}
+              >
+                {billingPending ? "Opening…" : "Manage subscription"}
+              </Button>
+            </div>
+            {billingError && (
+              <p className="font-body text-body text-red" role="alert">
+                ▸ {billingError}
+              </p>
+            )}
+          </Panel>
+        )}
       </div>
 
       {onDeleteAccount && (

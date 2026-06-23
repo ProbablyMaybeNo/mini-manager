@@ -14,16 +14,48 @@ import {
 export function AccountClient({
   username,
   recoveryEmail,
+  canManageBilling = false,
 }: {
   username: string;
   recoveryEmail: string;
+  /** Paid-plan users only — controls whether the billing panel renders. */
+  canManageBilling?: boolean;
 }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [billingPending, setBillingPending] = useState(false);
+  const [billingError, setBillingError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [, startSave] = useTransition();
+
+  // Open the Stripe billing portal: POST the route, then redirect the whole
+  // tab to the returned portal URL. Keeps `billingPending` true through the
+  // redirect so the button stays disabled until the navigation takes over.
+  async function openBillingPortal() {
+    setBillingError(null);
+    setBillingPending(true);
+    try {
+      const res = await fetch("/api/billing/portal", { method: "POST" });
+      const data = (await res.json().catch(() => null)) as {
+        url?: string;
+        error?: string;
+      } | null;
+      if (res.ok && data?.url) {
+        // Hand off to Stripe — leave the button disabled (don't reset pending)
+        // so it can't be double-clicked while the navigation takes over.
+        window.location.href = data.url;
+        return;
+      }
+      setBillingError(
+        data?.error ?? "Could not open the billing portal. Try again.",
+      );
+    } catch {
+      setBillingError("Could not reach billing. Check your connection.");
+    }
+    setBillingPending(false);
+  }
 
   // Require the exact username to be typed — guards against an accidental
   // destructive click.
@@ -56,6 +88,10 @@ export function AccountClient({
       ) : null}
       <AccountView
         profile={{ username, recoveryEmail }}
+        canManageBilling={canManageBilling}
+        onManageBilling={openBillingPortal}
+        billingPending={billingPending}
+        billingError={billingError}
         onSave={(next) => {
           // Username changes aren't a supported mutation (it's the login
           // identity); persist the recovery email, which IS editable.
