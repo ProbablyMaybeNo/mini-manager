@@ -41,6 +41,8 @@ export function DashboardClient({
   const [, startTransition] = useTransition();
   const [newOpen, setNewOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // A freshly created project to auto-open in the detail panel.
+  const [openId, setOpenId] = useState<string | null>(null);
 
   // Final tutorial step lands here as `/dashboard?tour=create` to open the
   // create-project flow. Auto-open the panel once, then strip the param so a
@@ -62,6 +64,8 @@ export function DashboardClient({
         events={events}
         activity={activity}
         projectMinutes={projectMinutes}
+        openProjectId={openId}
+        onOpenConsumed={() => setOpenId(null)}
         onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
         onFocusProject={(p) => router.push(`/focus?project=${p.id}`)}
         onAttachRecipe={() => router.push("/recipes")}
@@ -87,7 +91,11 @@ export function DashboardClient({
         }}
         onRetry={() => router.refresh()}
       />
-      <NewProjectPanel open={newOpen} onClose={() => setNewOpen(false)} />
+      <NewProjectPanel
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onCreated={(id) => setOpenId(id)}
+      />
       <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
       {node}
     </>

@@ -29,6 +29,7 @@ export function ProjectPageClient({
           variant="page"
           onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
           onAttachRecipe={() => router.push("/recipes")}
+          onOpenSubProject={(id) => router.push(`/projects/${id}`)}
           onClose={() => router.push("/dashboard")}
         />
       </div>

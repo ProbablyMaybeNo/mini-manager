@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import type {
@@ -10,8 +10,7 @@ import type {
   Project,
   ProjectType,
 } from "@/lib/types";
-import { rollupProjectMinutes } from "@/lib/projectTime";
-import { ProjectInspector } from "./ProjectInspector";
+import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectsTable } from "./ProjectsTable";
 import { RightRail } from "./RightRail";
 import { StatRow } from "./StatRow";
@@ -28,6 +27,10 @@ export interface DashboardViewProps {
    *  over sub-projects at render. Defaults to empty so non-data callers work. */
   projectMinutes?: Record<string, number>;
   status?: DashboardStatus;
+  /** When set, open this project's detail panel (e.g. just after creation),
+   *  then call onOpenConsumed so a refresh doesn't re-trigger it. */
+  openProjectId?: string | null;
+  onOpenConsumed?: () => void;
   onOpenProject?: (project: Project) => void;
   onFocusProject?: (project: Project) => void;
   onAttachRecipe?: (project: Project) => void;
@@ -57,6 +60,8 @@ export function DashboardView({
   activity,
   projectMinutes = {},
   status = "ready",
+  openProjectId,
+  onOpenConsumed,
   onOpenProject,
   onFocusProject,
   onAttachRecipe,
@@ -87,6 +92,17 @@ export function DashboardView({
     setInspectorOpen(true);
     onOpenProject?.(p);
   }
+
+  // Open-on-create: a freshly created project arrives via openProjectId. Open
+  // its panel once it resolves in the tree, then clear the request.
+  useEffect(() => {
+    if (!openProjectId) return;
+    if (findProject(projects, openProjectId)) {
+      setSelectedId(openProjectId);
+      setInspectorOpen(true);
+      onOpenConsumed?.();
+    }
+  }, [openProjectId, projects, onOpenConsumed]);
 
   return (
     // Solid black canvas (vZsx) — overrides the near-black page token for this
@@ -136,9 +152,10 @@ export function DashboardView({
           calendar events so newly-added dates show up immediately. */}
       <UpcomingEventsBar events={status === "ready" ? upcomingEvents : []} />
 
-      <ProjectInspector
-        project={selected}
-        loggedMinutes={selected ? rollupProjectMinutes(selected, projectMinutes) : 0}
+      <ProjectPanelStack
+        projects={projects}
+        rootId={selected?.id ?? null}
+        projectMinutes={projectMinutes}
         open={inspectorOpen}
         onClose={() => setInspectorOpen(false)}
         onStartSession={(p) => {

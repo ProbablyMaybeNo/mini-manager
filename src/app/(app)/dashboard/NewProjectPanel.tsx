@@ -13,9 +13,12 @@ const TYPES = ["Army", "Warband", "Unit", "Model", "Terrain Piece", "Diorama"] a
 export function NewProjectPanel({
   open,
   onClose,
+  onCreated,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Fired with the new project id so the caller can open its detail panel. */
+  onCreated?: (id: string) => void;
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -39,6 +42,7 @@ export function NewProjectPanel({
       setName("");
       setCount("0");
       onClose();
+      if (res.data?.id) onCreated?.(res.data.id);
       router.refresh();
     });
   }
