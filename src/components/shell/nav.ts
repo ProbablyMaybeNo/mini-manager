@@ -4,16 +4,19 @@ export interface NavItem {
   key: NavKey;
   label: string;
   path: string;
+  /** First-run tour anchor — emitted as `data-tour` on the rendered link so
+   *  the walkthrough can spotlight this nav item. */
+  tour?: string;
 }
 
 /** Primary rail items (top). */
 export const MAIN_NAV: NavItem[] = [
-  { key: "dashboard", label: "DASHBOARD", path: "/dashboard" },
-  { key: "focus", label: "FOCUS", path: "/focus" },
-  { key: "library", label: "LIBRARY", path: "/library" },
-  { key: "recipe", label: "RECIPE", path: "/recipes" },
-  { key: "tools", label: "TOOLS", path: "/tools" },
-  { key: "collection", label: "COLLECTION", path: "/collection" },
+  { key: "dashboard", label: "DASHBOARD", path: "/dashboard", tour: "nav-dashboard" },
+  { key: "focus", label: "FOCUS", path: "/focus", tour: "nav-focus" },
+  { key: "library", label: "LIBRARY", path: "/library", tour: "nav-library" },
+  { key: "recipe", label: "RECIPE", path: "/recipes", tour: "nav-recipe" },
+  { key: "tools", label: "TOOLS", path: "/tools", tour: "nav-tools" },
+  { key: "collection", label: "COLLECTION", path: "/collection", tour: "nav-collection" },
 ];
 
 /** Pinned-bottom rail items. */

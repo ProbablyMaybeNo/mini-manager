@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/shell";
+import { TourProvider } from "@/components/tour";
 import { MockProvider } from "@/mock/MockProvider";
 import { auth } from "@/auth";
 import { loadAppData } from "@/lib/appData";
+import { hasSeenTutorial } from "@/db/queries/users";
 
 /**
  * Signed-in surface. Server component: resolves the real session, loads the
@@ -21,12 +23,16 @@ export default async function AppGroupLayout({
 }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const data = userId ? await loadAppData(userId) : undefined;
+  const [data, seenTutorial] = userId
+    ? await Promise.all([loadAppData(userId), hasSeenTutorial(userId)])
+    : [undefined, true];
   const signedIn = Boolean(userId);
 
   return (
     <MockProvider variant="populated" signedIn={signedIn} data={data}>
-      <AppShell signedIn={signedIn}>{children}</AppShell>
+      <TourProvider seen={seenTutorial} signedIn={signedIn}>
+        <AppShell signedIn={signedIn}>{children}</AppShell>
+      </TourProvider>
     </MockProvider>
   );
 }

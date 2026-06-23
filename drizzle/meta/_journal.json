@@ -176,6 +176,13 @@
       "when": 1782073818030,
       "tag": "0024_special_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1782180997159,
+      "tag": "0025_stormy_stark_industries",
+      "breakpoints": true
     }
   ]
 }
