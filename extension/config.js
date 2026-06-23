@@ -1,4 +1,4 @@
-// Shared config + storage helpers for the Mini Manager Collection
+// Shared config + storage helpers for the Mini Mainframe Collection
 // extension. No build step — plain ES modules loaded directly by the
 // popup and options pages.
 
@@ -53,7 +53,7 @@ export async function apiPost(apiBase, token, path, body) {
     return {
       ok: false,
       status: 0,
-      data: { error: "Couldn't reach Mini Manager. Is the API base correct?" },
+      data: { error: "Couldn't reach The Mini Mainframe. Is the API base correct?" },
     };
   }
   let data = {};

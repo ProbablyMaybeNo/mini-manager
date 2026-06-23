@@ -42,7 +42,7 @@ export function SettingsView({
           <p className="font-body text-body text-fg">
             {plan.name === "Free"
               ? "Upgrade for unlimited projects, sharing, and the full tool suite."
-              : "Thanks for supporting Mini Manager."}
+              : "Thanks for supporting The Mini Mainframe."}
           </p>
           <div>
             <Button onClick={onUpgrade}>{plan.name === "Free" ? "Upgrade" : "Manage billing"}</Button>

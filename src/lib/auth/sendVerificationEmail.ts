@@ -19,14 +19,14 @@ export interface VerifyMail {
 
 export async function sendVerificationEmail(mail: VerifyMail): Promise<void> {
   const from =
-    process.env.AUTH_EMAIL_FROM ?? "Mini Manager <no-reply@localhost>";
+    process.env.AUTH_EMAIL_FROM ?? "Mini Mainframe <no-reply@localhost>";
 
   if (!process.env.AUTH_RESEND_KEY) {
     // eslint-disable-next-line no-console
     console.log(
       [
         "",
-        "┌─ MINI MANAGER · VERIFICATION MAIL ───────────────────",
+        "┌─ MINI MAINFRAME · VERIFICATION MAIL ─────────────────",
         `│ to:      ${mail.to}`,
         `│ subject: ${mail.subject}`,
         `│ body:    ${mail.text.replace(/\n/g, " | ")}`,

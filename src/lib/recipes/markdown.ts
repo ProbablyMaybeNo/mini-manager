@@ -17,7 +17,7 @@ export interface MarkdownInput {
   };
   /** Flat ordered slot list (2026-06-04 unify). */
   slots: ReadonlyArray<MarkdownSlot>;
-  /** When set, appended as a "Made with Mini Manager" footer link. */
+  /** When set, appended as a "Made with The Mini Mainframe" footer link. */
   publicUrl?: string;
 }
 
@@ -53,7 +53,7 @@ function renderSlot(slot: MarkdownSlot, index: number): string {
  *
  *     # Recipe name
  *
- *     *A Mini Manager recipe*
+ *     *A Mini Mainframe recipe*
  *
  *     ## Slots
  *
@@ -62,7 +62,7 @@ function renderSlot(slot: MarkdownSlot, index: number): string {
  *     ...
  *
  *     ---
- *     [Made with Mini Manager](<publicUrl>)
+ *     [Made with The Mini Mainframe](<publicUrl>)
  *
  * Pure function — no I/O, no side effects. Snapshot-tested in P5.8.
  * Trailing newline omitted; the consumer can append one if needed.
@@ -71,7 +71,7 @@ export function recipeToMarkdown(input: MarkdownInput): string {
   const parts: string[] = [];
   parts.push(`# ${input.recipe.name}`);
   parts.push("");
-  parts.push("*A Mini Manager recipe*");
+  parts.push("*A Mini Mainframe recipe*");
   parts.push("");
 
   parts.push("## Slots");
@@ -94,7 +94,7 @@ export function recipeToMarkdown(input: MarkdownInput): string {
 
   if (input.publicUrl) {
     parts.push("---");
-    parts.push(`[Made with Mini Manager](${input.publicUrl})`);
+    parts.push(`[Made with The Mini Mainframe](${input.publicUrl})`);
   }
 
   return parts.join("\n").replace(/\n{3,}/g, "\n\n");

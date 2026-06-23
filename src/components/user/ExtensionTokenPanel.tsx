@@ -12,7 +12,7 @@ export interface ExtensionTokenPanelProps {
 
 /**
  * Settings → "Browser extension" section. Generates the personal token
- * the "Mini Manager Collection" Chrome extension pastes in, with copy +
+ * the "Mini Mainframe Collection" Chrome extension pastes in, with copy +
  * regenerate. The token is shown once on demand (never persisted to the
  * page on load) so it isn't sitting in the DOM for every account visit.
  */
@@ -56,7 +56,7 @@ export function ExtensionTokenPanel({
     >
       <p className="font-body text-body text-fg">
         The{" "}
-        <span className="text-cyan">Mini Manager Collection</span> browser
+        <span className="text-cyan">Mini Mainframe Collection</span> browser
         extension lets you add a paint or model to your collection straight
         from a supported store’s product page. Generate a personal token below
         and paste it into the extension once.

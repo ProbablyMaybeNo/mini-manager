@@ -1,5 +1,5 @@
 /*
- * Mini Manager service worker.
+ * The Mini Mainframe service worker.
  *
  * P15.1 (PWA installability + app-shell offline) shipped the precache + the
  * network-first navigation handler. P15.4 (offline reads) adds a
@@ -169,7 +169,7 @@ function offlineNavigationResponse() {
     "<!doctype html><meta charset=utf-8><title>Offline</title>" +
       "<body style=\"font-family:monospace;background:#0a0a0a;color:#f5f5f5;" +
       "display:grid;place-items:center;height:100vh;margin:0\">" +
-      "<p>OFFLINE — reconnect to load Mini Manager.</p>",
+      "<p>OFFLINE — reconnect to load The Mini Mainframe.</p>",
     { headers: { "Content-Type": "text/html; charset=utf-8" } },
   );
 }
