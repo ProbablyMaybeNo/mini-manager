@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, count, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { bodyTypes, projects, recipes, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { logActivity } from "@/lib/activityLog";
-import { enforceCreateLimit } from "@/lib/billing/enforce";
+import { enforceRecipeNodeLimit } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 
 const recipeIdSchema = z.string().min(1).max(64);
@@ -106,24 +106,22 @@ export async function createRecipe(
   const d = parsed.data;
   const userId = await currentUserId();
 
-  // P10.2 — Free-tier recipe cap (1 recipe).
-  const ownedRows = await db
-    .select({ n: count() })
-    .from(recipes)
-    .where(eq(recipes.ownerId, userId));
-  const recipeGate = await enforceCreateLimit(
-    userId,
-    "recipes",
-    ownedRows[0]?.n ?? 0,
-  );
-  if (recipeGate) return recipeGate;
+  const attachedProjectId = d.attachedProjectId ?? null;
 
-  if (d.attachedProjectId) {
-    const owned = await verifyProjectOwnership(userId, d.attachedProjectId);
+  // Validate project ownership BEFORE the gate so a free user can't probe
+  // another owner's project id through the per-node recipe count.
+  if (attachedProjectId) {
+    const owned = await verifyProjectOwnership(userId, attachedProjectId);
     if (!owned) return { ok: false, error: "Project not found" };
   }
 
-  const isStandalone = !d.attachedProjectId;
+  // Gating-layer — Free-tier recipe cap is PER PROJECT NODE (1 recipe per
+  // attachedProjectId; standalone recipes share the null node). Counts only
+  // the recipes already under this node, then blocks the 2nd on free.
+  const recipeGate = await enforceRecipeNodeLimit(userId, attachedProjectId);
+  if (recipeGate) return recipeGate;
+
+  const isStandalone = !attachedProjectId;
 
   try {
     const inserted = await db
@@ -132,7 +130,7 @@ export async function createRecipe(
         ownerId: userId,
         name: d.name,
         bodyType: d.bodyType,
-        attachedProjectId: d.attachedProjectId ?? null,
+        attachedProjectId,
         isStandalone,
         notesMd: d.notesMd ?? null,
       })
@@ -144,8 +142,8 @@ export async function createRecipe(
     await logActivity(userId, "recipe_created", row.id);
 
     revalidatePath("/recipes");
-    if (d.attachedProjectId) {
-      revalidatePath(`/projects/${d.attachedProjectId}`);
+    if (attachedProjectId) {
+      revalidatePath(`/projects/${attachedProjectId}`);
       revalidatePath("/projects");
     }
     return { ok: true, data: { id: row.id } };

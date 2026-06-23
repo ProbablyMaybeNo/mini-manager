@@ -5,9 +5,11 @@
  * actions gate on `isWithinLimit(...)` before any insert; the /pricing
  * page reads `PLAN_LIMITS` to render the comparison table.
  *
- * Four tiers (locked in PHASE10_PLAN.md):
- *   free          — 1 project, 1 recipe, 3 wishlist items. The tasting
- *                   menu. Sign-up needs only a username + password.
+ * Four tiers (locked in PHASE10_PLAN.md, gating-layer revision):
+ *   free          — UNLIMITED projects + wishlist/collection, but only
+ *                   1 recipe PER PROJECT NODE (per attachedProjectId). The
+ *                   `recipes` cap is special — see the per-node note on
+ *                   PLAN_LIMITS. Sign-up needs only a username + password.
  *   pro_monthly   — unlimited. $4 / month.
  *   pro_lifetime  — unlimited. $36 one-time (3 free months vs monthly).
  *   founder       — unlimited. $26 one-time. Capped at 100 seats; same
@@ -29,10 +31,10 @@ import type { User } from "@/db/schema";
  * untestable for free users — including the recruit beta, who can't pay yet.
  * So enforcement is gated off and every user is effectively unlimited.
  *
- * `PLAN_LIMITS` below stays at the real advertised caps (1/1/3) so the
- * /pricing + /user pages keep showing what the free tier WILL be — only the
- * runtime gate in `isWithinLimit` is relaxed. Flip this to `true` in the
- * Stripe wire-up so the caps bite again the moment upgrading is possible.
+ * `PLAN_LIMITS` below stays at the real advertised caps so the /pricing +
+ * /user pages keep showing what the free tier WILL be — only the runtime
+ * gate in `isWithinLimit` is relaxed. Flip this to `true` in the Stripe
+ * wire-up so the caps bite again the moment upgrading is possible.
  */
 export const BILLING_ENFORCED = false;
 
@@ -47,10 +49,20 @@ export type LimitedResource = "projects" | "recipes" | "wishlist";
  * true unconditionally for that resource. Pro Monthly, Pro Lifetime,
  * and Founder all share the same unlimited shape; they're separate
  * tiers for identity / billing, not for capability.
+ *
+ * NOTE on `recipes` (gating-layer): the free `recipes` cap is special.
+ * It is NOT a per-account total — projects and wishlist are unlimited on
+ * free, and a free painter can keep one recipe on EVERY project node.
+ * The cap is enforced PER PROJECT NODE: `createRecipe` counts only the
+ * recipes sharing the new recipe's `attachedProjectId` (standalone
+ * recipes — `attachedProjectId === null` — form their own "no-project"
+ * node) and blocks the 2nd under that same node. The `1` here is that
+ * per-node ceiling; the cap MATH in `isWithinPlanLimit` is unchanged
+ * (count < cap), only the count the caller passes differs.
  */
 export const PLAN_LIMITS: Readonly<Record<PlanTier, Readonly<Record<LimitedResource, number>>>> =
   Object.freeze({
-    free: Object.freeze({ projects: 1, recipes: 1, wishlist: 3 }),
+    free: Object.freeze({ projects: Infinity, recipes: 1, wishlist: Infinity }),
     pro_monthly: Object.freeze({
       projects: Infinity,
       recipes: Infinity,
