@@ -82,6 +82,36 @@ async function seedRecipesForUser(n: number): Promise<void> {
   }
 }
 
+/** Seed one owned project and return its id (a recipe "node"). */
+async function seedProject(): Promise<string> {
+  const id = nanoid(16);
+  await state.db!.insert(projects).values({
+    id,
+    ownerId: state.userId,
+    type: "Unit",
+    name: `Node ${id}`,
+    count: 1,
+  });
+  return id;
+}
+
+/** Seed `n` recipes attached to a specific node (or standalone if null). */
+async function seedRecipesUnderNode(
+  n: number,
+  attachedProjectId: string | null,
+): Promise<void> {
+  for (let i = 0; i < n; i++) {
+    await state.db!.insert(recipes).values({
+      id: nanoid(16),
+      ownerId: state.userId,
+      name: `Node recipe ${i}`,
+      bodyType: "infantry",
+      attachedProjectId,
+      isStandalone: attachedProjectId === null,
+    });
+  }
+}
+
 async function seedWishlistForUser(n: number): Promise<void> {
   for (let i = 0; i < n; i++) {
     await state.db!.insert(wishlistItems).values({
@@ -114,7 +144,7 @@ afterEach(() => {
    createProject gate
    ============================================================ */
 
-describe("createProject — free tier cap (1 project)", () => {
+describe("createProject — free tier projects are UNLIMITED", () => {
   test("first project succeeds on a fresh free account", async () => {
     const result = await createProject({ name: "First", type: "Unit", count: 1 });
     const rows = await state.db!.select().from(projects);
@@ -122,33 +152,16 @@ describe("createProject — free tier cap (1 project)", () => {
     expect(result.ok).toBe(true);
   });
 
-  itWhenEnforced("second project is blocked with the free-tier error + upgrade URL", async () => {
-    await seedProjectsForUser(1);
-    const result = await createProject({
-      name: "Second",
-      type: "Unit",
-      count: 1,
-    });
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error).toMatch(/Free tier limit reached/);
-    expect(result.upgradeUrl).toBe("/pricing");
-    // Still only the 1 seeded row — gate ran before the insert.
+  // Gating-layer model — free is unlimited on projects (the cap moved to
+  // recipes, per-node). So a free user can keep adding projects today AND
+  // when billing goes live; this is NOT gated by BILLING_ENFORCED.
+  test("a free user can create many projects (no per-account project cap)", async () => {
+    await seedProjectsForUser(3);
+    const result = await createProject({ name: "Fourth", type: "Unit", count: 1 });
+    expect(result.ok).toBe(true);
     const rows = await state.db!.select().from(projects);
-    expect(rows).toHaveLength(1);
-    // Redirect must NOT have fired (we rejected before the success path).
-    expect(vi.mocked(redirect)).not.toHaveBeenCalled();
+    expect(rows).toHaveLength(4);
   });
-
-  test.skipIf(BILLING_ENFORCED)(
-    "second project IS allowed while billing is off (caps lifted pre-Stripe)",
-    async () => {
-      await seedProjectsForUser(1);
-      await createProject({ name: "Second", type: "Unit", count: 1 });
-      const rows = await state.db!.select().from(projects);
-      expect(rows).toHaveLength(2);
-    },
-  );
 });
 
 describe("createProject — paid tiers unlimited", () => {
@@ -180,7 +193,7 @@ describe("createProject — paid tiers unlimited", () => {
    createRecipe gate
    ============================================================ */
 
-describe("createRecipe — free tier cap (1 recipe)", () => {
+describe("createRecipe — free tier cap is PER PROJECT NODE (1 / node)", () => {
   test("first recipe succeeds on a fresh free account", async () => {
     const result = await createRecipe({ name: "Salamanders" });
     expect(result.ok).toBe(true);
@@ -188,16 +201,84 @@ describe("createRecipe — free tier cap (1 recipe)", () => {
     expect(rows).toHaveLength(1);
   });
 
-  itWhenEnforced("second recipe is blocked with the free-tier error + upgrade URL", async () => {
-    await seedRecipesForUser(1);
-    const result = await createRecipe({ name: "Second" });
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error).toMatch(/Free tier limit reached/);
-    expect(result.upgradeUrl).toBe("/pricing");
-    const rows = await state.db!.select().from(recipes);
-    expect(rows).toHaveLength(1);
-  });
+  // --- standalone node (attachedProjectId === null) ---
+  itWhenEnforced(
+    "second STANDALONE recipe is blocked (same null node) + upgrade URL",
+    async () => {
+      await seedRecipesUnderNode(1, null);
+      const result = await createRecipe({ name: "Second standalone" });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.error).toMatch(/Free tier limit reached/);
+      expect(result.upgradeUrl).toBe("/pricing");
+      // Gate ran before the insert — still just the 1 seeded standalone row.
+      const rows = await state.db!.select().from(recipes);
+      expect(rows).toHaveLength(1);
+    },
+  );
+
+  // --- per-project node ---
+  itWhenEnforced(
+    "second recipe UNDER THE SAME PROJECT is blocked + upgrade URL",
+    async () => {
+      const projectId = await seedProject();
+      await seedRecipesUnderNode(1, projectId);
+      const result = await createRecipe({
+        name: "Second on project",
+        attachedProjectId: projectId,
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.error).toMatch(/Free tier limit reached/);
+      expect(result.upgradeUrl).toBe("/pricing");
+    },
+  );
+
+  // The defining property of the per-node cap: a recipe already on one
+  // project must NOT block a recipe on a DIFFERENT project, and must not
+  // block the user's first standalone recipe. This is the behaviour that
+  // separates a per-node cap from a per-account total — assert it even
+  // while enforcement is on.
+  itWhenEnforced(
+    "a recipe on project A does NOT block a first recipe on project B",
+    async () => {
+      const projectA = await seedProject();
+      const projectB = await seedProject();
+      await seedRecipesUnderNode(1, projectA);
+      const result = await createRecipe({
+        name: "First on B",
+        attachedProjectId: projectB,
+      });
+      expect(result.ok).toBe(true);
+    },
+  );
+
+  itWhenEnforced(
+    "a recipe on a project does NOT block a first standalone recipe",
+    async () => {
+      const projectId = await seedProject();
+      await seedRecipesUnderNode(1, projectId);
+      const result = await createRecipe({ name: "First standalone" });
+      expect(result.ok).toBe(true);
+    },
+  );
+
+  // While billing is off there's no upgrade path, so even the 2nd recipe
+  // under one node is allowed today (caps lifted pre-Stripe).
+  test.skipIf(BILLING_ENFORCED)(
+    "second recipe under the same node IS allowed while billing is off",
+    async () => {
+      const projectId = await seedProject();
+      await seedRecipesUnderNode(1, projectId);
+      const result = await createRecipe({
+        name: "Second on project (off)",
+        attachedProjectId: projectId,
+      });
+      expect(result.ok).toBe(true);
+      const rows = await state.db!.select().from(recipes);
+      expect(rows).toHaveLength(2);
+    },
+  );
 });
 
 describe("createRecipe — paid tiers unlimited", () => {
@@ -215,7 +296,7 @@ describe("createRecipe — paid tiers unlimited", () => {
    createWishlistItem gate (cap = 3)
    ============================================================ */
 
-describe("createWishlistItem — free tier cap (3 items)", () => {
+describe("createWishlistItem — free tier collection is UNLIMITED", () => {
   test("first three items succeed on a fresh free account", async () => {
     for (let i = 0; i < 3; i++) {
       const result = await createWishlistItem({ title: `Item ${i}` });
@@ -225,30 +306,23 @@ describe("createWishlistItem — free tier cap (3 items)", () => {
     expect(rows).toHaveLength(3);
   });
 
-  itWhenEnforced("fourth item is blocked with the free-tier error + upgrade URL", async () => {
+  // Gating-layer model — free collection/wishlist is unlimited (the cap
+  // moved to recipes, per-node). A free user keeps adding today AND at
+  // launch; this is NOT gated by BILLING_ENFORCED.
+  test("a free user can add a fourth+ item (no per-account collection cap)", async () => {
     await seedWishlistForUser(3);
     const result = await createWishlistItem({ title: "Fourth" });
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error).toMatch(/Free tier limit reached/);
-    expect(result.upgradeUrl).toBe("/pricing");
+    expect(result.ok).toBe(true);
     const rows = await state.db!.select().from(wishlistItems);
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(4);
   });
 
-  itWhenEnforced("scrape path enforces the same cap (gate fires BEFORE the scrape)", async () => {
+  test("the scrape path is also uncapped on free", async () => {
     await seedWishlistForUser(3);
-    // The URL doesn't matter — the gate should reject before any HTTP work.
     const result = await scrapeAndCreateWishlistItem({
       url: "https://example.com/widget",
     });
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error).toMatch(/Free tier limit reached/);
-    expect(result.upgradeUrl).toBe("/pricing");
-    // Still only the 3 seeded rows — no scrape produced a 4th.
-    const rows = await state.db!.select().from(wishlistItems);
-    expect(rows).toHaveLength(3);
+    expect(result.ok).toBe(true);
   });
 });
 
