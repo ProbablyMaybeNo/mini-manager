@@ -45,7 +45,7 @@ describe("recipeToMarkdown", () => {
     expect(recipeToMarkdown(sample)).toMatchInlineSnapshot(`
       "# Salamanders Power Armor
 
-      *A Mini Manager recipe*
+      *A Mini Mainframe recipe*
 
       ## Slots
 
@@ -60,7 +60,7 @@ describe("recipeToMarkdown", () => {
       Two thin coats on the basecoat.
 
       ---
-      [Made with Mini Manager](https://miniaturemanager.app/r/abc123)"
+      [Made with The Mini Mainframe](https://miniaturemanager.app/r/abc123)"
     `);
   });
 
@@ -77,7 +77,7 @@ describe("recipeToMarkdown", () => {
         },
       ],
     });
-    expect(out).not.toContain("Made with Mini Manager");
+    expect(out).not.toContain("Made with The Mini Mainframe");
     expect(out).toContain("# Unpublished");
     // Hex should be normalised to uppercase.
     expect(out).toContain("`#5D3618`");

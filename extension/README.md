@@ -1,6 +1,6 @@
-# Mini Manager Collection — browser extension
+# Mini Mainframe Collection — browser extension
 
-Add a paint or model to your [Mini Manager](https://miniaturemanager.vercel.app)
+Add a paint or model to your [Mini Mainframe](https://miniaturemanager.vercel.app)
 collection straight from a supported store's product page. Click the
 toolbar icon (or press **Alt+Shift+M**) on a product page, pick **Owned**
 or **Wishlist**, and hit **Add to collection** — no leaving the page.
@@ -19,7 +19,7 @@ eBay. (The server is the source of truth — `src/lib/scrape/stores.ts`.)
 1. Open `chrome://extensions` in Chrome (or Edge: `edge://extensions`).
 2. Toggle **Developer mode** on (top-right).
 3. Click **Load unpacked** and select this `extension/` folder.
-4. The **Mini Manager Collection** icon appears in the toolbar. Pin it.
+4. The **Mini Mainframe Collection** icon appears in the toolbar. Pin it.
 
 ## Generate + paste your token
 
@@ -35,7 +35,7 @@ eBay. (The server is the source of truth — `src/lib/scrape/stores.ts`.)
    re-paste the new one.
 
 The token never leaves your browser except as a `Bearer` header to the
-Mini Manager API. It's a signed HMAC of your user id — there's no token
+Mini Mainframe API. It's a signed HMAC of your user id — there's no token
 stored server-side, so regenerating (which bumps a version counter)
 instantly invalidates every previous one.
 

@@ -157,7 +157,7 @@ async function issueRecoveryEmailToken(input: {
   const url = buildVerifyUrl(token);
   await sendVerificationEmail({
     to: input.email,
-    subject: "Verify your Mini Manager recovery email",
+    subject: "Verify your Mini Mainframe recovery email",
     text: `Click to verify this address for password reset:\n\n${url}\n\nThis link expires in 1 hour. If you didn't request it, ignore this email.`,
   });
 }

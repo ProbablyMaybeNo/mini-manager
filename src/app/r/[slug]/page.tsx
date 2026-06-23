@@ -20,11 +20,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const recipe = await load(slug);
   if (!recipe) {
-    return { title: "Recipe not found · Mini Manager", robots: { index: false } };
+    return { title: "Recipe not found · The Mini Mainframe", robots: { index: false } };
   }
   return {
-    title: `${recipe.name} · Mini Manager`,
-    description: `A paint recipe shared via Mini Manager — ${recipe.slots.length} slot${recipe.slots.length === 1 ? "" : "s"}.`,
+    title: `${recipe.name} · The Mini Mainframe`,
+    description: `A paint recipe shared via The Mini Mainframe — ${recipe.slots.length} slot${recipe.slots.length === 1 ? "" : "s"}.`,
   };
 }
 
@@ -86,7 +86,7 @@ export default async function PublicRecipePage({
       <footer className="text-center font-body text-body text-fg">
         Made with{" "}
         <a href="/" className="text-cyan hover:underline">
-          Mini Manager
+          The Mini Mainframe
         </a>
       </footer>
     </main>

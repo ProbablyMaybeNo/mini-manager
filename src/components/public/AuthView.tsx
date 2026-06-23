@@ -39,13 +39,13 @@ export function AuthView({
         {/* UX-010 — a real page heading for screen readers; the terminal
             panel label is decorative, so this stays visually hidden. */}
         <h1 className="sr-only">
-          {isSignUp ? "Sign up for Mini Manager" : "Sign in to Mini Manager"}
+          {isSignUp ? "Sign up for The Mini Mainframe" : "Sign in to The Mini Mainframe"}
         </h1>
         <div className="mb-5 flex flex-col items-center gap-3 text-center">
           <Logo href="/" size={128} className="animate-power-on" />
           <BootSequence
             lines={[
-              "MINI-MANAGER OS v1.0",
+              "MINI MAINFRAME OS v1.0",
               isSignUp ? "NEW USER REGISTRATION" : "AWAITING CREDENTIALS",
             ]}
           />

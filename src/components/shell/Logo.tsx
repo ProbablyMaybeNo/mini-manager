@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 /**
- * The Mini Manager CRT logo (exported from Figma). Links home / to dashboard.
+ * The Mini Mainframe CRT logo (exported from Figma). Links home / to dashboard.
  *
  * Enlarged per MM-50 / MM-20 / 63comR8WGVsR / ovBXfJWDLMn7 so the "MINI-MANAGER"
  * text on the CRT screen is legible. Defaults to 120×120 (was 64); the hero and
@@ -33,7 +33,7 @@ export function Logo({
   const img = (
     <Image
       src="/logo.png"
-      alt="Mini Manager"
+      alt="The Mini Mainframe"
       width={size}
       height={size}
       priority
@@ -45,7 +45,7 @@ export function Logo({
     return (
       <Link
         href={href}
-        aria-label="Mini Manager"
+        aria-label="The Mini Mainframe"
         className={cn("relative inline-block", className)}
         style={{ width: size, height: size }}
       >
@@ -62,7 +62,7 @@ export function Logo({
   }
 
   return (
-    <Link href={href} aria-label="Mini Manager" className={cn("inline-block", className)}>
+    <Link href={href} aria-label="The Mini Mainframe" className={cn("inline-block", className)}>
       {img}
     </Link>
   );

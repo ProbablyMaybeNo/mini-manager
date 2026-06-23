@@ -1,6 +1,6 @@
 {
-  "name": "Mini Manager",
-  "short_name": "MiniMgr",
+  "name": "The Mini Mainframe",
+  "short_name": "Mainframe",
   "description": "Command center for miniature & wargaming painters.",
   "start_url": "/dashboard",
   "display": "standalone",

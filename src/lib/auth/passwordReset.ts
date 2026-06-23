@@ -81,7 +81,7 @@ export async function requestPasswordReset(input: {
   const url = buildResetUrl(token);
   await sendVerificationEmail({
     to: user.recoveryEmail,
-    subject: "Reset your Mini Manager password",
+    subject: "Reset your Mini Mainframe password",
     text: `Click to reset your password:\n\n${url}\n\nThis link expires in 1 hour. If you didn't request it, ignore this email.`,
   });
 
