@@ -105,6 +105,7 @@ export function DashboardView({
           <div className="flex flex-col gap-6 xl:flex-row">
             <div className="flex min-w-0 flex-1 flex-col gap-6">
               <StatRow summary={summary} />
+              <div data-tour="dashboard-projects">
               <Panel label="PROJECTS" cornerTicks className="p-4">
                 <ProjectsTable
                   projects={projects}
@@ -116,7 +117,7 @@ export function DashboardView({
                   onAddSubProject={onAddSubProject}
                 />
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-                  <Button variant="add" onClick={onAddProject}>+ New Project</Button>
+                  <Button variant="add" onClick={onAddProject} data-tour="dashboard-new-project">+ New Project</Button>
                   {/* Upload-Army-List restored — opens the ArmyImportPanel
                       slide-out wired through onUploadArmyList. */}
                   <Button variant="secondary" onClick={onUploadArmyList}>
@@ -124,6 +125,7 @@ export function DashboardView({
                   </Button>
                 </div>
               </Panel>
+              </div>
             </div>
             <RightRail events={events} activity={activity} />
           </div>

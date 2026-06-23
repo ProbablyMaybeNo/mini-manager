@@ -26,6 +26,7 @@ export function NavLinks({
             <Link
               href={item.path}
               onClick={onNavigate}
+              data-tour={item.tour}
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 // min-h-11 → 44px comfortable touch target (UX-010); flex

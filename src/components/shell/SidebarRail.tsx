@@ -1,3 +1,4 @@
+import { TourReplayButton } from "@/components/tour";
 import { Logo } from "./Logo";
 import { NavLinks } from "./NavLinks";
 import { FOOTER_NAV, MAIN_NAV } from "./nav";
@@ -15,6 +16,8 @@ export function SidebarRail() {
       <NavLinks items={MAIN_NAV} />
       <div className="mt-auto border-t border-cyan/30 pt-3">
         <NavLinks items={FOOTER_NAV} />
+        {/* Re-trigger the first-run walkthrough on demand, pinned below ACCOUNT. */}
+        <TourReplayButton />
       </div>
     </nav>
   );

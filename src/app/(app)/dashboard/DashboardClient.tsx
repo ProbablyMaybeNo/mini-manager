@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { useToast } from "@/components/kit";
 import { deriveDashboardSummary } from "@/mock/derive";
@@ -36,10 +36,21 @@ export function DashboardClient({
   projectMinutes: Record<string, number>;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast, node } = useToast();
   const [, startTransition] = useTransition();
   const [newOpen, setNewOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+
+  // Final tutorial step lands here as `/dashboard?tour=create` to open the
+  // create-project flow. Auto-open the panel once, then strip the param so a
+  // refresh / back doesn't re-trigger it.
+  useEffect(() => {
+    if (searchParams.get("tour") === "create") {
+      setNewOpen(true);
+      router.replace("/dashboard");
+    }
+  }, [searchParams, router]);
 
   const summary = deriveDashboardSummary(projects, sessionStats);
 

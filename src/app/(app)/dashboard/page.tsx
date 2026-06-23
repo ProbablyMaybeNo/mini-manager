@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { currentUserId } from "@/lib/auth-stub";
 import { loadAppData } from "@/lib/appData";
 import { zeroSessionStats } from "@/mock/fixtures";
@@ -12,12 +13,17 @@ export default async function DashboardPage() {
   const data = await loadAppData(userId);
 
   return (
-    <DashboardClient
-      projects={data.projects ?? []}
-      events={data.events ?? []}
-      activity={data.activity ?? []}
-      sessionStats={data.sessionStats ?? zeroSessionStats}
-      projectMinutes={data.projectMinutes ?? {}}
-    />
+    // DashboardClient reads `useSearchParams` (the ?tour=create handoff from
+    // the walkthrough's final step), which Next requires under a Suspense
+    // boundary — matches the focus / recipes / collection pages.
+    <Suspense fallback={null}>
+      <DashboardClient
+        projects={data.projects ?? []}
+        events={data.events ?? []}
+        activity={data.activity ?? []}
+        sessionStats={data.sessionStats ?? zeroSessionStats}
+        projectMinutes={data.projectMinutes ?? {}}
+      />
+    </Suspense>
   );
 }

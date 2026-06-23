@@ -99,6 +99,18 @@ export const users = sqliteTable("user", {
   extensionTokenVersion: integer("extension_token_version")
     .notNull()
     .default(0),
+  /**
+   * First-run interactive tutorial. Null = the painter has never finished
+   * (or skipped) the coachmark walkthrough, so the app auto-starts it on
+   * their next signed-in load. Stamped with the completion/skip moment the
+   * first time they reach the end or dismiss the tour; once set, the tour
+   * never auto-shows again (it can still be restarted on demand from the
+   * side-panel "Tutorial" entry). Nullable; existing rows backfill to NULL
+   * so every current user is treated as "not yet seen".
+   */
+  tutorialCompletedAt: integer("tutorial_completed_at", {
+    mode: "timestamp_ms",
+  }),
 });
 
 export const accounts = sqliteTable(
