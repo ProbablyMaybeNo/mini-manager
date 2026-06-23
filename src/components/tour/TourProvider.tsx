@@ -124,6 +124,9 @@ export function TourProvider({
   useEffect(() => {
     if (autoStartedRef.current) return;
     if (!signedIn || seen || hasSeenLocal()) return;
+    // Never auto-show the tour to an automated browser (Playwright/E2E): its
+    // click-blocking overlay would time out every interaction test.
+    if (typeof navigator !== "undefined" && navigator.webdriver) return;
     autoStartedRef.current = true;
     const id = window.requestAnimationFrame(() => {
       setIndex(0);
