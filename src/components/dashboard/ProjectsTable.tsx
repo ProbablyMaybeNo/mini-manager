@@ -42,6 +42,7 @@ export function ProjectsTable({
   onAttachRecipe,
   onFocusProject,
   onAddSubProject,
+  onAddProject,
 }: {
   projects: Project[];
   /** Per-project logged minutes (UX-011), rolled up over sub-projects per row. */
@@ -53,6 +54,8 @@ export function ProjectsTable({
   onFocusProject: (project: Project) => void;
   /** Create a sub-project under `parent` of the given child type (D3 / OR6fdf). */
   onAddSubProject?: (parent: Project, childType: ProjectType, name: string) => void;
+  /** Open the create-project flow — wires the first-run empty-state CTA. */
+  onAddProject?: () => void;
 }) {
   // Which container rows are expanded. Sub-projects render inline beneath
   // their parent; expanding a sub-project reveals the next tier.
@@ -90,7 +93,12 @@ export function ProjectsTable({
       <EmptyState
         glyph="◳"
         title="No projects yet"
-        hint="Add a project or upload an army list to get started — your roster shows up here."
+        hint="A project tracks a model, unit, or whole army from wishlist to finished — your roster shows up here."
+        action={
+          onAddProject
+            ? { label: "+ Create your first project", onClick: onAddProject, variant: "add" }
+            : undefined
+        }
       />
     );
   }

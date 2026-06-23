@@ -115,6 +115,7 @@ export function DashboardView({
                   onFocusProject={(p) => onFocusProject?.(p)}
                   onAttachRecipe={(p) => onAttachRecipe?.(p)}
                   onAddSubProject={onAddSubProject}
+                  onAddProject={onAddProject}
                 />
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
                   <Button variant="add" onClick={onAddProject} data-tour="dashboard-new-project">+ New Project</Button>
