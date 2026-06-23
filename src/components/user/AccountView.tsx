@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, Input, Panel } from "@/components/kit";
+import { InstallPanel } from "@/components/pwa";
 import { PageHeader } from "@/components/shell";
 import {
   ExtensionTokenPanel,
@@ -88,6 +89,10 @@ export function AccountView({
           onGenerate={onGenerateToken}
           onRegenerate={onRegenerateToken}
         />
+
+        {/* Self-hiding — renders only when the browser offers an install and
+            the app isn't already installed (PWA install affordance). */}
+        <InstallPanel />
 
         {canManageBilling && (
           <Panel label="BILLING" className="flex flex-col gap-4 p-5">
