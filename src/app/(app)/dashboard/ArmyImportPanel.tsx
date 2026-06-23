@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, SlideOutPanel } from "@/components/kit";
 import {
@@ -8,6 +8,7 @@ import {
   fetchImportForPreview,
   applyImport,
 } from "@/lib/actions/imports";
+import { importBattleScribeRoster } from "@/lib/actions/importBattleScribe";
 import type { ImportedTree } from "@/lib/imports/types";
 
 /**
@@ -15,6 +16,12 @@ import type { ImportedTree } from "@/lib/imports/types";
  * importer: paste a list → createTextImport (parse + store) →
  * fetchImportForPreview (show the parsed army + units) → applyImport (create
  * the Army container + a child Unit per parsed entry), then refresh.
+ *
+ * BattleScribe rosters get a dedicated lane: uploading a `.ros` file reads it
+ * as text and lands a full Army → Unit → Model tree directly via
+ * `importBattleScribeRoster` (the structured, model-aware path). Zipped
+ * `.rosz` archives aren't read client-side in v1 — unzip them and paste/upload
+ * the inner `.ros`.
  */
 export function ArmyImportPanel({
   open,
@@ -24,6 +31,7 @@ export function ArmyImportPanel({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [raw, setRaw] = useState("");
   const [importId, setImportId] = useState<string | null>(null);
   const [tree, setTree] = useState<ImportedTree | null>(null);
@@ -56,6 +64,27 @@ export function ArmyImportPanel({
       }
       setImportId(res.data.importId);
       setTree(preview.tree);
+    });
+  }
+
+  function onPickRosFile(file: File) {
+    setError(null);
+    const lower = file.name.toLowerCase();
+    if (lower.endsWith(".rosz")) {
+      setError(
+        "Zipped .rosz files aren't supported yet — unzip it and import the inner .ros.",
+      );
+      return;
+    }
+    start(async () => {
+      const xml = await file.text();
+      const res = await importBattleScribeRoster({ xml });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      close();
+      router.push(`/projects/${res.data.armyProjectId}`);
     });
   }
 
@@ -96,6 +125,37 @@ export function ArmyImportPanel({
           {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
           <Button onClick={parse} disabled={pending || !raw.trim()} className="w-full">
             {pending ? "Parsing…" : "Parse list"}
+          </Button>
+
+          <div className="flex items-center gap-2 pt-1">
+            <span className="h-px flex-1 bg-cyan/20" aria-hidden="true" />
+            <span className="label-osd text-fg-faint">OR</span>
+            <span className="h-px flex-1 bg-cyan/20" aria-hidden="true" />
+          </div>
+
+          <p className="font-body text-body text-fg-faint">
+            Upload a BattleScribe <code>.ros</code> file to import the full
+            Army → Unit → Model tree.
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".ros"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onPickRosFile(file);
+              // Reset so re-selecting the same file still fires onChange.
+              e.target.value = "";
+            }}
+          />
+          <Button
+            variant="secondary"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={pending}
+            className="w-full"
+          >
+            {pending ? "Importing…" : "Upload .ros file"}
           </Button>
         </div>
       ) : (
