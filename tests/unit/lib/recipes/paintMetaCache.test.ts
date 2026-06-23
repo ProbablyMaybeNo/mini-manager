@@ -48,13 +48,21 @@ afterEach(() => {
 });
 
 describe("getPaintMetaMap caching", () => {
-  test("builds the paintId -> { hex, label } map from the catalog", async () => {
+  test("builds the paintId -> { hex, label, brand } map from the catalog", async () => {
     statMock.mockResolvedValue({ mtimeMs: 1000 });
     const getPaintMetaMap = await freshGetPaintMetaMap();
 
     const map = await getPaintMetaMap();
-    expect(map.get("a")).toEqual({ hex: "#0a0a55", label: "Citadel Macragge Blue" });
-    expect(map.get("b")).toEqual({ hex: "#aa1111", label: "Vallejo Heavy Red" });
+    expect(map.get("a")).toEqual({
+      hex: "#0a0a55",
+      label: "Citadel Macragge Blue",
+      brand: "Citadel",
+    });
+    expect(map.get("b")).toEqual({
+      hex: "#aa1111",
+      label: "Vallejo Heavy Red",
+      brand: "Vallejo",
+    });
   });
 
   test("reads + parses the catalog only once across many calls (warm mtime)", async () => {

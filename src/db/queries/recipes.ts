@@ -3,7 +3,7 @@ import "server-only";
 import { readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   recipes,
@@ -518,6 +518,10 @@ export async function getProjectRecipeMap(
 export interface PaintMeta {
   hex: string;
   label: string;
+  /** Manufacturer / paint-line owner (Citadel, Vallejo, …). Used by the
+   *  public gallery's brand facet — distinct from `label`, which is the
+   *  combined "Brand Name" display string. */
+  brand: string;
 }
 
 let paintMetaCache: Map<string, PaintMeta> | null = null;
@@ -563,7 +567,7 @@ export async function getPaintMetaMap(): Promise<Map<string, PaintMeta>> {
   const meta = new Map<string, PaintMeta>();
   const hex = new Map<string, string>();
   for (const p of catalog.paints as ReadonlyArray<Paint>) {
-    meta.set(p.id, { hex: p.hex, label: `${p.brand} ${p.name}` });
+    meta.set(p.id, { hex: p.hex, label: `${p.brand} ${p.name}`, brand: p.brand });
     hex.set(p.id, p.hex);
   }
   paintMetaCache = meta;
@@ -703,6 +707,106 @@ export async function summarizeRecipe(
   const recipe = await getRecipeWithSlots(userId, recipeId);
   if (!recipe) return { slotCount: 0 };
   return { slotCount: recipe.slots.length };
+}
+
+/* ============================================================
+   Public gallery — published recipes browse surface
+   ============================================================
+   The public `/gallery` page lists every recipe that has been
+   shared (its `publicSlug` is minted). This is the SINGLE leak
+   guard: the SELECT below filters `publicSlug IS NOT NULL`, so a
+   private recipe (slug = null) is never returned. No owner handle
+   is exposed — the gallery is anonymous, mirroring the `/r/<slug>`
+   view which also never surfaces the author.
+   ============================================================ */
+
+/** One card on the public gallery grid. */
+export interface GalleryRecipeCard {
+  /** The public slug — the card links to `/r/<slug>`. */
+  slug: string;
+  name: string;
+  bodyType: Recipe["bodyType"];
+  /** Up to 12 swatch hexes in slot-position order — the colour strip. */
+  swatches: string[];
+  /** Distinct brands across the recipe's catalog paints, sorted. Custom
+   *  colour-only slots contribute no brand. Drives the brand facet. */
+  brands: string[];
+  /** Total slot count (one paint + layer per slot). */
+  slotCount: number;
+  /** ms-timestamp of publish-adjacent recency (the recipe's updatedAt). */
+  updatedAt: number;
+}
+
+/**
+ * Every published recipe, newest first, resolved into gallery cards.
+ *
+ * Two SQL reads total — published recipes (1), then their slots (1) —
+ * plus the cached paint catalog for hex + brand resolution. Capped at
+ * `limit` recipes so the grid stays bounded; per-recipe swatch strip is
+ * capped at `swatchCap`.
+ *
+ * Leak guard: `isNotNull(recipes.publicSlug)` — only shared recipes are
+ * ever selected, so a private recipe can never appear in the gallery.
+ */
+export async function listPublishedRecipes(
+  limit = 60,
+  swatchCap = 12,
+): Promise<ReadonlyArray<GalleryRecipeCard>> {
+  const recipeRows = await db
+    .select()
+    .from(recipes)
+    .where(isNotNull(recipes.publicSlug))
+    .orderBy(desc(recipes.updatedAt))
+    .limit(limit);
+
+  if (recipeRows.length === 0) return [];
+
+  const recipeIds = recipeRows.map((r) => r.id);
+  const slotRows = await db
+    .select()
+    .from(recipeSlots)
+    .where(inArray(recipeSlots.recipeId, recipeIds))
+    .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position));
+
+  const slotsByRecipeId = new Map<string, RecipeSlot[]>();
+  for (const s of slotRows) {
+    const arr = slotsByRecipeId.get(s.recipeId) ?? [];
+    arr.push(s);
+    slotsByRecipeId.set(s.recipeId, arr);
+  }
+
+  const paintMeta = await getPaintMetaMap();
+
+  const out: GalleryRecipeCard[] = [];
+  for (const r of recipeRows) {
+    // publicSlug is guaranteed non-null by the WHERE filter, but narrow
+    // for the type system rather than asserting.
+    if (!r.publicSlug) continue;
+    const slots = slotsByRecipeId.get(r.id) ?? [];
+    const swatches: string[] = [];
+    const brandSet = new Set<string>();
+    for (const slot of slots) {
+      if (slot.paintId) {
+        const meta = paintMeta.get(slot.paintId);
+        if (meta) {
+          if (swatches.length < swatchCap) swatches.push(meta.hex);
+          if (meta.brand) brandSet.add(meta.brand);
+        }
+      } else if (slot.customColorHex) {
+        if (swatches.length < swatchCap) swatches.push(slot.customColorHex);
+      }
+    }
+    out.push({
+      slug: r.publicSlug,
+      name: r.name,
+      bodyType: r.bodyType,
+      swatches,
+      brands: Array.from(brandSet).sort((a, b) => a.localeCompare(b)),
+      slotCount: slots.length,
+      updatedAt: r.updatedAt.getTime(),
+    });
+  }
+  return out;
 }
 
 /* ============================================================
