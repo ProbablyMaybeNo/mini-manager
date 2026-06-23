@@ -14,6 +14,7 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
+    "db:seed-gallery": "tsx scripts/seedGallery.ts",
     "db:export-paints": "tsx scripts/export-paints.ts",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
