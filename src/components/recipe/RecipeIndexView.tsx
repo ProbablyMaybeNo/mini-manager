@@ -18,6 +18,7 @@ export function RecipeIndexView({
   onAssignProject,
   onShare,
   onNewRecipe,
+  onGenerateAi,
   onRetry,
   onEditPaint,
 }: {
@@ -30,6 +31,8 @@ export function RecipeIndexView({
   /** TXjhrdKPsrda — "+ Recipe" goes straight to the full create page; the
    *  recipe is named in the editor, so there is no separate naming step. */
   onNewRecipe: () => void;
+  /** Open the AI Recipe Creator (Pro). When omitted, the button is hidden. */
+  onGenerateAi?: () => void;
   onRetry?: () => void;
   /** MM-51 — a picker selection on a recipe-table paint. The host decides
    *  how to persist (e.g. open the recipe editor focused on that slot). */
@@ -45,7 +48,18 @@ export function RecipeIndexView({
       <PageHeader
         title="RECIPE"
         tagline="Build, manage, and share repeatable paint schemes."
-        actions={<Button variant="attach" onClick={onNewRecipe}>+ Recipe</Button>}
+        actions={
+          <div className="flex items-center gap-2">
+            {onGenerateAi && (
+              <Button variant="solidCyan" onClick={onGenerateAi}>
+                ✨ Generate with AI
+              </Button>
+            )}
+            <Button variant="attach" onClick={onNewRecipe}>
+              + Recipe
+            </Button>
+          </div>
+        }
       />
 
       {status === "error" ? (
