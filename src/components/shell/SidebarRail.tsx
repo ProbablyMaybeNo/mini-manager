@@ -1,4 +1,5 @@
 import { TourReplayButton } from "@/components/tour";
+import { ReportIssueButton } from "@/components/feedback/ReportIssueButton";
 import { Logo } from "./Logo";
 import { NavLinks } from "./NavLinks";
 import { FOOTER_NAV, MAIN_NAV } from "./nav";
@@ -18,6 +19,8 @@ export function SidebarRail() {
         <NavLinks items={FOOTER_NAV} />
         {/* Re-trigger the first-run walkthrough on demand, pinned below ACCOUNT. */}
         <TourReplayButton />
+        {/* Report an Issue — files a card in the Notion bug tracker. */}
+        <ReportIssueButton />
       </div>
     </nav>
   );

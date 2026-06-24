@@ -5,6 +5,7 @@ import { Logo } from "./Logo";
 import { NavLinks } from "./NavLinks";
 import { SlideOutPanel } from "@/components/kit";
 import { TourReplayButton } from "@/components/tour";
+import { ReportIssueButton } from "@/components/feedback/ReportIssueButton";
 import { FOOTER_NAV, MAIN_NAV } from "./nav";
 
 /** Mobile top bar: logo + menu button that opens the nav in the shared slide-out. */
@@ -38,6 +39,7 @@ export function MobileTopBar() {
           {/* Re-trigger the walkthrough; closing the menu lets the spotlight
               land on the now-visible page chrome. */}
           <TourReplayButton onNavigate={() => setOpen(false)} />
+          <ReportIssueButton onNavigate={() => setOpen(false)} />
         </div>
       </SlideOutPanel>
     </>
