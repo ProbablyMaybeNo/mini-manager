@@ -268,10 +268,10 @@ export function CollectionTable({
                         value={item.projectId ?? ""}
                         ariaLabel={`Assign ${item.name} to a project`}
                         accent="purple"
-                        placeholder="— Unassigned —"
+                        placeholder="+ ATTACH"
                         onChange={(v) => onAssignProject(item, v)}
                         options={[
-                          { value: "", label: "— Unassigned —" },
+                          { value: "", label: "+ ATTACH" },
                           ...activeProjects.map((p) => ({ value: p.id, label: p.title })),
                         ]}
                         triggerClassName="max-w-[160px]"
