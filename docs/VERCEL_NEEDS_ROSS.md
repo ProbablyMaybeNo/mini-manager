@@ -1,9 +1,9 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-06-21 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
-**2 unresolved threads** need your call after this run. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-06-24 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
+**5 unresolved threads** need your call. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-06-21):** shipped 3 clear, bounded fixes and resolved them after prod verify — `JZBOMvZVuFFf` (pure-black canvas to match the logo), `NVOzFLAjh-vq` (drop the redundant "X/Y models" line under the dashboard progress bars), `oRc-Pp1u9Gsk` (stop the first activity-tracker row clipping). Two threads stay open pending your input (below).
+> **This run (2026-06-24):** shipped 3 clear, bounded fixes (PR to `main`, CI-gated, resolved after prod verify) — `h58lphoBt-Dc` (Stacking "Substrate" field → "Undercoat"), `e5VXBtQdALyg` (collection unassigned-project dropdown → "+ ATTACH" to match the app), `bEv3zSo7wbsS` (button font +2px for legibility). Three new threads need your input + two carry over from 2026-06-21 (below).
 
 ---
 
@@ -11,8 +11,11 @@
 
 | Thread | Page | Ask | Why it's open / question asked |
 |---|---|---|---|
-| `aANKU9jIO6ih` | /focus | Separate the PROGRESS "x/100" numbers into their own font group and bump them to 18px | **Confirmed:** they share the `num2` category (VT323, ~15.5px) with the calendar day numbers — *and* the projects-table Time column and the progress-bar % labels, so I can't just bump `num2` globally without enlarging all of those. Asked: OK to add a dedicated token (same VT323 face) at 18px for the focus stat only? |
-| `0Uwugdcrguxb` | /focus | "Not letting me change my focus using the dropdown." | A functional bug I can't reproduce confidently from source (the Listbox + URL-driven focus look wired correctly). Asked: when you pick a different project, does the menu not open, do the options not click, or does it select but the bench header not update? |
+| `trogZqV-Yo8w` | /collection | Rebuild +ADD MODEL / +ADD PAINT into a full modal: AUTO-ADD URL paste **+** MANUAL-ADD form (name, game, faction, price, project dropdown, status) → save into the table; plus an edit pencil next to the X on each row. | Substantial feature (new modal layout, manual-entry form + validation, an edit/update flow, a new row action) — beyond the safe auto-fix scope. Needs a dedicated build + your sign-off on the field set. Asked: confirm the manual fields, and should the edit pencil reuse the same modal pre-filled? |
+| `d0MWLSNNjDTd` | /collection | Simplify the stats bar (drop "COLLECTION" title; format as `PAINT: 00 OWNED 00 WISHLIST $00 SPENT $00 REMAINING / MODELS: …`; drop progress tracking here) **and** a new per-project budget feature. | Two asks bundled + an open "let me know your ideas" question. The stats-bar relabel I can ship once the exact line format is locked; the budget system is a net-new feature. Asked: confirm the exact stat order/labels for the relabel so I can ship that piece on its own, and we'll scope budgeting separately. |
+| `8Wxk5lw0uh5c` | /tools/stacking | "Add layer button doesn't do anything — either remove it or make it add another circle." | Can't reproduce from source: the **+ Add layer** button is wired and adds a Layer N block (hex + opacity), enabled until 6 layers. "Add another circle" is ambiguous — the predicted-result Venn only renders 2 (undercoat ∩ top glaze). Asked: when you click it, does no new Layer block appear — or did you expect a 3rd Venn circle rather than a layer row? |
+| `aANKU9jIO6ih` | /focus | Separate the PROGRESS "x/100" numbers into their own font group and bump to 18px | **Confirmed:** they share the `num2` category (VT323, ~15.5px) with the calendar day numbers, the projects-table Time column, and the progress-bar % labels, so `num2` can't be bumped globally without enlarging all of those. Asked: OK to add a dedicated token (same VT323 face) at 18px for the focus stat only? *(carried over from 2026-06-21)* |
+| `0Uwugdcrguxb` | /focus | "Not letting me change my focus using the dropdown." | A functional bug not reproducible from source (the Listbox + URL-driven focus look wired correctly). Asked: when you pick a different project, does the menu not open, do the options not click, or does it select but the bench header not update? *(carried over from 2026-06-21)* |
 
 ---
 
@@ -20,6 +23,6 @@
 
 | Thread | Page | Change | Files |
 |---|---|---|---|
-| `JZBOMvZVuFFf` | /focus | `--color-bg` `#06080a` → `#000000` so body + sidebar + page read true black (logo art samples #000000) | `src/app/globals.css` |
-| `NVOzFLAjh-vq` | /dashboard | Removed the "X/Y models" line beneath each PROJECTS progress bar — bar + % only | `src/components/dashboard/ProjectsTable.tsx` |
-| `oRc-Pp1u9Gsk` | /dashboard | Added `pt-1` to the ACTIVITY TRACKER scroll container so the first row stops clipping | `src/components/dashboard/RightRail.tsx` |
+| `h58lphoBt-Dc` | /tools/stacking | Stacking input label "Substrate" → "Undercoat" (+ matching aria / picker breadcrumb) | `src/components/tools/LayeringTool.tsx` |
+| `e5VXBtQdALyg` | /collection | Unassigned-project dropdown trigger now reads "+ ATTACH", matching the app-wide attach affordance | `src/components/collection/CollectionTable.tsx` |
+| `bEv3zSo7wbsS` | /recipes (app-wide) | `--text-button` ~11.5px → ~13.5px (+2px) for button-label legibility; dropdown token untouched | `src/app/globals.css` |
