@@ -11,7 +11,7 @@ import {
   hslToHex,
   type HarmonyKey,
 } from "@/lib/tools/wheel/harmonies";
-import { readableText } from "@/lib/color";
+import { captionScrim, readableText } from "@/lib/color";
 import type { Paint } from "@/lib/types";
 import { WheelCanvas, type WheelStop } from "./WheelCanvas";
 
@@ -193,8 +193,14 @@ export function ColourWheelTool({
                   {isPinned ? "★" : "☆"}
                 </button>
                 <span
-                  className="inline-flex h-10 min-w-[88px] items-center justify-center border border-fg/20 px-2 font-body text-body"
-                  style={{ backgroundColor: hex, color: readableText(hex) }}
+                  className="inline-flex h-10 min-w-[88px] items-center justify-center border border-fg/20 px-2 font-body text-body font-bold"
+                  style={{
+                    backgroundColor: hex,
+                    color: readableText(hex),
+                    // AA scrim — keeps the caption ≥4.5:1 on saturated mid-tone
+                    // reds where pure white/black text alone dips under (MUX-009).
+                    textShadow: captionScrim(hex),
+                  }}
                   title={hex}
                 >
                   {hex}

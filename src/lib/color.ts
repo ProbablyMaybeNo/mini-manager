@@ -88,6 +88,22 @@ export function readableText(hex: string): "#000000" | "#ffffff" {
   return yiq >= 128 ? "#000000" : "#ffffff";
 }
 
+/**
+ * A 1px contrast scrim (text-shadow) sized to the chosen caption colour, so a
+ * hex label rendered directly on its own swatch stays AA-legible even on the
+ * saturated mid-tones (e.g. bright reds) where pure black/white text alone
+ * lands just under 4.5:1 (MUX-009). The shadow is the OPPOSITE tone of the
+ * text — a dark halo behind white text, a light halo behind black text — which
+ * raises the effective edge contrast without changing the YIQ colour choice
+ * that `readableText` locks. Returns a CSS `text-shadow` value.
+ */
+export function captionScrim(hex: string): string {
+  const dark = readableText(hex) === "#ffffff";
+  // Behind white text → black halo; behind black text → white halo.
+  const halo = dark ? "0,0,0" : "255,255,255";
+  return `0 1px 1px rgba(${halo},0.85), 0 0 1px rgba(${halo},0.85)`;
+}
+
 /** Interpolated ramp between base → shadow / highlight (Tools: layering). */
 export function ramp(baseHex: string, endHex: string, steps: number): string[] {
   const a = hexToHsl(baseHex);

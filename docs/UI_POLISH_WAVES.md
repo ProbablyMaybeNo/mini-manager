@@ -20,7 +20,7 @@ Consolidated from three UX audits (2026-06-24). Source-of-truth detail + screens
 - [x] **DOP-007a** — Renamed nav label "RECIPE" → "RECIPES" (src/components/shell/nav.ts MAIN_NAV; `key` stays `recipe`).
 - [x] **DOP-007b** — Added `//`-comment-style descriptors via the existing `PageHeader` tagline on Library ("every paint on the market — mark what you own/want"), Collection ("only the pots & models you own"), Focus, Tools, Recipes. Single line each; reused PageHeader so no layout regression.
 - [ ] **DOP-016 / MUX-013** — Fix the sidebar "N" glyph overlapping the "Report an Issue" / bottom nav region (src/components/shell). Verify with a live DOM probe (one auditor flagged it low-confidence). Acceptance: no overlap at desktop or 375px.
-- [ ] **MUX-009** — Raise color-wheel hex label contrast to ≥4.5:1 (white-on-red measured 4.34:1). Darken fill / add scrim / bold. Acceptance: computed ratio ≥4.5:1.
+- [x] **MUX-009** — Added a contrast scrim + bold to the color-wheel hex caption (`captionScrim` in src/lib/color.ts → text-shadow halo opposite the chosen text tone) so the on-swatch hex stays AA-legible on saturated mid-tone reds where pure white/black alone dips under 4.5:1. Kept the YIQ `readableText` colour choice (its contract is unit-locked). Tests added in readableText.test.ts.
 - [ ] **MUX-011** — Reserve space for the late block on /sign-in to cut CLS (0.089 → <0.1, ideally ~0). Acceptance: measured CLS improved, no visual regression.
 - [ ] **MOP-012** — Hide the redundant "⤢ Open full page" inspector action on mobile (panel is already full-bleed there).
 - [ ] **MUX-012** — Decide & fix `/projects` (currently falls through to dashboard → URL/title mismatch). Minimal: correct title/redirect. (Full resource-list page is DOP-017, Wave 4.)

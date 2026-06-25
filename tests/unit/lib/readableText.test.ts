@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { readableText } from "@/lib/color";
+import { captionScrim, readableText } from "@/lib/color";
 
 /**
  * Swatch hex captions auto-pick black/white for legibility via YIQ perceived
@@ -58,5 +58,23 @@ describe("readableText — perceptual (YIQ) swatch caption colour", () => {
 
   test("falls back to white for an unparseable hex", () => {
     expect(readableText("nope")).toBe("#ffffff");
+  });
+});
+
+describe("captionScrim — AA contrast halo for on-swatch hex captions (MUX-009)", () => {
+  test("halo is the opposite tone of the chosen caption colour", () => {
+    // Saturated red → white caption → dark halo.
+    expect(readableText("#c01010")).toBe("#ffffff");
+    expect(captionScrim("#c01010")).toContain("rgba(0,0,0");
+    // Light swatch → black caption → light halo.
+    expect(readableText("#eef996")).toBe("#000000");
+    expect(captionScrim("#eef996")).toContain("rgba(255,255,255");
+  });
+
+  test("returns a non-empty text-shadow value for every swatch in the spread", () => {
+    const spread = ["#F20D0D", "#c01010", "#6E99C9", "#000000", "#ffffff", "#ff9d3c"];
+    for (const hex of spread) {
+      expect(captionScrim(hex).length).toBeGreaterThan(0);
+    }
   });
 });
