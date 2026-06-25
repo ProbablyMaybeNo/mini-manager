@@ -33,16 +33,34 @@ export function BootSequence({
   }, [visible, lines.length, lineDelayMs]);
 
   return (
-    <div className={cn("font-body text-body leading-relaxed text-green", className)} aria-live="polite">
-      {lines.slice(0, visible).map((line, i) => (
-        <div key={i} className="text-glow-green">
-          <span className="text-fg-faint">▸ </span>
-          {line}
-        </div>
-      ))}
-      {visible < lines.length && (
-        <span className="inline-block h-3 w-2 animate-caret bg-green align-middle" />
-      )}
+    // CLS fix (MUX-011) — reserve the block's full final height up front so the
+    // typed-on lines reveal INTO pre-allocated space instead of growing the box
+    // and shoving the form below it down (measured 0.089 CLS on /sign-in). A
+    // visually-hidden ghost of every line sets the height; the animated lines
+    // render over it in the same grid cell.
+    <div
+      className={cn("relative grid font-body text-body leading-relaxed text-green", className)}
+      aria-live="polite"
+    >
+      {/* Height-only spacer: one empty line-box per line so the block reserves
+          its final height without duplicating the searchable line text (keeps
+          text queries / a11y tree matching only the real, animated copy). */}
+      <div aria-hidden className="invisible col-start-1 row-start-1">
+        {lines.map((_, i) => (
+          <div key={i}>&nbsp;</div>
+        ))}
+      </div>
+      <div className="col-start-1 row-start-1">
+        {lines.slice(0, visible).map((line, i) => (
+          <div key={i} className="text-glow-green">
+            <span className="text-fg-faint">▸ </span>
+            {line}
+          </div>
+        ))}
+        {visible < lines.length && (
+          <span className="inline-block h-3 w-2 animate-caret bg-green align-middle" />
+        )}
+      </div>
     </div>
   );
 }
