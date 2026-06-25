@@ -17,7 +17,14 @@ export function PricingView({
       <PublicHeader />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 p-6">
         <div className="text-center">
-          <h1 className="font-title text-title text-cyan text-glow-cyan">PRICING</h1>
+          {/* clamp() keeps the pixel-font title inside a 320px viewport
+              (MUX-008), settling at --text-title on wider screens. */}
+          <h1
+            className="font-title text-cyan text-glow-cyan"
+            style={{ fontSize: "clamp(1.75rem, 9vw, var(--text-title))" }}
+          >
+            PRICING
+          </h1>
           <p className="mt-3 font-body text-body text-fg">
             Start free. Upgrade when your paint table outgrows it.
           </p>

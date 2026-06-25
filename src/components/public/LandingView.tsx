@@ -109,10 +109,14 @@ export function LandingView() {
           )}
         </div>
         <p
-          className="max-w-2xl text-title leading-relaxed text-cyan text-glow-cyan"
+          className="max-w-2xl leading-relaxed text-cyan text-glow-cyan"
           style={{
             fontFamily:
               '"Flexi IBM VGA False", "Flexi IBM VGA True", "IBM Plex Mono", monospace',
+            // clamp() lets the pixel-font hero scale down on narrow phones so it
+            // never overruns a 320px viewport (MUX-008), settling at the
+            // ~44.5px --text-title on wider screens.
+            fontSize: "clamp(1.5rem, 7vw, var(--text-title))",
           }}
         >
           Plan your projects.
