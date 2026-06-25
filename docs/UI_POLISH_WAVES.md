@@ -27,7 +27,7 @@ Consolidated from three UX audits (2026-06-24). Source-of-truth detail + screens
 
 ## Wave 2 — Mobile compliance fixes (touch targets, semantics, reflow)
 - [x] **MUX-003** — Month chevrons (PlannerCalendar nav + the date-picker popover) → `h-11 min-w-11` (44px). MiniCalendar interactive day-buttons → `min-h-11` (44px tap height) by dropping the `aspect-square` lock on the interactive variant only, so the 7-col grid keeps its `max-w-[170px]` cap horizontally while gaining thumb height; read-only dashboard cells stay a tight square.
-- [ ] **MUX-004** — Projects-table row-action buttons to ≥44px hit area + ≥8px gap from the row's own tap target.
+- [x] **MUX-004** — Row-action buttons (`+` add-sub, `◎` focus) bumped `h-6 w-6`→`h-7 w-7`, gap `gap-1`→`gap-2` (8px), and each carries an invisible centered 44px `after:` tap-area expander so the touch target clears the WCAG floor without the 24px glyph bloating the dense desktop row. Role/aria-label selectors unchanged (e2e safe).
 - [ ] **MUX-007** — Sub-project tab buttons to ≥44px min-height, ≥8px gap (label+close share a tight cell). (ProjectPanelStack.tsx)
 - [ ] **MUX-006** — Give sub-project tabs real tab semantics: `role=tablist/tab/tabpanel`, `aria-selected`, arrow-key nav, non-color active indicator.
 - [ ] **MUX-008** — Fix 320px horizontal overflow on public landing/pricing (scrollWidth 356>320, likely the pixel-font H1 → `clamp()`/wrap).

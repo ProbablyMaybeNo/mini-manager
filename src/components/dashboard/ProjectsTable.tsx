@@ -203,12 +203,16 @@ export function ProjectsTable({
             )}
           </td>
           <td className="w-20 px-3 py-2.5">
-            <div className="flex items-center justify-end gap-1">
+            {/* gap-2 keeps ≥8px between the two action targets; each button
+                carries an invisible centered 44px tap area (after:) so the
+                touch target clears the WCAG floor (MUX-004) without the 24px
+                glyph bloating the dense desktop row. */}
+            <div className="flex items-center justify-end gap-2">
               {canAddSub && (
                 <IconButton
                   variant="add"
                   size="sm"
-                  className="h-6 w-6"
+                  className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
                   aria-label={`Add ${childType} to ${p.title}`}
                   title={`Add ${childType}`}
                   onClick={(e) => {
@@ -222,7 +226,7 @@ export function ProjectsTable({
               <IconButton
                 variant="outlineCyan"
                 size="sm"
-                className="h-6 w-6"
+                className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
                 aria-label={`Open ${p.title} in focus`}
                 title="Open in focus bench"
                 onClick={(e) => {
