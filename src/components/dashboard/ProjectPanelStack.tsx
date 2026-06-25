@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SlideOutPanel } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { rollupProjectMinutes } from "@/lib/projectTime";
@@ -46,6 +46,10 @@ export function ProjectPanelStack({
 }) {
   const [tabIds, setTabIds] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Roving tabindex: only the active tab is in the Tab order; ArrowLeft/Right
+  // move focus (and selection) between tabs. Refs let us move DOM focus to the
+  // newly-selected tab on arrow nav (WAI-ARIA tabs pattern).
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // A fresh root resets the stack to a single tab.
   useEffect(() => {
@@ -77,6 +81,22 @@ export function ProjectPanelStack({
     .map((id) => findProject(projects, id))
     .filter((p): p is Project => p != null);
 
+  /** WAI-ARIA tabs keyboard model: Arrow keys move selection + focus, Home/End
+   *  jump to the ends. Selection follows focus (automatic activation). */
+  function onTabKeyDown(e: React.KeyboardEvent, index: number) {
+    let next = index;
+    if (e.key === "ArrowRight") next = (index + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = tabs.length - 1;
+    else return;
+    e.preventDefault();
+    const target = tabs[next];
+    if (!target) return;
+    setActiveId(target.id);
+    tabRefs.current.get(target.id)?.focus();
+  }
+
   return (
     <SlideOutPanel
       open={open && tabIds.length > 0}
@@ -86,50 +106,98 @@ export function ProjectPanelStack({
       width="max-w-2xl"
     >
       {tabs.length > 1 && (
-        <div className="-mt-1 mb-4 flex flex-wrap gap-1 border-b border-cyan/20 pb-2">
-          {tabs.map((t, i) => (
-            <span
-              key={t.id}
-              className={cn(
-                "flex items-center border px-2 py-1",
-                t.id === activeId
-                  ? "border-cyan bg-cyan/10 text-cyan"
-                  : "border-cyan/20 text-fg-dim hover:border-cyan/50",
-              )}
-            >
-              <button
-                type="button"
-                onClick={() => setActiveId(t.id)}
-                className="max-w-[10rem] truncate font-body text-body"
+        <div
+          role="tablist"
+          aria-label="Open projects"
+          aria-orientation="horizontal"
+          className="-mt-1 mb-4 flex flex-wrap gap-1 border-b border-cyan/20 pb-2"
+        >
+          {tabs.map((t, i) => {
+            const selected = t.id === activeId;
+            return (
+              <span
+                key={t.id}
+                className={cn(
+                  // min-h-11 (44px) gives the label+close cell a thumb-friendly
+                  // height (MUX-007). border-b-2 + the leading ▸ marker on the
+                  // active tab are non-colour active cues (MUX-006).
+                  "flex min-h-11 items-center gap-2 border border-b-2 px-2 py-1",
+                  selected
+                    ? "border-cyan border-b-cyan bg-cyan/10 text-cyan"
+                    : "border-cyan/20 border-b-transparent text-fg-dim hover:border-cyan/50",
+                )}
               >
-                {t.title}
-              </button>
-              {i > 0 && (
                 <button
                   type="button"
-                  aria-label={`Close ${t.title} tab`}
-                  onClick={() => closeTab(t.id)}
-                  className="ml-2 text-fg-dim hover:text-red"
+                  role="tab"
+                  id={`subproject-tab-${t.id}`}
+                  aria-selected={selected}
+                  aria-controls="subproject-tabpanel"
+                  tabIndex={selected ? 0 : -1}
+                  ref={(el) => {
+                    if (el) tabRefs.current.set(t.id, el);
+                    else tabRefs.current.delete(t.id);
+                  }}
+                  onClick={() => setActiveId(t.id)}
+                  onKeyDown={(e) => onTabKeyDown(e, i)}
+                  className="flex max-w-[10rem] items-center gap-1 truncate font-body text-body focus:outline-none focus-visible:underline"
                 >
-                  ×
+                  <span aria-hidden className={cn("shrink-0", selected ? "visible" : "invisible")}>
+                    ▸
+                  </span>
+                  <span className="truncate">{t.title}</span>
                 </button>
-              )}
-            </span>
-          ))}
+                {i > 0 && (
+                  <button
+                    type="button"
+                    aria-label={`Close ${t.title} tab`}
+                    onClick={() => closeTab(t.id)}
+                    // ≥24px hit area, 8px (gap-2) from the label tap area.
+                    className="flex h-6 w-6 shrink-0 items-center justify-center text-fg-dim hover:text-red focus:outline-none focus-visible:text-red"
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            );
+          })}
         </div>
       )}
 
       {active ? (
-        <ProjectWorkspaceBody
-          key={active.id}
-          project={active}
-          loggedMinutes={rollupProjectMinutes(active, projectMinutes)}
-          onAttachRecipe={onAttachRecipe}
-          onStartSession={onStartSession}
-          onOpenSubProject={openSub}
-          onClose={onClose}
-          variant="panel"
-        />
+        // When the tab strip is showing, the body is the tabs' panel — labelled
+        // by the active tab so SR users hear which project they're in (MUX-006).
+        tabs.length > 1 ? (
+          <div
+            role="tabpanel"
+            id="subproject-tabpanel"
+            aria-labelledby={`subproject-tab-${active.id}`}
+            tabIndex={0}
+            className="focus:outline-none"
+          >
+            <ProjectWorkspaceBody
+              key={active.id}
+              project={active}
+              loggedMinutes={rollupProjectMinutes(active, projectMinutes)}
+              onAttachRecipe={onAttachRecipe}
+              onStartSession={onStartSession}
+              onOpenSubProject={openSub}
+              onClose={onClose}
+              variant="panel"
+            />
+          </div>
+        ) : (
+          <ProjectWorkspaceBody
+            key={active.id}
+            project={active}
+            loggedMinutes={rollupProjectMinutes(active, projectMinutes)}
+            onAttachRecipe={onAttachRecipe}
+            onStartSession={onStartSession}
+            onOpenSubProject={openSub}
+            onClose={onClose}
+            variant="panel"
+          />
+        )
       ) : (
         <p className="font-body text-body text-fg-dim">▸ Loading project…</p>
       )}
