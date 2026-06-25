@@ -115,7 +115,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
           type="button"
           onClick={() => shiftMonth(-1)}
           aria-label="Previous month"
-          className="inline-flex h-6 min-w-6 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
+          className="inline-flex h-11 min-w-11 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
         >
           ‹
         </button>
@@ -127,7 +127,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
           type="button"
           onClick={() => shiftMonth(1)}
           aria-label="Next month"
-          className="inline-flex h-6 min-w-6 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
+          className="inline-flex h-11 min-w-11 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
         >
           ›
         </button>
@@ -187,7 +187,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                         return base.toISOString().slice(0, 10);
                       })
                     }
-                    className="inline-flex h-6 min-w-6 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
+                    className="inline-flex h-11 min-w-11 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
                   >
                     ‹
                   </button>
@@ -201,7 +201,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                         return base.toISOString().slice(0, 10);
                       })
                     }
-                    className="inline-flex h-6 min-w-6 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
+                    className="inline-flex h-11 min-w-11 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
                   >
                     ›
                   </button>

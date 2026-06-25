@@ -140,7 +140,11 @@ export function MiniCalendar({
           const base = cn(
             // min-h-6/min-w-6 clears the WCAG 2.2 §2.5.8 24px target floor
             // (cells were 23x23) while keeping the dense glanceable grid.
-            "relative flex aspect-square min-h-6 min-w-6 items-center justify-center font-num2 text-num2 tabular-nums",
+            "relative flex min-h-6 min-w-6 items-center justify-center font-num2 text-num2 tabular-nums",
+            // Non-interactive (read-only dashboard) cells stay a tight square;
+            // interactive day-buttons drop the aspect lock so they can grow to
+            // a comfortable touch height below.
+            !interactive && "aspect-square",
             day == null && "opacity-0",
             accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg",
           );
@@ -156,7 +160,9 @@ export function MiniCalendar({
                 onMouseLeave={() => setHovered((h) => (h === day ? null : h))}
                 onFocus={() => setHovered(day)}
                 onBlur={() => setHovered((h) => (h === day ? null : h))}
-                className={cn(base, "cursor-pointer rounded-sm hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15")}
+                // min-h-11 (44px) gives the day a thumb-friendly tap height on
+                // touch (MUX-003) without widening the 7-col grid past its cap.
+                className={cn(base, "min-h-11 cursor-pointer rounded-sm hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15")}
               >
                 {content}
               </button>
