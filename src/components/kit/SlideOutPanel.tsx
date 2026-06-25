@@ -105,14 +105,30 @@ export function SlideOutPanel({
               {title}
             </h2>
           </div>
-          <CloseButton onClick={onClose} aria-label="Close panel" />
+          {/* h-11 (44px) makes the top-right dismiss a thumb-friendly target
+              (MUX-010); the ✕ glyph itself stays its resting size. */}
+          <CloseButton
+            onClick={onClose}
+            aria-label="Close panel"
+            className="h-11 w-11"
+          />
         </header>
         <div className="h-[calc(100%-7rem)] overflow-y-auto px-4 py-4">{children}</div>
-        {footer && (
-          <footer className="absolute bottom-0 w-full border-t border-cyan/40 bg-bg px-4 py-3">
-            {footer}
-          </footer>
-        )}
+        {/* A panel is full-bleed on mobile, so the top-right ✕ sits out of thumb
+            reach. Provide a bottom-anchored secondary dismiss (MUX-010): the
+            caller's footer if given, else a default full-width Close button.
+            Esc and an overlay tap also close (see onKey + the scrim onClick). */}
+        <footer className="absolute bottom-0 w-full border-t border-cyan/40 bg-bg px-4 py-3">
+          {footer ?? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-11 w-full items-center justify-center border border-cyan/40 font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan focus:outline-none focus-visible:border-cyan focus-visible:text-cyan"
+            >
+              ✕ Close
+            </button>
+          )}
+        </footer>
       </div>
     </div>
   );
