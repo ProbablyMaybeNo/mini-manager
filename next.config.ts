@@ -3,6 +3,14 @@ import path from "node:path";
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // DOP-016 / MUX-013 — the circular "N" mark the UX audits saw overlapping
+  // the bottom-left "REPORT AN ISSUE" sidebar text is the Next.js dev/preview
+  // indicator (it does NOT ship to a production build, so real users never see
+  // it). Move it to the bottom-right so it stops compositing over the sidebar
+  // footer in dev + Vercel-preview screenshots; production is unaffected.
+  devIndicators: {
+    position: "bottom-right",
+  },
   // Pin the Turbopack workspace root to this directory so Next 16
   // doesn't get confused by sibling lockfiles further up the tree
   // (the monorepo root has its own package-lock.json for other apps).
