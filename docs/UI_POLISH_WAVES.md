@@ -22,8 +22,8 @@ Consolidated from three UX audits (2026-06-24). Source-of-truth detail + screens
 - [ ] **DOP-016 / MUX-013** — Fix the sidebar "N" glyph overlapping the "Report an Issue" / bottom nav region (src/components/shell). Verify with a live DOM probe (one auditor flagged it low-confidence). Acceptance: no overlap at desktop or 375px.
 - [x] **MUX-009** — Added a contrast scrim + bold to the color-wheel hex caption (`captionScrim` in src/lib/color.ts → text-shadow halo opposite the chosen text tone) so the on-swatch hex stays AA-legible on saturated mid-tone reds where pure white/black alone dips under 4.5:1. Kept the YIQ `readableText` colour choice (its contract is unit-locked). Tests added in readableText.test.ts.
 - [ ] **MUX-011** — Reserve space for the late block on /sign-in to cut CLS (0.089 → <0.1, ideally ~0). Acceptance: measured CLS improved, no visual regression.
-- [ ] **MOP-012** — Hide the redundant "⤢ Open full page" inspector action on mobile (panel is already full-bleed there).
-- [ ] **MUX-012** — Decide & fix `/projects` (currently falls through to dashboard → URL/title mismatch). Minimal: correct title/redirect. (Full resource-list page is DOP-017, Wave 4.)
+- [x] **MOP-012** — Hid the "⤢ Open full page" inspector action below `md` (`hidden md:inline-flex`) in ProjectWorkspaceBody — the SlideOutPanel is `w-full` (full-bleed) under its `max-w-2xl` cap on mobile, so the action only earns its place on desktop where the panel is a capped side column.
+- [x] **MUX-012** — verified — already handled: `next.config.ts` `redirects()` 308-permanent-redirects `/projects` → `/dashboard`, so the browser URL becomes `/dashboard` (no URL/title mismatch). No `(app)/projects/page.tsx` exists to shadow it, and no in-app `<Link>`/`push("/projects")` navigates there (only `revalidatePath("/projects")` no-ops). Audit predates the redirect. Full resource-list page remains DOP-017 (Wave 4, ARCH).
 
 ## Wave 2 — Mobile compliance fixes (touch targets, semantics, reflow)
 - [ ] **MUX-003** — Planner calendar date cells + month chevrons to ≥44px hit area (currently `min-h-6 min-w-6`). Dashboard + inspector calendars (PlannerCalendar).

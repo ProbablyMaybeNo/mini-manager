@@ -596,7 +596,15 @@ export function ProjectWorkspaceBody({
           </Button>
         )}
         {variant === "panel" && (
-          <Button variant="secondary" size="sm" onClick={() => router.push(`/projects/${project.id}`)}>
+          // Hidden on mobile (MOP-012) — the panel is already full-bleed below
+          // md, so "open full page" is redundant there; it only earns its place
+          // on desktop where the panel is a capped side column.
+          <Button
+            variant="secondary"
+            size="sm"
+            className="hidden md:inline-flex"
+            onClick={() => router.push(`/projects/${project.id}`)}
+          >
             ⤢ Open full page
           </Button>
         )}
