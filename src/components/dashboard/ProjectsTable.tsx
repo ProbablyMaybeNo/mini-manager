@@ -288,24 +288,189 @@ export function ProjectsTable({
     });
   }
 
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[680px] border-collapse">
-        <thead>
-          <tr className="border-b border-cyan/30">
-            {COLS.map((c, i) => (
-              <th
-                key={c || `col-${i}`}
-                scope="col"
-                className="px-3 py-2 text-left label-osd tracking-[0.18em] text-fg"
+  // ── Mobile card view (MUX-002 / MOP-003) ────────────────────────────────
+  // Below 600px the dense 8-column table overflows the viewport, so each
+  // project renders as a stacked card carrying the key fields (title + type +
+  // status + completion + progress bar) and the same row actions. Reuses the
+  // exact handlers + expand/add state above — no duplicated logic. The tree is
+  // preserved via the same depth-indent + caret model as the table.
+  function renderCards(items: Project[], depth: number): ReactNode[] {
+    return items.flatMap((p) => {
+      const selected = p.id === selectedId;
+      const hasChildren = !!p.children && p.children.length > 0;
+      const isExpanded = expanded.has(p.id);
+      const childType = SUB_TYPE[p.type];
+      const canAddSub = !!childType && !!onAddSubProject;
+      const isAdding = addingFor === p.id;
+      const minutes = rollupProjectMinutes(p, projectMinutes);
+
+      const card = (
+        <div
+          key={p.id}
+          role="button"
+          tabIndex={0}
+          aria-label={`Manage ${p.title}`}
+          aria-current={selected ? "true" : undefined}
+          onClick={() => onOpenProject(p)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onOpenProject(p);
+            }
+          }}
+          style={{ marginLeft: depth * INDENT_PX }}
+          className={cn(
+            "cursor-pointer border p-3 transition-colors focus:outline-none focus-visible:border-cyan",
+            selected
+              ? "border-cyan bg-cyan/10"
+              : "border-fg/15 hover:border-cyan/40 hover:bg-cyan/5",
+          )}
+        >
+          <div className="flex items-start gap-2">
+            {hasChildren ? (
+              <button
+                type="button"
+                aria-label={`${isExpanded ? "Collapse" : "Expand"} ${p.title}`}
+                aria-expanded={isExpanded}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggle(p.id);
+                }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15"
               >
-                {c}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{renderRows(projects, 0)}</tbody>
-      </table>
-    </div>
+                <span className={cn("transition-transform", isExpanded && "rotate-90")}>
+                  ▸
+                </span>
+              </button>
+            ) : (
+              <span className="h-7 w-7 shrink-0" aria-hidden />
+            )}
+            <span className="min-w-0 flex-1 break-words font-body text-body text-fg">
+              {p.title}
+            </span>
+            <StatusText status={p.status} />
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-2 pl-9">
+            <TypeChip type={p.type} />
+            {minutes > 0 && (
+              <span className="font-num2 text-num2 tabular-nums text-cyan">
+                {formatMinutes(minutes)}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-2 pl-9">
+            <ProgressBar
+              percent={p.completionPercent}
+              accent={p.completionPercent >= 100 ? "green" : "cyan"}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 pl-9">
+            <SwatchStrip
+              swatches={p.recipeSwatches}
+              onAttach={() => onAttachRecipe(p)}
+            />
+            <div className="ml-auto flex items-center gap-2">
+              {canAddSub && (
+                <IconButton
+                  variant="add"
+                  size="sm"
+                  className="h-9 w-9"
+                  aria-label={`Add ${childType} to ${p.title}`}
+                  title={`Add ${childType}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openAddSub(p);
+                  }}
+                >
+                  +
+                </IconButton>
+              )}
+              <IconButton
+                variant="outlineCyan"
+                size="sm"
+                className="h-9 w-9"
+                aria-label={`Open ${p.title} in focus`}
+                title="Open in focus bench"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFocusProject(p);
+                }}
+              >
+                ◎
+              </IconButton>
+            </div>
+          </div>
+        </div>
+      );
+
+      const addCard =
+        isAdding && childType ? (
+          <div
+            key={`${p.id}-add`}
+            style={{ marginLeft: (depth + 1) * INDENT_PX }}
+            className="flex flex-col gap-2 border border-cyan/30 bg-bg-raised/30 p-3"
+          >
+            <span className="label-osd text-green">+ {childType}</span>
+            <Input
+              name={`sub-card-${p.id}`}
+              value={subName}
+              onChange={(e) => setSubName(e.target.value)}
+              placeholder={`${childType} name`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submitSub(p, childType);
+                }
+                if (e.key === "Escape") setAddingFor(null);
+              }}
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => submitSub(p, childType)}>
+                Add
+              </Button>
+              <Button size="sm" variant="tertiary" onClick={() => setAddingFor(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : null;
+
+      const childCards =
+        hasChildren && isExpanded ? renderCards(p.children!, depth + 1) : [];
+      return [card, ...(isExpanded && addCard ? [addCard] : []), ...childCards];
+    });
+  }
+
+  return (
+    <>
+      {/* Desktop table — unchanged from today, shown at ≥600px (MUX-002). */}
+      <div className="hidden overflow-x-auto min-[600px]:block">
+        <table className="w-full min-w-[680px] border-collapse">
+          <thead>
+            <tr className="border-b border-cyan/30">
+              {COLS.map((c, i) => (
+                <th
+                  key={c || `col-${i}`}
+                  scope="col"
+                  className="px-3 py-2 text-left label-osd tracking-[0.18em] text-fg"
+                >
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{renderRows(projects, 0)}</tbody>
+        </table>
+      </div>
+
+      {/* Mobile cards — shown < 600px, no horizontal overflow (MUX-002). */}
+      <div className="flex flex-col gap-2 min-[600px]:hidden">
+        {renderCards(projects, 0)}
+      </div>
+    </>
   );
 }
