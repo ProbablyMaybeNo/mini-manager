@@ -47,7 +47,7 @@ export function RecipeIndexView({
     <div className="flex h-full flex-col gap-6 p-6">
       <PageHeader
         title="RECIPE"
-        tagline="Build, manage, and share repeatable paint schemes."
+        tagline="// build, manage, and share repeatable paint schemes"
         actions={
           <div className="flex items-center gap-2">
             {onGenerateAi && (

@@ -23,7 +23,7 @@ export function ToolsHubView() {
     <div className="flex h-full flex-col gap-6 p-6">
       <PageHeader
         title="TOOLS"
-        tagline="Colour utilities — turn an idea, photo, or colour into named, buyable paints."
+        tagline="// colour utilities — turn an idea, photo, or colour into named, buyable paints"
       />
       <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
         {TOOLS.map((t) => {

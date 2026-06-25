@@ -44,7 +44,7 @@ export function CollectionView({
       <div className="flex flex-1 flex-col gap-6 pb-4">
       <PageHeader
         title="COLLECTION"
-        tagline="Track what you own, want, and what each cost — paints and models."
+        tagline="// only the pots & models you own — track what each cost"
       />
 
       <PasteUrlBar onAddUrl={onAddUrl} />

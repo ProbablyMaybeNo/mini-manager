@@ -79,7 +79,7 @@ export function LibraryView(props: LibraryViewProps) {
     <div className="flex h-full flex-col gap-6 p-6">
       <PageHeader
         title="LIBRARY"
-        tagline={`Growing library of ${totalCount.toLocaleString()} paints across all the major companies.`}
+        tagline={`// every paint on the market — mark what you own or want (${totalCount.toLocaleString()} across all the major brands)`}
         taglineClassName="font-body text-body"
         actions={
           <>

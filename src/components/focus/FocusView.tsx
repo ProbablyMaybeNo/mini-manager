@@ -53,7 +53,7 @@ export function FocusView({
   const [step, setStep] = useState(initialStep);
 
   const TAGLINE =
-    "Painting session companion — recipe, technique, progress, time, and inspiration, all in one place.";
+    "// your painting bench — recipe, progress, time, and inspiration for one model in one place";
 
   const picker = (
     <FocusPicker
