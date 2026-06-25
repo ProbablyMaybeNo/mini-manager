@@ -15,6 +15,7 @@ import { ProjectsTable } from "./ProjectsTable";
 import { RightRail } from "./RightRail";
 import { StatRow } from "./StatRow";
 import { UpcomingEventsBar } from "./UpcomingEventsBar";
+import { WelcomeCard } from "./WelcomeCard";
 
 export type DashboardStatus = "ready" | "loading" | "error";
 
@@ -120,6 +121,8 @@ export function DashboardView({
         ) : (
           <div className="flex flex-col gap-6 xl:flex-row">
             <div className="flex min-w-0 flex-1 flex-col gap-6">
+              {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
+              <WelcomeCard />
               <StatRow summary={summary} />
               <div data-tour="dashboard-projects">
               <Panel label="PROJECTS" cornerTicks className="p-4">
