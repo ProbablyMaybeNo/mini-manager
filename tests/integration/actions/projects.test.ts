@@ -121,10 +121,9 @@ describe("createProject", () => {
     expect(child[0]!.parentId).toBe(army!.id);
   });
 
-  test("2026-06-05 — a Unit can't contain another Unit", async () => {
-    // Containment rule reversal (Ross 2026-06-05): a Unit no longer hosts
-    // sub-Units. It can host a Model; a Unit itself is assigned to an
-    // army/warband, not nested in a unit.
+  test("2026-06-23 — a Unit can't contain another Unit (Units host Models only)", async () => {
+    // Containment rules (Ross 2026-06-23): a Unit hosts Models only. A sub-Unit
+    // is rejected — a Unit is assigned to an army/warband, not nested in a unit.
     await createProject({ name: "Top Unit", type: "Unit", count: 10 });
     const [unit] = await state.db!.select().from(projects);
 
@@ -135,7 +134,7 @@ describe("createProject", () => {
       parentId: unit!.id,
     });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/A unit can't contain another unit/);
+    if (!res.ok) expect(res.error).toMatch(/A Unit can contain: Model/);
 
     const child = await state
       .db!.select()
@@ -175,21 +174,43 @@ describe("createProject", () => {
     });
     expect(res.ok).toBe(false);
     if (!res.ok)
-      expect(res.error).toMatch(/Only Army, Warband, or Unit parents/);
+      expect(res.error).toMatch(/A Model can't contain sub-projects/);
   });
 
-  test("sub-projects must be a Unit or Model (Terrain rejected)", async () => {
+  test("2026-06-23 — an Army CAN host a Terrain Piece; a Unit cannot", async () => {
     await createProject({ name: "An Army", type: "Army", count: 0 });
     const [army] = await state.db!.select().from(projects);
 
-    const res = await createProject({
-      name: "Bad child",
+    // New containment rules (Ross 2026-06-23): an Army hosts Units, Warbands,
+    // Models AND Terrain — so Terrain under an Army is a legal sub-project.
+    await createProject({
+      name: "Objective Ruins",
       type: "Terrain Piece",
       count: 1,
       parentId: army!.id,
     });
+    const terrainChild = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.name, "Objective Ruins"));
+    expect(terrainChild).toHaveLength(1);
+    expect(terrainChild[0]!.type).toBe("Terrain Piece");
+    expect(terrainChild[0]!.parentId).toBe(army!.id);
+
+    // …but a Unit hosts Models only, so Terrain under a Unit is rejected.
+    await createProject({ name: "Squad", type: "Unit", count: 5 });
+    const [unit] = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.name, "Squad"));
+    const res = await createProject({
+      name: "Bad terrain",
+      type: "Terrain Piece",
+      count: 1,
+      parentId: unit!.id,
+    });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/Sub-projects must be a Unit or a Model/);
+    if (!res.ok) expect(res.error).toMatch(/A Unit can contain: Model/);
   });
 
   test("2026-06-05 — a Model is a legal sub-project under an Army", async () => {
@@ -230,10 +251,10 @@ describe("createProject", () => {
       parentId: terrain!.id,
     });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/Only Army, Warband, or Unit parents/);
+    if (!res.ok) expect(res.error).toMatch(/A Terrain Piece can't contain sub-projects/);
   });
 
-  test("rejects 3-deep nesting (Army → Unit → Unit grandchild blocked)", async () => {
+  test("a Unit nested under an Army can't host another Unit (depth bounded by containment map)", async () => {
     await createProject({ name: "Army", type: "Army", count: 0 });
     const [army] = await state.db!.select().from(projects);
     await createProject({
@@ -254,7 +275,38 @@ describe("createProject", () => {
       parentId: mid!.id,
     });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/Maximum 3 levels/);
+    // A Unit hosts Models only, so a sub-Unit is rejected by the containment
+    // map before the depth cap is ever reached — the tree can't grow a 4th tier.
+    if (!res.ok) expect(res.error).toMatch(/A Unit can contain: Model/);
+  });
+
+  test("2026-06-23 — a Model IS allowed 3 levels deep (Army → Unit → Model)", async () => {
+    await createProject({ name: "Army", type: "Army", count: 0 });
+    const [army] = await state.db!.select().from(projects);
+    await createProject({
+      name: "Squad",
+      type: "Unit",
+      count: 10,
+      parentId: army!.id,
+    });
+    const [unit] = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.parentId, army!.id));
+
+    await createProject({
+      name: "Sergeant",
+      type: "Model",
+      count: 1,
+      parentId: unit!.id,
+    });
+    const model = await state
+      .db!.select()
+      .from(projects)
+      .where(eq(projects.name, "Sergeant"));
+    expect(model).toHaveLength(1);
+    expect(model[0]!.type).toBe("Model");
+    expect(model[0]!.parentId).toBe(unit!.id);
   });
 
   test("rejects parent owned by a different user", async () => {

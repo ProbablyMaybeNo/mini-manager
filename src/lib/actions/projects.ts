@@ -76,14 +76,16 @@ export type CreateProjectInput = z.input<typeof createProjectSchema>;
 
 /**
  * Create a top-level or nested project. Validates the input, enforces
- * the 3-level nesting cap (Army → Unit → Unit), and redirects to the
- * new project's workspace. Throws via `redirect` on success.
+ * the containment rules (CHILD_TYPES) and the 3-level nesting cap
+ * (Army → Unit/Warband → Model), and redirects to the new project's
+ * workspace. Throws via `redirect` on success.
  *
  * Returns `{ ok: false, error }` for any validation or constraint
  * failure so a client component can surface the message.
  *
- * P13.4 sub-project type rule: Army/Warband/Unit parents host ONLY
- * Unit children. Terrain Piece + Diorama are top-level only.
+ * Containment (Ross 2026-06-23): an Army hosts Units, Warbands, Models
+ * and Terrain; a Unit or Warband hosts Models only; Models, Terrain and
+ * Dioramas are leaves (allowed top-level, but they host nothing).
  */
 export async function createProject(
   raw: CreateProjectInput,
