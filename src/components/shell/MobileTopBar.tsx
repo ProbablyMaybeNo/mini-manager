@@ -1,47 +1,15 @@
-"use client";
-
-import { useState } from "react";
 import { Logo } from "./Logo";
-import { NavLinks } from "./NavLinks";
-import { SlideOutPanel } from "@/components/kit";
-import { TourReplayButton } from "@/components/tour";
-import { ReportIssueButton } from "@/components/feedback/ReportIssueButton";
-import { FOOTER_NAV, MAIN_NAV } from "./nav";
 
-/** Mobile top bar: logo + menu button that opens the nav in the shared slide-out. */
+/**
+ * Mobile top header (< 840px): a slim logo bar. Primary navigation now lives in
+ * the persistent {@link BottomNav} (MUX-001) — its thumb-zone tabs plus the
+ * "More" sheet replace the old hamburger menu, so this bar is purely a brand
+ * anchor at the top of the phone/tablet viewport. The rail takes over ≥840px.
+ */
 export function MobileTopBar() {
-  const [open, setOpen] = useState(false);
   return (
-    <>
-      <header className="flex items-center justify-between border-b border-cyan/40 bg-bg-raised/40 px-4 py-2 md:hidden">
-        <Logo size={44} />
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          aria-expanded={open}
-          className="inline-flex min-h-11 items-center border border-cyan/60 px-3 py-1.5 font-button text-button uppercase tracking-[0.18em] text-cyan hover:bg-cyan/10"
-        >
-          ☰ Menu
-        </button>
-      </header>
-
-      <SlideOutPanel
-        open={open}
-        onClose={() => setOpen(false)}
-        side="left"
-        width="max-w-[260px]"
-        title="Navigation"
-      >
-        <NavLinks items={MAIN_NAV} onNavigate={() => setOpen(false)} />
-        <div className="mt-4 border-t border-cyan/30 pt-3">
-          <NavLinks items={FOOTER_NAV} onNavigate={() => setOpen(false)} />
-          {/* Re-trigger the walkthrough; closing the menu lets the spotlight
-              land on the now-visible page chrome. */}
-          <TourReplayButton onNavigate={() => setOpen(false)} />
-          <ReportIssueButton onNavigate={() => setOpen(false)} />
-        </div>
-      </SlideOutPanel>
-    </>
+    <header className="flex items-center justify-between border-b border-cyan/40 bg-bg-raised/40 px-4 py-2 min-[840px]:hidden">
+      <Logo size={44} />
+    </header>
   );
 }

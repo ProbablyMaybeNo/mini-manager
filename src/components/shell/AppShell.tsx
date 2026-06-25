@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SidebarRail } from "./SidebarRail";
 import { MobileTopBar } from "./MobileTopBar";
+import { BottomNav } from "./BottomNav";
 import { RouteTransition } from "./RouteTransition";
 
 /**
@@ -29,10 +30,18 @@ export function AppShell({
       <SidebarRail />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileTopBar />
-        <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto outline-none">
+        <main
+          id="main"
+          tabIndex={-1}
+          // Reserve room for the fixed phone bottom nav (+ its safe-area inset)
+          // so trailing content never hides behind the bar; cleared at ≥840px
+          // where the rail takes over (MUX-001).
+          className="min-w-0 flex-1 overflow-y-auto pb-[calc(3.25rem+env(safe-area-inset-bottom))] outline-none min-[840px]:pb-0"
+        >
           <RouteTransition>{children}</RouteTransition>
         </main>
       </div>
+      <BottomNav />
     </div>
   );
 }

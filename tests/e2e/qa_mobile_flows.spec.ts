@@ -4,12 +4,13 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
 /**
  * M6 — Mobile flow smokes (current mobile chrome).
  *
- * On a phone viewport the app drops the desktop SidebarRail for a
- * MobileTopBar: a logo + an "Open menu" button that opens the nav in the
- * shared slide-out (a dialog labelled "Navigation"). These tests cover
- * the mobile nav round-trip across the current routes and a core
- * project-create flow, both rejecting horizontal scroll — the failure
- * mode this phase's audit guards against.
+ * On a phone viewport (< 840px) the app drops the desktop SidebarRail for a
+ * persistent bottom nav (MUX-001): four labelled tabs (Dashboard · Library ·
+ * Collection · Tools) plus a "More" entry that opens the rest (Focus · Recipes
+ * · Account · Tutorial) in the shared slide-out (a dialog labelled "More").
+ * These tests cover the mobile nav round-trip across the current routes and a
+ * core project-create flow, both rejecting horizontal scroll — the failure mode
+ * this phase's audit guards against.
  *
  * This file only runs under the chromium-mobile project (iPhone 12).
  */
@@ -26,17 +27,31 @@ async function expectNoHorizontalScroll(
   expect(overflow, "page has horizontal scroll").toBeLessThanOrEqual(2);
 }
 
-async function navigateVia(
+/** A primary bottom-nav tab (always visible) — click it directly. */
+async function navigateViaTab(
   page: import("@playwright/test").Page,
   label: string,
   pathRe: RegExp,
 ): Promise<void> {
-  const menuBtn = page.getByRole("button", { name: /open menu/i });
-  const sheet = page.getByRole("dialog", { name: /Navigation/i });
-  // Retry opening the menu until the sheet mounts (guards a click that
-  // lands before the MobileTopBar island has hydrated).
+  const bar = page.getByRole("navigation", { name: /Primary/i });
+  const tab = bar.getByRole("link", { name: label, exact: true });
+  // Retry until the bottom-nav island has hydrated and the click registers.
   await expect(async () => {
-    await menuBtn.click();
+    await tab.click();
+    await page.waitForURL(pathRe, { timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
+}
+
+/** An overflow item — open the "More" sheet, then click its link. */
+async function navigateViaMore(
+  page: import("@playwright/test").Page,
+  label: string,
+  pathRe: RegExp,
+): Promise<void> {
+  const moreBtn = page.getByRole("button", { name: /^more$/i });
+  const sheet = page.getByRole("dialog", { name: /^More$/i });
+  await expect(async () => {
+    await moreBtn.click();
     await expect(sheet).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 30_000 });
   await sheet.getByRole("link", { name: label, exact: true }).click();
@@ -55,18 +70,21 @@ test.describe("M6 — Mobile primary flows", () => {
     ).toBeVisible({ timeout: 30_000 });
     await expectNoHorizontalScroll(page);
 
-    const destinations: Array<{ label: string; pathRe: RegExp }> = [
+    // Primary tabs sit in the persistent bottom bar; Recipes lives under "More".
+    const tabs: Array<{ label: string; pathRe: RegExp }> = [
       { label: "LIBRARY", pathRe: /\/library/ },
-      { label: "RECIPE", pathRe: /\/recipes/ },
       { label: "TOOLS", pathRe: /\/tools/ },
       { label: "COLLECTION", pathRe: /\/collection/ },
       { label: "DASHBOARD", pathRe: /\/dashboard/ },
     ];
-
-    for (const dest of destinations) {
-      await navigateVia(page, dest.label, dest.pathRe);
+    for (const dest of tabs) {
+      await navigateViaTab(page, dest.label, dest.pathRe);
       await expectNoHorizontalScroll(page);
     }
+
+    // Overflow route through the "More" sheet.
+    await navigateViaMore(page, "RECIPES", /\/recipes/);
+    await expectNoHorizontalScroll(page);
   });
 
   test("M6.2 create a project on mobile → focus stepper bump persists", async ({
