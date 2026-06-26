@@ -53,6 +53,25 @@ export function ProjectPanelStack({
   // newly-selected tab on arrow nav (WAI-ARIA tabs pattern).
   const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
+  // ---- History/back integration (MOP-004) ----------------------------------
+  // We mirror the drill stack into the browser history so OS/browser Back pops
+  // one tier (sub-project → parent → closed) and never exits the app. The model:
+  //   open       → pushState({ mmInspector: true })
+  //   openSub    → pushState({ mmInspector: true, mmSubProject: true })
+  //   user close → history.back() per pushed entry (unwinds cleanly)
+  //   popstate   → if event.state has no mmInspector, it's a Next router nav —
+  //                pass through untouched; otherwise reconcile the UI to the new
+  //                depth (pop a tab or close).
+  // `pushedDepthRef` tracks how many of OUR entries are live so a full close can
+  // unwind them, and `unwindingRef` flags programmatic history.back() calls so
+  // the resulting popstate doesn't double-handle.
+  const pushedDepthRef = useRef(0);
+  // Number of upcoming programmatic popstate events to swallow (a history.go(-n)
+  // fires n popstate events). Boolean wouldn't cover multi-level unwind.
+  const unwindingRef = useRef(0);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   // A fresh root resets the stack to a single tab.
   useEffect(() => {
     if (rootId) {
@@ -61,21 +80,113 @@ export function ProjectPanelStack({
     }
   }, [rootId]);
 
+  // Push our base entry when the panel becomes visible; unwind every pushed
+  // entry when it closes. Keyed on `visibleForHistory` (open + has a root) so a
+  // programmatic unwind doesn't re-trigger it.
+  const visibleForHistory = open && rootId != null;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (visibleForHistory) {
+      window.history.pushState({ ...window.history.state, mmInspector: true }, "");
+      pushedDepthRef.current = 1;
+      return () => {
+        // Panel unmounted/closed externally — unwind our entries so the history
+        // stack returns to where it was before we opened (clean back behaviour).
+        const depth = pushedDepthRef.current;
+        pushedDepthRef.current = 0;
+        if (depth > 0) {
+          unwindingRef.current += depth;
+          window.history.go(-depth);
+        }
+      };
+    }
+  }, [visibleForHistory]);
+
+  // popstate: OS/browser/predictive Back. Reconcile UI to the popped state.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    function onPop(event: PopStateEvent) {
+      // A programmatic unwind (clean close) — swallow; UI already updated.
+      if (unwindingRef.current > 0) {
+        unwindingRef.current -= 1;
+        return;
+      }
+      // CRITICAL: not our state → a Next.js router navigation. Pass through.
+      if (!event.state?.mmInspector) {
+        // If our panel is still open, the user backed out past it entirely —
+        // close it without touching history (the nav already moved us).
+        if (pushedDepthRef.current > 0) {
+          pushedDepthRef.current = 0;
+          onCloseRef.current();
+        }
+        return;
+      }
+      // Our state, with a depth shallower than the stack → Back popped a tier.
+      if (!event.state.mmSubProject) {
+        // Back to the root inspector entry: drop every pushed sub-tab.
+        pushedDepthRef.current = 1;
+        setTabIds((prev) => {
+          const root = prev[0];
+          setActiveId(root ?? null);
+          return root ? [root] : prev;
+        });
+      } else {
+        // Still within the sub-stack — pop the top sub-tab.
+        pushedDepthRef.current = Math.max(1, pushedDepthRef.current - 1);
+        setTabIds((prev) => {
+          if (prev.length <= 1) return prev;
+          const next = prev.slice(0, -1);
+          setActiveId(next[next.length - 1] ?? prev[0]);
+          return next;
+        });
+      }
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   function openSub(id: string) {
-    setTabIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setTabIds((prev) => {
+      if (prev.includes(id)) return prev;
+      // Push a sub-tier history entry so Back pops just this tab (MOP-004).
+      if (typeof window !== "undefined") {
+        window.history.pushState(
+          { ...window.history.state, mmInspector: true, mmSubProject: true },
+          "",
+        );
+        pushedDepthRef.current += 1;
+      }
+      return [...prev, id];
+    });
     setActiveId(id);
   }
 
   function closeTab(id: string) {
+    if (id === tabIds[0]) {
+      // Closing the root closes the whole panel — let the close effect unwind
+      // history. onClose flips `open`, unmounting via the cleanup above.
+      onClose();
+      return;
+    }
+    const isTop = id === tabIds[tabIds.length - 1];
+    if (isTop && typeof window !== "undefined" && pushedDepthRef.current > 1) {
+      // Closing the top sub-tab is exactly an OS-Back: pop one tier and let
+      // popstate update the stack (single source of truth, MOP-004).
+      window.history.back();
+      return;
+    }
+    // Closing a non-top middle tab (rare): mutate that specific tab directly and
+    // consume one history entry via a guarded back so depth stays balanced.
     setTabIds((prev) => {
-      if (id === prev[0]) {
-        onClose();
-        return prev;
-      }
       const next = prev.filter((t) => t !== id);
       if (id === activeId) setActiveId(next[next.length - 1] ?? prev[0]);
       return next;
     });
+    if (typeof window !== "undefined" && pushedDepthRef.current > 1) {
+      pushedDepthRef.current -= 1;
+      unwindingRef.current += 1;
+      window.history.back();
+    }
   }
 
   const active = activeId ? findProject(projects, activeId) : null;
@@ -101,6 +212,12 @@ export function ProjectPanelStack({
 
   const isDesktop = useIsDesktop();
   const visible = open && tabIds.length > 0;
+
+  // Breadcrumb depth (MOP-004): one ▸ PROJECT for the root, then ▸ SUB per tier
+  // down to the active tab so the painter can see how deep the drill is.
+  const activeIndex = activeId ? Math.max(0, tabIds.indexOf(activeId)) : 0;
+  const breadcrumb =
+    "DASHBOARD ▸ PROJECT" + " ▸ SUB".repeat(activeIndex);
 
   const body = active ? (
     // When the tab strip is showing, the body is the tabs' panel — labelled
@@ -207,7 +324,7 @@ export function ProjectPanelStack({
     return (
       <InspectorPane
         title={active?.title ?? ""}
-        breadcrumb="DASHBOARD ▸ PROJECT"
+        breadcrumb={breadcrumb}
         onClose={onClose}
       >
         {tabStrip}
@@ -222,7 +339,7 @@ export function ProjectPanelStack({
     <SlideOutPanel
       open={visible}
       onClose={onClose}
-      breadcrumb="DASHBOARD ▸ PROJECT"
+      breadcrumb={breadcrumb}
       title={active?.title ?? ""}
       width="max-w-2xl"
     >
