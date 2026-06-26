@@ -53,7 +53,7 @@ Consolidated from three UX audits (2026-06-24). Source-of-truth detail + screens
 - [ ] **DOP-014** — [ARCH — needs Ross] Kill the app-wide ~270px right-gutter; pick one consistent grid intent across pages.
 - [ ] **DOP-017** — [ARCH — needs Ross] Give projects a real resource-list page (sort/filter/bulk) for the power-user audience; `/projects` currently === dashboard.
 - [ ] **DOP-005** — [ARCH — needs Ross] Untangle FOCUS vs PLANNER vs `/planner` naming + give the calendar a clear home. Naming/IA decision.
-- [ ] **DOP-015** — Surface existing cross-feature bridges (Wheel→Recipe, Library→paint-pick) at the moment of need.
+- [x] **DOP-015** — Surfaced two cross-feature bridges in the Library paint-info panel at the moment of need: (1) a prominent **"+ Use in a recipe"** action for the inspected paint itself (the assign bridge previously only sat on its lower-down match alternatives), and (2) an **"Open in Color Wheel →"** link on the Harmonies field, seeded `/tools/wheel?hex=<paint>`, so the painter can explore the harmony interactively + match every leg. Wheel→Recipe ("Send to Recipe" + per-swatch Assign) already surfaced — left as-is.
 - [x] **DOP-013** — Each harmony swatch in the wheel's right panel ("HARMONY · CLOSEST PAINTS") now has a **"More matches (N)"** disclosure that reveals the next-closest paints (CIEDE2000 alternates across brands, primary excluded) as assignable swatch tiles — filling the lower-right void with real substitutes instead of dead space. New optional `rankPaints` prop on `ColourWheelTool` (back-compat: omitted → single closest only); wheel page feeds it via `rankMatches`. Rest of the layout held.
 - [ ] **MOP-011** — Stat strip: reflow the 4-up to 2×2 on mobile (overlap at 375px); keep the "N" mark off the action row.
 

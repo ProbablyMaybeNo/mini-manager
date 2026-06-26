@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { harmonies, HARMONY_SCHEMES, type HarmonyScheme } from "@/lib/color";
@@ -55,6 +56,13 @@ export function PaintInfoPanelContent({
       >
         {paint.owned ? "● Owned" : "○ Not owned"}
       </span>
+
+      {/* DOP-015 — Library→Recipe bridge at the moment of need: assign THIS
+          paint (the one you're inspecting) straight into a recipe, instead of
+          only being able to assign one of its lower-down match alternatives. */}
+      <Button variant="attach" size="sm" className="w-fit" onClick={() => onAssignPaint(paint)}>
+        + Use in a recipe
+      </Button>
 
       <Field label="Type">
         <span className="font-body text-body text-fg">{paint.type}</span>
@@ -152,6 +160,15 @@ export function PaintInfoPanelContent({
             <Swatch key={`${hex}-${i}`} hex={hex} size="lg" />
           ))}
         </div>
+        {/* DOP-015 — Library→Wheel bridge at the moment of need: jump to the
+            full Color Wheel seeded with this paint's hex to explore the harmony
+            interactively + match every leg to real paints. */}
+        <Link
+          href={`/tools/wheel?hex=${encodeURIComponent(paint.hex)}`}
+          className="mt-2 inline-flex w-fit items-center gap-1 label-osd text-cyan hover:text-glow-cyan"
+        >
+          ◑ Open in Color Wheel →
+        </Link>
       </Field>
 
       <Field label="Match — closest across brands">
