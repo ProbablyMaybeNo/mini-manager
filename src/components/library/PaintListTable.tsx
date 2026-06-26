@@ -105,7 +105,9 @@ export function PaintListTable({
               >
                 <div role="cell" style={cellStyle(COLS[0]!)} className="px-3 py-2">
                   <button type="button" onClick={() => onOpenPaint(p)} aria-label={`Open ${p.name}`}>
-                    <Swatch hex={p.hex} />
+                    {/* DOP-008 — tooltip names the paint (parity with the grid
+                        SwatchWall) instead of the bare hex default. */}
+                    <Swatch hex={p.hex} title={`${p.name} — ${p.brand} · ${p.hex}`} />
                   </button>
                 </div>
                 <div role="cell" style={cellStyle(COLS[1]!)} className="px-3 py-2">
