@@ -141,10 +141,11 @@ export function MiniCalendar({
             // min-h-6/min-w-6 clears the WCAG 2.2 §2.5.8 24px target floor
             // (cells were 23x23) while keeping the dense glanceable grid.
             "relative flex min-h-6 min-w-6 items-center justify-center font-num2 text-num2 tabular-nums",
-            // Non-interactive (read-only dashboard) cells stay a tight square;
-            // interactive day-buttons drop the aspect lock so they can grow to
-            // a comfortable touch height below.
-            !interactive && "aspect-square",
+            // Cells stay a tight square — RF-9: the interactive day-buttons no
+            // longer grow to a 44px visible height (that made the month grid
+            // ~4× too tall); the 44px tap target is restored via an invisible
+            // after: expander so the grid reads compact but stays tappable.
+            "aspect-square",
             day == null && "opacity-0",
             accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg",
           );
@@ -160,9 +161,14 @@ export function MiniCalendar({
                 onMouseLeave={() => setHovered((h) => (h === day ? null : h))}
                 onFocus={() => setHovered(day)}
                 onBlur={() => setHovered((h) => (h === day ? null : h))}
-                // min-h-11 (44px) gives the day a thumb-friendly tap height on
-                // touch (MUX-003) without widening the 7-col grid past its cap.
-                className={cn(base, "min-h-11 cursor-pointer rounded-sm hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15")}
+                // RF-9: compact square cell + an invisible centred 44px tap
+                // expander (after:) keeps the thumb-friendly hit target (MUX-003)
+                // without inflating the row height.
+                className={cn(
+                  base,
+                  "cursor-pointer rounded-sm hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15",
+                  "after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']",
+                )}
               >
                 {content}
               </button>
