@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import {
   Button,
+  ConfirmDialog,
   EmptyState,
   FocusReticleIcon,
   IconButton,
@@ -12,7 +14,9 @@ import {
   StatusText,
   SwatchStrip,
   TypeChip,
+  useToast,
 } from "@/components/kit";
+import { deleteProject } from "@/lib/actions/projects";
 import { formatMinutes } from "@/lib/palette";
 import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project, ProjectType } from "@/lib/types";
@@ -58,12 +62,28 @@ export function ProjectsTable({
   /** Open the create-project flow — wires the first-run empty-state CTA. */
   onAddProject?: () => void;
 }) {
+  const router = useRouter();
+  const { toast, node: toastNode } = useToast();
+  const [pendingDelete, startDelete] = useTransition();
   // Which container rows are expanded. Sub-projects render inline beneath
   // their parent; expanding a sub-project reveals the next tier.
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   // Which row currently has its inline "add sub-project" form open.
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [subName, setSubName] = useState("");
+  // The project queued for a confirm-guarded row delete (RF-3).
+  const [deleting, setDeleting] = useState<Project | null>(null);
+
+  function confirmDelete() {
+    const target = deleting;
+    if (!target) return;
+    setDeleting(null);
+    startDelete(async () => {
+      const res = await deleteProject({ id: target.id });
+      if (res.ok) router.refresh();
+      else toast(res.error, "red");
+    });
+  }
 
   function toggle(id: string) {
     setExpanded((prev) => {
@@ -245,6 +265,20 @@ export function ProjectsTable({
               >
                 <FocusReticleIcon size={24} />
               </IconButton>
+              <IconButton
+                variant="outlineRed"
+                size="sm"
+                className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+                aria-label={`Delete ${p.title}`}
+                title="Delete project"
+                disabled={pendingDelete}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleting(p);
+                }}
+              >
+                🗑
+              </IconButton>
             </div>
           </td>
         </tr>
@@ -410,6 +444,20 @@ export function ProjectsTable({
               >
                 <FocusReticleIcon size={24} />
               </IconButton>
+              <IconButton
+                variant="outlineRed"
+                size="sm"
+                className="h-9 w-9"
+                aria-label={`Delete ${p.title}`}
+                title="Delete project"
+                disabled={pendingDelete}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleting(p);
+                }}
+              >
+                🗑
+              </IconButton>
             </div>
           </div>
         </div>
@@ -480,6 +528,25 @@ export function ProjectsTable({
       <div className="flex flex-col gap-2 min-[600px]:hidden">
         {renderCards(projects, 0)}
       </div>
+
+      {/* Confirm-guarded row delete (RF-3) — one dialog, driven by the queued
+          project; shared by the table row + the mobile card. */}
+      <ConfirmDialog
+        open={deleting != null}
+        breadcrumb="PROJECT"
+        title="Delete project?"
+        message={
+          deleting
+            ? `Delete "${deleting.title}" and its sub-projects? This can't be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        destructive
+        busy={pendingDelete}
+        onClose={() => setDeleting(null)}
+        onConfirm={confirmDelete}
+      />
+      {toastNode}
     </>
   );
 }
