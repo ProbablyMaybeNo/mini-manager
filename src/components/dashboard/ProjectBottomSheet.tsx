@@ -205,3 +205,10 @@ export function ProjectBottomSheet({
     </div>
   );
 }
+
+/**
+ * Stable name for "the mobile inspector surface" used by InspectorShell. RF-10
+ * swaps the implementation behind this alias from the detent bottom sheet to a
+ * full-screen takeover; callers keep importing ProjectMobileSurface.
+ */
+export const ProjectMobileSurface = ProjectBottomSheet;

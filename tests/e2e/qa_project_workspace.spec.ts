@@ -5,8 +5,9 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * M3 — Project workspace lifecycle (reworked dashboard).
  *
  * The dashboard reworked projects into a tree. Creating a project no
- * longer navigates anywhere — "+ Add Project" opens NewProjectPanel,
- * persists via createProject, then refreshes the dashboard table.
+ * longer navigates anywhere — "+ New Project" opens the project page in
+ * CREATE mode (RF-8); SAVE ("Create") persists via createProject, then the
+ * new row appears and its edit panel opens.
  *
  * Each row exposes:
  *   - a body click → opens the read-only ProjectInspector (a dialog),
@@ -24,18 +25,22 @@ async function addProject(
   name: string,
   count: number,
 ): Promise<void> {
+  // RF-8: "+ New Project" opens the project page in CREATE mode (not the old
+  // mini-form dialog). Fill Name + Model count, then SAVE (labelled "Create").
   const addBtn = page.getByRole("button", { name: /\+ New Project/i });
-  const panel = page.getByRole("dialog", { name: /New Project/i });
-  // Retry until the slide-out mounts (guards a pre-hydration click).
+  const nameField = page.getByLabel("Name", { exact: true });
   await expect(async () => {
     await addBtn.click();
-    await expect(panel).toBeVisible({ timeout: 2_000 });
+    await expect(nameField).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 30_000 });
-  await panel.getByLabel(/project name/i).fill(name);
-  await panel.getByLabel(/model count/i).fill(String(count));
-  await panel.getByRole("button", { name: /create project/i }).click();
-  // Panel closes + the dashboard refreshes; the new row appears.
-  await expect(panel).toBeHidden({ timeout: 15_000 });
+  await nameField.fill(name);
+  await page.getByLabel(/model count/i).fill(String(count));
+  await page.getByRole("button", { name: /^▾?\s*Create$/i }).click();
+  // Create mode transitions to the new project's edit panel; the new row
+  // appears in the table.
+  await expect(
+    page.getByRole("button", { name: `Manage ${name}` }),
+  ).toBeVisible({ timeout: 15_000 });
 }
 
 test.describe("M3 — Project workspace lifecycle", () => {
@@ -60,14 +65,17 @@ test.describe("M3 — Project workspace lifecycle", () => {
     const row = page.getByRole("button", { name: `Manage ${name}` });
     await expect(row).toBeVisible({ timeout: 15_000 });
 
-    // Clicking the row body opens the project workspace inspector (a dialog
-    // labelled with the project title).
+    // Clicking the row body opens the project workspace inspector. On mobile
+    // this is the full-screen takeover (RF-10, a dialog labelled with the
+    // project title); on desktop it's the persistent InspectorPane section.
     await row.click();
     const inspector = page.getByRole("dialog", { name });
     await expect(inspector).toBeVisible();
-    await expect(inspector.getByRole("button", { name: /▸ Focus/i })).toBeVisible();
-    // The panel closes via its ✕ (aria-label "Close panel").
-    await inspector.getByRole("button", { name: /close panel/i }).click();
+    // RF-1/RF-2: Focus is now a labelled button carrying the purple reticle.
+    await expect(inspector.getByRole("button", { name: /Focus/i })).toBeVisible();
+    // The panel closes via its back/close control (aria-label
+    // "Close project inspector").
+    await inspector.getByRole("button", { name: /close project inspector/i }).click();
     await expect(inspector).toBeHidden();
 
     // The per-row focus icon navigates to the focus bench for this project.

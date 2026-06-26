@@ -11,6 +11,8 @@ import type {
   Project,
   ProjectType,
 } from "@/lib/types";
+import { CreateProjectView } from "./CreateProjectView";
+import { InspectorShell } from "./InspectorShell";
 import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectsTable } from "./ProjectsTable";
 import { RightRail } from "./RightRail";
@@ -33,6 +35,12 @@ export interface DashboardViewProps {
    *  then call onOpenConsumed so a refresh doesn't re-trigger it. */
   openProjectId?: string | null;
   onOpenConsumed?: () => void;
+  /** RF-8: fired with the new id after createProject succeeds so the parent can
+   *  feed it back via openProjectId and the new panel auto-opens. */
+  onProjectCreated?: (id: string) => void;
+  /** RF-8: one-shot signal to open CREATE mode on mount (tour deep-link). */
+  autoCreate?: boolean;
+  onAutoCreateConsumed?: () => void;
   onOpenProject?: (project: Project) => void;
   onFocusProject?: (project: Project) => void;
   onAttachRecipe?: (project: Project) => void;
@@ -64,6 +72,9 @@ export function DashboardView({
   status = "ready",
   openProjectId,
   onOpenConsumed,
+  onProjectCreated,
+  autoCreate,
+  onAutoCreateConsumed,
   onOpenProject,
   onFocusProject,
   onAttachRecipe,
@@ -75,6 +86,9 @@ export function DashboardView({
 }: DashboardViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  // RF-8: "+ New Project" opens the project page in CREATE mode (blank fields);
+  // no row is persisted until SAVE. Mutually exclusive with the edit inspector.
+  const [creating, setCreating] = useState(false);
   const isDesktop = useIsDesktop();
 
   // Derive the selected project from the live tree (not a snapshot) so an
@@ -91,16 +105,37 @@ export function DashboardView({
   // longer jumps to the focus bench. Reaching focus is now an explicit
   // per-row action (the ◎ icon) or the inspector's "Start session" button.
   function openProject(p: Project) {
+    setCreating(false);
     setSelectedId(p.id);
     setInspectorOpen(true);
     onOpenProject?.(p);
   }
+
+  // RF-8: open the blank create view (closing any open edit inspector first).
+  function startCreate() {
+    setInspectorOpen(false);
+    setSelectedId(null);
+    setCreating(true);
+    onAddProject?.();
+  }
+
+  // RF-8: consume the tour deep-link's one-shot create signal.
+  useEffect(() => {
+    if (!autoCreate) return;
+    setInspectorOpen(false);
+    setSelectedId(null);
+    setCreating(true);
+    onAutoCreateConsumed?.();
+  }, [autoCreate, onAutoCreateConsumed]);
 
   // Open-on-create: a freshly created project arrives via openProjectId. Open
   // its panel once it resolves in the tree, then clear the request.
   useEffect(() => {
     if (!openProjectId) return;
     if (findProject(projects, openProjectId)) {
+      // A freshly created project resolved in the tree — leave create mode and
+      // open its real edit panel (RF-8's "transition to edit mode").
+      setCreating(false);
       setSelectedId(openProjectId);
       setInspectorOpen(true);
       onOpenConsumed?.();
@@ -112,7 +147,7 @@ export function DashboardView({
   // visible) and the RightRail steps aside to make room for it. Below md the
   // inspector is an overlay (SlideOutPanel / the bottom sheet) so the RightRail
   // is irrelevant — keep it rendered there.
-  const twoPane = isDesktop && inspectorOpen;
+  const twoPane = isDesktop && (inspectorOpen || creating);
 
   const inspector = (
     <ProjectPanelStack
@@ -127,6 +162,27 @@ export function DashboardView({
       }}
       onAttachRecipe={(p) => onAttachRecipe?.(p)}
     />
+  );
+
+  // RF-8 create-mode surface — the project page, blank. Rendered in the same
+  // shell as the edit inspector (desktop pane / mobile full-screen). On a
+  // successful create, the new id flows back through openProjectId and the
+  // effect above swaps this for the real edit panel.
+  const createInspector = (
+    <InspectorShell
+      open={creating}
+      title="New Project"
+      breadcrumb="DASHBOARD ▸ NEW"
+      onClose={() => setCreating(false)}
+    >
+      <CreateProjectView
+        onCreated={(id) => {
+          // Hand the new id up; the parent sets openProjectId, and once the row
+          // resolves in the tree the auto-open effect swaps create → edit.
+          onProjectCreated?.(id);
+        }}
+      />
+    </InspectorShell>
   );
 
   return (
@@ -162,10 +218,10 @@ export function DashboardView({
                     onFocusProject={(p) => onFocusProject?.(p)}
                     onAttachRecipe={(p) => onAttachRecipe?.(p)}
                     onAddSubProject={onAddSubProject}
-                    onAddProject={onAddProject}
+                    onAddProject={startCreate}
                   />
                   <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-                    <Button variant="add" onClick={onAddProject} data-tour="dashboard-new-project">+ New Project</Button>
+                    <Button variant="add" onClick={startCreate} data-tour="dashboard-new-project">+ New Project</Button>
                     {/* Upload-Army-List restored — opens the ArmyImportPanel
                         slide-out wired through onUploadArmyList. */}
                     <Button variant="secondary" onClick={onUploadArmyList}>
@@ -188,6 +244,7 @@ export function DashboardView({
       </div>
 
       {inspector}
+      {createInspector}
     </div>
   );
 }

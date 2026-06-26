@@ -101,17 +101,20 @@ test.describe("M6 — Mobile primary flows", () => {
     ).toBeVisible({ timeout: 30_000 });
     await expectNoHorizontalScroll(page);
 
+    // RF-8: "+ New Project" opens the full-screen create page (no mini-form).
     const name = `QA Mobile Squad ${Date.now()}`;
     const addBtn = page.getByRole("button", { name: /\+ New Project/i });
-    const panel = page.getByRole("dialog", { name: /New Project/i });
+    const nameField = page.getByLabel("Name", { exact: true });
     await expect(async () => {
       await addBtn.click();
-      await expect(panel).toBeVisible({ timeout: 2_000 });
+      await expect(nameField).toBeVisible({ timeout: 2_000 });
     }).toPass({ timeout: 30_000 });
-    await panel.getByLabel(/project name/i).fill(name);
-    await panel.getByLabel(/model count/i).fill("3");
-    await panel.getByRole("button", { name: /create project/i }).click();
-    await expect(panel).toBeHidden({ timeout: 15_000 });
+    await nameField.fill(name);
+    await page.getByLabel(/model count/i).fill("3");
+    await page.getByRole("button", { name: /^▾?\s*Create$/i }).click();
+    await expect(
+      page.getByRole("button", { name: `Manage ${name}` }),
+    ).toBeVisible({ timeout: 15_000 });
 
     // Jump to the focus bench via the per-row focus icon.
     await page

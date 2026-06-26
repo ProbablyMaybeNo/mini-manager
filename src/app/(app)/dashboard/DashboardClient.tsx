@@ -12,7 +12,6 @@ import type {
   Project,
   SessionStats,
 } from "@/lib/types";
-import { NewProjectPanel } from "./NewProjectPanel";
 import { ArmyImportPanel } from "./ArmyImportPanel";
 
 /**
@@ -39,17 +38,19 @@ export function DashboardClient({
   const searchParams = useSearchParams();
   const { toast, node } = useToast();
   const [, startTransition] = useTransition();
-  const [newOpen, setNewOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   // A freshly created project to auto-open in the detail panel.
   const [openId, setOpenId] = useState<string | null>(null);
+  // RF-8: the tour deep-link opens CREATE mode (the project page, blank). A
+  // one-shot signal that DashboardView consumes once on mount.
+  const [autoCreate, setAutoCreate] = useState(false);
 
   // Final tutorial step lands here as `/dashboard?tour=create` to open the
-  // create-project flow. Auto-open the panel once, then strip the param so a
+  // create-project flow. Trigger create mode once, then strip the param so a
   // refresh / back doesn't re-trigger it.
   useEffect(() => {
     if (searchParams.get("tour") === "create") {
-      setNewOpen(true);
+      setAutoCreate(true);
       router.replace("/dashboard");
     }
   }, [searchParams, router]);
@@ -66,10 +67,12 @@ export function DashboardClient({
         projectMinutes={projectMinutes}
         openProjectId={openId}
         onOpenConsumed={() => setOpenId(null)}
+        onProjectCreated={(id) => setOpenId(id)}
+        autoCreate={autoCreate}
+        onAutoCreateConsumed={() => setAutoCreate(false)}
         onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
         onFocusProject={(p) => router.push(`/focus?project=${p.id}`)}
         onAttachRecipe={() => router.push("/recipes")}
-        onAddProject={() => setNewOpen(true)}
         onUploadArmyList={() => setImportOpen(true)}
         onAddSubProject={(parent, childType, name) => {
           // D3 / OR6fdf — add a Unit under an Army/Warband, or a Model under a
@@ -90,11 +93,6 @@ export function DashboardClient({
           });
         }}
         onRetry={() => router.refresh()}
-      />
-      <NewProjectPanel
-        open={newOpen}
-        onClose={() => setNewOpen(false)}
-        onCreated={(id) => setOpenId(id)}
       />
       <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
       {node}
