@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Panel } from "@/components/kit";
+import { Button, EmptyState, Panel, SegmentedToggle } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
 import type { Project, Recipe } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
+import { RecipeCardGrid } from "./RecipeCard";
 import { RecipeIndexTable } from "./RecipeIndexTable";
 
 export type RecipeStatus = "ready" | "loading" | "error";
@@ -42,6 +43,9 @@ export function RecipeIndexView({
   const [editingPaint, setEditingPaint] = useState<{ recipe: Recipe; index: number } | null>(
     null,
   );
+  // DOP-009 — table (dense, sortable scan) vs card (colour-first) view. Cards
+  // lead with the scheme palette; the table keeps the per-row paint tiles.
+  const [view, setView] = useState<"table" | "cards">("table");
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
@@ -50,6 +54,16 @@ export function RecipeIndexView({
         tagline="// build, manage, and share repeatable paint schemes"
         actions={
           <div className="flex items-center gap-2">
+            <SegmentedToggle
+              aria-label="Recipe view mode"
+              options={[
+                { value: "table", label: "Table" },
+                { value: "cards", label: "Cards" },
+              ]}
+              value={view}
+              onChange={setView}
+              disabled={status !== "ready"}
+            />
             {onGenerateAi && (
               <Button variant="solidCyan" onClick={onGenerateAi}>
                 ✨ Generate with AI
@@ -77,6 +91,27 @@ export function RecipeIndexView({
         <Panel label="RECIPES" cornerTicks className="p-4">
           {status === "loading" ? (
             <div className="h-48 animate-pulse bg-cyan/5" aria-busy="true" />
+          ) : view === "cards" ? (
+            recipes.length === 0 ? (
+              <EmptyState
+                glyph="⌖"
+                title="No recipes yet"
+                hint="A recipe is a repeatable paint scheme you can attach to a project and share."
+                action={{
+                  label: "+ Create your first recipe",
+                  onClick: onNewRecipe,
+                  variant: "add",
+                }}
+              />
+            ) : (
+              <RecipeCardGrid
+                recipes={recipes}
+                projects={projects}
+                onOpenRecipe={onOpenRecipe}
+                onAssignProject={onAssignProject}
+                onShare={onShare}
+              />
+            )
           ) : (
             <RecipeIndexTable
               recipes={recipes}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, EmptyState, Listbox, RecipePaintStrip } from "@/components/kit";
+import { Button, EmptyState, Listbox, RecipePaintStrip, Swatch } from "@/components/kit";
 import type { Project, Recipe } from "@/lib/types";
 
 const COLS = ["Name", "Recipe", "Project", "Share"];
@@ -67,10 +67,20 @@ export function RecipeIndexTable({
                     e.stopPropagation();
                     onOpenRecipe(r);
                   }}
-                  className="font-body text-body text-fg hover:text-cyan"
+                  className="block text-left font-body text-body text-fg hover:text-cyan"
                 >
                   {r.name}
                 </button>
+                {/* DOP-009 — a compact swatch-preview line under the name so the
+                    scheme's palette reads at a glance even before the eye
+                    reaches the (wider) Recipe tile cell. */}
+                {r.slots.length > 0 && (
+                  <span aria-hidden className="mt-1 inline-flex gap-0.5">
+                    {r.slots.slice(0, 8).map((s, i) => (
+                      <Swatch key={`${s.swatch}-${i}`} hex={s.swatch} size="sm" />
+                    ))}
+                  </span>
+                )}
               </td>
               <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                 {r.slots.length === 0 ? (
