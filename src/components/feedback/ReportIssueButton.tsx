@@ -91,14 +91,14 @@ export function ReportIssueButton({
           className,
         )}
       >
-        Report an Issue
+        Feedback
       </button>
 
       <ModalDialog
         open={open}
         onClose={close}
         breadcrumb="MINI MAINFRAME"
-        title="Report an Issue"
+        title="Feedback"
       >
         {state === "sent" ? (
           <div className="flex flex-col gap-3">

@@ -139,7 +139,7 @@
   /* Role-specific font sizes — independent of the body scale so each can be
      tuned on its own in the Theme Studio (no more shrinking body text to size
      buttons). Applied via text-button / text-dropdown / text-element. */
-  --text-button: 0.7188rem; /* ~11.5px (Buttons category) */
+  --text-button: 0.8438rem; /* ~13.5px (Buttons category, +2px for legibility — bEv3zSo7wbsS) */
   --text-dropdown: 1.02rem; /* Listbox trigger + options — +25% (w5cZimrBYgGh), on par with the project title-column cells */
   --text-element: 0.75rem; /* tools / activity tracker / feature text */
 

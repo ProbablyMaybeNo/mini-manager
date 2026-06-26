@@ -172,12 +172,12 @@ export function LayeringTool({
             painted result (optical mix, bottom → top).
           </p>
           <HexField
-            label="Substrate"
+            label="Undercoat"
             name="substrate"
             value={substrate}
             onChange={(e) => setSubstrate(e.target.value)}
             onSwatchClick={() => setPickingStack("substrate")}
-            swatchLabel="Pick substrate colour"
+            swatchLabel="Pick undercoat colour"
           />
           {layers.map((layer, i) => (
             <div key={i} className="flex flex-col gap-2 border border-purple/20 p-2">
@@ -298,7 +298,7 @@ export function LayeringTool({
         breadcrumb="STACKING ▸ COLOR PICKER"
         contextLabel={
           pickingStack === "substrate"
-            ? "substrate"
+            ? "undercoat"
             : typeof pickingStack === "number"
               ? `layer ${pickingStack + 1}`
               : undefined

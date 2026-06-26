@@ -80,6 +80,21 @@ export async function createTextImport(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
   const userId = await currentUserId();
+
+  // Gating-layer — the WHOLE army-list import is Pro, including the parse
+  // step (it can fall through to parseWithLlm, which spends LLM tokens).
+  // Gate BEFORE any parsing so free users never trigger the token cost.
+  // Inert while BILLING_ENFORCED is false (isProUser returns true for
+  // everyone until Stripe is live).
+  if (!(await isProUser(userId))) {
+    return {
+      ok: false,
+      error:
+        "Army-list import is a Pro feature. Upgrade to parse and import lists.",
+      upgradeUrl: "/pricing",
+    };
+  }
+
   const rawText = parsed.data.rawText;
 
   // First pass: heuristics.
@@ -119,6 +134,21 @@ export async function createFileImport(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid file" };
   }
   const userId = await currentUserId();
+
+  // Gating-layer — the WHOLE army-list import is Pro, including the parse
+  // step (PDF text can fall through to parseWithLlm, which spends LLM
+  // tokens). Gate BEFORE any decode/parse so free users never trigger the
+  // token cost. Inert while BILLING_ENFORCED is false (isProUser returns
+  // true for everyone until Stripe is live).
+  if (!(await isProUser(userId))) {
+    return {
+      ok: false,
+      error:
+        "Army-list import is a Pro feature. Upgrade to parse and import lists.",
+      upgradeUrl: "/pricing",
+    };
+  }
+
   const { filename, base64, size } = parsed.data;
 
   let buffer: ArrayBuffer;

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/shell";
 import { TourProvider } from "@/components/tour";
+import { InstallBanner } from "@/components/pwa";
 import { MockProvider } from "@/mock/MockProvider";
 import { auth } from "@/auth";
 import { loadAppData } from "@/lib/appData";
@@ -32,6 +33,7 @@ export default async function AppGroupLayout({
     <MockProvider variant="populated" signedIn={signedIn} data={data}>
       <TourProvider seen={seenTutorial} signedIn={signedIn}>
         <AppShell signedIn={signedIn}>{children}</AppShell>
+        {signedIn && <InstallBanner />}
       </TourProvider>
     </MockProvider>
   );

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeOverrides } from "@/components/dev/ThemeOverrides";
+import { PwaRegister } from "@/components/pwa";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body className="min-h-full">
         {process.env.NODE_ENV !== "production" && <ThemeOverrides />}
         {children}
+        <PwaRegister />
         <Analytics />
       </body>
     </html>
