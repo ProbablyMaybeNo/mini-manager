@@ -11,6 +11,7 @@ import type {
   Project,
   ProjectType,
 } from "@/lib/types";
+import { ContinuePainting } from "./ContinuePainting";
 import { CreateProjectView } from "./CreateProjectView";
 import { InspectorShell } from "./InspectorShell";
 import { PlannerScreen } from "./PlannerScreen";
@@ -236,6 +237,17 @@ export function DashboardView({
                   </div>
                 </Panel>
                 </div>
+
+                {/* DOP-003 — "continue painting" tier fills the previously empty
+                    lower half: the projects mid-paint, ready to resume in one
+                    click. Renders nothing when nothing's in progress, so a fresh
+                    account's dashboard stays clean. */}
+                <ContinuePainting
+                  projects={projects}
+                  projectMinutes={projectMinutes}
+                  onResume={(p) => onFocusProject?.(p)}
+                  onOpenProject={openProject}
+                />
               </div>
               {/* RightRail steps aside while the desktop pane occupies the
                   right column (DOP-002). RF-11: hidden below xl — the mobile
