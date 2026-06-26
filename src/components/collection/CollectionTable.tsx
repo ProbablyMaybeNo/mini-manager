@@ -164,10 +164,24 @@ export function CollectionTable({
         </div>
       </div>
 
-      {/* Below the table's natural width the wrapper scrolls horizontally
+      {/* DOP-012 — a truly-empty collection renders a compact empty block
+          instead of a full-width (min-w-760px) header-only table, so two empty
+          collections sit side-by-side without each forcing a wide horizontal
+          scrollbar + a tall void. The wide scrolling table only appears once
+          there are rows (or a filter hid them). */}
+      {items.length === 0 ? (
+        <EmptyState
+          glyph={kind === "paint" ? "▤" : "◈"}
+          title={`No ${label.toLowerCase()}s yet`}
+          hint={`Paste a store URL above, or add your first ${label.toLowerCase()} by hand.`}
+          action={{ label: `+ Add ${label.toLowerCase()}`, onClick: onAdd, variant: "add" }}
+          className="py-8"
+        />
+      ) : (
+      /* Below the table's natural width the wrapper scrolls horizontally
           rather than letting w-full compress the cells and clip text
           mid-word (UX-002). min-w mirrors the library PaintListTable pattern
-          (min-w-[680px]); the collection tables carry more columns. */}
+          (min-w-[680px]); the collection tables carry more columns. */
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse">
           <thead>
@@ -185,25 +199,14 @@ export function CollectionTable({
           </thead>
           <tbody>
             {visible.length === 0 ? (
+              // items.length === 0 is handled above (compact block); this branch
+              // is only the "filter hid every row" case (DOP-012).
               <tr>
                 <td colSpan={cols.length} className="px-3 py-4">
                   <EmptyState
                     glyph={kind === "paint" ? "▤" : "◈"}
-                    title={
-                      items.length === 0
-                        ? `No ${label.toLowerCase()}s yet`
-                        : "No matches for this filter"
-                    }
-                    hint={
-                      items.length === 0
-                        ? `Paste a store URL above, or add your first ${label.toLowerCase()} by hand.`
-                        : "Adjust the status filter to see more."
-                    }
-                    action={
-                      items.length === 0
-                        ? { label: `+ Add ${label.toLowerCase()}`, onClick: onAdd, variant: "add" as const }
-                        : undefined
-                    }
+                    title="No matches for this filter"
+                    hint="Adjust the status filter to see more."
                     className="py-8"
                   />
                 </td>
@@ -314,14 +317,19 @@ export function CollectionTable({
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Restyled add button — shared kit Button (R493). Neon green, the
-          collection accent the painter confirmed (MM-37/38/42/43). */}
-      <div className="flex border-t border-cyan/20 pt-3">
-        <Button variant="add" size="sm" onClick={onAdd}>
-          + Add {label.toLowerCase()}
-        </Button>
-      </div>
+          collection accent the painter confirmed (MM-37/38/42/43). Hidden when
+          the collection is empty — the compact empty block carries its own
+          + Add action, so this would be a duplicate (DOP-012). */}
+      {items.length > 0 && (
+        <div className="flex border-t border-cyan/20 pt-3">
+          <Button variant="add" size="sm" onClick={onAdd}>
+            + Add {label.toLowerCase()}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

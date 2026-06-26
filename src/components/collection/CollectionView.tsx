@@ -63,7 +63,11 @@ export function CollectionView({
       ) : status === "loading" ? (
         <div className="h-64 animate-pulse border border-cyan/20 bg-cyan/5" aria-busy="true" />
       ) : (
-        <>
+        // DOP-012 — the two collections sit side-by-side once there's room
+        // (xl+), so two short/empty tables stop each claiming the full page
+        // width and leaving a tall void. They start at the top (items-start) so
+        // an empty table only reserves its own height, not the taller sibling's.
+        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
           <Panel label="MY PAINT COLLECTION" cornerTicks className="p-4 pt-5">
             <CollectionTable
               kind="paint"
@@ -90,7 +94,7 @@ export function CollectionView({
               onAdd={onAddModel}
             />
           </Panel>
-        </>
+        </div>
       )}
       </div>
 
