@@ -396,6 +396,8 @@ export function ProjectsTable({
 
           <div className="mt-2 flex flex-wrap items-center gap-2 pl-9">
             <TypeChip type={p.type} />
+            {/* RF-12: surface priority on the card to match the desktop row. */}
+            <PriorityDropdown projectId={p.id} value={p.priority} />
             {minutes > 0 && (
               <span className="font-num2 text-num2 tabular-nums text-cyan">
                 {formatMinutes(minutes)}
@@ -403,6 +405,7 @@ export function ProjectsTable({
             )}
           </div>
 
+          {/* RF-12: completion bar, matching the desktop row's Completion cell. */}
           <div className="mt-2 pl-9">
             <ProgressBar
               percent={p.completionPercent}
