@@ -31,7 +31,11 @@ export function InspectorPane({
   return (
     <section
       aria-label="Project inspector"
-      className="flex h-full w-[672px] shrink-0 flex-col border-l border-cyan/40 bg-bg shadow-[-18px_0_50px_-18px_rgba(0,0,0,0.9)]"
+      // Wider inspector (RF-5): ~840px, 880 at 2xl, but capped at 60vw so the
+      // left projects table keeps a usable width on common desktops (~1280px →
+      // pane 768px, table ~512px with its own horizontal scroll) and never
+      // forces the table off-screen.
+      className="flex h-full w-[840px] max-w-[60vw] shrink-0 flex-col border-l border-cyan/40 bg-bg shadow-[-18px_0_50px_-18px_rgba(0,0,0,0.9)] 2xl:w-[880px]"
     >
       <header className="flex items-start justify-between border-b border-cyan/40 px-4 py-3">
         <div>
