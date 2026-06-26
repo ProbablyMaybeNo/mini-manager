@@ -13,6 +13,7 @@ import type {
 } from "@/lib/types";
 import { CreateProjectView } from "./CreateProjectView";
 import { InspectorShell } from "./InspectorShell";
+import { PlannerScreen } from "./PlannerScreen";
 import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectsTable } from "./ProjectsTable";
 import { RightRail } from "./RightRail";
@@ -89,6 +90,8 @@ export function DashboardView({
   // RF-8: "+ New Project" opens the project page in CREATE mode (blank fields);
   // no row is persisted until SAVE. Mutually exclusive with the edit inspector.
   const [creating, setCreating] = useState(false);
+  // RF-11: the mobile full-screen PLANNER, opened from the Upcoming-Events bar.
+  const [plannerOpen, setPlannerOpen] = useState(false);
   const isDesktop = useIsDesktop();
 
   // Derive the selected project from the live tree (not a snapshot) so an
@@ -232,19 +235,49 @@ export function DashboardView({
                 </div>
               </div>
               {/* RightRail steps aside while the desktop pane occupies the
-                  right column (DOP-002). */}
-              {!twoPane && <RightRail events={events} activity={activity} />}
+                  right column (DOP-002). RF-11: hidden below xl — the mobile
+                  dashboard shows only cards + the Upcoming-Events bar, which
+                  opens the full-screen PlannerScreen instead. */}
+              {!twoPane && (
+                <div className="hidden xl:flex">
+                  <RightRail events={events} activity={activity} />
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Bottom UPCOMING-EVENTS ticker restored — surfaces the dashboard's
-            calendar events so newly-added dates show up immediately. */}
-        <UpcomingEventsBar events={status === "ready" ? upcomingEvents : []} />
+        {/* Bottom UPCOMING-EVENTS ticker. Desktop (xl+): the informational
+            ticker. Mobile (RF-11): a tappable bar that opens the full-screen
+            PlannerScreen (calendar + +Date + activity tracker). */}
+        <div className="hidden xl:block">
+          <UpcomingEventsBar events={status === "ready" ? upcomingEvents : []} />
+        </div>
+        <button
+          type="button"
+          onClick={() => setPlannerOpen(true)}
+          aria-label="Open planner — upcoming events"
+          className="flex w-full items-center gap-3 border-t border-cyan/40 bg-bg-raised/40 px-4 py-3 text-left hover:bg-cyan/5 focus:outline-none focus-visible:bg-cyan/10 xl:hidden"
+        >
+          <span aria-hidden className="shrink-0 text-cyan">🗓</span>
+          <span className="shrink-0 label-osd text-fg">Upcoming events</span>
+          <span className="min-w-0 flex-1 truncate font-body text-body text-fg-dim">
+            {status === "ready" && upcomingEvents.length > 0
+              ? upcomingEvents[0].name
+              : "Nothing scheduled"}
+          </span>
+          <span aria-hidden className="shrink-0 text-cyan">›</span>
+        </button>
       </div>
 
       {inspector}
       {createInspector}
+      <PlannerScreen
+        open={plannerOpen}
+        onClose={() => setPlannerOpen(false)}
+        events={events}
+        activity={activity}
+      />
     </div>
   );
 }
