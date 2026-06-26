@@ -48,12 +48,18 @@ function offsetForIndex(harmony: HarmonyKey, i: number): number {
  */
 export function ColourWheelTool({
   closestPaint,
+  rankPaints,
   onSavePalette,
   onSendToRecipe,
   onAssignPaint,
   seedHex,
 }: {
   closestPaint: (hex: string) => Paint | null;
+  /** DOP-013 — ranked alternative paints for a harmony swatch (CIEDE2000),
+   *  beyond the single closest. Fills the right panel's lower void with the
+   *  "more matches" each pick has across brands. When omitted, only the single
+   *  closest paint is shown (back-compat). */
+  rankPaints?: (hex: string, n: number) => Paint[];
   onSavePalette: (hexes: string[]) => void;
   onSendToRecipe: (paints: Paint[]) => void;
   /** Opens the shared ColorPicker to assign a real paint to a planned swatch. */
@@ -66,6 +72,17 @@ export function ColourWheelTool({
   const [light, setLight] = useState(50);
   const [harmony, setHarmony] = useState<HarmonyKey>("complementary");
   const [pinned, setPinned] = useState<ReadonlySet<string>>(new Set());
+  // DOP-013 — which harmony hexes have their "more matches" alternates expanded.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+
+  function toggleExpanded(hex: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(hex)) next.delete(hex);
+      else next.add(hex);
+      return next;
+    });
+  }
 
   // Seed the primary pick once from a deep-link hex.
   useEffect(() => {
@@ -176,8 +193,16 @@ export function ColourWheelTool({
         <div className="flex flex-col gap-2">
           {picks.map(({ hex, paint }, i) => {
             const isPinned = pinned.has(hex);
+            // DOP-013 — alternates = the next-closest paints after the primary
+            // match, so each harmony swatch offers a few real substitutes
+            // (different brands / shades) instead of one lonely row.
+            const isExpanded = expanded.has(hex);
+            const alternates = rankPaints
+              ? rankPaints(hex, 5).filter((p) => p.id !== paint?.id).slice(0, 4)
+              : [];
             return (
-              <div className="flex flex-wrap items-center gap-3 gap-y-2 border border-cyan/20 p-2" key={i}>
+              <div className="flex flex-col gap-2 border border-cyan/20 p-2" key={i}>
+              <div className="flex flex-wrap items-center gap-3 gap-y-2">
                 <button
                   type="button"
                   aria-pressed={isPinned}
@@ -234,6 +259,56 @@ export function ColourWheelTool({
                     Assign
                   </Button>
                 )}
+              </div>
+
+              {/* DOP-013 — "more matches": a disclosure of the next-closest
+                  paints for this harmony swatch, filling the right panel's
+                  lower void with real substitutes rather than dead space. */}
+              {alternates.length > 0 && (
+                <div className="flex flex-col gap-1.5 border-t border-cyan/10 pt-2">
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleExpanded(hex)}
+                    className="flex items-center gap-1 self-start label-osd text-fg-faint hover:text-cyan"
+                  >
+                    <span aria-hidden className={cn("transition-transform", isExpanded && "rotate-90")}>
+                      ▸
+                    </span>
+                    {isExpanded ? "Fewer matches" : `More matches (${alternates.length})`}
+                  </button>
+                  {isExpanded && (
+                    <ul className="flex flex-wrap gap-2">
+                      {alternates.map((alt) => (
+                        <li key={alt.id}>
+                          <button
+                            type="button"
+                            onClick={onAssignPaint ? () => onAssignPaint(alt.hex) : undefined}
+                            disabled={!onAssignPaint}
+                            title={`${alt.brand} ${alt.name} · ${alt.hex}`}
+                            className={cn(
+                              "flex items-center gap-2 border border-cyan/20 p-1.5 text-left",
+                              onAssignPaint
+                                ? "hover:border-cyan/60 hover:bg-cyan/5"
+                                : "cursor-default",
+                            )}
+                          >
+                            <Swatch hex={alt.hex} size="md" />
+                            <span className="min-w-0">
+                              <span className="block max-w-[10rem] truncate font-body text-body text-fg">
+                                {alt.name}
+                              </span>
+                              <span className="block truncate label-osd text-fg-faint">
+                                {alt.brand}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
               </div>
             );
           })}

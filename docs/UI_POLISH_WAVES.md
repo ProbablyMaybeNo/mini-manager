@@ -54,7 +54,7 @@ Consolidated from three UX audits (2026-06-24). Source-of-truth detail + screens
 - [ ] **DOP-017** — [ARCH — needs Ross] Give projects a real resource-list page (sort/filter/bulk) for the power-user audience; `/projects` currently === dashboard.
 - [ ] **DOP-005** — [ARCH — needs Ross] Untangle FOCUS vs PLANNER vs `/planner` naming + give the calendar a clear home. Naming/IA decision.
 - [ ] **DOP-015** — Surface existing cross-feature bridges (Wheel→Recipe, Library→paint-pick) at the moment of need.
-- [ ] **DOP-013** — Fill the Color-Wheel's lower-right void with more matches (hold the rest of the layout — it's already good).
+- [x] **DOP-013** — Each harmony swatch in the wheel's right panel ("HARMONY · CLOSEST PAINTS") now has a **"More matches (N)"** disclosure that reveals the next-closest paints (CIEDE2000 alternates across brands, primary excluded) as assignable swatch tiles — filling the lower-right void with real substitutes instead of dead space. New optional `rankPaints` prop on `ColourWheelTool` (back-compat: omitted → single closest only); wheel page feeds it via `rankMatches`. Rest of the layout held.
 - [ ] **MOP-011** — Stat strip: reflow the 4-up to 2×2 on mobile (overlap at 375px); keep the "N" mark off the action row.
 
 ## Wave 5 — Mobile delight & PWA (beyond-minimum)

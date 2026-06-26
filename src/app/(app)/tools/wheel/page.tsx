@@ -7,7 +7,7 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { usePaletteSaver } from "@/components/tools/usePaletteSaver";
 import { useToast } from "@/components/kit";
 import { AssignToRecipeDialog, type AssignSwatch } from "@/components/recipe/AssignToRecipeDialog";
-import { closestPaint } from "@/lib/toolMatch";
+import { closestPaint, rankMatches } from "@/lib/toolMatch";
 import type { Paint } from "@/lib/types";
 import { useCatalog } from "../useCatalog";
 
@@ -50,6 +50,8 @@ function ColourWheelRoute() {
       <ColourWheelTool
         seedHex={seedHex}
         closestPaint={(hex) => closestPaint(hex, paints)}
+        // DOP-013 — ranked alternatives feed the "more matches" disclosure.
+        rankPaints={(hex, n) => rankMatches(hex, paints, undefined, n).map((m) => m.paint)}
         onSavePalette={save}
         onSendToRecipe={() => router.push("/recipes")}
         // Per-swatch "assign paint" → assign that planned colour into a recipe.
