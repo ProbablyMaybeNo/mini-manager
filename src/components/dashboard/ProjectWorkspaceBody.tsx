@@ -77,21 +77,74 @@ const CHILD_TYPES: Partial<Record<ProjectType, ProjectType[]>> = {
   Unit: ["Model"],
 };
 
-/** A cyan-bordered section box matching the rest of the app, with a label
- *  notched into the top border and a one-line body hint. */
-function SectionBox({
+/** Mobile quick-jump rail targets (MOP-005) — order matches the section order. */
+const QUICK_JUMP_SECTIONS: { anchorId: string; label: string }[] = [
+  { anchorId: "inspector-details", label: "Details" },
+  { anchorId: "inspector-sub-projects", label: "Sub" },
+  { anchorId: "inspector-recipes", label: "Recipes" },
+  { anchorId: "inspector-progress", label: "Progress" },
+  { anchorId: "inspector-info", label: "Info" },
+];
+
+/**
+ * A cyan-bordered section box matching the rest of the app, with a label
+ * notched into the top border and a one-line body hint.
+ *
+ * Collapsible on mobile (MOP-005): below `md` the body collapses behind a
+ * chevron toggle (local state, NOT native <details>), with `defaultOpen`
+ * controlling its initial state — SUB-PROJECTS + PROGRESS open by default
+ * (Ross's locked M4 call), the rest collapsed for a glanceable mobile view.
+ * On `md`+ every section is always expanded (`md:block` forces the body open
+ * and `md:hidden` removes the toggle) — collapsing is purely a mobile space
+ * affordance. The chevron rotation rides the global `prefers-reduced-motion`
+ * reset (globals.css zeroes transition-duration), so reduced-motion users get
+ * an instant snap (M7 pattern).
+ *
+ * The outer `id={anchorId}` is the scroll target for the mobile quick-jump rail.
+ */
+function CollapsibleSection({
   label,
   hint,
+  anchorId,
+  defaultOpen,
   children,
 }: {
   label: string;
   hint?: string;
+  anchorId: string;
+  defaultOpen: boolean;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const bodyId = `${anchorId}-body`;
   return (
     <Panel label={label} className="p-4 pt-5">
-      {hint && <p className="mb-3 font-body text-body text-fg-dim">{hint}</p>}
-      {children}
+      {/* scroll-mt keeps the notched label clear of the sticky header when the
+          quick-jump rail scrolls this section into view. */}
+      <div id={anchorId} className="scroll-mt-4">
+        {/* Mobile-only collapse toggle. The Panel's notched label is the section
+            identity, so the toggle is chevron-only with an aria-label naming the
+            section; it sits as a full-width row above the body to give a ≥44px
+            hit target without duplicating the visible label text. */}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          aria-label={`${open ? "Collapse" : "Expand"} ${label} section`}
+          onClick={() => setOpen((v) => !v)}
+          className="-mt-2 -mr-2 mb-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center justify-end md:hidden"
+        >
+          <span aria-hidden className={cn("shrink-0 text-cyan transition-transform", open && "rotate-90")}>
+            ▸
+          </span>
+        </button>
+
+        {/* Body: hidden when collapsed on mobile; always shown on md+. */}
+        <div id={bodyId} className={cn(open ? "block" : "hidden", "md:block")}>
+          {hint && <p className="mb-3 font-body text-body text-fg-dim">{hint}</p>}
+          {children}
+        </div>
+      </div>
     </Panel>
   );
 }
@@ -270,8 +323,23 @@ export function ProjectWorkspaceBody({
   // title so the body title is an h2. Visual class is identical either way.
   const titleTag = variant === "page" ? "h1" : "h2";
 
+  // Mobile quick-jump (MOP-005): scroll a section into view. If the target
+  // section is collapsed, click its toggle first so it opens before we scroll —
+  // keeps each section's collapse state local while still landing the painter on
+  // expanded content. Scoped to this body's DOM via rootRef.
+  const rootRef = useRef<HTMLDivElement>(null);
+  function quickJump(anchorId: string) {
+    const root = rootRef.current;
+    if (!root) return;
+    const toggle = root.querySelector<HTMLButtonElement>(
+      `#${anchorId} > button[aria-expanded]`,
+    );
+    if (toggle?.getAttribute("aria-expanded") === "false") toggle.click();
+    root.querySelector(`#${anchorId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={rootRef} className="flex flex-col gap-4">
       {/* Title + overall progress + focus target */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
@@ -289,9 +357,31 @@ export function ProjectWorkspaceBody({
         <FocusTargetButton onClick={() => onStartSession?.(project)} />
       </div>
 
+      {/* Mobile quick-jump rail (MOP-005): segmented section anchors. Hidden on
+          md+ where every section is already expanded and on-screen. Scrolls (and
+          expands if needed) the matching section. Horizontally scrollable so it
+          never forces page-width overflow on narrow phones. */}
+      <nav
+        aria-label="Jump to inspector section"
+        className="-mx-1 flex gap-1 overflow-x-auto px-1 md:hidden"
+      >
+        {QUICK_JUMP_SECTIONS.map((s) => (
+          <button
+            key={s.anchorId}
+            type="button"
+            onClick={() => quickJump(s.anchorId)}
+            className="shrink-0 border border-cyan/40 px-3 py-1 font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan focus:outline-none focus-visible:border-cyan focus-visible:text-cyan"
+          >
+            {s.label}
+          </button>
+        ))}
+      </nav>
+
       {/* DETAILS — type / status / priority */}
-      <SectionBox
+      <CollapsibleSection
         label="DETAILS"
+        anchorId="inspector-details"
+        defaultOpen={false}
         hint="Set the type, where it sits in your pipeline, and how urgent it is."
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -339,11 +429,13 @@ export function ProjectWorkspaceBody({
             {[detail.faction, detail.game].filter(Boolean).join(" · ")}
           </p>
         )}
-      </SectionBox>
+      </CollapsibleSection>
 
       {/* SUB-PROJECTS — the structure list. Click a row to open its panel. */}
-      <SectionBox
+      <CollapsibleSection
         label="SUB-PROJECTS"
+        anchorId="inspector-sub-projects"
+        defaultOpen
         hint="Track your project from the macro to the micro — add units, models, warbands or terrain, all under one roof."
       >
         {children.length > 0 ? (
@@ -397,11 +489,13 @@ export function ProjectWorkspaceBody({
               + Sub-project
             </Button>
           ))}
-      </SectionBox>
+      </CollapsibleSection>
 
       {/* RECIPES — every recipe across this project + its sub-projects. */}
-      <SectionBox
+      <CollapsibleSection
         label="RECIPES"
+        anchorId="inspector-recipes"
+        defaultOpen={false}
         hint="Every paint recipe attached to this project and its sub-projects. Click one to open it."
       >
         {recipeCards === null ? (
@@ -451,11 +545,13 @@ export function ProjectWorkspaceBody({
             </Button>
           </div>
         )}
-      </SectionBox>
+      </CollapsibleSection>
 
       {/* PROGRESS — the working table: per-sub-project stage + completion. */}
-      <SectionBox
+      <CollapsibleSection
         label="PROGRESS"
+        anchorId="inspector-progress"
+        defaultOpen
         hint="Adjust each sub-project's stage and completion right here — completed rows light up green."
       >
         {children.length > 0 ? (
@@ -532,11 +628,13 @@ export function ProjectWorkspaceBody({
             <StatCell label="Time" value={formatMinutes(loggedMinutes)} />
           )}
         </div>
-      </SectionBox>
+      </CollapsibleSection>
 
       {/* INFO — notes / techniques, deadline, reference image. */}
-      <SectionBox
+      <CollapsibleSection
         label="INFO"
+        anchorId="inspector-info"
+        defaultOpen={false}
         hint="Notes and techniques, a target date, and a reference image to paint towards."
       >
         <textarea
@@ -585,7 +683,7 @@ export function ProjectWorkspaceBody({
             </Button>
           </div>
         </div>
-      </SectionBox>
+      </CollapsibleSection>
 
       {error && <p className="font-body text-body text-red">▸ {error}</p>}
 
