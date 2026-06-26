@@ -37,6 +37,7 @@ import {
 import { cn } from "@/lib/cn";
 import { formatMinutes, priorityAccent, statusAccent, STATUS_LABEL } from "@/lib/palette";
 import type { Priority, Project, ProjectStatus, ProjectType } from "@/lib/types";
+import { InspectorActionBar } from "./InspectorActionBar";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
   "WISHLIST",
@@ -588,54 +589,52 @@ export function ProjectWorkspaceBody({
 
       {error && <p className="font-body text-body text-red">▸ {error}</p>}
 
-      {/* Actions — focus / open page (panel only) / archive / duplicate / delete. */}
-      <div className="flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-        {onStartSession && (
-          <Button size="sm" onClick={() => onStartSession(project)}>
-            ▸ Focus
-          </Button>
-        )}
-        {variant === "panel" && (
-          // Hidden on mobile (MOP-012) — the panel is already full-bleed below
-          // md, so "open full page" is redundant there; it only earns its place
-          // on desktop where the panel is a capped side column.
-          <Button
-            variant="secondary"
-            size="sm"
-            className="hidden md:inline-flex"
-            onClick={() => router.push(`/projects/${project.id}`)}
-          >
-            ⤢ Open full page
-          </Button>
-        )}
-        <Button
-          variant="tertiary"
-          size="sm"
-          disabled={pending}
-          onClick={() =>
-            run(() => setProjectArchived({ id: project.id, archived: !detail?.archived }))
-          }
-        >
-          {detail?.archived ? "⊞ Unarchive" : "⊟ Archive"}
-        </Button>
-        <Button
-          variant="tertiary"
-          size="sm"
-          disabled={pending}
-          onClick={() =>
-            run(async () => {
-              const res = await duplicateProject({ id: project.id });
-              if (res.ok && res.data?.id) onOpenSubProject?.(res.data.id);
-              return res;
-            })
-          }
-        >
-          ⧉ Duplicate
-        </Button>
-        <Button variant="danger" size="sm" disabled={pending} onClick={() => setConfirmingDelete(true)}>
-          🗑 Delete
-        </Button>
-      </div>
+      {/* Sticky action bar (MOP-002): Focus stays prominent; Open full page /
+          Archive / Duplicate / Delete are demoted into the ⋯ overflow so the
+          destructive verb leaves the thumb-rest zone. Delete still routes
+          through the ConfirmDialog below. */}
+      <InspectorActionBar
+        onFocus={onStartSession ? () => onStartSession(project) : undefined}
+        disabled={pending}
+        actions={[
+          // Hidden on mobile (MOP-012) — the panel is full-bleed below md, so
+          // "open full page" is redundant there; desktop-only via desktopOnly.
+          ...(variant === "panel"
+            ? [
+                {
+                  key: "open-full",
+                  label: "⤢ Open full page",
+                  desktopOnly: true,
+                  onClick: () => router.push(`/projects/${project.id}`),
+                },
+              ]
+            : []),
+          {
+            key: "archive",
+            label: detail?.archived ? "⊞ Unarchive" : "⊟ Archive",
+            onClick: () =>
+              run(() =>
+                setProjectArchived({ id: project.id, archived: !detail?.archived }),
+              ),
+          },
+          {
+            key: "duplicate",
+            label: "⧉ Duplicate",
+            onClick: () =>
+              run(async () => {
+                const res = await duplicateProject({ id: project.id });
+                if (res.ok && res.data?.id) onOpenSubProject?.(res.data.id);
+                return res;
+              }),
+          },
+          {
+            key: "delete",
+            label: "🗑 Delete",
+            tone: "danger" as const,
+            onClick: () => setConfirmingDelete(true),
+          },
+        ]}
+      />
       <ConfirmDialog
         open={confirmingDelete}
         breadcrumb="PROJECT"
