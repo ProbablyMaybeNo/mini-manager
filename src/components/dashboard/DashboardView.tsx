@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import { useIsDesktop } from "@/hooks/useBreakpoint";
 import type {
   ActivityEntry,
   CalendarEvent,
@@ -74,6 +75,7 @@ export function DashboardView({
 }: DashboardViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const isDesktop = useIsDesktop();
 
   // Derive the selected project from the live tree (not a snapshot) so an
   // inline edit + router.refresh() shows fresh data in the open panel.
@@ -105,69 +107,87 @@ export function DashboardView({
     }
   }, [openProjectId, projects, onOpenConsumed]);
 
+  // Desktop master-detail (DOP-002): when the inspector is open on md+, the
+  // pane becomes a persistent in-flow right column (no scrim, table stays
+  // visible) and the RightRail steps aside to make room for it. Below md the
+  // inspector is an overlay (SlideOutPanel / the bottom sheet) so the RightRail
+  // is irrelevant — keep it rendered there.
+  const twoPane = isDesktop && inspectorOpen;
+
+  const inspector = (
+    <ProjectPanelStack
+      projects={projects}
+      rootId={selected?.id ?? null}
+      projectMinutes={projectMinutes}
+      open={inspectorOpen}
+      onClose={() => setInspectorOpen(false)}
+      onStartSession={(p) => {
+        setInspectorOpen(false);
+        onStartSession?.(p);
+      }}
+      onAttachRecipe={(p) => onAttachRecipe?.(p)}
+    />
+  );
+
   return (
     // Solid black canvas (vZsx) — overrides the near-black page token for this
     // surface so the dashboard reads as a true terminal background.
-    <div className="flex h-full flex-col bg-black">
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-        {/* No tagline text bar — the "+ New Project" button + the obvious
-            PROJECTS panel already make the page's purpose clear (drev). */}
-        <PageHeader title="DASHBOARD" />
+    // Top-level flex-row hosts the desktop master-detail pane to the right of
+    // the dashboard column; below md the pane is a fixed overlay so this row is
+    // a no-op single column.
+    <div className="flex h-full bg-black">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
+          {/* No tagline text bar — the "+ New Project" button + the obvious
+              PROJECTS panel already make the page's purpose clear (drev). */}
+          <PageHeader title="DASHBOARD" />
 
-        {status === "error" ? (
-          <ErrorState onRetry={onRetry} />
-        ) : status === "loading" ? (
-          <LoadingState />
-        ) : (
-          <div className="flex flex-col gap-6 xl:flex-row">
-            <div className="flex min-w-0 flex-1 flex-col gap-6">
-              {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
-              <WelcomeCard />
-              <StatRow summary={summary} />
-              <div data-tour="dashboard-projects">
-              <Panel label="PROJECTS" cornerTicks className="p-4">
-                <ProjectsTable
-                  projects={projects}
-                  projectMinutes={projectMinutes}
-                  selectedId={selected?.id}
-                  onOpenProject={openProject}
-                  onFocusProject={(p) => onFocusProject?.(p)}
-                  onAttachRecipe={(p) => onAttachRecipe?.(p)}
-                  onAddSubProject={onAddSubProject}
-                  onAddProject={onAddProject}
-                />
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-                  <Button variant="add" onClick={onAddProject} data-tour="dashboard-new-project">+ New Project</Button>
-                  {/* Upload-Army-List restored — opens the ArmyImportPanel
-                      slide-out wired through onUploadArmyList. */}
-                  <Button variant="secondary" onClick={onUploadArmyList}>
-                    ⬆ Upload Army List
-                  </Button>
+          {status === "error" ? (
+            <ErrorState onRetry={onRetry} />
+          ) : status === "loading" ? (
+            <LoadingState />
+          ) : (
+            <div className="flex flex-col gap-6 xl:flex-row">
+              <div className="flex min-w-0 flex-1 flex-col gap-6">
+                {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
+                <WelcomeCard />
+                <StatRow summary={summary} />
+                <div data-tour="dashboard-projects">
+                <Panel label="PROJECTS" cornerTicks className="p-4">
+                  <ProjectsTable
+                    projects={projects}
+                    projectMinutes={projectMinutes}
+                    selectedId={selected?.id}
+                    onOpenProject={openProject}
+                    onFocusProject={(p) => onFocusProject?.(p)}
+                    onAttachRecipe={(p) => onAttachRecipe?.(p)}
+                    onAddSubProject={onAddSubProject}
+                    onAddProject={onAddProject}
+                  />
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
+                    <Button variant="add" onClick={onAddProject} data-tour="dashboard-new-project">+ New Project</Button>
+                    {/* Upload-Army-List restored — opens the ArmyImportPanel
+                        slide-out wired through onUploadArmyList. */}
+                    <Button variant="secondary" onClick={onUploadArmyList}>
+                      ⬆ Upload Army List
+                    </Button>
+                  </div>
+                </Panel>
                 </div>
-              </Panel>
               </div>
+              {/* RightRail steps aside while the desktop pane occupies the
+                  right column (DOP-002). */}
+              {!twoPane && <RightRail events={events} activity={activity} />}
             </div>
-            <RightRail events={events} activity={activity} />
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Bottom UPCOMING-EVENTS ticker restored — surfaces the dashboard's
+            calendar events so newly-added dates show up immediately. */}
+        <UpcomingEventsBar events={status === "ready" ? upcomingEvents : []} />
       </div>
 
-      {/* Bottom UPCOMING-EVENTS ticker restored — surfaces the dashboard's
-          calendar events so newly-added dates show up immediately. */}
-      <UpcomingEventsBar events={status === "ready" ? upcomingEvents : []} />
-
-      <ProjectPanelStack
-        projects={projects}
-        rootId={selected?.id ?? null}
-        projectMinutes={projectMinutes}
-        open={inspectorOpen}
-        onClose={() => setInspectorOpen(false)}
-        onStartSession={(p) => {
-          setInspectorOpen(false);
-          onStartSession?.(p);
-        }}
-        onAttachRecipe={(p) => onAttachRecipe?.(p)}
-      />
+      {inspector}
     </div>
   );
 }
