@@ -149,83 +149,60 @@ function CollapsibleSection({
   );
 }
 
-/** The red pixelated target — sets this project as the focus-bench subject. */
-function FocusTargetButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Focus this project"
-      title="Focus — open this project in the focus bench timer to track your painting session."
-      className="group shrink-0 border border-red/40 p-1.5 text-red transition-colors hover:bg-red/10 hover:border-red"
-    >
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 11 11"
-        shapeRendering="crispEdges"
-        aria-hidden="true"
-        className="text-glow-red"
-      >
-        {/* outer pixel ring */}
-        <path
-          fill="currentColor"
-          d="M3 0h5v1H3zM2 1h1v1H2zM8 1h1v1H8zM1 2h1v1H1zM9 2h1v1H9zM0 3h1v5H0zM10 3h1v5h-1zM1 8h1v1H1zM9 8h1v1H9zM2 9h1v1H2zM8 9h1v1H8zM3 10h5v1H3z"
-        />
-        {/* centre dot */}
-        <path fill="currentColor" d="M4 4h3v3H4z" />
-      </svg>
-    </button>
-  );
-}
-
-/** Inline-editable project title in the page-title font. Commits on blur. */
-function EditableTitle({
+/**
+ * Inline-editable project NAME field, relocated into DETAILS (RF-4) now that the
+ * big duplicate title is gone — the breadcrumb / page heading names the project,
+ * this is where you rename it. Seeded from the project name, owned locally so
+ * typing stays responsive, commits on blur / Enter via updateProjectName.
+ */
+function RenameField({
   id,
-  title,
-  tag: Tag,
+  name,
+  disabled,
   onSaved,
 }: {
   id: string;
-  title: string;
-  tag: "h1" | "h2";
+  name: string;
+  disabled?: boolean;
   onSaved: () => void;
 }) {
-  const ref = useRef<HTMLHeadingElement>(null);
+  const [value, setValue] = useState(name);
   const [, start] = useTransition();
+  // Re-seed if the project changes underneath us (e.g. switching tabs).
+  const lastName = useRef(name);
+  if (lastName.current !== name) {
+    lastName.current = name;
+    setValue(name);
+  }
 
   function commit() {
-    const next = ref.current?.textContent?.trim() ?? "";
-    if (!next || next === title) {
-      if (ref.current) ref.current.textContent = title;
+    const next = value.trim();
+    if (!next || next === name) {
+      setValue(name);
       return;
     }
     start(async () => {
       const res = await updateProjectName({ id, name: next });
       if (res.ok) onSaved();
-      else if (ref.current) ref.current.textContent = title;
+      else setValue(name);
     });
   }
 
   return (
-    <Tag
-      ref={ref}
-      contentEditable
-      suppressContentEditableWarning
-      spellCheck={false}
-      role="textbox"
-      aria-label="Project name"
+    <Input
+      name="project-name"
+      label="Name"
+      value={value}
+      disabled={disabled}
+      onChange={(e) => setValue(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          ref.current?.blur();
+          (e.target as HTMLInputElement).blur();
         }
       }}
-      className="min-w-0 break-words font-title text-title leading-none text-green text-glow-green outline-none focus:bg-green/5"
-    >
-      {title}
-    </Tag>
+    />
   );
 }
 
@@ -318,11 +295,6 @@ export function ProjectWorkspaceBody({
     });
   }
 
-  // On the standalone /projects/[id] page the title is the document's primary
-  // heading (h1); in the slide-out the SlideOutPanel header supplies the dialog
-  // title so the body title is an h2. Visual class is identical either way.
-  const titleTag = variant === "page" ? "h1" : "h2";
-
   // Mobile quick-jump (MOP-005): scroll a section into view. If the target
   // section is collapsed, click its toggle first so it opens before we scroll —
   // keeps each section's collapse state local while still landing the painter on
@@ -340,23 +312,6 @@ export function ProjectWorkspaceBody({
 
   return (
     <div ref={rootRef} className="flex flex-col gap-4">
-      {/* Title + overall progress + focus target */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <EditableTitle
-            id={project.id}
-            title={project.title}
-            tag={titleTag}
-            onSaved={() => router.refresh()}
-          />
-          <span className="font-body text-body text-fg-dim">
-            {project.completionPercent}% complete
-            {detail?.archived ? " · ARCHIVED" : ""}
-          </span>
-        </div>
-        <FocusTargetButton onClick={() => onStartSession?.(project)} />
-      </div>
-
       {/* Mobile quick-jump rail (MOP-005): segmented section anchors. Hidden on
           md+ where every section is already expanded and on-screen. Scrolls (and
           expands if needed) the matching section. Horizontally scrollable so it
@@ -377,13 +332,22 @@ export function ProjectWorkspaceBody({
         ))}
       </nav>
 
-      {/* DETAILS — type / status / priority */}
+      {/* DETAILS — name / type / status / priority */}
       <CollapsibleSection
         label="DETAILS"
         anchorId="inspector-details"
         defaultOpen={false}
-        hint="Set the type, where it sits in your pipeline, and how urgent it is."
+        hint="Rename it, set the type, where it sits in your pipeline, and how urgent it is."
       >
+        {/* Rename lives here now (RF-4) — the big in-panel title was removed. */}
+        <div className="mb-3">
+          <RenameField
+            id={project.id}
+            name={project.title}
+            disabled={pending}
+            onSaved={() => router.refresh()}
+          />
+        </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="flex flex-col gap-1">
             <span className="label-osd text-fg-dim">Type</span>
