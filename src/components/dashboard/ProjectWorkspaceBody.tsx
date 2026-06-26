@@ -332,6 +332,31 @@ export function ProjectWorkspaceBody({
         ))}
       </nav>
 
+      {/* Compact PROGRESS summary strip (RF-6): a dense, glanceable trio at the
+          very top — total models · completed · time spent. The detailed
+          per-sub-project steppers + status dropdowns still live in the PROGRESS
+          section below. */}
+      <div className="flex items-center gap-2 border border-cyan/30 bg-bg-raised/30 px-3 py-2">
+        <ProgressStat
+          glyph="#"
+          label="total"
+          value={project.modelCount ?? 0}
+        />
+        <span aria-hidden className="text-fg-faint">·</span>
+        <ProgressStat
+          glyph="✓"
+          label="complete"
+          value={project.modelsComplete ?? 0}
+          accent="green"
+        />
+        <span aria-hidden className="text-fg-faint">·</span>
+        <ProgressStat
+          glyph="🕒"
+          label="time"
+          value={formatMinutes(loggedMinutes ?? 0)}
+        />
+      </div>
+
       {/* DETAILS — name / type / status / priority */}
       <CollapsibleSection
         label="DETAILS"
@@ -702,6 +727,37 @@ export function ProjectWorkspaceBody({
         }}
       />
     </div>
+  );
+}
+
+/** One cell of the compact top PROGRESS strip (RF-6): glyph + value + tiny
+ *  label, all on one dense line. */
+function ProgressStat({
+  glyph,
+  label,
+  value,
+  accent,
+}: {
+  glyph: string;
+  label: string;
+  value: React.ReactNode;
+  accent?: "green";
+}) {
+  return (
+    <span className="flex min-w-0 items-baseline gap-1.5">
+      <span aria-hidden className={cn("shrink-0", accent === "green" ? "text-green" : "text-cyan")}>
+        {glyph}
+      </span>
+      <span
+        className={cn(
+          "font-num2 text-num2 tabular-nums",
+          accent === "green" ? "text-green" : "text-fg",
+        )}
+      >
+        {value}
+      </span>
+      <span className="truncate label-osd text-fg-dim">{label}</span>
+    </span>
   );
 }
 
