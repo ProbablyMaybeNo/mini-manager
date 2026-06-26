@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Panel } from "@/components/kit";
-import { PageHeader } from "@/components/shell";
+import { PageContainer, PageHeader } from "@/components/shell";
 import { TOOL_THUMBS } from "./ToolThumbnails";
 
 interface ToolCard {
@@ -20,7 +20,7 @@ const TOOLS: ToolCard[] = [
 
 export function ToolsHubView() {
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <PageContainer>
       <PageHeader
         title="TOOLS"
         tagline="// colour utilities — turn an idea, photo, or colour into named, buyable paints"
@@ -50,6 +50,6 @@ export function ToolsHubView() {
           );
         })}
       </div>
-    </div>
+    </PageContainer>
   );
 }

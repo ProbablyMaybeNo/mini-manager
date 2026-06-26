@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { ActivityFeed, Panel } from "@/components/kit";
-import { PageHeader } from "@/components/shell";
+import { PageContainer, PageHeader } from "@/components/shell";
 import { useMockData } from "@/mock/MockProvider";
 import { PlannerCalendar } from "@/components/dashboard/PlannerCalendar";
 
@@ -21,12 +21,11 @@ function PlannerRoute() {
   const data = useMockData();
 
   return (
-    <div className="flex h-full flex-col bg-black">
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-        <PageHeader
-          title="PLANNER"
-          tagline="// tournaments, deadlines & your hobby calendar"
-        />
+    <PageContainer>
+      <PageHeader
+        title="PLANNER"
+        tagline="// tournaments, deadlines & your hobby calendar"
+      />
 
         {/* Calendar gets the lead column on desktop (it's the point of the
             page); the activity tracker rides alongside on lg+ and stacks
@@ -51,8 +50,7 @@ function PlannerRoute() {
             </Panel>
           </div>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }
 

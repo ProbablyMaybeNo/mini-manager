@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Panel, SearchField, SegmentedToggle, SlideOutPanel } from "@/components/kit";
-import { PageHeader } from "@/components/shell";
+import { PageContainer, PageHeader } from "@/components/shell";
 import type { LibraryFilter, MatchResult, Paint } from "@/lib/types";
 import { ColorMapRail } from "./ColorMapRail";
 import { FilterPanelContent } from "./FilterPanelContent";
@@ -76,7 +76,7 @@ export function LibraryView(props: LibraryViewProps) {
     filter.colors.length + filter.brands.length + filter.status.length + (filter.hex ? 1 : 0);
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <PageContainer>
       <PageHeader
         title="LIBRARY"
         tagline={`// every paint on the market — mark what you own or want (${totalCount.toLocaleString()} across all the major brands)`}
@@ -192,6 +192,6 @@ export function LibraryView(props: LibraryViewProps) {
           />
         )}
       </SlideOutPanel>
-    </div>
+    </PageContainer>
   );
 }

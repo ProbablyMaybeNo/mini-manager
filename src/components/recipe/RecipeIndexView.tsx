@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, EmptyState, Panel, SegmentedToggle } from "@/components/kit";
-import { PageHeader } from "@/components/shell";
+import { PageContainer, PageHeader } from "@/components/shell";
 import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
 import type { Project, Recipe } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
@@ -48,7 +48,7 @@ export function RecipeIndexView({
   const [view, setView] = useState<"table" | "cards">("table");
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <PageContainer>
       <PageHeader
         title="RECIPE"
         tagline="// build, manage, and share repeatable paint schemes"
@@ -151,6 +151,6 @@ export function RecipeIndexView({
           if (editingPaint) onEditPaint?.(editingPaint.recipe, editingPaint.index, sel);
         }}
       />
-    </div>
+    </PageContainer>
   );
 }
