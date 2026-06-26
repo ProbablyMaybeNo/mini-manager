@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SlideOutPanel } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
 import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project } from "@/lib/types";
 import { InspectorPane } from "./InspectorPane";
+import { ProjectBottomSheet } from "./ProjectBottomSheet";
 import { ProjectWorkspaceBody } from "./ProjectWorkspaceBody";
 
 /** Find a project anywhere in the tree by id (rows + their sub-projects). */
@@ -333,18 +333,17 @@ export function ProjectPanelStack({
     );
   }
 
-  // Mobile (< md): the overlay slide-out (the capstone swaps in the bottom
-  // sheet here; SlideOutPanel stays the MobileTopBar nav surface).
+  // Mobile (< md): the true bottom sheet (capstone). SlideOutPanel stays the
+  // MobileTopBar nav surface; the inspector now uses ProjectBottomSheet.
   return (
-    <SlideOutPanel
+    <ProjectBottomSheet
       open={visible}
       onClose={onClose}
       breadcrumb={breadcrumb}
       title={active?.title ?? ""}
-      width="max-w-2xl"
     >
       {tabStrip}
       {body}
-    </SlideOutPanel>
+    </ProjectBottomSheet>
   );
 }

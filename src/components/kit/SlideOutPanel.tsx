@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { CloseButton } from "./CloseButton";
 
 /**
@@ -29,49 +30,9 @@ export function SlideOutPanel({
   footer?: ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const lastFocused = useRef<HTMLElement | null>(null);
-  // MM-24 — keep `onClose` out of the focus-trap effect deps via a ref.
-  // Callers pass a fresh inline `onClose` on every render; if the effect
-  // depended on it, each parent re-render (e.g. typing in an input INSIDE
-  // the panel) tore down + re-ran this effect, which re-focused the panel
-  // and dropped focus from the field after every keystroke. The effect now
-  // runs only when `open` flips.
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    if (!open) return;
-    lastFocused.current = document.activeElement as HTMLElement | null;
-    const panel = panelRef.current;
-    panel?.focus();
-
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onCloseRef.current();
-        return;
-      }
-      if (e.key !== "Tab" || !panel) return;
-      const focusables = panel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      lastFocused.current?.focus();
-    };
-  }, [open]);
+  // Shared modal focus trap (MM-24 ref pattern lives inside the hook now):
+  // focus in on open, Tab cycle, Escape closes, focus restored on close.
+  useFocusTrap(panelRef, open, onClose);
 
   if (!open) return null;
 
