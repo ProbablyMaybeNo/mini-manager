@@ -687,51 +687,37 @@ export function ProjectWorkspaceBody({
 
       {error && <p className="font-body text-body text-red">▸ {error}</p>}
 
-      {/* Sticky action bar (MOP-002): Focus stays prominent; Open full page /
-          Archive / Duplicate / Delete are demoted into the ⋯ overflow so the
-          destructive verb leaves the thumb-rest zone. Delete still routes
-          through the ConfirmDialog below. */}
+      {/* Sticky action bar (RF-1): a visible row of labelled buttons —
+          FOCUS · DELETE · SAVE · Archive · Duplicate. SAVE flushes the locally
+          held INFO edits (notes / target date / reference image). Delete still
+          routes through the ConfirmDialog below. */}
       <InspectorActionBar
-        onFocus={onStartSession ? () => onStartSession(project) : undefined}
         disabled={pending}
-        actions={[
-          // Hidden on mobile (MOP-012) — the panel is full-bleed below md, so
-          // "open full page" is redundant there; desktop-only via desktopOnly.
-          ...(variant === "panel"
-            ? [
-                {
-                  key: "open-full",
-                  label: "⤢ Open full page",
-                  desktopOnly: true,
-                  onClick: () => router.push(`/projects/${project.id}`),
-                },
-              ]
-            : []),
-          {
-            key: "archive",
-            label: detail?.archived ? "⊞ Unarchive" : "⊟ Archive",
-            onClick: () =>
-              run(() =>
-                setProjectArchived({ id: project.id, archived: !detail?.archived }),
-              ),
-          },
-          {
-            key: "duplicate",
-            label: "⧉ Duplicate",
-            onClick: () =>
-              run(async () => {
-                const res = await duplicateProject({ id: project.id });
-                if (res.ok && res.data?.id) onOpenSubProject?.(res.data.id);
-                return res;
-              }),
-          },
-          {
-            key: "delete",
-            label: "🗑 Delete",
-            tone: "danger" as const,
-            onClick: () => setConfirmingDelete(true),
-          },
-        ]}
+        archived={!!detail?.archived}
+        onFocus={onStartSession ? () => onStartSession(project) : undefined}
+        onDelete={() => setConfirmingDelete(true)}
+        onSave={() =>
+          run(async () => {
+            const results = await Promise.all([
+              updateProjectNotes({ id: project.id, notes }),
+              setProjectTargetDate({ id: project.id, date: targetDate || null }),
+              setProjectReferenceImage({ id: project.id, url: refUrl || null }),
+            ]);
+            return results.find((r) => !r.ok) ?? { ok: true };
+          })
+        }
+        onArchive={() =>
+          run(() =>
+            setProjectArchived({ id: project.id, archived: !detail?.archived }),
+          )
+        }
+        onDuplicate={() =>
+          run(async () => {
+            const res = await duplicateProject({ id: project.id });
+            if (res.ok && res.data?.id) onOpenSubProject?.(res.data.id);
+            return res;
+          })
+        }
       />
       <ConfirmDialog
         open={confirmingDelete}

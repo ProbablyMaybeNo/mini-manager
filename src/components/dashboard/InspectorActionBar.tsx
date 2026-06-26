@@ -1,123 +1,113 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/kit";
-import { cn } from "@/lib/cn";
+import { Button, FocusReticleIcon } from "@/components/kit";
 
 /**
- * The inspector's sticky action bar (MOP-002).
+ * The inspector's sticky action bar (RF-1).
  *
- * Focus stays the prominent, thumb-rest primary; the destructive + secondary
- * lifecycle verbs (Open full page, Archive, Duplicate, Delete) are demoted into
- * a `⋯` overflow menu so the destructive `Delete` leaves the resting zone and
- * can't be fat-fingered. `Delete` still routes through the caller's
- * ConfirmDialog (the `onDelete` handler opens it) — this bar never deletes
- * directly.
+ * The old `⋯` overflow menu is retired: every lifecycle verb is now a visible,
+ * labelled button across the bottom of the panel —
+ *   FOCUS · DELETE · SAVE · Archive · Duplicate
+ * Focus carries the shared purple reticle (RF-2). Delete stays confirm-guarded
+ * (the caller's `onDelete` opens the ConfirmDialog — this bar never deletes
+ * directly). SAVE persists the DETAILS edits, and in RF-8's new-project mode it
+ * is the create action (caller passes `saveLabel="Create"`).
  *
  * Rendered `sticky bottom-0` inside the scrollable inspector body so it pins to
- * the bottom on long projects while staying in normal flow (shared by the
- * mobile sheet and the desktop pane).
+ * the bottom on long projects — shared by the desktop pane and the mobile
+ * full-screen view (RF-10).
  */
-export interface InspectorOverflowAction {
-  key: string;
-  label: string;
-  onClick: () => void;
-  /** Destructive verbs render in red and sit last in the menu. */
-  tone?: "default" | "danger";
-  /** Hidden below md (e.g. "Open full page", which is desktop-only). */
-  desktopOnly?: boolean;
-  disabled?: boolean;
-}
-
 export function InspectorActionBar({
   onFocus,
-  actions,
+  onDelete,
+  onSave,
+  onArchive,
+  onDuplicate,
+  archived = false,
+  saveLabel = "Save",
+  saveDisabled = false,
   disabled = false,
 }: {
-  /** The prominent primary — opens the focus bench for this project. */
+  /** Opens the focus bench for this project (hidden in create mode). */
   onFocus?: () => void;
-  /** Demoted lifecycle verbs, shown in the ⋯ overflow menu. */
-  actions: InspectorOverflowAction[];
+  /** Opens the caller's delete ConfirmDialog (hidden in create mode). */
+  onDelete?: () => void;
+  /** Persists the DETAILS edits — or creates the project in RF-8 create mode. */
+  onSave?: () => void;
+  /** Toggles archived (hidden in create mode). */
+  onArchive?: () => void;
+  /** Duplicates the project (hidden in create mode). */
+  onDuplicate?: () => void;
+  archived?: boolean;
+  /** SAVE button label — "Save" normally, "Create" in RF-8 create mode. */
+  saveLabel?: string;
+  /** Disable just SAVE (e.g. create mode with an empty name). */
+  saveDisabled?: boolean;
   disabled?: boolean;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  // Close the menu on outside click + Escape (the menu is a lightweight
-  // popover, not a modal — no focus trap, just dismissal).
-  useEffect(() => {
-    if (!menuOpen) return;
-    function onDown(e: PointerEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setMenuOpen(false);
-    }
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
-
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 mt-2 flex items-center gap-2 border-t border-cyan/40 bg-bg/95 px-4 py-3 backdrop-blur-sm">
+    <div className="sticky bottom-0 z-10 -mx-4 mt-2 flex flex-wrap items-center gap-2 border-t border-cyan/40 bg-bg/95 px-4 py-3 backdrop-blur-sm">
       {onFocus && (
         <Button
+          variant="outlinePurple"
           size="sm"
           className="min-h-11"
           disabled={disabled}
           onClick={onFocus}
         >
-          ▸ Focus
+          <FocusReticleIcon size={18} />
+          Focus
         </Button>
       )}
 
-      <div ref={wrapRef} className="relative ml-auto">
+      {onDelete && (
         <Button
-          variant="secondary"
+          variant="danger"
           size="sm"
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          aria-label="More project actions"
-          className="min-h-11 min-w-11"
+          className="min-h-11"
           disabled={disabled}
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={onDelete}
         >
-          ⋯
+          🗑 Delete
         </Button>
+      )}
 
-        {menuOpen && (
-          <div
-            role="menu"
-            aria-label="More project actions"
-            className="absolute bottom-full right-0 z-20 mb-2 flex min-w-44 flex-col border border-cyan/40 bg-bg shadow-[0_0_24px_rgba(0,210,255,0.14)]"
+      {/* SAVE is the primary — it stays prominent and pushes the secondary
+          lifecycle verbs to the right. */}
+      {onSave && (
+        <Button
+          variant="primary"
+          size="sm"
+          className="min-h-11"
+          disabled={disabled || saveDisabled}
+          onClick={onSave}
+        >
+          ▾ {saveLabel}
+        </Button>
+      )}
+
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        {onArchive && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="min-h-11"
+            disabled={disabled}
+            onClick={onArchive}
           >
-            {actions.map((a) => (
-              <button
-                key={a.key}
-                type="button"
-                role="menuitem"
-                disabled={disabled || a.disabled}
-                onClick={() => {
-                  setMenuOpen(false);
-                  a.onClick();
-                }}
-                className={cn(
-                  "flex min-h-11 items-center px-3 py-2 text-left font-body text-body transition-colors disabled:opacity-40",
-                  a.desktopOnly && "hidden md:flex",
-                  a.tone === "danger"
-                    ? "text-red hover:bg-red/10"
-                    : "text-fg hover:bg-cyan/10 hover:text-cyan",
-                )}
-              >
-                {a.label}
-              </button>
-            ))}
-          </div>
+            {archived ? "⊞ Unarchive" : "⊟ Archive"}
+          </Button>
+        )}
+        {onDuplicate && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="min-h-11"
+            disabled={disabled}
+            onClick={onDuplicate}
+          >
+            ⧉ Duplicate
+          </Button>
         )}
       </div>
     </div>
