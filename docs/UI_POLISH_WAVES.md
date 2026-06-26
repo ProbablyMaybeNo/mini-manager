@@ -46,7 +46,7 @@ Consolidated from three UX audits (2026-06-24). Source-of-truth detail + screens
 
 ## Wave 4 — Under-built pages catch up to the good ones
 - [x] **DOP-009** — Recipe list now has a Table/Cards `SegmentedToggle` (Library's view-toggle pattern). Table rows gained a compact swatch-preview line under the name (reuses `Swatch`); new `RecipeCard`/`RecipeCardGrid` (src/components/recipe/RecipeCard.tsx) lead each card with a full-width ordered-scheme preview strip + a 6-swatch echo, then name, paint-count, assign Listbox + Share. Cards open the recipe to edit (per-paint quick-edit stays a table-cell affordance).
-- [ ] **DOP-011** — Recipe editor: example/empty-state slot + live scheme preview.
+- [x] **DOP-011** — New `SchemePreview` + `EmptySchemeExample` (src/components/recipe/SchemePreview.tsx). The SLOTS panel now shows a **live ordered-scheme preview** (labelled base→highlight swatch strip + indexed legend) that updates as you build, and the empty state is a worked three-layer example (Base/Layer/Highlight, decorative — never persists) instead of one line of text. Reuses `Swatch` + `readableText`.
 - [ ] **DOP-012** — Collection: compact the two stacked full-height empty tables (side-by-side, swatch rows) instead of wasting the width.
 - [ ] **DOP-008** — Library: add hover tooltips + clickable hue rail; propagate the color-map canvas pattern (the app's best surface) where it fits.
 - [ ] **DOP-003** — Fill the dashboard's empty lower half with purposeful content (e.g. a "continue painting" tier) — page ends at ~55% viewport.

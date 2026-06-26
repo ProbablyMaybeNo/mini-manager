@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shell";
 import type { Project, Recipe, RecipeSlot } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { RecipePaintPicker } from "./RecipePaintPicker";
+import { EmptySchemeExample, SchemePreview } from "./SchemePreview";
 import { SlotRow } from "./SlotRow";
 
 export function RecipeEditorView({
@@ -126,10 +127,13 @@ export function RecipeEditorView({
           slots + notes use the full width (luPYg). zfnUz — borders thinned to
           cyan/20 across the editor sections. */}
       <Panel label="SLOTS" cornerTicks className="flex flex-col gap-3 p-4">
+        {/* DOP-011 — live ordered-scheme preview: the layers render as labelled
+            swatches the moment they exist, so the painter sees the build the way
+            it'll appear on the recipe list / card. */}
+        <SchemePreview slots={recipe.slots} />
         {recipe.slots.length === 0 ? (
-          <p className="py-6 text-center font-body text-body text-fg">
-            No slots yet — add your first paint layer.
-          </p>
+          // DOP-011 — empty-state slot with a worked three-layer example.
+          <EmptySchemeExample />
         ) : (
           recipe.slots.map((slot, i) => (
             <SlotRow
