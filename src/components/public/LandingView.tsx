@@ -127,7 +127,7 @@ export function LandingView() {
         </p>
         <p className="max-w-xl font-body text-body text-fg">
           One command center for your whole hobby — paint library, colour tools, recipes,
-          collection, and project tracking, all in one terminal. Free forever. Pro when you
+          collection, and project tracking, all in one terminal. Free to start. Pro when you
           need it.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -151,13 +151,13 @@ export function LandingView() {
       {/* Plans — free vs pro, with the real named benefits */}
       <section className="mx-auto w-full max-w-5xl px-6 pb-16">
         <div className="mb-6 text-center">
-          <h2 className="font-h1 text-h1 text-purple">Free forever. Pro when you need it.</h2>
+          <h2 className="font-h1 text-h1 text-purple">Free to start. Pro when you need it.</h2>
           <p className="mt-2 font-body text-body text-fg">
             Run your whole hobby for free — then unlock the power features when you’re ready.
           </p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <Panel label="FREE · FOREVER" cornerTicks className="flex flex-col gap-4 p-6">
+          <Panel label="FREE" cornerTicks className="flex flex-col gap-4 p-6">
             <ul className="flex flex-col gap-2 text-left">
               {FREE_PERKS.map((perk) => (
                 <li key={perk} className="flex gap-2 font-body text-body text-fg">
