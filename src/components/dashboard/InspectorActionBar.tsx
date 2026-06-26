@@ -72,8 +72,6 @@ export function InspectorActionBar({
         </Button>
       )}
 
-      {/* SAVE is the primary — it stays prominent and pushes the secondary
-          lifecycle verbs to the right. */}
       {onSave && (
         <Button
           variant="primary"
@@ -86,30 +84,31 @@ export function InspectorActionBar({
         </Button>
       )}
 
-      <div className="ml-auto flex flex-wrap items-center gap-2">
-        {onArchive && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="min-h-11"
-            disabled={disabled}
-            onClick={onArchive}
-          >
-            {archived ? "⊞ Unarchive" : "⊟ Archive"}
-          </Button>
-        )}
-        {onDuplicate && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="min-h-11"
-            disabled={disabled}
-            onClick={onDuplicate}
-          >
-            ⧉ Duplicate
-          </Button>
-        )}
-      </div>
+      {/* Archive + Duplicate are direct flex-wrap children (no ml-auto group) so
+          on a narrow panel they wrap to the next line instead of overflowing /
+          clipping off the right edge. */}
+      {onArchive && (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="min-h-11"
+          disabled={disabled}
+          onClick={onArchive}
+        >
+          {archived ? "⊞ Unarchive" : "⊟ Archive"}
+        </Button>
+      )}
+      {onDuplicate && (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="min-h-11"
+          disabled={disabled}
+          onClick={onDuplicate}
+        >
+          ⧉ Duplicate
+        </Button>
+      )}
     </div>
   );
 }

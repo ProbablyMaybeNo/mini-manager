@@ -207,7 +207,10 @@ export function DashboardView({
             <LoadingState />
           ) : (
             <div className="flex flex-col gap-6 xl:flex-row">
-              <div className="flex min-w-0 flex-1 flex-col gap-6">
+              {/* @container so StatRow (and any width-sensitive child) reflows to
+                  the COLUMN width, not the viewport — it goes 2-up the moment the
+                  inspector pane squeezes this column, instead of overlapping. */}
+              <div className="@container flex min-w-0 flex-1 flex-col gap-6">
                 {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
                 <WelcomeCard />
                 <StatRow summary={summary} />

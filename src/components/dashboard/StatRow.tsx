@@ -14,7 +14,7 @@ export function StatRow({ summary }: { summary: DashboardSummary }) {
   // break" cue; otherwise it stays the base pastel purple (icu1mlFtJeya).
   const timeAccent = summary.timeTotalMinutes >= 8 * 60 ? "red" : statBoxAccents.time;
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
       {/* D5 / MM-49 / qHYZN — each centered tracker reads in its own style-guide
           hue so the row scans as four distinct readouts. Colours come from the
           shared statBoxAccents map; Time overrides to red past a long session. */}
