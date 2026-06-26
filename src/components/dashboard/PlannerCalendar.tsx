@@ -23,7 +23,15 @@ const KINDS: CalendarEventKind[] = ["tournament", "deadline", "battle", "other"]
  *    to the native `<input type="date">`.
  *  - The form carries a Notes field, surfaced in the calendar hover tooltip.
  */
-export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
+export function PlannerCalendar({
+  events,
+  calendarClassName = "mx-auto w-full max-w-[170px]",
+}: {
+  events: CalendarEvent[];
+  /** Override the month-grid sizing. Defaults to the compact rail width
+   *  (max-w-[170px]); the standalone /planner page widens it (DOP-005a). */
+  calendarClassName?: string;
+}) {
   const router = useRouter();
   const [view, setView] = useState(() => {
     const d = new Date();
@@ -142,7 +150,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         events={events}
         onDayClick={openAddForDay}
         showMonthLabel={false}
-        className="mx-auto w-full max-w-[170px]"
+        className={calendarClassName}
       />
 
       {adding ? (

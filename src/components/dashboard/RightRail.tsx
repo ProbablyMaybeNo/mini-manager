@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ActivityFeed, Panel } from "@/components/kit";
 import type { ActivityEntry, CalendarEvent } from "@/lib/types";
 import { PlannerCalendar } from "./PlannerCalendar";
@@ -16,6 +17,15 @@ export function RightRail({
           compact width so the month grid reads as a glanceable mini-calendar,
           not a full-size one. */}
       <Panel label="PLANNER" className="p-3">
+        {/* DOP-005b — the widget header links to the full PLANNER page (the
+            real calendar + events + activity surface). Keeps the rail a
+            glance, sends power use to /planner. */}
+        <Link
+          href="/planner"
+          className="mb-2 flex items-center justify-end gap-1 label-osd text-fg-dim transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+        >
+          OPEN PLANNER <span aria-hidden>▸</span>
+        </Link>
         <PlannerCalendar events={events} />
       </Panel>
       {/* Activity feed kept compact + scrollable (UF5HOwXMpJxP): capped height
