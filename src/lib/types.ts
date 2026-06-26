@@ -39,6 +39,9 @@ export interface Project {
   modelCount?: number;
   /** Models fully complete — seeds the focus bench's models stepper. */
   modelsComplete?: number;
+  /** Epoch ms of the last edit — powers the /projects "Recently updated" sort
+   *  (DOP-017). Optional so fixture/derived callers without a timestamp work. */
+  updatedAt?: number;
   children?: Project[];
 }
 

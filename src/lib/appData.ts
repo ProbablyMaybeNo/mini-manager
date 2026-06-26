@@ -145,6 +145,9 @@ function mapProject(p: DbProject, swatches: string[]): KitProject {
     completionPercent: progressPercent(p),
     modelCount: p.count,
     modelsComplete: p.completeCount,
+    // DOP-017 — surface the last-edit timestamp so /projects can offer a real
+    // "Recently updated" sort. timestamp_ms columns come back as Date.
+    updatedAt: p.updatedAt instanceof Date ? p.updatedAt.getTime() : undefined,
   };
 }
 

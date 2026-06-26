@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
@@ -217,6 +218,18 @@ export function DashboardView({
                 <StatRow summary={summary} />
                 <div data-tour="dashboard-projects">
                 <Panel label="PROJECTS" cornerTicks className="p-4">
+                  {/* DOP-017 — "ALL PROJECTS ▸" sends power use to the real
+                      /projects management list (search + filter + sort). The
+                      dashboard panel stays a curated glance; the full roster
+                      lives at /projects. */}
+                  <div className="-mt-1 mb-2 flex justify-end">
+                    <Link
+                      href="/projects"
+                      className="flex items-center gap-1 label-osd text-fg-dim transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+                    >
+                      ALL PROJECTS <span aria-hidden>▸</span>
+                    </Link>
+                  </div>
                   <ProjectsTable
                     projects={projects}
                     projectMinutes={projectMinutes}

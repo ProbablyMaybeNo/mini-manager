@@ -17,13 +17,15 @@ Build each as its own commit; `npm run typecheck` + unit + integration green; re
 ## DOP-017 — Real `/projects` list page (manage many projects)
 **The problem:** `/projects` 308-redirects to `/dashboard`; there's no focused place to manage a large roster.
 
-- [ ] **DOP-017 — `/projects` resource-list page.** Replace the `/projects → /dashboard` redirect with a real `(app)/projects/page.tsx`. It's the **power-user management view** — the projects list with controls the dashboard lacks:
+- [x] **DOP-017 — `/projects` resource-list page.** Replace the `/projects → /dashboard` redirect with a real `(app)/projects/page.tsx`. It's the **power-user management view** — the projects list with controls the dashboard lacks:
+  - Done: removed the `/projects` redirect; added `(app)/projects/page.tsx`. Search + Status/Type/Priority filters + Sort (Name / Completion % / Priority / Recently updated) over a pure, unit-tested `applyProjectFilters` tree helper (`src/lib/projectFilter.ts`, 14 tests) that keeps ancestors when a descendant matches so the Army→Unit→Model tree stays navigable. Reuses ProjectsTable (table + mobile cards, all row actions) and the same ProjectPanelStack inspector the dashboard drives (fed the FULL tree so sub-project tabs resolve even when filtered). "ALL PROJECTS ▸" link added to the dashboard PROJECTS panel; NOT added to primary nav (kept lean). "Recently updated" sort backed by a new optional `Project.updatedAt` threaded through appData. Type filter offers the real ProjectType union (no "Diorama" — not in the type). Bulk multi-select DEFERRED (see flag below).
   - **Search** by name.
   - **Filter** by status (Wishlist/Owned/Building/Priming/Painting/Basing/Complete/Shelved), type (Army/Warband/Unit/Model/Terrain/Diorama), and priority.
   - **Sort** by name / completion % / priority / recently-updated.
   - Reuse the existing `ProjectsTable` (desktop table + mobile cards) for the rows so row actions (open inspector, focus, delete, attach) all carry over. Drive the inspector the same way the dashboard does (`onOpenProject`).
   - NO welcome card / stat strip / calendar — just the filterable list (that's what differentiates it from the dashboard). Page header "PROJECTS" + a `//` descriptor (e.g. "// every army, warband & model you're tracking").
   - Bulk actions (multi-select delete/archive) are NICE-TO-HAVE — include if clean, otherwise defer and flag.
+    - DEFERRED + flagged: ProjectsTable rows are tree rows with expand/add-sub/delete actions and a whole-row click that opens the inspector. Bolting multi-select checkboxes onto that shared component (used by the dashboard too) cleanly — without colliding with the row-click-to-open and the tree semantics — is a non-trivial change to a shared primitive, so it's out of scope for this consistency-respecting pass. Single-row delete already works from the list.
   - **Reachable:** add a link from the dashboard PROJECTS panel header (e.g. a small "ALL PROJECTS ▸" / "Manage" affordance) → `/projects`. Keep it out of the primary nav unless it reads cleaner (flag the choice).
 - Acceptance: `/projects` renders a searchable/filterable/sortable project list (no redirect); reachable from the dashboard; opening a project works; mobile uses the cards.
 

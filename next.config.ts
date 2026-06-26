@@ -41,16 +41,16 @@ const config: NextConfig = {
   // information architecture; permanently redirect inbound links
   // (bookmarks, the old PWA shortcut, shared URLs) to their current home
   // so they land on a live page instead of a 404.
-  //   /projects    — the old dashboard path, now /dashboard.
   //   /collections — plural alias of the COLLECTION route.
   //   /wishlist    — the wishlist was folded into COLLECTION.
   //
   // DOP-005: /planner is now a REAL standalone page (the month calendar +
   // events + activity tracker), no longer an alias of /focus — its redirect
   // was removed so (app)/planner/page.tsx renders. FOCUS stays the bench.
+  // DOP-017: /projects is now a REAL management list page (searchable /
+  // filterable / sortable project roster), no longer a redirect to /dashboard.
   async redirects() {
     return [
-      { source: "/projects", destination: "/dashboard", permanent: true },
       { source: "/collections", destination: "/collection", permanent: true },
       { source: "/wishlist", destination: "/collection", permanent: true },
     ];
