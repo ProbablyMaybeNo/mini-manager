@@ -20,4 +20,5 @@ export { useToast } from "./Toast";
 export { MiniCalendar } from "./MiniCalendar";
 export { ActivityFeed } from "./ActivityFeed";
 export { StatusIcon, type StatusIconName } from "./StatusIcon";
+export { FocusReticleIcon } from "./FocusReticleIcon";
 export { BootSequence } from "./BootSequence";

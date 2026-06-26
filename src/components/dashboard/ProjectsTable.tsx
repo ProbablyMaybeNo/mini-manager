@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 import {
   Button,
   EmptyState,
+  FocusReticleIcon,
   IconButton,
   Input,
   ProgressBar,
@@ -232,7 +233,7 @@ export function ProjectsTable({
                 </IconButton>
               )}
               <IconButton
-                variant="outlineCyan"
+                variant="outlinePurple"
                 size="sm"
                 className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
                 aria-label={`Open ${p.title} in focus`}
@@ -242,7 +243,7 @@ export function ProjectsTable({
                   onFocusProject(p);
                 }}
               >
-                ◎
+                <FocusReticleIcon size={24} />
               </IconButton>
             </div>
           </td>
@@ -397,7 +398,7 @@ export function ProjectsTable({
                 </IconButton>
               )}
               <IconButton
-                variant="outlineCyan"
+                variant="outlinePurple"
                 size="sm"
                 className="h-9 w-9"
                 aria-label={`Open ${p.title} in focus`}
@@ -407,7 +408,7 @@ export function ProjectsTable({
                   onFocusProject(p);
                 }}
               >
-                ◎
+                <FocusReticleIcon size={24} />
               </IconButton>
             </div>
           </div>
