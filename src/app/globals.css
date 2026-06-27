@@ -280,7 +280,8 @@ option {
    which is floored to 13px) preserves the dominant label size. */
 @utility label-osd {
   font-family: var(--font-h2);
-  font-size: var(--text-h2);
+  font-size: 0.75rem; /* 12px — small meta/eyebrow/column-header label. Must NOT
+                         inherit the 24px Header --text-h2 (A1 regression). */
   text-transform: uppercase;
   letter-spacing: 0.15em;
 }

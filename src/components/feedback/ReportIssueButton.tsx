@@ -87,7 +87,7 @@ export function ReportIssueButton({
         className={cn(
           // Mirror the Tutorial entry's nav-item styling, with a red accent so
           // it reads as the "something's wrong" affordance.
-          "flex min-h-11 w-full items-center border-l-2 border-transparent px-4 py-2 text-left font-h1 text-h1 uppercase tracking-[0.18em] text-fg transition-colors hover:border-red/50 hover:bg-red/5 hover:text-red",
+          "flex min-h-11 w-full items-center border-l-2 border-transparent px-4 py-2 text-left font-title text-[0.9rem] uppercase tracking-[0.1em] text-fg transition-colors hover:border-red/50 hover:bg-red/5 hover:text-red",
           className,
         )}
       >

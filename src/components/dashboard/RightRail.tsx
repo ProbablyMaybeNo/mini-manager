@@ -22,7 +22,7 @@ export function RightRail({
             glance, sends power use to /planner. */}
         <Link
           href="/planner"
-          className="mb-2 flex items-center justify-end gap-1 label-osd text-fg-dim transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+          className="mb-2 ml-auto inline-flex items-center gap-1 border border-cyan/40 px-2 py-1 label-osd text-cyan transition-colors hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/10"
         >
           OPEN PLANNER <span aria-hidden>▸</span>
         </Link>

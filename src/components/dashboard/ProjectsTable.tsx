@@ -192,7 +192,7 @@ export function ProjectsTable({
               )}
               {/* Name stays white so it's clearly distinct from the coloured
                   TYPE chip — even on the cyan-highlighted selected row (JRH4). */}
-              <span className="text-fg">{p.title}</span>
+              <span className="font-h2 text-fg">{p.title}</span>
             </div>
           </td>
           <td className="px-3 py-2.5">
