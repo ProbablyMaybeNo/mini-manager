@@ -43,7 +43,7 @@ export function ProjectPageClient({
         ‹ Dashboard
       </button>
 
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-6xl">
         {/* HEADER — breadcrumb by depth, name + prominent TYPE badge. */}
         <header className="mb-5">
           <nav
