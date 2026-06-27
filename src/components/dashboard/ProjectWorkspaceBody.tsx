@@ -6,12 +6,15 @@ import {
   Button,
   ConfirmDialog,
   DateField,
+  FocusReticleIcon,
+  IconButton,
   Input,
   Listbox,
   Panel,
   ProgressBar,
   StatusText,
   Swatch,
+  SwatchStrip,
   TypeChip,
 } from "@/components/kit";
 import {
@@ -107,18 +110,21 @@ function CollapsibleSection({
   hint,
   anchorId,
   defaultOpen,
+  className,
   children,
 }: {
   label: string;
   hint?: string;
   anchorId: string;
   defaultOpen: boolean;
+  /** Extra classes on the Panel — used for variant-specific flex ordering. */
+  className?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = `${anchorId}-body`;
   return (
-    <Panel label={label} className="p-4 pt-5">
+    <Panel label={label} className={cn("p-4 pt-5", className)}>
       {/* scroll-mt keeps the notched label clear of the sticky header when the
           quick-jump rail scrolls this section into view. */}
       <div id={anchorId} className="scroll-mt-4">
@@ -228,6 +234,9 @@ export function ProjectWorkspaceBody({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // PP-2: a sub-project queued for a confirm-guarded delete from the
+  // SUB-PROJECTS list's trailing 🗑 icon.
+  const [deletingChild, setDeletingChild] = useState<Project | null>(null);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [recipeCards, setRecipeCards] = useState<ProjectRecipeCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -243,6 +252,12 @@ export function ProjectWorkspaceBody({
 
   const children = project.children ?? [];
   const allowedChildren = CHILD_TYPES[project.type] ?? [];
+  // PP-2: on the project PAGE the layout is sub-project-list-first — the
+  // SUB-PROJECTS section leads (order-first), the secondary DETAILS / RECIPES /
+  // PROGRESS / INFO sections follow, and DETAILS/RECIPES default collapsed. The
+  // panel (dashboard slide-out) keeps its existing top-down order. Ordering is
+  // applied via flex `order-*` utilities so the JSX (and its anchors) stays put.
+  const isPage = variant === "page";
 
   useEffect(() => {
     let alive = true;
@@ -335,33 +350,39 @@ export function ProjectWorkspaceBody({
       {/* Compact PROGRESS summary strip (RF-6): a dense, glanceable trio at the
           very top — total models · completed · time spent. The detailed
           per-sub-project steppers + status dropdowns still live in the PROGRESS
-          section below. */}
-      <div className="flex items-center gap-2 border border-cyan/30 bg-bg-raised/30 px-3 py-2">
-        <ProgressStat
-          glyph="#"
-          label="total"
-          value={project.modelCount ?? 0}
-        />
-        <span aria-hidden className="text-fg-faint">·</span>
-        <ProgressStat
-          glyph="✓"
-          label="complete"
-          value={project.modelsComplete ?? 0}
-          accent="green"
-        />
-        <span aria-hidden className="text-fg-faint">·</span>
-        <ProgressStat
-          glyph="🕒"
-          label="time"
-          value={formatMinutes(loggedMinutes ?? 0)}
-        />
-      </div>
+          section below. On the PAGE variant this trio lives in the page header's
+          overall-progress strip instead (PP-2), so it's suppressed here to avoid
+          a duplicate. */}
+      {!isPage && (
+        <div className="flex items-center gap-2 border border-cyan/30 bg-bg-raised/30 px-3 py-2">
+          <ProgressStat
+            glyph="#"
+            label="total"
+            value={project.modelCount ?? 0}
+          />
+          <span aria-hidden className="text-fg-faint">·</span>
+          <ProgressStat
+            glyph="✓"
+            label="complete"
+            value={project.modelsComplete ?? 0}
+            accent="green"
+          />
+          <span aria-hidden className="text-fg-faint">·</span>
+          <ProgressStat
+            glyph="🕒"
+            label="time"
+            value={formatMinutes(loggedMinutes ?? 0)}
+          />
+        </div>
+      )}
 
-      {/* DETAILS — name / type / status / priority */}
+      {/* DETAILS — name / type / status / priority. Secondary on the page
+          (order-2, collapsed by default); leads the panel's DETAILS-first order. */}
       <CollapsibleSection
         label="DETAILS"
         anchorId="inspector-details"
         defaultOpen={false}
+        className={isPage ? "order-2" : undefined}
         hint="Rename it, set the type, where it sits in your pipeline, and how urgent it is."
       >
         {/* Rename lives here now (RF-4) — the big in-panel title was removed. */}
@@ -420,32 +441,27 @@ export function ProjectWorkspaceBody({
         )}
       </CollapsibleSection>
 
-      {/* SUB-PROJECTS — the structure list. Click a row to open its panel. */}
+      {/* SUB-PROJECTS — the structure list and the page's centerpiece (PP-2):
+          each row is name + recipe swatches + progress + edit/focus/delete.
+          Leads the page (order-1); sits third in the panel. */}
       <CollapsibleSection
         label="SUB-PROJECTS"
         anchorId="inspector-sub-projects"
         defaultOpen
+        className={isPage ? "order-1" : undefined}
         hint="Track your project from the macro to the micro — add units, models, warbands or terrain, all under one roof."
       >
         {children.length > 0 ? (
-          <ul className="flex flex-col">
+          <ul className="flex flex-col gap-2">
             {children.map((c) => (
-              <li key={c.id}>
-                <button
-                  type="button"
-                  onClick={() => onOpenSubProject?.(c.id)}
-                  className="flex w-full items-center gap-3 border-b border-fg/10 py-2 text-left transition-colors hover:bg-cyan/5"
-                >
-                  <span className="min-w-0 flex-1 truncate font-body text-body text-fg">
-                    {c.title}
-                  </span>
-                  <TypeChip type={c.type} />
-                  <span className="font-num2 text-num2 tabular-nums text-fg-dim">
-                    {c.completionPercent}%
-                  </span>
-                  <span aria-hidden className="text-cyan">›</span>
-                </button>
-              </li>
+              <SubProjectRow
+                key={c.id}
+                child={c}
+                disabled={pending}
+                onOpen={() => onOpenSubProject?.(c.id)}
+                onFocus={onStartSession ? () => onStartSession(c) : undefined}
+                onDelete={() => setDeletingChild(c)}
+              />
             ))}
           </ul>
         ) : (
@@ -485,6 +501,7 @@ export function ProjectWorkspaceBody({
         label="RECIPES"
         anchorId="inspector-recipes"
         defaultOpen={false}
+        className={isPage ? "order-3" : undefined}
         hint="Every paint recipe attached to this project and its sub-projects. Click one to open it."
       >
         {recipeCards === null ? (
@@ -541,6 +558,7 @@ export function ProjectWorkspaceBody({
         label="PROGRESS"
         anchorId="inspector-progress"
         defaultOpen
+        className={isPage ? "order-4" : undefined}
         hint="Adjust each sub-project's stage and completion right here — completed rows light up green."
       >
         {children.length > 0 ? (
@@ -624,6 +642,7 @@ export function ProjectWorkspaceBody({
         label="INFO"
         anchorId="inspector-info"
         defaultOpen={false}
+        className={isPage ? "order-5" : undefined}
         hint="Notes and techniques, a target date, and a reference image to paint towards."
       >
         <textarea
@@ -674,13 +693,17 @@ export function ProjectWorkspaceBody({
         </div>
       </CollapsibleSection>
 
-      {error && <p className="font-body text-body text-red">▸ {error}</p>}
+      {/* error + action bar — kept last in the flex column. On the page variant
+          they carry order-6 so they sit below the ordered sections (the un-
+          ordered default order-0 would otherwise float them above SUB-PROJECTS). */}
+      <div className={cn("flex flex-col gap-4", isPage && "order-6")}>
+        {error && <p className="font-body text-body text-red">▸ {error}</p>}
 
-      {/* Sticky action bar (RF-1): a visible row of labelled buttons —
-          FOCUS · DELETE · SAVE · Archive · Duplicate. SAVE flushes the locally
-          held INFO edits (notes / target date / reference image). Delete still
-          routes through the ConfirmDialog below. */}
-      <InspectorActionBar
+        {/* Sticky action bar (RF-1): a visible row of labelled buttons —
+            FOCUS · DELETE · SAVE · Archive · Duplicate. SAVE flushes the locally
+            held INFO edits (notes / target date / reference image). Delete still
+            routes through the ConfirmDialog below. */}
+        <InspectorActionBar
         disabled={pending}
         archived={!!detail?.archived}
         onFocus={onStartSession ? () => onStartSession(project) : undefined}
@@ -707,7 +730,8 @@ export function ProjectWorkspaceBody({
             return res;
           })
         }
-      />
+        />
+      </div>
       <ConfirmDialog
         open={confirmingDelete}
         breadcrumb="PROJECT"
@@ -726,7 +750,118 @@ export function ProjectWorkspaceBody({
           });
         }}
       />
+      {/* PP-2: confirm-guarded delete for a sub-project row's 🗑 icon. Deleting a
+          sub-project stays on this page (the parent re-renders without it). */}
+      <ConfirmDialog
+        open={deletingChild != null}
+        breadcrumb="SUB-PROJECT"
+        title="Delete sub-project?"
+        message={
+          deletingChild
+            ? `Delete "${deletingChild.title}" and its sub-projects? This can't be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        destructive
+        busy={pending}
+        onClose={() => setDeletingChild(null)}
+        onConfirm={() => {
+          const target = deletingChild;
+          setDeletingChild(null);
+          if (!target) return;
+          run(() => deleteProject({ id: target.id }));
+        }}
+      />
     </div>
+  );
+}
+
+/**
+ * A prominent SUB-PROJECTS list row (PP-2): the sub-project name (clickable →
+ * drills into its page), its recipe swatch squares (SwatchStrip), a progress
+ * bar, and trailing edit / focus / delete icons. Restyled from the old dense
+ * name+chip+% line into the sketch's "centerpiece" row.
+ */
+function SubProjectRow({
+  child,
+  disabled,
+  onOpen,
+  onFocus,
+  onDelete,
+}: {
+  child: Project;
+  disabled?: boolean;
+  onOpen: () => void;
+  onFocus?: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 border border-cyan/20 p-3 transition-colors hover:border-cyan/40">
+      {/* Name + type — the name click drills into the sub-project's page. */}
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex min-w-[8rem] flex-1 items-center gap-2 text-left focus:outline-none focus-visible:underline"
+      >
+        <span className="min-w-0 flex-1 truncate font-h2 text-h2 text-cyan hover:text-glow-cyan">
+          {child.title}
+        </span>
+        <TypeChip type={child.type} />
+      </button>
+
+      {/* Recipe swatches — non-interactive here (editing the recipe happens on
+          the sub-project's own page); empty → a quiet "no recipe" note. */}
+      {child.recipeSwatches.length > 0 ? (
+        <SwatchStrip swatches={child.recipeSwatches} />
+      ) : (
+        <span className="label-osd text-fg-faint">no recipe</span>
+      )}
+
+      {/* Progress bar — fixed-ish width so the row reads as a consistent grid. */}
+      <div className="min-w-[7rem] flex-1 basis-40">
+        <ProgressBar
+          percent={child.completionPercent}
+          accent={child.completionPercent >= 100 ? "green" : "cyan"}
+        />
+      </div>
+
+      {/* Trailing edit / focus / delete icons. */}
+      <div className="ml-auto flex items-center gap-2">
+        <IconButton
+          variant="outlineCyan"
+          size="sm"
+          className="h-8 w-8"
+          aria-label={`Edit ${child.title}`}
+          title="Edit sub-project"
+          onClick={onOpen}
+        >
+          ✎
+        </IconButton>
+        {onFocus && (
+          <IconButton
+            variant="outlinePurple"
+            size="sm"
+            className="h-8 w-8"
+            aria-label={`Open ${child.title} in focus`}
+            title="Open in focus bench"
+            onClick={onFocus}
+          >
+            <FocusReticleIcon size={22} />
+          </IconButton>
+        )}
+        <IconButton
+          variant="outlineRed"
+          size="sm"
+          className="h-8 w-8"
+          aria-label={`Delete ${child.title}`}
+          title="Delete sub-project"
+          disabled={disabled}
+          onClick={onDelete}
+        >
+          🗑
+        </IconButton>
+      </div>
+    </li>
   );
 }
 
