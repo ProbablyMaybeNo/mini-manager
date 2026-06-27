@@ -124,11 +124,16 @@ export function MiniCalendar({
 
           const content = (
             <>
-              {day}
+              {/* Number + event-dot stack in normal flow (flex-col on the cell)
+                  so the dot always sits BELOW the day number with a small gap,
+                  never overlapping/touching it (pnzYXjHjgFpp). leading-none keeps
+                  the digit tight so number + 2px gap + 4px dot still fit the
+                  compact 24px cell. */}
+              <span className="leading-none">{day}</span>
               {accent && (
                 <span
                   className={cn(
-                    "absolute bottom-0.5 h-1 w-1 rounded-full",
+                    "mt-0.5 h-1 w-1 rounded-full",
                     accentBg[accent],
                   )}
                 />
@@ -140,7 +145,7 @@ export function MiniCalendar({
           const base = cn(
             // min-h-6/min-w-6 clears the WCAG 2.2 §2.5.8 24px target floor
             // (cells were 23x23) while keeping the dense glanceable grid.
-            "relative flex min-h-6 min-w-6 items-center justify-center font-num2 text-num2 tabular-nums",
+            "relative flex min-h-6 min-w-6 flex-col items-center justify-center font-num2 text-num2 tabular-nums",
             // Cells stay a tight square — RF-9: the interactive day-buttons no
             // longer grow to a 44px visible height (that made the month grid
             // ~4× too tall); the 44px tap target is restored via an invisible
