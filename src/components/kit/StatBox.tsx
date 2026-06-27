@@ -41,13 +41,15 @@ export function StatBox({
       </div>
       <div
         className={cn(
-          // Hero tracker number (Number 1 category).
-          "font-num1 text-num1 leading-none",
-          !center && "mt-1",
-          accentText[accent],
-          // Subtle per-accent phosphor glow on the hero number (UX-006) —
-          // static low-glow token, matches each box's hue.
-          accentTextGlow[accent],
+          center
+            ? // Dashboard trackers (377k9jxJmpIC): number shares the title's
+              // face (font-h1) in WHITE, one step smaller than the title.
+              // Ross asked for white here — this intentionally drops the
+              // per-box accent hue + phosphor glow on the centred trackers.
+              "font-h1 text-num2 leading-none text-fg"
+            : // Hero tracker number (Number 1 category) elsewhere keeps the
+              // big accent num1 + glow.
+              cn("font-num1 text-num1 leading-none mt-1", accentText[accent], accentTextGlow[accent]),
         )}
       >
         {value}
