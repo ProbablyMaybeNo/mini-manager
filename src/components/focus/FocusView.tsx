@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Panel, ProgressBar } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { formatMinutes } from "@/lib/palette";
@@ -51,6 +51,15 @@ export function FocusView({
       Math.round((project.completionPercent / 100) * modelCount))
     : 0;
   const [step, setStep] = useState(initialStep);
+
+  // Re-seed the PROGRESS counter when the focused project changes (0Uwugdcrguxb).
+  // `step` is a useState initial-value, so without this it kept the previous
+  // project's value after switching focus via the "+ Focus" dropdown — the
+  // header/recipe updated but the x/N progress didn't, reading as "the dropdown
+  // won't change my focus". Mirrors the inspo re-seed in the route controller.
+  useEffect(() => {
+    setStep(initialStep);
+  }, [project?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const TAGLINE =
     "// your painting bench — recipe, progress, time, and inspiration for one model in one place";
