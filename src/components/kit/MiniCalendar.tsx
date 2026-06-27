@@ -124,11 +124,15 @@ export function MiniCalendar({
 
           const content = (
             <>
-              {day}
+              {/* When the day carries an event dot, nudge the number up so the
+                  dot can sit BELOW it with a clear gap rather than touching
+                  (pnzYXjHjgFpp). translate keeps the day centred-ish without
+                  any layout shift / reflow. */}
+              <span className={cn(accent && "-translate-y-[3px]")}>{day}</span>
               {accent && (
                 <span
                   className={cn(
-                    "absolute bottom-0.5 h-1 w-1 rounded-full",
+                    "absolute bottom-1 h-1 w-1 rounded-full",
                     accentBg[accent],
                   )}
                 />
