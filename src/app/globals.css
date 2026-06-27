@@ -161,6 +161,11 @@
   --text-body: 0.75rem; /* 12px (−4px) */
   --text-num1: 2.3438rem; /* ~37.5px */
   --text-num2: 0.9688rem; /* ~15.5px */
+  /* Dedicated size for the /focus PROGRESS counter only (aANKU9jIO6ih) — same
+     VT323 face as num2 but a fixed 18px, so bumping it doesn't drag the shared
+     num2 size (calendar day-numbers / projects Time / progress-% labels). Pair
+     with font-num2 for the family. */
+  --text-focus-progress: 1.125rem; /* 18px */
 
   /* Border + glow */
   --radius-panel: 2px;

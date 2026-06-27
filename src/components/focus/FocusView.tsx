@@ -153,7 +153,10 @@ export function FocusView({
               >
                 −
               </button>
-              <span className="font-num2 text-num2 tabular-nums text-fg">
+              {/* Dedicated 18px focus-progress token (aANKU9jIO6ih) — same
+                  VT323 face as num2, sized only here so it doesn't touch the
+                  shared num2 (calendar / Time / %). */}
+              <span className="font-num2 text-focus-progress tabular-nums text-fg">
                 {step}/{modelCount}
               </span>
               <button
