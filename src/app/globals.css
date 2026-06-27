@@ -418,12 +418,13 @@ option {
   }
 }
 
-/* Gentle content entrance — a brief fade + rise so a page settles in
-   rather than snapping. Reduced-motion users get the end state instantly. */
+/* Gentle content entrance — a brief fade + small rise so a page settles in
+   rather than snapping. A4 motion reduction: travel softened 6px -> 3px so the
+   entrance is quieter. Reduced-motion users get the end state instantly. */
 @keyframes content-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(3px);
   }
   to {
     opacity: 1;

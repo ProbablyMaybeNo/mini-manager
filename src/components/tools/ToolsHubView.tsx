@@ -36,7 +36,7 @@ export function ToolsHubView() {
                 cornerTicks
                 className="flex h-full flex-col gap-4 p-6 transition-colors group-hover:border-cyan group-hover:glow-cyan"
               >
-                <div className="relative aspect-[16/9] w-full overflow-hidden border border-cyan/20 bg-black transition-transform duration-500 group-hover:scale-[1.02]">
+                <div className="relative aspect-[16/9] w-full overflow-hidden border border-cyan/20 bg-black transition-transform duration-200 group-hover:scale-[1.01]">
                   {Thumb ? <Thumb /> : null}
                 </div>
                 <div>
