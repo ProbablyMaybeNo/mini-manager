@@ -3,7 +3,19 @@
 **Snapshot:** 2026-06-27 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
 **7 unresolved threads** need your call. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-06-27):** shipped 2 clear, bounded fixes (one branch → PR to `main`, CI-gated, resolved after prod verify) — `pnzYXjHjgFpp` (calendar event-dot now sits below the day number instead of touching it) and `X2BittFA6UwD` ("JUN 2026" planner month label kept on one line). Two new threads need your input (`377k9jxJmpIC`, `FGqJI1COa7Fx`); five carry over from earlier runs (below).
+> **This run (2026-06-27):** built 2 clear, bounded fixes — `pnzYXjHjgFpp` (calendar event-dot now sits below the day number instead of touching it) and `X2BittFA6UwD` ("JUN 2026" planner month label kept on one line) — on branch `fix/vercel-comments-2026-06-27` (PR #78). **Both are BLOCKED, not shipped:** CI is red and I will not merge into a red gate. The redness is **pre-existing and unrelated** — `main`'s Playwright E2E has failed the same 5 tests on the last four builds (since 2026-06-24); my fixes pass typecheck + unit + integration + build and add zero new failures. See the 🚨 banner below — fixing the E2E suite needs a human. Two threads also need your input (`377k9jxJmpIC`, `FGqJI1COa7Fx`); five carry over from earlier runs (below).
+
+---
+
+## 🚨 BLOCKER — `main` CI (Playwright E2E) has been red since 2026-06-24
+
+The autonomous merge gate is stuck: no Vercel-comment fix can ship until this is resolved. **Needs a human.**
+
+- **What:** the `Playwright E2E` job in `.github/workflows/ci.yml` fails 5 of 24 tests; typecheck/unit/integration/build all pass.
+- **Since:** last green `main` CI run was 2026-06-24 (run 143). Runs 145, 146, 147, 148 (current `main` HEAD `43fad6c`) all fail the **same 5 tests** — deterministic, not flaky.
+- **Failing tests:** `qa_dashboard_workspace` M11.1 (add calendar event → ticker) & M11.2 (sub-project + stepper); `qa_project_workspace` M3.1 (project page → focus stepper); `qa_mobile_flows` M6.1 (mobile nav sheet) & M6.2 (create project on mobile → focus stepper).
+- **Root cause (from traces):** a first-run onboarding dialog (`role="dialog"`, body text *"Track your project from the macro to the micro…"* — the welcome/tour card) renders over the project page and **intercepts pointer events**, so Playwright can't click the "Open in focus" / nav buttons (click times out at 30–60s). Something merged after 2026-06-24 made this tour modal block core flows on a fresh test user.
+- **Suggested next step:** ensure the first-run tour can be dismissed/skipped (or isn't modal-blocking) so a fresh user — and the E2E suite — can reach the project-page actions. This may also be a real UX regression for new users, not just a test issue.
 
 ---
 
@@ -21,7 +33,9 @@
 
 ---
 
-## 🟢 SHIPPED THIS RUN (resolved after prod verify)
+## 🟡 BUILT BUT BLOCKED ON CI (PR #78, NOT resolved — do not close the threads)
+
+These passed typecheck + unit + integration + build and are ready; they are held only by the pre-existing red E2E suite above. Resolve the threads after the E2E suite is green, this PR merges, and prod serves the commit.
 
 | Thread | Page | Change | Files |
 |---|---|---|---|
