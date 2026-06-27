@@ -119,8 +119,11 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         >
           ‹
         </button>
-        {/* Month label sits between the nav arrows, not below them (yO830AqQH3Hu). */}
-        <span className="label-osd text-cyan">
+        {/* Month label sits between the nav arrows, not below them (yO830AqQH3Hu).
+            whitespace-nowrap + a smaller OSD size keeps "JUN 2026" on a single
+            line within the narrow (~200px) planner rail rather than wrapping the
+            year onto its own line (X2BittFA6UwD). */}
+        <span className="whitespace-nowrap font-h2 text-sm uppercase tracking-[0.08em] text-cyan">
           {monthLabel}
         </span>
         <button
