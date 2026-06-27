@@ -196,6 +196,12 @@
      spacing scale (24px = one --space-6 step, also a roomier nest). */
   --indent-step: 24px;
 
+  /* Page grid (A5) — the formal 12-column convention pages compose on. 24px
+     gutters match the --space-6 gutter PageContainer already uses, so the
+     outer rhythm is uniform whether a page is a flow column or a grid. */
+  --grid-cols: 12;
+  --grid-gutter: 24px;
+
   /* Border + glow */
   --radius-panel: 2px;
 }
@@ -288,6 +294,20 @@ option {
   font-size: var(--text-h1);
   text-transform: uppercase;
   letter-spacing: 0.15em;
+}
+
+/* ----------------------------------------------------------------------------
+   Layout — the formal 12-column page grid (A5 / DOP-014)
+   ------------------------------------------------------------------------- */
+
+/* The standard page grid: 12 equal columns with a uniform 24px gutter. Pages
+   compose on this (`PageContainer grid` / `PageGrid`) instead of hand-rolling
+   flex, so columns and margins line up across the app. Children place
+   themselves with Tailwind's `col-span-*` (1-12) on the 12-track grid. */
+@utility page-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+  gap: var(--grid-gutter);
 }
 
 /* ----------------------------------------------------------------------------

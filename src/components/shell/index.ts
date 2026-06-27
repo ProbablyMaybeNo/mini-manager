@@ -5,6 +5,6 @@ export { BottomNav } from "./BottomNav";
 export { NavLinks } from "./NavLinks";
 export { Logo } from "./Logo";
 export { PageHeader } from "./PageHeader";
-export { PageContainer } from "./PageContainer";
+export { PageContainer, PageGrid } from "./PageContainer";
 export { PagePlaceholder } from "./PagePlaceholder";
 export { MAIN_NAV, FOOTER_NAV, ALL_NAV, activeNavKey, type NavItem } from "./nav";

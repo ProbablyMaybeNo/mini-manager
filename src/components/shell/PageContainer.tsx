@@ -24,17 +24,24 @@ export function PageContainer({
   children,
   className,
   scroll = false,
+  grid = false,
 }: {
   children: ReactNode;
   className?: string;
   scroll?: boolean;
+  /** A5 — lay the page out on the formal 12-column grid (24px gutters) instead
+   *  of the default vertical flow column. Children place with `col-span-*`. */
+  grid?: boolean;
 }) {
   return (
     <div
       className={cn(
-        // A3 — between-groups rhythm bumped to 32px (was 24) for a clearly
-        // roomier vertical cadence; 24px gutter stays uniform with the app.
-        "flex h-full flex-col gap-8 p-6",
+        grid
+          ? // 12-col grid, 24px gutter; auto-rows keep the page a flow of rows.
+            "page-grid h-full auto-rows-min p-6"
+          : // A3 — between-groups rhythm 32px for a roomier vertical cadence;
+            // 24px gutter stays uniform with the app.
+            "flex h-full flex-col gap-8 p-6",
         scroll && "overflow-y-auto",
         className,
       )}
@@ -42,4 +49,20 @@ export function PageContainer({
       {children}
     </div>
   );
+}
+
+/**
+ * A5 — standalone 12-column grid for composing a page section on the same grid
+ * convention as `PageContainer grid` (24px gutters), without owning the page's
+ * full-height padding column. Drop it inside a PageContainer flow when one
+ * section wants column alignment. Children place with `col-span-*`.
+ */
+export function PageGrid({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={cn("page-grid", className)}>{children}</div>;
 }
