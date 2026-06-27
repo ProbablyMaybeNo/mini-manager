@@ -196,7 +196,7 @@ export function DashboardView({
     // Top-level flex-row hosts the desktop master-detail pane to the right of
     // the dashboard column; below md the pane is a fixed overlay so this row is
     // a no-op single column.
-    <div className="flex h-full bg-black">
+    <div className="flex h-full">
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
           {/* No tagline text bar — the "+ New Project" button + the obvious

@@ -79,7 +79,7 @@ function ProjectsRoute() {
   const filtered = hasActiveFilters(filters);
 
   return (
-    <div className="flex h-full bg-black">
+    <div className="flex h-full">
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-6">
         <PageHeader
           title="PROJECTS"
