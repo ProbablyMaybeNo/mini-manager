@@ -114,53 +114,69 @@
   --color-fg-dim: #b6c6cc;
   --color-fg-faint: #7d8f95;
 
-  /* Type families — Ross's Theme Studio picks. IBM Plex Mono trails each pixel
-     face as a glyph-coverage fallback so missing glyphs stay readable. */
-  --font-display: "Unbutton", "IBM Plex Mono", monospace;
-  --font-osd: "IBM BIOS", "IBM Plex Mono", monospace;
-  --font-mono: "VT323", "IBM Plex Mono", monospace;
-  --font-button: "DePixel Klein", "IBM Plex Mono", monospace;
-  --font-body2: "VT323", "IBM Plex Mono", monospace;
-  /* Extra loaded faces — type `font-lightpixel` / `font-unbutton` on any element. */
-  --font-lightpixel: "Light Pixel 7", "IBM Plex Mono", monospace;
-  --font-unbutton: "Unbutton", "VT323", "IBM Plex Mono", monospace;
+  /* ─────────────────────────────────────────────────────────────────────────
+     Typography — the FOUR confirmed roles (Wave A · A1). Consolidated from the
+     old 6 typeface tokens; Unbutton/3D-Pixel, IBM BIOS, DePixel Klein dropped.
+     IBM Plex Mono trails each custom face as a glyph-coverage fallback.
 
-  /* Type scale — Ross's Theme Studio sizing. xs=12px is the readability floor;
-     the rest scale up from there. */
-  --text-xs: 0.75rem; /* 12px (floor) */
-  --text-sm: 0.9688rem; /* ~15.5px */
-  --text-base: 1.0938rem; /* ~17.5px */
+       Title  = UAV OSD Mono       26px  — page titles + side-panel nav (~16px)
+       Header = IBM Flexi VGA True 24px  + 0.06em tracking — section titles,
+                                                keywords, number displays
+       Body   = IBM Plex Mono      16px  — everything else, incl. tables/labels
+       Button = VT323 (uppercase)  18px  — text inside buttons
+
+     The legacy aliases (--font-display/-osd/-mono/-body2 and --font-h1/-h2/
+     -num1/-num2) are kept pointed at the matching role so residual class usages
+     inherit the right face without a per-file rename. */
+
+  /* Role faces */
+  --font-title: "UAV OSD Mono", "IBM Plex Mono", monospace;
+  --font-header: "Flexi IBM VGA True", "IBM Plex Mono", monospace;
+  --font-body: "IBM Plex Mono", monospace;
+  --font-button: "VT323", "IBM Plex Mono", monospace;
+
+  /* Taxonomy aliases → role faces (so font-h1 / font-num2 / etc. keep working) */
+  --font-h1: var(--font-header); /* section headers + modal titles */
+  --font-h2: var(--font-header); /* column headers + in-section labels */
+  --font-num1: var(--font-header); /* hero numbers — Header per A1 ("number displays") */
+  --font-num2: var(--font-header); /* standard numbers */
+
+  /* Legacy aliases → role faces (residual font-display/-osd/-mono usages) */
+  --font-display: var(--font-title);
+  --font-osd: var(--font-header);
+  --font-mono: var(--font-body);
+  --font-body2: var(--font-button);
+
+  /* Type scale — body floor raised to 16px (A1). xs/sm now clamp to the 16px
+     reading floor; only display sizes climb above it. */
+  --text-xs: 1rem; /* 16px (floor — was 12) */
+  --text-sm: 1rem; /* 16px (floor — was ~15.5) */
+  --text-base: 1rem; /* 16px body */
   --text-lg: 1.25rem; /* 20px */
-  --text-xl: 1.5313rem; /* ~24.5px */
+  --text-xl: 1.5rem; /* 24px (Header) */
   --text-2xl: 1.8438rem; /* ~29.5px */
   --text-3xl: 2.1875rem; /* 35px */
   --text-4xl: 2.9688rem; /* ~47.5px */
 
-  /* Role-specific font sizes — independent of the body scale so each can be
-     tuned on its own in the Theme Studio (no more shrinking body text to size
-     buttons). Applied via text-button / text-dropdown / text-element. */
-  --text-button: 0.8438rem; /* ~13.5px (Buttons category, +2px for legibility — bEv3zSo7wbsS) */
-  --text-dropdown: 1.02rem; /* Listbox trigger + options — +25% (w5cZimrBYgGh), on par with the project title-column cells */
-  --text-element: 0.75rem; /* tools / activity tracker / feature text */
+  /* Role sizes (A1 confirmed) */
+  --text-title: 1.625rem; /* 26px — page title (nav renders this face at --text-h1) */
+  --text-header: 1.5rem; /* 24px — Header role */
+  --text-button: 1.125rem; /* 18px — Button role */
 
-  /* ─────────────────────────────────────────────────────────────────────────
-     Typography categories — the 7-category taxonomy the Theme Builder drives.
-     Buttons reuse --font-button / --text-button above. Number 2 defaults to
-     Body 1. App surfaces migrate onto these in the typography pass; for now the
-     Theme Builder (/dev/theme) renders them so faces + sizes can be locked in. */
-  --font-title: "Unbutton", "IBM Plex Mono", monospace; /* page titles */
-  --font-h1: "IBM BIOS", "IBM Plex Mono", monospace; /* section headers + nav + modal titles */
-  --font-h2: "Flexi IBM VGA True", "IBM Plex Mono", monospace; /* column headers + in-section labels */
-  --font-body: "IBM Plex Mono", monospace; /* all regular text */
-  --font-num1: "Unbutton", "IBM Plex Mono", monospace; /* hero numbers */
-  --font-num2: "VT323", "IBM Plex Mono", monospace; /* standard numbers */
+  /* Taxonomy size aliases */
+  --text-h1: 1rem; /* 16px — nav items + section/modal titles at body-floor size */
+  --text-h2: 1.5rem; /* 24px — Header */
+  --text-body: 1rem; /* 16px — body floor (was 12px) */
+  --text-num1: 1.5rem; /* 24px — Header number displays */
+  --text-num2: 1.5rem; /* 24px — Header number displays */
+  --text-dropdown: 1rem; /* 16px — Listbox trigger + options (body floor) */
+  --text-element: 1rem; /* 16px — tools / activity / feature text (body floor) */
 
-  --text-title: 2.7813rem; /* ~44.5px */
-  --text-h1: 1rem; /* 16px */
-  --text-h2: 1.2188rem; /* ~19.5px */
-  --text-body: 0.75rem; /* 12px (−4px) */
-  --text-num1: 2.3438rem; /* ~37.5px */
-  --text-num2: 0.9688rem; /* ~15.5px */
+  /* Header tracking — Ross wants 1–2px tracking on the Header role (~0.06em). */
+  --tracking-header: 0.06em;
+
+  /* Extra loaded faces — type `font-lightpixel` on any element. */
+  --font-lightpixel: "Light Pixel 7", "IBM Plex Mono", monospace;
 
   /* Border + glow */
   --radius-panel: 2px;
@@ -216,10 +232,16 @@ option {
   outline-offset: 2px;
 }
 
-/* Display titles (Unbutton). Generous tracking (~5px at title sizes) so the
-   pixel face has breathing room between glyphs. Per Ross — tune the em value. */
-.font-display {
-  letter-spacing: 0.14em;
+/* Header role (Flexi IBM VGA True) — Ross wants 1–2px tracking (~0.06em) on
+   section titles / keywords / number displays so the VGA face has air. Applied
+   automatically wherever the Header face is used via the taxonomy aliases. */
+.font-header,
+.font-h1,
+.font-h2,
+.font-num1,
+.font-num2,
+.font-osd {
+  letter-spacing: var(--tracking-header);
 }
 
 /* ----------------------------------------------------------------------------

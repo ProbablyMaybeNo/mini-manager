@@ -20,7 +20,7 @@ export function ActivityFeed({
 }) {
   if (entries.length === 0) {
     return (
-      <p className={cn("font-body text-[10px] text-fg", className)}>
+      <p className={cn("font-body text-body text-fg", className)}>
         No activity yet — your painting moves will show here.
       </p>
     );
