@@ -24,7 +24,10 @@ export function StatBox({
   return (
     <div
       className={cn(
-        "border bg-bg/60 px-4 py-3 panel-depth transition-shadow duration-200 hover:panel-depth-glow",
+        // A3 — roomier inner padding (24/20, was 16/12). Glow dialed back:
+        // static panel-depth only, no hover edge-glow (reserve glow for
+        // primary/active surfaces per the chrome dial-down).
+        "border bg-bg/60 px-6 py-5 panel-depth",
         // Uniform 1px border in the box's accent — each KPI box reads in its
         // own hue (D5/MM-49/qHYZN) while staying the same weight as its
         // neighbours (SrUl); alpha softened so it frames rather than glares.

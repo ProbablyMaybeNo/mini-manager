@@ -25,8 +25,9 @@ import { PriorityDropdown } from "./PriorityDropdown";
 const COLS = ["Title", "Type", "Recipe", "Status", "Priority", "Completion", "Time", ""];
 
 /** Per-depth indent (px) applied to the Title cell so nested sub-projects
- *  read as a tree: Army → Unit → Model. */
-const INDENT_PX = 18;
+ *  read as a tree: Army → Unit → Model. On the A3 spacing scale (--indent-step
+ *  = 24px, one --space-6 step) — roomier nest, no magic number. */
+const INDENT_PX = 24;
 
 /**
  * Which child type a container row can spawn (OR6fdf — "units to armies,

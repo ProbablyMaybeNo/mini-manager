@@ -32,7 +32,9 @@ export function PageContainer({
   return (
     <div
       className={cn(
-        "flex h-full flex-col gap-6 p-6",
+        // A3 — between-groups rhythm bumped to 32px (was 24) for a clearly
+        // roomier vertical cadence; 24px gutter stays uniform with the app.
+        "flex h-full flex-col gap-8 p-6",
         scroll && "overflow-y-auto",
         className,
       )}

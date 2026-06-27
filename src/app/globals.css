@@ -179,6 +179,23 @@
   /* Extra loaded faces — type `font-lightpixel` on any element. */
   --font-lightpixel: "Light Pixel 7", "IBM Plex Mono", monospace;
 
+  /* Spacing scale (A3) — 4 / 8 / 12 / 16 / 24 / 32 / 48. Components default to
+     the roomy end: card inner padding 16-24, card gap 24 (16 mobile), section
+     top/bottom 32-48, between groups 24-32. Density target 3/5 — clearly more
+     breathing room than the old ~4. Use via the named utilities or the matching
+     Tailwind step (p-4=16, p-6=24, p-8=32, p-12=48). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Sub-project / tree indent — retires the INDENT_PX=18 magic number on the
+     spacing scale (24px = one --space-6 step, also a roomier nest). */
+  --indent-step: 24px;
+
   /* Border + glow */
   --radius-panel: 2px;
 }
@@ -195,14 +212,15 @@ body {
   background-color: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-body);
-  /* Faint global scanline texture — neutral white tint (was cyan, which read
-     as a blue cast on the black canvas, T4nuELRRnFtJ). */
+  /* Faint global scanline texture — static, neutral white tint. Dialed to a
+     readability-floored low opacity (A3 chrome dial-down: was 0.02) and a
+     wider 4px pitch so the texture reads as ambient CRT, not a grid. */
   background-image: repeating-linear-gradient(
     0deg,
-    rgba(255, 255, 255, 0.02) 0px,
-    rgba(255, 255, 255, 0.02) 1px,
+    rgba(255, 255, 255, 0.012) 0px,
+    rgba(255, 255, 255, 0.012) 1px,
     transparent 1px,
-    transparent 3px
+    transparent 4px
   );
 }
 

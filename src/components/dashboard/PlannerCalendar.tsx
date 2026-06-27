@@ -25,11 +25,11 @@ const KINDS: CalendarEventKind[] = ["tournament", "deadline", "battle", "other"]
  */
 export function PlannerCalendar({
   events,
-  calendarClassName = "mx-auto w-full max-w-[170px]",
+  calendarClassName = "mx-auto w-full max-w-44",
 }: {
   events: CalendarEvent[];
   /** Override the month-grid sizing. Defaults to the compact rail width
-   *  (max-w-[170px]); the standalone /planner page widens it (DOP-005a). */
+   *  (max-w-44); the standalone /planner page widens it (DOP-005a). */
   calendarClassName?: string;
 }) {
   const router = useRouter();
