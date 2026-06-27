@@ -517,7 +517,7 @@ export function ProjectsTable({
                 <th
                   key={c || `col-${i}`}
                   scope="col"
-                  className="px-3 py-2 text-left label-osd tracking-[0.18em] text-fg"
+                  className="px-3 py-2 text-left font-h2 text-[0.9375rem] uppercase tracking-[0.12em] text-fg"
                 >
                   {c}
                 </th>

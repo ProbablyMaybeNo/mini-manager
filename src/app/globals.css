@@ -292,7 +292,9 @@ option {
    title. Same OSD face, ~+33% size. */
 @utility label-osd-h2 {
   font-family: var(--font-h1);
-  font-size: var(--text-h1);
+  font-size: 0.8125rem; /* 13px — panel/section + stat-box titles; small enough
+                           to sit cleanly in the panel's top-border notch without
+                           clipping (was 16px var(--text-h1) — too tall). */
   text-transform: uppercase;
   letter-spacing: 0.15em;
 }

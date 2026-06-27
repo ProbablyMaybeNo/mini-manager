@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ActivityFeed, Panel } from "@/components/kit";
 import type { ActivityEntry, CalendarEvent } from "@/lib/types";
 import { PlannerCalendar } from "./PlannerCalendar";
@@ -16,16 +15,8 @@ export function RightRail({
       {/* Calendar made much smaller (r-N-8): the PLANNER panel is capped to a
           compact width so the month grid reads as a glanceable mini-calendar,
           not a full-size one. */}
+      {/* Planner is a dashboard calendar widget — no separate page (Ross). */}
       <Panel label="PLANNER" className="p-3">
-        {/* DOP-005b — the widget header links to the full PLANNER page (the
-            real calendar + events + activity surface). Keeps the rail a
-            glance, sends power use to /planner. */}
-        <Link
-          href="/planner"
-          className="mb-2 ml-auto inline-flex items-center gap-1 border border-cyan/40 px-2 py-1 label-osd text-cyan transition-colors hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/10"
-        >
-          OPEN PLANNER <span aria-hidden>▸</span>
-        </Link>
         <PlannerCalendar events={events} />
       </Panel>
       {/* Activity feed kept compact + scrollable (UF5HOwXMpJxP): capped height
