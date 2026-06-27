@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
@@ -86,7 +87,13 @@ export function DashboardView({
   onAddSubProject,
   onRetry,
 }: DashboardViewProps) {
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // PP-1 cleanup flag: the slide-out edit inspector is no longer opened by a
+  // dashboard row-click (rows now navigate to /projects/[id]). `inspectorOpen`
+  // is kept only for the open-on-create transition below; the row-click path
+  // that previously set it is gone. Safe to remove the inspector entirely once
+  // the create flow stops routing through InspectorShell (follow-up).
   const [inspectorOpen, setInspectorOpen] = useState(false);
   // RF-8: "+ New Project" opens the project page in CREATE mode (blank fields);
   // no row is persisted until SAVE. Mutually exclusive with the edit inspector.
@@ -105,14 +112,13 @@ export function DashboardView({
   const todayIso = new Date().toISOString().slice(0, 10);
   const upcomingEvents = events.filter((e) => e.date >= todayIso);
 
-  // Row click manages the project (opens the inspector) — it deliberately no
-  // longer jumps to the focus bench. Reaching focus is now an explicit
-  // per-row action (the ◎ icon) or the inspector's "Start session" button.
+  // PP-1: a row click now navigates to the dedicated project PAGE
+  // (/projects/[id]) instead of opening the slide-out inspector. Focus is still
+  // an explicit per-row action (the ◎ icon); delete / attach / add-sub remain
+  // wired through ProjectsTable's own per-row controls.
   function openProject(p: Project) {
-    setCreating(false);
-    setSelectedId(p.id);
-    setInspectorOpen(true);
     onOpenProject?.(p);
+    router.push(`/projects/${p.id}`);
   }
 
   // RF-8: open the blank create view (closing any open edit inspector first).

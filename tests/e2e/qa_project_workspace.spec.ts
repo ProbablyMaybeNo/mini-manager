@@ -10,14 +10,14 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * new row appears and its edit panel opens.
  *
  * Each row exposes:
- *   - a body click → opens the read-only ProjectInspector (a dialog),
+ *   - a body click → navigates to the project PAGE (/projects/<id>) (PP-1),
  *   - a focus icon (aria-label "Open <title> in focus") → /focus?project=<id>,
  *   - an expand chevron (only when the row has sub-projects).
  *
  * The model-completion stepper now lives on the FOCUS bench (not the
- * inspector), so this mission creates a project, opens the inspector to
- * confirm the slide-out, then drives the focus bench's "Increase models
- * painted" stepper and asserts the bump persists across reload.
+ * project page), so this mission creates a project, opens its page to confirm
+ * the navigation, then drives the focus bench's "Increase models painted"
+ * stepper and asserts the bump persists across reload.
  */
 
 async function addProject(
@@ -44,7 +44,7 @@ async function addProject(
 }
 
 test.describe("M3 — Project workspace lifecycle", () => {
-  test("M3.1 create → inspector opens → focus stepper bump persists", async ({
+  test("M3.1 create → project page opens → focus stepper bump persists", async ({
     page,
   }) => {
     // This test has more steps than most (create → inspect → focus → stepper →
@@ -65,18 +65,20 @@ test.describe("M3 — Project workspace lifecycle", () => {
     const row = page.getByRole("button", { name: `Manage ${name}` });
     await expect(row).toBeVisible({ timeout: 15_000 });
 
-    // Clicking the row body opens the project workspace inspector. On mobile
-    // this is the full-screen takeover (RF-10, a dialog labelled with the
-    // project title); on desktop it's the persistent InspectorPane section.
+    // PP-1: clicking the row body navigates to the dedicated project PAGE
+    // (/projects/<id>) — no slide-out inspector. The page leads with the
+    // project name as its h1, then a back control returns to the dashboard.
     await row.click();
-    const inspector = page.getByRole("dialog", { name });
-    await expect(inspector).toBeVisible();
-    // RF-1/RF-2: Focus is now a labelled button carrying the purple reticle.
-    await expect(inspector.getByRole("button", { name: /Focus/i })).toBeVisible();
-    // The panel closes via its back/close control (aria-label
-    // "Close project inspector").
-    await inspector.getByRole("button", { name: /close project inspector/i }).click();
-    await expect(inspector).toBeHidden();
+    await page.waitForURL(/\/projects\//, { timeout: 30_000 });
+    await expect(
+      page.getByRole("heading", { name, level: 1 }),
+    ).toBeVisible({ timeout: 30_000 });
+    // The back control returns to the dashboard.
+    await page.getByRole("button", { name: /‹ Dashboard/i }).click();
+    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
+    await expect(
+      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+    ).toBeVisible({ timeout: 30_000 });
 
     // The per-row focus icon navigates to the focus bench for this project.
     await page
