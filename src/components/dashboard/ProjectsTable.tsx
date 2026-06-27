@@ -189,9 +189,11 @@ export function ProjectsTable({
                 // Spacer keeps leaf titles aligned with their expandable siblings.
                 <span className="h-6 w-6 shrink-0" aria-hidden />
               )}
-              {/* Name stays white so it's clearly distinct from the coloured
-                  TYPE chip — even on the cyan-highlighted selected row (JRH4). */}
-              <span className="text-fg">{p.title}</span>
+              {/* Name uses the column-header face (font-h2 = Flexi IBM VGA True,
+                  FGqJI1COa7Fx) and stays white so it's clearly distinct from the
+                  coloured TYPE chip — even on the cyan-highlighted selected row
+                  (JRH4). */}
+              <span className="font-h2 text-h2 text-fg">{p.title}</span>
             </div>
           </td>
           <td className="px-3 py-2.5">
