@@ -108,8 +108,9 @@ export function ArmyPanelBody({
           <span className="shrink-0 font-mono text-body font-bold tabular-nums text-cyan">{overall}%</span>
         </div>
 
-        {/* UNITS (n) list. */}
-        <h3 className="mt-6 label-osd text-fg-dim">Units ({units.length})</h3>
+        {/* UNITS (n) section — a hairline rule above the label per 43:22. */}
+        <div className="mt-6 h-px w-full bg-border" aria-hidden />
+        <h3 className="mt-2.5 label-osd text-fg-dim">Units ({units.length})</h3>
         {units.length > 0 ? (
           <ul className="mt-2 flex flex-col">
             {units.map((u) => (
@@ -155,17 +156,21 @@ export function ArmyPanelBody({
           <p className="mt-2 font-mono text-body text-fg-dim">No units yet.</p>
         )}
 
-        <Button variant="add" size="sm" className="mt-4" disabled={pending} onClick={addUnit}>
-          + Add unit
-        </Button>
+        <div className="mt-4">
+          <Button variant="add" size="sm" disabled={pending} onClick={addUnit}>
+            + Add unit
+          </Button>
+        </div>
 
         {error && <p className="mt-3 font-mono text-body text-red">▸ {error}</p>}
 
+        {/* Expand affordance (spec — not in the 43:4 frame) kept subtle on its
+            own line so the panel still reads as the frame's roster. */}
         {onExpand && (
           <button
             type="button"
             onClick={() => onExpand(project)}
-            className="mt-5 inline-flex items-center gap-1.5 font-mono text-body text-fg-dim hover:text-cyan"
+            className="mt-6 inline-flex items-center gap-1.5 font-mono text-[11px] text-fg-faint hover:text-cyan"
           >
             ⤢ Open full page
           </button>
@@ -179,9 +184,9 @@ export function ArmyPanelBody({
           onClick={() => onGoPaint?.(project, nextUnit)}
           className="flex w-full items-center justify-center gap-2 bg-cyan px-4 py-4 font-display text-button font-bold uppercase tracking-wide text-bg transition-colors hover:bg-cyan/85"
         >
-          ▸ Go Paint
+          ▸ GO PAINT
           {nextUnit && (
-            <span className="font-normal opacity-80">· Next: {nextUnit.title}</span>
+            <span className="font-normal opacity-80">· NEXT: {nextUnit.title}</span>
           )}
         </button>
       </div>

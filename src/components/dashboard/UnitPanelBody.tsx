@@ -129,13 +129,16 @@ export function UnitPanelBody({
           </div>
         </div>
 
-        {/* RECIPE big named swatches. */}
+        {/* Full-bleed divider before RECIPE (44:21). */}
+        <div className="-mx-4 mt-5 h-px bg-border md:-mx-6" aria-hidden />
+
+        {/* RECIPE — five 60px named swatches (44:24). */}
         <h3 className="mt-5 label-osd text-fg-dim">Recipe</h3>
-        <div className="mt-2 flex flex-wrap gap-3">
+        <div className="mt-3 flex flex-wrap gap-3">
           {palette.length > 0 ? (
-            palette.slice(0, 6).map((p, i) => (
-              <div key={`${p.hex}-${i}`} className="flex w-[84px] flex-col gap-1">
-                <Swatch hex={p.hex} size="lg" className="h-[84px] w-[84px] rounded-[6px]" />
+            palette.slice(0, 5).map((p, i) => (
+              <div key={`${p.hex}-${i}`} className="flex w-[60px] flex-col gap-1.5">
+                <Swatch hex={p.hex} size="lg" className="h-[60px] w-[60px] rounded-[6px]" />
                 {p.label && (
                   <span className="truncate font-mono text-[11px] text-fg-dim" title={p.label}>
                     {p.label}
@@ -156,15 +159,24 @@ export function UnitPanelBody({
           </Button>
         </div>
 
-        {/* PROGRESS · n MODELS — cumulative stage steppers. */}
-        <h3 className="mt-6 label-osd text-fg-dim">
+        {/* Full-bleed divider before PROGRESS (44:46). */}
+        <div className="-mx-4 mt-6 h-px bg-border md:-mx-6" aria-hidden />
+
+        {/* PROGRESS · n MODELS — cumulative stage steppers, hairline-separated. */}
+        <h3 className="mt-5 label-osd text-fg-dim">
           Progress · {total} model{total === 1 ? "" : "s"}
         </h3>
-        <div className="mt-3 flex flex-col gap-4">
-          {STAGE_ROWS.map((row) => {
+        <div className="mt-3 flex flex-col">
+          {STAGE_ROWS.map((row, idx) => {
             const value = snap ? (snap[row.column] as number) : 0;
             return (
-              <div key={row.stage} className="flex items-center gap-3">
+              <div
+                key={row.stage}
+                className={cn(
+                  "flex items-center gap-3 py-3",
+                  idx > 0 && "border-t border-border",
+                )}
+              >
                 <span className="w-[78px] shrink-0 font-mono text-body text-fg-bright">{row.label}</span>
                 <div className="flex shrink-0 items-center">
                   <button
@@ -217,11 +229,12 @@ export function UnitPanelBody({
 
         {error && <p className="mt-3 font-mono text-body text-red">▸ {error}</p>}
 
+        {/* Expand affordance (spec — not in the 44:4 frame), kept subtle. */}
         {onExpand && (
           <button
             type="button"
             onClick={() => onExpand(project)}
-            className="mt-5 inline-flex items-center gap-1.5 font-mono text-body text-fg-dim hover:text-cyan"
+            className="mt-6 inline-flex items-center gap-1.5 font-mono text-[11px] text-fg-faint hover:text-cyan"
           >
             ⤢ Open full page
           </button>
@@ -235,7 +248,7 @@ export function UnitPanelBody({
           onClick={() => onGoPaint?.(project)}
           className="flex w-full items-center justify-center gap-2 bg-cyan px-4 py-4 font-display text-button font-bold uppercase tracking-wide text-bg transition-colors hover:bg-cyan/85"
         >
-          ▷ Go Paint!
+          ▷ GO PAINT!
         </button>
       </div>
     </div>
