@@ -17,7 +17,6 @@ import type {
   Project,
   ProjectType,
 } from "@/lib/types";
-import { ContinuePainting } from "./ContinuePainting";
 import { CreateProjectView } from "./CreateProjectView";
 import { InspectorShell } from "./InspectorShell";
 import { PlannerScreen } from "./PlannerScreen";
@@ -30,8 +29,6 @@ import {
   type RosterSort,
 } from "./RosterFilterBar";
 import { RightRail } from "./RightRail";
-import { StatRow } from "./StatRow";
-import { UpcomingEventsBar } from "./UpcomingEventsBar";
 import { WelcomeCard } from "./WelcomeCard";
 
 export type DashboardStatus = "ready" | "loading" | "error";
@@ -78,7 +75,6 @@ function findProject(list: Project[], id: string): Project | null {
 }
 
 export function DashboardView({
-  summary,
   projects,
   events,
   activity,
@@ -251,7 +247,6 @@ export function DashboardView({
               <div className="@container flex min-w-0 flex-1 flex-col gap-6">
                 {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
                 <WelcomeCard />
-                <StatRow summary={summary} />
                 <div data-tour="dashboard-projects" className="flex flex-col gap-4">
                   {/* Section header row (4:4): PROJECTS ROSTER label. */}
                   <div className="flex items-center justify-between">
@@ -304,17 +299,6 @@ export function DashboardView({
                     </Button>
                   </div>
                 </div>
-
-                {/* DOP-003 — "continue painting" tier fills the previously empty
-                    lower half: the projects mid-paint, ready to resume in one
-                    click. Renders nothing when nothing's in progress, so a fresh
-                    account's dashboard stays clean. */}
-                <ContinuePainting
-                  projects={projects}
-                  projectMinutes={projectMinutes}
-                  onResume={(p) => onFocusProject?.(p)}
-                  onOpenProject={openProject}
-                />
               </div>
               {/* RightRail steps aside while the desktop pane occupies the
                   right column (DOP-002). RF-11: hidden below xl — the mobile
@@ -329,12 +313,10 @@ export function DashboardView({
           )}
         </div>
 
-        {/* Bottom UPCOMING-EVENTS ticker. Desktop (xl+): the informational
-            ticker. Mobile (RF-11): a tappable bar that opens the full-screen
-            PlannerScreen (calendar + +Date + activity tracker). */}
-        <div className="hidden xl:block">
-          <UpcomingEventsBar events={status === "ready" ? upcomingEvents : []} />
-        </div>
+        {/* Upcoming events live ONLY in the right rail now (strict Figma 4:4 —
+            no bottom ticker section in main). The button below stays mobile-only
+            (xl:hidden), opening the full-screen PlannerScreen where the rail is
+            hidden. */}
         <button
           type="button"
           onClick={() => setPlannerOpen(true)}
