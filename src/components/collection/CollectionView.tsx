@@ -1,11 +1,34 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { CollectionTable } from "./CollectionTable";
 import { CollectionStatsBar } from "./CollectionStatsBar";
 import { PasteUrlBar } from "./PasteUrlBar";
+
+/** A 24:4 collection section: a coloured accent tick down the left edge over a
+ *  bare, unboxed table (no Panel border — the frame stacks two full-width
+ *  sections). The table renders its own PAINTS/MODELS + count + filter header. */
+function CollectionSection({
+  label,
+  accent,
+  children,
+}: {
+  label: string;
+  accent: "cyan" | "purple";
+  children: ReactNode;
+}) {
+  return (
+    <section
+      aria-label={label}
+      className={accent === "purple" ? "border-l-2 border-purple pl-4" : "border-l-2 border-cyan pl-4"}
+    >
+      {children}
+    </section>
+  );
+}
 
 export type CollectionStatus = "ready" | "loading" | "error";
 
@@ -44,7 +67,7 @@ export function CollectionView({
       <div className="flex flex-1 flex-col gap-6 pb-4">
       <PageHeader
         title="COLLECTION"
-        tagline="// only the pots & models you own — track what each cost"
+        tagline="// paints & models — track what each costs"
       />
 
       <PasteUrlBar onAddUrl={onAddUrl} />
@@ -63,12 +86,11 @@ export function CollectionView({
       ) : status === "loading" ? (
         <div className="h-64 animate-pulse border border-cyan/20 bg-cyan/5" aria-busy="true" />
       ) : (
-        // DOP-012 — the two collections sit side-by-side once there's room
-        // (xl+), so two short/empty tables stop each claiming the full page
-        // width and leaving a tall void. They start at the top (items-start) so
-        // an empty table only reserves its own height, not the taller sibling's.
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
-          <Panel label={`PAINTS (${paints.length})`} className="p-4 pt-5">
+        // 24:4 — PAINTS and MODELS stack as two full-width, unboxed sections
+        // (not side-by-side bordered cards), each an accent-ticked label over a
+        // bare table.
+        <div className="flex flex-col gap-10">
+          <CollectionSection label="PAINTS" accent="cyan">
             <CollectionTable
               kind="paint"
               items={paints}
@@ -80,9 +102,9 @@ export function CollectionView({
               onAdd={onAddPaint}
               recipeSwatches={recipeSwatches}
             />
-          </Panel>
+          </CollectionSection>
 
-          <Panel label={`MODELS (${models.length})`} accent="purple" className="p-4 pt-5">
+          <CollectionSection label="MODELS" accent="purple">
             <CollectionTable
               kind="model"
               items={models}
@@ -93,7 +115,7 @@ export function CollectionView({
               onRemove={onRemove}
               onAdd={onAddModel}
             />
-          </Panel>
+          </CollectionSection>
         </div>
       )}
       </div>

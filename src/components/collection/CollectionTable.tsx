@@ -112,7 +112,7 @@ export function CollectionTable({
       <div className="flex items-center justify-between gap-3">
         {/* h2 (not h3) so the /collection outline reads h1 → h2 with no skipped
             level — the page h1 is "COLLECTION" (UX-005). Visual styling kept. */}
-        <h2 className="label-osd text-cyan">
+        <h2 className={cn("label-osd", kind === "model" ? "text-purple" : "text-cyan")}>
           {title} <span className="text-fg">{items.length}</span>
         </h2>
         <div className="relative">

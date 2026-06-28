@@ -40,11 +40,11 @@ function KindToggle({
             aria-checked={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "border px-4 py-1.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
-              "border-purple",
+              "rounded-[6px] border px-4 py-1.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
+              "border-cyan",
               active
-                ? "bg-purple text-bg"
-                : "bg-transparent text-purple hover:bg-purple/10",
+                ? "bg-cyan text-bg"
+                : "bg-transparent text-cyan hover:bg-cyan/10",
             )}
           >
             {opt.label}
