@@ -1,10 +1,49 @@
 "use client";
 
-import { CloseButton, RecipePaintTile } from "@/components/kit";
+import { IconButton, Listbox, Swatch } from "@/components/kit";
+import type { Accent } from "@/lib/palette";
 import { cn } from "@/lib/cn";
 import type { RecipeSlot } from "@/lib/types";
 
-/** One editor slot: swatch + brand/name + layer + note, with reorder / pick / remove. */
+/** Standard technique pills (Figma 28:4) — the recipe step taxonomy. The slot's
+ *  free-text `layer` field stores the chosen technique; unrecognised values fall
+ *  through as a neutral pill so legacy/custom layers still render. */
+const TECHNIQUES = [
+  "BASECOAT",
+  "SHADE",
+  "LAYER",
+  "HIGHLIGHT",
+  "DRYBRUSH",
+  "DETAIL",
+] as const;
+type Technique = (typeof TECHNIQUES)[number];
+
+const TECHNIQUE_ACCENT: Record<Technique, Accent> = {
+  BASECOAT: "green",
+  SHADE: "purple",
+  LAYER: "cyan",
+  HIGHLIGHT: "cyan",
+  DRYBRUSH: "yellow",
+  DETAIL: "green",
+};
+
+const pillTint: Record<Accent, string> = {
+  cyan: "border-cyan/50 text-cyan",
+  green: "border-green/50 text-green",
+  yellow: "border-yellow/50 text-yellow",
+  orange: "border-orange/50 text-orange",
+  purple: "border-purple/50 text-purple",
+  red: "border-red/50 text-red",
+  dim: "border-border text-fg-dim",
+};
+
+function techniqueAccent(layer: string): Accent {
+  const up = layer.toUpperCase() as Technique;
+  return TECHNIQUES.includes(up) ? TECHNIQUE_ACCENT[up] : "dim";
+}
+
+/** One editor step row (28:4): drag-handle + nn + technique pill + paint
+ *  dot/name/brand + note + delete, with reorder / pick. */
 export function SlotRow({
   slot,
   index,
@@ -26,62 +65,75 @@ export function SlotRow({
   onLayerChange: (layer: string) => void;
   onNoteChange: (note: string) => void;
 }) {
+  const currentTechnique = (slot.layer.toUpperCase() as Technique);
+  const known = TECHNIQUES.includes(currentTechnique);
+
   return (
-    <div className="flex items-start gap-3 border border-cyan/30 bg-bg/40 p-3">
-      <div className="flex flex-col items-center gap-1 pt-1">
-        <ReorderBtn label="Move up" disabled={isFirst} onClick={() => onMove(-1)}>
+    <div className="flex items-center gap-3 rounded-[6px] border border-border bg-bg/40 p-3">
+      {/* Drag-handle column: the ⠿ glyph + keyboard reorder up/down. */}
+      <div className="flex shrink-0 flex-col items-center">
+        <ReorderBtn label={`Move step ${index + 1} up`} disabled={isFirst} onClick={() => onMove(-1)}>
           ▲
         </ReorderBtn>
-        <span className="font-num2 text-num2 text-fg">{index + 1}</span>
-        <ReorderBtn label="Move down" disabled={isLast} onClick={() => onMove(1)}>
+        <span aria-hidden className="text-fg-faint">⠿</span>
+        <ReorderBtn label={`Move step ${index + 1} down`} disabled={isLast} onClick={() => onMove(1)}>
           ▼
         </ReorderBtn>
       </div>
 
-      {/* l9-Ep / C1Dj / -zP2IB — large legible tile: company top, paint name
-          centre, layer bottom in black/white. Clicking opens the picker. */}
-      <RecipePaintTile
-        hex={slot.swatch}
-        name={slot.name}
-        brand={slot.brand}
-        layer={slot.layer}
-        size="lg"
-        onClick={onPick}
-        ariaLabel={`Change paint for slot ${index + 1}`}
-        className="mt-0.5 shrink-0"
-      />
+      {/* Zero-padded step number. */}
+      <span className="shrink-0 font-mono text-body font-bold tabular-nums text-fg-dim">
+        {String(index + 1).padStart(2, "0")}
+      </span>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <button type="button" onClick={onPick} className="text-left">
-          <div className="font-body text-body text-fg hover:text-cyan">{slot.name}</div>
-          <div className="font-body text-body uppercase tracking-[0.15em] text-fg">
-            {slot.brand}
-          </div>
-        </button>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            value={slot.layer}
-            onChange={(e) => onLayerChange(e.target.value)}
-            aria-label={`Layer for slot ${index + 1}`}
-            placeholder="Layer / technique"
-            className="min-h-6 w-36 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
-          />
-          <input
-            value={slot.note ?? ""}
-            onChange={(e) => onNoteChange(e.target.value)}
-            aria-label={`Note for slot ${index + 1}`}
-            placeholder="Note (e.g. thin 2:1, recess only)"
-            className="min-h-6 min-w-[160px] flex-1 border border-cyan/40 bg-bg px-2 py-1 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
-          />
-        </div>
+      {/* Technique pill — a bordered Listbox styled as the coloured pill. */}
+      <div className="shrink-0">
+        <Listbox<Technique>
+          value={known ? currentTechnique : ""}
+          options={TECHNIQUES.map((t) => ({ value: t, label: t }))}
+          onChange={(t) => onLayerChange(t)}
+          ariaLabel={`Technique for step ${index + 1}`}
+          accent={techniqueAccent(slot.layer)}
+          placeholder={slot.layer ? slot.layer.toUpperCase() : "TECHNIQUE"}
+          triggerClassName={cn("min-w-[104px] rounded-[6px] border-solid", pillTint[techniqueAccent(slot.layer)])}
+        />
       </div>
 
-      <CloseButton
-        tone="destructive"
-        onClick={onRemove}
-        aria-label={`Remove slot ${index + 1}`}
+      {/* Paint dot + name + brand — clicking opens the Pick & Paint picker. */}
+      <button
+        type="button"
+        onClick={onPick}
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        aria-label={`Change paint for step ${index + 1}`}
+      >
+        <Swatch hex={slot.swatch} size="md" className="shrink-0 rounded-full" />
+        <span className="min-w-0">
+          <span className="block truncate font-mono text-body text-fg-bright hover:text-cyan">
+            {slot.name}
+          </span>
+          <span className="block truncate font-mono text-[11px] text-fg-dim">{slot.brand}</span>
+        </span>
+      </button>
+
+      {/* Note. */}
+      <input
+        value={slot.note ?? ""}
+        onChange={(e) => onNoteChange(e.target.value)}
+        aria-label={`Note for step ${index + 1}`}
+        placeholder="Note…"
+        className="min-h-7 w-40 shrink-0 rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
       />
+
+      {/* Delete. */}
+      <IconButton
+        variant="outlineRed"
+        size="sm"
+        className="h-7 w-7 shrink-0"
+        aria-label={`Remove step ${index + 1}`}
+        onClick={onRemove}
+      >
+        ⊗
+      </IconButton>
     </div>
   );
 }
@@ -104,10 +156,8 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        // h-6 w-6 → 24px hit area (WCAG 2.2 §2.5.8) without changing the glyph
-        // (UX-003); was 20px.
-        "flex h-6 w-6 items-center justify-center font-button text-button leading-none",
-        disabled ? "text-fg-faint/30" : "text-cyan hover:text-glow-cyan",
+        "flex h-4 w-6 items-center justify-center font-button text-[8px] leading-none",
+        disabled ? "text-fg-faint/30" : "text-cyan hover:text-fg-bright",
       )}
     >
       {children}

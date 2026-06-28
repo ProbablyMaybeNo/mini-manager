@@ -103,18 +103,19 @@ export function RecipePaintPicker({
     <SlideOutPanel
       open={open}
       onClose={onClose}
-      title="Pick a paint"
-      breadcrumb={contextLabel ? `RECIPE ▸ ${contextLabel.toUpperCase()}` : "RECIPE ▸ PICK A PAINT"}
+      title="Pick & Paint"
+      breadcrumb={contextLabel ? `RECIPE ▸ ${contextLabel.toUpperCase()}` : "RECIPE ▸ PICK & PAINT"}
       width="max-w-2xl"
     >
       <div className="flex flex-col gap-4">
-        <p className="font-body text-body text-fg">
+        <p className="font-mono text-body italic text-fg-dim">
           {mode === "edit-slot"
-            ? "▸ Choosing a paint REPLACES this slot's paint."
-            : "▸ Choosing a paint fills this slot."}
+            ? "// choosing a paint replaces this slot"
+            : "// choosing a paint fills this slot"}
         </p>
 
-        <div role="tablist" aria-label="Paint picker tools" className="flex flex-wrap gap-1 border-b border-cyan/20 pb-2">
+        {/* Underline-active tab bar (Pick & Paint 37:5). */}
+        <div role="tablist" aria-label="Paint picker tools" className="flex flex-wrap gap-5 border-b border-border">
           {TABS.map((t) => {
             const active = t.key === tab;
             return (
@@ -125,10 +126,10 @@ export function RecipePaintPicker({
                 aria-selected={active}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "border px-3 py-1.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
+                  "-mb-px border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors",
                   active
-                    ? "border-cyan bg-cyan/10 text-cyan"
-                    : "border-cyan/20 text-fg-dim hover:border-cyan/60 hover:text-cyan",
+                    ? "border-cyan text-cyan"
+                    : "border-transparent text-fg-dim hover:text-fg",
                 )}
               >
                 {t.label}

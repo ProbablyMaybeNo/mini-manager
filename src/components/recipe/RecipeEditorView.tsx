@@ -116,11 +116,21 @@ export function RecipeEditorView({
             ]}
           />
         </div>
-        {/* Share → neon green (t7doCednL8MP). Font stays DePixel Klein. */}
-        <Button variant="add" onClick={onShare}>
-          Share
+        {/* 28:4 footer actions: SHARE LINK (outline), SAVE RECIPE (green),
+            ATTACH RECIPE (blue). Share stays the green outline link affordance. */}
+        <Button variant="secondary" onClick={onShare}>
+          ⛓ Share Link
         </Button>
-        <Button variant="solidCyan" onClick={onSave}>Save</Button>
+        <Button variant="add" onClick={onSave}>
+          Save Recipe
+        </Button>
+        <Button
+          variant="solidCyan"
+          className="border-blue bg-blue hover:bg-blue/85"
+          onClick={onSave}
+        >
+          Attach Recipe
+        </Button>
       </Panel>
 
       {/* ndZ9 — inspiration removed from the creator; the freed space lets the
@@ -154,9 +164,14 @@ export function RecipeEditorView({
             />
           ))
         )}
-        <Button variant="add" onClick={addSlot}>
-          + Add slot
-        </Button>
+        {/* + ADD STEP — dashed full-width affordance (28:4). */}
+        <button
+          type="button"
+          onClick={addSlot}
+          className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-cyan/40 py-3 font-mono text-body font-bold uppercase tracking-wide text-cyan transition-colors hover:bg-cyan/5"
+        >
+          + Add Step
+        </button>
       </Panel>
 
       {/* -bxkX — Notes shortened (rows 3) so the panel sits symmetric with the
