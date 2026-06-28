@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import { and, eq } from "drizzle-orm";
 import { currentUserId } from "@/lib/auth-stub";
 import { loadAppData } from "@/lib/appData";
+import { db } from "@/db/client";
+import { projects } from "@/db/schema";
 import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project } from "@/lib/types";
 import { ProjectPageClient } from "./ProjectPageClient";
@@ -39,11 +42,35 @@ export default async function ProjectPage({
   if (!hit) notFound();
   const { project, ancestors } = hit;
   const loggedMinutes = rollupProjectMinutes(project, data.projectMinutes ?? {});
+
+  // Timeline / DETAILS / NOTES fields not carried on the dashboard view-model
+  // (created date, deadline, notes, tags) — read straight from the row so the
+  // 13:4 right-rail TIMELINE + DETAILS/NOTES accordions show REAL data only.
+  const metaRows = await db
+    .select({
+      createdAt: projects.createdAt,
+      targetDate: projects.targetDate,
+      notesMd: projects.notesMd,
+      faction: projects.faction,
+      game: projects.game,
+    })
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  const row = metaRows[0];
+  const meta = {
+    createdAtIso: row?.createdAt ? row.createdAt.toISOString().slice(0, 10) : null,
+    deadlineIso: row?.targetDate ? row.targetDate.toISOString().slice(0, 10) : null,
+    notes: row?.notesMd ?? null,
+    tags: [row?.game, row?.faction].filter((t): t is string => !!t),
+  };
+
   return (
     <ProjectPageClient
       project={project}
       ancestors={ancestors.map((a) => ({ id: a.id, title: a.title, type: a.type }))}
       loggedMinutes={loggedMinutes}
+      meta={meta}
     />
   );
 }
