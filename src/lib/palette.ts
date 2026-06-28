@@ -45,6 +45,17 @@ export const accentBorder: Record<Accent, string> = {
   dim: "border-fg-faint",
 };
 
+/** Per-accent dot fill — used by PriorityTag / activity dots / status dots. */
+export const accentDot: Record<Accent, string> = {
+  cyan: "bg-cyan",
+  green: "bg-green",
+  yellow: "bg-yellow",
+  orange: "bg-orange",
+  purple: "bg-purple",
+  red: "bg-red",
+  dim: "bg-fg-faint",
+};
+
 /** Per-accent phosphor text-glow (maps onto the text-glow-* utilities in
  *  globals.css). `dim` has no phosphor token, so it stays un-glowed. */
 export const accentTextGlow: Record<Accent, string> = {

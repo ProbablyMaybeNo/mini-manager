@@ -26,24 +26,26 @@ export function ProgressBar({
   className?: string;
 }) {
   const pct = Math.max(0, Math.min(100, percent));
+  // V2 ramp (4:4): cyan while in progress, green at/near 100%; empty stays dim.
   const tone: Accent =
-    accent ??
-    (pct >= 67 ? "green" : pct >= 34 ? "yellow" : pct > 0 ? "red" : "dim");
+    accent ?? (pct >= 100 ? "green" : pct > 0 ? "cyan" : "dim");
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div
-        // Bar height +50% (h-2 → h-3) to match the larger % label (kdV6XB6eFsRS).
-        className="h-3 flex-1 border border-fg/20 bg-bg"
+        // Rounded 4px track on the border-grey rail (HEX.CODE progress bar).
+        className="h-1 flex-1 overflow-hidden rounded-full bg-border"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className={cn("h-full", fillColor[tone])} style={{ width: `${pct}%` }} />
+        <div
+          className={cn("h-full rounded-full", fillColor[tone])}
+          style={{ width: `${pct}%` }}
+        />
       </div>
       {showLabel && (
-        // % label +50% (12px → 18px); widen the box so the larger digits fit.
-        <span className="w-12 text-right font-num2 text-num2 tabular-nums text-fg">
+        <span className="w-10 text-right font-mono text-[11px] tabular-nums text-fg">
           {pct}%
         </span>
       )}

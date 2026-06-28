@@ -1,7 +1,6 @@
 import { cn } from "@/lib/cn";
 import {
-  accentBorder,
-  accentText,
+  accentDot,
   priorityAccent,
   projectTypeAccent,
   statusAccent,
@@ -10,6 +9,18 @@ import {
 } from "@/lib/palette";
 import type { Priority, ProjectStatus, ProjectType } from "@/lib/types";
 import { StatusIcon } from "./StatusIcon";
+
+/** Tinted-pill classes per accent: colour@13% fill + colour@25% border +
+ *  colour text — the HEX.CODE status-pill / filter-chip treatment (4:4). */
+const pillTint: Record<Accent, string> = {
+  cyan: "bg-cyan/15 border-cyan/25 text-cyan",
+  green: "bg-green/15 border-green/25 text-green",
+  yellow: "bg-yellow/15 border-yellow/25 text-yellow",
+  orange: "bg-orange/15 border-orange/25 text-orange",
+  purple: "bg-purple/15 border-purple/25 text-purple",
+  red: "bg-red/15 border-red/25 text-red",
+  dim: "bg-fg/5 border-border text-fg-dim",
+};
 
 /** Statuses that have one of Ross's bespoke pixel-art glyphs. */
 const STATUS_WITH_GLYPH: ReadonlySet<ProjectStatus> = new Set([
@@ -22,7 +33,9 @@ const STATUS_WITH_GLYPH: ReadonlySet<ProjectStatus> = new Set([
   "COMPLETE",
 ]);
 
-/** Colour-coded pill (project type and other taxonomies). */
+/** Colour-coded tinted pill (status / project type / other taxonomies) — the
+ *  HEX.CODE outline-pill: tinted fill + colour border + colour text, mono bold,
+ *  4px radius (4:4 badges + filter chips). */
 export function Chip({
   children,
   accent = "cyan",
@@ -35,9 +48,8 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-flex items-center border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em]",
-        accentBorder[accent],
-        accentText[accent],
+        "inline-flex items-center rounded-[4px] border px-2 py-0.5 font-mono font-bold text-[10px] uppercase tracking-wide",
+        pillTint[accent],
         className,
       )}
     >
@@ -64,14 +76,13 @@ export function StatusText({ status }: { status: ProjectStatus }) {
   );
 }
 
+/** Priority readout — coloured dot + uppercase label (4:4): HIGH red, MED
+ *  orange/yellow, LOW dim. The dot carries the colour; the label stays bright. */
 export function PriorityTag({ priority }: { priority: Priority }) {
+  const accent = priorityAccent[priority];
   return (
-    <span
-      className={cn(
-        "font-button text-button uppercase tracking-[0.15em]",
-        accentText[priorityAccent[priority]],
-      )}
-    >
+    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase text-fg">
+      <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", accentDot[accent])} aria-hidden />
       {priority}
     </span>
   );

@@ -32,6 +32,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
     "@auth/drizzle-adapter": "^1.7.0",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/share-tech-mono": "^5.2.7",
     "@fontsource/vt323": "^5.2.7",

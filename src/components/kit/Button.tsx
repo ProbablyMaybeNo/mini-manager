@@ -15,42 +15,47 @@ import { cn } from "@/lib/cn";
  * button — it is neon green by default. The single exception is wishlist add
  * buttons, which use `variant="addWishlist"` (yellow).
  */
+/**
+ * V2 "HEX.CODE" buttons (style guide 1:66). Primary = solid cyan fill + dark
+ * text @ 6px radius; outline = transparent + white-12% border; colour variants
+ * are solid fills (success/danger/warning) or coloured outlines. Bold Inter,
+ * 6px radius, no glow. APIs (variant/size names) are unchanged so every caller
+ * keeps working — the cyan-led `primary` is now a true filled button.
+ */
 const button = cva(
-  "inline-flex items-center justify-center gap-2 font-button text-button uppercase tracking-[0.15em] transition-[transform,box-shadow,background-color,border-color,color] duration-150 ease-out focus-visible:outline-2 disabled:opacity-40 disabled:pointer-events-none motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 motion-safe:active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 rounded-[6px] font-display font-bold text-button tracking-tight transition-[background-color,border-color,color] duration-150 ease-out focus-visible:outline-2 disabled:opacity-40 disabled:pointer-events-none motion-safe:active:scale-[0.98]",
   {
     variants: {
       variant: {
-        /* ---- Tiers (cyan-led, per the button sheet) ---- */
+        /* ---- Tiers (cyan-led primary, per the buttons sheet) ---- */
         primary:
-          "border border-cyan bg-cyan/15 text-cyan hover:bg-cyan/25 glow-cyan hover:shadow-[0_0_6px_rgba(0,210,255,0.45),0_0_1px_rgba(0,210,255,0.8),0_8px_18px_-6px_rgba(0,210,255,0.5)]",
+          "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
         secondary:
-          "border border-cyan/60 bg-transparent text-cyan hover:bg-cyan/10 hover:border-cyan hover:shadow-[0_6px_16px_-8px_rgba(0,210,255,0.45)]",
+          "border border-border bg-transparent text-fg hover:bg-fg/5 hover:border-fg/25",
         tertiary:
           "border-0 bg-transparent text-fg-dim underline-offset-4 hover:text-cyan hover:underline",
         danger:
-          "border border-red bg-red/10 text-red hover:bg-red/20 hover:shadow-[0_6px_16px_-8px_rgba(255,66,66,0.45)]",
+          "border border-red bg-red text-bg hover:bg-red/85",
 
         /* ---- "+" / add buttons (MM-52) ----
-           Default add = neon green; wishlist add = yellow. */
+           Default add = green; wishlist add = yellow. */
         add:
-          "border border-green bg-green text-bg hover:bg-green/85 glow-green hover:shadow-[0_0_6px_rgba(81,253,128,0.45),0_8px_18px_-6px_rgba(81,253,128,0.5)]",
+          "border border-green bg-green text-bg hover:bg-green/85",
         addWishlist:
-          "border border-yellow bg-yellow text-bg hover:bg-yellow/85 glow-yellow hover:shadow-[0_0_6px_rgba(238,249,150,0.45),0_8px_18px_-6px_rgba(238,249,150,0.5)]",
-        // Canonical "+ Attach" affordance — pastel purple, so an attach/assign
-        // action reads distinctly from a neon-green add (9lgIwII2oBy7 / foqbcZx93a6F
-        // / t7doCednL8MP / CiBUwVgwwQRD). Button FONT stays DePixel Klein (the
-        // VT323 ask in those threads is superseded by Ross's ruling #1).
+          "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
+        // Canonical "+ Attach" affordance — purple, so an attach/assign action
+        // reads distinctly from a green add.
         attach:
-          "border border-purple bg-purple text-bg hover:bg-purple/85 glow-purple hover:shadow-[0_0_6px_rgba(155,128,220,0.45),0_8px_18px_-6px_rgba(155,128,220,0.5)]",
+          "border border-purple bg-purple text-bg hover:bg-purple/85",
 
-        /* ---- Solid fills (colour fill + black text) ---- */
-        solidCyan: "border border-cyan bg-cyan text-bg hover:bg-cyan/85 glow-cyan",
-        solidGreen: "border border-green bg-green text-bg hover:bg-green/85 glow-green",
-        solidYellow: "border border-yellow bg-yellow text-bg hover:bg-yellow/85 glow-yellow",
-        solidPurple: "border border-purple bg-purple text-bg hover:bg-purple/85 glow-purple",
-        solidRed: "border border-red bg-red text-bg hover:bg-red/85 glow-red",
+        /* ---- Solid fills (colour fill + dark text) ---- */
+        solidCyan: "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
+        solidGreen: "border border-green bg-green text-bg hover:bg-green/85",
+        solidYellow: "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
+        solidPurple: "border border-purple bg-purple text-bg hover:bg-purple/85",
+        solidRed: "border border-red bg-red text-bg hover:bg-red/85",
 
-        /* ---- Outlines (colour border + black fill + colour text) ---- */
+        /* ---- Outlines (colour border + transparent fill + colour text) ---- */
         outlineCyan: "border border-cyan/60 bg-transparent text-cyan hover:bg-cyan/10 hover:border-cyan",
         outlineGreen: "border border-green/60 bg-transparent text-green hover:bg-green/10 hover:border-green",
         outlineYellow: "border border-yellow/60 bg-transparent text-yellow hover:bg-yellow/10 hover:border-yellow",
@@ -60,9 +65,9 @@ const button = cva(
       size: {
         // Font size is the shared --text-button token (base class); size
         // variants only change padding so all buttons share one font size.
-        sm: "px-3 py-1",
-        md: "px-4 py-2",
-        lg: "px-6 py-3",
+        sm: "px-2.5 py-1.5",
+        md: "px-4 py-2.5",
+        lg: "px-6 py-3.5",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

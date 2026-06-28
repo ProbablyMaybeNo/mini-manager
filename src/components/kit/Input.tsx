@@ -33,10 +33,10 @@ export function Input({
       )}
       <div
         className={cn(
-          "flex items-center gap-2 border bg-bg px-2 py-1.5 transition-[border-color,box-shadow] duration-150",
+          "flex items-center gap-2 rounded-[6px] border bg-surface-2 px-2.5 py-2 transition-[border-color,box-shadow] duration-150",
           error
-            ? "border-red focus-within:shadow-[0_0_0_3px_rgba(255,66,66,0.12)]"
-            : "border-cyan/50 focus-within:border-cyan focus-within:shadow-[0_0_0_3px_rgba(0,210,255,0.12)]",
+            ? "border-red focus-within:shadow-[0_0_0_3px_rgba(255,75,75,0.15)]"
+            : "border-border focus-within:border-cyan focus-within:shadow-[0_0_0_3px_rgba(0,245,255,0.15)]",
         )}
       >
         {leading}
