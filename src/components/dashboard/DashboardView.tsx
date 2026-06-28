@@ -201,9 +201,9 @@ export function DashboardView({
     // Top-level flex-row hosts the desktop master-detail pane to the right of
     // the dashboard column; below md the pane is a fixed overlay so this row is
     // a no-op single column.
-    <div className="flex h-full bg-black">
+    <div className="flex h-full bg-bg">
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
+        <div className="flex flex-1 flex-col gap-7 overflow-y-auto p-10">
           {/* No tagline text bar — the "+ New Project" button + the obvious
               PROJECTS panel already make the page's purpose clear (drev). */}
           <PageHeader title="DASHBOARD" />
@@ -221,27 +221,32 @@ export function DashboardView({
                 {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
                 <WelcomeCard />
                 <StatRow summary={summary} />
-                <div data-tour="dashboard-projects">
-                <Panel label="PROJECTS" cornerTicks className="p-4">
-                  <ProjectsTable
-                    projects={projects}
-                    projectMinutes={projectMinutes}
-                    selectedId={selected?.id}
-                    onOpenProject={openProject}
-                    onFocusProject={(p) => onFocusProject?.(p)}
-                    onAttachRecipe={(p) => onAttachRecipe?.(p)}
-                    onAddSubProject={onAddSubProject}
-                    onAddProject={startCreate}
-                  />
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-cyan/20 pt-4">
-                    <Button variant="add" onClick={startCreate} data-tour="dashboard-new-project">+ New Project</Button>
+                <div data-tour="dashboard-projects" className="flex flex-col gap-4">
+                  {/* Section header row (4:4): PROJECTS ROSTER label. */}
+                  <div className="flex items-center justify-between">
+                    <h2 className="label-osd text-fg">PROJECTS ROSTER</h2>
+                  </div>
+                  {/* Roster table in a bordered 12px container per 4:4. */}
+                  <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
+                    <ProjectsTable
+                      projects={projects}
+                      projectMinutes={projectMinutes}
+                      selectedId={selected?.id}
+                      onOpenProject={openProject}
+                      onFocusProject={(p) => onFocusProject?.(p)}
+                      onAttachRecipe={(p) => onAttachRecipe?.(p)}
+                      onAddSubProject={onAddSubProject}
+                      onAddProject={startCreate}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
                     {/* Upload-Army-List restored — opens the ArmyImportPanel
                         slide-out wired through onUploadArmyList. */}
                     <Button variant="secondary" onClick={onUploadArmyList}>
                       ⬆ Upload Army List
                     </Button>
                   </div>
-                </Panel>
                 </div>
 
                 {/* DOP-003 — "continue painting" tier fills the previously empty
@@ -278,7 +283,7 @@ export function DashboardView({
           type="button"
           onClick={() => setPlannerOpen(true)}
           aria-label="Open planner — upcoming events"
-          className="flex w-full items-center gap-3 border-t border-cyan/40 bg-bg-raised/40 px-4 py-3 text-left hover:bg-cyan/5 focus:outline-none focus-visible:bg-cyan/10 xl:hidden"
+          className="flex w-full items-center gap-3 border-t border-border bg-surface px-4 py-3 text-left hover:bg-cyan/5 focus:outline-none focus-visible:bg-cyan/10 xl:hidden"
         >
           <span aria-hidden className="shrink-0 text-cyan">🗓</span>
           <span className="shrink-0 label-osd text-fg">Upcoming events</span>

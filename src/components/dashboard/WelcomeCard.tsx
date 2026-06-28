@@ -1,8 +1,8 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Panel } from "@/components/kit";
 import { useTour } from "@/components/tour";
 
 /**
@@ -43,38 +43,64 @@ export function WelcomeCard() {
   if (!show) return null;
 
   return (
-    <Panel label="SYS ▸ WELCOME" accent="green" cornerTicks className="relative p-4">
-      <button
-        type="button"
-        aria-label="Dismiss welcome"
-        onClick={dismiss}
-        className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center text-fg-faint transition-colors hover:text-cyan"
-      >
-        ✕
-      </button>
+    // HEX.CODE blue welcome card (4:4): blue fill, white text, dismissible,
+    // four jump-off CTAs rendered as inset chips on the blue.
+    <section className="relative overflow-hidden rounded-[12px] bg-blue p-6 text-white">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="font-mono text-[14px] font-bold tracking-wide text-white">
+          &gt; SYS — WELCOME
+        </span>
+        <button
+          type="button"
+          aria-label="Dismiss welcome"
+          onClick={dismiss}
+          className="inline-flex min-h-11 min-w-11 items-center justify-center text-white/70 transition-colors hover:text-white"
+        >
+          <X size={16} aria-hidden />
+        </button>
+      </div>
 
-      <p className="max-w-2xl pr-10 font-body text-body text-fg">
-        <span className="text-green text-glow-green">▸ </span>
+      <p className="max-w-2xl font-mono text-[14px] leading-relaxed text-white">
         Plan armies, track every model from wishlist to finished, and build
         repeatable paint recipes from a cross-brand paint library.
       </p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {/* Distinct label from the PROJECTS panel's "+ New Project" so e2e
-            create-project selectors stay unambiguous; same ?tour=create flow. */}
-        <Button size="sm" onClick={() => router.push("/dashboard?tour=create")}>
-          Create your first project
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => router.push("/library")}>
-          Browse Library
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => router.push("/recipes/new")}>
-          Build a Recipe
-        </Button>
-        <Button variant="tertiary" size="sm" onClick={() => start()}>
-          ▸ Take the tour
-        </Button>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        {/* Inset dark-blue CTA chips on the blue card (4:4). Distinct label from
+            the PROJECTS panel's "+ New Project" so e2e selectors stay
+            unambiguous; same ?tour=create flow. */}
+        <WelcomeCta onClick={() => router.push("/dashboard?tour=create")}>
+          CREATE YOUR FIRST PROJECT
+        </WelcomeCta>
+        <WelcomeCta onClick={() => router.push("/library")}>BROWSE LIBRARY</WelcomeCta>
+        <WelcomeCta onClick={() => router.push("/recipes/new")}>BUILD A RECIPE</WelcomeCta>
+        <button
+          type="button"
+          onClick={() => start()}
+          className="font-mono text-[12px] font-bold uppercase tracking-wide text-white underline underline-offset-4 transition-opacity hover:opacity-80"
+        >
+          — TAKE THE TOUR
+        </button>
       </div>
-    </Panel>
+    </section>
+  );
+}
+
+/** Inset dark CTA chip on the blue welcome card. */
+function WelcomeCta({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-[4px] bg-black/30 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-black/45"
+    >
+      {children}
+    </button>
   );
 }

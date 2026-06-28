@@ -159,10 +159,10 @@ export function ProjectsTable({
             }
           }}
           className={cn(
-            "cursor-pointer border-b border-fg/10 transition-colors focus:outline-none",
+            "cursor-pointer border-b border-border transition-colors focus:outline-none",
             selected
-              ? "bg-cyan/10 text-cyan"
-              : cn("hover:bg-cyan/5 focus-visible:bg-cyan/10", banded && "bg-fg/[0.02]"),
+              ? "bg-cyan/10"
+              : cn("bg-surface hover:bg-cyan/[0.06] focus-visible:bg-cyan/10", banded && "bg-bg"),
           )}
         >
           <td className="px-3 py-2.5 font-body text-body text-fg">
@@ -189,11 +189,9 @@ export function ProjectsTable({
                 // Spacer keeps leaf titles aligned with their expandable siblings.
                 <span className="h-6 w-6 shrink-0" aria-hidden />
               )}
-              {/* Name uses the column-header face (font-h2 = Flexi IBM VGA True,
-                  FGqJI1COa7Fx) and stays white so it's clearly distinct from the
-                  coloured TYPE chip — even on the cyan-highlighted selected row
-                  (JRH4). */}
-              <span className="font-h2 text-h2 text-fg">{p.title}</span>
+              {/* Title — JetBrains Mono Bold 13px (4:4), bright white so it
+                  reads distinct from the coloured TYPE chip. */}
+              <span className="font-mono text-[13px] font-bold text-fg-bright">{p.title}</span>
             </div>
           </td>
           <td className="px-3 py-2.5">
@@ -513,12 +511,12 @@ export function ProjectsTable({
       <div className="hidden overflow-x-auto min-[600px]:block">
         <table className="w-full min-w-[680px] border-collapse">
           <thead>
-            <tr className="border-b border-cyan/30">
+            <tr className="border-b border-border bg-surface">
               {COLS.map((c, i) => (
                 <th
                   key={c || `col-${i}`}
                   scope="col"
-                  className="px-3 py-2 text-left label-osd tracking-[0.18em] text-fg"
+                  className="px-3 py-3 text-left font-mono text-[11px] font-normal uppercase tracking-wide text-fg-dim"
                 >
                   {c}
                 </th>

@@ -18,12 +18,14 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
       <div>
-        <h1 className="font-title text-title leading-tight text-cyan text-glow-cyan">
+        {/* HEX.CODE page title (4:4): mono/Inter ExtraBold, uppercase, with a
+            short cyan underline bar beneath it. */}
+        <h1 className="font-mono text-[clamp(2rem,5vw,3rem)] font-extrabold uppercase leading-none tracking-tight text-fg-bright">
           {title}
         </h1>
-        {/* Sub-title bright white (1Xq1P5W3Yvzq / mWGF8f6O1IEQ) — was text-fg-dim. */}
+        <span aria-hidden className="mt-2 block h-1 w-12 rounded-full bg-cyan" />
         {tagline && (
-          <p className={cn("mt-2 max-w-2xl font-body text-body text-fg", taglineClassName)}>{tagline}</p>
+          <p className={cn("mt-3 max-w-2xl font-mono text-body text-fg-dim", taglineClassName)}>{tagline}</p>
         )}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
