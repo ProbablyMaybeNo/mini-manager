@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { TourReplayButton } from "@/components/tour";
 import { ReportIssueButton } from "@/components/feedback/ReportIssueButton";
