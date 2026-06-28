@@ -240,75 +240,85 @@ export function DashboardView({
           ) : status === "loading" ? (
             <LoadingState />
           ) : (
-            <div className="flex flex-col gap-6 xl:flex-row">
-              {/* @container so StatRow (and any width-sensitive child) reflows to
-                  the COLUMN width, not the viewport — it goes 2-up the moment the
-                  inspector pane squeezes this column, instead of overlapping. */}
-              <div className="@container flex min-w-0 flex-1 flex-col gap-6">
-                {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
-                <WelcomeCard />
-                <div data-tour="dashboard-projects" className="flex flex-col gap-4">
-                  {/* Section header row (4:4): PROJECTS ROSTER label. */}
-                  <div className="flex items-center justify-between">
-                    <h2 className="label-osd text-fg">PROJECTS ROSTER</h2>
+            // @container so StatRow (and any width-sensitive child) reflows to
+            // the COLUMN width, not the viewport — it goes 2-up the moment the
+            // inspector pane squeezes this column, instead of overlapping.
+            <div className="@container flex min-w-0 flex-1 flex-col gap-6">
+              {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
+              <WelcomeCard />
+              <div data-tour="dashboard-projects" className="flex flex-col gap-4">
+                {/* Section header row (4:58): PROJECTS ROSTER label + filter /
+                    add-project icon affordances at the right edge. */}
+                <div className="flex items-center justify-between">
+                  <h2 className="label-osd text-fg">PROJECTS ROSTER</h2>
+                  <div className="flex items-center gap-3 text-fg-dim">
+                    <button
+                      type="button"
+                      aria-label="Filter roster"
+                      title="Filter roster"
+                      onClick={() => setRosterFilter((f) => (f === "ALL" ? "IN PROGRESS" : "ALL"))}
+                      className="inline-flex h-4 w-4 items-center justify-center transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+                    >
+                      <FilterIcon />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="New project"
+                      title="New project"
+                      onClick={startCreate}
+                      className="inline-flex h-4 w-4 items-center justify-center transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+                    >
+                      <PlusCircleIcon />
+                    </button>
                   </div>
-                  {/* Filter-chip row + SORT (4:4). Hidden when the painter has no
-                      projects yet — the empty roster CTA carries the moment. */}
-                  {projects.length > 0 && (
-                    <RosterFilterBar
-                      filter={rosterFilter}
-                      sort={rosterSort}
-                      onFilterChange={setRosterFilter}
-                      onSortChange={setRosterSort}
+                </div>
+                {/* Filter-chip row + SORT (4:4). Hidden when the painter has no
+                    projects yet — the empty roster CTA carries the moment. */}
+                {projects.length > 0 && (
+                  <RosterFilterBar
+                    filter={rosterFilter}
+                    sort={rosterSort}
+                    onFilterChange={setRosterFilter}
+                    onSortChange={setRosterSort}
+                  />
+                )}
+                {/* Roster table in a bordered 12px container per 4:4. */}
+                <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
+                  {projects.length > 0 && visibleProjects.length === 0 ? (
+                    // Filtered to zero, but the painter HAS projects — show a
+                    // filter-aware empty hint instead of the first-run CTA.
+                    <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+                      <p className="label-osd text-fg-dim">No projects match “{rosterFilter}”</p>
+                      <button
+                        type="button"
+                        onClick={() => setRosterFilter("ALL")}
+                        className="font-mono text-body text-cyan underline-offset-4 hover:underline"
+                      >
+                        Clear filter
+                      </button>
+                    </div>
+                  ) : (
+                    <ProjectsTable
+                      projects={visibleProjects}
+                      projectMinutes={projectMinutes}
+                      selectedId={selected?.id}
+                      onOpenProject={openProject}
+                      onFocusProject={(p) => onFocusProject?.(p)}
+                      onAttachRecipe={(p) => onAttachRecipe?.(p)}
+                      onAddSubProject={onAddSubProject}
+                      onAddProject={startCreate}
                     />
                   )}
-                  {/* Roster table in a bordered 12px container per 4:4. */}
-                  <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
-                    {projects.length > 0 && visibleProjects.length === 0 ? (
-                      // Filtered to zero, but the painter HAS projects — show a
-                      // filter-aware empty hint instead of the first-run CTA.
-                      <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-                        <p className="label-osd text-fg-dim">No projects match “{rosterFilter}”</p>
-                        <button
-                          type="button"
-                          onClick={() => setRosterFilter("ALL")}
-                          className="font-mono text-body text-cyan underline-offset-4 hover:underline"
-                        >
-                          Clear filter
-                        </button>
-                      </div>
-                    ) : (
-                      <ProjectsTable
-                        projects={visibleProjects}
-                        projectMinutes={projectMinutes}
-                        selectedId={selected?.id}
-                        onOpenProject={openProject}
-                        onFocusProject={(p) => onFocusProject?.(p)}
-                        onAttachRecipe={(p) => onAttachRecipe?.(p)}
-                        onAddSubProject={onAddSubProject}
-                        onAddProject={startCreate}
-                      />
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
-                    {/* Upload-Army-List restored — opens the ArmyImportPanel
-                        slide-out wired through onUploadArmyList. */}
-                    <Button variant="secondary" onClick={onUploadArmyList}>
-                      ⬆ Upload Army List
-                    </Button>
-                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
+                  {/* Upload-Army-List restored — opens the ArmyImportPanel
+                      slide-out wired through onUploadArmyList. */}
+                  <Button variant="secondary" onClick={onUploadArmyList}>
+                    ⬆ Upload Army List
+                  </Button>
                 </div>
               </div>
-              {/* RightRail steps aside while the desktop pane occupies the
-                  right column (DOP-002). RF-11: hidden below xl — the mobile
-                  dashboard shows only cards + the Upcoming-Events bar, which
-                  opens the full-screen PlannerScreen instead. */}
-              {!twoPane && (
-                <div className="hidden xl:flex">
-                  <RightRail events={events} activity={activity} />
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -334,6 +344,17 @@ export function DashboardView({
         </button>
       </div>
 
+      {/* Right rail (4:184) — a full-height dedicated side panel flush to the
+          right edge with its own left hairline + inset, NOT a card inside the
+          scrolling content. Steps aside while the desktop master-detail pane
+          owns the right column (DOP-002); hidden below xl, where the mobile
+          dashboard surfaces the planner via the bottom button above (RF-11). */}
+      {!twoPane && status === "ready" && (
+        <div className="hidden xl:flex">
+          <RightRail events={events} activity={activity} />
+        </div>
+      )}
+
       {inspector}
       {createInspector}
       {/* Phase 2 project FLOW panel (Army/Unit overlay). */}
@@ -356,6 +377,30 @@ export function DashboardView({
         activity={activity}
       />
     </div>
+  );
+}
+
+/** Filter-funnel icon by the PROJECTS ROSTER header (4:327). */
+function FilterIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M1.5 2.5h13l-5 6v4l-3 1.5V8.5l-5-6z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Plus-in-circle icon by the PROJECTS ROSTER header (4:330). */
+function PlusCircleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M8 5v6M5 8h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
   );
 }
 

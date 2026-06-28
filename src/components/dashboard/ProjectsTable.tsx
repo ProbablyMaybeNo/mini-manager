@@ -22,7 +22,7 @@ import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project, ProjectType } from "@/lib/types";
 import { PriorityDropdown } from "./PriorityDropdown";
 
-const COLS = ["Title", "Type", "Recipe", "Status", "Priority", "Completion", "Time", ""];
+const COLS = ["Title", "Type", "#", "Recipe", "Status", "Priority", "Completion", "Time", ""];
 
 /** Per-depth indent (px) applied to the Title cell so nested sub-projects
  *  read as a tree: Army → Unit → Model. */
@@ -196,6 +196,14 @@ export function ProjectsTable({
           </td>
           <td className="px-3 py-2.5">
             <TypeChip type={p.type} />
+          </td>
+          {/* # — model count (4:68). Plain mono value, dim "—" when unset. */}
+          <td className="px-3 py-2.5">
+            {p.modelCount != null && p.modelCount > 0 ? (
+              <span className="font-mono text-[13px] tabular-nums text-fg">{p.modelCount}</span>
+            ) : (
+              <span className="font-body text-body text-fg-dim">—</span>
+            )}
           </td>
           <td className="px-3 py-2.5">
             <SwatchStrip
@@ -396,6 +404,11 @@ export function ProjectsTable({
 
           <div className="mt-2 flex flex-wrap items-center gap-2 pl-9">
             <TypeChip type={p.type} />
+            {p.modelCount != null && p.modelCount > 0 && (
+              <span className="font-mono text-[12px] tabular-nums text-fg-dim">
+                ×{p.modelCount}
+              </span>
+            )}
             {/* RF-12: surface priority on the card to match the desktop row. */}
             <PriorityDropdown projectId={p.id} value={p.priority} />
             {minutes > 0 && (

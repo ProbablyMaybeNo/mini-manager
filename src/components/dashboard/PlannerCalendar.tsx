@@ -50,12 +50,14 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
     return view;
   })();
 
-  // Match MiniCalendar's "Jun 2026" label exactly (same locale + options).
-  const monthLabel = new Date(Date.UTC(view.year, view.month, 1)).toLocaleString("en-US", {
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  // Full month name + year ("JUNE 2026") to match the 4:185 calendar header.
+  const monthLabel = new Date(Date.UTC(view.year, view.month, 1))
+    .toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+    .toUpperCase();
 
   function shiftMonth(delta: number) {
     setView((v) => {
@@ -109,41 +111,42 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => shiftMonth(-1)}
-          aria-label="Previous month"
-          className="inline-flex h-11 min-w-11 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
-        >
-          ‹
-        </button>
-        {/* Month label sits between the nav arrows, not below them (yO830AqQH3Hu).
-            whitespace-nowrap keeps "JUN 2026" on one line (X2BittFA6UwD). */}
-        <span className="label-osd whitespace-nowrap text-cyan">
+    <div className="flex flex-col gap-4">
+      {/* 4:186 header: full month name left-aligned, ‹ › nav at the right. */}
+      <div className="flex items-start justify-between">
+        <span className="whitespace-nowrap font-mono text-[14px] font-bold text-fg-bright">
           {monthLabel}
         </span>
-        <button
-          type="button"
-          onClick={() => shiftMonth(1)}
-          aria-label="Next month"
-          className="inline-flex h-11 min-w-11 items-center justify-center px-2 font-button text-button text-fg hover:text-cyan"
-        >
-          ›
-        </button>
+        <div className="flex items-start gap-2">
+          <button
+            type="button"
+            onClick={() => shiftMonth(-1)}
+            aria-label="Previous month"
+            className="inline-flex h-3.5 w-3.5 items-center justify-center text-fg-dim hover:text-cyan"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={() => shiftMonth(1)}
+            aria-label="Next month"
+            className="inline-flex h-3.5 w-3.5 items-center justify-center text-fg-dim hover:text-cyan"
+          >
+            ›
+          </button>
+        </div>
       </div>
 
-      {/* Cap the grid to a small, glanceable size (r-N-8) so the calendar
-          stays compact within the rail rather than stretching to fill it.
-          showMonthLabel=false — the label now lives between the arrows above. */}
+      {/* Full-width month grid (4:191) — the calendar fills the rail's 222px
+          content width, not a capped 170px column. showMonthLabel=false: the
+          label lives in the header row above. */}
       <MiniCalendar
         year={view.year}
         month={view.month}
         events={events}
         onDayClick={openAddForDay}
         showMonthLabel={false}
-        className="mx-auto w-full max-w-[170px]"
+        className="w-full"
       />
 
       {adding ? (
@@ -277,14 +280,14 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
           </div>
         </form>
       ) : (
-        <Button
-          variant="add"
-          size="sm"
-          className="w-full"
+        // 4:279 — full-width bordered ghost button, centred dim label.
+        <button
+          type="button"
           onClick={() => setAdding(true)}
+          className="flex h-8 w-full items-center justify-center rounded-[6px] border border-border font-mono text-[11px] text-fg-dim transition-colors hover:border-cyan/50 hover:text-cyan focus:outline-none focus-visible:border-cyan"
         >
-          + Date
-        </Button>
+          + ADD DATE
+        </button>
       )}
     </div>
   );
