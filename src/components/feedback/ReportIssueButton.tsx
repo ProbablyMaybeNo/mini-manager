@@ -1,5 +1,6 @@
 "use client";
 
+import { MessageSquarePlus } from "lucide-react";
 import { useState } from "react";
 import { Button, Input, Listbox, ModalDialog } from "@/components/kit";
 import { cn } from "@/lib/cn";
@@ -85,12 +86,13 @@ export function ReportIssueButton({
           onNavigate?.();
         }}
         className={cn(
-          // Mirror the Tutorial entry's nav-item styling, with a red accent so
-          // it reads as the "something's wrong" affordance.
-          "flex min-h-11 w-full items-center border-l-2 border-transparent px-4 py-2 text-left font-h1 text-h1 uppercase tracking-[0.18em] text-fg transition-colors hover:border-red/50 hover:bg-red/5 hover:text-red",
+          // Mirror the Tutorial entry's nav-item styling (icon+label, mono),
+          // with a red hover so it reads as the "something's wrong" affordance.
+          "flex min-h-11 w-full items-center gap-3 pl-5 pr-3 text-left font-mono text-[13px] uppercase tracking-wide text-fg transition-colors hover:bg-red/5 hover:text-red",
           className,
         )}
       >
+        <MessageSquarePlus size={16} strokeWidth={2} className="shrink-0" aria-hidden />
         Feedback
       </button>
 

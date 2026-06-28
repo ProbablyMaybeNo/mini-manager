@@ -18,9 +18,10 @@ export function NavLinks({
   const pathname = usePathname();
   const active = activeNavKey(pathname);
   return (
-    <ul className={cn("flex flex-col gap-1", className)}>
+    <ul className={cn("flex flex-col", className)}>
       {items.map((item) => {
         const isActive = item.key === active;
+        const Icon = item.icon;
         return (
           <li key={item.key}>
             <Link
@@ -29,14 +30,16 @@ export function NavLinks({
               data-tour={item.tour}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                // min-h-11 → 44px comfortable touch target (UX-010); flex
-                // keeps the label vertically centred in the taller row.
-                "flex min-h-11 items-center border-l-2 px-4 py-2 font-h1 text-h1 uppercase tracking-[0.18em] transition-colors",
+                // 44px row (HEX.CODE nav-item / WCAG touch target). icon+label,
+                // mono uppercase. Active = cyan tint + cyan text/icon; rest are
+                // neutral with a faint cyan hover.
+                "flex min-h-11 items-center gap-3 pl-5 pr-3 font-mono text-[13px] uppercase tracking-wide transition-colors",
                 isActive
-                  ? "border-cyan bg-cyan/10 text-cyan text-glow-cyan"
-                  : "border-transparent text-fg hover:border-cyan/40 hover:bg-cyan/5 hover:text-cyan",
+                  ? "bg-cyan/[0.06] font-bold text-cyan"
+                  : "text-fg hover:bg-fg/[0.04] hover:text-cyan",
               )}
             >
+              {Icon && <Icon size={16} strokeWidth={2} className="shrink-0" aria-hidden />}
               {item.label}
             </Link>
           </li>
