@@ -2,62 +2,61 @@
 
 /* ----------------------------------------------------------------------------
    Fonts — V2 "HEX.CODE" (REDESIGN_V2_HEXCODE.md)
-   Display / headings → Inter (ExtraBold titles, Bold sections) → --font-display
+   ONE FACE: JetBrains Mono everywhere (Ross, 2026-06-28).
+   Titles  → JetBrains Mono Bold/heavy (uppercase, tight tracking) → --font-display
    Body / labels / table / values / numbers → JetBrains Mono → --font-mono
-   Variable packages cover the full weight axis from one file each.
-   The legacy pixel faces (VT323 / Flexi / UAV / 3D Pixel / Plex) are removed
-   from the active token mapping; IBM Plex Mono stays only as a glyph fallback.
+   The variable package covers the full weight axis from one file.
+   Inter is dropped from the active token mapping; IBM Plex Mono stays only as a
+   glyph fallback for monospace.
    ------------------------------------------------------------------------- */
-@import "@fontsource-variable/inter/index.css";
 @import "@fontsource-variable/jetbrains-mono/index.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 
 /* ----------------------------------------------------------------------------
-   Design tokens — exact values sampled from the Figma dashboard-main (4:4) and
-   the HEX.CODE style guide. The dashboard frame is the visual source of truth
-   for this build, so where it diverges from the style-guide swatches the
-   dashboard values win (see report). Token NAMES are kept stable so the whole
-   app's existing utility usage (bg-bg / text-cyan / font-mono / …) keeps
-   working — this pass is a reskin, not a rename.
+   Design tokens — exact values from the HEX.CODE style guide (Figma node 1:13).
+   PALETTE DECISION (Ross, 2026-06-28): follow the style guide for surfaces +
+   semantic colours (softer than the neon dashboard 4:4 samples). The one
+   reconciliation: keep CYAN #00F5FF as the primary --accent (every example page
+   renders the accent cyan) while the style guide's "Accent" swatch #3182E0
+   becomes --blue. Keep purple #BF7BFF.
+   Token NAMES are kept stable so the whole app's existing utility usage
+   (bg-bg / text-cyan / font-mono / …) keeps working — this is a reskin.
    ------------------------------------------------------------------------- */
 @theme {
-  /* Surfaces */
-  --color-bg: #090909; /* app canvas */
-  --color-surface: #141414; /* sidebar / panels / cards / table header */
-  --color-surface-2: #1a1a1f; /* lifted surface (inputs / nested) */
+  /* Surfaces (style guide 1:13) */
+  --color-bg: #0d0d17; /* app canvas — Background */
+  --color-surface: #1a1a1f; /* sidebar / panels / cards / table header — Surface */
+  --color-surface-2: #202028; /* lifted surface (inputs / nested) */
   /* Back-compat alias: prior token name for the lifted surface. */
-  --color-bg-raised: #141414;
-  --color-border: #262626; /* hairline divider / panel border */
+  --color-bg-raised: #1a1a1f;
+  --color-border: rgba(255, 255, 255, 0.12); /* hairline divider / panel border — Border */
 
-  /* Brand palette (sampled from 4:4) */
+  /* Brand palette (style guide 1:13; cyan accent per palette decision) */
   --color-cyan: #00f5ff; /* PRIMARY accent — logo / active-nav / +NEW PROJECT / progress / DONE */
-  --color-blue: #3182e0; /* style-guide accent (links / secondary) */
-  --color-green: #00ff9c; /* success / IN PROGRESS */
-  --color-yellow: #ffb100; /* warning / PLANNED / NEARLY DONE */
-  --color-purple: #bf7bff; /* secondary accent / ON HOLD / Models */
-  --color-red: #ff4b4b; /* danger / OVERDUE / HIGH priority */
-  --color-highlight: #ff2b6d; /* highlight / pink */
-  /* Mid-priority hue (ynb3l8 — Red=High, orange=Med, Yellow=Low). Kept as a
-     distinct warm tone so MED reads apart from LOW. */
+  --color-blue: #3182e0; /* style-guide Accent (welcome card / ATTACH RECIPE / links) */
+  --color-green: #09cd7e; /* success / IN PROGRESS — Success */
+  --color-yellow: #f5f17a; /* warning / PLANNED / NEARLY DONE — Warning */
+  --color-purple: #bf7bff; /* secondary accent / ON HOLD / Models / Attach */
+  --color-red: #f12d52; /* danger / OVERDUE / HIGH priority — Danger */
+  --color-highlight: #ff2b6d; /* highlight / pink — Highlight */
+  /* Mid-priority hue (Red=High, orange=Med, Yellow=Low). Kept as a distinct
+     warm tone so MED reads apart from LOW. */
   --color-orange: #ff8a3c;
 
-  /* Foreground ramp */
-  --color-fg: #ffffff;
+  /* Foreground ramp (style guide: text #E6E5E5, titles #FCFCFC, dim #888) */
+  --color-fg: #e6e5e5;
   --color-fg-bright: #fcfcfc;
-  --color-fg-dim: #a0a0a0;
-  --color-fg-faint: #666666;
+  --color-fg-dim: #888888;
+  --color-fg-faint: #5a5a5a;
 
-  /* Type families.
-     --font-display  Inter        — page titles + section/panel headers
-     --font-mono     JetBrains     — body, labels, tables, numbers, hex codes (app default) */
-  --font-display: "Inter Variable", "Inter", system-ui, sans-serif;
+  /* Type families — ONE FACE: JetBrains Mono (Ross, 2026-06-28).
+     --font-display  JetBrains Bold/heavy — page titles + section/panel headers
+     --font-mono     JetBrains            — body, labels, tables, numbers, hex */
+  --font-display: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
 
   /* Back-compat aliases for the 7-category taxonomy used across the app.
-     They all collapse onto the two HEX.CODE faces:
-       titles / hero numbers      → Inter   (display)
-       section / column / labels  → Inter   (display) for headers
-       body / tables / numbers    → JetBrains (mono)
+     They all collapse onto the single HEX.CODE face (JetBrains Mono).
      Kept so existing font-title / font-h1 / font-h2 / font-body / font-num*
      / font-button / font-osd class usage keeps resolving without edits. */
   --font-title: var(--font-display);
@@ -116,16 +115,14 @@ body {
 }
 
 /* Form controls don't inherit font-family by default; pin them to the app
-   faces. Buttons use the display face (Inter) per the HEX.CODE buttons sheet. */
+   face (JetBrains Mono — the one face for the whole system). */
 input,
 select,
 textarea,
 optgroup,
-option {
-  font-family: var(--font-body);
-}
+option,
 button {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
 }
 
 /* Visible focus ring everywhere (WCAG 2.2) */
@@ -134,9 +131,18 @@ button {
   outline-offset: 2px;
 }
 
-/* Display titles (Inter). Tight tracking on big titles (-0.5px ≈ -0.01em at
-   48px) per the style guide. */
+/* Display titles (JetBrains Mono Bold). Tight tracking on big titles
+   (-0.5px ≈ -0.01em at 48px) per the style guide. */
 .font-display {
+  letter-spacing: -0.01em;
+}
+
+/* Page-title treatment — JetBrains Mono heavy, uppercase, tight tracking
+   (e.g. DASHBOARD, COLLECTION, RECIPES). */
+@utility page-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
   letter-spacing: -0.01em;
 }
 

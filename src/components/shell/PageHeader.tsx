@@ -18,7 +18,7 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
       <div>
-        {/* HEX.CODE page title (4:4): mono/Inter ExtraBold, uppercase, with a
+        {/* HEX.CODE page title (4:4): JetBrains Mono ExtraBold, uppercase, with a
             short cyan underline bar beneath it. */}
         <h1 className="font-mono text-[clamp(2rem,5vw,3rem)] font-extrabold uppercase leading-none tracking-tight text-fg-bright">
           {title}

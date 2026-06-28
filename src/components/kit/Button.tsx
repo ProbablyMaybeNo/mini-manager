@@ -18,8 +18,8 @@ import { cn } from "@/lib/cn";
 /**
  * V2 "HEX.CODE" buttons (style guide 1:66). Primary = solid cyan fill + dark
  * text @ 6px radius; outline = transparent + white-12% border; colour variants
- * are solid fills (success/danger/warning) or coloured outlines. Bold Inter,
- * 6px radius, no glow. APIs (variant/size names) are unchanged so every caller
+ * are solid fills (success/danger/warning) or coloured outlines. Bold JetBrains
+ * Mono, 6px radius, no glow. APIs (variant/size names) are unchanged so callers
  * keeps working — the cyan-led `primary` is now a true filled button.
  */
 const button = cva(
