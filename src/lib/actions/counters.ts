@@ -169,6 +169,32 @@ export async function setCounter(
   return { ok: true, data: { ...snap, ...patch } };
 }
 
+/**
+ * Load a project's cascade counter snapshot (count + the six stage columns).
+ * Powers the Unit panel's Built/Primed/Painted/Completed steppers, which seed
+ * from the real DB counts and stay in sync via setCounter's returned snapshot.
+ * Owner-scoped; null if the project doesn't exist for this user.
+ */
+export async function loadProjectCounters(
+  id: string,
+): Promise<CounterSnapshot | null> {
+  const userId = await currentUserId();
+  const rows = await db
+    .select({
+      count: projects.count,
+      ownedCount: projects.ownedCount,
+      buildCount: projects.buildCount,
+      primeCount: projects.primeCount,
+      paintCount: projects.paintCount,
+      baseCount: projects.baseCount,
+      completeCount: projects.completeCount,
+    })
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.ownerId, userId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 /** Cascade-validate an absolute target for a stage against its immediate
  *  neighbours. Mirrors the bump cascade: each stage is bounded above by
  *  the next-shallower stage's count and below by the next-deeper one. */

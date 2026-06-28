@@ -22,6 +22,7 @@ import { CreateProjectView } from "./CreateProjectView";
 import { InspectorShell } from "./InspectorShell";
 import { PlannerScreen } from "./PlannerScreen";
 import { ProjectPanelStack } from "./ProjectPanelStack";
+import { ProjectFlowPanel } from "./ProjectFlowPanel";
 import { ProjectsTable } from "./ProjectsTable";
 import {
   RosterFilterBar,
@@ -116,6 +117,10 @@ export function DashboardView({
   // the underlying data, so a row's stored status pill is unchanged.
   const [rosterFilter, setRosterFilter] = useState<RosterFilter>("ALL");
   const [rosterSort, setRosterSort] = useState<RosterSort>("completion-desc");
+  // Phase 2: the project FLOW panel (Army/Unit, 440px overlay). A row-click
+  // opens this instead of navigating to /projects/[id]; the panel's expand
+  // affordance still routes to the full page for the roomy editor.
+  const [flowOpenId, setFlowOpenId] = useState<string | null>(null);
   const isDesktop = useIsDesktop();
 
   // Derive the selected project from the live tree (not a snapshot) so an
@@ -138,13 +143,13 @@ export function DashboardView({
     return sortRoster(filtered, rosterSort, (p) => rollupProjectMinutes(p, projectMinutes));
   }, [projects, rosterFilter, rosterSort, projectMinutes, todayIso]);
 
-  // PP-1: a row click now navigates to the dedicated project PAGE
-  // (/projects/[id]) instead of opening the slide-out inspector. Focus is still
-  // an explicit per-row action (the ◎ icon); delete / attach / add-sub remain
-  // wired through ProjectsTable's own per-row controls.
+  // Phase 2 (HEX.CODE flow): a row click opens the Army/Unit FLOW panel as a
+  // 440px overlay WITHOUT navigating away (the panel's ⤢ expand still routes to
+  // /projects/[id] for the roomy editor). Focus stays an explicit per-row action
+  // (the ◎ icon); delete / attach / add-sub remain wired through ProjectsTable.
   function openProject(p: Project) {
     onOpenProject?.(p);
-    router.push(`/projects/${p.id}`);
+    setFlowOpenId(p.id);
   }
 
   // RF-8: open the blank create view (closing any open edit inspector first).
@@ -349,6 +354,19 @@ export function DashboardView({
 
       {inspector}
       {createInspector}
+      {/* Phase 2 project FLOW panel (Army/Unit overlay). */}
+      <ProjectFlowPanel
+        projects={projects}
+        rootId={flowOpenId}
+        projectMinutes={projectMinutes}
+        open={flowOpenId != null}
+        onClose={() => setFlowOpenId(null)}
+        onGoPaint={(p) => {
+          setFlowOpenId(null);
+          onStartSession?.(p);
+        }}
+        onAttachRecipe={(p) => onAttachRecipe?.(p)}
+      />
       <PlannerScreen
         open={plannerOpen}
         onClose={() => setPlannerOpen(false)}
