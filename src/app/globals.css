@@ -172,28 +172,40 @@ button {
    migrated off them.
    ------------------------------------------------------------------------- */
 @utility glow-cyan {
+  box-shadow: none;
 }
 @utility glow-green {
+  box-shadow: none;
 }
 @utility glow-yellow {
+  box-shadow: none;
 }
 @utility glow-purple {
+  box-shadow: none;
 }
 @utility glow-red {
+  box-shadow: none;
 }
 @utility text-glow-cyan {
+  text-shadow: none;
 }
 @utility text-glow-green {
+  text-shadow: none;
 }
 @utility text-glow-yellow {
+  text-shadow: none;
 }
 @utility text-glow-purple {
+  text-shadow: none;
 }
 @utility text-glow-red {
+  text-shadow: none;
 }
 @utility text-display-shadow {
+  text-shadow: none;
 }
 @utility scanlines {
+  position: relative;
 }
 
 /* Panel depth → a flat, restrained elevation for the modern-dark system: a
