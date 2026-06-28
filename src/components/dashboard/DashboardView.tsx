@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
+import { rollupProjectMinutes } from "@/lib/projectTime";
+import {
+  projectMatchesRoster,
+  sortRoster,
+} from "@/lib/rosterStatus";
 import type {
   ActivityEntry,
   CalendarEvent,
@@ -18,6 +23,11 @@ import { InspectorShell } from "./InspectorShell";
 import { PlannerScreen } from "./PlannerScreen";
 import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectsTable } from "./ProjectsTable";
+import {
+  RosterFilterBar,
+  type RosterFilter,
+  type RosterSort,
+} from "./RosterFilterBar";
 import { RightRail } from "./RightRail";
 import { StatRow } from "./StatRow";
 import { UpcomingEventsBar } from "./UpcomingEventsBar";
@@ -100,6 +110,12 @@ export function DashboardView({
   const [creating, setCreating] = useState(false);
   // RF-11: the mobile full-screen PLANNER, opened from the Upcoming-Events bar.
   const [plannerOpen, setPlannerOpen] = useState(false);
+  // Roster filter-chip row + SORT (4:4). Filter buckets are derived from each
+  // project's completion + lifecycle status (see lib/rosterStatus); SORT
+  // reorders the visible top-level rows. Both are view-only — they never mutate
+  // the underlying data, so a row's stored status pill is unchanged.
+  const [rosterFilter, setRosterFilter] = useState<RosterFilter>("ALL");
+  const [rosterSort, setRosterSort] = useState<RosterSort>("completion-desc");
   const isDesktop = useIsDesktop();
 
   // Derive the selected project from the live tree (not a snapshot) so an
@@ -111,6 +127,16 @@ export function DashboardView({
   // is a true "upcoming" list, so it filters that same set to today-forward.
   const todayIso = new Date().toISOString().slice(0, 10);
   const upcomingEvents = events.filter((e) => e.date >= todayIso);
+
+  // Roster filter + sort applied to the TOP-LEVEL rows. A container matches a
+  // filter if it or any sub-project matches, so a filtered Army still drills.
+  const visibleProjects = useMemo(() => {
+    const filtered =
+      rosterFilter === "ALL"
+        ? projects
+        : projects.filter((p) => projectMatchesRoster(p, rosterFilter, undefined, todayIso));
+    return sortRoster(filtered, rosterSort, (p) => rollupProjectMinutes(p, projectMinutes));
+  }, [projects, rosterFilter, rosterSort, projectMinutes, todayIso]);
 
   // PP-1: a row click now navigates to the dedicated project PAGE
   // (/projects/[id]) instead of opening the slide-out inspector. Focus is still
@@ -226,18 +252,43 @@ export function DashboardView({
                   <div className="flex items-center justify-between">
                     <h2 className="label-osd text-fg">PROJECTS ROSTER</h2>
                   </div>
+                  {/* Filter-chip row + SORT (4:4). Hidden when the painter has no
+                      projects yet — the empty roster CTA carries the moment. */}
+                  {projects.length > 0 && (
+                    <RosterFilterBar
+                      filter={rosterFilter}
+                      sort={rosterSort}
+                      onFilterChange={setRosterFilter}
+                      onSortChange={setRosterSort}
+                    />
+                  )}
                   {/* Roster table in a bordered 12px container per 4:4. */}
                   <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
-                    <ProjectsTable
-                      projects={projects}
-                      projectMinutes={projectMinutes}
-                      selectedId={selected?.id}
-                      onOpenProject={openProject}
-                      onFocusProject={(p) => onFocusProject?.(p)}
-                      onAttachRecipe={(p) => onAttachRecipe?.(p)}
-                      onAddSubProject={onAddSubProject}
-                      onAddProject={startCreate}
-                    />
+                    {projects.length > 0 && visibleProjects.length === 0 ? (
+                      // Filtered to zero, but the painter HAS projects — show a
+                      // filter-aware empty hint instead of the first-run CTA.
+                      <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+                        <p className="label-osd text-fg-dim">No projects match “{rosterFilter}”</p>
+                        <button
+                          type="button"
+                          onClick={() => setRosterFilter("ALL")}
+                          className="font-mono text-body text-cyan underline-offset-4 hover:underline"
+                        >
+                          Clear filter
+                        </button>
+                      </div>
+                    ) : (
+                      <ProjectsTable
+                        projects={visibleProjects}
+                        projectMinutes={projectMinutes}
+                        selectedId={selected?.id}
+                        onOpenProject={openProject}
+                        onFocusProject={(p) => onFocusProject?.(p)}
+                        onAttachRecipe={(p) => onAttachRecipe?.(p)}
+                        onAddSubProject={onAddSubProject}
+                        onAddProject={startCreate}
+                      />
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
