@@ -68,7 +68,7 @@ export function CollectionView({
         // width and leaving a tall void. They start at the top (items-start) so
         // an empty table only reserves its own height, not the taller sibling's.
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
-          <Panel label="MY PAINT COLLECTION" cornerTicks className="p-4 pt-5">
+          <Panel label={`PAINTS (${paints.length})`} className="p-4 pt-5">
             <CollectionTable
               kind="paint"
               items={paints}
@@ -82,7 +82,7 @@ export function CollectionView({
             />
           </Panel>
 
-          <Panel label="MY MODEL COLLECTION" cornerTicks className="p-4 pt-5">
+          <Panel label={`MODELS (${models.length})`} accent="purple" className="p-4 pt-5">
             <CollectionTable
               kind="model"
               items={models}
@@ -98,7 +98,9 @@ export function CollectionView({
       )}
       </div>
 
-      {status === "ready" && <CollectionStatsBar paints={paints} models={models} />}
+      {status === "ready" && (
+        <CollectionStatsBar paints={paints} models={models} projects={projects} />
+      )}
     </div>
   );
 }

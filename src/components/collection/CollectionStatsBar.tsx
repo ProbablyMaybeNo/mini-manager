@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 import { accentText, type Accent } from "@/lib/palette";
-import type { CollectionItem, ProjectStatus } from "@/lib/types";
+import type { CollectionItem, Project, ProjectStatus } from "@/lib/types";
 
 /** Parse a formatted price ("$29.99", "£12") to a number; 0 when blank. */
 function parsePrice(p: string): number {
@@ -54,10 +54,37 @@ function Stat({ value, label, accent = "cyan" }: { value: string; label: string;
 export function CollectionStatsBar({
   paints,
   models,
+  projects = [],
 }: {
   paints: CollectionItem[];
   models: CollectionItem[];
+  /** Projects, for the per-project BUDGET chips (24:4). Omitted → chips hidden. */
+  projects?: Project[];
 }) {
+  // Per-project BUDGET chips (24:4): spent (acquired) + remaining (wishlist),
+  // grouped by the item's projectId across both paints + models. Projects carry
+  // no stored budget, so each chip shows $spent and the +remaining to-buy; the
+  // grand TOTAL SPENT / TOTAL (spent + remaining) trail the row.
+  const budget = useMemo(() => {
+    const all = [...paints, ...models];
+    const byProject = new Map<string, { spent: number; remaining: number }>();
+    for (const item of all) {
+      if (!item.projectId) continue;
+      const cur = byProject.get(item.projectId) ?? { spent: 0, remaining: 0 };
+      if (item.status === "WISHLIST") cur.remaining += parsePrice(item.price);
+      else if (item.status !== "SHELVED") cur.spent += parsePrice(item.price);
+      byProject.set(item.projectId, cur);
+    }
+    const titleOf = (id: string) => projects.find((p) => p.id === id)?.title ?? "Unassigned";
+    const rows = [...byProject.entries()]
+      .map(([id, v]) => ({ id, title: titleOf(id), ...v }))
+      .filter((r) => r.spent > 0 || r.remaining > 0)
+      .sort((a, b) => b.spent - a.spent);
+    const totalSpent = rows.reduce((s, r) => s + r.spent, 0);
+    const totalRemaining = rows.reduce((s, r) => s + r.remaining, 0);
+    return { rows, totalSpent, total: totalSpent + totalRemaining };
+  }, [paints, models, projects]);
+
   const stats = useMemo(() => {
     const wishlist = (items: CollectionItem[]) =>
       items.filter((i) => i.status === "WISHLIST").length;
@@ -82,6 +109,27 @@ export function CollectionStatsBar({
         "bg-bg/90 px-4 py-2.5 backdrop-blur-sm",
       )}
     >
+      {budget.rows.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-border pb-1.5">
+          <span className="label-osd text-cyan">BUDGET</span>
+          {budget.rows.map((r) => (
+            <span
+              key={r.id}
+              className="inline-flex items-center gap-1.5 rounded-[6px] border border-border px-2 py-0.5 font-mono text-[11px] text-fg"
+            >
+              <span className="text-fg-bright">{r.title}</span>
+              <span className="tabular-nums text-green">{money(r.spent)}</span>
+              {r.remaining > 0 && (
+                <span className="tabular-nums text-yellow">+{money(r.remaining)}</span>
+              )}
+            </span>
+          ))}
+          <span className="ml-auto inline-flex items-baseline gap-3">
+            <Stat value={money(budget.totalSpent)} label="TOTAL SPENT" accent="green" />
+            <Stat value={money(budget.total)} label="TOTAL" accent="cyan" />
+          </span>
+        </div>
+      )}
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
         <span className="label-osd text-cyan">PAINT:</span>
         <Stat value={String(stats.paintOwned)} label="OWNED" accent="green" />
