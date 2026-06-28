@@ -1,82 +1,36 @@
-"use client";
+import { currentUserId } from "@/lib/auth-stub";
+import { loadAppData, loadEditorRecipe, loadProjectsForPicker } from "@/lib/appData";
+import type { Recipe } from "@/lib/types";
+import { RecipeWorkbench } from "@/components/recipe/RecipeWorkbench";
 
-import { Suspense, useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { RecipeIndexView, type RecipeStatus } from "@/components/recipe/RecipeIndexView";
-import { AiRecipeDialog } from "@/components/recipe/AiRecipeDialog";
-import { useMockData } from "@/mock/MockProvider";
-import { attachRecipeToProject } from "@/lib/actions/recipes";
-import { publishRecipe } from "@/lib/actions/recipeSharing";
-import { saveRecipeFromAi, wishlistMissingPaints } from "@/lib/actions/aiRecipe";
-import type { GroundedRecipeProposal } from "@/lib/ai/recipeSchema";
+export const dynamic = "force-dynamic";
 
-function RecipesRoute() {
-  const data = useMockData();
-  const router = useRouter();
-  const preview = useSearchParams().get("state");
-  const [, startTransition] = useTransition();
-  const [aiOpen, setAiOpen] = useState(false);
-
-  const isEmpty = preview === "empty";
-  const status: RecipeStatus =
-    preview === "loading" ? "loading" : preview === "error" ? "error" : "ready";
-
-  async function approveAi(proposal: GroundedRecipeProposal) {
-    const res = await saveRecipeFromAi(proposal);
-    if (res.ok) {
-      setAiOpen(false);
-      router.push(`/recipes/${res.data.id}`);
-    }
+/**
+ * Recipes route (Figma 28:4) — a 3-pane column master-detail. The server loads
+ * every recipe with its FULL slots (technique + paintId + note resolved, not
+ * just the palette) so the editor column renders complete the moment a recipe
+ * is selected, then hands the list + projects to the client workbench.
+ */
+export default async function RecipesPage() {
+  const userId = await currentUserId();
+  if (!userId) {
+    return <RecipeWorkbench recipes={[]} projects={[]} />;
   }
 
-  return (
-    <>
-      <RecipeIndexView
-        recipes={isEmpty ? [] : data.recipes}
-        projects={data.projects}
-        status={status}
-        onOpenRecipe={(r) => router.push(`/recipes/${r.id}`)}
-        onNewRecipe={() => router.push("/recipes/new")}
-        onGenerateAi={() => setAiOpen(true)}
-        onAssignProject={(recipe, projectId) => {
-          startTransition(async () => {
-            await attachRecipeToProject({ recipeId: recipe.id, projectId });
-            router.refresh();
-          });
-        }}
-        onShare={(recipe) => {
-          startTransition(async () => {
-            const res = await publishRecipe({ recipeId: recipe.id });
-            if (res.ok && typeof navigator !== "undefined") {
-              const url = `${location.origin}/r/${res.data.slug}`;
-              await navigator.clipboard?.writeText(url).catch(() => {});
-            }
-          });
-        }}
-        onRetry={() => router.refresh()}
-        onEditPaint={(recipe) => {
-          // MM-51 — the index view-model carries no per-slot ids to persist an
-          // in-place edit, so route into the recipe editor (same shared picker,
-          // full persistence) rather than silently dropping the change.
-          router.push(`/recipes/${recipe.id}`);
-        }}
-      />
-      <AiRecipeDialog
-        open={aiOpen}
-        onClose={() => setAiOpen(false)}
-        onApprove={approveAi}
-        onAddMissing={async (paintIds) => {
-          await wishlistMissingPaints(paintIds);
-        }}
-      />
-    </>
-  );
-}
+  const [data, projects] = await Promise.all([
+    loadAppData(userId),
+    loadProjectsForPicker(userId),
+  ]);
 
-export default function RecipesPage() {
-  return (
-    <Suspense fallback={null}>
-      <RecipesRoute />
-    </Suspense>
+  // Resolve each recipe to its full editable form (slots with technique +
+  // paintId). loadAppData only carries the palette, so hydrate per recipe.
+  const summaries = data.recipes ?? [];
+  const full = await Promise.all(
+    summaries.map(async (r): Promise<Recipe> => {
+      const detail = await loadEditorRecipe(userId, r.id);
+      return detail ?? r;
+    }),
   );
+
+  return <RecipeWorkbench recipes={full} projects={projects} />;
 }
