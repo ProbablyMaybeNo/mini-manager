@@ -11,6 +11,10 @@ This REPLACES the vintage-terminal/CRT aesthetic entirely. New branch `redesign/
 - dashboard-main `4:4` · project-page `13:4` · collection-ideal `24:4` · recipes-page `28:4`
 - Paint-Pick side panel `37:5` · army-panel `43:4` · unit-panel `44:4`
 
+## PALETTE DECISION (Ross: "follow the style guide", 2026-06-28)
+Use the **style-guide (`1:13`) values** for bg/surface/border + semantic colours (they're the refined system), NOT the more-neon dashboard-`4:4` samples. The one reconciliation: the style guide's only "Accent" swatch is the blue `#3182E0`, but EVERY example page renders the primary accent as **cyan** — so keep **cyan `#00F5FF` as `--accent`** (the actual designed UI) and `#3182E0` as `--blue` (welcome card, ATTACH RECIPE, links). Keep purple `#BF7BFF` (ON HOLD pill, Models, Attach). Locked values:
+`--bg #0D0D17` · `--surface #1A1A1F` · `--surface-2 #202028` · `--border rgba(255,255,255,.12)` · `--accent #00F5FF` (cyan) · `--blue #3182E0` · `--purple #BF7BFF` · `--success #09CD7E` · `--warning #F5F17A` · `--danger #F12D52` · `--highlight #FF2B6D` · `--text #E6E5E5` · `--text-bright #FCFCFC` · `--text-dim #888`. Radii 6/12px.
+
 ## Design tokens (from style guide 1:13)
 | token | value |
 |---|---|
@@ -30,10 +34,8 @@ This REPLACES the vintage-terminal/CRT aesthetic entirely. New branch `redesign/
 | radius | 6px (controls/cards-inner), 12px (panels/cards) |
 | spacing | 8 / 16 / 24 / 40 rhythm |
 
-## Typography
-- **Display / headings:** Inter (ExtraBold for page titles e.g. `DASHBOARD`, Bold for section + panel names). letter-spacing tight on big titles (`-0.5px`).
-- **Body / labels / table / values:** JetBrains Mono (Regular; Semibold for emphasis). Numbers + hex codes always mono.
-- Install via `@fontsource/inter` + `@fontsource/jetbrains-mono` (or next/font) — replace the VT323/Flexi/UAV/Plex stack in globals.css. Keep a `--font-display` / `--font-mono` token pair.
+## Typography — JetBrains Mono EVERYWHERE (Ross, 2026-06-28)
+- **One face: JetBrains Mono.** Display/titles = JetBrains Mono Bold/heavy (tight tracking on big titles, uppercase for page titles like `DASHBOARD`); body/labels/table/values = JetBrains Mono Regular/Medium. Drop Inter entirely — point `--font-display` AND `--font-mono` at JetBrains Mono. (`@fontsource-variable/jetbrains-mono` already installed.)
 
 ## Core components (style guide 1:66–1:313 — match exactly)
 - **Buttons:** primary = cyan fill, dark text, 6px radius (e.g. `+ NEW PROJECT`, `GO PAINT`); secondary = outline; coloured outline variants (green `+ Create`, purple `+ Attach`, blue `ATTACH RECIPE`). Icon+label.
