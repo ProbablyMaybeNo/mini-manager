@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Button, Input, Panel } from "@/components/kit";
+import { Button, Input } from "@/components/kit";
 import { Logo } from "@/components/shell";
 import { requestPasswordReset } from "@/lib/auth/passwordReset";
 
@@ -14,14 +14,17 @@ export default function ResetPage() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-6">
-      <Panel label="SYS ▸ RECOVER" cornerTicks glow className="w-full max-w-sm p-6">
-        <div className="mb-5 flex flex-col items-center gap-2 text-center">
-          <Logo href="/" size={56} />
-          <p className="font-body text-body text-fg">Reset your password</p>
+      <div className="w-full max-w-sm rounded-[12px] border border-border bg-surface p-6 panel-depth motion-safe:animate-content-in">
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
+          <Logo href="/" size={64} />
+          <h1 className="font-mono text-[20px] font-extrabold uppercase tracking-tight text-fg-bright">
+            Reset password
+          </h1>
+          <span aria-hidden className="block h-1 w-12 rounded-full bg-cyan" />
         </div>
 
         {sent ? (
-          <p className="font-body text-body text-green text-glow-green">
+          <p className="rounded-[6px] border border-green/40 bg-green/5 px-3 py-2 font-body text-body text-green">
             ▸ If that account has a verified recovery email, a reset link is on
             its way.
           </p>
@@ -52,12 +55,15 @@ export default function ResetPage() {
           </form>
         )}
 
-        <div className="mt-4 text-center font-body text-body">
-          <Link href="/sign-in" className="text-cyan hover:underline">
+        <div className="mt-5 text-center font-body text-body">
+          <Link
+            href="/sign-in"
+            className="text-cyan underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
+          >
             ← Back to sign in
           </Link>
         </div>
-      </Panel>
+      </div>
     </div>
   );
 }

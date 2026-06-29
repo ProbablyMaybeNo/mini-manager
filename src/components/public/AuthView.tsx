@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Input, Panel } from "@/components/kit";
+import { Button, Input } from "@/components/kit";
 import { Logo } from "@/components/shell";
-import { BootSequence } from "@/components/kit";
 
 export type AuthMode = "sign-in" | "sign-up";
 
@@ -35,20 +34,17 @@ export function AuthView({
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-6">
-      <Panel label="SYS ▸ ACCESS" cornerTicks glow className="w-full max-w-sm p-6">
-        {/* UX-010 — a real page heading for screen readers; the terminal
-            panel label is decorative, so this stays visually hidden. */}
-        <h1 className="sr-only">
-          {isSignUp ? "Sign up for The Mini Mainframe" : "Sign in to The Mini Mainframe"}
-        </h1>
-        <div className="mb-5 flex flex-col items-center gap-3 text-center">
-          <Logo href="/" size={128} className="animate-power-on" />
-          <BootSequence
-            lines={[
-              "MINI MAINFRAME OS v1.0",
-              isSignUp ? "NEW USER REGISTRATION" : "AWAITING CREDENTIALS",
-            ]}
-          />
+      <div className="w-full max-w-sm rounded-[12px] border border-border bg-surface p-6 panel-depth motion-safe:animate-content-in">
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
+          <Logo href="/" size={112} />
+          {/* HEX.CODE title + cyan underline (matches the app PageHeader). */}
+          <h1 className="font-mono text-[20px] font-extrabold uppercase tracking-tight text-fg-bright">
+            {isSignUp ? "Create account" : "Sign in"}
+          </h1>
+          <span aria-hidden className="block h-1 w-12 rounded-full bg-cyan" />
+          <p className="font-mono text-body text-fg-dim">
+            {isSignUp ? "New user — The Mini Mainframe" : "Welcome back to The Mini Mainframe"}
+          </p>
         </div>
 
         <form
@@ -82,20 +78,23 @@ export function AuthView({
           </Button>
         </form>
 
-        <div className="mt-4 flex items-center justify-between font-body text-body">
+        <div className="mt-5 flex items-center justify-between font-body text-body">
           <Link
             href={switchHref}
-            className="text-cyan hover:underline"
+            className="text-cyan underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
           >
             {isSignUp ? "Have an account? Sign in" : "New here? Create account"}
           </Link>
           {!isSignUp && (
-            <Link href="/reset" className="text-fg hover:text-cyan">
+            <Link
+              href="/reset"
+              className="text-fg-dim underline-offset-4 transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+            >
               Forgot?
             </Link>
           )}
         </div>
-      </Panel>
+      </div>
     </div>
   );
 }

@@ -32,14 +32,14 @@ export function SettingsView({
       <PageHeader title="SETTINGS" tagline="Plan, preferences, and data." />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel label="PLAN" cornerTicks className="flex flex-col gap-3 p-5">
+        <Panel label="PLAN" className="flex flex-col gap-3 p-5">
           <div className="flex items-baseline justify-between">
-            <span className="font-display text-base text-cyan">{plan.name}</span>
+            <span className="font-display text-base font-bold text-cyan">{plan.name}</span>
             {plan.renews && (
-              <span className="font-body text-body text-fg">Renews {plan.renews}</span>
+              <span className="font-body text-body text-fg-dim">Renews {plan.renews}</span>
             )}
           </div>
-          <p className="font-body text-body text-fg">
+          <p className="font-body text-body text-fg-dim">
             {plan.name === "Free"
               ? "Upgrade for unlimited projects, sharing, and the full tool suite."
               : "Thanks for supporting The Mini Mainframe."}
@@ -64,13 +64,13 @@ export function SettingsView({
               onChange={onDensityChange}
             />
           </div>
-          <p className="font-body text-body text-fg">
+          <p className="font-body text-body text-fg-dim">
             ▸ Motion respects your system “reduce motion” setting automatically.
           </p>
         </Panel>
 
         <Panel label="DATA" className="flex flex-col gap-3 p-5">
-          <p className="font-body text-body text-fg">
+          <p className="font-body text-body text-fg-dim">
             Import a roster or paint list, or export your whole collection.
           </p>
           <div className="flex gap-2">
@@ -84,7 +84,7 @@ export function SettingsView({
         </Panel>
 
         <Panel label="SESSION" accent="red" className="flex flex-col gap-3 p-5">
-          <p className="font-body text-body text-fg">Sign out of this device.</p>
+          <p className="font-body text-body text-fg-dim">Sign out of this device.</p>
           <div>
             <Button variant="danger" onClick={onSignOut}>
               Sign out

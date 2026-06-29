@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { Button, Chip, Panel } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import type { PricingTier } from "@/lib/types";
 import { PublicHeader } from "./PublicHeader";
+import { PublicPageTitle } from "./PublicPageTitle";
 
 export function PricingView({
   tiers,
@@ -16,16 +18,9 @@ export function PricingView({
     <div className="flex min-h-dvh flex-col">
       <PublicHeader />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 p-6">
-        <div className="text-center">
-          {/* clamp() keeps the pixel-font title inside a 320px viewport
-              (MUX-008), settling at --text-title on wider screens. */}
-          <h1
-            className="font-title text-cyan text-glow-cyan"
-            style={{ fontSize: "clamp(1.75rem, 9vw, var(--text-title))" }}
-          >
-            PRICING
-          </h1>
-          <p className="mt-3 font-body text-body text-fg">
+        <div className="flex flex-col items-center text-center">
+          <PublicPageTitle>PRICING</PublicPageTitle>
+          <p className="mt-3 font-body text-body text-fg-dim">
             Start free. Upgrade when your paint table outgrows it.
           </p>
         </div>
@@ -36,9 +31,10 @@ export function PricingView({
               key={t.id}
               label={t.name.toUpperCase()}
               accent={t.featured ? "purple" : "cyan"}
-              cornerTicks={t.featured}
-              glow={t.featured}
-              className="flex flex-col gap-4 p-5"
+              className={cn(
+                "flex flex-col gap-4 p-5 transition-colors duration-150 hover:border-fg/25",
+                t.featured && "border-purple/40 hover:border-purple",
+              )}
             >
               {t.featured && (
                 <div className="flex items-center justify-between">
@@ -49,8 +45,8 @@ export function PricingView({
                 </div>
               )}
               <div className="flex items-baseline gap-1">
-                <span className="font-num1 text-num1 text-fg">{t.price}</span>
-                <span className="font-body text-body text-fg">{t.cadence}</span>
+                <span className="font-num1 text-num1 text-fg-bright">{t.price}</span>
+                <span className="font-body text-body text-fg-dim">{t.cadence}</span>
               </div>
               <ul className="flex flex-1 flex-col gap-2">
                 {t.features.map((f) => (
@@ -61,9 +57,9 @@ export function PricingView({
                 ))}
               </ul>
               {t.featured && t.seatsLeft != null && t.seatsTotal != null && (
-                <div className="h-1 w-full border border-purple/40">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
                   <div
-                    className="h-full bg-purple"
+                    className="h-full rounded-full bg-purple transition-[width] duration-300"
                     style={{ width: `${100 - (t.seatsLeft / t.seatsTotal) * 100}%` }}
                   />
                 </div>
@@ -79,9 +75,9 @@ export function PricingView({
           ))}
         </div>
 
-        <p className="text-center font-body text-body text-fg">
+        <p className="text-center font-body text-body text-fg-dim">
           Questions?{" "}
-          <Link href="/" className="text-cyan hover:underline">
+          <Link href="/" className="text-cyan underline-offset-4 hover:underline">
             Back to home
           </Link>
         </p>

@@ -39,15 +39,14 @@ function Verify() {
     <div className="flex h-full flex-col gap-6 p-6">
       <PageHeader title="VERIFY EMAIL" tagline="Confirming your recovery email." />
       <Panel
-        label={status === "ok" ? "SYS ▸ OK" : status === "error" ? "SYS ▸ ERROR" : "SYS ▸ …"}
-        accent={status === "error" ? "red" : "cyan"}
-        cornerTicks
+        label={status === "ok" ? "VERIFIED" : status === "error" ? "ERROR" : "VERIFYING"}
+        accent={status === "error" ? "red" : status === "ok" ? "green" : "cyan"}
         className="max-w-md p-6"
       >
         {status === "pending" ? (
-          <p className="font-body text-body text-fg">▸ Verifying…</p>
+          <p className="font-body text-body text-fg-dim">▸ Verifying…</p>
         ) : status === "ok" ? (
-          <p className="font-body text-body text-green text-glow-green">
+          <p className="font-body text-body text-green">
             ▸ Recovery email verified. Password resets can now be sent to it.
           </p>
         ) : (
@@ -56,7 +55,7 @@ function Verify() {
         <div className="mt-4">
           <Link
             href="/user/account"
-            className="label-osd text-cyan hover:underline"
+            className="label-osd text-cyan underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
           >
             ← Back to account
           </Link>

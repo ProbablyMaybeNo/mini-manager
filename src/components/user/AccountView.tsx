@@ -49,7 +49,7 @@ export function AccountView({
       <PageHeader title="ACCOUNT" tagline="Profile, password, and recovery." />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel label="PROFILE" cornerTicks className="flex flex-col gap-4 p-5">
+        <Panel label="PROFILE" className="flex flex-col gap-4 p-5">
           <Input
             label="Username"
             name="username"
@@ -75,7 +75,7 @@ export function AccountView({
         </Panel>
 
         <Panel label="SECURITY" className="flex flex-col gap-4 p-5">
-          <p className="font-body text-body text-fg">
+          <p className="font-body text-body text-fg-dim">
             Passwords are never entered here — we’ll email you a secure change link.
           </p>
           <div>
@@ -96,7 +96,7 @@ export function AccountView({
 
         {canManageBilling && (
           <Panel label="BILLING" className="flex flex-col gap-4 p-5">
-            <p className="font-body text-body text-fg">
+            <p className="font-body text-body text-fg-dim">
               Update your payment method, view invoices, or cancel your plan in
               the secure Stripe portal.
             </p>
@@ -120,7 +120,7 @@ export function AccountView({
 
       {onDeleteAccount && (
         <Panel label="DANGER ZONE" accent="red" className="flex flex-col gap-3 p-5">
-          <p className="font-body text-body text-fg">
+          <p className="font-body text-body text-fg-dim">
             Deleting your account permanently removes your projects, recipes,
             collection, and everything else. This can’t be undone — export your
             data first if you want a copy.

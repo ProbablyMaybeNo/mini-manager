@@ -81,7 +81,7 @@ export function AccountClient({
       {notice ? (
         <div
           role="status"
-          className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] border border-cyan bg-bg px-4 py-2 text-center font-body text-body text-cyan glow-cyan"
+          className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] rounded-[6px] border border-cyan/50 bg-surface px-4 py-2 text-center font-body text-body text-cyan panel-depth motion-safe:animate-menu-in"
         >
           ▸ {notice}
         </div>
@@ -163,10 +163,10 @@ export function AccountClient({
           </div>
         }
       >
-        <p className="mb-3 font-body text-body text-fg">
+        <p className="mb-3 font-body text-body text-fg-dim">
           This permanently deletes your account and all of its data. To
           confirm, type your username{" "}
-          <span className="text-red">{username}</span> below.
+          <span className="font-bold text-red">{username}</span> below.
         </p>
         <Input
           name="confirm-username"
