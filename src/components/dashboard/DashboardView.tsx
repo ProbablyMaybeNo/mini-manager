@@ -15,7 +15,6 @@ import type {
   CalendarEvent,
   DashboardSummary,
   Project,
-  ProjectType,
 } from "@/lib/types";
 import { CreateProjectView } from "./CreateProjectView";
 import { InspectorShell } from "./InspectorShell";
@@ -53,12 +52,9 @@ export interface DashboardViewProps {
   autoCreate?: boolean;
   onAutoCreateConsumed?: () => void;
   onOpenProject?: (project: Project) => void;
-  onFocusProject?: (project: Project) => void;
   onAttachRecipe?: (project: Project) => void;
   onAddProject?: () => void;
-  onUploadArmyList?: () => void;
   onStartSession?: (project: Project) => void;
-  onAddSubProject?: (parent: Project, childType: ProjectType, name: string) => void;
   onRetry?: () => void;
 }
 
@@ -86,12 +82,9 @@ export function DashboardView({
   autoCreate,
   onAutoCreateConsumed,
   onOpenProject,
-  onFocusProject,
   onAttachRecipe,
   onAddProject,
-  onUploadArmyList,
   onStartSession,
-  onAddSubProject,
   onRetry,
 }: DashboardViewProps) {
   const router = useRouter();
@@ -303,20 +296,13 @@ export function DashboardView({
                       projectMinutes={projectMinutes}
                       selectedId={selected?.id}
                       onOpenProject={openProject}
-                      onFocusProject={(p) => onFocusProject?.(p)}
                       onAttachRecipe={(p) => onAttachRecipe?.(p)}
-                      onAddSubProject={onAddSubProject}
                       onAddProject={startCreate}
                     />
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
-                  {/* Upload-Army-List restored — opens the ArmyImportPanel
-                      slide-out wired through onUploadArmyList. */}
-                  <Button variant="secondary" onClick={onUploadArmyList}>
-                    ⬆ Upload Army List
-                  </Button>
                 </div>
               </div>
             </div>

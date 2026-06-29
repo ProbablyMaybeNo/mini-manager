@@ -1,25 +1,22 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/DashboardView";
-import { useToast } from "@/components/kit";
 import { deriveDashboardSummary } from "@/mock/derive";
-import { createProject } from "@/lib/actions/projects";
 import type {
   ActivityEntry,
   CalendarEvent,
   Project,
   SessionStats,
 } from "@/lib/types";
-import { ArmyImportPanel } from "./ArmyImportPanel";
 
 /**
  * Dashboard client shell. Receives the signed-in user's REAL data (loaded
- * server-side via loadAppData) and wires the interactive bits: the create /
- * import modals and the navigation callbacks. Creating a project or event
- * calls a server action that revalidates `/dashboard`, so the server
- * component re-runs and this re-renders with fresh data.
+ * server-side via loadAppData) and wires the interactive bits: the create flow
+ * and navigation callbacks. Creating a project or event calls a server action
+ * that revalidates `/dashboard`, so the server component re-runs and this
+ * re-renders with fresh data.
  */
 export function DashboardClient({
   projects,
@@ -36,9 +33,6 @@ export function DashboardClient({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { toast, node } = useToast();
-  const [, startTransition] = useTransition();
-  const [importOpen, setImportOpen] = useState(false);
   // A freshly created project to auto-open in the detail panel.
   const [openId, setOpenId] = useState<string | null>(null);
   // RF-8: the tour deep-link opens CREATE mode (the project page, blank). A
@@ -58,44 +52,20 @@ export function DashboardClient({
   const summary = deriveDashboardSummary(projects, sessionStats);
 
   return (
-    <>
-      <DashboardView
-        summary={summary}
-        projects={projects}
-        events={events}
-        activity={activity}
-        projectMinutes={projectMinutes}
-        openProjectId={openId}
-        onOpenConsumed={() => setOpenId(null)}
-        onProjectCreated={(id) => setOpenId(id)}
-        autoCreate={autoCreate}
-        onAutoCreateConsumed={() => setAutoCreate(false)}
-        onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
-        onFocusProject={(p) => router.push(`/focus?project=${p.id}`)}
-        onAttachRecipe={() => router.push("/recipes")}
-        onUploadArmyList={() => setImportOpen(true)}
-        onAddSubProject={(parent, childType, name) => {
-          // D3 / OR6fdf — add a Unit under an Army/Warband, or a Model under a
-          // Unit. The picker only ever yields "Unit" / "Model" (both valid DB
-          // project types); guard the rest so the cast is sound.
-          if (childType !== "Unit" && childType !== "Model") return;
-          startTransition(async () => {
-            const res = await createProject({
-              name,
-              type: childType,
-              // Seed a single model so the new sub-project has a non-zero
-              // denominator; the painter can adjust the count later.
-              count: 1,
-              parentId: parent.id,
-            });
-            if (res.ok) router.refresh();
-            else toast(res.error, "red");
-          });
-        }}
-        onRetry={() => router.refresh()}
-      />
-      <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
-      {node}
-    </>
+    <DashboardView
+      summary={summary}
+      projects={projects}
+      events={events}
+      activity={activity}
+      projectMinutes={projectMinutes}
+      openProjectId={openId}
+      onOpenConsumed={() => setOpenId(null)}
+      onProjectCreated={(id) => setOpenId(id)}
+      autoCreate={autoCreate}
+      onAutoCreateConsumed={() => setAutoCreate(false)}
+      onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
+      onAttachRecipe={() => router.push("/recipes")}
+      onRetry={() => router.refresh()}
+    />
   );
 }
