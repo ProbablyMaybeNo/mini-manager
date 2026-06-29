@@ -185,7 +185,7 @@ export function RecipeWorkbench({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="SEARCH RECIPES..."
               aria-label="Search recipes"
-              className="min-w-0 flex-1 bg-transparent font-mono text-[12px] uppercase text-fg placeholder:text-fg-dim focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent font-mono text-[12px] uppercase text-fg placeholder:text-[#757575] focus:outline-none"
             />
           </label>
         </div>

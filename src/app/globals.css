@@ -43,14 +43,14 @@
      warm tone so MED reads apart from LOW. */
   --color-orange: #ff8a3c;
 
-  /* Foreground ramp (style guide: text #E6E5E5, titles #FCFCFC, dim #888) */
+  /* Foreground ramp. Ross: "nothing should be grey" — the dim + faint text
+     tokens are whitened to the body white so all text reads white. (Titles use
+     the brighter #FCFCFC.) Input placeholders keep a muted #757575 inline so a
+     hint never looks like a filled value. */
   --color-fg: #e6e5e5;
   --color-fg-bright: #fcfcfc;
-  --color-fg-dim: #888888;
-  /* Faint = decorative glyphs / disabled / separators. Lifted to #757575 so it
-     clears the 3:1 non-text / large floor on every surface (a11y pass, Phase 5):
-     #5a5a5a failed at ~2.3–2.8. Body text never uses faint. */
-  --color-fg-faint: #757575;
+  --color-fg-dim: #e6e5e5;
+  --color-fg-faint: #e6e5e5;
 
   /* Type families — ONE FACE: JetBrains Mono (Ross, 2026-06-28).
      --font-display  JetBrains Bold/heavy — page titles + section/panel headers

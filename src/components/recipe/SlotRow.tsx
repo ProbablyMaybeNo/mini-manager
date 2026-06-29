@@ -121,7 +121,7 @@ export function SlotRow({
         onChange={(e) => onNoteChange(e.target.value)}
         aria-label={`Note for step ${index + 1}`}
         placeholder="Note…"
-        className="min-h-7 w-40 shrink-0 rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+        className="min-h-7 w-40 shrink-0 rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
       />
 
       {/* Delete. */}

@@ -183,7 +183,7 @@ export function RecipeEditorView({
           aria-label="Recipe notes"
           rows={3}
           placeholder="General notes — varnish, basing, sub-assembly order…"
-          className="w-full resize-y border border-cyan/40 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-faint focus:border-cyan focus:outline-none"
+          className="w-full resize-y border border-cyan/40 bg-bg p-2 font-body text-body text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
         />
       </Panel>
 
