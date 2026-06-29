@@ -299,8 +299,14 @@ export function DashboardView({
                     />
                   )}
                 </div>
+                {/* In the empty state the welcome card + the table's
+                    "+ Create your first project" CTA already carry create, so
+                    the cyan + NEW PROJECT button is hidden until there's a
+                    roster (Ross). Upload Army stays — import is a valid first move. */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
+                  {projects.length > 0 && (
+                    <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
+                  )}
                   {onUploadArmyList && (
                     <Button variant="outlinePurple" onClick={onUploadArmyList}>⬆ Upload Army</Button>
                   )}
