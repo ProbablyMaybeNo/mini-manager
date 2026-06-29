@@ -51,7 +51,7 @@ export function SwatchStrip({
         className={cn(
           // min-h-6 keeps the hit area ≥24px (WCAG 2.2 §2.5.8) without
           // enlarging the dense table cell (UX-008).
-          "inline-flex min-h-6 items-center border border-dashed border-purple px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] text-purple hover:border-purple hover:text-purple",
+          "inline-flex min-h-6 items-center rounded-[6px] border border-dashed border-purple/60 px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] text-purple transition-colors duration-150 hover:border-purple hover:bg-purple/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple",
           className,
         )}
       >
@@ -77,7 +77,7 @@ export function SwatchStrip({
         className={cn(
           // min-h-6 lifts the 16px swatch strip's hit area to ≥24px
           // (WCAG 2.2 §2.5.8) without resizing the swatches (UX-008).
-          "inline-flex min-h-6 items-center rounded-none hover:opacity-80",
+          "inline-flex min-h-6 items-center rounded-[4px] transition-opacity duration-150 hover:opacity-80 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan",
           className,
         )}
       >

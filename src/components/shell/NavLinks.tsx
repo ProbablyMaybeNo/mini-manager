@@ -31,12 +31,15 @@ export function NavLinks({
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 // 44px row (HEX.CODE nav-item / WCAG touch target). icon+label,
-                // mono uppercase. Active = cyan tint + cyan text/icon; rest are
-                // neutral with a faint cyan hover.
-                "flex min-h-11 items-center gap-3 pl-5 pr-3 font-mono text-[13px] uppercase tracking-wide transition-colors",
+                // mono uppercase. Active = cyan left indicator + cyan tint +
+                // cyan text/icon; rest are neutral with a faint cyan hover. The
+                // left border doubles as the active indicator (style guide 1:191)
+                // and reserves a transparent 2px on inactive rows so the label
+                // baseline never shifts on activation.
+                "relative flex min-h-11 items-center gap-3 border-l-2 pl-5 pr-3 font-mono text-[13px] uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:bg-cyan/10 focus-visible:text-cyan",
                 isActive
-                  ? "bg-cyan/[0.06] font-bold text-cyan"
-                  : "text-fg hover:bg-fg/[0.04] hover:text-cyan",
+                  ? "border-cyan bg-cyan/[0.06] font-bold text-cyan"
+                  : "border-transparent text-fg hover:bg-fg/[0.04] hover:text-cyan",
               )}
             >
               {Icon && <Icon size={16} strokeWidth={2} className="shrink-0" aria-hidden />}

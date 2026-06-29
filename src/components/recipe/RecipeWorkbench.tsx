@@ -250,20 +250,27 @@ export function RecipeWorkbench({
         </ul>
 
         {/* Bottom tabs (28:126). */}
-        <div className="flex items-center gap-5 border-t border-border px-4 py-3">
-          {(["MY RECIPES", "GALLERY", "SHARED"] as RecipeTab[]).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "font-mono text-[11px] font-bold uppercase tracking-wide transition-colors",
-                t === tab ? "text-cyan" : "text-fg-dim hover:text-fg",
-              )}
-            >
-              {t}
-            </button>
-          ))}
+        <div role="tablist" aria-label="Recipe source" className="flex items-center gap-5 border-t border-border px-4 py-3">
+          {(["MY RECIPES", "GALLERY", "SHARED"] as RecipeTab[]).map((t) => {
+            const active = t === tab;
+            return (
+              <button
+                key={t}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "border-b-2 pb-0.5 font-mono text-[11px] font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan",
+                  active
+                    ? "border-cyan text-cyan"
+                    : "border-transparent text-fg-dim hover:text-fg",
+                )}
+              >
+                {t}
+              </button>
+            );
+          })}
         </div>
       </div>
 

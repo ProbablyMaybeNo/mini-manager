@@ -28,7 +28,7 @@ export function SegmentedToggle<T extends string>({
       role="radiogroup"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex border border-cyan/60",
+        "inline-flex overflow-hidden rounded-[6px] border border-border bg-surface-2 p-0.5",
         disabled && "opacity-40",
         className,
       )}
@@ -44,8 +44,10 @@ export function SegmentedToggle<T extends string>({
             disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "px-3 py-1 font-button text-button uppercase tracking-[0.15em] transition-colors",
-              active ? "bg-cyan/20 text-cyan glow-cyan" : "text-fg-dim hover:text-cyan",
+              "rounded-[5px] px-3 py-1 font-button text-button uppercase tracking-[0.15em] transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan",
+              active
+                ? "bg-cyan text-bg"
+                : "text-fg-dim hover:bg-fg/5 hover:text-fg",
               disabled && "cursor-not-allowed",
             )}
           >
