@@ -85,6 +85,9 @@ function CollectionRoute() {
   /** Which manual-add dialog is open ("paint"/"model") — null when closed. */
   const [adding, setAdding] = useState<CollectionKind | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  /** The row whose rename (ACTIONS pen) dialog is open — null when closed. */
+  const [editing, setEditing] = useState<CollectionItem | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   /** The paint row whose recipe-attach picker is open — null when closed. */
   const [attaching, setAttaching] = useState<CollectionItem | null>(null);
 
@@ -141,6 +144,19 @@ function CollectionRoute() {
     });
   }
 
+  function renameItem(title: string) {
+    const item = editing;
+    if (!item) return;
+    setEditError(null);
+    patch(item, { name: title });
+    setEditing(null);
+    startTransition(async () => {
+      const res = await updateWishlistItem({ id: item.id, title });
+      if (res.ok) toast(`Renamed to ${title}`, "green");
+      else toast(res.error, "red");
+    });
+  }
+
   function attachRecipe(recipeId: string) {
     const item = attaching;
     if (!item) return;
@@ -176,6 +192,10 @@ function CollectionRoute() {
         });
       }}
       onAttachRecipe={(item) => setAttaching(item)}
+      onEdit={(item) => {
+        setEditError(null);
+        setEditing(item);
+      }}
       onRemove={(item) => {
         if (item.kind === "paint") setPaints((l) => l.filter((x) => x.id !== item.id));
         else setModels((l) => l.filter((x) => x.id !== item.id));
@@ -199,6 +219,21 @@ function CollectionRoute() {
       onClose={() => {
         setAdding(null);
         setAddError(null);
+      }}
+    />
+    <PromptDialog
+      open={editing !== null}
+      title={editing?.kind === "model" ? "Rename model" : "Rename paint"}
+      breadcrumb="COLLECTION"
+      label="Name"
+      defaultValue={editing?.name ?? ""}
+      placeholder={editing?.kind === "model" ? "e.g. Intercessor Squad" : "e.g. Macragge Blue"}
+      submitLabel="Save"
+      error={editError}
+      onSubmit={renameItem}
+      onClose={() => {
+        setEditing(null);
+        setEditError(null);
       }}
     />
     <RecipePickerDialog

@@ -151,14 +151,28 @@ export const mockRecipes: Recipe[] = [
   },
 ];
 
+/** Frame-faithful collection fixtures (24:4) — used by the populated
+ *  MockProvider preview so the paint/model tables render with the same
+ *  brand/type/status/project mix as Ross's Figma. */
 export const mockCollectionPaints: CollectionItem[] = [
-  { id: "c1", kind: "paint", thumbnail: "", name: "Red Paint", company: "Army Painter", vendor: "Noble Knight", price: "$1.99", status: "OWNED", sourceUrl: "https://example.com/p1" },
-  { id: "c2", kind: "paint", thumbnail: "", name: "Red Paint", company: "Army Painter", vendor: "Noble Knight", price: "$1.99", status: "WISHLIST", sourceUrl: "https://example.com/p2" },
+  { id: "c1", kind: "paint", thumbnail: "", name: "Macragge Blue", company: "Citadel", vendor: "Element Games", paintType: "Base", price: "$4.55", quantity: 2, status: "OWNED", projectId: "p1", sourceUrl: "https://example.com/p1" },
+  { id: "c2", kind: "paint", thumbnail: "", name: "Agrax Earthshade", company: "Citadel", vendor: "Element Games", paintType: "Wash", price: "$4.55", quantity: 1, status: "OWNED", sourceUrl: "https://example.com/p2" },
+  { id: "c3", kind: "paint", thumbnail: "", name: "Leadbelcher", company: "Citadel", vendor: "Element Games", paintType: "Metallic", price: "$4.55", quantity: 3, status: "OWNED", projectId: "p1", sourceUrl: "https://example.com/p3" },
+  { id: "c4", kind: "paint", thumbnail: "", name: "Nuln Oil", company: "Citadel", vendor: "Element Games", paintType: "Wash", price: "$4.55", quantity: 2, status: "OWNED", sourceUrl: "https://example.com/p4" },
+  { id: "c5", kind: "paint", thumbnail: "", name: "Vallejo Ivory", company: "Vallejo", vendor: "Element Games", paintType: "Layer", price: "$3.99", quantity: 1, status: "OWNED", projectId: "p2", sourceUrl: "https://example.com/p5" },
+  { id: "c6", kind: "paint", thumbnail: "", name: "Contrast Skeleton", company: "Citadel", vendor: "Element Games", paintType: "Contrast", price: "$7.80", quantity: 0, status: "WISHLIST", projectId: "p2", sourceUrl: "https://example.com/p6" },
+  { id: "c7", kind: "paint", thumbnail: "", name: "Mournfang Brown", company: "Citadel", vendor: "Element Games", paintType: "Base", price: "$4.55", quantity: 0, status: "WISHLIST", sourceUrl: "https://example.com/p7" },
+  { id: "c8", kind: "paint", thumbnail: "", name: "Typhus Corrosion", company: "Citadel", vendor: "Element Games", paintType: "Technical", price: "$6.30", quantity: 0, status: "WISHLIST", sourceUrl: "https://example.com/p8" },
+  { id: "c9", kind: "paint", thumbnail: "", name: "Khorne Red", company: "Citadel", vendor: "Element Games", paintType: "Base", price: "$4.55", quantity: 2, status: "OWNED", projectId: "p1", sourceUrl: "https://example.com/p9" },
 ];
 
 export const mockCollectionModels: CollectionItem[] = [
-  { id: "m1", kind: "model", thumbnail: "", name: "Primaris Captain", company: "Games Workshop", vendor: "Element Games", game: "Warhammer 40,000", army: "Space Marines", price: "$29.99", quantity: 1, status: "OWNED", projectId: "p1", sourceUrl: "https://example.com/m1" },
-  { id: "m2", kind: "model", thumbnail: "", name: "Ork Boyz Box", company: "Games Workshop", vendor: "Wayland", game: "Warhammer 40,000", army: "Orks", price: "$49.99", quantity: 2, status: "BUILDING", projectId: "p2", sourceUrl: "https://example.com/m2" },
+  { id: "m1", kind: "model", thumbnail: "", name: "Space Marines Intercessors", company: "Games Workshop", vendor: "Element Games", game: "Warhammer 40,000", army: "Space Marines", paintType: "Infantry", price: "$60.00", quantity: 10, status: "BUILDING", projectId: "p1", sourceUrl: "https://example.com/m1" },
+  { id: "m2", kind: "model", thumbnail: "", name: "Dragon Warlock", company: "Games Workshop", vendor: "Wayland", game: "Warhammer 40,000", army: "Space Marines", paintType: "Character", price: "$35.00", quantity: 1, status: "PAINTING", projectId: "p2", sourceUrl: "https://example.com/m2" },
+  { id: "m3", kind: "model", thumbnail: "", name: "Terrain Ruins Set", company: "Games Workshop", vendor: "Wayland", game: "Warhammer 40,000", army: "Scenery", paintType: "Scenery", price: "$45.00", quantity: 1, status: "PRIMING", sourceUrl: "https://example.com/m3" },
+  { id: "m4", kind: "model", thumbnail: "", name: "Skeleton Warriors", company: "Games Workshop", vendor: "Wayland", game: "Warhammer 40,000", army: "Undead", paintType: "Infantry", price: "$40.00", quantity: 20, status: "BASING", projectId: "p2", sourceUrl: "https://example.com/m4" },
+  { id: "m5", kind: "model", thumbnail: "", name: "Zombie Horde", company: "Games Workshop", vendor: "Wayland", game: "Warhammer 40,000", army: "Undead", paintType: "Infantry", price: "$35.00", quantity: 10, status: "WISHLIST", sourceUrl: "https://example.com/m5" },
+  { id: "m6", kind: "model", thumbnail: "", name: "Land Raider", company: "Games Workshop", vendor: "Wayland", game: "Warhammer 40,000", army: "Space Marines", paintType: "Vehicle", price: "$80.00", quantity: 1, status: "COMPLETE", projectId: "p1", sourceUrl: "https://example.com/m6" },
 ];
 
 /* ----------------------------------------------------------------------------

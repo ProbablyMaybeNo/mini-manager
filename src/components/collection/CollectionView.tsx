@@ -1,34 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { CollectionTable } from "./CollectionTable";
 import { CollectionStatsBar } from "./CollectionStatsBar";
 import { PasteUrlBar } from "./PasteUrlBar";
-
-/** A 24:4 collection section: a coloured accent tick down the left edge over a
- *  bare, unboxed table (no Panel border — the frame stacks two full-width
- *  sections). The table renders its own PAINTS/MODELS + count + filter header. */
-function CollectionSection({
-  label,
-  accent,
-  children,
-}: {
-  label: string;
-  accent: "cyan" | "purple";
-  children: ReactNode;
-}) {
-  return (
-    <section
-      aria-label={label}
-      className={accent === "purple" ? "border-l-2 border-purple pl-4" : "border-l-2 border-cyan pl-4"}
-    >
-      {children}
-    </section>
-  );
-}
 
 export type CollectionStatus = "ready" | "loading" | "error";
 
@@ -42,6 +19,7 @@ export function CollectionView({
   onAssignProject,
   onAttachRecipe,
   onRemove,
+  onEdit,
   onAddPaint,
   onAddModel,
   onRetry,
@@ -56,6 +34,7 @@ export function CollectionView({
   onAssignProject: (item: CollectionItem, projectId: string) => void;
   onAttachRecipe: (item: CollectionItem) => void;
   onRemove: (item: CollectionItem) => void;
+  onEdit?: (item: CollectionItem) => void;
   onAddPaint: () => void;
   onAddModel: () => void;
   onRetry?: () => void;
@@ -87,10 +66,10 @@ export function CollectionView({
         <div className="h-64 animate-pulse border border-cyan/20 bg-cyan/5" aria-busy="true" />
       ) : (
         // 24:4 — PAINTS and MODELS stack as two full-width, unboxed sections
-        // (not side-by-side bordered cards), each an accent-ticked label over a
-        // bare table.
-        <div className="flex flex-col gap-10">
-          <CollectionSection label="PAINTS" accent="cyan">
+        // (each table renders its own accent-ticked header), split by a thin
+        // full-width divider (24:280).
+        <div className="flex flex-col">
+          <section aria-label="PAINTS">
             <CollectionTable
               kind="paint"
               items={paints}
@@ -99,12 +78,15 @@ export function CollectionView({
               onAssignProject={onAssignProject}
               onAttachRecipe={onAttachRecipe}
               onRemove={onRemove}
+              onEdit={onEdit}
               onAdd={onAddPaint}
               recipeSwatches={recipeSwatches}
             />
-          </CollectionSection>
+          </section>
 
-          <CollectionSection label="MODELS" accent="purple">
+          <div className="my-8 h-px w-full bg-border" aria-hidden />
+
+          <section aria-label="MODELS">
             <CollectionTable
               kind="model"
               items={models}
@@ -113,9 +95,10 @@ export function CollectionView({
               onAssignProject={onAssignProject}
               onAttachRecipe={onAttachRecipe}
               onRemove={onRemove}
+              onEdit={onEdit}
               onAdd={onAddModel}
             />
-          </CollectionSection>
+          </section>
         </div>
       )}
       </div>
