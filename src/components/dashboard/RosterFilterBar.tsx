@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/cn";
 import { Listbox } from "@/components/kit";
-import { accentDot, type Accent } from "@/lib/palette";
+import { type Accent } from "@/lib/palette";
 import { ROSTER_STATUS_ACCENT, type RosterStatus } from "@/lib/rosterStatus";
 
 /** Roster filter value: a roster status, or ALL. */
@@ -82,10 +82,7 @@ export function RosterFilterBar({
 }) {
   return (
     <div
-      className={cn(
-        "flex flex-wrap items-center gap-2 rounded-[12px] border border-border bg-surface px-3 py-2.5",
-        className,
-      )}
+      className={cn("flex flex-wrap items-center gap-2 py-1.5", className)}
       role="group"
       aria-label="Filter roster by status"
     >
@@ -100,19 +97,12 @@ export function RosterFilterBar({
               aria-pressed={active}
               onClick={() => onFilterChange(f)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-[6px] border px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wide transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-cyan",
+                // 4:4 filter chips are text-only (no leading status dot):
+                // active = filled accent, inactive = accent outline.
+                "inline-flex items-center rounded-[6px] border px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-cyan",
                 active ? activeFill[accent] : ghost[accent],
               )}
             >
-              {f !== "ALL" && (
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 shrink-0 rounded-full",
-                    active ? "bg-bg/70" : accentDot[accent],
-                  )}
-                  aria-hidden
-                />
-              )}
               {f}
             </button>
           );
