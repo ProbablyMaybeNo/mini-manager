@@ -4,12 +4,9 @@ import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import {
-  Button,
   ConfirmDialog,
   EmptyState,
-  FocusReticleIcon,
   IconButton,
-  Input,
   ProgressBar,
   StatusText,
   SwatchStrip,
@@ -19,7 +16,7 @@ import {
 import { deleteProject } from "@/lib/actions/projects";
 import { formatMinutes } from "@/lib/palette";
 import { rollupProjectMinutes } from "@/lib/projectTime";
-import type { Project, ProjectType } from "@/lib/types";
+import type { Project } from "@/lib/types";
 import { PriorityDropdown } from "./PriorityDropdown";
 
 const COLS = ["Title", "Type", "#", "Recipe", "Status", "Priority", "Completion", "Time", ""];
@@ -28,25 +25,12 @@ const COLS = ["Title", "Type", "#", "Recipe", "Status", "Priority", "Completion"
  *  read as a tree: Army → Unit → Model. */
 const INDENT_PX = 18;
 
-/**
- * Which child type a container row can spawn (OR6fdf — "units to armies,
- * models to units"). Army / Warband hold Units; a Unit holds Models. Leaf
- * types (Model, Terrain) get no add-sub affordance.
- */
-const SUB_TYPE: Partial<Record<ProjectType, ProjectType>> = {
-  Army: "Unit",
-  Warband: "Unit",
-  Unit: "Model",
-};
-
 export function ProjectsTable({
   projects,
   projectMinutes = {},
   selectedId,
   onOpenProject,
   onAttachRecipe,
-  onFocusProject,
-  onAddSubProject,
   onAddProject,
 }: {
   projects: Project[];
@@ -55,10 +39,6 @@ export function ProjectsTable({
   selectedId?: string;
   onOpenProject: (project: Project) => void;
   onAttachRecipe: (project: Project) => void;
-  /** Jump straight to the focus bench with this project (+ its recipe) loaded. */
-  onFocusProject: (project: Project) => void;
-  /** Create a sub-project under `parent` of the given child type (D3 / OR6fdf). */
-  onAddSubProject?: (parent: Project, childType: ProjectType, name: string) => void;
   /** Open the create-project flow — wires the first-run empty-state CTA. */
   onAddProject?: () => void;
 }) {
@@ -68,9 +48,6 @@ export function ProjectsTable({
   // Which container rows are expanded. Sub-projects render inline beneath
   // their parent; expanding a sub-project reveals the next tier.
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  // Which row currently has its inline "add sub-project" form open.
-  const [addingFor, setAddingFor] = useState<string | null>(null);
-  const [subName, setSubName] = useState("");
   // The project queued for a confirm-guarded row delete (RF-3).
   const [deleting, setDeleting] = useState<Project | null>(null);
 
@@ -92,21 +69,6 @@ export function ProjectsTable({
       else next.add(id);
       return next;
     });
-  }
-
-  function openAddSub(p: Project) {
-    setAddingFor((cur) => (cur === p.id ? null : p.id));
-    setSubName("");
-    // Reveal children so the new row lands in view once created.
-    setExpanded((prev) => new Set(prev).add(p.id));
-  }
-
-  function submitSub(parent: Project, childType: ProjectType) {
-    const name = subName.trim();
-    if (!name) return;
-    onAddSubProject?.(parent, childType, name);
-    setAddingFor(null);
-    setSubName("");
   }
 
   if (projects.length === 0) {
@@ -134,14 +96,10 @@ export function ProjectsTable({
       const selected = p.id === selectedId;
       const hasChildren = !!p.children && p.children.length > 0;
       const isExpanded = expanded.has(p.id);
-      const childType = SUB_TYPE[p.type];
-      const canAddSub = !!childType && !!onAddSubProject;
-      const isAdding = addingFor === p.id;
       // The caret expands/collapses existing sub-projects, so only rows that
-      // actually have children render it. Leaf rows (incl. empty containers
-      // like a childless Army) render no chevron — adding a first sub-project
-      // is done via the dedicated "+" action button, which then makes the
-      // caret appear (honours the documented leaf contract, M3.2).
+      // actually have children render it. Adding sub-projects now happens in
+      // the Army/Unit flow panel, not via a per-row affordance (strict-strip
+      // to match dashboard 4:4).
       const showCaret = hasChildren;
 
       const row = (
@@ -159,7 +117,7 @@ export function ProjectsTable({
             }
           }}
           className={cn(
-            "cursor-pointer border-b border-border transition-colors focus:outline-none",
+            "group/row cursor-pointer border-b border-border transition-colors duration-150 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-cyan",
             selected
               ? "bg-cyan/10"
               : cn("bg-surface hover:bg-cyan/[0.06] focus-visible:bg-cyan/10", banded && "bg-bg"),
@@ -179,9 +137,9 @@ export function ProjectsTable({
                     e.stopPropagation();
                     toggle(p.id);
                   }}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15 focus-visible:text-cyan active:bg-cyan/25"
                 >
-                  <span className={cn("transition-transform", isExpanded && "rotate-90")}>
+                  <span className={cn("transition-transform duration-150", isExpanded && "rotate-90")}>
                     ▸
                   </span>
                 </button>
@@ -239,44 +197,16 @@ export function ProjectsTable({
               <span className="font-body text-body text-fg">—</span>
             )}
           </td>
-          <td className="w-20 px-3 py-2.5">
-            {/* gap-2 keeps ≥8px between the two action targets; each button
-                carries an invisible centered 44px tap area (after:) so the
-                touch target clears the WCAG floor (MUX-004) without the 24px
-                glyph bloating the dense desktop row. */}
-            <div className="flex items-center justify-end gap-2">
-              {canAddSub && (
-                <IconButton
-                  variant="add"
-                  size="sm"
-                  className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
-                  aria-label={`Add ${childType} to ${p.title}`}
-                  title={`Add ${childType}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openAddSub(p);
-                  }}
-                >
-                  +
-                </IconButton>
-              )}
-              <IconButton
-                variant="outlinePurple"
-                size="sm"
-                className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
-                aria-label={`Open ${p.title} in focus`}
-                title="Open in focus bench"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFocusProject(p);
-                }}
-              >
-                <FocusReticleIcon size={24} />
-              </IconButton>
+          <td className="w-12 px-3 py-2.5">
+            {/* Roster rows expose ONLY the delete action (strict-strip vs 4:4).
+                Add-sub + focus moved to the Army/Unit flow panel. The invisible
+                centered 44px tap area (after:) keeps the touch target above the
+                WCAG floor (MUX-004) without bloating the dense desktop row. */}
+            <div className="flex items-center justify-end">
               <IconButton
                 variant="outlineRed"
                 size="sm"
-                className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+                className="relative h-7 w-7 opacity-70 transition-opacity duration-150 group-hover/row:opacity-100 group-focus-within/row:opacity-100 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
                 aria-label={`Delete ${p.title}`}
                 title="Delete project"
                 disabled={pendingDelete}
@@ -292,67 +222,23 @@ export function ProjectsTable({
         </tr>
       );
 
-      const addRow =
-        isAdding && childType ? (
-          <tr key={`${p.id}-add`} className="border-b border-fg/10 bg-bg-raised/30">
-            <td colSpan={COLS.length} className="px-3 py-2">
-              <div
-                className="flex items-center gap-2"
-                style={{ paddingLeft: (depth + 1) * INDENT_PX }}
-              >
-                <span className="label-osd text-green">
-                  + {childType}
-                </span>
-                <Input
-                  name={`sub-${p.id}`}
-                  value={subName}
-                  onChange={(e) => setSubName(e.target.value)}
-                  placeholder={`${childType} name`}
-                  containerClassName="max-w-[200px]"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      submitSub(p, childType);
-                    }
-                    if (e.key === "Escape") setAddingFor(null);
-                  }}
-                  autoFocus
-                />
-                <Button size="sm" onClick={() => submitSub(p, childType)}>
-                  Add
-                </Button>
-                <Button
-                  size="sm"
-                  variant="tertiary"
-                  onClick={() => setAddingFor(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </td>
-          </tr>
-        ) : null;
-
       const childRows =
         hasChildren && isExpanded ? renderRows(p.children!, depth + 1, group) : [];
-      return [row, ...(isExpanded && addRow ? [addRow] : []), ...childRows];
+      return [row, ...childRows];
     });
   }
 
   // ── Mobile card view (MUX-002 / MOP-003) ────────────────────────────────
   // Below 600px the dense 8-column table overflows the viewport, so each
   // project renders as a stacked card carrying the key fields (title + type +
-  // status + completion + progress bar) and the same row actions. Reuses the
-  // exact handlers + expand/add state above — no duplicated logic. The tree is
-  // preserved via the same depth-indent + caret model as the table.
+  // status + completion + progress bar) and the delete action. Reuses the exact
+  // handlers + expand state above — no duplicated logic. The tree is preserved
+  // via the same depth-indent + caret model as the table.
   function renderCards(items: Project[], depth: number): ReactNode[] {
     return items.flatMap((p) => {
       const selected = p.id === selectedId;
       const hasChildren = !!p.children && p.children.length > 0;
       const isExpanded = expanded.has(p.id);
-      const childType = SUB_TYPE[p.type];
-      const canAddSub = !!childType && !!onAddSubProject;
-      const isAdding = addingFor === p.id;
       const minutes = rollupProjectMinutes(p, projectMinutes);
 
       const card = (
@@ -371,10 +257,10 @@ export function ProjectsTable({
           }}
           style={{ marginLeft: depth * INDENT_PX }}
           className={cn(
-            "cursor-pointer border p-3 transition-colors focus:outline-none focus-visible:border-cyan",
+            "cursor-pointer rounded-[6px] border p-3 transition-colors duration-150 focus:outline-none focus-visible:border-cyan focus-visible:ring-1 focus-visible:ring-cyan",
             selected
               ? "border-cyan bg-cyan/10"
-              : "border-fg/15 hover:border-cyan/40 hover:bg-cyan/5",
+              : "border-fg/15 hover:border-cyan/40 hover:bg-cyan/5 active:bg-cyan/10",
           )}
         >
           <div className="flex items-start gap-2">
@@ -387,9 +273,9 @@ export function ProjectsTable({
                   e.stopPropagation();
                   toggle(p.id);
                 }}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15 active:bg-cyan/25"
               >
-                <span className={cn("transition-transform", isExpanded && "rotate-90")}>
+                <span className={cn("transition-transform duration-150", isExpanded && "rotate-90")}>
                   ▸
                 </span>
               </button>
@@ -431,35 +317,9 @@ export function ProjectsTable({
               swatches={p.recipeSwatches}
               onAttach={() => onAttachRecipe(p)}
             />
-            <div className="ml-auto flex items-center gap-2">
-              {canAddSub && (
-                <IconButton
-                  variant="add"
-                  size="sm"
-                  className="h-9 w-9"
-                  aria-label={`Add ${childType} to ${p.title}`}
-                  title={`Add ${childType}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openAddSub(p);
-                  }}
-                >
-                  +
-                </IconButton>
-              )}
-              <IconButton
-                variant="outlinePurple"
-                size="sm"
-                className="h-9 w-9"
-                aria-label={`Open ${p.title} in focus`}
-                title="Open in focus bench"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFocusProject(p);
-                }}
-              >
-                <FocusReticleIcon size={24} />
-              </IconButton>
+            <div className="ml-auto flex items-center">
+              {/* Mobile card: delete only (strict-strip vs 4:4). Add-sub + focus
+                  live in the Army/Unit flow panel. */}
               <IconButton
                 variant="outlineRed"
                 size="sm"
@@ -479,48 +339,15 @@ export function ProjectsTable({
         </div>
       );
 
-      const addCard =
-        isAdding && childType ? (
-          <div
-            key={`${p.id}-add`}
-            style={{ marginLeft: (depth + 1) * INDENT_PX }}
-            className="flex flex-col gap-2 border border-cyan/30 bg-bg-raised/30 p-3"
-          >
-            <span className="label-osd text-green">+ {childType}</span>
-            <Input
-              name={`sub-card-${p.id}`}
-              value={subName}
-              onChange={(e) => setSubName(e.target.value)}
-              placeholder={`${childType} name`}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submitSub(p, childType);
-                }
-                if (e.key === "Escape") setAddingFor(null);
-              }}
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => submitSub(p, childType)}>
-                Add
-              </Button>
-              <Button size="sm" variant="tertiary" onClick={() => setAddingFor(null)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : null;
-
       const childCards =
         hasChildren && isExpanded ? renderCards(p.children!, depth + 1) : [];
-      return [card, ...(isExpanded && addCard ? [addCard] : []), ...childCards];
+      return [card, ...childCards];
     });
   }
 
   return (
     <>
-      {/* Desktop table — unchanged from today, shown at ≥600px (MUX-002). */}
+      {/* Desktop table — shown at ≥600px (MUX-002). */}
       <div className="hidden overflow-x-auto min-[600px]:block">
         <table className="w-full min-w-[680px] border-collapse">
           <thead>
