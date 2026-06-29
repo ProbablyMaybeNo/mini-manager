@@ -12,6 +12,9 @@ interface PanelProps {
   /** Legacy prop — glow is removed in V2; kept for API stability. */
   glow?: boolean;
   className?: string;
+  /** Optional walkthrough anchor — surfaced as a `data-walkthrough` attribute
+   *  on the panel root so the first-create coach-marks can spotlight it. */
+  "data-walkthrough"?: string;
 }
 
 /**
@@ -26,9 +29,11 @@ export function Panel({
   label,
   accent = "cyan",
   className,
+  "data-walkthrough": dataWalkthrough,
 }: PanelProps) {
   return (
     <div
+      data-walkthrough={dataWalkthrough}
       className={cn(
         "relative rounded-[12px] border border-border bg-surface panel-depth",
         className,

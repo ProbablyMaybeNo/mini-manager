@@ -111,6 +111,7 @@ function CollapsibleSection({
   anchorId,
   defaultOpen,
   className,
+  dataWalkthrough,
   children,
 }: {
   label: string;
@@ -119,12 +120,14 @@ function CollapsibleSection({
   defaultOpen: boolean;
   /** Extra classes on the Panel — used for variant-specific flex ordering. */
   className?: string;
+  /** First-create walkthrough anchor id placed on the section's outer Panel. */
+  dataWalkthrough?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = `${anchorId}-body`;
   return (
-    <Panel label={label} className={cn("p-4 pt-5", className)}>
+    <Panel label={label} className={cn("p-4 pt-5", className)} data-walkthrough={dataWalkthrough}>
       {/* scroll-mt keeps the notched label clear of the sticky header when the
           quick-jump rail scrolls this section into view. */}
       <div id={anchorId} className="scroll-mt-4">
@@ -386,7 +389,7 @@ export function ProjectWorkspaceBody({
         hint="Rename it, set the type, where it sits in your pipeline, and how urgent it is."
       >
         {/* Rename lives here now (RF-4) — the big in-panel title was removed. */}
-        <div className="mb-3">
+        <div className="mb-3" data-walkthrough="name">
           <RenameField
             id={project.id}
             name={project.title}
@@ -394,7 +397,7 @@ export function ProjectWorkspaceBody({
             onSaved={() => router.refresh()}
           />
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" data-walkthrough="meta">
           <label className="flex flex-col gap-1">
             <span className="label-osd text-fg-dim">Type</span>
             <Listbox
@@ -470,7 +473,7 @@ export function ProjectWorkspaceBody({
 
         {allowedChildren.length > 0 &&
           (pickingChild ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2" data-walkthrough="sub">
               <span className="label-osd text-fg-dim">Add:</span>
               {allowedChildren.map((t) => (
                 <Button key={t} variant="add" size="sm" disabled={pending} onClick={() => addChild(t)}>
@@ -486,6 +489,7 @@ export function ProjectWorkspaceBody({
               variant="add"
               size="sm"
               className="mt-3 self-start"
+              data-walkthrough="sub"
               disabled={pending}
               onClick={() =>
                 allowedChildren.length === 1 ? addChild(allowedChildren[0]) : setPickingChild(true)
@@ -502,6 +506,7 @@ export function ProjectWorkspaceBody({
         anchorId="inspector-recipes"
         defaultOpen={false}
         className={isPage ? "order-3" : undefined}
+        dataWalkthrough="recipes"
         hint="Every paint recipe attached to this project and its sub-projects. Click one to open it."
       >
         {recipeCards === null ? (
@@ -559,6 +564,7 @@ export function ProjectWorkspaceBody({
         anchorId="inspector-progress"
         defaultOpen
         className={isPage ? "order-4" : undefined}
+        dataWalkthrough="progress"
         hint="Adjust each sub-project's stage and completion right here — completed rows light up green."
       >
         {children.length > 0 ? (

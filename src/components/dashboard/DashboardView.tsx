@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
@@ -17,6 +17,11 @@ import type {
   Project,
 } from "@/lib/types";
 import { PlannerScreen } from "./PlannerScreen";
+import { ProjectCreateWalkthrough } from "./ProjectCreateWalkthrough";
+import {
+  hasSeenWalkthrough,
+  shouldShowProjectCreateWalkthrough,
+} from "./projectCreateWalkthroughData";
 import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectFlowPanel } from "./ProjectFlowPanel";
 import { ProjectsTable } from "./ProjectsTable";
@@ -108,6 +113,11 @@ export function DashboardView({
   // opens this instead of navigating to /projects/[id]; the panel's expand
   // affordance still routes to the full page for the roomy editor.
   const [flowOpenId, setFlowOpenId] = useState<string | null>(null);
+  // First-create walkthrough: armed by the open-on-create effect the FIRST
+  // time a draft panel opens (gated by the localStorage "seen" flag). The
+  // overlay scopes its anchor lookup to this dashboard subtree.
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useIsDesktop();
 
   // Derive the selected project from the live tree (not a snapshot) so an
@@ -165,6 +175,19 @@ export function DashboardView({
       setSelectedId(openProjectId);
       setInspectorOpen(true);
       onOpenConsumed?.();
+      // Arm the first-create walkthrough the first time a draft panel opens.
+      // Gated on the localStorage "seen" flag + a webdriver guard so it never
+      // auto-shows in E2E. Deferred a frame so the panel's anchors mount first.
+      const isWebdriver =
+        typeof navigator !== "undefined" && navigator.webdriver === true;
+      if (
+        shouldShowProjectCreateWalkthrough({
+          seen: hasSeenWalkthrough(),
+          isWebdriver,
+        })
+      ) {
+        window.requestAnimationFrame(() => setWalkthroughOpen(true));
+      }
     }
   }, [openProjectId, projects, onOpenConsumed]);
 
@@ -196,7 +219,7 @@ export function DashboardView({
     // Top-level flex-row hosts the desktop master-detail pane to the right of
     // the dashboard column; below md the pane is a fixed overlay so this row is
     // a no-op single column.
-    <div className="flex h-full bg-bg">
+    <div ref={dashboardRef} className="flex h-full bg-bg">
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-1 flex-col gap-7 overflow-y-auto p-10">
           {/* No tagline text bar — the "+ New Project" button + the obvious
@@ -339,6 +362,13 @@ export function DashboardView({
         events={events}
         activity={activity}
       />
+      {/* First-create walkthrough — only while the draft panel is open. */}
+      {walkthroughOpen && inspectorOpen && (
+        <ProjectCreateWalkthrough
+          containerRef={dashboardRef}
+          onDismiss={() => setWalkthroughOpen(false)}
+        />
+      )}
     </div>
   );
 }
