@@ -54,6 +54,9 @@ export interface DashboardViewProps {
   onOpenProject?: (project: Project) => void;
   onAttachRecipe?: (project: Project) => void;
   onAddProject?: () => void;
+  /** Opens the army-list import panel (re-homed to the dashboard, opposite
+   *  + NEW PROJECT, per Ross). */
+  onUploadArmyList?: () => void;
   onStartSession?: (project: Project) => void;
   onRetry?: () => void;
 }
@@ -84,6 +87,7 @@ export function DashboardView({
   onOpenProject,
   onAttachRecipe,
   onAddProject,
+  onUploadArmyList,
   onStartSession,
   onRetry,
 }: DashboardViewProps) {
@@ -301,8 +305,11 @@ export function DashboardView({
                     />
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
+                  {onUploadArmyList && (
+                    <Button variant="outlinePurple" onClick={onUploadArmyList}>⬆ Upload Army</Button>
+                  )}
                 </div>
               </div>
             </div>

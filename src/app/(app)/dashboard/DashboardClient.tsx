@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { ArmyImportPanel } from "./ArmyImportPanel";
 import { deriveDashboardSummary } from "@/mock/derive";
 import type {
   ActivityEntry,
@@ -38,6 +39,8 @@ export function DashboardClient({
   // RF-8: the tour deep-link opens CREATE mode (the project page, blank). A
   // one-shot signal that DashboardView consumes once on mount.
   const [autoCreate, setAutoCreate] = useState(false);
+  // Army-list import panel (re-homed to the dashboard "⬆ Upload Army" button).
+  const [importOpen, setImportOpen] = useState(false);
 
   // Final tutorial step lands here as `/dashboard?tour=create` to open the
   // create-project flow. Trigger create mode once, then strip the param so a
@@ -52,20 +55,24 @@ export function DashboardClient({
   const summary = deriveDashboardSummary(projects, sessionStats);
 
   return (
-    <DashboardView
-      summary={summary}
-      projects={projects}
-      events={events}
-      activity={activity}
-      projectMinutes={projectMinutes}
-      openProjectId={openId}
-      onOpenConsumed={() => setOpenId(null)}
-      onProjectCreated={(id) => setOpenId(id)}
-      autoCreate={autoCreate}
-      onAutoCreateConsumed={() => setAutoCreate(false)}
-      onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
-      onAttachRecipe={() => router.push("/recipes")}
-      onRetry={() => router.refresh()}
-    />
+    <>
+      <DashboardView
+        summary={summary}
+        projects={projects}
+        events={events}
+        activity={activity}
+        projectMinutes={projectMinutes}
+        openProjectId={openId}
+        onOpenConsumed={() => setOpenId(null)}
+        onProjectCreated={(id) => setOpenId(id)}
+        autoCreate={autoCreate}
+        onAutoCreateConsumed={() => setAutoCreate(false)}
+        onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
+        onAttachRecipe={() => router.push("/recipes")}
+        onUploadArmyList={() => setImportOpen(true)}
+        onRetry={() => router.refresh()}
+      />
+      <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
+    </>
   );
 }
