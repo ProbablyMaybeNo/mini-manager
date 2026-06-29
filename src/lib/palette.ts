@@ -166,11 +166,15 @@ export const statBoxAccents = {
   time: "purple",
 } as const satisfies Record<string, Accent>;
 
-/** Minutes → "H:MM" for the dashboard time-total / focus totals. */
+/**
+ * Minutes → "Xh Ym" (e.g. 4h 20m, 32h 10m) — the logged-time format the
+ * 13:4 / 4:4 / 43:4 / 44:4 frames render across the roster TIME column,
+ * project-progress meta line and army/unit panel headers.
+ */
 export function formatMinutes(total: number): string {
   const h = Math.floor(total / 60);
   const m = total % 60;
-  return `${h}:${m.toString().padStart(2, "0")}`;
+  return `${h}h ${m.toString().padStart(2, "0")}m`;
 }
 
 /** Hue (0–360) of a #rrggbb colour — used to position swatches on the coverage map. */
