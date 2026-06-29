@@ -89,7 +89,11 @@ export function ProjectFlowPanel({
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div
+        className="absolute inset-0 bg-black/60 motion-safe:animate-scrim-in"
+        onClick={onClose}
+        aria-hidden="true"
+      />
       <div
         ref={panelRef}
         role="dialog"
@@ -98,6 +102,7 @@ export function ProjectFlowPanel({
         tabIndex={-1}
         className={cn(
           "absolute right-0 top-0 flex h-full w-full flex-col border-l border-border bg-surface shadow-[-18px_0_50px_-18px_rgba(0,0,0,0.9)] outline-none sm:w-[440px]",
+          "motion-safe:animate-panel-in-right",
         )}
       >
         {/* Chrome-light close button overlaid top-right — the body owns the title. */}

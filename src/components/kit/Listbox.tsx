@@ -181,7 +181,7 @@ export function Listbox<T extends string>({
           aria-activedescendant={activeIndex >= 0 ? `${listId}-opt-${activeIndex}` : undefined}
           tabIndex={-1}
           className={cn(
-            "absolute left-0 top-full z-30 mt-1 max-h-60 min-w-full overflow-y-auto border border-dotted bg-bg py-1 panel-depth",
+            "absolute left-0 top-full z-30 mt-1 max-h-60 min-w-full overflow-y-auto border border-dotted bg-bg py-1 panel-depth motion-safe:animate-menu-in",
             accentBorder[accent],
           )}
           style={{ borderRadius: "var(--radius-panel)" }}

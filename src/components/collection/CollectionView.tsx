@@ -63,7 +63,7 @@ export function CollectionView({
           )}
         </Panel>
       ) : status === "loading" ? (
-        <div className="h-64 animate-pulse border border-cyan/20 bg-cyan/5" aria-busy="true" />
+        <div className="h-64 animate-pulse rounded-[12px] border border-border bg-surface-2" aria-busy="true" />
       ) : (
         // 24:4 — PAINTS and MODELS stack as two full-width, unboxed sections
         // (each table renders its own accent-ticked header), split by a thin

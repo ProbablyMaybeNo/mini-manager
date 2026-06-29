@@ -395,11 +395,14 @@ function LoadingState() {
     <div className="flex flex-col gap-6" aria-busy="true" aria-live="polite">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[72px] animate-pulse border border-cyan/20 bg-cyan/5" />
+          <div
+            key={i}
+            className="h-[72px] animate-pulse rounded-[12px] border border-border bg-surface-2"
+          />
         ))}
       </div>
-      <div className="h-72 animate-pulse border border-cyan/20 bg-cyan/5" />
-      <span className="font-body text-body text-fg">▸ Loading dashboard…</span>
+      <div className="h-72 animate-pulse rounded-[12px] border border-border bg-surface-2" />
+      <span className="font-body text-body text-fg-dim">▸ Loading dashboard…</span>
     </div>
   );
 }

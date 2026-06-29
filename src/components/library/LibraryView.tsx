@@ -124,11 +124,11 @@ export function LibraryView(props: LibraryViewProps) {
             {loading ? (
               <div className="h-full overflow-y-auto p-4">
                 <div
-                  className="flex h-full min-h-[300px] animate-pulse flex-col items-center justify-center gap-2 bg-cyan/5"
+                  className="flex h-full min-h-[300px] animate-pulse flex-col items-center justify-center gap-2 rounded-[12px] border border-border bg-surface-2"
                   aria-busy="true"
                   aria-live="polite"
                 >
-                  <span className="label-osd text-cyan text-glow-cyan">
+                  <span className="label-osd text-cyan">
                     ▸ Loading{totalCount > 0 ? ` ${totalCount.toLocaleString()}` : ""} paints…
                   </span>
                   <span className="font-body text-body text-fg">

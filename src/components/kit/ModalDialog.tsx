@@ -76,7 +76,7 @@ export function ModalDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/60 motion-safe:animate-scrim-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -87,7 +87,7 @@ export function ModalDialog({
         aria-label={title}
         tabIndex={-1}
         className={cn(
-          "relative w-full border border-cyan bg-bg shadow-[0_0_36px_rgba(0,210,255,0.14),0_24px_60px_-24px_rgba(0,0,0,0.9)] outline-none",
+          "relative w-full border border-cyan bg-bg shadow-[0_0_36px_rgba(0,210,255,0.14),0_24px_60px_-24px_rgba(0,0,0,0.9)] outline-none motion-safe:animate-sheet-in",
           width,
         )}
       >

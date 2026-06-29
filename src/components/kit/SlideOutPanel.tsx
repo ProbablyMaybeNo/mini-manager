@@ -39,7 +39,7 @@ export function SlideOutPanel({
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/60 motion-safe:animate-scrim-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -52,7 +52,9 @@ export function SlideOutPanel({
         className={cn(
           "absolute top-0 h-full w-full border-cyan bg-bg shadow-[0_0_36px_rgba(0,210,255,0.14),-18px_0_50px_-18px_rgba(0,0,0,0.9)] outline-none",
           width,
-          side === "right" ? "right-0 border-l" : "left-0 border-r",
+          side === "right"
+            ? "right-0 border-l motion-safe:animate-panel-in-right"
+            : "left-0 border-r motion-safe:animate-panel-in-left",
         )}
       >
         <header className="flex items-start justify-between border-b border-cyan/40 px-4 py-3">

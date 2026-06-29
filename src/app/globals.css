@@ -259,6 +259,62 @@ button {
   animation: caret-blink 1s steps(1) infinite;
 }
 
+/* ---- V2 motion kit (modern + subtle; NO CRT/glow) ----
+   Fast, tasteful enter transitions for overlays + menus. All durations sit in
+   the 120–200ms band per the polish brief; the prefers-reduced-motion guard
+   below collapses every one of them to ~0ms. */
+
+/* Scrim / backdrop fade-in for modal + slide-out overlays. */
+@keyframes scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@utility animate-scrim-in {
+  animation: scrim-in 160ms ease-out both;
+}
+
+/* Right-anchored panel slide-in (inspector / flow / filter sheets). */
+@keyframes panel-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@utility animate-panel-in-right {
+  animation: panel-in-right 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Left-anchored variant (left-side slide-outs). */
+@keyframes panel-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@utility animate-panel-in-left {
+  animation: panel-in-left 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Bottom-sheet slide-up (mobile sheets / modals). */
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@utility animate-sheet-in {
+  animation: sheet-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Dropdown / menu / popover fade + tiny rise. */
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@utility animate-menu-in {
+  animation: menu-in 140ms ease-out both;
+  transform-origin: top;
+}
+
+/* Generic content fade-up — reuses the content-in keyframe above. */
+@utility animate-content-in {
+  animation: content-in 220ms ease-out both;
+}
+
 /* Legacy boot animation reference (AuthView logo) — softened to a plain fade-in
    so the class resolves without the CRT power-on flicker. */
 @keyframes power-on {

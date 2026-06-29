@@ -90,7 +90,7 @@ export function RecipeIndexView({
       ) : (
         <Panel label="RECIPES" cornerTicks className="p-4">
           {status === "loading" ? (
-            <div className="h-48 animate-pulse bg-cyan/5" aria-busy="true" />
+            <div className="h-48 animate-pulse rounded-[6px] border border-border bg-surface-2" aria-busy="true" />
           ) : view === "cards" ? (
             recipes.length === 0 ? (
               <EmptyState
