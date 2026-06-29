@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { ArmyImportPanel } from "./ArmyImportPanel";
+import { useToast } from "@/components/kit";
+import { createProject } from "@/lib/actions/projects";
 import { deriveDashboardSummary } from "@/mock/derive";
 import type {
   ActivityEntry,
@@ -41,6 +43,23 @@ export function DashboardClient({
   const [autoCreate, setAutoCreate] = useState(false);
   // Army-list import panel (re-homed to the dashboard "⬆ Upload Army" button).
   const [importOpen, setImportOpen] = useState(false);
+  const [, creatingProject] = useTransition();
+  const { toast, node: toastNode } = useToast();
+
+  // "+ New Project" now creates a draft immediately and opens its editable
+  // panel (the open-on-create effect picks up the new id). No separate
+  // create form — the panel itself is where name/type/units are set (Ross).
+  function handleAddProject() {
+    creatingProject(async () => {
+      const res = await createProject({ name: "New Project", type: "Army", count: 0 });
+      if (res.ok && res.data?.id) {
+        setOpenId(res.data.id);
+        router.refresh();
+      } else if (!res.ok) {
+        toast(res.error ?? "Couldn’t create the project.", "red");
+      }
+    });
+  }
 
   // Final tutorial step lands here as `/dashboard?tour=create` to open the
   // create-project flow. Trigger create mode once, then strip the param so a
@@ -64,7 +83,7 @@ export function DashboardClient({
         projectMinutes={projectMinutes}
         openProjectId={openId}
         onOpenConsumed={() => setOpenId(null)}
-        onProjectCreated={(id) => setOpenId(id)}
+        onAddProject={handleAddProject}
         autoCreate={autoCreate}
         onAutoCreateConsumed={() => setAutoCreate(false)}
         onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
@@ -73,6 +92,7 @@ export function DashboardClient({
         onRetry={() => router.refresh()}
       />
       <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
+      {toastNode}
     </>
   );
 }

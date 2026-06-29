@@ -16,8 +16,6 @@ import type {
   DashboardSummary,
   Project,
 } from "@/lib/types";
-import { CreateProjectView } from "./CreateProjectView";
-import { InspectorShell } from "./InspectorShell";
 import { PlannerScreen } from "./PlannerScreen";
 import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectFlowPanel } from "./ProjectFlowPanel";
@@ -81,7 +79,6 @@ export function DashboardView({
   status = "ready",
   openProjectId,
   onOpenConsumed,
-  onProjectCreated,
   autoCreate,
   onAutoCreateConsumed,
   onOpenProject,
@@ -99,9 +96,6 @@ export function DashboardView({
   // that previously set it is gone. Safe to remove the inspector entirely once
   // the create flow stops routing through InspectorShell (follow-up).
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  // RF-8: "+ New Project" opens the project page in CREATE mode (blank fields);
-  // no row is persisted until SAVE. Mutually exclusive with the edit inspector.
-  const [creating, setCreating] = useState(false);
   // RF-11: the mobile full-screen PLANNER, opened from the Upcoming-Events bar.
   const [plannerOpen, setPlannerOpen] = useState(false);
   // Roster filter-chip row + SORT (4:4). Filter buckets are derived from each
@@ -145,31 +139,29 @@ export function DashboardView({
     setFlowOpenId(p.id);
   }
 
-  // RF-8: open the blank create view (closing any open edit inspector first).
+  // "+ New Project" creates a draft project immediately; the open-on-create
+  // effect below opens its editable panel. No separate create form (Ross).
   function startCreate() {
     setInspectorOpen(false);
     setSelectedId(null);
-    setCreating(true);
     onAddProject?.();
   }
 
-  // RF-8: consume the tour deep-link's one-shot create signal.
+  // The tour deep-link's one-shot create signal — kicks the same draft-create.
   useEffect(() => {
     if (!autoCreate) return;
     setInspectorOpen(false);
     setSelectedId(null);
-    setCreating(true);
+    onAddProject?.();
     onAutoCreateConsumed?.();
-  }, [autoCreate, onAutoCreateConsumed]);
+  }, [autoCreate, onAddProject, onAutoCreateConsumed]);
 
   // Open-on-create: a freshly created project arrives via openProjectId. Open
   // its panel once it resolves in the tree, then clear the request.
   useEffect(() => {
     if (!openProjectId) return;
     if (findProject(projects, openProjectId)) {
-      // A freshly created project resolved in the tree — leave create mode and
-      // open its real edit panel (RF-8's "transition to edit mode").
-      setCreating(false);
+      // The freshly created draft resolved in the tree — open its editable panel.
       setSelectedId(openProjectId);
       setInspectorOpen(true);
       onOpenConsumed?.();
@@ -181,7 +173,7 @@ export function DashboardView({
   // visible) and the RightRail steps aside to make room for it. Below md the
   // inspector is an overlay (SlideOutPanel / the bottom sheet) so the RightRail
   // is irrelevant — keep it rendered there.
-  const twoPane = isDesktop && (inspectorOpen || creating);
+  const twoPane = isDesktop && inspectorOpen;
 
   const inspector = (
     <ProjectPanelStack
@@ -196,27 +188,6 @@ export function DashboardView({
       }}
       onAttachRecipe={(p) => onAttachRecipe?.(p)}
     />
-  );
-
-  // RF-8 create-mode surface — the project page, blank. Rendered in the same
-  // shell as the edit inspector (desktop pane / mobile full-screen). On a
-  // successful create, the new id flows back through openProjectId and the
-  // effect above swaps this for the real edit panel.
-  const createInspector = (
-    <InspectorShell
-      open={creating}
-      title="New Project"
-      breadcrumb="DASHBOARD ▸ NEW"
-      onClose={() => setCreating(false)}
-    >
-      <CreateProjectView
-        onCreated={(id) => {
-          // Hand the new id up; the parent sets openProjectId, and once the row
-          // resolves in the tree the auto-open effect swaps create → edit.
-          onProjectCreated?.(id);
-        }}
-      />
-    </InspectorShell>
   );
 
   return (
@@ -349,7 +320,6 @@ export function DashboardView({
       )}
 
       {inspector}
-      {createInspector}
       {/* Phase 2 project FLOW panel (Army/Unit overlay). */}
       <ProjectFlowPanel
         projects={projects}
