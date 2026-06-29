@@ -27,6 +27,20 @@ import type {
 import { PixelWheelRing } from "./PixelWheelRing";
 
 /**
+ * ΔE2000 → named match-quality badge (37:5 Pick & Paint library list):
+ *   EXACT ≤1 · NEAR ≤2 · CLOSE ≤5 · SIMILAR ≤10 · (beyond) FAR.
+ * Returns the badge label + its accent so the row reads the closeness at a
+ * glance, with the precise ΔE kept alongside for power users.
+ */
+function matchQuality(deltaE: number): { label: string; cls: string } {
+  if (deltaE <= 1) return { label: "EXACT", cls: "bg-green/15 border-green/25 text-green" };
+  if (deltaE <= 2) return { label: "NEAR", cls: "bg-cyan/15 border-cyan/25 text-cyan" };
+  if (deltaE <= 5) return { label: "CLOSE", cls: "bg-cyan/10 border-cyan/20 text-cyan/80" };
+  if (deltaE <= 10) return { label: "SIMILAR", cls: "bg-yellow/15 border-yellow/25 text-yellow" };
+  return { label: "FAR", cls: "bg-fg/5 border-border text-fg-dim" };
+}
+
+/**
  * Shared 3-panel ColorPicker (ported from old `components/ui/ColorPicker.tsx`
  * into the terminal-phosphor kit). Stacked sub-panels:
  *   1. Pixel HSL wheel + harmony dropdown + sat/light sliders.
@@ -261,8 +275,23 @@ export function ColorPicker({
                     {m.paint.line ? ` · ${m.paint.line}` : ""}
                   </span>
                 </span>
-                <span className="shrink-0 font-body text-body tabular-nums text-fg">
-                  ΔE {m.deltaE.toFixed(1)}
+                <span className="flex shrink-0 items-center gap-2">
+                  {(() => {
+                    const q = matchQuality(m.deltaE);
+                    return (
+                      <span
+                        className={cn(
+                          "rounded-[4px] border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide",
+                          q.cls,
+                        )}
+                      >
+                        {q.label}
+                      </span>
+                    );
+                  })()}
+                  <span className="font-body text-body tabular-nums text-fg-dim">
+                    ΔE {m.deltaE.toFixed(1)}
+                  </span>
                 </span>
               </button>
             </li>
