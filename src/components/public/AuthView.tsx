@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { Button, Input } from "@/components/kit";
 import { Logo } from "@/components/shell";
 
@@ -21,6 +22,8 @@ export function AuthView({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
+  // UX-015: show/hide password toggle so the painter can verify what they typed.
+  const [showPassword, setShowPassword] = useState(false);
 
   const userError = touched && username.trim().length < 3 ? "Min 3 characters" : undefined;
   const passError = touched && password.length < 8 ? "Min 8 characters" : undefined;
@@ -66,11 +69,26 @@ export function AuthView({
           <Input
             label="Password"
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete={isSignUp ? "new-password" : "current-password"}
             value={password}
             error={passError}
             onChange={(e) => setPassword(e.target.value)}
+            trailing={
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? "Hide characters" : "Reveal characters"}
+                aria-pressed={showPassword}
+                className="-m-1 inline-flex h-6 w-6 items-center justify-center rounded-[4px] p-1 text-fg-dim transition-colors hover:text-cyan focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+              >
+                {showPassword ? (
+                  <EyeOff size={16} aria-hidden />
+                ) : (
+                  <Eye size={16} aria-hidden />
+                )}
+              </button>
+            }
           />
 
           <Button type="submit" className="w-full">
