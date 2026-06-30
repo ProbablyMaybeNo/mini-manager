@@ -99,7 +99,8 @@ export function RosterFilterBar({
               className={cn(
                 // 4:4 filter chips are text-only (no leading status dot):
                 // active = filled accent, inactive = accent outline.
-                "inline-flex items-center rounded-[6px] border px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan motion-safe:active:scale-[0.97]",
+                // ≥44px tap target on touch widths; compact on desktop (UX-011).
+                "inline-flex min-h-[44px] items-center rounded-[6px] border px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan motion-safe:active:scale-[0.97] md:min-h-0",
                 active ? activeFill[accent] : ghost[accent],
               )}
             >

@@ -34,6 +34,11 @@ export function RecipeWorkbench({
   const [selectedId, setSelectedId] = useState<string | null>(initialRecipes[0]?.id ?? null);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<RecipeTab>("MY RECIPES");
+  // <768px drill-down (UX-001): the 3-pane master-detail collapses to a single
+  // view on phones. `mobileDetail` flips to the detail pane when a recipe row is
+  // tapped; the in-pane ‹ BACK control returns to the list. ≥md both panes show
+  // side-by-side as before, so this state is inert on desktop.
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [paints, setPaints] = useState<Paint[]>([]);
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
   const [, startTransition] = useTransition();
@@ -158,8 +163,15 @@ export function RecipeWorkbench({
 
   return (
     <div className="flex h-full bg-bg">
-      {/* ── LIST column (28:42) — 320px, its own right hairline. ──────────── */}
-      <div className="flex w-[320px] shrink-0 flex-col border-r border-border">
+      {/* ── LIST column (28:42) — 320px, its own right hairline. On phones it is
+          the default full-width view; tapping a recipe swaps to the detail pane
+          (UX-001), so the list hides < md when mobileDetail is on. ─────────── */}
+      <div
+        className={cn(
+          "flex-col border-r border-border md:flex md:w-[320px] md:shrink-0",
+          mobileDetail ? "hidden w-full" : "flex w-full",
+        )}
+      >
         <div className="flex flex-col gap-5 p-6">
           <div className="flex items-center justify-between">
             <h1 className="flex items-center gap-3">
@@ -173,7 +185,8 @@ export function RecipeWorkbench({
             <button
               type="button"
               onClick={() => router.push("/recipes/new")}
-              className="inline-flex items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-cyan/85"
+              // ≥44px tap target on touch widths, compact on desktop (UX-011).
+              className="inline-flex min-h-[44px] items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-cyan/85 md:min-h-0"
             >
               + NEW
             </button>
@@ -201,6 +214,7 @@ export function RecipeWorkbench({
                     onClick={() => {
                       setSelectedId(r.id);
                       setPickingSlot(null);
+                      setMobileDetail(true);
                     }}
                     aria-current={isSel ? "true" : undefined}
                     className={cn(
@@ -261,7 +275,9 @@ export function RecipeWorkbench({
                 aria-selected={active}
                 onClick={() => setTab(t)}
                 className={cn(
-                  "border-b-2 pb-0.5 font-mono text-[11px] font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan",
+                  // Padded ≥44px tap target on touch widths; stays compact on
+                  // desktop via md: overrides (UX-011).
+                  "inline-flex min-h-[44px] items-center border-b-2 px-1 font-mono text-[11px] font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan md:min-h-0 md:px-0 md:pb-0.5",
                   active
                     ? "border-cyan text-cyan"
                     : "border-transparent text-fg-dim hover:text-fg",
@@ -274,10 +290,25 @@ export function RecipeWorkbench({
         </div>
       </div>
 
-      {/* ── DETAIL column (28:131) — the 28:4 editor-pane. ───────────────── */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+      {/* ── DETAIL column (28:131) — the 28:4 editor-pane. On phones it is the
+          drilled-in view (hidden until a recipe is tapped), with a ‹ BACK
+          control to return to the list (UX-001). ─────────────────────────── */}
+      <div
+        className={cn(
+          "min-w-0 flex-1 flex-col overflow-y-auto md:flex",
+          mobileDetail ? "flex" : "hidden",
+        )}
+      >
         {selected ? (
           <div className="flex max-w-[760px] flex-col gap-6 p-8">
+            {/* Phone-only back control returning to the recipe list (UX-001). */}
+            <button
+              type="button"
+              onClick={() => setMobileDetail(false)}
+              className="-mb-2 inline-flex min-h-[44px] w-fit items-center gap-1.5 font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim transition-colors hover:text-cyan md:hidden"
+            >
+              <span aria-hidden>‹</span> Recipes
+            </button>
             {/* Editor header (28:132). */}
             <div className="flex flex-col gap-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
