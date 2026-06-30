@@ -1,7 +1,7 @@
 "use client";
 
 import { Swatch } from "@/components/kit";
-import { readableText } from "@/lib/color";
+import { captionScrim, readableText } from "@/lib/color";
 import type { RecipeSlot } from "@/lib/types";
 
 /**
@@ -23,7 +23,11 @@ export function SchemePreview({ slots }: { slots: RecipeSlot[] }) {
           <span
             key={i}
             className="flex flex-1 items-center justify-center px-1 text-center leading-tight"
-            style={{ backgroundColor: s.swatch, color: readableText(s.swatch) }}
+            style={{
+              backgroundColor: s.swatch,
+              color: readableText(s.swatch),
+              textShadow: captionScrim(s.swatch),
+            }}
             title={`${i + 1}. ${s.name}${s.layer ? " · " + s.layer : ""}`}
           >
             <span className="truncate label-osd opacity-90">{s.layer || s.name}</span>
@@ -75,7 +79,7 @@ export function EmptySchemeExample() {
           <span
             key={i}
             className="flex flex-1 items-center justify-center px-1 text-center leading-tight"
-            style={{ backgroundColor: s.hex, color: readableText(s.hex) }}
+            style={{ backgroundColor: s.hex, color: readableText(s.hex), textShadow: captionScrim(s.hex) }}
           >
             <span className="truncate label-osd opacity-90">{s.layer}</span>
           </span>

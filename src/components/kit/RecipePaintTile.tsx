@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import { readableText } from "@/lib/color";
+import { captionScrim, readableText } from "@/lib/color";
 import type { Hex } from "@/lib/types";
 
 /**
@@ -29,6 +29,9 @@ export function RecipePaintTile({
   className?: string;
 }) {
   const ink = readableText(hex);
+  // Subtle 1px halo so the on-swatch labels clear AA on the mid-tone fills
+  // (e.g. #3f7fbf) where black/white text alone lands just under 4.5:1 (UX-008).
+  const scrim = captionScrim(hex);
   // Bigger paint squares (1wGf-tbEKkh_) so the name reads comfortably inside.
   const dim =
     size === "sm" ? "h-20 w-20" : size === "lg" ? "h-36 w-36" : "h-28 w-28";
@@ -40,7 +43,7 @@ export function RecipePaintTile({
         dim,
         className,
       )}
-      style={{ backgroundColor: hex, color: ink }}
+      style={{ backgroundColor: hex, color: ink, textShadow: scrim }}
     >
       <span className="truncate label-osd opacity-90">
         {brand ?? " "}
