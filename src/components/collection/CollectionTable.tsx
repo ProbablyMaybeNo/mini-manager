@@ -47,7 +47,8 @@ function FilterChip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "rounded-[6px] px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors",
+        // ≥44px tap target on touch widths, compact on desktop (UX-011).
+        "inline-flex min-h-[44px] items-center rounded-[6px] px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors md:min-h-0",
         active
           ? "bg-cyan/20 text-cyan"
           : "border border-border text-fg-dim hover:border-cyan/40 hover:text-fg",
@@ -189,8 +190,10 @@ export function CollectionTable({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* section-header (24:63) — accent tick · title · count · filter chips · add */}
-      <div className="flex h-11 items-center justify-between gap-3">
+      {/* section-header (24:63) — accent tick · title · count · filter chips · add.
+          Wraps on narrow widths so the chip row + add button never clip off the
+          right edge (UX-002). */}
+      <div className="flex flex-wrap items-center justify-between gap-3 md:h-11 md:flex-nowrap">
         <div className="flex items-center gap-3">
           <span
             className={cn("h-8 w-1 shrink-0 rounded-[2px]", isPaint ? "bg-cyan" : "bg-purple")}
@@ -212,7 +215,7 @@ export function CollectionTable({
           </h2>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {statusChips.map((s) => (
             <FilterChip
               key={s}
@@ -251,8 +254,117 @@ export function CollectionTable({
         </button>
       </div>
 
-      {/* table (24:83 / 24:306) */}
-      <div className="overflow-x-auto">
+      {/* Phone reflow (UX-002): the dense min-w-[900px] table overflows with no
+          scroll cue < md, hiding STATUS/ACTIONS off-screen. Below md each row
+          reflows to a stacked card showing name, brand, price, status, project,
+          and the row actions; the table returns at ≥md. */}
+      <ul className="flex flex-col gap-3 md:hidden">
+        {visible.length === 0 ? (
+          <li className="rounded-[8px] border border-border px-4 py-8 text-center font-mono text-body text-fg-dim">
+            {items.length === 0
+              ? `No ${label}s yet — paste a store URL above or add one by hand.`
+              : "No matches for these filters."}
+          </li>
+        ) : (
+          visible.map((item) => {
+            const proj = item.projectId ? projectInfo.get(item.projectId) : undefined;
+            const firstSwatch = item.recipeId
+              ? recipeSwatches?.(item.recipeId)?.[0]
+              : undefined;
+            return (
+              <li
+                key={item.id}
+                className="flex flex-col gap-3 rounded-[10px] border border-border bg-surface p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    {isPaint && <SwatchDot hex={firstSwatch} />}
+                    <div className="min-w-0">
+                      {item.sourceUrl ? (
+                        <a
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block truncate font-mono text-[14px] font-bold text-fg hover:text-cyan hover:underline"
+                        >
+                          {item.name}
+                        </a>
+                      ) : (
+                        <span className="block truncate font-mono text-[14px] font-bold text-fg">
+                          {item.name}
+                        </span>
+                      )}
+                      <span className="block truncate font-mono text-[11px] uppercase text-fg-dim">
+                        {isPaint ? (item.company || "—") : (item.paintType ?? item.army ?? "—")}
+                        {" · "}
+                        QTY {item.quantity ?? 1}
+                        {" · "}
+                        {item.price || "—"}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-3">
+                    {onEdit && (
+                      <button
+                        type="button"
+                        aria-label={`Edit ${item.name}`}
+                        onClick={() => onEdit(item)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] text-fg-dim transition-colors hover:bg-fg/5 hover:text-cyan"
+                      >
+                        <PenLine size={16} aria-hidden />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`Delete ${item.name}`}
+                      onClick={() => onRemove(item)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] text-fg-dim transition-colors hover:bg-fg/5 hover:text-red"
+                    >
+                      <Trash2 size={16} aria-hidden />
+                    </button>
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusDropdown
+                    kind={kind}
+                    value={item.status}
+                    ariaLabel={`Status for ${item.name}`}
+                    onChange={(s) => onStatusChange(item, s)}
+                  />
+                  {proj ? (
+                    <ProjectChip name={proj.name} accent={proj.accent} />
+                  ) : (
+                    <Listbox
+                      value={item.projectId ?? ""}
+                      ariaLabel={`Assign ${item.name} to a project`}
+                      accent="purple"
+                      placeholder="+ ATTACH"
+                      onChange={(v) => onAssignProject(item, v)}
+                      options={[
+                        { value: "", label: "+ ATTACH" },
+                        ...activeProjects.map((p) => ({ value: p.id, label: p.title })),
+                      ]}
+                      triggerClassName="max-w-[160px]"
+                    />
+                  )}
+                </div>
+              </li>
+            );
+          })
+        )}
+        <li>
+          <button
+            type="button"
+            onClick={onAdd}
+            className="flex h-12 w-full items-center justify-center rounded-[8px] border border-dashed border-border px-4 font-mono text-[12px] text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg"
+          >
+            + Add {label} row
+          </button>
+        </li>
+      </ul>
+
+      {/* table (24:83 / 24:306) — desktop only; phones use the card list above. */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[900px] border-collapse">
           <thead>
             <tr className="border-b border-border">
@@ -267,6 +379,17 @@ export function CollectionTable({
                       aria-hidden
                       className="inline-block h-3.5 w-3.5 rounded-[3px] border-[1.5px] border-fg-dim"
                     />
+                  ) : h === "SW" ? (
+                    // UX-013: "SW" is the recipe swatch column. Expand it via a
+                    // tooltip + an accessible name so it isn't an unexplained
+                    // two-letter abbreviation.
+                    <abbr
+                      title="Swatch — the attached recipe's first colour"
+                      aria-label="Swatch"
+                      className="cursor-help no-underline"
+                    >
+                      SW
+                    </abbr>
                   ) : (
                     h
                   )}
