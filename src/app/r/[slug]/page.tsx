@@ -41,7 +41,7 @@ export default async function PublicRecipePage({
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
       <header className="flex items-center gap-3">
-        <Logo href="/" size={48} />
+        <Logo href="/" size={40} />
         <div>
           <h1 className="font-title text-title text-cyan text-glow-cyan">{recipe.name}</h1>
           <p className="font-body text-body text-fg">

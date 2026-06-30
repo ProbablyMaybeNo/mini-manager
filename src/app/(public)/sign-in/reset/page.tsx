@@ -19,7 +19,7 @@ function ResetConfirm() {
     <div className="flex min-h-dvh items-center justify-center p-6">
       <Panel label="SYS ▸ RESET" cornerTicks glow className="w-full max-w-sm p-6">
         <div className="mb-5 flex flex-col items-center gap-2 text-center">
-          <Logo href="/" size={56} />
+          <Logo href="/" size={40} />
           <p className="font-body text-body text-fg">Set a new password</p>
         </div>
 

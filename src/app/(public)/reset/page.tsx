@@ -16,7 +16,7 @@ export default function ResetPage() {
     <div className="flex min-h-dvh items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-[12px] border border-border bg-surface p-6 panel-depth motion-safe:animate-content-in">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <Logo href="/" size={64} />
+          <Logo href="/" size={40} />
           <h1 className="font-mono text-[20px] font-extrabold uppercase tracking-tight text-fg-bright">
             Reset password
           </h1>
