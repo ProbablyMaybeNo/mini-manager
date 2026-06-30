@@ -242,13 +242,17 @@ export function DashboardView({
                     add-project icon affordances at the right edge. */}
                 <div className="flex items-center justify-between">
                   <h2 className="label-osd text-fg">PROJECTS ROSTER</h2>
-                  <div className="flex items-center gap-3 text-fg-dim">
+                  {/* ≥24px padded hit area around the 16px glyph (UX-003 /
+                      WCAG 2.2 §2.5.8); gap-2 keeps the two targets from
+                      colliding. The glyph size is unchanged — only the button
+                      box grows. */}
+                  <div className="flex items-center gap-2 text-fg-dim">
                     <button
                       type="button"
                       aria-label="Filter roster"
                       title="Filter roster"
                       onClick={() => setRosterFilter((f) => (f === "ALL" ? "IN PROGRESS" : "ALL"))}
-                      className="inline-flex h-4 w-4 items-center justify-center transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
                     >
                       <FilterIcon />
                     </button>
@@ -257,7 +261,7 @@ export function DashboardView({
                       aria-label="New project"
                       title="New project"
                       onClick={startCreate}
-                      className="inline-flex h-4 w-4 items-center justify-center transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
                     >
                       <PlusCircleIcon />
                     </button>
