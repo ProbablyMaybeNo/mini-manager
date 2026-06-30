@@ -72,14 +72,20 @@ export function WelcomeCard() {
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        {/* Inset dark-blue CTA chips on the blue card (4:4). Distinct label from
-            the PROJECTS panel's "+ New Project" so e2e selectors stay
-            unambiguous; same ?tour=create flow. */}
-        <WelcomeCta onClick={() => router.push("/dashboard?tour=create")}>
+        {/* One dominant primary per card (UX-007): CREATE is a filled cyan
+            button; BROWSE / BUILD demote to ghost outlines; TAKE THE TOUR is a
+            tertiary text link. Distinct label from the PROJECTS panel's
+            "+ New Project" so e2e selectors stay unambiguous; same ?tour=create
+            flow. */}
+        <WelcomeCta variant="primary" onClick={() => router.push("/dashboard?tour=create")}>
           CREATE YOUR FIRST PROJECT
         </WelcomeCta>
-        <WelcomeCta onClick={() => router.push("/library")}>BROWSE LIBRARY</WelcomeCta>
-        <WelcomeCta onClick={() => router.push("/recipes/new")}>BUILD A RECIPE</WelcomeCta>
+        <WelcomeCta variant="secondary" onClick={() => router.push("/library")}>
+          BROWSE LIBRARY
+        </WelcomeCta>
+        <WelcomeCta variant="secondary" onClick={() => router.push("/recipes/new")}>
+          BUILD A RECIPE
+        </WelcomeCta>
         <button
           type="button"
           onClick={() => start()}
@@ -92,19 +98,29 @@ export function WelcomeCard() {
   );
 }
 
-/** Inset dark CTA chip on the blue welcome card. */
+/**
+ * CTA on the blue welcome card. `primary` is the single dominant action — a
+ * filled cyan button with dark text, slightly larger; `secondary` is a ghost
+ * outline that recedes against the blue surface (UX-007).
+ */
 function WelcomeCta({
   children,
   onClick,
+  variant = "secondary",
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  variant?: "primary" | "secondary";
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="rounded-[4px] bg-black/30 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-black/45"
+      className={
+        variant === "primary"
+          ? "rounded-[6px] bg-cyan px-5 py-3 font-mono text-[13px] font-bold uppercase tracking-wide text-bg shadow-[0_0_12px_0_rgba(0,245,255,0.35)] transition-colors hover:bg-cyan/85"
+          : "rounded-[6px] border border-white/40 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-wide text-white transition-colors hover:border-white/70 hover:bg-white/10"
+      }
     >
       {children}
     </button>
