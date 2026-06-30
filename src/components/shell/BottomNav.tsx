@@ -51,8 +51,10 @@ export function BottomNav() {
       <nav
         aria-label="Primary"
         // Persistent bottom bar < 840px; the rail replaces it at ≥840px.
-        // pb safe-area inset keeps the tabs clear of the home indicator.
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-cyan/40 bg-bg pb-[env(safe-area-inset-bottom)] min-[840px]:hidden"
+        // pb safe-area inset keeps the tabs clear of the home indicator; the
+        // l/r safe-area insets keep the first/last labels off the screen edge
+        // so "More" no longer clips on notched phones (UX-009).
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-cyan/40 bg-bg pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] min-[840px]:hidden"
       >
         {BOTTOM_NAV_PRIMARY.map((item) => (
           <BottomTab key={item.key} item={item} active={item.key === active} />
@@ -65,7 +67,7 @@ export function BottomNav() {
           aria-expanded={moreOpen}
           aria-current={moreActive ? "page" : undefined}
           className={cn(
-            "relative flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 border-t-2 px-1 py-1.5 font-h1 text-[0.6rem] uppercase tracking-[0.12em] transition-colors",
+            "relative flex min-h-[3.25rem] min-w-0 flex-col items-center justify-center gap-0.5 border-t-2 px-1 py-1.5 font-h1 text-[0.6rem] uppercase tracking-[0.08em] transition-colors",
             moreActive
               ? "border-cyan bg-cyan/10 text-cyan text-glow-cyan"
               : "border-transparent text-fg-dim hover:text-cyan",
@@ -74,7 +76,7 @@ export function BottomNav() {
           <span aria-hidden className="text-base leading-none">
             ⋯
           </span>
-          <span className="leading-none">More</span>
+          <span className="w-full truncate text-center leading-none">More</span>
 
           {/* Resolvable tour anchors for the overflow items, pinned over the
               More tab so a recipe/focus tour step spotlights this button. */}
@@ -117,7 +119,9 @@ function BottomTab({ item, active }: { item: NavItem; active: boolean }) {
       data-tour={item.tour}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 border-t-2 px-1 py-1.5 font-h1 text-[0.6rem] uppercase tracking-[0.12em] transition-colors",
+        // min-w-0 + a truncating full-width label keeps each of the 5 cells
+        // within its grid column so no label (incl. the last) clips (UX-009).
+        "flex min-h-[3.25rem] min-w-0 flex-col items-center justify-center gap-0.5 border-t-2 px-1 py-1.5 font-h1 text-[0.6rem] uppercase tracking-[0.08em] transition-colors",
         active
           ? "border-cyan bg-cyan/10 text-cyan text-glow-cyan"
           : "border-transparent text-fg-dim hover:text-cyan",
@@ -126,7 +130,7 @@ function BottomTab({ item, active }: { item: NavItem; active: boolean }) {
       <span aria-hidden className="text-base leading-none">
         {GLYPH[item.key] ?? "•"}
       </span>
-      <span className="leading-none">{item.label}</span>
+      <span className="w-full truncate text-center leading-none">{item.label}</span>
     </Link>
   );
 }
