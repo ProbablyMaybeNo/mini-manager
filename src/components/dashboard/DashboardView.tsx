@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
+import { cn } from "@/lib/cn";
 import { rollupProjectMinutes } from "@/lib/projectTime";
 import {
   projectMatchesRoster,
@@ -221,7 +222,16 @@ export function DashboardView({
     // a no-op single column.
     <div ref={dashboardRef} className="flex h-full bg-bg">
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-1 flex-col gap-7 overflow-y-auto p-10">
+        {/* When the inspector squeezes this column (twoPane), tighten the
+            padding so the roster + welcome card keep a usable content width and
+            don't collapse into a cramped, momentarily-broken-looking wrap
+            (UX-014). Full-width dashboard keeps the roomy p-10. */}
+        <div
+          className={cn(
+            "flex flex-1 flex-col gap-7 overflow-y-auto",
+            twoPane ? "px-5 py-6" : "p-10",
+          )}
+        >
           {/* No tagline text bar — the "+ New Project" button + the obvious
               PROJECTS panel already make the page's purpose clear (drev). */}
           <PageHeader title="DASHBOARD" />
