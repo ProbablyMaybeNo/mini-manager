@@ -70,12 +70,14 @@ export function SlotRow({
 
   return (
     <div className="flex items-center gap-3 rounded-[6px] border border-border bg-bg/40 p-3">
-      {/* Drag-handle column: the ⠿ glyph + keyboard reorder up/down. */}
-      <div className="flex shrink-0 flex-col items-center">
+      {/* Drag-handle column: keyboard reorder up/down with a ⠿ affordance
+          between. Each arrow is a ≥24px tap target with vertical spacing so the
+          two WCAG 2.5.8 target circles no longer intersect (UX-004). */}
+      <div className="flex shrink-0 flex-col items-center gap-0.5">
         <ReorderBtn label={`Move step ${index + 1} up`} disabled={isFirst} onClick={() => onMove(-1)}>
           ▲
         </ReorderBtn>
-        <span aria-hidden className="text-fg-faint">⠿</span>
+        <span aria-hidden className="text-[10px] leading-none text-fg-faint">⠿</span>
         <ReorderBtn label={`Move step ${index + 1} down`} disabled={isLast} onClick={() => onMove(1)}>
           ▼
         </ReorderBtn>
@@ -103,7 +105,7 @@ export function SlotRow({
       <button
         type="button"
         onClick={onPick}
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        className="flex min-w-0 flex-[2] items-center gap-2 text-left"
         aria-label={`Change paint for step ${index + 1}`}
       >
         <Swatch hex={slot.swatch} size="md" className="shrink-0 rounded-full" />
@@ -115,13 +117,15 @@ export function SlotRow({
         </span>
       </button>
 
-      {/* Note. */}
+      {/* Note — flexes to fill the available row width (UX-005) so technique
+          notes are readable inline instead of truncating while the row has a
+          large empty band to the right. min-w-0 lets it shrink on small rows. */}
       <input
         value={slot.note ?? ""}
         onChange={(e) => onNoteChange(e.target.value)}
         aria-label={`Note for step ${index + 1}`}
         placeholder="Note…"
-        className="min-h-7 w-40 shrink-0 rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
+        className="min-h-7 min-w-0 flex-[3] rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
       />
 
       {/* Delete. */}
@@ -156,8 +160,12 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex h-4 w-6 items-center justify-center font-button text-[8px] leading-none",
-        disabled ? "text-fg-faint/30" : "text-cyan hover:text-fg-bright",
+        // ≥24px tall tap target (h-6 w-7) around the small glyph (UX-004 /
+        // WCAG 2.2 §2.5.8). Glyph size unchanged; the box grows.
+        "flex h-6 w-7 items-center justify-center rounded-[4px] font-button text-[8px] leading-none transition-colors",
+        disabled
+          ? "text-fg-faint/30"
+          : "text-cyan hover:bg-cyan/10 hover:text-fg-bright",
       )}
     >
       {children}
