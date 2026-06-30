@@ -105,11 +105,14 @@ export function ProjectFlowPanel({
           "motion-safe:animate-panel-in-right",
         )}
       >
-        {/* Chrome-light close button overlaid top-right — the body owns the title. */}
+        {/* Clear, high-contrast top-right dismiss (UX-012): a backed chip so the
+            ✕ doesn't get lost against the busy ARMY chip / header, matching the
+            visibility of the SlideOutPanel header close. The body owns the
+            title; a footer close mirrors the Upload Army panel below. */}
         <CloseButton
           onClick={onClose}
           aria-label="Close project panel"
-          className="absolute right-2 top-2 z-10 h-9 w-9"
+          className="absolute right-3 top-3 z-10 h-9 w-9 rounded-[6px] border border-border bg-bg/80 text-fg backdrop-blur-sm hover:border-cyan/60 hover:bg-bg"
         />
         <div className="flex min-h-0 flex-1 flex-col px-4 py-4 md:px-6 md:py-6">
           {active == null ? (
@@ -136,6 +139,18 @@ export function ProjectFlowPanel({
             />
           )}
         </div>
+        {/* Footer close (UX-012) — mirrors the Upload Army panel / SlideOutPanel
+            so the dismiss pattern is identical across slide-in panels, and gives
+            a thumb-reachable close on the full-bleed mobile sheet. */}
+        <footer className="shrink-0 border-t border-border bg-surface px-4 py-3 md:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-11 w-full items-center justify-center rounded-[6px] border border-border font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan focus:outline-none focus-visible:border-cyan focus-visible:text-cyan"
+          >
+            ✕ Close
+          </button>
+        </footer>
       </div>
     </div>
   );
