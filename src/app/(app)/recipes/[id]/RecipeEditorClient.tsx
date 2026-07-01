@@ -36,9 +36,14 @@ function recipeSignature(r: Recipe): string {
 export function RecipeEditorClient({
   initial,
   projects,
+  backTo,
 }: {
   initial: Recipe;
   projects: Project[];
+  /** When the recipe belongs to a project (attached, or created from it via
+   *  ?from=), the back control returns to that project's dashboard panel and
+   *  reads "‹ back to <title>". Absent → the plain "← Recipes" index return. */
+  backTo?: { projectId: string; title: string };
 }) {
   const router = useRouter();
   const { toast, node } = useToast();
@@ -92,7 +97,7 @@ export function RecipeEditorClient({
       });
       if (res.ok) {
         setSaved(true); // disarm the unsaved-changes guard for the redirect
-        router.push("/recipes");
+        router.push(backTo ? `/projects/${backTo.projectId}` : "/recipes");
       }
     });
   }
@@ -123,12 +128,13 @@ export function RecipeEditorClient({
         onChange={setRecipe}
         onShare={share}
         onSave={persist}
+        backLabel={backTo ? `‹ back to ${backTo.title}` : "← Recipes"}
         onBack={() => {
           if (dirty) {
             setConfirmingLeave(true);
             return;
           }
-          router.push("/recipes");
+          router.push(backTo ? `/projects/${backTo.projectId}` : "/recipes");
         }}
       />
       <ConfirmDialog
@@ -141,7 +147,7 @@ export function RecipeEditorClient({
         onClose={() => setConfirmingLeave(false)}
         onConfirm={() => {
           setConfirmingLeave(false);
-          router.push("/recipes");
+          router.push(backTo ? `/projects/${backTo.projectId}` : "/recipes");
         }}
       />
       {node}

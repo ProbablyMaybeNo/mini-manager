@@ -17,6 +17,7 @@ export function RecipeEditorView({
   onBack,
   onSave,
   resolvePaintMeta,
+  backLabel = "← Recipes",
 }: {
   recipe: Recipe;
   projects: Project[];
@@ -27,6 +28,10 @@ export function RecipeEditorView({
   /** Resolve a picked paint id → display brand/name (catalog lives in the
    *  picker; the editor only needs the labels for the slot row). */
   resolvePaintMeta?: (paintId: string) => { brand: string; name: string } | null;
+  /** Back-button label. When the recipe is attached to (or was created from) a
+   *  project, the controller passes "‹ back to <project>" so the painter
+   *  returns to that project instead of the recipe index. */
+  backLabel?: string;
 }) {
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
 
@@ -81,7 +86,7 @@ export function RecipeEditorView({
     <div className="flex h-full flex-col gap-6 overflow-y-auto p-6">
       <div className="flex items-center gap-3">
         <Button variant="tertiary" onClick={onBack}>
-          ← Recipes
+          {backLabel}
         </Button>
       </div>
 

@@ -27,7 +27,19 @@ export default async function RecipeEditorPage({
   const userId = session?.user?.id ?? null;
 
   const nameParam = typeof sp.name === "string" ? sp.name : "";
+  const fromParam = typeof sp.from === "string" ? sp.from : null;
   const projects = userId ? await loadProjectsForPicker(userId) : [];
+
+  /** Resolve the project this recipe should "‹ back to" — the explicit ?from=
+   *  hand-off (create-from-project) wins, else the recipe's own attachment.
+   *  Only surfaced when the project is actually in the user's tree. */
+  const backTo = (() => {
+    if (id === "new") return undefined;
+    // resolved below once the recipe loads for the attachedProjectId fallback.
+    return fromParam
+      ? projects.find((p) => p.id === fromParam)
+      : undefined;
+  })();
 
   if (id === "new") {
     return <RecipeEditorClient initial={blankRecipe(nameParam)} projects={projects} />;
@@ -36,5 +48,17 @@ export default async function RecipeEditorPage({
   const recipe = userId ? await loadEditorRecipe(userId, id) : null;
   if (!recipe) return <RecipeNotFound id={id} />;
 
-  return <RecipeEditorClient initial={recipe} projects={projects} />;
+  const backProject =
+    backTo ??
+    (recipe.assignedProjectId
+      ? projects.find((p) => p.id === recipe.assignedProjectId)
+      : undefined);
+
+  return (
+    <RecipeEditorClient
+      initial={recipe}
+      projects={projects}
+      backTo={backProject ? { projectId: backProject.id, title: backProject.title } : undefined}
+    />
+  );
 }
