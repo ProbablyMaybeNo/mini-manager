@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -8,7 +9,13 @@ import {
   PriorityTag,
   ProgressBar,
   StatusText,
+  useToast,
 } from "@/components/kit";
+import {
+  RecipePickerDialog,
+  type RecipePickerOption,
+} from "@/components/recipe/RecipePickerDialog";
+import { attachRecipeToProject, createRecipe } from "@/lib/actions/recipes";
 import { cn } from "@/lib/cn";
 import {
   accentDot,
@@ -76,13 +83,53 @@ export function ProjectPageClient({
   ancestors = [],
   loggedMinutes,
   meta,
+  recipeOptions = [],
 }: {
   project: Project;
   ancestors?: ProjectCrumb[];
   loggedMinutes?: number;
   meta?: ProjectMeta;
+  /** The user's recipes (recently-used first) for the attach dropdown. */
+  recipeOptions?: RecipePickerOption[];
 }) {
   const router = useRouter();
+  const { toast, node: toastNode } = useToast();
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [attachPending, startAttach] = useTransition();
+
+  // Attach an existing recipe to this project, then refresh in place so the
+  // RECIPE card's swatches update without navigating away.
+  function attach(recipeId: string) {
+    setAttachOpen(false);
+    const name = recipeOptions.find((r) => r.id === recipeId)?.name ?? "recipe";
+    startAttach(async () => {
+      const res = await attachRecipeToProject({ recipeId, projectId: project.id });
+      if (res.ok) {
+        toast(`Attached ${name}`, "green");
+        router.refresh();
+      } else {
+        toast(res.error, "red");
+      }
+    });
+  }
+
+  // Create a NEW recipe already attached to this project, then open it in the
+  // editor with a "‹ back to <project>" return.
+  function createForProject() {
+    setAttachOpen(false);
+    startAttach(async () => {
+      const res = await createRecipe({
+        name: `${project.title} recipe`,
+        attachedProjectId: project.id,
+      });
+      if (res.ok && res.data?.id) {
+        router.push(`/recipes/${res.data.id}?from=${project.id}`);
+      } else if (!res.ok) {
+        toast(res.error, "red");
+      }
+    });
+  }
+
   const accent = projectTypeAccent[project.type];
   const children = project.children ?? [];
   const childCount = children.length;
@@ -211,12 +258,13 @@ export function ProjectPageClient({
             </div>
           </section>
 
-          {/* RECIPE summary (13:233) — label + count + big swatch preview. */}
-          <button
-            type="button"
-            onClick={() => router.push("/recipes")}
-            aria-label="View attached recipes"
-            className="flex items-center justify-between gap-4 rounded-[12px] border border-border bg-surface p-4 text-left transition-colors hover:border-cyan/40 focus:outline-none focus-visible:border-cyan"
+          {/* RECIPE summary (13:233) — label + count + big swatch preview, plus
+              the ATTACH / CREATE affordances. When recipes are attached the card
+              still opens the picker to add or change one; the empty state offers
+              the two real paths (no dead /recipes link). */}
+          <section
+            aria-label="Attached recipes"
+            className="flex flex-wrap items-center justify-between gap-4 rounded-[12px] border border-border bg-surface p-4"
           >
             <div className="flex min-w-0 items-center gap-4">
               <span className="shrink-0 font-mono text-[13px] font-bold uppercase text-fg-bright">
@@ -240,8 +288,25 @@ export function ProjectPageClient({
                 </span>
               )}
             </div>
-            <span aria-hidden className="shrink-0 text-fg-dim">›</span>
-          </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="attach"
+                size="sm"
+                disabled={attachPending}
+                onClick={() => setAttachOpen(true)}
+              >
+                {recipeCount > 0 ? "+ Attach ▾" : "+ Attach"}
+              </Button>
+              <Button
+                variant="add"
+                size="sm"
+                disabled={attachPending}
+                onClick={createForProject}
+              >
+                + Create
+              </Button>
+            </div>
+          </section>
 
           {/* SUB-PROJECTS (13:79) — header + table + add-row. */}
           <section aria-label="Sub-projects" className="flex flex-col gap-4">
@@ -400,6 +465,19 @@ export function ProjectPageClient({
           </dl>
         </section>
       </aside>
+
+      <RecipePickerDialog
+        open={attachOpen}
+        recipes={recipeOptions}
+        busy={attachPending}
+        title={`Attach a recipe to ${project.title}`}
+        breadcrumb="PROJECT"
+        createLabel="+ Create new"
+        onPick={attach}
+        onCreateNew={createForProject}
+        onClose={() => setAttachOpen(false)}
+      />
+      {toastNode}
     </div>
   );
 }

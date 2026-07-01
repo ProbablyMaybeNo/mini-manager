@@ -27,6 +27,7 @@ import {
   updateProjectPriority,
   updateProjectType,
 } from "@/lib/actions/projects";
+import { detachRecipe } from "@/lib/actions/recipes";
 import {
   loadProjectDetail,
   loadProjectRecipeCards,
@@ -297,6 +298,13 @@ export function ProjectWorkspaceBody({
     });
   }
 
+  // Detach a recipe from its project. Optimistically drop the card, persist via
+  // detachRecipe, then refresh so the roster / panel swatches update in place.
+  function detach(recipeId: string) {
+    setRecipeCards((cards) => cards?.filter((c) => c.id !== recipeId) ?? cards);
+    run(() => detachRecipe({ recipeId }));
+  }
+
   function addChild(type: ProjectType) {
     setPickingChild(false);
     run(async () => {
@@ -521,20 +529,41 @@ export function ProjectWorkspaceBody({
         ) : (
           <div className="flex flex-col gap-2">
             {recipeCards.map((rc) => (
-              <button
+              <div
                 key={rc.id}
-                type="button"
-                onClick={() => router.push(`/recipes/${rc.id}`)}
-                className="flex flex-col gap-2 border border-cyan/30 p-3 text-left transition-colors hover:border-cyan hover:bg-cyan/5"
+                className="flex flex-col gap-2 border border-cyan/30 p-3 transition-colors hover:border-cyan hover:bg-cyan/5"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-h2 text-h2 text-cyan">{rc.name}</span>
-                  <span className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/recipes/${rc.id}?from=${rc.attachedProjectId}`)}
+                    className="min-w-0 flex-1 text-left font-h2 text-h2 text-cyan hover:text-glow-cyan focus:outline-none focus-visible:underline"
+                  >
+                    <span className="truncate">{rc.name}</span>
+                  </button>
+                  <span className="flex shrink-0 items-center gap-2">
                     <TypeChip type={rc.attachedProjectType} />
                     <span className="font-body text-body text-fg-dim">{rc.attachedProjectName}</span>
+                    {/* Detach affordance — removes the recipe from this project
+                        (the recipe itself is kept, just unlinked). */}
+                    <IconButton
+                      variant="outlineRed"
+                      size="sm"
+                      className="h-7 w-7"
+                      aria-label={`Detach ${rc.name}`}
+                      title="Detach recipe"
+                      disabled={pending}
+                      onClick={() => detach(rc.id)}
+                    >
+                      ✕
+                    </IconButton>
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push(`/recipes/${rc.id}?from=${rc.attachedProjectId}`)}
+                  className="flex flex-wrap items-center gap-2 text-left focus:outline-none focus-visible:underline"
+                >
                   {rc.palette.map((p, i) => (
                     <span key={`${p.hex}-${i}`} className="flex items-center gap-1">
                       <Swatch hex={p.hex} size="lg" />
@@ -548,8 +577,8 @@ export function ProjectWorkspaceBody({
                       {rc.slotCount} paint{rc.slotCount === 1 ? "" : "s"}
                     </span>
                   )}
-                </div>
-              </button>
+                </button>
+              </div>
             ))}
             <Button variant="add" size="sm" className="self-start" onClick={() => onAttachRecipe?.(project)}>
               + Paint recipe

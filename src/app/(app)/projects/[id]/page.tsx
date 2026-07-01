@@ -65,12 +65,21 @@ export default async function ProjectPage({
     tags: [row?.game, row?.faction].filter((t): t is string => !!t),
   };
 
+  // Recipe picker options (recently-used first) so the RECIPE card's attach
+  // flow can open the same dropdown the dashboard uses — no dead /recipes link.
+  const recipeOptions = (data.recipes ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    swatches: r.slots.map((s) => s.swatch),
+  }));
+
   return (
     <ProjectPageClient
       project={project}
       ancestors={ancestors.map((a) => ({ id: a.id, title: a.title, type: a.type }))}
       loggedMinutes={loggedMinutes}
       meta={meta}
+      recipeOptions={recipeOptions}
     />
   );
 }
