@@ -20,6 +20,9 @@ export function RecipePickerDialog({
   onCreateNew,
   onClose,
   busy = false,
+  title = "Attach a recipe",
+  breadcrumb = "COLLECTION",
+  createLabel = "+ New",
 }: {
   open: boolean;
   recipes: RecipePickerOption[];
@@ -28,6 +31,12 @@ export function RecipePickerDialog({
   onCreateNew?: () => void;
   onClose: () => void;
   busy?: boolean;
+  /** Dialog heading — override for a project-scoped attach ("Attach to X"). */
+  title?: string;
+  /** Breadcrumb kicker above the title. */
+  breadcrumb?: string;
+  /** Label for the pinned create entry. */
+  createLabel?: string;
 }) {
   const newEntry = onCreateNew ? (
     <Button
@@ -37,17 +46,17 @@ export function RecipePickerDialog({
       onClick={onCreateNew}
       className="self-start"
     >
-      + New
+      {createLabel}
     </Button>
   ) : null;
 
   return (
-    <ModalDialog open={open} onClose={onClose} title="Attach a recipe" breadcrumb="COLLECTION">
+    <ModalDialog open={open} onClose={onClose} title={title} breadcrumb={breadcrumb}>
       {recipes.length === 0 ? (
         <div className="flex flex-col gap-2">
           {newEntry}
           <p className="font-body text-body text-fg">
-            No recipes yet — create one with “+ New”.
+            No recipes yet — create one with “{createLabel}”.
           </p>
         </div>
       ) : (

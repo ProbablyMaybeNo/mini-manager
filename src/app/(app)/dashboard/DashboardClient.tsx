@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { RecipePickerDialog } from "@/components/recipe/RecipePickerDialog";
 import { ArmyImportPanel } from "./ArmyImportPanel";
 import { useToast } from "@/components/kit";
 import { createProject } from "@/lib/actions/projects";
+import { attachRecipeToProject, createRecipe } from "@/lib/actions/recipes";
 import { deriveDashboardSummary } from "@/mock/derive";
 import type {
   ActivityEntry,
   CalendarEvent,
   Project,
+  Recipe,
   SessionStats,
 } from "@/lib/types";
 
@@ -20,17 +23,25 @@ import type {
  * and navigation callbacks. Creating a project or event calls a server action
  * that revalidates `/dashboard`, so the server component re-runs and this
  * re-renders with fresh data.
+ *
+ * The recipe-attach flow (V2 HEX.CODE): every `onAttachRecipe(project)` from the
+ * roster / flow panels opens the {@link RecipePickerDialog} of the user's
+ * recipes (recently-used first). Picking one calls `attachRecipeToProject` and
+ * refreshes in place — no navigation. "+ New" pre-creates a recipe already
+ * attached to that project and opens it in the editor.
  */
 export function DashboardClient({
   projects,
   events,
   activity,
+  recipes,
   sessionStats,
   projectMinutes,
 }: {
   projects: Project[];
   events: CalendarEvent[];
   activity: ActivityEntry[];
+  recipes: Recipe[];
   sessionStats: SessionStats;
   projectMinutes: Record<string, number>;
 }) {
@@ -43,8 +54,23 @@ export function DashboardClient({
   const [autoCreate, setAutoCreate] = useState(false);
   // Army-list import panel (re-homed to the dashboard "⬆ Upload Army" button).
   const [importOpen, setImportOpen] = useState(false);
+  // The project whose recipe-attach picker is open — null when closed.
+  const [attaching, setAttaching] = useState<Project | null>(null);
   const [, creatingProject] = useTransition();
+  const [attachPending, startAttach] = useTransition();
   const { toast, node: toastNode } = useToast();
+
+  // Recipe picker options, recently-used first. `recipes` arrives already
+  // ordered by updatedAt desc (listRecipesForTable), so mapping preserves it.
+  const recipeOptions = useMemo(
+    () =>
+      recipes.map((r) => ({
+        id: r.id,
+        name: r.name,
+        swatches: r.slots.map((s) => s.swatch),
+      })),
+    [recipes],
+  );
 
   // "+ New Project" now creates a draft immediately and opens its editable
   // panel (the open-on-create effect picks up the new id). No separate
@@ -57,6 +83,45 @@ export function DashboardClient({
         router.refresh();
       } else if (!res.ok) {
         toast(res.error ?? "Couldn’t create the project.", "red");
+      }
+    });
+  }
+
+  // Attach an existing recipe to the picker's target project. Persists via the
+  // real action, closes the picker, and refreshes so the project's swatches
+  // update in place across the roster + panels (no navigation).
+  function attach(recipeId: string) {
+    const target = attaching;
+    if (!target) return;
+    setAttaching(null);
+    const name = recipes.find((r) => r.id === recipeId)?.name ?? "recipe";
+    startAttach(async () => {
+      const res = await attachRecipeToProject({ recipeId, projectId: target.id });
+      if (res.ok) {
+        toast(`Attached ${name} to ${target.title}`, "green");
+        router.refresh();
+      } else {
+        toast(res.error, "red");
+      }
+    });
+  }
+
+  // "+ Create" — a brand-new recipe already attached to the picker's target
+  // project, then open it in the editor. Because it is pre-attached, saving
+  // needs no extra step; returning to the dashboard shows its swatches.
+  function createForProject() {
+    const target = attaching;
+    if (!target) return;
+    setAttaching(null);
+    startAttach(async () => {
+      const res = await createRecipe({
+        name: `${target.title} recipe`,
+        attachedProjectId: target.id,
+      });
+      if (res.ok && res.data?.id) {
+        router.push(`/recipes/${res.data.id}?from=${target.id}`);
+      } else if (!res.ok) {
+        toast(res.error, "red");
       }
     });
   }
@@ -87,11 +152,22 @@ export function DashboardClient({
         autoCreate={autoCreate}
         onAutoCreateConsumed={() => setAutoCreate(false)}
         onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
-        onAttachRecipe={() => router.push("/recipes")}
+        onAttachRecipe={(p) => setAttaching(p)}
         onUploadArmyList={() => setImportOpen(true)}
         onRetry={() => router.refresh()}
       />
       <ArmyImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
+      <RecipePickerDialog
+        open={attaching !== null}
+        recipes={recipeOptions}
+        busy={attachPending}
+        title={attaching ? `Attach a recipe to ${attaching.title}` : "Attach a recipe"}
+        breadcrumb="PROJECT"
+        createLabel="+ Create new"
+        onPick={attach}
+        onCreateNew={createForProject}
+        onClose={() => setAttaching(null)}
+      />
       {toastNode}
     </>
   );
