@@ -6,11 +6,14 @@ const config: NextConfig = {
   // DOP-016 / MUX-013 — the circular "N" mark the UX audits saw overlapping
   // the bottom-left "REPORT AN ISSUE" sidebar text is the Next.js dev/preview
   // indicator (it does NOT ship to a production build, so real users never see
-  // it). Move it to the bottom-right so it stops compositing over the sidebar
-  // footer in dev + Vercel-preview screenshots; production is unaffected.
-  devIndicators: {
-    position: "bottom-right",
-  },
+  // it). Moving it to bottom-right (the prior fix here) stopped it compositing
+  // over the desktop sidebar footer, but on phone-width viewports that same
+  // bottom-right corner is exactly where the persistent bottom-nav "More" tab
+  // sits (MUX-001) — the badge physically blocks taps on it in dev, which is
+  // how the E2E mobile suite (qa_mobile_flows M6.1) caught it. There's no
+  // corner that's safe on both breakpoints, so disable the indicator outright;
+  // it's dev-only chrome, never shipped to production.
+  devIndicators: false,
   // Pin the Turbopack workspace root to this directory so Next 16
   // doesn't get confused by sibling lockfiles further up the tree
   // (the monorepo root has its own package-lock.json for other apps).

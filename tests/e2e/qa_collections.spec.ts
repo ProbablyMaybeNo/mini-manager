@@ -28,12 +28,12 @@ test.describe("M2 — Collection add", () => {
 
     const title = `QA Test Paint ${Date.now()}`;
 
-    // Fresh user → the paint table shows its compact empty-state "+ Add paint"
-    // action (DOP-012: the footer "+ Add paint" button is hidden while the
-    // collection is empty, so the compact block's action is the only one).
-    // .first() stays valid either way. Open the modal, retrying the click until
-    // the dialog mounts (guards a click landing before the island has hydrated).
-    const addBtn = page.getByRole("button", { name: /^\+ Add paint$/i }).first();
+    // The PAINTS section header carries a "+ PAINT" add button (there's also
+    // a dashed "+ Add paint row" ghost-row at the bottom of the table — both
+    // open the same PromptDialog via onAddPaint). .first() picks the header
+    // one. Open the modal, retrying the click until the dialog mounts (guards
+    // a click landing before the island has hydrated).
+    const addBtn = page.getByRole("button", { name: /^\+ PAINT$/i }).first();
     const dialog = page.getByRole("dialog", { name: /^Add paint$/i });
     await expect(addBtn).toBeVisible({ timeout: 30_000 });
     await expect(async () => {
@@ -46,13 +46,17 @@ test.describe("M2 — Collection add", () => {
     // The new paint renders as a row in the paint table. A manual entry has
     // no source URL, so its name is plain text (only scraped rows with a
     // sourceUrl render the name as a link) — match the name text exactly.
+    // CollectionTable mounts BOTH the <900px card list and the ≥md table (CSS
+    // toggles which is visible), so the same text exists twice in the DOM —
+    // .last() is the desktop table row, the one actually visible at this
+    // viewport.
     await expect(
-      page.getByText(title, { exact: true }),
+      page.getByText(title, { exact: true }).last(),
     ).toBeVisible({ timeout: 15_000 });
 
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(
-      page.getByText(title, { exact: true }),
+      page.getByText(title, { exact: true }).last(),
     ).toBeVisible({ timeout: 30_000 });
   });
 

@@ -44,11 +44,12 @@ test.describe("M4 — Tools", () => {
     await expect(page.getByLabel(/^Hue$/i)).toBeVisible();
     await expect(page.getByText(/^Harmony$/i)).toBeVisible();
 
-    // Send to Recipe routes to the recipes index (no modal anymore).
+    // Send to Recipe routes to the recipes index — the 3-pane RecipeWorkbench
+    // (Figma 28:4), whose list column leads with an "RECIPES <count>" h1.
     await page.getByRole("button", { name: /Send to Recipe/i }).click();
     await page.waitForURL(/\/recipes/, { timeout: 30_000 });
     await expect(
-      page.getByRole("heading", { name: /^RECIPE$/ }),
+      page.getByRole("heading", { name: /^RECIPES/ }),
     ).toBeVisible({ timeout: 30_000 });
   });
 

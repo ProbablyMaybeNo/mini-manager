@@ -33,7 +33,9 @@ test.describe("M7 — Imports", () => {
       page.getByRole("heading", { name: /^DASHBOARD$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
-    const uploadBtn = page.getByRole("button", { name: /Upload Army List/i });
+    // The dashboard's trigger button reads "⬆ Upload Army" (no "List" suffix)
+    // — the slide-out panel it opens keeps the fuller "Upload Army List" title.
+    const uploadBtn = page.getByRole("button", { name: /Upload Army/i });
     const panel = page.getByRole("dialog", { name: /Upload Army List/i });
     // Retry until the slide-out mounts (guards a pre-hydration click).
     await expect(async () => {

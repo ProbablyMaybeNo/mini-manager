@@ -42,13 +42,13 @@ Integration / Unit) and tagged to the build phase they cover.
 - **Bug workflow** — EXPLORER → REPRODUCER → FIXER. If a bug surfaces, the
   failing test is written/confirmed first, then fixed, then re-verified.
 
-**Headline result (last full run — 2026-05-31, standalone repo `D:\AI-Workstation\mini-manager`):**
+**Headline result (last full run — 2026-07-02, `redesign/v2-hexcode`):**
 
 | Layer | Files | Tests | Result |
 |---|---|---|---|
-| Unit + Integration (Vitest) | 52 | 544 pass · 1 skipped | ✅ green |
-| E2E (Playwright — chromium desktop + chromium-mobile) | 11 | 15 pass | ✅ green |
-| `tsc --noEmit` | — | — | ✅ 0 errors |
+| Unit + Integration (Vitest) | 92 | 1002 pass · 1 fail · 5 skipped | ⚠️ green except 1 pre-existing (unrelated, see below) |
+| E2E (Playwright — chromium desktop + chromium-mobile) | 14 | 26 pass | ✅ green (2 consecutive full 23/23 desktop runs + 2 consecutive 3/3 mobile runs) |
+| `tsc --noEmit` | — | — | ⚠️ 1 error in `src/app/(app)/tools/wheel/page.tsx` — introduced by a concurrent agent session mid-run (AI-recipe-generation work, untracked `src/lib/recipes/generate.ts` etc.), **not** touched by this campaign; every file this campaign edited typechecks clean |
 
 > **Repo migration note (2026-05-29):** the project was split out of the
 > `Antigravity/apps/Paint-planner/app` monorepo into a flat standalone repo.
@@ -65,6 +65,18 @@ Integration / Unit) and tagged to the build phase they cover.
 > hydration mismatch** (server `NET · OFF` vs client `NET · ON`) — see Bug Log
 > **B5** — plus a new regression-guard mission **M10** that fails on any
 > hydration console error.
+>
+> **2026-07-02 session (`redesign/v2-hexcode` live-testing handoff):** first
+> full E2E run since the v2 HEX.CODE redesign landed — every mission needed
+> selector/flow rework (the redesign touched dashboard create, row-click
+> navigation, the recipes area, collection, credentials copy, and mobile nav).
+> Two genuine app defects found + fixed: a dead `/dashboard?open=<id>` deep
+> link (**B7**) and the Next.js dev indicator blocking the mobile "More" tab
+> (**B8**). Everything else was test-side drift (**B6, B9–B13**) — the create
+> -project mini-form removal (B6) was confirmed a deliberate redesign choice,
+> not a regression. The 1 remaining unit fail is the pre-existing, unrelated
+> `tests/unit/lib/sw/strategy.test.ts` tripping on the uncommitted
+> `public/sw.js` build-id placeholder (flagged at session start, not chased).
 
 ---
 
@@ -76,18 +88,25 @@ in-browser runs. Each mints its own session via `signInAs(freshTestEmail())`.
 | # | Run | Spec | Phase | Status |
 |---|-----|------|-------|--------|
 | M1.1 | Library quick-lookup — navigate → search → open detail panel | `qa_library.spec.ts` | P2 | ✅ Pass |
-| M2.1 | Wishlist quick-add — manual entry → row appears | `qa_wishlist.spec.ts` | P2 | ✅ Pass |
-| M3.1 | Project workspace lifecycle — create Unit → bump Build stage → persists across refresh | `qa_project_workspace.spec.ts` | P1 | ✅ Pass |
-| M4.1 | Tools — landing → colour wheel → "send to recipe" modal opens | `qa_tools.spec.ts` | P4 | ✅ Pass |
-| M5.1 | Share + Clone — Alice publishes a recipe → Bob (fresh context) opens the public URL unauthenticated → signs in → clones → lands on his own copy | `qa_share_recipe.spec.ts` | P5 | ✅ Pass (bugs B1, B2 — re-applied after migration, see B3) |
-| M6.1 | Mobile — bottom tab bar visible and navigates (iPhone 12 viewport / chromium-mobile) | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
-| M6.2 | Mobile — create Unit project → bump stage → reload persists | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
+| M2.1 | Collection add — manual paint entry via the "+ PAINT" modal → row appears + persists | `qa_collections.spec.ts` | P2 | ✅ Pass (see B11) |
+| M2.2 | Collection — `/collections` (plural) and `/wishlist` permanently redirect to `/collection` | `qa_collections.spec.ts` | P2 | ✅ Pass |
+| M3.1 | Project workspace lifecycle (v2 HEX.CODE) — create Army → row opens the FLOW panel → "⤢ Open full page" → back → "+ Add unit" → GO PAINT → FOCUS stepper bump persists | `qa_project_workspace.spec.ts` | P1 / v2 | ✅ Pass (see B6) |
+| M4.1 | Tools — landing → colour wheel → "Send to Recipe" routes to the RecipeWorkbench index | `qa_tools.spec.ts` | P4 | ✅ Pass (see B9) |
+| M5.1 | Create + share a recipe — "+ NEW" → editor → Save Recipe → select the row in the RecipeWorkbench detail column → "⬡ SHARE LINK" → Bob (fresh, unauthenticated context) reads the public /r/<slug> read-only | `qa_share_recipe.spec.ts` | P5 | ✅ Pass (see B9) |
+| M6.1 | Mobile — bottom nav bar visible, all primary tabs + the "More" overflow sheet navigate (iPhone 12 viewport / chromium-mobile) | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass (see B8) |
+| M6.2 | Mobile — create Army → FLOW panel → "+ Add unit" → GO PAINT → FOCUS stepper bump persists | `qa_mobile_flows.spec.ts` | P6 / v2 | ✅ Pass (see B6, B13) |
 | M6.3 | Mobile — library lookup → detail panel renders without clipping | `qa_mobile_flows.spec.ts` | P6 | ✅ Pass |
-| M7.1 | Imports — paste plain-text list → preview tree → apply → land on new Army workspace | `qa_imports.spec.ts` | P7 | ✅ Pass |
-| M9.3 | Credentials sign-up — create account → land on /projects, plus reserved-username rejection | `qa_credentials_signup.spec.ts` | P9 | ✅ Pass |
-| M9.4 | Credentials sign-in — sign up → sign out → sign back in lands on /projects, plus wrong-password rejection | `qa_credentials_signin.spec.ts` | P9 | ✅ Pass |
+| M7.1 | Imports — paste plain-text list → preview tree → apply → land on new Army workspace | `qa_imports.spec.ts` | P7 | ✅ Pass (see B12) |
+| M9.3 | Credentials sign-up — create account → land on /dashboard, plus a too-short-password rejection | `qa_credentials_signup.spec.ts` | P9 | ✅ Pass (see B10) |
+| M9.4 | Credentials sign-in — sign up → sign out → sign back in lands on /dashboard, plus wrong-password rejection | `qa_credentials_signin.spec.ts` | P9 | ✅ Pass (see B10) |
 | M8.1 | Library view-mode toggle — list → grid, open detail panel from a swatch, persists across reload | `qa_library_view_toggle.spec.ts` | P2/P8 | ✅ Pass |
 | M10.1 | Hydration / SSR integrity — load /projects, /library, /recipes, /tools; fail on any hydration console error | `qa_hydration.spec.ts` | cross-cutting | ✅ Pass (guards B5) |
+| M11.1 | Dashboard PLANNER — tap a day cell on the rail's mini calendar → add-event form → new event shows in UPCOMING | `qa_dashboard_workspace.spec.ts` | v2 | ✅ Pass (see B6) |
+| M11.2 | Project PAGE "+ ADD UNIT" → `/dashboard?open=<id>` reopens the INSPECTOR panel → "+ Sub-project" → Unit → flip tabs → PROGRESS stepper bump (army roll-up, commit f012be2) | `qa_dashboard_workspace.spec.ts` | v2 | ✅ Pass (see B6, B7) |
+| M12.1 | Project page — "+ Create" mints an attached recipe → editor `?from=<id>` → "‹ back to <project>" return | `qa_project_recipe.spec.ts` | v2 | ✅ Pass (see B6) |
+| M12.2 | Project page — "+ Attach" opens RecipePickerDialog → attach an existing recipe → dialog closes | `qa_project_recipe.spec.ts` | v2 | ✅ Pass (see B6) |
+| UX-002 | Recipe slot picker — clicking a slot opens the full "Pick & Paint" toolset (wheel/library, match, dropper, layering) and assigns a paint | `qa_ux002_recipe_picker.spec.ts` | v2 | ✅ Pass (see B9) |
+| M13.1 | Colour-first recipe generation — wheel "Generate Recipe" → preview dialog (tinted ramps grounded to real paints) → Save → new recipe carries the generated technique notes | `qa_generate_recipe.spec.ts` | v2 | ✅ Pass |
 
 **Mutation coverage applied in M5.1:** isolated browser contexts (Alice vs Bob),
 unauthenticated public read, cross-account hop, clone-independence assertion
@@ -248,6 +267,179 @@ Bugs surfaced during this test campaign, with evidence and resolution.
 
 ---
 
+### B6 — E2E create-project helper needed updating for the v2 HEX.CODE flow (suite-wide)
+- **Mission:** M3.1, M3.2, M11.*, M12.1/2 (`qa_project_workspace`, `qa_dashboard_workspace`, `qa_project_recipe`) + M6.2 (`qa_mobile_flows`)
+- **Not a regression.** Confirmed with Ross: combining create + rename into the
+  project's own panel (dropping the separate RF-8 Name/model-count mini-form) was
+  a **deliberate v2 redesign decision** — the old form was redundant with the
+  panel/page content once the project already exists. This entry documents the
+  test-side rework, not an app defect.
+- **Symptom (2026-07-02, first e2e run on `redesign/v2-hexcode`):** the shared
+  `addProject(name, count)` helper timed out at the `+ New Project` click — the
+  old Name mini-form never appears anymore.
+- **Explorer:** "+ New project" (`DashboardClient.handleAddProject`, roster-header
+  icon button, accessible name **"New project"**) now calls
+  `createProject({ name: "New Project", type: "Army", count: 0 })`
+  **immediately** and opens the project's editable **INSPECTOR** panel
+  (`ProjectPanelStack` → `ProjectWorkspaceBody`'s DETAILS section, which carries
+  the "Name" field) — no mini-form. Separately, a plain row click no longer
+  navigates at all (the earlier "PP-1" contract) — it opens a *different*
+  overlay, the Army/Unit **FLOW panel** (`ProjectFlowPanel`, `role="dialog"`),
+  which has no rename field; reaching the full project PAGE now goes through
+  that panel's "⤢ Open full page" affordance. There is also no UI path left to
+  set an arbitrary model count at creation — an Army's total now **rolls up**
+  from its Units (commit f012be2), each created via "+ Add unit" with a fixed 1
+  model, so missions needing a non-zero count add a Unit rather than passing a
+  `count` argument.
+- **Fixer (test-side):** Reworked `addProject(page, name)` in all four specs to:
+  click "New project" (exact match — disambiguates from the "+ NEW PROJECT" text
+  button, which also substring-matches) → wait for the INSPECTOR's "Name" field
+  → fill + blur (commits via `updateProjectName` on blur) → confirm the
+  `Manage <name>` row → close via "Close project inspector" (desktop) / "Back"
+  after expanding the mobile DETAILS section (`ProjectBottomSheet`, where DETAILS
+  starts collapsed below `md`). Added a matching `openProjectPage(page, name)`
+  helper (click the row → `role="dialog"` FLOW panel → "⤢ Open full page" →
+  `/projects/<id>`). Rewrote M3.1/M6.2's FOCUS-bench assertions to create a Unit
+  first (0/1 → 1/1) instead of asserting a top-level count the UI can no longer
+  set. Rewrote M11.2 around the real `/dashboard?open=<id>` deep link (see B7)
+  and the INSPECTOR's tab-strip drill-down instead of the old page-based
+  "+ Sub-project" flow.
+- **Verified:** M3.1, M3.2, M11.1, M11.2, M12.1, M12.2, M6.2 all green.
+
+### B7 — `/dashboard?open=<id>` deep link from the project PAGE was unwired (app fix)
+- **Mission:** M11.2 (`qa_dashboard_workspace.spec.ts`)
+- **Severity:** High — a core "add sub-project from the project page" entry
+  point was a dead end.
+- **Explorer:** `ProjectPageClient`'s "+ ADD UNIT" header button and "+ Add
+  Sub-Project" footer button both `router.push(\`/dashboard?open=${project.id}\`)`.
+  `DashboardClient` only ever read `searchParams.get("tour")` — the `open` param
+  was never consumed, so clicking either button silently landed on a plain
+  dashboard with nothing open. `updateProjectCount` (a would-be model-count
+  setter) is similarly unreferenced by any component — confirmed dead, left
+  alone (out of scope; no UI currently needs it since counts roll up from Units).
+- **Reproducer:** 3/3 — every visit to `/projects/<id>` → "+ ADD UNIT" → lands on
+  `/dashboard` with no panel open, param silently dropped.
+- **Fixer:** `src/app/(app)/dashboard/DashboardClient.tsx` — added a second
+  `useEffect` mirroring the existing `tour=create` handler: reads
+  `searchParams.get("open")`, feeds it into the same `openId` state the create
+  flow already uses (which requires no extra plumbing — `DashboardView`'s
+  `openProjectId` effect just needs the id to resolve in the already-loaded
+  tree, true here since the project already exists), then strips the param via
+  `router.replace("/dashboard")`.
+- **Verified:** M11.2 now drives "+ ADD UNIT" → the INSPECTOR panel reopens on
+  the right project, scrolled to SUB-PROJECTS with "+ Sub-project" visible.
+
+### B8 — Next.js dev indicator overlaps the mobile bottom-nav "More" tab (app fix)
+- **Mission:** M6.1 (`qa_mobile_flows.spec.ts`)
+- **Severity:** Medium — blocks a primary mobile nav control in dev (this
+  affects Ross testing on a real phone against the dev server too, not just CI).
+- **Explorer:** `next.config.ts`'s `devIndicators: { position: "bottom-right" }`
+  (from an earlier fix, DOP-016/MUX-013, that stopped the dev/preview badge
+  compositing over the desktop sidebar's "REPORT AN ISSUE" text) puts the same
+  circular "N" badge exactly where the persistent bottom-nav's "More" tab sits
+  on phone-width viewports (MUX-001) — there's no corner safe on both
+  breakpoints. Screenshot evidence: the badge visibly sits on top of the "More"
+  label at 390px width.
+- **Reproducer:** 3/3 — `navigateViaMore`'s retry-click loop exhausts its 30s
+  budget because every click lands on the (non-navigating) dev-tools badge, not
+  the "More" button underneath it.
+- **Fixer:** `next.config.ts` — `devIndicators: false` (Next 15.1+ supports
+  disabling it outright). Dev-only chrome; never shipped to production, so this
+  has no production impact.
+- **Verified:** M6.1 green; the badge is gone from both breakpoints in dev.
+
+### B9 — Recipes area rebuilt as the RecipeWorkbench 3-pane master-detail (test-side)
+- **Mission:** M4.1, M5.1, UX-002 (`qa_tools`, `qa_share_recipe`, `qa_ux002_recipe_picker`)
+- **Explorer:** `/recipes` now renders `RecipeWorkbench` (Figma 28:4) — a 320px
+  LIST column (h1 text "RECIPES <count>", not "RECIPE") + an inline DETAIL
+  column that populates in place when a list row is clicked (no navigation to
+  `/recipes/<id>`). "+ NEW" (unconditional, no more "+ Create your first
+  recipe" empty-state variant) still routes to the dedicated `/recipes/new`
+  editor page (`RecipeEditorClient`/`RecipeEditorView`, unchanged: "RECIPE
+  EDITOR" h1, "Recipe name" field), whose save button is now "Save Recipe" (not
+  "Save") and returns to `/recipes`. The WORKbench's own detail column has an
+  independent "⬡ SHARE LINK" share affordance (distinct casing/glyph from the
+  editor page's "⛓ Share Link" — both call the same `publishRecipe` action).
+  List rows are one `<button>` whose accessible name concatenates the recipe
+  name AND its "Used in N projects · M steps" meta line, so exact-name matching
+  breaks. Separately, the slot-picker dialog (`RecipePaintPicker`) is titled
+  "Pick & Paint", not "Pick a paint", and its trigger button reads "+ Add Step"
+  (was "+ Add slot").
+- **Fixer (test-side):** Updated heading assertions to `/^RECIPES/`; M5.1 now
+  clicks "+ NEW" → saves via "Save Recipe" → selects the saved row by a
+  name-prefix regex (not `exact: true`) → publishes via the workbench's "⬡
+  SHARE LINK" (no more navigating into `/recipes/<id>`). UX-002 now opens "+ Add
+  Step" and asserts the "Pick & Paint" dialog title.
+- **Verified:** M4.1, M5.1, UX-002 all green.
+
+### B10 — Credentials auth screens renamed + an SSR hydration race under load (test-side)
+- **Mission:** M9.3, M9.4 (`qa_credentials_signup`, `qa_credentials_signin`)
+- **Explorer:** `AuthView`'s boot-line copy changed — sign-up now leads with an
+  h1 "Create account" (was "NEW USER REGISTRATION"), sign-in with "Sign in"
+  (was "AWAITING CREDENTIALS"). Separately, under heavy 8-worker parallel dev
+  -server load, filling + submitting the form before React attaches its
+  `onSubmit` listener falls through to the plain `<form>` element's native GET,
+  reflecting the fields onto the URL (`/sign-up?username=...&password=...`),
+  losing all typed state, and hanging the test on a redirect that never comes —
+  a real (if narrow, automation-speed-only) robustness gap, not something a
+  real user is likely to hit at normal click cadence. 100% reliable serially
+  (~1s); only flaked under full parallel runs.
+- **Fixer (test-side):** Updated the boot-line assertions to the new headings.
+  Added a `waitForHydration()` probe (both spec files) that toggles "Reveal
+  characters" (UX-015, itself worth covering) and waits for the password field
+  to actually flip to `type=text` before filling the form — proves the page is
+  interactive first, cheaply, without `waitForLoadState('networkidle')`. The
+  probe's own click is retried the same way every other "guards a pre-hydration
+  click" spot in this suite already does. Also bumped the create-account round
+  trip's budget (bcrypt hashing is deliberately slow) to 45–60s to absorb
+  legitimate load, mirroring the MM-test-1 precedent elsewhere in this doc.
+- **Verified:** M9.3, M9.4 green across repeated full-suite runs (2 consecutive
+  23/23 desktop passes with 8 workers).
+
+### B11 — Collection page rebuilt as a spreadsheet-style table (test-side)
+- **Mission:** M2.1 (`qa_collections.spec.ts`)
+- **Explorer:** The "+ Add paint" trigger button is gone — `CollectionTable`'s
+  section header now reads "+ PAINT" (there's also a dashed "+ Add paint row"
+  ghost-row at the table's bottom; both call the same `onAddPaint`). The
+  `PromptDialog` itself is unchanged ("Add paint" title, `prompt-value` input).
+  Separately, `CollectionTable` mounts BOTH the <900px card list and the ≥md
+  table simultaneously (CSS toggles which is visible), so a newly-added row's
+  name text exists twice in the DOM, tripping `exact: true` strict-mode.
+- **Fixer (test-side):** Updated the add-button selector to `/^\+ PAINT$/i`;
+  scoped the persisted-row assertion to `.last()` (the desktop table copy,
+  which DOM-order-wise renders after the mobile card list).
+- **Verified:** M2.1, M2.2 green.
+
+### B12 — Dashboard import trigger button text shortened (test-side)
+- **Mission:** M7.1 (`qa_imports.spec.ts`)
+- **Explorer:** The dashboard's trigger button now reads "⬆ Upload Army" (the
+  "List" suffix was dropped); the slide-out panel it opens keeps the fuller
+  "Upload Army List" title, so only the trigger-button selector needed
+  broadening.
+- **Fixer (test-side):** `/Upload Army List/i` → `/Upload Army/i` for the
+  trigger button; the panel's own selector (`/Upload Army List/i`) was already
+  correct and unchanged.
+- **Verified:** M7.1 green.
+
+### B13 — Mobile roster card nests an interactive PriorityDropdown (test-side)
+- **Mission:** M6.2 (`qa_mobile_flows.spec.ts`)
+- **Explorer:** Below `md`, `ProjectsTable` renders each project as a stacked
+  card (title row → type/priority/time meta row → progress bar), all inside ONE
+  `role="button" aria-label="Manage <title>"` region. The meta row's
+  `PriorityDropdown` is a nested interactive control **by design** — so
+  priority is changeable without opening the project. A plain Playwright
+  `.click()` targets the element's geometric center, which on this vertically
+  -stacked card lands on that dropdown (near the card's vertical midpoint), not
+  the card body — reproduced live (opened a "MED ▲ / HIGH" priority popup
+  instead of the FLOW panel).
+- **Fixer (test-side):** `.click({ position: { x: 12, y: 12 } })` — aims at the
+  card's top-left title corner, which is never inside the nested dropdown's
+  bounding box, regardless of card height (variable per project's meta
+  content). Not an app defect: nesting the dropdown is intentional, real
+  fingertip taps land wherever the user actually touches, not a computed
+  center.
+- **Verified:** M6.2 green.
+
 ## Coverage gaps closed this campaign
 
 New tests written to fill phase gaps the build left behind:
@@ -269,12 +461,20 @@ New tests written to fill phase gaps the build left behind:
 
 | Mission group | Runs | Pass | Skip | Fail |
 |---|---|---|---|---|
-| E2E desktop (M1–M5, M7, M8.1, M9.3–9.4, M10.1) | 12 | 12 | 0 | 0 |
+| E2E desktop (M1.1–M12.2, M8.1–8.2, UX-002) | 23 | 23 | 0 | 0 |
 | E2E mobile (M6.1–M6.3) | 3 | 3 | 0 | 0 |
-| Integration (IM1–IM18) | 18 modules | 18 | 0 (1 test skip in IM7) | 0 |
-| Unit (UM1–UM30) | 30 modules | 30 | 0 | 0 |
-| **Vitest total** | **52 files** | **544 tests** | **1 test** | **0** |
-| Bugs found / fixed | 5 | — | — | 0 open |
+| Integration | 35 files | 393 | 5 | 0 |
+| Unit | 57 files | 609 | 0 | 1 (pre-existing, unrelated — `sw/strategy.test.ts`) |
+| **Vitest total** | **92 files** | **1002 tests** | **5 tests** | **1 test (pre-existing, unrelated)** |
+| Bugs found / fixed this campaign (2026-07-02) | 8 (B6–B13) | — | — | 0 open |
+
+**2026-07-02 campaign detail:** B6 (create-project flow — confirmed intended,
+test-side rework), B7 (`/dashboard?open=<id>` dead link — **app fix**), B8
+(Next.js dev indicator blocking the mobile "More" tab — **app fix**), B9
+(RecipeWorkbench redesign — test-side), B10 (auth heading rename +
+hydration-race hardening — test-side), B11 (Collection page rebuild —
+test-side), B12 (import trigger button text — test-side), B13 (mobile roster
+card click-position — test-side). See the Bug Log above for each entry.
 
 ---
 

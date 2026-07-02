@@ -23,9 +23,9 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
     // Adding a slot auto-opens the picker via React state (setPickingSlot).
     // Retry the click + dialog-mount check until the island has hydrated and
     // the SlideOutPanel renders (guards a pre-hydration click miss).
-    const dialog = page.getByRole("dialog", { name: "Pick a paint" });
+    const dialog = page.getByRole("dialog", { name: "Pick & Paint" });
     await expect(async () => {
-      await page.getByRole("button", { name: "+ Add slot" }).click();
+      await page.getByRole("button", { name: "+ Add Step" }).click();
       await expect(dialog).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 30_000 });
 
