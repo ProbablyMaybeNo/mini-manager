@@ -7,6 +7,7 @@ import { ToolShell } from "@/components/tools/ToolShell";
 import { usePaletteSaver } from "@/components/tools/usePaletteSaver";
 import { useToast } from "@/components/kit";
 import { AssignToRecipeDialog, type AssignSwatch } from "@/components/recipe/AssignToRecipeDialog";
+import { GenerateRecipeDialog } from "@/components/recipe/GenerateRecipeDialog";
 import { closestPaint, rankMatches } from "@/lib/toolMatch";
 import type { Paint } from "@/lib/types";
 import { useCatalog } from "../useCatalog";
@@ -31,6 +32,7 @@ function ColourWheelRoute() {
   const { save, dialog } = usePaletteSaver("wheel");
   const { toast, node } = useToast();
   const [assigning, setAssigning] = useState<AssignSwatch | null>(null);
+  const [generating, setGenerating] = useState<string[] | null>(null);
 
   // MM-53 — `?hex` (canonical) and `?name` (catalog-resolved fallback) seed
   // the primary pick. Both read once; mid-session URL edits don't re-seed.
@@ -54,6 +56,7 @@ function ColourWheelRoute() {
         rankPaints={(hex, n) => rankMatches(hex, paints, undefined, n).map((m) => m.paint)}
         onSavePalette={save}
         onSendToRecipe={() => router.push("/recipes")}
+        onGenerateRecipe={(hexes) => setGenerating(hexes)}
         // Per-swatch "assign paint" → assign that planned colour into a recipe.
         onAssignPaint={(hex) => {
           const p = closestPaint(hex, paints);
@@ -65,6 +68,12 @@ function ColourWheelRoute() {
         swatches={assigning ? [assigning] : []}
         onClose={() => setAssigning(null)}
         onAssigned={(recipeName) => toast(`Added to ${recipeName}`, "green")}
+      />
+      <GenerateRecipeDialog
+        open={generating != null}
+        hexes={generating ?? []}
+        catalog={paints}
+        onClose={() => setGenerating(null)}
       />
       {dialog}
       {node}

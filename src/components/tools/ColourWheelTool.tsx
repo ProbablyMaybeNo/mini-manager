@@ -51,6 +51,7 @@ export function ColourWheelTool({
   rankPaints,
   onSavePalette,
   onSendToRecipe,
+  onGenerateRecipe,
   onAssignPaint,
   seedHex,
 }: {
@@ -62,6 +63,9 @@ export function ColourWheelTool({
   rankPaints?: (hex: string, n: number) => Paint[];
   onSavePalette: (hexes: string[]) => void;
   onSendToRecipe: (paints: Paint[]) => void;
+  /** Generate a full layered recipe from the current harmony palette — the
+   *  colour-first path (buildLayerRamp → ground → save). Omit to hide. */
+  onGenerateRecipe?: (hexes: string[]) => void;
   /** Opens the shared ColorPicker to assign a real paint to a planned swatch. */
   onAssignPaint?: (hex: string) => void;
   /** Deep-link seed (`?hex`/resolved `?name`) — sets the primary pick. */
@@ -326,6 +330,11 @@ export function ColourWheelTool({
           >
             Send to Recipe
           </Button>
+          {onGenerateRecipe && (
+            <Button variant="primary" onClick={() => onGenerateRecipe(ordered)}>
+              Generate Recipe
+            </Button>
+          )}
         </div>
       </Panel>
     </div>
