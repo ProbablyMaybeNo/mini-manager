@@ -21,7 +21,12 @@ import {
   getAllTimeRollupSeconds,
   getProjectRollupSecondsMap,
 } from "@/db/queries/paintSessions";
-import { displayStatus, progressPercent } from "@/lib/progress";
+import {
+  aggregateCounters,
+  displayStatus,
+  progressPercent,
+  type AggregateCounters,
+} from "@/lib/progress";
 import { computeStreak } from "@/lib/streak";
 import type {
   Project as DbProject,
@@ -79,8 +84,10 @@ export async function loadEditorRecipe(
 export async function loadProjectsForPicker(
   userId: string,
 ): Promise<KitProject[]> {
+  // Flat list (no tree) — the picker only needs name + swatches, so aggregate
+  // over the project's own counters.
   const projects = await listAllProjects(userId);
-  return projects.map((p) => mapProject(p, []));
+  return projects.map((p) => mapProject(p, [], aggregateCounters(p, [])));
 }
 
 /** The signed-in user's owned / wishlisted paint ids — the small,
@@ -134,7 +141,7 @@ const TYPE_MAP: Record<string, KitProjectType> = {
   Diorama: "Terrain",
 };
 
-function mapProject(p: DbProject, swatches: string[]): KitProject {
+function mapProject(p: DbProject, swatches: string[], agg: AggregateCounters): KitProject {
   return {
     id: p.id,
     title: p.name,
@@ -142,9 +149,13 @@ function mapProject(p: DbProject, swatches: string[]): KitProject {
     recipeSwatches: swatches,
     status: displayStatus(p),
     priority: PRIORITY_MAP[p.priority ?? "Medium"] ?? "Med",
-    completionPercent: progressPercent(p),
-    modelCount: p.count,
-    modelsComplete: p.completeCount,
+    // Roll-up: a container's completion + model totals aggregate its own AND
+    // all descendant counters, so painting a unit's models fills the army's
+    // bar too (Ross — "watch the army fill in green"). For a leaf, `agg` equals
+    // its own counters, so units/models are unchanged.
+    completionPercent: progressPercent(agg),
+    modelCount: agg.count,
+    modelsComplete: agg.completeCount,
   };
 }
 
@@ -159,9 +170,30 @@ function buildProjectTree(
   rows: ReadonlyArray<DbProject>,
   palettes: Map<string, string[]>,
 ): KitProject[] {
+  // Index children by parent so each node can aggregate its whole subtree.
+  const childrenByParent = new Map<string, DbProject[]>();
+  for (const p of rows) {
+    if (!p.parentId) continue;
+    const arr = childrenByParent.get(p.parentId);
+    if (arr) arr.push(p);
+    else childrenByParent.set(p.parentId, [p]);
+  }
+  const descendantsOf = (id: string): DbProject[] => {
+    const out: DbProject[] = [];
+    const stack = [...(childrenByParent.get(id) ?? [])];
+    while (stack.length) {
+      const c = stack.pop()!;
+      out.push(c);
+      const kids = childrenByParent.get(c.id);
+      if (kids) stack.push(...kids);
+    }
+    return out;
+  };
+
   const nodes = new Map<string, KitProject>();
   for (const p of rows) {
-    nodes.set(p.id, mapProject(p, palettes.get(p.id) ?? []));
+    const agg = aggregateCounters(p, descendantsOf(p.id));
+    nodes.set(p.id, mapProject(p, palettes.get(p.id) ?? [], agg));
   }
   const roots: KitProject[] = [];
   for (const p of rows) {
