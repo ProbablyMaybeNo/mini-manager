@@ -49,6 +49,10 @@ const activeFill: Record<Accent, string> = {
   purple: "bg-purple border-purple text-bg",
   red: "bg-red border-red text-bg",
   dim: "bg-fg/20 border-fg/30 text-fg",
+  neutral: "bg-fg border-fg text-bg",
+  "priority-low": "bg-priority-low border-priority-low text-bg",
+  "priority-med": "bg-priority-med border-priority-med text-bg",
+  "priority-high": "bg-priority-high border-priority-high text-bg",
 };
 
 /** Ghost/outline chip classes when inactive (colour border + colour text). */
@@ -60,6 +64,10 @@ const ghost: Record<Accent, string> = {
   purple: "border-purple/40 text-purple hover:bg-purple/10",
   red: "border-red/40 text-red hover:bg-red/10",
   dim: "border-border text-fg-dim hover:bg-fg/5",
+  neutral: "border-border text-fg hover:bg-fg/5",
+  "priority-low": "border-priority-low/40 text-priority-low hover:bg-priority-low/10",
+  "priority-med": "border-priority-med/40 text-priority-med hover:bg-priority-med/10",
+  "priority-high": "border-priority-high/40 text-priority-high hover:bg-priority-high/10",
 };
 
 /**

@@ -35,6 +35,10 @@ const pillTint: Record<Accent, string> = {
   purple: "border-purple/50 text-purple",
   red: "border-red/50 text-red",
   dim: "border-border text-fg-dim",
+  neutral: "border-border text-fg",
+  "priority-low": "border-priority-low/50 text-priority-low",
+  "priority-med": "border-priority-med/50 text-priority-med",
+  "priority-high": "border-priority-high/50 text-priority-high",
 };
 
 function techniqueAccent(layer: string): Accent {
@@ -125,7 +129,7 @@ export function SlotRow({
         onChange={(e) => onNoteChange(e.target.value)}
         aria-label={`Note for step ${index + 1}`}
         placeholder="Note…"
-        className="min-h-7 min-w-0 flex-[3] rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
+        className="min-h-7 min-w-0 flex-[3] rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
       />
 
       {/* Delete. */}

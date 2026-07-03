@@ -31,26 +31,38 @@
   --color-bg-raised: #1a1a1f;
   --color-border: rgba(255, 255, 255, 0.12); /* hairline divider / panel border — Border */
 
-  /* Brand palette (style guide 1:13; cyan accent per palette decision) */
-  --color-cyan: #00f5ff; /* PRIMARY accent — logo / active-nav / +NEW PROJECT / progress / DONE */
-  --color-blue: #3182e0; /* style-guide Accent (welcome card / ATTACH RECIPE / links) */
-  --color-green: #09cd7e; /* success / IN PROGRESS — Success */
-  --color-yellow: #f5f17a; /* warning / PLANNED / NEARLY DONE — Warning */
-  --color-purple: #bf7bff; /* secondary accent / ON HOLD / Models / Attach */
-  --color-red: #f12d52; /* danger / OVERDUE / HIGH priority — Danger */
-  --color-highlight: #ff2b6d; /* highlight / pink — Highlight */
-  /* Mid-priority hue (Red=High, orange=Med, Yellow=Low). Kept as a distinct
-     warm tone so MED reads apart from LOW. */
+  /* Brand palette — HEX.CODE v2 colour contract (docs/COLOUR_CONTRACT.md). */
+  --color-cyan: #0b78b3; /* brand blue — token key kept `cyan` to avoid a repo-wide class rename. Primary CTA / active-nav / focus / logo (the fill takes white text). */
+  --color-cyan-lite: #4aa8da; /* lighter brand-blue step — blue text / links / labels on the dark bg (clears contrast where the #0b78b3 fill-colour would not) */
+  --color-blue: #3182e0; /* style-guide Accent (welcome card / links) */
+  --color-green: #09cd7e; /* done / COMPLETE / progress-fill / success */
+  --color-yellow: #f5f17a; /* WISHLIST / wishlist add / low-stakes warning */
+  --color-purple: #bf7bff; /* retained for the decorative systems only (statBox / activity / event) — no longer a core-surface accent */
+  --color-red: #f7143e; /* danger — delete / remove / error (the only saturated red) */
+  --color-highlight: #ff2b6d; /* highlight / pink — retained, decorative only */
+  /* Retained warm tone; no longer the MED-priority source (priority now has its
+     own --priority-* ramp). Kept defined for the decorative systems. */
   --color-orange: #ff8a3c;
 
+  /* Priority ramp — self-contained severity tokens (colour contract §5). Values
+     deliberately differ from the semantic accents so priority reads as ranking,
+     with High kept distinct from danger red. */
+  --color-priority-low: #faff94; /* butter */
+  --color-priority-med: #fcbb7e; /* peach */
+  --color-priority-high: #e23b3b; /* brick — warm true-red, distinct from danger #f7143e */
+
   /* Foreground ramp. Ross: "nothing should be grey" — the dim + faint text
-     tokens are whitened to the body white so all text reads white. (Titles use
-     the brighter #FCFCFC.) Input placeholders keep a muted #757575 inline so a
-     hint never looks like a filled value. */
+     tokens are whitened to the body white so all *readable* text reads white.
+     (Titles use the brighter #FCFCFC.)
+     --color-fg-muted is the ONE genuine grey (colour contract §2): the two
+     functional grey cases — disabled controls and input placeholders — plus the
+     SHELVED / on-hold inactive state. Tuned to clear WCAG 4.5:1 on --color-bg
+     (#0d0d17): #8a8a8a ≈ 5.6:1. */
   --color-fg: #e6e5e5;
   --color-fg-bright: #fcfcfc;
   --color-fg-dim: #e6e5e5;
   --color-fg-faint: #e6e5e5;
+  --color-fg-muted: #8a8a8a;
 
   /* Type families — ONE FACE: JetBrains Mono (Ross, 2026-06-28).
      --font-display  JetBrains Bold/heavy — page titles + section/panel headers

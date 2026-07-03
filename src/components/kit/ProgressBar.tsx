@@ -9,6 +9,10 @@ const fillColor: Record<Accent, string> = {
   purple: "bg-purple",
   red: "bg-red",
   dim: "bg-fg-faint",
+  neutral: "bg-fg",
+  "priority-low": "bg-priority-low",
+  "priority-med": "bg-priority-med",
+  "priority-high": "bg-priority-high",
 };
 
 /** Solid progress bar + percent label. When no accent is given, the fill

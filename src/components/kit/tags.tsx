@@ -19,7 +19,11 @@ const pillTint: Record<Accent, string> = {
   orange: "bg-orange/15 border-orange/25 text-orange",
   purple: "bg-purple/15 border-purple/25 text-purple",
   red: "bg-red/15 border-red/25 text-red",
-  dim: "bg-fg/5 border-border text-fg-dim",
+  dim: "bg-fg/5 border-border text-fg-muted",
+  neutral: "bg-fg/5 border-border text-fg",
+  "priority-low": "bg-priority-low/15 border-priority-low/25 text-priority-low",
+  "priority-med": "bg-priority-med/15 border-priority-med/25 text-priority-med",
+  "priority-high": "bg-priority-high/15 border-priority-high/25 text-priority-high",
 };
 
 /** Statuses that have one of Ross's bespoke pixel-art glyphs. */

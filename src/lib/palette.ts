@@ -5,7 +5,11 @@ import type {
   ProjectType,
 } from "./types";
 
-/** Accent keys map 1:1 onto the Tailwind token colours generated from globals.css. */
+/** Accent keys map 1:1 onto the Tailwind token colours generated from globals.css.
+ *  `neutral` is the white-on-dark default (colour contract §3/§6: status-middle +
+ *  entity-type chips carry no hue). The `priority-*` keys are the self-contained
+ *  severity ramp (§5) — their tokens differ from the semantic accents, so they
+ *  live as their own keys rather than borrowing red/orange/yellow. */
 export type Accent =
   | "cyan"
   | "green"
@@ -13,7 +17,11 @@ export type Accent =
   | "orange"
   | "purple"
   | "red"
-  | "dim";
+  | "dim"
+  | "neutral"
+  | "priority-low"
+  | "priority-med"
+  | "priority-high";
 
 export const accentText: Record<Accent, string> = {
   cyan: "text-cyan",
@@ -22,7 +30,13 @@ export const accentText: Record<Accent, string> = {
   orange: "text-orange",
   purple: "text-purple",
   red: "text-red",
-  dim: "text-fg-dim",
+  // `dim` now renders the ONE genuine muted grey (SHELVED / inactive), not the
+  // whitened fg-dim — see --color-fg-muted in globals.css.
+  dim: "text-fg-muted",
+  neutral: "text-fg",
+  "priority-low": "text-priority-low",
+  "priority-med": "text-priority-med",
+  "priority-high": "text-priority-high",
 };
 
 export const accentBg: Record<Accent, string> = {
@@ -32,7 +46,11 @@ export const accentBg: Record<Accent, string> = {
   orange: "bg-orange",
   purple: "bg-purple",
   red: "bg-red",
-  dim: "bg-fg-faint",
+  dim: "bg-fg-muted",
+  neutral: "bg-transparent",
+  "priority-low": "bg-priority-low",
+  "priority-med": "bg-priority-med",
+  "priority-high": "bg-priority-high",
 };
 
 export const accentBorder: Record<Accent, string> = {
@@ -42,7 +60,11 @@ export const accentBorder: Record<Accent, string> = {
   orange: "border-orange",
   purple: "border-purple",
   red: "border-red",
-  dim: "border-fg-faint",
+  dim: "border-fg-muted",
+  neutral: "border-border",
+  "priority-low": "border-priority-low",
+  "priority-med": "border-priority-med",
+  "priority-high": "border-priority-high",
 };
 
 /** Per-accent dot fill — used by PriorityTag / activity dots / status dots. */
@@ -53,11 +75,16 @@ export const accentDot: Record<Accent, string> = {
   orange: "bg-orange",
   purple: "bg-purple",
   red: "bg-red",
-  dim: "bg-fg-faint",
+  dim: "bg-fg-muted",
+  neutral: "bg-fg",
+  "priority-low": "bg-priority-low",
+  "priority-med": "bg-priority-med",
+  "priority-high": "bg-priority-high",
 };
 
 /** Per-accent phosphor text-glow (maps onto the text-glow-* utilities in
- *  globals.css). `dim` has no phosphor token, so it stays un-glowed. */
+ *  globals.css). `dim` / `neutral` / the priority ramp have no phosphor token,
+ *  so they stay un-glowed. */
 export const accentTextGlow: Record<Accent, string> = {
   cyan: "text-glow-cyan",
   green: "text-glow-green",
@@ -66,14 +93,20 @@ export const accentTextGlow: Record<Accent, string> = {
   purple: "text-glow-purple",
   red: "text-glow-red",
   dim: "",
+  neutral: "",
+  "priority-low": "",
+  "priority-med": "",
+  "priority-high": "",
 };
 
+/** Entity type is a category label, not a state (colour contract §6) →
+ *  icon + neutral chip, no hue. */
 export const projectTypeAccent: Record<ProjectType, Accent> = {
-  Army: "cyan",
-  Warband: "purple",
-  Unit: "green",
-  Model: "yellow",
-  Terrain: "red",
+  Army: "neutral",
+  Warband: "neutral",
+  Unit: "neutral",
+  Model: "neutral",
+  Terrain: "neutral",
 };
 
 /**
@@ -94,24 +127,27 @@ export const STATUS_LABEL: Record<ProjectStatus, string> = {
   SHELVED: "HOLD",
 };
 
+/** Status — coloured bookends, calm middle (colour contract §3). WISHLIST yellow
+ *  ("don't own it yet") + COMPLETE green ("done") carry colour; the working
+ *  middle (OWNED→BASING) is neutral white; SHELVED is the muted-grey inactive
+ *  state. The STATUS_LABEL word + progress bar already carry stage granularity. */
 export const statusAccent: Record<ProjectStatus, Accent> = {
   WISHLIST: "yellow",
-  // OWNED reads neon green — the "you have this" status, mirroring the green
-  // owned-state used in the library/collection (bKcN: PURCHASED → OWNED green).
-  OWNED: "green",
-  BUILDING: "cyan",
-  PRIMING: "purple",
-  PAINTING: "cyan",
-  BASING: "green",
+  OWNED: "neutral",
+  BUILDING: "neutral",
+  PRIMING: "neutral",
+  PAINTING: "neutral",
+  BASING: "neutral",
   COMPLETE: "green",
   SHELVED: "dim",
 };
 
-/** Priority → accent (ynb3l8JdxhaE): Red = High, orange = Med, Yellow = Low. */
+/** Priority → the self-contained severity ramp (colour contract §5). Low/Med/High
+ *  use their own --priority-* tokens, no longer borrowing red/orange/yellow. */
 export const priorityAccent: Record<Priority, Accent> = {
-  Low: "yellow",
-  Med: "orange",
-  High: "red",
+  Low: "priority-low",
+  Med: "priority-med",
+  High: "priority-high",
 };
 
 /** Calendar event kind → accent (shared by the calendar dots + the ticker). */
