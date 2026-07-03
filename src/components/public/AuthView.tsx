@@ -99,7 +99,7 @@ export function AuthView({
         <div className="mt-5 flex items-center justify-between font-body text-body">
           <Link
             href={switchHref}
-            className="text-cyan underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
+            className="text-cyan-lite underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
           >
             {isSignUp ? "Have an account? Sign in" : "New here? Create account"}
           </Link>

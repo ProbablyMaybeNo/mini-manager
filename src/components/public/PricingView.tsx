@@ -77,7 +77,7 @@ export function PricingView({
 
         <p className="text-center font-body text-body text-fg-dim">
           Questions?{" "}
-          <Link href="/" className="text-cyan underline-offset-4 hover:underline">
+          <Link href="/" className="text-cyan-lite underline-offset-4 hover:underline">
             Back to home
           </Link>
         </p>

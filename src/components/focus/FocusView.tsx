@@ -81,7 +81,7 @@ export function FocusView({
         <Panel label="NO SESSION" className="max-w-md p-6">
           <p className="font-body text-body text-fg">▸ No project in focus.</p>
           <p className="mt-2 font-body text-body text-fg">
-            Pick a project from the <span className="text-cyan">+ Focus</span> menu above, or
+            Pick a project from the <span className="text-cyan-lite">+ Focus</span> menu above, or
             launch the bench from the Dashboard.
           </p>
         </Panel>

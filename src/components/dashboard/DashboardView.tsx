@@ -297,7 +297,7 @@ export function DashboardView({
                       <button
                         type="button"
                         onClick={() => setRosterFilter("ALL")}
-                        className="font-mono text-body text-cyan underline-offset-4 hover:underline"
+                        className="font-mono text-body text-cyan-lite underline-offset-4 hover:underline"
                       >
                         Clear filter
                       </button>

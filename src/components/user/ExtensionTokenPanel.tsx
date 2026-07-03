@@ -56,7 +56,7 @@ export function ExtensionTokenPanel({
     >
       <p className="font-body text-body text-fg">
         The{" "}
-        <span className="text-cyan">Mini Mainframe Collection</span> browser
+        <span className="text-cyan-lite">Mini Mainframe Collection</span> browser
         extension lets you add a paint or model to your collection straight
         from a supported store’s product page. Generate a personal token below
         and paste it into the extension once.

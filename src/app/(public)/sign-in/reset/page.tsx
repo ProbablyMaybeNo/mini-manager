@@ -66,7 +66,7 @@ function ResetConfirm() {
         )}
 
         <div className="mt-4 text-center font-body text-body">
-          <Link href="/sign-in" className="text-cyan hover:underline">
+          <Link href="/sign-in" className="text-cyan-lite hover:underline">
             ← Back to sign in
           </Link>
         </div>

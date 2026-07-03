@@ -63,15 +63,15 @@ export default async function GalleryPage() {
 
       <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
         ▸ THE MINI MAINFRAME · made for painters ·{" "}
-        <Link href="/" className="text-cyan hover:underline">
+        <Link href="/" className="text-cyan-lite hover:underline">
           Home
         </Link>{" "}
         ·{" "}
-        <Link href="/pricing" className="text-cyan hover:underline">
+        <Link href="/pricing" className="text-cyan-lite hover:underline">
           Pricing
         </Link>{" "}
         ·{" "}
-        <Link href="/sign-in" className="text-cyan hover:underline">
+        <Link href="/sign-in" className="text-cyan-lite hover:underline">
           Sign in
         </Link>
       </footer>

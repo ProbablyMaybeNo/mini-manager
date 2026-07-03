@@ -206,23 +206,23 @@ export function LandingView() {
 
       <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
         ▸ THE MINI MAINFRAME · made for painters ·{" "}
-        <Link href="/gallery" className="text-cyan hover:underline">
+        <Link href="/gallery" className="text-cyan-lite hover:underline">
           Gallery
         </Link>{" "}
         ·{" "}
-        <Link href="/pricing" className="text-cyan hover:underline">
+        <Link href="/pricing" className="text-cyan-lite hover:underline">
           Pricing
         </Link>{" "}
         ·{" "}
-        <Link href="/sign-in" className="text-cyan hover:underline">
+        <Link href="/sign-in" className="text-cyan-lite hover:underline">
           Sign in
         </Link>{" "}
         ·{" "}
-        <Link href="/privacy" className="text-cyan hover:underline">
+        <Link href="/privacy" className="text-cyan-lite hover:underline">
           Privacy
         </Link>{" "}
         ·{" "}
-        <Link href="/terms" className="text-cyan hover:underline">
+        <Link href="/terms" className="text-cyan-lite hover:underline">
           Terms
         </Link>
       </footer>

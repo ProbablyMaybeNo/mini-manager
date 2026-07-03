@@ -58,7 +58,7 @@ export default function ResetPage() {
         <div className="mt-5 text-center font-body text-body">
           <Link
             href="/sign-in"
-            className="text-cyan underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
+            className="text-cyan-lite underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
           >
             ← Back to sign in
           </Link>
