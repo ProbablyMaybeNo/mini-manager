@@ -61,9 +61,9 @@ async function navigateViaMore(
 /**
  * Create a top-level project (v2 HEX.CODE flow, mobile). "+ New project"
  * creates a draft Army immediately and opens its editable INSPECTOR panel as
- * a full-screen takeover (ProjectBottomSheet, RF-10) — below `md` the DETAILS
- * section (which carries the Name field) starts COLLAPSED, unlike desktop
- * where `md:block` forces it open, so this mobile helper expands it first.
+ * a full-screen takeover (ProjectBottomSheet, RF-10). A fresh "New Project"
+ * draft opens with DETAILS already expanded (UX-005), so the Name field is
+ * reachable without expanding the section first.
  */
 async function addProjectMobile(
   page: import("@playwright/test").Page,
@@ -75,7 +75,6 @@ async function addProjectMobile(
     await addBtn.click();
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
-  await dialog.getByRole("button", { name: /Expand DETAILS section/i }).click();
   const nameField = dialog.getByLabel("Name", { exact: true });
   await expect(nameField).toBeVisible({ timeout: 15_000 });
   await nameField.fill(name);
@@ -115,11 +114,11 @@ test.describe("M6 — Mobile primary flows", () => {
     await expectNoHorizontalScroll(page);
   });
 
-  test("M6.2 create a project on mobile → focus stepper bump persists", async ({
+  test("M6.2 create on mobile → inspector model count + stage bump persists", async ({
     page,
   }) => {
-    // Same multi-step flow as M3.1 (create → focus → stepper → reload);
-    // extend the timeout so a loaded dev server doesn't exhaust the budget.
+    // Multi-step (create → inspect → edit type → count + stage → reload); extend
+    // the timeout so a loaded dev server doesn't exhaust the budget.
     test.setTimeout(60_000);
     await signInAs(page, freshTestEmail("mobile-proj"));
 
@@ -135,52 +134,38 @@ test.describe("M6 — Mobile primary flows", () => {
     const name = `QA Mobile Squad ${Date.now()}`;
     await addProjectMobile(page, name);
 
-    // A row tap opens the Army/Unit FLOW panel overlay (Phase 2 HEX.CODE) —
-    // there's no per-row focus icon anymore (moved into that panel). A fresh
-    // Army's rolled-up model count is 0 (nothing sets an arbitrary count at
-    // creation anymore), so "+ Add unit" is this mission's only route to a
-    // real, non-zero total: it creates a Unit with a fixed 1 model and drills
-    // the SAME panel straight into its workbench.
-    //
-    // The mobile card stacks title / type+priority+time / progress bar inside
-    // ONE "Manage <title>" clickable region, and its own PriorityDropdown is a
-    // nested interactive control (by design — so priority is changeable
-    // without opening the project). A plain .click() lands at the element's
-    // geometric center, which on this stacked card sits on that dropdown, not
-    // the card body — aim at the top-left title corner instead.
+    // A row tap opens the full editable INSPECTOR as a bottom-sheet dialog
+    // (ProjectBottomSheet). The mobile card stacks title / meta / progress into
+    // ONE "Manage <title>" region whose geometric center sits on the nested
+    // priority dropdown — aim at the top-left title corner to hit the card body.
     await page
       .getByRole("button", { name: `Manage ${name}` })
       .click({ position: { x: 12, y: 12 } });
-    const flowPanel = page.getByRole("dialog");
-    await expect(flowPanel).toBeVisible({ timeout: 15_000 });
-    await expect(
-      flowPanel.getByRole("heading", { name, level: 2 }),
-    ).toBeVisible({ timeout: 15_000 });
-    await flowPanel.getByRole("button", { name: /^\+ Add unit$/ }).click();
-    await expect(
-      flowPanel.getByRole("heading", { name: "New Unit", level: 2 }),
-    ).toBeVisible({ timeout: 15_000 });
+    const sheet = page.getByRole("dialog");
+    await expect(sheet).toBeVisible({ timeout: 15_000 });
 
-    // "▷ GO PAINT!" on the Unit workbench is this mission's route to the
-    // FOCUS bench (closes the panel, navigates to /focus?project=<unitId>).
-    await flowPanel.getByRole("button", { name: /go paint/i }).click();
-    await page.waitForURL(/\/focus\?project=/, { timeout: 30_000 });
-    await expectNoHorizontalScroll(page);
+    // Make it a leaf (MODEL) so PROGRESS renders the model-count + stage grid.
+    // DETAILS collapses on mobile once the project is named, so expand it to
+    // reach the Type control (options render in a portal, so target them at the
+    // page level, not inside the sheet).
+    await sheet.getByRole("button", { name: /Expand DETAILS section/i }).click();
+    await sheet.getByRole("combobox", { name: "Project type" }).click();
+    await page.getByRole("option", { name: "MODEL" }).click();
 
-    // Bump the model-completion stepper. Starts at 0/1 (the Unit's fixed
-    // count).
-    await expect(page.getByText(/^0\s*\/\s*1$/)).toBeVisible({ timeout: 15_000 });
-    // Optimistic state: click bumps the UI immediately via React useState.
-    // Poll reloads until the server-side state reflects 1/1 (the server action
-    // has committed to the DB). This is more robust than waitForResponse under
-    // parallel dev-server load (MM-test-1).
-    await page
-      .getByRole("button", { name: /increase models painted/i })
-      .click();
-    await expect(page.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 15_000 });
+    // Set the model count to 1, then tick the first painting stage (Built). The
+    // stage steppers clamp to the model count, so Models must be raised first.
+    await sheet.getByRole("button", { name: "Increase model count" }).click();
+    await expect(sheet.getByText(/^0\s*\/\s*1$/).first()).toBeVisible({ timeout: 15_000 });
+    await sheet.getByRole("button", { name: "Increase Built" }).click();
+    await expect(sheet.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 15_000 });
 
+    // Persistence across a reload (setCounter + updateProjectCount committed).
+    // PROGRESS is open by default, so the reopened sheet shows the grid directly.
     await expect(async () => {
       await page.reload({ waitUntil: "domcontentloaded" });
+      await page
+        .getByRole("button", { name: `Manage ${name}` })
+        .click({ position: { x: 12, y: 12 } });
       await expect(page.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 5_000 });
     }).toPass({ timeout: 45_000 });
     await expectNoHorizontalScroll(page);

@@ -24,7 +24,6 @@ import {
   shouldShowProjectCreateWalkthrough,
 } from "./projectCreateWalkthroughData";
 import { ProjectPanelStack } from "./ProjectPanelStack";
-import { ProjectFlowPanel } from "./ProjectFlowPanel";
 import { ProjectsTable } from "./ProjectsTable";
 import {
   RosterFilterBar,
@@ -111,9 +110,6 @@ export function DashboardView({
   const [rosterFilter, setRosterFilter] = useState<RosterFilter>("ALL");
   const [rosterSort, setRosterSort] = useState<RosterSort>("completion-desc");
   // Phase 2: the project FLOW panel (Army/Unit, 440px overlay). A row-click
-  // opens this instead of navigating to /projects/[id]; the panel's expand
-  // affordance still routes to the full page for the roomy editor.
-  const [flowOpenId, setFlowOpenId] = useState<string | null>(null);
   // First-create walkthrough: armed by the open-on-create effect the FIRST
   // time a draft panel opens (gated by the localStorage "seen" flag). The
   // overlay scopes its anchor lookup to this dashboard subtree.
@@ -141,13 +137,15 @@ export function DashboardView({
     return sortRoster(filtered, rosterSort, (p) => rollupProjectMinutes(p, projectMinutes));
   }, [projects, rosterFilter, rosterSort, projectMinutes, todayIso]);
 
-  // Phase 2 (HEX.CODE flow): a row click opens the Army/Unit FLOW panel as a
-  // 440px overlay WITHOUT navigating away (the panel's ⤢ expand still routes to
-  // /projects/[id] for the roomy editor). Focus stays an explicit per-row action
-  // (the ◎ icon); delete / attach / add-sub remain wired through ProjectsTable.
+  // A row click opens the full project inspector (ProjectPanelStack →
+  // ProjectWorkspaceBody) — one panel with everything editable: name, type,
+  // status, priority, model count, sub-projects, recipes, painting stages. Focus
+  // stays an explicit per-row action (the ◎ icon); delete / attach / add-sub
+  // remain wired through ProjectsTable.
   function openProject(p: Project) {
     onOpenProject?.(p);
-    setFlowOpenId(p.id);
+    setSelectedId(p.id);
+    setInspectorOpen(true);
   }
 
   // "+ New Project" creates a draft project immediately; the open-on-create
@@ -365,19 +363,6 @@ export function DashboardView({
       )}
 
       {inspector}
-      {/* Phase 2 project FLOW panel (Army/Unit overlay). */}
-      <ProjectFlowPanel
-        projects={projects}
-        rootId={flowOpenId}
-        projectMinutes={projectMinutes}
-        open={flowOpenId != null}
-        onClose={() => setFlowOpenId(null)}
-        onGoPaint={(p) => {
-          setFlowOpenId(null);
-          onStartSession?.(p);
-        }}
-        onAttachRecipe={(p) => onAttachRecipe?.(p)}
-      />
       <PlannerScreen
         open={plannerOpen}
         onClose={() => setPlannerOpen(false)}

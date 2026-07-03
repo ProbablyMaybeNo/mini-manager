@@ -45,14 +45,14 @@ async function addProject(page: Page, name: string): Promise<void> {
   await page.getByRole("button", { name: "Close project inspector" }).click();
 }
 
-/** Open the project PAGE for a dashboard row. A row's body click opens the
- *  Army/Unit FLOW panel overlay (Phase 2 HEX.CODE), not a navigation — its
- *  "⤢ Open full page" affordance is what actually routes to /projects/<id>. */
+/** Open the project PAGE for a dashboard row. A row's body click opens the full
+ *  editable INSPECTOR (a "Project inspector" region), whose "⤢ Open full page"
+ *  affordance routes to the roomy /projects/<id> page. */
 async function openProjectPage(page: Page, name: string): Promise<string> {
   await page.getByRole("button", { name: `Manage ${name}` }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible({ timeout: 15_000 });
-  await dialog.getByRole("button", { name: /open full page/i }).click();
+  const inspector = page.getByRole("region", { name: "Project inspector" });
+  await expect(inspector).toBeVisible({ timeout: 15_000 });
+  await inspector.getByRole("button", { name: /open full page/i }).click();
   await page.waitForURL(/\/projects\//, { timeout: 30_000 });
   await expect(
     page.getByRole("heading", { name, level: 1 }),

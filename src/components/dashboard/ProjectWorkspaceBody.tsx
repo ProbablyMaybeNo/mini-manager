@@ -42,6 +42,7 @@ import { cn } from "@/lib/cn";
 import { formatMinutes, priorityAccent, statusAccent, STATUS_LABEL } from "@/lib/palette";
 import type { Priority, Project, ProjectStatus, ProjectType } from "@/lib/types";
 import { InspectorActionBar } from "./InspectorActionBar";
+import { ModelCounterGrid } from "./ModelCounterGrid";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
   "WISHLIST",
@@ -358,6 +359,21 @@ export function ProjectWorkspaceBody({
         ))}
       </nav>
 
+      {/* The inspector holds everything editable, but the roomy read-first
+          project PAGE (timeline / related / quick stats) is still one tap away. */}
+      {!isPage && (
+        <button
+          type="button"
+          // Navigate forward (no onClose) — the inspector's history-unwind on
+          // close would fight the push. ProjectPanelStack's unmount cleanup
+          // skips its unwind when we've navigated past the inspector entry.
+          onClick={() => router.push(`/projects/${project.id}`)}
+          className="inline-flex min-h-11 items-center gap-1.5 self-start font-mono text-[11px] text-fg-faint transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan md:min-h-0"
+        >
+          ⤢ Open full page
+        </button>
+      )}
+
       {/* Compact PROGRESS summary strip (RF-6): a dense, glanceable trio at the
           very top — total models · completed · time spent. The detailed
           per-sub-project steppers + status dropdowns still live in the PROGRESS
@@ -600,7 +616,13 @@ export function ProjectWorkspaceBody({
         defaultOpen
         className={isPage ? "order-4" : undefined}
         dataWalkthrough="progress"
-        hint="Adjust each sub-project's stage and completion right here — completed rows light up green."
+        hint={
+          children.length > 0
+            ? "Adjust each sub-project's stage and completion right here — completed rows light up green."
+            : project.type !== "Army" && project.type !== "Warband"
+              ? "Set the model count, then tick off each stage (Built → Completed) as you paint."
+              : "Add sub-projects above to track their stages here."
+        }
       >
         {children.length > 0 ? (
           <div className="flex flex-col gap-2">
@@ -661,6 +683,11 @@ export function ProjectWorkspaceBody({
               );
             })}
           </div>
+        ) : project.type !== "Army" && project.type !== "Warband" ? (
+          // A leaf unit *is* a set of models — track its own painting stages +
+          // set its model count right here (the standalone flow panel's grid,
+          // folded into the one inspector).
+          <ModelCounterGrid project={project} />
         ) : (
           <p className="font-body text-body text-fg-dim">
             Add sub-projects above to track their stages here.
@@ -668,20 +695,23 @@ export function ProjectWorkspaceBody({
         )}
 
         {/* Roll-up stat strip — 2-up on phones so the 4th cell + its label
-            aren't clipped off the right edge (MUX-004). */}
-        <div
-          className={cn(
-            "mt-3 grid gap-2",
-            loggedMinutes != null ? "grid-cols-2 min-[420px]:grid-cols-4" : "grid-cols-3",
-          )}
-        >
-          <StatCell label="Total models" value={project.modelCount ?? 0} />
-          <StatCell label="Completed" value={project.modelsComplete ?? 0} />
-          <StatCell label="Sub-projects" value={children.length} />
-          {loggedMinutes != null && (
-            <StatCell label="Time" value={formatMinutes(loggedMinutes)} />
-          )}
-        </div>
+            aren't clipped off the right edge (MUX-004). Container-only: a leaf's
+            own totals live in its ModelCounterGrid above. */}
+        {children.length > 0 && (
+          <div
+            className={cn(
+              "mt-3 grid gap-2",
+              loggedMinutes != null ? "grid-cols-2 min-[420px]:grid-cols-4" : "grid-cols-3",
+            )}
+          >
+            <StatCell label="Total models" value={project.modelCount ?? 0} />
+            <StatCell label="Completed" value={project.modelsComplete ?? 0} />
+            <StatCell label="Sub-projects" value={children.length} />
+            {loggedMinutes != null && (
+              <StatCell label="Time" value={formatMinutes(loggedMinutes)} />
+            )}
+          </div>
+        )}
       </CollapsibleSection>
 
       {/* INFO — notes / techniques, deadline, reference image. */}

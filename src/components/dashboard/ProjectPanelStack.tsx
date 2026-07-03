@@ -92,9 +92,13 @@ export function ProjectPanelStack({
       return () => {
         // Panel unmounted/closed externally — unwind our entries so the history
         // stack returns to where it was before we opened (clean back behaviour).
+        // BUT: if the current entry is no longer ours (mmInspector), the user
+        // navigated FORWARD past the inspector (e.g. "⤢ Open full page" →
+        // /projects/[id]); unwinding here would bounce them straight back, so
+        // skip it and leave the stale entry behind the new page.
         const depth = pushedDepthRef.current;
         pushedDepthRef.current = 0;
-        if (depth > 0) {
+        if (depth > 0 && window.history.state?.mmInspector) {
           unwindingRef.current += depth;
           window.history.go(-depth);
         }

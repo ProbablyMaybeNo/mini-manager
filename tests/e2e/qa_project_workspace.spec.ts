@@ -12,14 +12,13 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * a regression: the old separate create-form step was redundant with the
  * page/panel content once the project exists (see MISSIONS.md bug B6).
  *
- * A row's body click no longer navigates anywhere — it opens the Army/Unit
- * FLOW panel (`ProjectFlowPanel`, a 440px overlay) instead (Phase 2
- * HEX.CODE). That panel's "⤢ Open full page" affordance is what routes to
- * the full project PAGE (/projects/<id>). There's also no UI path left to
- * set an arbitrary top-level model count at creation time — an Army's model
- * total now rolls up from its Units (each created with a fixed 1 model via
- * "+ Add unit"), so this mission adds a Unit to get a real, non-zero count to
- * drive the FOCUS bench's stepper against.
+ * A row's body click opens the full editable INSPECTOR (ProjectPanelStack →
+ * ProjectWorkspaceBody) — one panel with name, type, status, priority,
+ * sub-projects, recipes, and (for a leaf) the model-count + painting-stage
+ * grid. The standalone Army/Unit flow overlay was folded into this one panel.
+ * This mission drives that path end to end: create → click row → full editor →
+ * make it a leaf → set the model count → tick a painting stage → assert it
+ * survives a reload (setCounter + updateProjectCount round-trip).
  */
 
 async function addProject(page: Page, name: string): Promise<void> {
@@ -44,10 +43,10 @@ async function addProject(page: Page, name: string): Promise<void> {
 }
 
 test.describe("M3 — Project workspace lifecycle", () => {
-  test("M3.1 create → project page opens → focus stepper bump persists", async ({
+  test("M3.1 create → click row opens full inspector → model count + stage bump persists", async ({
     page,
   }) => {
-    // This test has more steps than most (create → inspect → focus → stepper →
+    // More steps than most (create → inspect → edit type → count + stage →
     // reload). The default 30s test timeout is too tight when the dev server is
     // under parallel load compiling each route for the first time.
     test.setTimeout(60_000);
@@ -61,73 +60,39 @@ test.describe("M3 — Project workspace lifecycle", () => {
     const name = `QA Squad ${Date.now()}`;
     await addProject(page, name);
 
-    // The new project row is rendered in the PROJECTS tree.
     const row = page.getByRole("button", { name: `Manage ${name}` });
     await expect(row).toBeVisible({ timeout: 15_000 });
 
-    // Phase 2 HEX.CODE: the row body no longer navigates — it opens the
-    // Army/Unit FLOW panel as an overlay dialog (labelled with whichever
-    // project/unit is currently active in its drill stack, so the locator
-    // stays name-agnostic — only one flow panel is ever open at a time).
+    // A row-body click opens the full editable INSPECTOR (not the old flow
+    // overlay): name, type, status, priority all editable in one panel.
     await row.click();
-    const flowPanel = page.getByRole("dialog");
-    await expect(flowPanel).toBeVisible({ timeout: 15_000 });
-    await expect(flowPanel.getByRole("heading", { name, level: 2 })).toBeVisible({
+    const inspector = page.locator('section[aria-label="Project inspector"]');
+    await expect(inspector).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel("Name", { exact: true })).toHaveValue(name, {
       timeout: 15_000,
     });
+    await expect(page.getByRole("combobox", { name: "Project type" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Project status" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Project priority" })).toBeVisible();
 
-    // The panel's "⤢ Open full page" affordance is the actual route to the
-    // full project PAGE (/projects/<id>), which leads with the project name
-    // as its h1 and a "Back to dashboard" breadcrumb control.
-    await flowPanel.getByRole("button", { name: /open full page/i }).click();
-    await page.waitForURL(/\/projects\//, { timeout: 30_000 });
-    await expect(
-      page.getByRole("heading", { name, level: 1 }),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.getByRole("button", { name: "Back to dashboard" }).click();
-    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
-    await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
-    ).toBeVisible({ timeout: 30_000 });
+    // Make it a leaf (MODEL) so PROGRESS renders the model-count + painting-stage
+    // grid (folded in from the old unit flow panel).
+    await page.getByRole("combobox", { name: "Project type" }).click();
+    await page.getByRole("option", { name: "MODEL" }).click();
 
-    // A fresh Army's rolled-up model count is 0 (no UI sets an arbitrary count
-    // at creation anymore — see the module doc comment), so "+ Add unit" is
-    // the only way to a real, non-zero total: it creates a Unit with a fixed 1
-    // model and drills the SAME flow panel straight into its workbench.
-    await row.click();
-    await expect(flowPanel).toBeVisible({ timeout: 15_000 });
-    await flowPanel.getByRole("button", { name: /^\+ Add unit$/ }).click();
-    await expect(
-      flowPanel.getByRole("heading", { name: "New Unit", level: 2 }),
-    ).toBeVisible({ timeout: 15_000 });
-
-    // "▷ GO PAINT!" on the Unit workbench is this mission's route to the FOCUS
-    // bench (closes the panel, navigates to /focus?project=<unitId>).
-    await flowPanel.getByRole("button", { name: /go paint/i }).click();
-    await page.waitForURL(/\/focus\?project=/, { timeout: 30_000 });
-    await expect(
-      page.getByRole("heading", { name: /^FOCUS$/ }),
-    ).toBeVisible({ timeout: 30_000 });
-
-    // Bump the model-completion stepper. Starts at 0/1 (the Unit's fixed count).
-    await expect(page.getByText(/^0\s*\/\s*1$/)).toBeVisible({ timeout: 15_000 });
-    // The stepper uses optimistic local state (React useState) so the UI
-    // updates immediately on click. The server action (setProjectComplete) runs
-    // in a startTransition and posts to /focus?project=<id> via Next-Action.
-    // Under parallel dev-server load the POST can take tens of seconds to
-    // respond, making waitForResponse unreliable. Instead we click, confirm the
-    // optimistic UI update, then poll reloads until the server state matches —
-    // this naturally waits for the server action to commit without a fixed timeout.
-    await page
-      .getByRole("button", { name: /increase models painted/i })
-      .click();
+    // Set the model count to 1, then tick the first painting stage (Built). The
+    // stage steppers clamp to the model count, so Models must be raised first.
+    await page.getByRole("button", { name: "Increase model count" }).click();
+    await expect(page.getByText(/^0\s*\/\s*1$/).first()).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "Increase Built" }).click();
     await expect(page.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 15_000 });
 
-    // Confirm persistence: keep reloading until the server-side state shows
-    // 1/1 (the server action has committed). Retrying the reload is more
-    // robust than waitForResponse under dev-server load (MM-test-1).
+    // Persistence: reload, reopen the row, and confirm the stage bump survived
+    // the server round-trip (setCounter + updateProjectCount committed). Retrying
+    // the reload is more robust than waitForResponse under dev-server load.
     await expect(async () => {
       await page.reload({ waitUntil: "domcontentloaded" });
+      await page.getByRole("button", { name: `Manage ${name}` }).click();
       await expect(page.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 5_000 });
     }).toPass({ timeout: 45_000 });
   });
