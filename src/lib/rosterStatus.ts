@@ -9,9 +9,9 @@ import type { Project } from "@/lib/types";
  *
  *   IN PROGRESS  green   — in-flight (mid-paint)
  *   PLANNED      yellow  — not started (wishlist/owned, 0%)
- *   ON HOLD      purple  — shelved
+ *   ON HOLD      dim     — shelved (matches the SHELVED muted-grey state)
  *   DONE         cyan    — complete / 100%
- *   NEARLY DONE  orange  — 80–99%
+ *   NEARLY DONE  neutral — 80–99%
  *   OVERDUE      red     — past its deadline and not done
  */
 export type RosterStatus =
@@ -25,9 +25,9 @@ export type RosterStatus =
 export const ROSTER_STATUS_ACCENT: Record<RosterStatus, Accent> = {
   "IN PROGRESS": "green",
   PLANNED: "yellow",
-  "ON HOLD": "purple",
+  "ON HOLD": "dim",
   DONE: "cyan",
-  "NEARLY DONE": "orange",
+  "NEARLY DONE": "neutral",
   OVERDUE: "red",
 };
 

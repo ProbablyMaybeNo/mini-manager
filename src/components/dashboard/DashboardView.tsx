@@ -322,7 +322,7 @@ export function DashboardView({
                     <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
                   )}
                   {onUploadArmyList && (
-                    <Button variant="outlinePurple" onClick={onUploadArmyList}>⬆ Upload Army</Button>
+                    <Button variant="secondary" onClick={onUploadArmyList}>⬆ Upload Army</Button>
                   )}
                 </div>
               </div>

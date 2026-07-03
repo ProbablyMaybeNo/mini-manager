@@ -111,11 +111,11 @@ export function FocusView({
         </span>
         <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 label-osd text-fg">
           {projectMinutes != null && (
-            <span className="text-purple">Time {formatMinutes(projectMinutes)}</span>
+            <span className="text-fg-muted">Time {formatMinutes(projectMinutes)}</span>
           )}
           <span>Today {formatMinutes(stats.todayMinutes)}</span>
           <span>Week {formatMinutes(stats.weekMinutes)}</span>
-          <span className="text-purple">Streak {stats.streakDays}d</span>
+          <span className="text-yellow">Streak {stats.streakDays}d</span>
         </div>
       </Panel>
 

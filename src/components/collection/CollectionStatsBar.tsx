@@ -141,7 +141,7 @@ export function CollectionStatsBar({
         <span className="label-osd text-cyan">MODELS:</span>
         <Stat value={String(stats.modelWishlist)} label="WISHLIST" accent="cyan" />
         <Stat value={String(stats.modelOwned)} label="OWNED" accent="green" />
-        <Stat value={String(stats.modelComplete)} label="COMPLETE" accent="purple" />
+        <Stat value={String(stats.modelComplete)} label="COMPLETE" accent="green" />
         <Stat value={money(stats.modelSpend)} label="TOTAL SPENT" accent="green" />
         <Stat value={money(stats.modelRemaining)} label="TOTAL REMAINING" accent="yellow" />
       </div>

@@ -119,7 +119,7 @@ export function CollectionTable({
   const isPaint = kind === "paint";
   const label = isPaint ? "paint" : "model";
   const title = isPaint ? "PAINTS" : "MODELS";
-  const sectionAccent = isPaint ? "cyan" : "purple";
+  const sectionAccent = isPaint ? "cyan" : "neutral";
 
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [projectFilter, setProjectFilter] = useState("");
@@ -191,7 +191,7 @@ export function CollectionTable({
       <div className="flex flex-wrap items-center justify-between gap-3 md:h-11 md:flex-nowrap">
         <div className="flex items-center gap-3">
           <span
-            className={cn("h-8 w-1 shrink-0 rounded-[2px]", isPaint ? "bg-cyan" : "bg-purple")}
+            className={cn("h-8 w-1 shrink-0 rounded-[2px]", isPaint ? "bg-cyan" : "bg-fg-muted")}
             aria-hidden
           />
           {/* h2 keeps the /collection outline h1 → h2 with no skipped level.
@@ -205,7 +205,7 @@ export function CollectionTable({
               aria-label={`${items.length} ${label}${items.length === 1 ? "" : "s"}`}
               className={cn(
                 "rounded-[4px] px-2 py-0.5 font-mono text-[13px] font-bold",
-                isPaint ? "bg-cyan/10 text-cyan" : "bg-purple/10 text-purple",
+                isPaint ? "bg-cyan/10 text-cyan" : "bg-fg/5 text-fg",
               )}
             >
               {items.length}

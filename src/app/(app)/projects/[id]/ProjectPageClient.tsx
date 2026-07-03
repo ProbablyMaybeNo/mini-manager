@@ -465,7 +465,7 @@ export function ProjectPageClient({
             <StatRow label="Completed" value={stats.complete} valueClass="text-green" />
             <StatRow label="In Progress" value={stats.inProgress} valueClass="text-cyan" />
             <StatRow label="Planned" value={stats.planned} valueClass="text-yellow" />
-            <StatRow label="On Hold" value={stats.onHold} valueClass="text-purple" className="pt-2" />
+            <StatRow label="On Hold" value={stats.onHold} valueClass="text-fg-muted" className="pt-2" />
             <StatRow label="Colours Used" value={coloursUsed} />
           </dl>
         </section>

@@ -27,12 +27,12 @@ const STAGE_ROWS: {
   label: string;
   stage: CounterStage;
   column: keyof CounterSnapshot;
-  accent: "green" | "cyan" | "purple";
+  accent: "green" | "cyan";
 }[] = [
   { label: "Built", stage: "build", column: "buildCount", accent: "green" },
   { label: "Primed", stage: "prime", column: "primeCount", accent: "green" },
   { label: "Painted", stage: "paint", column: "paintCount", accent: "cyan" },
-  { label: "Completed", stage: "base", column: "baseCount", accent: "purple" },
+  { label: "Completed", stage: "base", column: "baseCount", accent: "green" },
 ];
 
 export function ModelCounterGrid({ project }: { project: Project }) {

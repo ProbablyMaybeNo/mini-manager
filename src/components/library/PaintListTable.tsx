@@ -134,7 +134,7 @@ export function PaintListTable({
                   {p.line}
                 </div>
                 <div role="cell" style={cellStyle(COLS[4]!)} className="px-3 py-2">
-                  <Chip accent="purple">{p.type}</Chip>
+                  <Chip accent="neutral">{p.type}</Chip>
                 </div>
                 <div
                   role="cell"
