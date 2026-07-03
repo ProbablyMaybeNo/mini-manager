@@ -150,32 +150,32 @@ export const priorityAccent: Record<Priority, Accent> = {
   High: "priority-high",
 };
 
-/** Calendar event kind → accent (shared by the calendar dots + the ticker). */
+/** Calendar event kind → accent (shared by the calendar dots + the ticker).
+ *  Colour contract §8: the calendar KEEPS full colour (Ross's explicit ask) —
+ *  colour-by-kind is genuinely scannable here. `other` moves off the retired
+ *  purple onto green. */
 export const eventKindAccent: Record<CalendarEventKind, Accent> = {
   tournament: "cyan",
   deadline: "red",
   battle: "yellow",
-  other: "purple",
+  other: "green",
 };
 
 /**
- * Activity icon-key → accent (D5 / MM-45). The ActivityFeed used to render
- * every row green; colour-coding by the move's type makes the tracker
- * glanceable using the full style-guide palette:
- *   add    → green  (something new — project / slot created)
- *   cart   → yellow (a purchase / wishlist add — "spend" warning hue)
- *   build  → cyan   (a stage bump — primary "progress" colour)
- *   prime  → purple (special prep stage)
- *   paint  → cyan   (logged a painting session — core action)
- *   check  → green  (a recipe / completion — positive)
+ * Activity icon-key → accent (D5 / MM-45). Colour contract §8 calms the
+ * row-rainbow: only the two moves that carry a real signal keep a hue, the rest
+ * go neutral and let the icon carry the meaning.
+ *   cart   → yellow  (a purchase / wishlist add — the "spend" signal)
+ *   check  → green   (a recipe / completion — positive / done)
+ *   add / build / prime / paint → neutral (icon carries the rest)
  * Unknown keys fall back to dim so a new icon never crashes the feed.
  */
 export const activityAccent: Record<string, Accent> = {
-  add: "green",
+  add: "neutral",
   cart: "yellow",
-  build: "cyan",
-  prime: "purple",
-  paint: "cyan",
+  build: "neutral",
+  prime: "neutral",
+  paint: "neutral",
   check: "green",
 };
 
@@ -184,22 +184,19 @@ export function activityAccentFor(icon: string): Accent {
 }
 
 /**
- * Per-stat-box accent (D5 / MM-49 — "give each tracker box's total its own
- * palette colour"). The four dashboard KPI boxes each read in a distinct
- * style-guide hue per Ross's tracker comments (qHYZN/4g3I/JxHyr), so the row
- * scans as four separate readouts:
- * Per Ross's per-stat colour calls (icu1mlFtJeya / awIApwrPCRs3 / zsgMLZrqO_ha /
- * _tsKQEEUbfvT):
- *   Active projects → cyan   (neon — a live readout)
- *   Completion %    → green  (neon — progress toward done)
- *   Streak         → yellow  (pastel — a streak you don't want to break)
- *   Time Total      → purple (pastel — base; flips red past a long session)
+ * Per-stat-box accent (D5 / MM-49). Colour contract §8 keeps the meaningful
+ * readouts coloured and drops the odd hue: Time moves off the retired purple to
+ * neutral (it still flips red past a long session — see StatRow).
+ *   Active projects → cyan     (brand — a live readout)
+ *   Completion %    → green    (progress toward done)
+ *   Streak         → yellow    (a streak you don't want to break)
+ *   Time Total      → neutral  (base; flips red past a long session)
  */
 export const statBoxAccents = {
   active: "cyan",
   completion: "green",
   streak: "yellow",
-  time: "purple",
+  time: "neutral",
 } as const satisfies Record<string, Accent>;
 
 /**

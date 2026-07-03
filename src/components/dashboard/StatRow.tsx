@@ -6,12 +6,12 @@ import type { DashboardSummary } from "@/lib/types";
  *
  *  Per Ross's tracker feedback (qHYZN/4g3I/JxHyr): each box is just a centered
  *  title + its number, padded to two digits (01, 02, …) where it's a count.
- *  One colour per box so the dashboard reads at a glance — active cyan,
- *  completion green, streak yellow, time pastel purple (flips red past a long
- *  session, the only "warning" semantic here). Pure display. */
+ *  The meaningful readouts stay coloured — active cyan, completion green, streak
+ *  yellow — while Time is neutral (colour contract §8) and flips red past a long
+ *  session, the only "warning" semantic here. Pure display. */
 export function StatRow({ summary }: { summary: DashboardSummary }) {
   // A session that has run long (8h+) flips Time to red as a gentle "take a
-  // break" cue; otherwise it stays the base pastel purple (icu1mlFtJeya).
+  // break" cue; otherwise it stays the neutral base (icu1mlFtJeya).
   const timeAccent = summary.timeTotalMinutes >= 8 * 60 ? "red" : statBoxAccents.time;
   return (
     <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
