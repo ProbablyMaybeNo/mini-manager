@@ -36,7 +36,7 @@ export function AuthView({
     : switchTo;
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-6">
+    <main className="flex min-h-dvh items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-[12px] border border-border bg-surface p-6 panel-depth motion-safe:animate-content-in">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
           <Logo href="/" size={40} />
@@ -113,6 +113,6 @@ export function AuthView({
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

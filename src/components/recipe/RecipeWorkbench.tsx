@@ -174,14 +174,20 @@ export function RecipeWorkbench({
       >
         <div className="flex flex-col gap-5 p-6">
           <div className="flex items-center justify-between">
-            <h1 className="flex items-center gap-3">
-              <span className="font-mono text-[20px] font-bold uppercase tracking-tight text-fg-bright">
+            {/* Count badge lives OUTSIDE the <h1> so the heading's accessible
+                name reads "RECIPES", not "RECIPES0" (UX-008); the badge carries
+                its own spoken label. */}
+            <div className="flex items-center gap-3">
+              <h1 className="font-mono text-[20px] font-bold uppercase tracking-tight text-fg-bright">
                 RECIPES
-              </span>
-              <span className="inline-flex items-center rounded-[4px] border border-border px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-fg-dim">
+              </h1>
+              <span
+                aria-label={`${recipes.length} recipe${recipes.length === 1 ? "" : "s"}`}
+                className="inline-flex items-center rounded-[4px] border border-border px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-fg-dim"
+              >
                 {recipes.length}
               </span>
-            </h1>
+            </div>
             <button
               type="button"
               onClick={() => router.push("/recipes/new")}

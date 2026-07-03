@@ -158,7 +158,8 @@ export function Listbox<T extends string>({
           // Distinct "+Attach" dropdown treatment (8GfWoKTUukde): a thinner
           // pixel face (font-osd) + a DOTTED border, so a dropdown always reads
           // differently from a solid-bordered DePixel-Klein button app-wide.
-          "inline-flex w-full items-center justify-between gap-2 border border-dotted bg-bg font-button tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+          // ≥44px tap target on touch widths (MUX-003); stays compact on desktop.
+          "inline-flex min-h-[44px] w-full items-center justify-between gap-2 border border-dotted bg-bg font-button tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 md:min-h-0",
           pad,
           accentBorder[accent],
           "border-opacity-60",

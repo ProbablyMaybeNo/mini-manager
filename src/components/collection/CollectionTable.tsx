@@ -199,12 +199,15 @@ export function CollectionTable({
             className={cn("h-8 w-1 shrink-0 rounded-[2px]", isPaint ? "bg-cyan" : "bg-purple")}
             aria-hidden
           />
-          {/* h2 keeps the /collection outline h1 → h2 with no skipped level. */}
-          <h2 className="flex items-center gap-3">
-            <span className={cn("font-display text-[18px] font-bold", accentText[sectionAccent])}>
+          {/* h2 keeps the /collection outline h1 → h2 with no skipped level.
+              The count badge sits OUTSIDE the <h2> so the heading reads
+              "PAINTS"/"MODELS", not "PAINTS0" (UX-008). */}
+          <div className="flex items-center gap-3">
+            <h2 className={cn("font-display text-[18px] font-bold", accentText[sectionAccent])}>
               {title}
-            </span>
+            </h2>
             <span
+              aria-label={`${items.length} ${label}${items.length === 1 ? "" : "s"}`}
               className={cn(
                 "rounded-[4px] px-2 py-0.5 font-mono text-[13px] font-bold",
                 isPaint ? "bg-cyan/10 text-cyan" : "bg-purple/10 text-purple",
@@ -212,7 +215,7 @@ export function CollectionTable({
             >
               {items.length}
             </span>
-          </h2>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

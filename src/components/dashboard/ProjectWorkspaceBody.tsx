@@ -365,20 +365,23 @@ export function ProjectWorkspaceBody({
           overall-progress strip instead (PP-2), so it's suppressed here to avoid
           a duplicate. */}
       {!isPage && (
-        <div className="flex items-center gap-2 border border-cyan/30 bg-bg-raised/30 px-3 py-2">
+        // At phone width the trio wraps to a 2-up grid so no label is clipped
+        // to an ellipsis (MUX-004); the inline dot-separated row returns once
+        // there's room (≥420px). The dots only show in the inline layout.
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border border-cyan/30 bg-bg-raised/30 px-3 py-2 min-[420px]:flex min-[420px]:items-center min-[420px]:gap-2">
           <ProgressStat
             glyph="#"
             label="total"
             value={project.modelCount ?? 0}
           />
-          <span aria-hidden className="text-fg-faint">·</span>
+          <span aria-hidden className="hidden text-fg-faint min-[420px]:inline">·</span>
           <ProgressStat
             glyph="✓"
             label="complete"
             value={project.modelsComplete ?? 0}
             accent="green"
           />
-          <span aria-hidden className="text-fg-faint">·</span>
+          <span aria-hidden className="hidden text-fg-faint min-[420px]:inline">·</span>
           <ProgressStat
             glyph="🕒"
             label="time"
@@ -388,11 +391,14 @@ export function ProjectWorkspaceBody({
       )}
 
       {/* DETAILS — name / type / status / priority. Secondary on the page
-          (order-2, collapsed by default); leads the panel's DETAILS-first order. */}
+          (order-2, collapsed by default on mobile); leads the panel's
+          DETAILS-first order. A freshly-created draft still named "New Project"
+          opens DETAILS by default so the name field is immediately visible to
+          rename on phones (UX-005 / MUX-005). */}
       <CollapsibleSection
         label="DETAILS"
         anchorId="inspector-details"
-        defaultOpen={false}
+        defaultOpen={project.title === "New Project"}
         className={isPage ? "order-2" : undefined}
         hint="Rename it, set the type, where it sits in your pipeline, and how urgent it is."
       >
@@ -661,8 +667,14 @@ export function ProjectWorkspaceBody({
           </p>
         )}
 
-        {/* Roll-up stat strip. */}
-        <div className={cn("mt-3 grid gap-2", loggedMinutes != null ? "grid-cols-4" : "grid-cols-3")}>
+        {/* Roll-up stat strip — 2-up on phones so the 4th cell + its label
+            aren't clipped off the right edge (MUX-004). */}
+        <div
+          className={cn(
+            "mt-3 grid gap-2",
+            loggedMinutes != null ? "grid-cols-2 min-[420px]:grid-cols-4" : "grid-cols-3",
+          )}
+        >
           <StatCell label="Total models" value={project.modelCount ?? 0} />
           <StatCell label="Completed" value={project.modelsComplete ?? 0} />
           <StatCell label="Sub-projects" value={children.length} />

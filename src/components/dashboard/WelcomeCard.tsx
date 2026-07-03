@@ -15,7 +15,7 @@ import { useTour } from "@/components/tour";
  */
 const DISMISSED_KEY = "mm.welcomeDismissed";
 
-export function WelcomeCard() {
+export function WelcomeCard({ hasProjects = false }: { hasProjects?: boolean }) {
   const router = useRouter();
   const { start } = useTour();
   // Default hidden, then reveal after reading the flag so the card never
@@ -41,6 +41,39 @@ export function WelcomeCard() {
   }
 
   if (!show) return null;
+
+  // Returning painters (already have a project) get a slim one-line bar instead
+  // of the full-height MOTD, so the roster stays above the fold (UX-010). The
+  // full onboarding card only shows on a fresh, project-less account.
+  if (hasProjects) {
+    return (
+      <section
+        className="flex items-center justify-between gap-3 rounded-[10px] px-4 py-2.5 text-white"
+        style={{ backgroundColor: "#2A6FC9" }}
+      >
+        <span className="min-w-0 truncate font-mono text-[13px] text-white">
+          <span className="font-bold">&gt; SYS</span> — plan armies, track models, build recipes.
+        </span>
+        <span className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => start()}
+            className="rounded-[6px] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-wide text-white underline underline-offset-4 transition-opacity hover:opacity-80"
+          >
+            Tour
+          </button>
+          <button
+            type="button"
+            aria-label="Dismiss welcome"
+            onClick={dismiss}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center text-white/70 transition-colors hover:text-white"
+          >
+            <X size={16} aria-hidden />
+          </button>
+        </span>
+      </section>
+    );
+  }
 
   return (
     // HEX.CODE blue welcome card (4:4): blue fill, white text, dismissible,

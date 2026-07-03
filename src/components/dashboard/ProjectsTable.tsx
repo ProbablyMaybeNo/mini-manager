@@ -167,6 +167,7 @@ export function ProjectsTable({
             <SwatchStrip
               swatches={p.recipeSwatches}
               onAttach={() => onAttachRecipe(p)}
+              ariaLabel={`Attach recipe to ${p.title}`}
             />
           </td>
           <td className="px-3 py-2.5">
@@ -215,7 +216,7 @@ export function ProjectsTable({
                   setDeleting(p);
                 }}
               >
-                🗑
+                <span aria-hidden>🗑</span>
               </IconButton>
             </div>
           </td>
@@ -316,14 +317,16 @@ export function ProjectsTable({
             <SwatchStrip
               swatches={p.recipeSwatches}
               onAttach={() => onAttachRecipe(p)}
+              ariaLabel={`Attach recipe to ${p.title}`}
             />
             <div className="ml-auto flex items-center">
               {/* Mobile card: delete only (strict-strip vs 4:4). Add-sub + focus
-                  live in the Army/Unit flow panel. */}
+                  live in the Army/Unit flow panel. 44px thumb target (MUX-002);
+                  ml-auto + the card's gap-2 keep ≥8px from the open-tap zone. */}
               <IconButton
                 variant="outlineRed"
                 size="sm"
-                className="h-9 w-9"
+                className="h-11 w-11"
                 aria-label={`Delete ${p.title}`}
                 title="Delete project"
                 disabled={pendingDelete}
@@ -332,7 +335,7 @@ export function ProjectsTable({
                   setDeleting(p);
                 }}
               >
-                🗑
+                <span aria-hidden>🗑</span>
               </IconButton>
             </div>
           </div>

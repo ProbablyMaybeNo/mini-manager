@@ -311,14 +311,19 @@ export function ProjectPageClient({
           {/* SUB-PROJECTS (13:79) — header + table + add-row. */}
           <section aria-label="Sub-projects" className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-3">
-                <span className="font-mono text-[15px] font-bold uppercase tracking-wide text-fg-bright">
+              {/* Count badge sits OUTSIDE the <h2> so the heading reads
+                  "SUB-PROJECTS", not "SUB-PROJECTS0" (UX-008). */}
+              <div className="flex items-center gap-3">
+                <h2 className="font-mono text-[15px] font-bold uppercase tracking-wide text-fg-bright">
                   SUB-PROJECTS
-                </span>
-                <span className="inline-flex items-center rounded-[4px] border border-border px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-fg-dim">
+                </h2>
+                <span
+                  aria-label={`${childCount} sub-project${childCount === 1 ? "" : "s"}`}
+                  className="inline-flex items-center rounded-[4px] border border-border px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-fg-dim"
+                >
                   {childCount}
                 </span>
-              </h2>
+              </div>
               <Button
                 variant="add"
                 size="sm"

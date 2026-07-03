@@ -108,38 +108,44 @@ export function GenerateRecipeDialog({
               <Swatch hex={color.source} size="md" />
               <span className="font-body text-body font-bold text-fg">{color.source}</span>
             </div>
-            <div className="grid grid-cols-5 gap-2">
-              {color.steps.map((step) => {
-                const trusted = step.paint && step.confidence !== "low";
-                return (
-                  <div key={step.role} className="flex flex-col items-center gap-1 text-center">
-                    <span className="label-osd text-fg-faint">{ROLE_LABEL[step.role]}</span>
-                    <Swatch hex={step.hex} size="lg" />
-                    {step.paint ? (
-                      <>
-                        <span className="flex items-center gap-1">
-                          <span
-                            aria-hidden
-                            className={cn(
-                              "inline-block h-1.5 w-1.5 rounded-full",
-                              CONFIDENCE_DOT[step.confidence ?? "low"],
-                            )}
-                          />
-                          <span className="max-w-[6rem] truncate font-body text-[11px] text-fg">
-                            {trusted ? step.paint.name : "Custom mix"}
-                          </span>
+            {/* One row per ramp step (shade → edge, top to bottom). A row list
+                reads cleanly at any width — the old 5-column grid collided its
+                paint labels into an unreadable smear at ≤440px (UX-001/MUX-001). */}
+            <ul className="flex flex-col gap-1.5">
+              {color.steps.map((step) => (
+                <li key={step.role} className="flex items-center gap-2.5">
+                  <Swatch hex={step.hex} size="md" />
+                  <span className="w-20 shrink-0 whitespace-nowrap label-osd text-fg-faint">
+                    {ROLE_LABEL[step.role]}
+                  </span>
+                  {step.paint ? (
+                    <>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "inline-block h-2 w-2 shrink-0 rounded-full",
+                          CONFIDENCE_DOT[step.confidence ?? "low"],
+                        )}
+                      />
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate font-body text-body text-fg">
+                          {step.confidence !== "low" ? step.paint.name : "Custom mix"}
                         </span>
-                        <span className="max-w-[6rem] truncate label-osd text-fg-faint">
-                          {trusted ? step.paint.brand : `nearest: ${step.paint.name}`}
+                        <span className="truncate label-osd text-fg-faint">
+                          {step.confidence !== "low"
+                            ? step.paint.brand
+                            : `nearest: ${step.paint.name}`}
                         </span>
-                      </>
-                    ) : (
-                      <span className="font-body text-[11px] text-fg-faint">Custom mix</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                      </span>
+                    </>
+                  ) : (
+                    <span className="min-w-0 flex-1 truncate font-body text-body text-fg-faint">
+                      Custom mix — no catalog match
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
 

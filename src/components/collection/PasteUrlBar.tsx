@@ -84,7 +84,7 @@ export function PasteUrlBar({
         <KindToggle value={kind} onChange={setKind} />
         <Input
           name="paste-url"
-          placeholder="Paste a store URL to add paints and models"
+          placeholder="Paste a store URL…"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}

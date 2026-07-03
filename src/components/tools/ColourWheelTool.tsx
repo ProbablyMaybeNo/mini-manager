@@ -274,7 +274,7 @@ export function ColourWheelTool({
                     type="button"
                     aria-expanded={isExpanded}
                     onClick={() => toggleExpanded(hex)}
-                    className="flex items-center gap-1 self-start label-osd text-fg-faint hover:text-cyan"
+                    className="flex min-h-11 items-center gap-1 self-start label-osd text-fg-faint hover:text-cyan md:min-h-0"
                   >
                     <span aria-hidden className={cn("transition-transform", isExpanded && "rotate-90")}>
                       ▸
@@ -321,20 +321,22 @@ export function ColourWheelTool({
           {/* Save Palette = +COLOR SCHEME → neon green; Send to Recipe = +RECIPE
               → pastel purple attach (9lgIwII2oBy7 / CiBUwVgwwQRD). DePixel Klein
               font kept (ruling #1). */}
-          <Button variant="add" onClick={() => onSavePalette(ordered)}>Save Palette</Button>
+          {/* Generate Recipe is the single primary action; Save Palette + Send
+              to Recipe demote to outline so there's one clear CTA (UX-004). */}
+          {onGenerateRecipe && (
+            <Button variant="primary" onClick={() => onGenerateRecipe(ordered)}>
+              Generate Recipe
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => onSavePalette(ordered)}>Save Palette</Button>
           <Button
-            variant="attach"
+            variant="secondary"
             onClick={() =>
               onSendToRecipe(picks.map((p) => p.paint).filter((p): p is Paint => p != null))
             }
           >
             Send to Recipe
           </Button>
-          {onGenerateRecipe && (
-            <Button variant="primary" onClick={() => onGenerateRecipe(ordered)}>
-              Generate Recipe
-            </Button>
-          )}
         </div>
       </Panel>
     </div>

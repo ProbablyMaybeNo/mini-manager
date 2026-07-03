@@ -122,7 +122,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             type="button"
             onClick={() => shiftMonth(-1)}
             aria-label="Previous month"
-            className="inline-flex h-3.5 w-3.5 items-center justify-center text-fg-dim hover:text-cyan"
+            className="inline-flex h-11 w-11 items-center justify-center text-fg-dim hover:text-cyan"
           >
             ‹
           </button>
@@ -130,7 +130,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             type="button"
             onClick={() => shiftMonth(1)}
             aria-label="Next month"
-            className="inline-flex h-3.5 w-3.5 items-center justify-center text-fg-dim hover:text-cyan"
+            className="inline-flex h-11 w-11 items-center justify-center text-fg-dim hover:text-cyan"
           >
             ›
           </button>

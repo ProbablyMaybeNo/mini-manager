@@ -245,8 +245,10 @@ export function DashboardView({
             // the COLUMN width, not the viewport — it goes 2-up the moment the
             // inspector pane squeezes this column, instead of overlapping.
             <div className="@container flex min-w-0 flex-1 flex-col gap-6">
-              {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists. */}
-              <WelcomeCard />
+              {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists.
+                  Collapses to a slim bar once the painter has a project so the
+                  roster isn't pushed below the fold (UX-010). */}
+              <WelcomeCard hasProjects={projects.length > 0} />
               <div data-tour="dashboard-projects" className="flex flex-col gap-4">
                 {/* Section header row (4:58): PROJECTS ROSTER label + filter /
                     add-project icon affordances at the right edge. */}
@@ -262,7 +264,7 @@ export function DashboardView({
                       aria-label="Filter roster"
                       title="Filter roster"
                       onClick={() => setRosterFilter((f) => (f === "ALL" ? "IN PROGRESS" : "ALL"))}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
                     >
                       <FilterIcon />
                     </button>
@@ -271,7 +273,7 @@ export function DashboardView({
                       aria-label="New project"
                       title="New project"
                       onClick={startCreate}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
                     >
                       <PlusCircleIcon />
                     </button>

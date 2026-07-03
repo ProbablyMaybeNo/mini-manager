@@ -43,15 +43,15 @@ export const PROJECT_CREATE_WALKTHROUGH: WalkthroughStep[] = [
   {
     id: "name",
     target: "name",
-    title: "NAME",
-    body: "Name your project here.",
+    title: "PROJECT CREATED",
+    body: "Now give it a real name — it starts as 'New Project'.",
     placement: "bottom",
   },
   {
     id: "meta",
     target: "meta",
-    title: "TYPE · STATUS · PRIORITY",
-    body: "Set what it is, where it sits in your pipeline, and how urgent.",
+    title: "DEFINE IT",
+    body: "Assign a type, set its status, and how urgent it is.",
     placement: "bottom",
   },
   {

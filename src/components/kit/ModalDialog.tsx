@@ -102,11 +102,21 @@ export function ModalDialog({
               {title}
             </h2>
           </div>
-          <CloseButton onClick={onClose} aria-label="Close dialog" />
+          {/* 44px close target for a high-frequency modal dismiss (MUX-008) —
+              the ✕ glyph stays its resting size, only the padded box grows. */}
+          <CloseButton
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="min-h-11 min-w-11"
+          />
         </header>
         <div className="px-4 py-4">{children}</div>
         {footer && (
-          <footer className="border-t border-cyan/40 px-4 py-3">{footer}</footer>
+          // Footer buttons lift to a 44px min-height on touch widths (MUX-008),
+          // staying compact on desktop — lifts every dialog, not just one.
+          <footer className="border-t border-cyan/40 px-4 py-3 [&_button]:min-h-[44px] md:[&_button]:min-h-0">
+            {footer}
+          </footer>
         )}
       </div>
     </div>

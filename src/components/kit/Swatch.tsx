@@ -49,9 +49,9 @@ export function SwatchStrip({
         onClick={onAttach}
         aria-label={ariaLabel}
         className={cn(
-          // min-h-6 keeps the hit area ≥24px (WCAG 2.2 §2.5.8) without
-          // enlarging the dense table cell (UX-008).
-          "inline-flex min-h-6 items-center rounded-[6px] border border-dashed border-purple/60 px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] text-purple transition-colors duration-150 hover:border-purple hover:bg-purple/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple",
+          // ≥44px tap target on touch widths (MUX-003); stays compact (≥24px,
+          // WCAG 2.2 §2.5.8) in the dense desktop table cell.
+          "inline-flex min-h-[44px] items-center rounded-[6px] border border-dashed border-purple/60 px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] text-purple transition-colors duration-150 hover:border-purple hover:bg-purple/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple md:min-h-6",
           className,
         )}
       >
@@ -75,9 +75,9 @@ export function SwatchStrip({
         onClick={onAttach}
         aria-label={ariaLabel ?? "Change attached recipe"}
         className={cn(
-          // min-h-6 lifts the 16px swatch strip's hit area to ≥24px
-          // (WCAG 2.2 §2.5.8) without resizing the swatches (UX-008).
-          "inline-flex min-h-6 items-center rounded-[4px] transition-opacity duration-150 hover:opacity-80 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan",
+          // ≥44px tap target on touch widths (MUX-003); ≥24px (WCAG 2.2 §2.5.8)
+          // on desktop without resizing the 16px swatches.
+          "inline-flex min-h-[44px] items-center rounded-[4px] transition-opacity duration-150 hover:opacity-80 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:min-h-6",
           className,
         )}
       >
