@@ -91,7 +91,7 @@ export function ArmyImportPanel({
             onChange={(e) => setRaw(e.target.value)}
             rows={12}
             placeholder={"10x Intercessors\n5x Terminators\n1x Captain"}
-            className="w-full resize-y border border-cyan/50 bg-bg p-2 font-body text-body text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
+            className="w-full resize-y border border-cyan/50 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
           />
           {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
           <Button onClick={parse} disabled={pending || !raw.trim()} className="w-full">
@@ -112,7 +112,7 @@ export function ArmyImportPanel({
               value={tree.armyName}
               onChange={(e) => setTree({ ...tree, armyName: e.target.value })}
               placeholder="Name this army before importing"
-              className="w-full border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-cyan placeholder:text-[#757575] focus:border-cyan focus:outline-none"
+              className="w-full border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-cyan placeholder:text-fg-muted focus:border-cyan focus:outline-none"
             />
             {tree.faction || tree.totalPoints ? (
               <div className="label-osd text-fg">

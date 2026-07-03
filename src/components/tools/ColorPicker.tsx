@@ -241,7 +241,7 @@ export function ColorPicker({
           onChange={(e) => setTextQuery(e.target.value)}
           placeholder="Search by paint name, brand, or line…"
           aria-label="Filter library paints"
-          className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
+          className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
         />
         <div className="flex items-center justify-between">
           <span className="font-body text-body text-fg">

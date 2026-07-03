@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { PenLine, Trash2 } from "lucide-react";
 import { Listbox } from "@/components/kit";
 import { cn } from "@/lib/cn";
-import { projectTypeAccent, statusAccent, accentText } from "@/lib/palette";
+import { statusAccent, accentText } from "@/lib/palette";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import { StatusDropdown } from "./StatusDropdown";
 
@@ -61,14 +61,9 @@ function FilterChip({
 
 /** Frame's accent-tinted status pill (read-only look) for the STATUS column,
  *  wrapping the interactive StatusDropdown so the painter can still change it. */
-function ProjectChip({ name, accent }: { name: string; accent: "cyan" | "purple" | "green" | "yellow" | "red" | "dim" }) {
+function ProjectChip({ name, accent }: { name: string; accent: "neutral" }) {
   const tint: Record<typeof accent, string> = {
-    cyan: "bg-cyan/10 border-cyan/30 text-cyan",
-    purple: "bg-purple/10 border-purple/30 text-purple",
-    green: "bg-green/10 border-green/30 text-green",
-    yellow: "bg-yellow/10 border-yellow/30 text-yellow",
-    red: "bg-red/10 border-red/30 text-red",
-    dim: "bg-fg/5 border-border text-fg-dim",
+    neutral: "bg-fg/5 border-border text-fg",
   };
   return (
     <span
@@ -131,12 +126,12 @@ export function CollectionTable({
   /** Paint = BRAND (company) filter; Model = TYPE (paintType/army-class) filter. */
   const [facetFilter, setFacetFilter] = useState("");
 
-  // Resolve a project id → { name, accent } for the PROJECT chip.
+  // Resolve a project id → { name, accent } for the PROJECT chip. Project type
+  // no longer carries a hue (colour contract §6) → every chip renders neutral.
   const projectInfo = useMemo(() => {
-    const m = new Map<string, { name: string; accent: "cyan" | "purple" | "green" | "yellow" | "red" }>();
+    const m = new Map<string, { name: string; accent: "neutral" }>();
     for (const p of projects) {
-      const a = projectTypeAccent[p.type];
-      m.set(p.id, { name: p.title, accent: (a === "orange" ? "yellow" : a) as never });
+      m.set(p.id, { name: p.title, accent: "neutral" });
     }
     return m;
   }, [projects]);
@@ -340,7 +335,7 @@ export function CollectionTable({
                     <Listbox
                       value={item.projectId ?? ""}
                       ariaLabel={`Assign ${item.name} to a project`}
-                      accent="purple"
+                      accent="neutral"
                       placeholder="+ ATTACH"
                       onChange={(v) => onAssignProject(item, v)}
                       options={[
@@ -470,7 +465,7 @@ export function CollectionTable({
                         <Listbox
                           value={item.projectId ?? ""}
                           ariaLabel={`Assign ${item.name} to a project`}
-                          accent="purple"
+                          accent="neutral"
                           placeholder="+ ATTACH"
                           onChange={(v) => onAssignProject(item, v)}
                           options={[

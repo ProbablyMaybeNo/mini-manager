@@ -11,9 +11,10 @@ import { cn } from "@/lib/cn";
  * solid + outline variant so page agents get the full 5-colour palette for free
  * (`variant="solidGreen"`, `variant="outlineYellow"`, …).
  *
- * "+" rule (thread JlrBYUITMqoa / MM-52): use `variant="add"` for any add/＋
- * button — it is neon green by default. The single exception is wishlist add
- * buttons, which use `variant="addWishlist"` (yellow).
+ * "+" rule (colour contract §4): use `variant="add"` for any add/＋ button — it
+ * renders as the blue primary. `variant="attach"` renders as the neutral
+ * secondary outline. The single coloured exception is wishlist add buttons,
+ * which use `variant="addWishlist"` (yellow).
  */
 /**
  * V2 "HEX.CODE" buttons (style guide 1:66). Primary = solid cyan fill + dark
@@ -23,7 +24,7 @@ import { cn } from "@/lib/cn";
  * keeps working — the cyan-led `primary` is now a true filled button.
  */
 const button = cva(
-  "inline-flex items-center justify-center gap-2 rounded-[6px] font-display font-bold text-button tracking-tight transition-[background-color,border-color,color] duration-150 ease-out focus-visible:outline-2 disabled:opacity-40 disabled:pointer-events-none motion-safe:active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 rounded-[6px] font-display font-bold text-button tracking-tight transition-[background-color,border-color,color] duration-150 ease-out focus-visible:outline-2 disabled:border-border disabled:bg-transparent disabled:text-fg-muted disabled:pointer-events-none motion-safe:active:scale-[0.98]",
   {
     variants: {
       variant: {
@@ -37,16 +38,17 @@ const button = cva(
         danger:
           "border border-red bg-red text-bg hover:bg-red/85",
 
-        /* ---- "+" / add buttons (MM-52) ----
-           Default add = green; wishlist add = yellow. */
+        /* ---- "+" / add buttons ----
+           Colour contract §4: the "+" glyph + label already say "add", so the
+           coloured "+" is retired. `add` now renders as the blue primary and
+           `attach` as the neutral secondary outline (variant names kept to avoid
+           a churny call-site rename). Wishlist add keeps yellow (real semantic). */
         add:
-          "border border-green bg-green text-bg hover:bg-green/85",
+          "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
         addWishlist:
           "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
-        // Canonical "+ Attach" affordance — purple, so an attach/assign action
-        // reads distinctly from a green add.
         attach:
-          "border border-purple bg-purple text-bg hover:bg-purple/85",
+          "border border-border bg-transparent text-fg hover:bg-fg/5 hover:border-fg/25",
 
         /* ---- Solid fills (colour fill + dark text) ---- */
         solidCyan: "border border-cyan bg-cyan text-bg hover:bg-cyan/85",

@@ -46,7 +46,7 @@ export function Input({
           className={cn(
             // min-h-6 floors the field at 24px (WCAG 2.2 §2.5.8) — the 23.5px
             // Body line-box otherwise drops the bare input to 23px (UX-006).
-            "min-h-6 w-full bg-transparent font-body text-body text-fg placeholder:text-[#757575] focus:outline-none",
+            "min-h-6 w-full bg-transparent font-body text-body text-fg placeholder:text-fg-muted focus:outline-none",
             className,
           )}
           {...props}

@@ -228,7 +228,7 @@ function ComposeForm({
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSubmit();
         }}
-        className="w-full resize-y border border-cyan/40 bg-bg p-2 font-body text-body text-fg placeholder:text-[#757575] focus:border-cyan focus:outline-none"
+        className="w-full resize-y border border-cyan/40 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
       />
       {error && <p className="font-body text-body text-red">▸ {error}</p>}
       <div className="flex flex-col gap-1">
