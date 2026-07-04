@@ -51,7 +51,7 @@ export function SwatchStrip({
         className={cn(
           // ≥44px tap target on touch widths (MUX-003); stays compact (≥24px,
           // WCAG 2.2 §2.5.8) in the dense desktop table cell.
-          "inline-flex min-h-[44px] items-center rounded-[6px] border border-dashed border-purple/60 px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] text-purple transition-colors duration-150 hover:border-purple hover:bg-purple/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple md:min-h-6",
+          "inline-flex min-h-[44px] items-center rounded-[6px] border border-dashed border-border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] text-fg transition-colors duration-150 hover:border-fg/40 hover:bg-fg/5 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:min-h-6",
           className,
         )}
       >
