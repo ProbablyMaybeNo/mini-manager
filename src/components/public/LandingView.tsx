@@ -76,6 +76,7 @@ export function LandingView() {
     <div className="flex min-h-dvh flex-col">
       <PublicHeader />
 
+      <main id="main" className="flex flex-1 flex-col">
       {/* Hero — the animated CRT logo IS the wordmark (its screen reads
           "Mini-Mainframe"); reduced-motion users get the static poster frame. */}
       <section className="scanlines flex flex-col items-center gap-6 px-6 py-16 text-center">
@@ -109,7 +110,7 @@ export function LandingView() {
           )}
         </div>
         <p
-          className="max-w-2xl leading-relaxed text-cyan text-glow-cyan"
+          className="max-w-2xl leading-relaxed text-cyan-lite text-glow-cyan"
           style={{
             fontFamily:
               '"Flexi IBM VGA False", "Flexi IBM VGA True", "IBM Plex Mono", monospace',
@@ -193,7 +194,7 @@ export function LandingView() {
 
       {/* Final CTA */}
       <section className="flex flex-col items-center gap-4 px-6 pb-16 text-center">
-        <h2 className="max-w-xl font-h1 text-h1 text-cyan text-glow-cyan">
+        <h2 className="max-w-xl font-h1 text-h1 text-cyan-lite text-glow-cyan">
           Ready to take your hobby to the next level?
         </h2>
         <p className="max-w-md font-body text-body text-fg">
@@ -203,6 +204,7 @@ export function LandingView() {
           <Button size="lg">Start for Free</Button>
         </Link>
       </section>
+      </main>
 
       <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
         ▸ THE MINI MAINFRAME · made for painters ·{" "}

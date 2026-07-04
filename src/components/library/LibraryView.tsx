@@ -86,6 +86,7 @@ export function LibraryView(props: LibraryViewProps) {
             <div className="w-44">
               <SearchField
                 name="library-search"
+                aria-label="Search the paint library"
                 value={filter.search ?? ""}
                 onChange={(e) => onFilterChange({ ...filter, search: e.target.value })}
               />
@@ -109,7 +110,7 @@ export function LibraryView(props: LibraryViewProps) {
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">
-          <p className="font-body text-body text-red">▸ Couldn’t load the library.</p>
+          <p className="font-body text-body text-red-text">▸ Couldn’t load the library.</p>
           {onRetry && (
             <div className="mt-4">
               <Button variant="danger" onClick={onRetry}>
@@ -128,7 +129,7 @@ export function LibraryView(props: LibraryViewProps) {
                   aria-busy="true"
                   aria-live="polite"
                 >
-                  <span className="label-osd text-cyan">
+                  <span className="label-osd text-cyan-lite">
                     ▸ Loading{totalCount > 0 ? ` ${totalCount.toLocaleString()}` : ""} paints…
                   </span>
                   <span className="font-body text-body text-fg">

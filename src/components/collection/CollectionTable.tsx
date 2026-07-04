@@ -50,7 +50,7 @@ function FilterChip({
         // ≥44px tap target on touch widths, compact on desktop (UX-011).
         "inline-flex min-h-[44px] items-center rounded-[6px] px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors md:min-h-0",
         active
-          ? "bg-cyan/20 text-cyan"
+          ? "bg-cyan/20 text-cyan-lite"
           : "border border-border text-fg-dim hover:border-cyan/40 hover:text-fg",
       )}
     >
@@ -205,7 +205,7 @@ export function CollectionTable({
               aria-label={`${items.length} ${label}${items.length === 1 ? "" : "s"}`}
               className={cn(
                 "rounded-[4px] px-2 py-0.5 font-mono text-[13px] font-bold",
-                isPaint ? "bg-cyan/10 text-cyan" : "bg-fg/5 text-fg",
+                isPaint ? "bg-cyan/10 text-cyan-lite" : "bg-fg/5 text-fg",
               )}
             >
               {items.length}
@@ -242,11 +242,12 @@ export function CollectionTable({
           />
         </div>
 
-        {/* + PAINT / + MODEL — green outline add button (24:81). */}
+        {/* + PAINT / + MODEL — neutral outline add button. Green is reserved for
+            COMPLETE / success, not add affordances (UX-004). */}
         <button
           type="button"
           onClick={onAdd}
-          className="shrink-0 rounded-[6px] border border-green px-4 py-2 font-display text-[12px] font-bold text-green transition-colors hover:bg-green/10"
+          className="shrink-0 rounded-[6px] border border-border bg-transparent px-4 py-2 font-display text-[12px] font-bold text-fg transition-colors hover:border-fg/25 hover:bg-fg/5"
         >
           + {isPaint ? "PAINT" : "MODEL"}
         </button>
@@ -283,7 +284,7 @@ export function CollectionTable({
                           href={item.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block truncate font-mono text-[14px] font-bold text-fg hover:text-cyan hover:underline"
+                          className="block truncate font-mono text-[14px] font-bold text-fg hover:text-cyan-lite hover:underline"
                         >
                           {item.name}
                         </a>
@@ -307,7 +308,7 @@ export function CollectionTable({
                         type="button"
                         aria-label={`Edit ${item.name}`}
                         onClick={() => onEdit(item)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] text-fg-dim transition-colors hover:bg-fg/5 hover:text-cyan"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] text-fg-dim transition-colors hover:bg-fg/5 hover:text-cyan-lite"
                       >
                         <PenLine size={16} aria-hidden />
                       </button>
@@ -437,7 +438,7 @@ export function CollectionTable({
                           href={item.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-mono text-[13px] text-fg hover:text-cyan hover:underline"
+                          className="font-mono text-[13px] text-fg hover:text-cyan-lite hover:underline"
                         >
                           {item.name}
                         </a>
@@ -496,7 +497,7 @@ export function CollectionTable({
                             type="button"
                             aria-label={`Edit ${item.name}`}
                             onClick={() => onEdit(item)}
-                            className="text-fg-dim transition-colors hover:text-cyan"
+                            className="text-fg-dim transition-colors hover:text-cyan-lite"
                           >
                             <PenLine size={14} aria-hidden />
                           </button>

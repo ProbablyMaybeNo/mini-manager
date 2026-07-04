@@ -80,7 +80,7 @@ export function AuthView({
                 onClick={() => setShowPassword((s) => !s)}
                 aria-label={showPassword ? "Hide characters" : "Reveal characters"}
                 aria-pressed={showPassword}
-                className="-m-1 inline-flex h-6 w-6 items-center justify-center rounded-[4px] p-1 text-fg-dim transition-colors hover:text-cyan focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+                className="-m-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-[4px] p-1 text-fg-dim transition-colors hover:text-cyan-lite focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:min-h-6 md:min-w-6"
               >
                 {showPassword ? (
                   <EyeOff size={16} aria-hidden />
@@ -106,7 +106,7 @@ export function AuthView({
           {!isSignUp && (
             <Link
               href="/reset"
-              className="text-fg-dim underline-offset-4 transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan"
+              className="text-fg-dim underline-offset-4 transition-colors hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite"
             >
               Forgot?
             </Link>

@@ -145,7 +145,7 @@ function CollapsibleSection({
           onClick={() => setOpen((v) => !v)}
           className="-mt-2 -mr-2 mb-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center justify-end md:hidden"
         >
-          <span aria-hidden className={cn("shrink-0 text-cyan transition-transform", open && "rotate-90")}>
+          <span aria-hidden className={cn("shrink-0 text-cyan-lite transition-transform", open && "rotate-90")}>
             ▸
           </span>
         </button>
@@ -352,7 +352,7 @@ export function ProjectWorkspaceBody({
             key={s.anchorId}
             type="button"
             onClick={() => quickJump(s.anchorId)}
-            className="shrink-0 border border-cyan/40 px-3 py-1 font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan focus:outline-none focus-visible:border-cyan focus-visible:text-cyan"
+            className="shrink-0 border border-cyan/40 px-3 py-1 font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan-lite focus:outline-none focus-visible:border-cyan focus-visible:text-cyan-lite"
           >
             {s.label}
           </button>
@@ -368,7 +368,7 @@ export function ProjectWorkspaceBody({
           // close would fight the push. ProjectPanelStack's unmount cleanup
           // skips its unwind when we've navigated past the inspector entry.
           onClick={() => router.push(`/projects/${project.id}`)}
-          className="inline-flex min-h-11 items-center gap-1.5 self-start font-mono text-[11px] text-fg-faint transition-colors hover:text-cyan focus:outline-none focus-visible:text-cyan md:min-h-0"
+          className="inline-flex min-h-11 items-center gap-1.5 self-start font-mono text-[11px] text-fg-faint transition-colors hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite md:min-h-6"
         >
           ⤢ Open full page
         </button>
@@ -559,7 +559,7 @@ export function ProjectWorkspaceBody({
                   <button
                     type="button"
                     onClick={() => router.push(`/recipes/${rc.id}?from=${rc.attachedProjectId}`)}
-                    className="min-w-0 flex-1 text-left font-h2 text-h2 text-cyan hover:text-glow-cyan focus:outline-none focus-visible:underline"
+                    className="min-w-0 flex-1 text-left font-h2 text-h2 text-cyan-lite hover:text-glow-cyan focus:outline-none focus-visible:underline"
                   >
                     <span className="truncate">{rc.name}</span>
                   </button>
@@ -659,7 +659,7 @@ export function ProjectWorkspaceBody({
                       onClick={() =>
                         run(() => setProjectComplete({ id: c.id, complete: Math.max(0, done - 1) }))
                       }
-                      className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                      className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
                     >
                       −
                     </button>
@@ -671,7 +671,7 @@ export function ProjectWorkspaceBody({
                       aria-label={`Increase completed for ${c.title}`}
                       disabled={pending || (total > 0 && done >= total)}
                       onClick={() => run(() => setProjectComplete({ id: c.id, complete: done + 1 }))}
-                      className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan hover:bg-cyan/10 disabled:opacity-30"
+                      className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
                     >
                       +
                     </button>
@@ -727,6 +727,7 @@ export function ProjectWorkspaceBody({
           onChange={(e) => setNotes(e.target.value)}
           onBlur={() => run(() => updateProjectNotes({ id: project.id, notes }))}
           rows={3}
+          aria-label="Notes & techniques"
           placeholder="Notes & techniques — e.g. edge highlight Terminators with Stormhost Silver…"
           className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-body text-body text-fg focus:border-cyan focus:outline-none"
         />
@@ -754,6 +755,7 @@ export function ProjectWorkspaceBody({
           <div className="flex gap-2">
             <Input
               name="reference-url"
+              aria-label="Reference image URL"
               value={refUrl}
               onChange={(e) => setRefUrl(e.target.value)}
               placeholder="https://…/reference.jpg"
@@ -774,7 +776,7 @@ export function ProjectWorkspaceBody({
           they carry order-6 so they sit below the ordered sections (the un-
           ordered default order-0 would otherwise float them above SUB-PROJECTS). */}
       <div className={cn("flex flex-col gap-4", isPage && "order-6")}>
-        {error && <p className="font-body text-body text-red">▸ {error}</p>}
+        {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
 
         {/* Sticky action bar (RF-1): a visible row of labelled buttons —
             FOCUS · DELETE · SAVE · Archive · Duplicate. SAVE flushes the locally
@@ -880,7 +882,7 @@ function SubProjectRow({
         onClick={onOpen}
         className="flex min-w-[8rem] flex-1 items-center gap-2 text-left focus:outline-none focus-visible:underline"
       >
-        <span className="min-w-0 flex-1 truncate font-h2 text-h2 text-cyan hover:text-glow-cyan">
+        <span className="min-w-0 flex-1 truncate font-h2 text-h2 text-cyan-lite hover:text-glow-cyan">
           {child.title}
         </span>
         <TypeChip type={child.type} />
@@ -957,7 +959,7 @@ function ProgressStat({
 }) {
   return (
     <span className="flex min-w-0 items-baseline gap-1.5">
-      <span aria-hidden className={cn("shrink-0", accent === "green" ? "text-green" : "text-cyan")}>
+      <span aria-hidden className={cn("shrink-0", accent === "green" ? "text-green" : "text-cyan-lite")}>
         {glyph}
       </span>
       <span

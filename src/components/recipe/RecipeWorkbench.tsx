@@ -192,7 +192,7 @@ export function RecipeWorkbench({
               type="button"
               onClick={() => router.push("/recipes/new")}
               // ≥44px tap target on touch widths, compact on desktop (UX-011).
-              className="inline-flex min-h-[44px] items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-cyan/85 md:min-h-0"
+              className="inline-flex min-h-[44px] items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-white transition-colors hover:bg-cyan/85 md:min-h-0"
             >
               + NEW
             </button>
@@ -248,7 +248,7 @@ export function RecipeWorkbench({
                       <span
                         className={cn(
                           "block truncate font-mono text-[13px] font-bold",
-                          isSel ? "text-cyan" : "text-fg-bright",
+                          isSel ? "text-cyan-lite" : "text-fg-bright",
                         )}
                       >
                         {r.name}
@@ -283,9 +283,9 @@ export function RecipeWorkbench({
                 className={cn(
                   // Padded ≥44px tap target on touch widths; stays compact on
                   // desktop via md: overrides (UX-011).
-                  "inline-flex min-h-[44px] items-center border-b-2 px-1 font-mono text-[11px] font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan md:min-h-0 md:px-0 md:pb-0.5",
+                  "inline-flex min-h-[44px] items-center border-b-2 px-1 font-mono text-[11px] font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite md:min-h-6 md:px-0 md:pb-0.5",
                   active
-                    ? "border-cyan text-cyan"
+                    ? "border-cyan text-cyan-lite"
                     : "border-transparent text-fg-dim hover:text-fg",
                 )}
               >
@@ -311,7 +311,7 @@ export function RecipeWorkbench({
             <button
               type="button"
               onClick={() => setMobileDetail(false)}
-              className="-mb-2 inline-flex min-h-[44px] w-fit items-center gap-1.5 font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim transition-colors hover:text-cyan md:hidden"
+              className="-mb-2 inline-flex min-h-[44px] w-fit items-center gap-1.5 font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim transition-colors hover:text-cyan-lite md:hidden"
             >
               <span aria-hidden>‹</span> Recipes
             </button>
@@ -331,7 +331,7 @@ export function RecipeWorkbench({
                   <button
                     type="button"
                     onClick={share}
-                    className="inline-flex items-center rounded-[6px] border border-border px-4 py-2.5 font-mono text-[12px] font-bold text-fg-bright transition-colors hover:border-cyan/50 hover:text-cyan"
+                    className="inline-flex items-center rounded-[6px] border border-border px-4 py-2.5 font-mono text-[12px] font-bold text-fg-bright transition-colors hover:border-cyan/50 hover:text-cyan-lite"
                   >
                     ⬡ SHARE LINK
                   </button>
@@ -404,7 +404,7 @@ export function RecipeWorkbench({
               <button
                 type="button"
                 onClick={addSlot}
-                className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-cyan/40 py-3 font-mono text-[13px] font-bold uppercase tracking-wide text-cyan transition-colors hover:bg-cyan/5"
+                className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-cyan/40 py-3 font-mono text-[13px] font-bold uppercase tracking-wide text-cyan-lite transition-colors hover:bg-cyan/5"
               >
                 + ADD STEP
               </button>
@@ -428,10 +428,29 @@ export function RecipeWorkbench({
               </button>
             </div>
           </div>
+        ) : recipes.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
+            <div className="flex flex-col gap-1.5">
+              <p className="font-display text-[14px] font-bold uppercase tracking-wide text-fg">
+                No recipes yet
+              </p>
+              <p className="max-w-xs font-mono text-[13px] leading-relaxed text-fg-dim">
+                A recipe saves a paint sequence — base, layer, highlight — that you
+                can reuse across projects.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push("/recipes/new")}
+              className="inline-flex items-center rounded-[6px] bg-cyan px-4 py-2.5 font-display text-[12px] font-bold uppercase tracking-tight text-white transition-colors hover:bg-cyan/85"
+            >
+              Create your first recipe
+            </button>
+          </div>
         ) : (
           <div className="flex flex-1 items-center justify-center p-8">
             <p className="font-mono text-[13px] text-fg-dim">
-              Select a recipe from the list, or create a new one.
+              Select a recipe from the list to view it here.
             </p>
           </div>
         )}

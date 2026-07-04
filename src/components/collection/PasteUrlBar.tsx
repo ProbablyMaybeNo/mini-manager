@@ -43,8 +43,8 @@ function KindToggle({
               "rounded-[6px] border px-4 py-1.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
               "border-cyan",
               active
-                ? "bg-cyan text-bg"
-                : "bg-transparent text-cyan hover:bg-cyan/10",
+                ? "bg-cyan text-white"
+                : "bg-transparent text-cyan-lite hover:bg-cyan/10",
             )}
           >
             {opt.label}
@@ -84,6 +84,7 @@ export function PasteUrlBar({
         <KindToggle value={kind} onChange={setKind} />
         <Input
           name="paste-url"
+          aria-label="Paste a store URL"
           placeholder="Paste a store URL…"
           value={url}
           onChange={(e) => setUrl(e.target.value)}

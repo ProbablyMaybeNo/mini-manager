@@ -165,7 +165,7 @@ export function EyedropperTool({
                 busy && "cursor-progress opacity-60",
               )}
             >
-              <span className="label-osd text-cyan">
+              <span className="label-osd text-cyan-lite">
                 ⬚ Drop or capture image
               </span>
               <span className="font-body text-body text-fg">
@@ -190,7 +190,7 @@ export function EyedropperTool({
           </>
         )}
         {error && (
-          <p role="alert" className="font-body text-body text-red">
+          <p role="alert" className="font-body text-body text-red-text">
             {error}
           </p>
         )}
@@ -240,7 +240,7 @@ export function EyedropperTool({
               aria-label="Remove a dropper"
               disabled={dropperCount <= MIN_DROPPERS}
               onClick={() => changeDroppers(-1)}
-              className="font-button text-button h-7 w-7 border border-cyan/40 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+              className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-7 md:min-w-7"
             >
               −
             </button>
@@ -252,7 +252,7 @@ export function EyedropperTool({
               aria-label="Add a dropper"
               disabled={dropperCount >= MAX_DROPPERS}
               onClick={() => changeDroppers(1)}
-              className="font-button text-button h-7 w-7 border border-cyan/40 text-cyan hover:bg-cyan/10 disabled:opacity-30"
+              className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-7 md:min-w-7"
             >
               +
             </button>

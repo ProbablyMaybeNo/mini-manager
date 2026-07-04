@@ -274,7 +274,7 @@ export function ColourWheelTool({
                     type="button"
                     aria-expanded={isExpanded}
                     onClick={() => toggleExpanded(hex)}
-                    className="flex min-h-11 items-center gap-1 self-start label-osd text-fg-faint hover:text-cyan md:min-h-0"
+                    className="flex min-h-11 items-center gap-1 self-start label-osd text-fg-faint hover:text-cyan-lite md:min-h-6"
                   >
                     <span aria-hidden className={cn("transition-transform", isExpanded && "rotate-90")}>
                       ▸

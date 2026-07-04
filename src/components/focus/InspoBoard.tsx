@@ -62,6 +62,7 @@ export function InspoBoard({
       <div className="flex gap-2">
         <Input
           name="focus-inspo"
+          aria-label="Add an inspiration URL"
           placeholder="Paste URL to add inspo"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
