@@ -279,7 +279,7 @@ export function ProjectPanelStack({
               // active tab are non-colour active cues (MUX-006).
               "flex min-h-11 items-center gap-2 border border-b-2 px-2 py-1",
               selected
-                ? "border-cyan border-b-cyan bg-cyan/10 text-cyan"
+                ? "border-cyan border-b-cyan bg-cyan/10 text-cyan-lite"
                 : "border-cyan/20 border-b-transparent text-fg-dim hover:border-cyan/50",
             )}
           >

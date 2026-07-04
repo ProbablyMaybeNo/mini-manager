@@ -304,7 +304,7 @@ const TooltipCard = forwardRef<HTMLDivElement, CardProps>(function TooltipCard(
 
       {/* Tech label + step counter */}
       <div className="mb-2 flex items-center justify-between">
-        <span className="label-osd-h2 text-cyan text-glow-cyan">{step.title}</span>
+        <span className="label-osd-h2 text-cyan-lite text-glow-cyan">{step.title}</span>
         <span className="label-osd tracking-[0.2em] text-fg-dim">
           {index + 1}/{total}
         </span>

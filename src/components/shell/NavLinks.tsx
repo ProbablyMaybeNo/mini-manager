@@ -36,10 +36,10 @@ export function NavLinks({
                 // left border doubles as the active indicator (style guide 1:191)
                 // and reserves a transparent 2px on inactive rows so the label
                 // baseline never shifts on activation.
-                "relative flex min-h-11 items-center gap-3 border-l-2 pl-5 pr-3 font-mono text-[13px] uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:bg-cyan/10 focus-visible:text-cyan",
+                "relative flex min-h-11 items-center gap-3 border-l-2 pl-5 pr-3 font-mono text-[13px] uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:bg-cyan/10 focus-visible:text-cyan-lite",
                 isActive
-                  ? "border-cyan bg-cyan/[0.06] font-bold text-cyan"
-                  : "border-transparent text-fg hover:bg-fg/[0.04] hover:text-cyan",
+                  ? "border-cyan bg-cyan/[0.06] font-bold text-cyan-lite"
+                  : "border-transparent text-fg hover:bg-fg/[0.04] hover:text-cyan-lite",
               )}
             >
               {Icon && <Icon size={16} strokeWidth={2} className="shrink-0" aria-hidden />}

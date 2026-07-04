@@ -34,7 +34,7 @@ import { PixelWheelRing } from "./PixelWheelRing";
  */
 function matchQuality(deltaE: number): { label: string; cls: string } {
   if (deltaE <= 1) return { label: "EXACT", cls: "bg-green/15 border-green/25 text-green" };
-  if (deltaE <= 2) return { label: "NEAR", cls: "bg-cyan/15 border-cyan/25 text-cyan" };
+  if (deltaE <= 2) return { label: "NEAR", cls: "bg-cyan/15 border-cyan/25 text-cyan-lite" };
   if (deltaE <= 5) return { label: "CLOSE", cls: "bg-cyan/10 border-cyan/20 text-cyan/80" };
   if (deltaE <= 10) return { label: "SIMILAR", cls: "bg-yellow/15 border-yellow/25 text-yellow" };
   return { label: "FAR", cls: "bg-fg/5 border-border text-fg-dim" };
@@ -170,7 +170,7 @@ export function ColorPicker({
 
       {/* Sub-panel 1 — wheel + harmony + sliders */}
       <section aria-labelledby="cp-wheel-heading" className="flex flex-col gap-3">
-        <h3 id="cp-wheel-heading" className="label-osd text-cyan">
+        <h3 id="cp-wheel-heading" className="label-osd text-cyan-lite">
           Wheel
         </h3>
         <PixelWheelRing hue={hue} onChange={handleHueChange} />
@@ -232,7 +232,7 @@ export function ColorPicker({
 
       {/* Sub-panel 2 — library */}
       <section aria-labelledby="cp-library-heading" className="flex flex-col gap-3">
-        <h3 id="cp-library-heading" className="label-osd text-cyan">
+        <h3 id="cp-library-heading" className="label-osd text-cyan-lite">
           Library
         </h3>
         <input
@@ -309,12 +309,12 @@ export function ColorPicker({
 
       {/* Sub-panel 3 — eyedropper */}
       <section aria-labelledby="cp-eyedrop-heading" className="flex flex-col gap-3">
-        <h3 id="cp-eyedrop-heading" className="label-osd text-cyan">
+        <h3 id="cp-eyedrop-heading" className="label-osd text-cyan-lite">
           Eyedropper
         </h3>
         <PickerDropZone onFile={handleEyeFile} disabled={eyeBusy} />
         {eyeError && (
-          <p role="alert" className="font-body text-body text-red">
+          <p role="alert" className="font-body text-body text-red-text">
             {eyeError}
           </p>
         )}
@@ -429,7 +429,7 @@ function PickerDropZone({
         disabled && "cursor-progress opacity-60",
       )}
     >
-      <p className="label-osd text-cyan">⬚ Drop image</p>
+      <p className="label-osd text-cyan-lite">⬚ Drop image</p>
       <p className="mt-1 font-body text-body text-fg">
         click to pick · or paste (Ctrl/⌘+V) · JPG/PNG/WebP/GIF
       </p>

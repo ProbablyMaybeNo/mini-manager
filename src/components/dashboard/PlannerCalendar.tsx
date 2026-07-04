@@ -122,7 +122,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             type="button"
             onClick={() => shiftMonth(-1)}
             aria-label="Previous month"
-            className="inline-flex h-11 w-11 items-center justify-center text-fg-dim hover:text-cyan"
+            className="inline-flex h-11 w-11 items-center justify-center text-fg-dim hover:text-cyan-lite"
           >
             ‹
           </button>
@@ -130,7 +130,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
             type="button"
             onClick={() => shiftMonth(1)}
             aria-label="Next month"
-            className="inline-flex h-11 w-11 items-center justify-center text-fg-dim hover:text-cyan"
+            className="inline-flex h-11 w-11 items-center justify-center text-fg-dim hover:text-cyan-lite"
           >
             ›
           </button>
@@ -173,7 +173,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                 aria-label="Open date picker"
                 aria-expanded={pickerOpen}
                 onClick={() => setPickerOpen((o) => !o)}
-                className="mb-px shrink-0 border border-cyan/50 px-2 py-1 font-button text-button text-cyan hover:bg-cyan/10"
+                className="mb-px shrink-0 border border-cyan/50 px-2 py-1 font-button text-button text-cyan-lite hover:bg-cyan/10"
               >
                 ▦
               </button>
@@ -191,7 +191,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                         return base.toISOString().slice(0, 10);
                       })
                     }
-                    className="inline-flex h-11 min-w-11 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
+                    className="inline-flex h-11 min-w-11 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan-lite"
                   >
                     ‹
                   </button>
@@ -205,7 +205,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                         return base.toISOString().slice(0, 10);
                       })
                     }
-                    className="inline-flex h-11 min-w-11 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan"
+                    className="inline-flex h-11 min-w-11 items-center justify-center px-1 font-button text-button text-fg hover:text-cyan-lite"
                   >
                     ›
                   </button>
@@ -260,7 +260,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
           >
             ▪ {kind}
           </span>
-          {error && <p className="font-body text-body text-red">▸ {error}</p>}
+          {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={busy}>
               {busy ? "Adding…" : "Add"}
@@ -284,7 +284,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="flex h-8 w-full items-center justify-center rounded-[6px] border border-border font-mono text-[11px] text-fg-dim transition-colors hover:border-cyan/50 hover:text-cyan focus:outline-none focus-visible:border-cyan"
+          className="flex h-8 w-full items-center justify-center rounded-[6px] border border-border font-mono text-[11px] text-fg-dim transition-colors hover:border-cyan/50 hover:text-cyan-lite focus:outline-none focus-visible:border-cyan"
         >
           + ADD DATE
         </button>

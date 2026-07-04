@@ -50,12 +50,12 @@ function Verify() {
             ▸ Recovery email verified. Password resets can now be sent to it.
           </p>
         ) : (
-          <p className="font-body text-body text-red">▸ {message}</p>
+          <p className="font-body text-body text-red-text">▸ {message}</p>
         )}
         <div className="mt-4">
           <Link
             href="/user/account"
-            className="label-osd text-cyan underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
+            className="label-osd text-cyan-lite underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
           >
             ← Back to account
           </Link>

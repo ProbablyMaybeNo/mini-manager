@@ -115,8 +115,8 @@ function BrandChip({
         // min-h-6 keeps the hit area ≥24px (WCAG 2.2 §2.5.8).
         "inline-flex min-h-6 items-center border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
         active
-          ? "border-cyan bg-cyan/15 text-cyan"
-          : "border-cyan/40 text-fg hover:border-cyan hover:text-cyan",
+          ? "border-cyan bg-cyan/15 text-cyan-lite"
+          : "border-cyan/40 text-fg hover:border-cyan hover:text-cyan-lite",
       )}
     >
       {label}
@@ -134,7 +134,7 @@ function RecipeCard({ recipe }: { recipe: GalleryRecipeCard }) {
         cornerTicks
         className="flex h-full flex-col gap-3 p-4 transition-shadow group-hover:shadow-[0_0_6px_rgba(0,210,255,0.35)]"
       >
-        <h2 className="font-h1 text-h1 text-cyan group-hover:text-glow-cyan">
+        <h2 className="font-h1 text-h1 text-cyan-lite group-hover:text-glow-cyan">
           {recipe.name}
         </h2>
 

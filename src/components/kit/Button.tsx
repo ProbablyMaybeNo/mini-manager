@@ -30,11 +30,11 @@ const button = cva(
       variant: {
         /* ---- Tiers (cyan-led primary, per the buttons sheet) ---- */
         primary:
-          "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
+          "border border-cyan bg-cyan text-white hover:bg-cyan/85",
         secondary:
           "border border-border bg-transparent text-fg hover:bg-fg/5 hover:border-fg/25",
         tertiary:
-          "border-0 bg-transparent text-fg-dim underline-offset-4 hover:text-cyan hover:underline",
+          "border-0 bg-transparent text-fg-dim underline-offset-4 hover:text-cyan-lite hover:underline",
         danger:
           "border border-red bg-red text-bg hover:bg-red/85",
 
@@ -44,21 +44,21 @@ const button = cva(
            `attach` as the neutral secondary outline (variant names kept to avoid
            a churny call-site rename). Wishlist add keeps yellow (real semantic). */
         add:
-          "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
+          "border border-cyan bg-cyan text-white hover:bg-cyan/85",
         addWishlist:
           "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
         attach:
           "border border-border bg-transparent text-fg hover:bg-fg/5 hover:border-fg/25",
 
         /* ---- Solid fills (colour fill + dark text) ---- */
-        solidCyan: "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
+        solidCyan: "border border-cyan bg-cyan text-white hover:bg-cyan/85",
         solidGreen: "border border-green bg-green text-bg hover:bg-green/85",
         solidYellow: "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
         solidPurple: "border border-purple bg-purple text-bg hover:bg-purple/85",
         solidRed: "border border-red bg-red text-bg hover:bg-red/85",
 
         /* ---- Outlines (colour border + transparent fill + colour text) ---- */
-        outlineCyan: "border border-cyan/60 bg-transparent text-cyan hover:bg-cyan/10 hover:border-cyan",
+        outlineCyan: "border border-cyan/60 bg-transparent text-cyan-lite hover:bg-cyan/10 hover:border-cyan",
         outlineGreen: "border border-green/60 bg-transparent text-green hover:bg-green/10 hover:border-green",
         outlineYellow: "border border-yellow/60 bg-transparent text-yellow hover:bg-yellow/10 hover:border-yellow",
         outlinePurple: "border border-purple/60 bg-transparent text-purple hover:bg-purple/10 hover:border-purple",

@@ -125,7 +125,7 @@ export function DateField({
               type="button"
               aria-label="Previous month"
               onClick={() => stepMonth(-1)}
-              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-button text-button text-cyan hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
+              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-button text-button text-cyan-lite hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
             >
               ‹
             </button>
@@ -133,7 +133,7 @@ export function DateField({
               type="button"
               aria-label="Next month"
               onClick={() => stepMonth(1)}
-              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-button text-button text-cyan hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
+              className="flex h-6 w-6 items-center justify-center border border-cyan/30 font-button text-button text-cyan-lite hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
             >
               ›
             </button>

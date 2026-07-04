@@ -34,7 +34,7 @@ export function SettingsView({
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel label="PLAN" className="flex flex-col gap-3 p-5">
           <div className="flex items-baseline justify-between">
-            <span className="font-display text-base font-bold text-cyan">{plan.name}</span>
+            <span className="font-display text-base font-bold text-cyan-lite">{plan.name}</span>
             {plan.renews && (
               <span className="font-body text-body text-fg-dim">Renews {plan.renews}</span>
             )}

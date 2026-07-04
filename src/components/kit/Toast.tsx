@@ -45,7 +45,7 @@ export function useToast(): {
       ? "border-green text-green shadow-[0_0_24px_rgba(81,253,128,0.2)]"
       : state?.tone === "red"
         ? "border-red text-red shadow-[0_0_24px_rgba(255,66,66,0.2)]"
-        : "border-cyan text-cyan shadow-[0_0_24px_rgba(0,210,255,0.2)]";
+        : "border-cyan text-cyan-lite shadow-[0_0_24px_rgba(0,210,255,0.2)]";
 
   return {
     toast,

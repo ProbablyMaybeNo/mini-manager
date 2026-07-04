@@ -37,7 +37,7 @@ export function TourReplayButton({
       className={cn(
         // Mirror NavLinks' inactive item styling (icon+label, 44px row, mono)
         // so it sits flush in the V2 rail.
-        "flex min-h-11 w-full items-center gap-3 pl-5 pr-3 text-left font-mono text-[13px] uppercase tracking-wide text-fg transition-colors hover:bg-fg/[0.04] hover:text-cyan",
+        "flex min-h-11 w-full items-center gap-3 pl-5 pr-3 text-left font-mono text-[13px] uppercase tracking-wide text-fg transition-colors hover:bg-fg/[0.04] hover:text-cyan-lite",
         className,
       )}
     >

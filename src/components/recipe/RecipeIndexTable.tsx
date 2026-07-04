@@ -67,7 +67,7 @@ export function RecipeIndexTable({
                     e.stopPropagation();
                     onOpenRecipe(r);
                   }}
-                  className="block text-left font-body text-body text-fg hover:text-cyan"
+                  className="block text-left font-body text-body text-fg hover:text-cyan-lite"
                 >
                   {r.name}
                 </button>

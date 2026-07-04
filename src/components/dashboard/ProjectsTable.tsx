@@ -137,7 +137,7 @@ export function ProjectsTable({
                     e.stopPropagation();
                     toggle(p.id);
                   }}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15 focus-visible:text-cyan active:bg-cyan/25"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan-lite focus:outline-none focus-visible:bg-cyan/15 focus-visible:text-cyan-lite active:bg-cyan/25"
                 >
                   <span className={cn("transition-transform duration-150", isExpanded && "rotate-90")}>
                     ▸
@@ -191,7 +191,7 @@ export function ProjectsTable({
             {/* Logged focus time, rolled up over sub-projects (UX-011).
                 Dim "—" when nothing's been logged so empty rows stay quiet. */}
             {rollupProjectMinutes(p, projectMinutes) > 0 ? (
-              <span className="font-num2 text-num2 tabular-nums text-cyan">
+              <span className="font-num2 text-num2 tabular-nums text-cyan-lite">
                 {formatMinutes(rollupProjectMinutes(p, projectMinutes))}
               </span>
             ) : (
@@ -274,7 +274,7 @@ export function ProjectsTable({
                   e.stopPropagation();
                   toggle(p.id);
                 }}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan focus:outline-none focus-visible:bg-cyan/15 active:bg-cyan/25"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan-lite focus:outline-none focus-visible:bg-cyan/15 active:bg-cyan/25"
               >
                 <span className={cn("transition-transform duration-150", isExpanded && "rotate-90")}>
                   ▸
@@ -299,7 +299,7 @@ export function ProjectsTable({
             {/* RF-12: surface priority on the card to match the desktop row. */}
             <PriorityDropdown projectId={p.id} value={p.priority} />
             {minutes > 0 && (
-              <span className="font-num2 text-num2 tabular-nums text-cyan">
+              <span className="font-num2 text-num2 tabular-nums text-cyan-lite">
                 {formatMinutes(minutes)}
               </span>
             )}

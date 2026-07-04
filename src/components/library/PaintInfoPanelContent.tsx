@@ -165,7 +165,7 @@ export function PaintInfoPanelContent({
             interactively + match every leg to real paints. */}
         <Link
           href={`/tools/wheel?hex=${encodeURIComponent(paint.hex)}`}
-          className="mt-2 inline-flex w-fit items-center gap-1 label-osd text-cyan hover:text-glow-cyan"
+          className="mt-2 inline-flex w-fit items-center gap-1 label-osd text-cyan-lite hover:text-glow-cyan"
         >
           ◑ Open in Color Wheel →
         </Link>
@@ -185,7 +185,7 @@ export function PaintInfoPanelContent({
               <button
                 type="button"
                 onClick={() => onAssignPaint(m.paint)}
-                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan-lite hover:bg-cyan/10"
               >
                 Use
               </button>
@@ -205,7 +205,7 @@ export function PaintInfoPanelContent({
               <button
                 type="button"
                 onClick={() => onAssignPaint(p)}
-                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan hover:bg-cyan/10"
+                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan-lite hover:bg-cyan/10"
               >
                 Use
               </button>

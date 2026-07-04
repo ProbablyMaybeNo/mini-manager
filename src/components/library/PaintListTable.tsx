@@ -114,7 +114,7 @@ export function PaintListTable({
                   <button
                     type="button"
                     onClick={() => onOpenPaint(p)}
-                    className="truncate font-body text-body text-fg hover:text-cyan"
+                    className="truncate font-body text-body text-fg hover:text-cyan-lite"
                   >
                     {p.name}
                   </button>

@@ -111,7 +111,7 @@ export function CollectionStatsBar({
     >
       {budget.rows.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-border pb-1.5">
-          <span className="label-osd text-cyan">BUDGET</span>
+          <span className="label-osd text-cyan-lite">BUDGET</span>
           {budget.rows.map((r) => (
             <span
               key={r.id}
@@ -131,14 +131,14 @@ export function CollectionStatsBar({
         </div>
       )}
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
-        <span className="label-osd text-cyan">PAINT:</span>
+        <span className="label-osd text-cyan-lite">PAINT:</span>
         <Stat value={String(stats.paintOwned)} label="OWNED" accent="green" />
         <Stat value={String(stats.paintWishlist)} label="WISHLIST" accent="cyan" />
         <Stat value={money(stats.paintSpend)} label="TOTAL SPENT" accent="green" />
         <Stat value={money(stats.paintRemaining)} label="TOTAL REMAINING" accent="yellow" />
       </div>
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
-        <span className="label-osd text-cyan">MODELS:</span>
+        <span className="label-osd text-cyan-lite">MODELS:</span>
         <Stat value={String(stats.modelWishlist)} label="WISHLIST" accent="cyan" />
         <Stat value={String(stats.modelOwned)} label="OWNED" accent="green" />
         <Stat value={String(stats.modelComplete)} label="COMPLETE" accent="green" />

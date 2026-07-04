@@ -173,7 +173,7 @@ export function RecipeEditorView({
         <button
           type="button"
           onClick={addSlot}
-          className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-cyan/40 py-3 font-mono text-body font-bold uppercase tracking-wide text-cyan transition-colors hover:bg-cyan/5"
+          className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-cyan/40 py-3 font-mono text-body font-bold uppercase tracking-wide text-cyan-lite transition-colors hover:bg-cyan/5"
         >
           + Add Step
         </button>

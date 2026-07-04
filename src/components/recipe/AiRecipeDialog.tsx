@@ -230,7 +230,7 @@ function ComposeForm({
         }}
         className="w-full resize-y border border-cyan/40 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
       />
-      {error && <p className="font-body text-body text-red">▸ {error}</p>}
+      {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
       <div className="flex flex-col gap-1">
         <span className="label-osd text-fg-dim">Try</span>
         <div className="flex flex-wrap gap-1.5">
@@ -240,7 +240,7 @@ function ComposeForm({
               type="button"
               onClick={() => onCommand(s)}
               disabled={loading}
-              className="border border-cyan/30 px-2 py-1 font-body text-[0.7rem] text-fg-dim hover:border-cyan hover:text-cyan"
+              className="border border-cyan/30 px-2 py-1 font-body text-[0.7rem] text-fg-dim hover:border-cyan hover:text-cyan-lite"
             >
               {s}
             </button>

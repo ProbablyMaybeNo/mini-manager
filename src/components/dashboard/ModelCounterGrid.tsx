@@ -107,7 +107,7 @@ export function ModelCounterGrid({ project }: { project: Project }) {
             aria-label="Decrease model count"
             disabled={pending || total <= 0}
             onClick={() => setTotal(total - 1)}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
           >
             −
           </button>
@@ -117,7 +117,7 @@ export function ModelCounterGrid({ project }: { project: Project }) {
             aria-label="Increase model count"
             disabled={pending || total >= 9999}
             onClick={() => setTotal(total + 1)}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
           >
             +
           </button>
@@ -140,7 +140,7 @@ export function ModelCounterGrid({ project }: { project: Project }) {
                   aria-label={`Decrease ${row.label}`}
                   disabled={!snap || pending || value <= 0}
                   onClick={() => step(row.stage, row.column, -1)}
-                  className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
                 >
                   −
                 </button>
@@ -152,7 +152,7 @@ export function ModelCounterGrid({ project }: { project: Project }) {
                   aria-label={`Increase ${row.label}`}
                   disabled={!snap || pending || value >= total}
                   onClick={() => step(row.stage, row.column, 1)}
-                  className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-8 md:min-w-8"
                 >
                   +
                 </button>
@@ -175,10 +175,10 @@ export function ModelCounterGrid({ project }: { project: Project }) {
         <div className="min-w-0 flex-1">
           <ProgressBar percent={overall} accent={overall >= 100 ? "green" : "cyan"} showLabel={false} />
         </div>
-        <span className="shrink-0 font-num2 text-num2 font-bold tabular-nums text-cyan">{overall}%</span>
+        <span className="shrink-0 font-num2 text-num2 font-bold tabular-nums text-cyan-lite">{overall}%</span>
       </div>
 
-      {error && <p className="font-body text-body text-red">▸ {error}</p>}
+      {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
     </div>
   );
 }

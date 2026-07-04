@@ -110,7 +110,7 @@ export function AccountView({
               </Button>
             </div>
             {billingError && (
-              <p className="font-body text-body text-red" role="alert">
+              <p className="font-body text-body text-red-text" role="alert">
                 ▸ {billingError}
               </p>
             )}

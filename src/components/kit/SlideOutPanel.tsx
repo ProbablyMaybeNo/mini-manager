@@ -64,7 +64,7 @@ export function SlideOutPanel({
                 {breadcrumb}
               </div>
             )}
-            <h2 className="label-osd-h2 text-cyan">
+            <h2 className="label-osd-h2 text-cyan-lite">
               {title}
             </h2>
           </div>
@@ -86,7 +86,7 @@ export function SlideOutPanel({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-11 w-full items-center justify-center border border-cyan/40 font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan focus:outline-none focus-visible:border-cyan focus-visible:text-cyan"
+              className="flex h-11 w-full items-center justify-center border border-cyan/40 font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan-lite focus:outline-none focus-visible:border-cyan focus-visible:text-cyan-lite"
             >
               ✕ Close
             </button>

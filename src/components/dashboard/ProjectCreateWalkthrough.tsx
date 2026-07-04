@@ -345,7 +345,7 @@ const WalkthroughCard = forwardRef<HTMLDivElement, CardProps>(
         {showArrow && <span className={arrowBySide[side]} aria-hidden="true" />}
 
         <div className="mb-2 flex items-center justify-between gap-3">
-          <span className="font-mono text-[12px] font-bold uppercase tracking-wide text-cyan">
+          <span className="font-mono text-[12px] font-bold uppercase tracking-wide text-cyan-lite">
             {step.title}
           </span>
           <span className="font-mono text-[11px] tracking-[0.2em] text-fg-dim">

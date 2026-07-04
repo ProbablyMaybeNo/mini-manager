@@ -14,7 +14,7 @@ export function SchemePreview({ slots }: { slots: RecipeSlot[] }) {
   if (slots.length === 0) return null;
   return (
     <div className="flex flex-col gap-2 border border-cyan/20 bg-bg/40 p-3">
-      <span className="label-osd text-cyan">▸ Live scheme · base → highlight</span>
+      <span className="label-osd text-cyan-lite">▸ Live scheme · base → highlight</span>
       {/* The continuous strip mirrors the recipe-list preview — one block per
           layer, in order, with the layer label printed on the swatch in a
           contrast-safe ink. */}

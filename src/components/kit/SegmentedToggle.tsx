@@ -46,7 +46,7 @@ export function SegmentedToggle<T extends string>({
             className={cn(
               "rounded-[5px] px-3 py-1 font-button text-button uppercase tracking-[0.15em] transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan",
               active
-                ? "bg-cyan text-bg"
+                ? "bg-cyan text-white"
                 : "text-fg-dim hover:bg-fg/5 hover:text-fg",
               disabled && "cursor-not-allowed",
             )}

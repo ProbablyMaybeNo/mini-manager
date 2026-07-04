@@ -57,7 +57,7 @@ export function Stopwatch({
         <span
           className={cn(
             "font-num1 text-num1 tabular-nums",
-            running ? "text-green text-glow-green" : "text-cyan",
+            running ? "text-green text-glow-green" : "text-cyan-lite",
           )}
         >
           {fmt(elapsed)}
@@ -78,7 +78,7 @@ export function Stopwatch({
           <button
             type="button"
             onClick={logSession}
-            className="border border-cyan/60 px-3 py-1.5 font-button text-button uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
+            className="border border-cyan/60 px-3 py-1.5 font-button text-button uppercase tracking-[0.15em] text-cyan-lite hover:bg-cyan/10"
           >
             Log
           </button>

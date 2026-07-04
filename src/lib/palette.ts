@@ -24,12 +24,14 @@ export type Accent =
   | "priority-high";
 
 export const accentText: Record<Accent, string> = {
-  cyan: "text-cyan",
+  // Blue + red as TEXT use the lighter/text-safe steps so they clear AA on the
+  // dark bg (the saturated #0b78b3 / #f7143e stay for fills/borders/icons).
+  cyan: "text-cyan-lite",
   green: "text-green",
   yellow: "text-yellow",
   orange: "text-orange",
   purple: "text-purple",
-  red: "text-red",
+  red: "text-red-text",
   // `dim` now renders the ONE genuine muted grey (SHELVED / inactive), not the
   // whitened fg-dim — see --color-fg-muted in globals.css.
   dim: "text-fg-muted",

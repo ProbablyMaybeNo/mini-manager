@@ -28,7 +28,7 @@ const TECHNIQUE_ACCENT: Record<Technique, Accent> = {
 };
 
 const pillTint: Record<Accent, string> = {
-  cyan: "border-cyan/50 text-cyan",
+  cyan: "border-cyan/50 text-cyan-lite",
   green: "border-green/50 text-green",
   yellow: "border-yellow/50 text-yellow",
   orange: "border-orange/50 text-orange",
@@ -114,7 +114,7 @@ export function SlotRow({
       >
         <Swatch hex={slot.swatch} size="md" className="shrink-0 rounded-full" />
         <span className="min-w-0">
-          <span className="block truncate font-mono text-body text-fg-bright hover:text-cyan">
+          <span className="block truncate font-mono text-body text-fg-bright hover:text-cyan-lite">
             {slot.name}
           </span>
           <span className="block truncate font-mono text-[11px] text-fg-dim">{slot.brand}</span>
@@ -169,7 +169,7 @@ function ReorderBtn({
         "flex h-6 w-7 items-center justify-center rounded-[4px] font-button text-[8px] leading-none transition-colors",
         disabled
           ? "text-fg-faint/30"
-          : "text-cyan hover:bg-cyan/10 hover:text-fg-bright",
+          : "text-cyan-lite hover:bg-cyan/10 hover:text-fg-bright",
       )}
     >
       {children}

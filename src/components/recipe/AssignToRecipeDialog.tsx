@@ -136,7 +136,7 @@ export function AssignToRecipeDialog({
       </div>
 
       {error && (
-        <p className="mt-3 font-body text-body text-red" role="alert">
+        <p className="mt-3 font-body text-body text-red-text" role="alert">
           ▸ {error}
         </p>
       )}

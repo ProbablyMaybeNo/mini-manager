@@ -262,7 +262,7 @@ export function DashboardView({
                       aria-label="Filter roster"
                       title="Filter roster"
                       onClick={() => setRosterFilter((f) => (f === "ALL" ? "IN PROGRESS" : "ALL"))}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
                     >
                       <FilterIcon />
                     </button>
@@ -271,7 +271,7 @@ export function DashboardView({
                       aria-label="New project"
                       title="New project"
                       onClick={startCreate}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
                     >
                       <PlusCircleIcon />
                     </button>
@@ -340,14 +340,14 @@ export function DashboardView({
           aria-label="Open planner — upcoming events"
           className="flex w-full items-center gap-3 border-t border-border bg-surface px-4 py-3 text-left hover:bg-cyan/5 focus:outline-none focus-visible:bg-cyan/10 xl:hidden"
         >
-          <span aria-hidden className="shrink-0 text-cyan">🗓</span>
+          <span aria-hidden className="shrink-0 text-cyan-lite">🗓</span>
           <span className="shrink-0 label-osd text-fg">Upcoming events</span>
           <span className="min-w-0 flex-1 truncate font-body text-body text-fg-dim">
             {status === "ready" && upcomingEvents.length > 0
               ? upcomingEvents[0].name
               : "Nothing scheduled"}
           </span>
-          <span aria-hidden className="shrink-0 text-cyan">›</span>
+          <span aria-hidden className="shrink-0 text-cyan-lite">›</span>
         </button>
       </div>
 
@@ -424,7 +424,7 @@ function LoadingState() {
 function ErrorState({ onRetry }: { onRetry?: () => void }) {
   return (
     <Panel label="ERROR" accent="red" className="max-w-md p-6">
-      <p className="font-body text-body text-red">▸ Couldn’t load your dashboard.</p>
+      <p className="font-body text-body text-red-text">▸ Couldn’t load your dashboard.</p>
       <p className="mt-2 font-body text-body text-fg">
         The connection dropped. Check your network and try again.
       </p>

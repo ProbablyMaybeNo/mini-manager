@@ -42,7 +42,7 @@ function accentFor(filter: RosterFilter): Accent {
 /** Filled-chip classes when a chip is the active filter (colour fill + dark
  *  text), per the 4:4 active-chip treatment (ALL/NEARLY DONE shown filled). */
 const activeFill: Record<Accent, string> = {
-  cyan: "bg-cyan border-cyan text-bg",
+  cyan: "bg-cyan border-cyan text-white",
   green: "bg-green border-green text-bg",
   yellow: "bg-yellow border-yellow text-bg",
   orange: "bg-orange border-orange text-bg",
@@ -57,7 +57,7 @@ const activeFill: Record<Accent, string> = {
 
 /** Ghost/outline chip classes when inactive (colour border + colour text). */
 const ghost: Record<Accent, string> = {
-  cyan: "border-cyan/40 text-cyan hover:bg-cyan/10",
+  cyan: "border-cyan/40 text-cyan-lite hover:bg-cyan/10",
   green: "border-green/40 text-green hover:bg-green/10",
   yellow: "border-yellow/40 text-yellow hover:bg-yellow/10",
   orange: "border-orange/40 text-orange hover:bg-orange/10",

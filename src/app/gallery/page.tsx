@@ -30,7 +30,7 @@ export default async function GalleryPage() {
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
         <header className="mb-8 flex flex-col gap-2">
-          <h1 className="font-title text-title text-cyan text-glow-cyan">
+          <h1 className="font-title text-title text-cyan-lite text-glow-cyan">
             Recipe Gallery
           </h1>
           <p className="max-w-2xl font-body text-body text-fg">
@@ -50,7 +50,7 @@ export default async function GalleryPage() {
             <div className="flex justify-center pb-4">
               <Link
                 href="/sign-up"
-                className="border border-cyan bg-cyan/15 px-4 py-2 font-button text-button uppercase tracking-[0.15em] text-cyan hover:bg-cyan/25"
+                className="border border-cyan bg-cyan/15 px-4 py-2 font-button text-button uppercase tracking-[0.15em] text-cyan-lite hover:bg-cyan/25"
               >
                 Start for Free
               </Link>

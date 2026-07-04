@@ -73,7 +73,7 @@ export function ExtensionTokenPanel({
             <button
               type="button"
               onClick={copy}
-              className="shrink-0 font-osd text-xs text-cyan hover:text-fg focus:outline-none"
+              className="shrink-0 font-osd text-xs text-cyan-lite hover:text-fg focus:outline-none"
             >
               {copied ? "COPIED ✓" : "COPY"}
             </button>
@@ -86,7 +86,7 @@ export function ExtensionTokenPanel({
       )}
 
       {error && (
-        <p className="font-body text-body text-red" role="alert">
+        <p className="font-body text-body text-red-text" role="alert">
           ▸ {error}
         </p>
       )}

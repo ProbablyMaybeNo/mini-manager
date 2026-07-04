@@ -42,7 +42,7 @@ export function InspectorPane({
           {breadcrumb && (
             <div className="label-osd tracking-[0.2em] text-fg">{breadcrumb}</div>
           )}
-          <h2 className="label-osd-h2 text-cyan">{title}</h2>
+          <h2 className="label-osd-h2 text-cyan-lite">{title}</h2>
         </div>
         <CloseButton
           onClick={onClose}

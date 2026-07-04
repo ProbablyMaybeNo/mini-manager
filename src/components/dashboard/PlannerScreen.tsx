@@ -43,13 +43,13 @@ export function PlannerScreen({
           type="button"
           onClick={onClose}
           aria-label="Back"
-          className="flex h-11 w-11 shrink-0 items-center justify-center text-cyan hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
+          className="flex h-11 w-11 shrink-0 items-center justify-center text-cyan-lite hover:bg-cyan/10 focus:outline-none focus-visible:bg-cyan/15"
         >
           <span aria-hidden className="text-h2">‹</span>
         </button>
         <div className="min-w-0">
           <div className="label-osd tracking-[0.2em] text-fg">DASHBOARD ▸</div>
-          <h2 className="truncate label-osd-h2 text-cyan">PLANNER</h2>
+          <h2 className="truncate label-osd-h2 text-cyan-lite">PLANNER</h2>
         </div>
       </header>
 

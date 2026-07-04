@@ -7,7 +7,7 @@ export function AuthError({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] rounded-[6px] border border-red/50 bg-surface px-4 py-2 text-center font-body text-body text-red panel-depth motion-safe:animate-menu-in"
+      className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] rounded-[6px] border border-red/50 bg-surface px-4 py-2 text-center font-body text-body text-red-text panel-depth motion-safe:animate-menu-in"
     >
       ▸ {message}
     </div>

@@ -54,7 +54,7 @@ export function InstallBanner() {
       className="fixed bottom-4 right-4 z-50 flex max-w-[min(20rem,calc(100vw-2rem))] items-start gap-3 border border-cyan/60 bg-bg px-4 py-3 panel-depth"
     >
       <div className="flex flex-col gap-2">
-        <p className="label-osd tracking-[0.18em] text-cyan">Install app</p>
+        <p className="label-osd tracking-[0.18em] text-cyan-lite">Install app</p>
         <p className="font-body text-body text-fg">
           Add The Mini Mainframe to your device for a full-screen, app-like
           bench.
@@ -67,14 +67,14 @@ export function InstallBanner() {
               // Whatever the user chose, don't show this banner again.
               if (outcome !== "unavailable") dismiss();
             }}
-            className="border border-cyan bg-cyan/15 px-3 py-1 font-button text-button uppercase tracking-[0.15em] text-cyan glow-cyan transition-colors hover:bg-cyan/25"
+            className="border border-cyan bg-cyan/15 px-3 py-1 font-button text-button uppercase tracking-[0.15em] text-cyan-lite glow-cyan transition-colors hover:bg-cyan/25"
           >
             ⬇ Install
           </button>
           <button
             type="button"
             onClick={dismiss}
-            className="border-0 bg-transparent px-2 py-1 font-button text-button uppercase tracking-[0.15em] text-fg-dim underline-offset-4 transition-colors hover:text-cyan hover:underline"
+            className="border-0 bg-transparent px-2 py-1 font-button text-button uppercase tracking-[0.15em] text-fg-dim underline-offset-4 transition-colors hover:text-cyan-lite hover:underline"
           >
             Not now
           </button>

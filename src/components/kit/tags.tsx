@@ -13,7 +13,7 @@ import { StatusIcon } from "./StatusIcon";
 /** Tinted-pill classes per accent: colour@13% fill + colour@25% border +
  *  colour text — the HEX.CODE status-pill / filter-chip treatment (4:4). */
 const pillTint: Record<Accent, string> = {
-  cyan: "bg-cyan/15 border-cyan/25 text-cyan",
+  cyan: "bg-cyan/15 border-cyan/25 text-cyan-lite",
   green: "bg-green/15 border-green/25 text-green",
   yellow: "bg-yellow/15 border-yellow/25 text-yellow",
   orange: "bg-orange/15 border-orange/25 text-orange",

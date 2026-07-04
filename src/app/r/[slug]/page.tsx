@@ -43,7 +43,7 @@ export default async function PublicRecipePage({
       <header className="flex items-center gap-3">
         <Logo href="/" size={40} />
         <div>
-          <h1 className="font-title text-title text-cyan text-glow-cyan">{recipe.name}</h1>
+          <h1 className="font-title text-title text-cyan-lite text-glow-cyan">{recipe.name}</h1>
           <p className="font-body text-body text-fg">
             Shared paint recipe · {recipe.slots.length} slot
             {recipe.slots.length === 1 ? "" : "s"}

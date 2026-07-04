@@ -78,7 +78,7 @@ export function ContinuePainting({
                 <button
                   type="button"
                   onClick={() => onOpenProject?.(p)}
-                  className="min-w-0 flex-1 text-left font-body text-body font-medium text-fg hover:text-cyan"
+                  className="min-w-0 flex-1 text-left font-body text-body font-medium text-fg hover:text-cyan-lite"
                 >
                   <span className="block truncate">{p.title}</span>
                 </button>

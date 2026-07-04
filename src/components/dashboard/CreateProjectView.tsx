@@ -100,7 +100,7 @@ export function CreateProjectView({ onCreated }: { onCreated: (id: string) => vo
         </div>
       </Panel>
 
-      {error && nameValid && <p className="font-body text-body text-red">▸ {error}</p>}
+      {error && nameValid && <p className="font-body text-body text-red-text">▸ {error}</p>}
 
       {/* Reuse the RF-1 action bar — only SAVE (relabelled CREATE) is live in
           create mode; the lifecycle verbs (Focus/Delete/Archive/Duplicate) make

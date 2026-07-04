@@ -78,7 +78,7 @@ export function RecipeIndexView({
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">
-          <p className="font-body text-body text-red">▸ Couldn’t load your recipes.</p>
+          <p className="font-body text-body text-red-text">▸ Couldn’t load your recipes.</p>
           {onRetry && (
             <div className="mt-4">
               <Button variant="danger" onClick={onRetry}>

@@ -98,7 +98,7 @@ export function ModalDialog({
                 {breadcrumb}
               </div>
             )}
-            <h2 className="label-osd-h2 text-cyan">
+            <h2 className="label-osd-h2 text-cyan-lite">
               {title}
             </h2>
           </div>

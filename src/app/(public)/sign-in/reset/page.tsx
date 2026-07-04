@@ -24,7 +24,7 @@ function ResetConfirm() {
         </div>
 
         {!token ? (
-          <p className="font-body text-body text-red">
+          <p className="font-body text-body text-red-text">
             ▸ Missing or invalid reset link.
           </p>
         ) : (
@@ -58,7 +58,7 @@ function ResetConfirm() {
               error={password && !valid ? "Min 8 characters" : undefined}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
+            {error ? <p className="font-body text-body text-red-text">▸ {error}</p> : null}
             <Button type="submit" className="w-full" disabled={!valid}>
               Set password
             </Button>

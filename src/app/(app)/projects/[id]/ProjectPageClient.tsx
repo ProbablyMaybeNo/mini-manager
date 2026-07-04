@@ -167,14 +167,14 @@ export function ProjectPageClient({
               type="button"
               onClick={() => router.push("/dashboard")}
               aria-label="Back to dashboard"
-              className="inline-flex h-5 w-5 items-center justify-center text-fg hover:text-cyan"
+              className="inline-flex h-5 w-5 items-center justify-center text-fg hover:text-cyan-lite"
             >
               ‹
             </button>
             <button
               type="button"
               onClick={() => router.push("/dashboard")}
-              className="hover:text-cyan"
+              className="hover:text-cyan-lite"
             >
               Projects
             </button>
@@ -184,7 +184,7 @@ export function ProjectPageClient({
                 <button
                   type="button"
                   onClick={() => router.push(`/projects/${a.id}`)}
-                  className="hover:text-cyan"
+                  className="hover:text-cyan-lite"
                 >
                   {a.title}
                 </button>
@@ -226,7 +226,7 @@ export function ProjectPageClient({
                   showLabel={false}
                 />
               </div>
-              <span className="shrink-0 font-mono text-[12px] font-bold tabular-nums text-cyan">
+              <span className="shrink-0 font-mono text-[12px] font-bold tabular-nums text-cyan-lite">
                 {project.completionPercent}%
               </span>
             </div>
@@ -371,7 +371,7 @@ export function ProjectPageClient({
               <button
                 type="button"
                 onClick={() => router.push(`/dashboard?open=${project.id}`)}
-                className="flex w-full items-center justify-center border-t border-border px-4 py-4 font-mono text-[13px] text-cyan transition-colors hover:bg-cyan/5 focus:outline-none focus-visible:bg-cyan/10"
+                className="flex w-full items-center justify-center border-t border-border px-4 py-4 font-mono text-[13px] text-cyan-lite transition-colors hover:bg-cyan/5 focus:outline-none focus-visible:bg-cyan/10"
               >
                 + Add Sub-Project
               </button>
@@ -411,7 +411,7 @@ export function ProjectPageClient({
       >
         {/* PROJECT TIMELINE — built from real dates + current status only. */}
         <section className="flex flex-col gap-5">
-          <h2 className="font-mono text-[14px] font-bold uppercase text-cyan">PROJECT TIMELINE</h2>
+          <h2 className="font-mono text-[14px] font-bold uppercase text-cyan-lite">PROJECT TIMELINE</h2>
           <ol className="flex flex-col">
             {createdLong && (
               <TimelineEntry title="Project Created" sub={createdLong} done last={false} />
@@ -433,7 +433,7 @@ export function ProjectPageClient({
           <>
             <div className="h-px w-full bg-border" aria-hidden />
             <section className="flex flex-col gap-4">
-              <h2 className="font-mono text-[14px] font-bold uppercase text-cyan">RELATED</h2>
+              <h2 className="font-mono text-[14px] font-bold uppercase text-cyan-lite">RELATED</h2>
               <div className="flex flex-col gap-3">
                 {ancestors.map((a, i) => (
                   <button
@@ -443,7 +443,7 @@ export function ProjectPageClient({
                     className={cn(
                       "rounded-[8px] border bg-bg p-3 text-left font-mono text-[12px] transition-colors",
                       i === ancestors.length - 1
-                        ? "border-cyan text-cyan hover:bg-cyan/10"
+                        ? "border-cyan text-cyan-lite hover:bg-cyan/10"
                         : "border-border text-fg-dim hover:border-cyan/40 hover:text-fg",
                     )}
                   >
@@ -459,11 +459,11 @@ export function ProjectPageClient({
 
         {/* QUICK STATS (13:289) — label / colour-coded value rows. */}
         <section className="flex flex-col gap-4">
-          <h2 className="font-mono text-[14px] font-bold uppercase text-cyan">QUICK STATS</h2>
+          <h2 className="font-mono text-[14px] font-bold uppercase text-cyan-lite">QUICK STATS</h2>
           <dl className="flex flex-col gap-2 font-mono text-[12px]">
             <StatRow label="Total Models" value={project.modelCount ?? 0} />
             <StatRow label="Completed" value={stats.complete} valueClass="text-green" />
-            <StatRow label="In Progress" value={stats.inProgress} valueClass="text-cyan" />
+            <StatRow label="In Progress" value={stats.inProgress} valueClass="text-cyan-lite" />
             <StatRow label="Planned" value={stats.planned} valueClass="text-yellow" />
             <StatRow label="On Hold" value={stats.onHold} valueClass="text-fg-muted" className="pt-2" />
             <StatRow label="Colours Used" value={coloursUsed} />
@@ -625,7 +625,7 @@ function TimelineEntry({
       </div>
       <div className={cn("flex flex-col gap-0.5", last ? "pb-0" : "pb-4")}>
         <span className="font-mono text-[12px] font-bold text-fg-bright">{title}</span>
-        <span className={cn("font-mono text-[11px]", current ? "text-cyan" : "text-fg-dim")}>
+        <span className={cn("font-mono text-[11px]", current ? "text-cyan-lite" : "text-fg-dim")}>
           {sub}
         </span>
       </div>

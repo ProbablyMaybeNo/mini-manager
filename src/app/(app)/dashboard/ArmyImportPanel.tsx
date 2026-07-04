@@ -93,7 +93,7 @@ export function ArmyImportPanel({
             placeholder={"10x Intercessors\n5x Terminators\n1x Captain"}
             className="w-full resize-y border border-cyan/50 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
           />
-          {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
+          {error ? <p className="font-body text-body text-red-text">▸ {error}</p> : null}
           <Button onClick={parse} disabled={pending || !raw.trim()} className="w-full">
             {pending ? "Parsing…" : "Parse list"}
           </Button>
@@ -112,7 +112,7 @@ export function ArmyImportPanel({
               value={tree.armyName}
               onChange={(e) => setTree({ ...tree, armyName: e.target.value })}
               placeholder="Name this army before importing"
-              className="w-full border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-cyan placeholder:text-fg-muted focus:border-cyan focus:outline-none"
+              className="w-full border border-cyan/50 bg-bg px-2 py-1.5 font-body text-body text-cyan-lite placeholder:text-fg-muted focus:border-cyan focus:outline-none"
             />
             {tree.faction || tree.totalPoints ? (
               <div className="label-osd text-fg">
@@ -135,7 +135,7 @@ export function ArmyImportPanel({
               </li>
             ))}
           </ul>
-          {error ? <p className="font-body text-body text-red">▸ {error}</p> : null}
+          {error ? <p className="font-body text-body text-red-text">▸ {error}</p> : null}
           <div className="flex gap-2">
             <Button variant="secondary" onClick={reset} disabled={pending}>
               ← Back

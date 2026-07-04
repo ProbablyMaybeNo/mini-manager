@@ -53,7 +53,7 @@ export function RecipeCard({
         <button
           type="button"
           onClick={() => onOpenRecipe(recipe)}
-          className="text-left font-body text-body font-medium text-fg hover:text-cyan"
+          className="text-left font-body text-body font-medium text-fg hover:text-cyan-lite"
         >
           {recipe.name}
         </button>

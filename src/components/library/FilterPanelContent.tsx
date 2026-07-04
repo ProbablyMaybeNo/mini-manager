@@ -32,7 +32,7 @@ function CheckRow({
         onClick={onToggle}
         className={cn(
           "flex h-4 w-4 items-center justify-center border",
-          checked ? "border-cyan bg-cyan/20 text-cyan" : "border-fg-faint",
+          checked ? "border-cyan bg-cyan/20 text-cyan-lite" : "border-fg-faint",
         )}
       >
         {checked && "✓"}

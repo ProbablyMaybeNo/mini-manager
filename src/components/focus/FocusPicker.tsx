@@ -31,7 +31,7 @@ export function FocusPicker({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <label className="flex items-center gap-2">
-        <span className="label-osd text-cyan">
+        <span className="label-osd text-cyan-lite">
           + Focus
         </span>
         <Listbox

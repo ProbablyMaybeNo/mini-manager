@@ -28,7 +28,7 @@ export function AddPaintCard({ onClick }: { onClick?: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[120px] w-40 shrink-0 items-center justify-center border border-cyan/40 font-button text-button uppercase tracking-[0.15em] text-cyan hover:bg-cyan/10"
+      className="flex min-h-[120px] w-40 shrink-0 items-center justify-center border border-cyan/40 font-button text-button uppercase tracking-[0.15em] text-cyan-lite hover:bg-cyan/10"
     >
       + Paint
     </button>

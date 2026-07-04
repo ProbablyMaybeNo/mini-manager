@@ -81,7 +81,7 @@ export function PromptDialog({
         onKeyDown={(e) => e.key === "Enter" && submit()}
       />
       {error && (
-        <p className="mt-2 font-body text-body text-red" role="alert">
+        <p className="mt-2 font-body text-body text-red-text" role="alert">
           ▸ {error}
         </p>
       )}

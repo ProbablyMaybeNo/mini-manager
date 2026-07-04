@@ -126,9 +126,9 @@ export function RecipePaintPicker({
                 aria-selected={active}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "-mb-px border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan",
+                  "-mb-px border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite",
                   active
-                    ? "border-cyan text-cyan"
+                    ? "border-cyan text-cyan-lite"
                     : "border-transparent text-fg-dim hover:border-fg/30 hover:text-fg",
                 )}
               >

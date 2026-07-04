@@ -53,7 +53,7 @@ export function Input({
         />
         {trailing}
       </div>
-      {error && <span className="font-body text-body text-red">{error}</span>}
+      {error && <span className="font-body text-body text-red-text">{error}</span>}
     </div>
   );
 }

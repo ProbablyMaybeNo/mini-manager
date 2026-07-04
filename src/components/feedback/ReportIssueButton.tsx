@@ -139,7 +139,7 @@ export function ReportIssueButton({
                 onChange={(s) => setSeverity(s)}
               />
             </label>
-            {error && <p className="font-body text-body text-red">▸ {error}</p>}
+            {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
             <div className="flex gap-2">
               <Button onClick={submit} disabled={state === "sending"}>
                 {state === "sending" ? "Sending…" : "Send report"}

@@ -40,7 +40,7 @@ export function ToolsHubView() {
                   {Thumb ? <Thumb /> : null}
                 </div>
                 <div>
-                  <h2 className="label-osd text-cyan">
+                  <h2 className="label-osd text-cyan-lite">
                     {t.title}
                   </h2>
                   <p className="mt-1 font-body text-body text-fg">{t.blurb}</p>

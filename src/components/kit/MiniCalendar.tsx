@@ -76,7 +76,7 @@ export function MiniCalendar({
   return (
     <div className={cn("select-none", className)}>
       {showMonthLabel && (
-        <div className="mb-1 text-center label-osd tracking-[0.2em] text-cyan">
+        <div className="mb-1 text-center label-osd tracking-[0.2em] text-cyan-lite">
           {monthLabel}
         </div>
       )}

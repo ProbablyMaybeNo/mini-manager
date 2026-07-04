@@ -29,7 +29,7 @@ export function LegalDoc({
           <div className="mt-6 flex flex-col gap-6">
             {sections.map((s) => (
               <section key={s.heading}>
-                <h2 className="font-h1 text-h1 uppercase tracking-[0.2em] text-cyan">
+                <h2 className="font-h1 text-h1 uppercase tracking-[0.2em] text-cyan-lite">
                   {s.heading}
                 </h2>
                 <div className="mt-2 font-body text-body leading-relaxed text-fg">

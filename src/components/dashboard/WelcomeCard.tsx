@@ -151,7 +151,7 @@ function WelcomeCta({
       onClick={onClick}
       className={
         variant === "primary"
-          ? "rounded-[6px] bg-cyan px-5 py-3 font-mono text-[13px] font-bold uppercase tracking-wide text-bg shadow-[0_0_12px_0_rgba(0,245,255,0.35)] transition-colors hover:bg-cyan/85"
+          ? "rounded-[6px] bg-cyan px-5 py-3 font-mono text-[13px] font-bold uppercase tracking-wide text-white shadow-[0_0_12px_0_rgba(0,245,255,0.35)] transition-colors hover:bg-cyan/85"
           : "rounded-[6px] border border-white/40 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-wide text-white transition-colors hover:border-white/70 hover:bg-white/10"
       }
     >

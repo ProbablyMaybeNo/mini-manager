@@ -81,7 +81,7 @@ export function AccountClient({
       {notice ? (
         <div
           role="status"
-          className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] rounded-[6px] border border-cyan/50 bg-surface px-4 py-2 text-center font-body text-body text-cyan panel-depth motion-safe:animate-menu-in"
+          className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90vw] rounded-[6px] border border-cyan/50 bg-surface px-4 py-2 text-center font-body text-body text-cyan-lite panel-depth motion-safe:animate-menu-in"
         >
           ▸ {notice}
         </div>
@@ -178,7 +178,7 @@ export function AccountClient({
           onKeyDown={(e) => e.key === "Enter" && runDelete()}
         />
         {deleteError && (
-          <p className="mt-2 font-body text-body text-red" role="alert">
+          <p className="mt-2 font-body text-body text-red-text" role="alert">
             ▸ {deleteError}
           </p>
         )}

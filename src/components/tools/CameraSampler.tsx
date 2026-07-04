@@ -99,7 +99,7 @@ export function CameraSampler({
     >
       <div className="w-full max-w-md border border-cyan bg-bg p-3">
         <header className="flex items-center justify-between">
-          <h2 className="font-h1 text-h1 uppercase tracking-[0.18em] text-cyan">Camera sampler</h2>
+          <h2 className="font-h1 text-h1 uppercase tracking-[0.18em] text-cyan-lite">Camera sampler</h2>
           <CloseButton
             onClick={onClose}
             aria-label="Close camera sampler"

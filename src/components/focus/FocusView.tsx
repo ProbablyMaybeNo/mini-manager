@@ -107,7 +107,7 @@ export function FocusView({
       {/* Pinned project header — bound to the focused project (MM-21). */}
       <Panel className="flex items-center justify-between p-4" glow>
         <span className="font-h1 text-h1 uppercase text-green text-glow-green">
-          {project.title} <span className="text-cyan">×{modelCount}</span>
+          {project.title} <span className="text-cyan-lite">×{modelCount}</span>
         </span>
         <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 label-osd text-fg">
           {projectMinutes != null && (
@@ -158,7 +158,7 @@ export function FocusView({
                 type="button"
                 aria-label="Decrease models painted"
                 onClick={() => bumpStep(-1)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10 md:min-h-6 md:min-w-6"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan-lite hover:bg-cyan/10 md:min-h-6 md:min-w-6"
               >
                 −
               </button>
@@ -172,7 +172,7 @@ export function FocusView({
                 type="button"
                 aria-label="Increase models painted"
                 onClick={() => bumpStep(1)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan hover:bg-cyan/10 md:min-h-6 md:min-w-6"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan-lite hover:bg-cyan/10 md:min-h-6 md:min-w-6"
               >
                 +
               </button>
