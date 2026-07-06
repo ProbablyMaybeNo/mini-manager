@@ -1,13 +1,13 @@
 # Vercel comments — Ross's decision queue
 
 **Snapshot:** 2026-07-06 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
-**6 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**7 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-06):** shipped one clear fix — **UNDERCOAT** added to the recipe step/layer technique picker (thread `qQ647hi5H2_W`, PR to `main`, resolved after prod verify). Two new `/recipes` threads came in and got a specific clarifying question each (below); both left open. The four pre-existing needs-Ross threads are unchanged — no new input from you had landed on them.
+> **This run (2026-07-06, later pass):** no new clear/bounded fixes to ship. One brand-new `/recipes` thread (`uWkPLukPw_vr`) came in and got a specific clarifying question (below); left open. The other six needs-Ross threads are unchanged — no new input from you had landed on them.
 
 ---
 
-## 🔴 NEEDS YOUR CALL (6)
+## 🔴 NEEDS YOUR CALL (7)
 
 | Thread | Page | Ask | Where it stands / what I need from you |
 |---|---|---|---|
@@ -17,6 +17,7 @@
 | `trogZqV-Yo8w` | /collection | Rebuild +ADD MODEL / +ADD PAINT into a full modal: AUTO-ADD URL paste **+** MANUAL-ADD form (name · game · faction · price · project dropdown · status) → save into the table; plus an edit ✎ next to the X on each row. | Substantial feature (new modal, manual-entry form + validation, edit/update flow, new row action) — beyond safe auto-fix scope, **queued as a dedicated build**. To lock scope: confirm that's the full manual field set, and that the edit ✎ reopens the same modal pre-filled with the row's values. |
 | `d0MWLSNNjDTd` | /collection | Simplify the stats bar (drop "COLLECTION" title → `PAINT: 00 OWNED 00 WISHLIST $00 TOTAL SPENT [REMAINING] / MODELS: …`), **plus** a per-project budget feature. | Relabel is locked and ready to ship on its own — the **only** blocker is the `REMAINING` field, which has no data source without budgeting. **Pick one and the relabel ships immediately:** (a) `REMAINING` = total cost of WISHLIST (not-yet-bought) items — shippable now; or (b) hold `REMAINING` until the per-project budget feature lands. Budgeting stays a separate feature either way. *(main/prod still shows the old ▸ COLLECTION bar — not resolving until it's genuinely on main.)* |
 | `8Wxk5lw0uh5c` | /tools/stacking | "Add layer button doesn't do anything — remove it or make it add another circle." | **Not a bug** — the **+ Add layer** button is wired and appends a Layer N (hex + opacity) block, capped at 6. It feels dead because (1) the new block inserts *above* the button (so it lands off-screen), and (2) the Venn only renders 2 circles (undercoat ∩ top glaze) by design, so layer 3+ doesn't change it (the PREDICTED RESULT swatch does update). **Which do you want:** (a) auto-scroll/highlight the new layer when added, and/or (b) surface layers 3+ in the result preview? |
+| `uWkPLukPw_vr` | /recipes | Widen the recipe page, bigger paint icons + full names, add a persisted NOTES box below DELETE/SAVE/ATTACH, auto-populate per-paint notes as styled lines (layer + name bold/coloured), feed into the "shared recipe experience". | Multi-part. Right-side panels were recently widened (`max-w-4xl`). A plain persisted NOTES text box is bounded/shippable; the auto-population + shared-recipe rendering is its own build. **One call to unblock:** ship the plain NOTES box now and treat auto-population + shared rendering as a follow-up, or hold and build the whole thing at once? |
 
 ---
 
