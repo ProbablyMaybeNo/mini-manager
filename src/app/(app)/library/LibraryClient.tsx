@@ -9,7 +9,8 @@ import { COLOR_OPTIONS, colorFamilyForHue, filterPaints } from "@/mock/filterPai
 import { EMPTY_LIBRARY_FILTER, type LibraryFilter, type Paint, type PaintType } from "@/lib/types";
 import type { PaintStatus } from "@/components/library/PaintInfoPanelContent";
 import { loadPaints } from "@/lib/paints/loader";
-import { setOwnedCount, toggleWishlistedPaint } from "@/lib/actions/inventory";
+import { setPaintOwnershipStatus, bulkAddPaintsToCollection } from "@/lib/actions/paintOwnership";
+import type { OwnershipStatus, BulkOwnershipStatus } from "@/lib/paints/ownership";
 import type { InventoryFlags } from "@/lib/appData";
 
 /** Catalog paint type → kit PaintType (the kit chip set is narrower). */
@@ -47,6 +48,31 @@ export function LibraryClient({
   const [reloadKey, setReloadKey] = useState(0);
   const [assigning, setAssigning] = useState<Paint | null>(null);
   const [, startTransition] = useTransition();
+  const [bulkPending, startBulkTransition] = useTransition();
+
+  // Bulk-select (batch/library-collection-sync item 4) — a lightweight
+  // selection mode over the grid/list. Off by default so the action bar
+  // never appears until the painter opts in.
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  function toggleSelectMode() {
+    setSelectMode((on) => !on);
+    setSelectedIds(new Set());
+  }
+
+  function toggleSelectPaint(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
 
   /** Patch one paint's flags in the loaded catalog (optimistic). */
   function patchPaint(id: string, fields: Partial<Paint>) {
@@ -108,32 +134,52 @@ export function LibraryClient({
     [selected, recipesByPaint],
   );
 
-  function toggleOwned(p: Paint) {
-    const nextOwned = !p.owned;
-    const count = nextOwned ? 1 : 0;
-    patchPaint(p.id, { owned: nextOwned });
+  /** Every Library ownership write (list-view toggles + the panel's
+   *  STATUS control) funnels through the same reconcile-backed action, so
+   *  OWNED / WISHLIST / NONE stay mutually exclusive here exactly like the
+   *  linked Collection row's single `status` column — and each write
+   *  creates/updates/removes that linked row too. */
+  function applyStatus(paintId: string, status: OwnershipStatus) {
+    patchPaint(paintId, { owned: status === "OWNED", wishlisted: status === "WISHLIST" });
     startTransition(async () => {
-      await setOwnedCount({ paintId: p.id, count });
+      await setPaintOwnershipStatus({ paintId, status });
     });
+  }
+
+  function toggleOwned(p: Paint) {
+    applyStatus(p.id, p.owned ? "NONE" : "OWNED");
   }
 
   function toggleWishlist(p: Paint) {
-    patchPaint(p.id, { wishlisted: !p.wishlisted });
-    startTransition(async () => {
-      await toggleWishlistedPaint({ paintId: p.id });
-    });
+    applyStatus(p.id, p.wishlisted ? "NONE" : "WISHLIST");
   }
 
-  /** STATUS control (tri-state): compose the two independent inventory
-   *  flags so OWNED / WISHLIST are mutually exclusive and STATUS clears
-   *  both. Reuses the existing owned/wishlist server actions. */
+  /** STATUS control (tri-state) — one call per change instead of composing
+   *  two independent toggles. */
   function setStatus(next: PaintStatus) {
     const p = selected;
     if (!p) return;
-    const wantOwned = next === "owned";
-    const wantWish = next === "wishlist";
-    if (p.owned !== wantOwned) toggleOwned(p);
-    if (p.wishlisted !== wantWish) toggleWishlist(p);
+    const status: OwnershipStatus =
+      next === "owned" ? "OWNED" : next === "wishlist" ? "WISHLIST" : "NONE";
+    applyStatus(p.id, status);
+  }
+
+  function bulkAdd(status: BulkOwnershipStatus) {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    for (const id of ids) patchPaint(id, { owned: status === "OWNED", wishlisted: status === "WISHLIST" });
+    startBulkTransition(async () => {
+      const res = await bulkAddPaintsToCollection({ paintIds: ids, status });
+      if (res.ok) {
+        toast(
+          `Added ${res.data.count} paint${res.data.count === 1 ? "" : "s"} to Collection as ${status}`,
+          "green",
+        );
+        setSelectedIds(new Set());
+      } else {
+        toast(res.error, "red");
+      }
+    });
   }
 
   return (
@@ -168,6 +214,13 @@ export function LibraryClient({
         setLibrary(null);
         setReloadKey((k) => k + 1);
       }}
+      selectMode={selectMode}
+      selectedIds={selectedIds}
+      onToggleSelectMode={toggleSelectMode}
+      onToggleSelectPaint={toggleSelectPaint}
+      onClearSelection={clearSelection}
+      onBulkAdd={bulkAdd}
+      bulkPending={bulkPending}
     />
     <AssignToRecipeDialog
       open={assigning !== null}

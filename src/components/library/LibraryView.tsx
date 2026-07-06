@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Panel, SearchField, SegmentedToggle, SlideOutPanel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import type { LibraryFilter, MatchResult, Paint } from "@/lib/types";
+import type { BulkOwnershipStatus } from "@/lib/paints/ownership";
 import { ColorMapRail } from "./ColorMapRail";
 import { FilterPanelContent } from "./FilterPanelContent";
 import { PaintInfoPanelContent, type PaintStatus } from "./PaintInfoPanelContent";
@@ -37,6 +38,14 @@ export interface LibraryViewProps {
   onAssignPaint: (paint: Paint) => void;
   onJumpHue?: (hue: number) => void;
   onRetry?: () => void;
+  // bulk "Add to Collection" (batch/library-collection-sync item 4)
+  selectMode: boolean;
+  selectedIds: Set<string>;
+  onToggleSelectMode: () => void;
+  onToggleSelectPaint: (paintId: string) => void;
+  onClearSelection: () => void;
+  onBulkAdd: (status: BulkOwnershipStatus) => void;
+  bulkPending?: boolean;
 }
 
 export function LibraryView(props: LibraryViewProps) {
@@ -63,6 +72,13 @@ export function LibraryView(props: LibraryViewProps) {
     onAssignPaint,
     onJumpHue,
     onRetry,
+    selectMode,
+    selectedIds,
+    onToggleSelectMode,
+    onToggleSelectPaint,
+    onClearSelection,
+    onBulkAdd,
+    bulkPending = false,
   } = props;
 
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -108,9 +124,52 @@ export function LibraryView(props: LibraryViewProps) {
             <Button variant="secondary" disabled={loading} onClick={() => setFilterOpen(true)}>
               Filter{activeFilters ? ` (${activeFilters})` : ""}
             </Button>
+            <Button
+              variant={selectMode ? "outlineCyan" : "secondary"}
+              disabled={loading}
+              onClick={onToggleSelectMode}
+              aria-pressed={selectMode}
+            >
+              {selectMode ? "Done" : "Select"}
+            </Button>
           </>
         }
       />
+
+      {/* Bulk "Add to Collection" action bar (batch/library-collection-sync
+          item 4) — only appears once something is selected, so select mode
+          on its own stays out of the way. */}
+      {selectMode && selectedIds.size > 0 && (
+        <div
+          role="toolbar"
+          aria-label="Bulk paint actions"
+          className="flex flex-wrap items-center gap-3 border border-cyan/40 bg-cyan/5 px-4 py-3"
+        >
+          <span className="font-body text-body text-fg">
+            {selectedIds.size} paint{selectedIds.size === 1 ? "" : "s"} selected
+          </span>
+          <span className="label-osd text-fg-dim">Add to Collection</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={bulkPending}
+            onClick={() => onBulkAdd("OWNED")}
+          >
+            ▸ Owned
+          </Button>
+          <Button
+            variant="outlineYellow"
+            size="sm"
+            disabled={bulkPending}
+            onClick={() => onBulkAdd("WISHLIST")}
+          >
+            ▸ Wishlist
+          </Button>
+          <Button variant="tertiary" size="sm" disabled={bulkPending} onClick={onClearSelection}>
+            Clear
+          </Button>
+        </div>
+      )}
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">
@@ -142,13 +201,22 @@ export function LibraryView(props: LibraryViewProps) {
                 </div>
               </div>
             ) : view === "grid" ? (
-              <SwatchWall paints={paints} onOpenPaint={onOpenPaint} />
+              <SwatchWall
+                paints={paints}
+                onOpenPaint={onOpenPaint}
+                selectMode={selectMode}
+                selectedIds={selectedIds}
+                onToggleSelect={onToggleSelectPaint}
+              />
             ) : (
               <PaintListTable
                 paints={paints}
                 onOpenPaint={onOpenPaint}
                 onToggleOwned={onToggleOwned}
                 onToggleWishlist={onToggleWishlist}
+                selectMode={selectMode}
+                selectedIds={selectedIds}
+                onToggleSelect={onToggleSelectPaint}
               />
             )}
           </Panel>

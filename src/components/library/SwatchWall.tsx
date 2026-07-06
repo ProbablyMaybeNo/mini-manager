@@ -15,9 +15,17 @@ const OVERSCAN_ROWS = 6;
 export function SwatchWall({
   paints,
   onOpenPaint,
+  selectMode = false,
+  selectedIds,
+  onToggleSelect,
 }: {
   paints: Paint[];
   onOpenPaint: (paint: Paint) => void;
+  /** Bulk-select (batch/library-collection-sync item 4) — while true, a
+   *  tile click toggles selection instead of opening the paint panel. */
+  selectMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (paintId: string) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [columns, setColumns] = useState(1);
@@ -94,23 +102,49 @@ export function SwatchWall({
                 paddingBottom: GAP,
               }}
             >
-              {rowPaints.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="listitem"
-                  onClick={() => onOpenPaint(p)}
-                  title={`${p.name} — ${p.brand}`}
-                  aria-label={`${p.name}, ${p.brand}${p.owned ? ", owned" : ""}${p.wishlisted ? ", wishlisted" : ""}`}
-                  className={cn(
-                    "relative aspect-square w-full border border-black/40 transition-transform hover:z-10 hover:scale-125 hover:border-cyan focus-visible:z-10 focus-visible:scale-125",
-                  )}
-                  style={{ backgroundColor: p.hex }}
-                >
-                  {p.owned && <span className="absolute right-0 top-0 h-1.5 w-1.5 bg-green" />}
-                  {p.wishlisted && <span className="absolute left-0 top-0 h-1.5 w-1.5 bg-yellow" />}
-                </button>
-              ))}
+              {rowPaints.map((p) => {
+                const isSelected = selectedIds?.has(p.id) ?? false;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role={selectMode ? "checkbox" : "listitem"}
+                    aria-checked={selectMode ? isSelected : undefined}
+                    onClick={() =>
+                      selectMode ? onToggleSelect?.(p.id) : onOpenPaint(p)
+                    }
+                    title={`${p.name} — ${p.brand}`}
+                    aria-label={
+                      selectMode
+                        ? `${p.name}, ${p.brand}${isSelected ? ", selected" : ""}`
+                        : `${p.name}, ${p.brand}${p.owned ? ", owned" : ""}${p.wishlisted ? ", wishlisted" : ""}`
+                    }
+                    className={cn(
+                      "relative aspect-square w-full border border-black/40 transition-transform hover:z-10 hover:scale-125 hover:border-cyan focus-visible:z-10 focus-visible:scale-125",
+                      selectMode && isSelected && "ring-2 ring-cyan ring-offset-1 ring-offset-bg",
+                    )}
+                    style={{ backgroundColor: p.hex }}
+                  >
+                    {selectMode ? (
+                      isSelected && (
+                        <span
+                          aria-hidden
+                          className="absolute inset-0 flex items-center justify-center bg-black/30 font-bold text-cyan"
+                        >
+                          ✓
+                        </span>
+                      )
+                    ) : (
+                      <>
+                        {p.owned && <span className="absolute right-0 top-0 h-1.5 w-1.5 bg-green" />}
+                        {p.wishlisted && (
+                          <span className="absolute left-0 top-0 h-1.5 w-1.5 bg-yellow" />
+                        )}
+                      </>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           );
         })}

@@ -62,6 +62,7 @@ function toCollectionItem(i: WishlistItem): CollectionItem {
     projectId: i.projectId ?? undefined,
     recipeId: i.recipeId ?? undefined,
     paintType: i.paintType ?? undefined,
+    paintId: i.paintId ?? undefined,
   };
 }
 

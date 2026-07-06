@@ -1,5 +1,6 @@
 import "server-only";
 import { listInventoryByUser } from "@/db/queries/inventory";
+import { listLinkedPaintStatuses } from "@/lib/paints/reconcileOwnership";
 import { listAllProjects } from "@/db/queries/projects";
 import {
   getProjectPalettesMap,
@@ -103,14 +104,26 @@ export async function loadInventoryFlags(
   userId: string | null,
 ): Promise<InventoryFlags> {
   if (!userId) return { ownedIds: [], wishlistedIds: [] };
-  const inventory = await listInventoryByUser(userId);
-  const ownedIds: string[] = [];
-  const wishlistedIds: string[] = [];
+  // Library ↔ Collection sync — a paint reads as OWNED/WISHLIST if EITHER
+  // store says so: inventory_entry (the fast flag, ~8 other call sites)
+  // OR its linked Collection row's status (a row the backfill script
+  // links, or one edited straight on /collection, may be ahead of
+  // inventory_entry until the next reconcile write touches it).
+  const [inventory, linked] = await Promise.all([
+    listInventoryByUser(userId),
+    listLinkedPaintStatuses(userId),
+  ]);
+  const ownedIds = new Set<string>();
+  const wishlistedIds = new Set<string>();
   for (const [paintId, entry] of inventory) {
-    if (entry.ownedCount > 0) ownedIds.push(paintId);
-    if (entry.isWishlisted) wishlistedIds.push(paintId);
+    if (entry.ownedCount > 0) ownedIds.add(paintId);
+    if (entry.isWishlisted) wishlistedIds.add(paintId);
   }
-  return { ownedIds, wishlistedIds };
+  for (const [paintId, status] of linked) {
+    if (status === "OWNED") ownedIds.add(paintId);
+    if (status === "WISHLIST") wishlistedIds.add(paintId);
+  }
+  return { ownedIds: [...ownedIds], wishlistedIds: [...wishlistedIds] };
 }
 
 /** Serializable `paintId -> recipes[]` map for the Library paint panel's
@@ -324,6 +337,7 @@ function mapCollectionItem(i: WishlistItem): CollectionItem {
     projectId: i.projectId ?? undefined,
     recipeId: i.recipeId ?? undefined,
     paintType: i.paintType ?? undefined,
+    paintId: i.paintId ?? undefined,
   };
 }
 

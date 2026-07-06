@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/cn";
-import { Chip, Swatch } from "@/components/kit";
+import { Chip, Checkbox, Swatch } from "@/components/kit";
 import type { Paint } from "@/lib/types";
 
 // Column layout — flex-basis (px), grow factor, and an optional max width.
@@ -19,6 +19,11 @@ const COLS: { label: string; basis: number; grow: number; max?: number }[] = [
   { label: "Own", basis: 56, grow: 0 },
   { label: "Wish", basis: 56, grow: 0 },
 ];
+
+// Bulk-select column (batch/library-collection-sync item 4) — prepended
+// only while `selectMode` is on, so the header/row layout is untouched by
+// default.
+const SELECT_COL = { label: "", basis: 36, grow: 0 };
 
 const ROW_HEIGHT = 37; // px-3 py-2 + text + 1px border — matches the original row box
 const OVERSCAN = 12;
@@ -36,13 +41,22 @@ export function PaintListTable({
   onOpenPaint,
   onToggleOwned,
   onToggleWishlist,
+  selectMode = false,
+  selectedIds,
+  onToggleSelect,
 }: {
   paints: Paint[];
   onOpenPaint: (paint: Paint) => void;
   onToggleOwned: (paint: Paint) => void;
   onToggleWishlist: (paint: Paint) => void;
+  /** Bulk-select (batch/library-collection-sync item 4) — prepends a row
+   *  checkbox column while true. */
+  selectMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (paintId: string) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const cols = selectMode ? [SELECT_COL, ...COLS] : COLS;
 
   const virtualizer = useVirtualizer({
     count: paints.length,
@@ -69,7 +83,7 @@ export function PaintListTable({
       <div role="table" aria-label="Paints" className="min-w-[680px]">
         <div role="rowgroup" className="sticky top-0 z-10 bg-bg/95">
           <div role="row" className="flex border-b border-cyan/30">
-            {COLS.map((c, i) => (
+            {cols.map((c, i) => (
               <div
                 key={i}
                 role="columnheader"
@@ -103,6 +117,15 @@ export function PaintListTable({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
+                {selectMode && (
+                  <div role="cell" style={cellStyle(SELECT_COL)} className="px-3 py-2">
+                    <Checkbox
+                      checked={selectedIds?.has(p.id) ?? false}
+                      onChange={() => onToggleSelect?.(p.id)}
+                      ariaLabel={`Select ${p.name}`}
+                    />
+                  </div>
+                )}
                 <div role="cell" style={cellStyle(COLS[0]!)} className="px-3 py-2">
                   <button type="button" onClick={() => onOpenPaint(p)} aria-label={`Open ${p.name}`}>
                     {/* DOP-008 — tooltip names the paint (parity with the grid

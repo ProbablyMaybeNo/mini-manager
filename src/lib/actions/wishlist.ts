@@ -18,6 +18,10 @@ import type { ActionResult } from "@/lib/actions/projects";
 import { enforceCreateLimit } from "@/lib/billing/enforce";
 import { inferWishlistKind } from "@/lib/wishlist/kindInference";
 import { scrapeAndInsertWishlistItem } from "@/lib/wishlist/scrapeInsert";
+import {
+  reflectCollectionStatusToInventory,
+  reflectCollectionRemovalToInventory,
+} from "@/lib/paints/reconcileOwnership";
 
 /* ============================================================
    Schemas
@@ -194,7 +198,17 @@ export async function updateWishlistItem(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
+
+    // Library ↔ Collection sync — a status change on a linked paint row
+    // (paintId set) mirrors into inventory_entry so the Library reflects
+    // it too. `paintId` isn't part of this action's schema, so an edit
+    // here (price, project, notes, …) can never wipe the link.
+    if (patch.status !== undefined && row.kind === "paint" && row.paintId) {
+      await reflectCollectionStatusToInventory(userId, row.paintId, patch.status);
+    }
+
     revalidatePath("/collection");
+    revalidatePath("/library");
     return { ok: true, data: row };
   } catch (err) {
     return {
@@ -210,11 +224,28 @@ export async function deleteWishlistItem(
   const id = z.string().min(1).max(64).safeParse(raw.id);
   if (!id.success) return { ok: false, error: "Invalid id" };
   const userId = await currentUserId();
+
+  const existing = await db
+    .select()
+    .from(wishlistItems)
+    .where(and(eq(wishlistItems.id, id.data), eq(wishlistItems.ownerId, userId)))
+    .limit(1);
+  const row = existing[0];
+  if (!row) return { ok: false, error: "Item not found" };
+
   try {
     await db
       .delete(wishlistItems)
       .where(and(eq(wishlistItems.id, id.data), eq(wishlistItems.ownerId, userId)));
+
+    // Library ↔ Collection sync — deleting a linked paint row clears its
+    // owned/wishlist flags in inventory_entry too.
+    if (row.kind === "paint" && row.paintId) {
+      await reflectCollectionRemovalToInventory(userId, row.paintId);
+    }
+
     revalidatePath("/collection");
+    revalidatePath("/library");
     return { ok: true, data: { id: id.data } };
   } catch (err) {
     return {
@@ -282,7 +313,8 @@ export async function setWishlistStatus(
     .from(wishlistItems)
     .where(and(eq(wishlistItems.id, id), eq(wishlistItems.ownerId, userId)))
     .limit(1);
-  if (!existing[0]) return { ok: false, error: "Item not found" };
+  const existingRow = existing[0];
+  if (!existingRow) return { ok: false, error: "Item not found" };
 
   const patch: Partial<typeof wishlistItems.$inferInsert> = { status };
   if (status === "WISHLIST") patch.dateResolved = null;
@@ -296,8 +328,16 @@ export async function setWishlistStatus(
       .returning();
     const row = updated[0];
     if (!row) return { ok: false, error: "Update returned no row" };
+
+    // Library ↔ Collection sync — mirror a linked paint row's status
+    // change into inventory_entry.
+    if (existingRow.kind === "paint" && existingRow.paintId) {
+      await reflectCollectionStatusToInventory(userId, existingRow.paintId, status);
+    }
+
     revalidatePath("/collection");
     revalidatePath("/projects");
+    revalidatePath("/library");
     return { ok: true, data: row };
   } catch (err) {
     return {

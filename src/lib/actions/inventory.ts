@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { inventoryEntries, type InventoryEntry } from "@/db/schema";
+import { upsertInventoryEntry } from "@/db/queries/inventory";
 import { currentUserId } from "@/lib/auth-stub";
 import type { ActionResult } from "@/lib/actions/projects";
 
@@ -20,45 +21,6 @@ const markPurchasedSchema = z.object({
   deltaCount: z.number().int().min(1).max(999),
 });
 
-async function upsertInventory(
-  userId: string,
-  paintId: string,
-  patch: Partial<Pick<InventoryEntry, "ownedCount" | "isWishlisted" | "lastPurchasedAt">>,
-): Promise<InventoryEntry> {
-  const existing = await db
-    .select()
-    .from(inventoryEntries)
-    .where(
-      and(eq(inventoryEntries.ownerId, userId), eq(inventoryEntries.paintId, paintId)),
-    )
-    .limit(1);
-
-  const current = existing[0];
-  if (current) {
-    const updated = await db
-      .update(inventoryEntries)
-      .set(patch)
-      .where(eq(inventoryEntries.id, current.id))
-      .returning();
-    const row = updated[0];
-    if (!row) throw new Error("Update returned no row");
-    return row;
-  }
-  const inserted = await db
-    .insert(inventoryEntries)
-    .values({
-      ownerId: userId,
-      paintId,
-      ownedCount: patch.ownedCount ?? 0,
-      isWishlisted: patch.isWishlisted ?? false,
-      lastPurchasedAt: patch.lastPurchasedAt ?? null,
-    })
-    .returning();
-  const row = inserted[0];
-  if (!row) throw new Error("Insert returned no row");
-  return row;
-}
-
 export async function setOwnedCount(
   raw: z.infer<typeof setOwnedSchema>,
 ): Promise<ActionResult<InventoryEntry>> {
@@ -69,7 +31,7 @@ export async function setOwnedCount(
   const { paintId, count } = parsed.data;
   const userId = await currentUserId();
   try {
-    const row = await upsertInventory(userId, paintId, { ownedCount: count });
+    const row = await upsertInventoryEntry(userId, paintId, { ownedCount: count });
     revalidatePath("/library");
     return { ok: true, data: row };
   } catch (err) {
@@ -103,7 +65,7 @@ export async function toggleWishlistedPaint(
       .limit(1);
     const current = existing[0];
     const nextValue = current ? !current.isWishlisted : true;
-    const row = await upsertInventory(userId, paintId, { isWishlisted: nextValue });
+    const row = await upsertInventoryEntry(userId, paintId, { isWishlisted: nextValue });
     revalidatePath("/library");
     return { ok: true, data: row };
   } catch (err) {
@@ -136,7 +98,7 @@ export async function markPurchased(
       )
       .limit(1);
     const currentOwned = existing[0]?.ownedCount ?? 0;
-    const row = await upsertInventory(userId, paintId, {
+    const row = await upsertInventoryEntry(userId, paintId, {
       ownedCount: currentOwned + deltaCount,
       lastPurchasedAt: new Date(),
     });

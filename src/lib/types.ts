@@ -125,6 +125,11 @@ export interface CollectionItem {
   recipeId?: string;
   /** Paint medium type (paint rows) — Contrast / Wash / Acrylic / … */
   paintType?: string;
+  /** Library ↔ Collection sync — the catalog paint id this row is linked
+   *  to (paint rows only). Undefined = a manually-typed row with no
+   *  catalog match; linked rows mirror status to/from the Library's
+   *  inventory flags via `reconcilePaintOwnership`. */
+  paintId?: string;
 }
 
 /* ----------------------------------------------------------------------------
