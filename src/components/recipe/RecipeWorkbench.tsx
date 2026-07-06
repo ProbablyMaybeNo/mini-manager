@@ -400,13 +400,13 @@ export function RecipeWorkbench({
                 ))
               )}
 
-              {/* + ADD STEP (28:237). */}
+              {/* + ADD PAINT (28:237). */}
               <button
                 type="button"
                 onClick={addSlot}
                 className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-cyan/40 py-3 font-mono text-[13px] font-bold uppercase tracking-wide text-cyan-lite transition-colors hover:bg-cyan/5"
               >
-                + ADD STEP
+                + ADD PAINT
               </button>
             </div>
 
