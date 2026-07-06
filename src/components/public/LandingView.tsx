@@ -73,7 +73,9 @@ export function LandingView() {
   const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    // Solid black canvas so the page matches the logo's pure-black background
+    // (the app --color-bg #0d0d17 reads faintly blue against it).
+    <div className="flex min-h-dvh flex-col bg-black">
       <PublicHeader />
 
       <main id="main" className="flex flex-1 flex-col">
