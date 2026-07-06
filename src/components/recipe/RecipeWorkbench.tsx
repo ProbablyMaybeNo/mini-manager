@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ConfirmDialog, useToast } from "@/components/kit";
+import { ConfirmDialog, ModalDialog, useToast } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
@@ -43,6 +43,7 @@ export function RecipeWorkbench({
   const [paints, setPaints] = useState<Paint[]>([]);
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -208,14 +209,26 @@ export function RecipeWorkbench({
                 {recipes.length}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => router.push("/recipes/new")}
-              // ≥44px tap target on touch widths, compact on desktop (UX-011).
-              className="inline-flex min-h-[44px] items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-cyan/85 md:min-h-0"
-            >
-              + NEW
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Plain-language "what is a recipe / how do I build one" explainer
+                  for first-timers who land on an empty recipe list (DOP-006). */}
+              <button
+                type="button"
+                onClick={() => setShowHelp(true)}
+                aria-label="What is a recipe?"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[6px] border border-border px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-fg-dim transition-colors hover:border-cyan/50 hover:text-cyan-lite md:min-h-0"
+              >
+                <span aria-hidden>ⓘ</span> LOST?
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/recipes/new")}
+                // ≥44px tap target on touch widths, compact on desktop (UX-011).
+                className="inline-flex min-h-[44px] items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-cyan/85 md:min-h-0"
+              >
+                + NEW
+              </button>
+            </div>
           </div>
           <label className="flex items-center gap-2 rounded-[6px] border border-border bg-surface px-3 py-2">
             <span aria-hidden className="text-fg-dim">⌕</span>
@@ -513,6 +526,48 @@ export function RecipeWorkbench({
         onClose={() => setConfirmingDelete(false)}
         onConfirm={remove}
       />
+      <ModalDialog
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        breadcrumb="RECIPES ▸ HELP"
+        title="What's a recipe?"
+        width="max-w-lg"
+      >
+        <div className="flex flex-col gap-4 font-mono text-[13px] leading-relaxed text-fg">
+          <p>
+            A <span className="text-cyan-lite">recipe</span> is a repeatable paint
+            scheme — the ordered layers you apply to get a look — that you can
+            reuse across projects instead of remembering it each time.
+          </p>
+          <div className="flex flex-col gap-2">
+            <span className="label-osd text-cyan-lite">HOW TO BUILD ONE</span>
+            <ol className="flex list-decimal flex-col gap-1.5 pl-5 marker:text-fg-dim">
+              <li>
+                Hit <span className="text-fg-bright">+ NEW</span> and give the
+                recipe a name.
+              </li>
+              <li>
+                Add each paint as a step with{" "}
+                <span className="text-fg-bright">ADD PAINT</span> — work bottom-up:
+                undercoat first, then base, layers, and highlights last.
+              </li>
+              <li>
+                Tag every step with its technique (basecoat, shade, layer,
+                highlight…) and jot an optional note.
+              </li>
+              <li>
+                <span className="text-fg-bright">SAVE RECIPE</span>, then{" "}
+                <span className="text-fg-bright">ATTACH</span> it to a project so
+                you can follow the same scheme every time you paint it.
+              </li>
+            </ol>
+          </div>
+          <p className="text-fg-dim">
+            Tip: turn the colour wheel in the paint picker to surface the closest
+            library paints, then ADD PAINT to lock one in.
+          </p>
+        </div>
+      </ModalDialog>
       {toastNode}
     </div>
   );
