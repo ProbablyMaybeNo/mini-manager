@@ -30,15 +30,15 @@ export function PricingView({
             <Panel
               key={t.id}
               label={t.name.toUpperCase()}
-              accent={t.featured ? "purple" : "cyan"}
+              accent={t.featured ? "green" : "cyan"}
               className={cn(
                 "flex flex-col gap-4 p-5 transition-colors duration-150 hover:border-fg/25",
-                t.featured && "border-purple/40 hover:border-purple",
+                t.featured && "border-green/40 hover:border-green",
               )}
             >
               {t.featured && (
                 <div className="flex items-center justify-between">
-                  <Chip accent="purple">Limited seat</Chip>
+                  <Chip accent="green">Limited seat</Chip>
                   <span className="font-body text-body text-yellow">
                     {t.seatsLeft}/{t.seatsTotal} left
                   </span>
@@ -59,7 +59,7 @@ export function PricingView({
               {t.featured && t.seatsLeft != null && t.seatsTotal != null && (
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
                   <div
-                    className="h-full rounded-full bg-purple transition-[width] duration-300"
+                    className="h-full rounded-full bg-green transition-[width] duration-300"
                     style={{ width: `${100 - (t.seatsLeft / t.seatsTotal) * 100}%` }}
                   />
                 </div>
