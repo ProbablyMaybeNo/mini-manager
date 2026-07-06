@@ -37,6 +37,7 @@ export function filterPaints(paints: Paint[], filter: LibraryFilter): Paint[] {
   const search = filter.search?.trim().toLowerCase() ?? "";
   return paints.filter((p) => {
     if (filter.brands.length && !filter.brands.includes(p.brand)) return false;
+    if (filter.types.length && !filter.types.includes(p.type)) return false;
     if (filter.status.includes("owned") && !p.owned) return false;
     if (filter.status.includes("wishlist") && !p.wishlisted) return false;
     if (filter.colors.length) {

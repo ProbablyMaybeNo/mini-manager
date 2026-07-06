@@ -177,6 +177,8 @@ export interface DashboardSummary {
 export interface LibraryFilter {
   colors: string[];
   brands: string[];
+  /** Paint medium types (Acrylic / Wash / Contrast / …) — AND-composed with the other axes. */
+  types: string[];
   status: Array<"owned" | "wishlist">;
   search?: string;
   hex?: Hex;
@@ -185,6 +187,7 @@ export interface LibraryFilter {
 export const EMPTY_LIBRARY_FILTER: LibraryFilter = {
   colors: [],
   brands: [],
+  types: [],
   status: [],
   search: "",
   hex: "",

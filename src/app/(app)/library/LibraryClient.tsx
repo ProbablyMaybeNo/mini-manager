@@ -85,6 +85,10 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
     () => Array.from(new Set(paints.map((p) => p.brand))).sort(),
     [paints],
   );
+  const typeOptions = useMemo(
+    () => Array.from(new Set(paints.map((p) => p.type))).sort(),
+    [paints],
+  );
   const matchResults = useMemo(
     () => (selected ? nearestMatches(selected, paints, 4) : []),
     [selected, paints],
@@ -136,6 +140,7 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
       filter={filter}
       colorOptions={COLOR_OPTIONS}
       brandOptions={brandOptions}
+      typeOptions={typeOptions}
       status={library === null ? "loading" : "ready"}
       selectedPaint={selected}
       ownedCount={ownedCount}

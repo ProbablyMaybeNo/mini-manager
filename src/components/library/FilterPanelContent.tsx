@@ -46,12 +46,14 @@ export function FilterPanelContent({
   value,
   colorOptions,
   brandOptions,
+  typeOptions,
   onChange,
   onClear,
 }: {
   value: LibraryFilter;
   colorOptions: string[];
   brandOptions: string[];
+  typeOptions: string[];
   onChange: (next: LibraryFilter) => void;
   onClear: () => void;
 }) {
@@ -97,6 +99,22 @@ export function FilterPanelContent({
           />
         ))}
       </div>
+
+      {typeOptions.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <SectionLabel>Type</SectionLabel>
+          <div className="flex max-h-48 flex-col overflow-y-auto">
+            {typeOptions.map((t) => (
+              <CheckRow
+                key={t}
+                label={t}
+                checked={value.types.includes(t)}
+                onToggle={() => onChange({ ...value, types: toggle(value.types, t) })}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1">
         <SectionLabel>Status</SectionLabel>

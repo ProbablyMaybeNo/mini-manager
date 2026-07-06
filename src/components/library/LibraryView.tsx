@@ -18,6 +18,7 @@ export interface LibraryViewProps {
   filter: LibraryFilter;
   colorOptions: string[];
   brandOptions: string[];
+  typeOptions: string[];
   status?: LibraryStatus;
   // selected paint detail (host-provided derived data)
   selectedPaint: Paint | null;
@@ -46,6 +47,7 @@ export function LibraryView(props: LibraryViewProps) {
     filter,
     colorOptions,
     brandOptions,
+    typeOptions,
     status = "ready",
     selectedPaint,
     ownedCount,
@@ -73,7 +75,11 @@ export function LibraryView(props: LibraryViewProps) {
   const loading = status === "loading";
 
   const activeFilters =
-    filter.colors.length + filter.brands.length + filter.status.length + (filter.hex ? 1 : 0);
+    filter.colors.length +
+    filter.brands.length +
+    filter.types.length +
+    filter.status.length +
+    (filter.hex ? 1 : 0);
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
@@ -168,6 +174,7 @@ export function LibraryView(props: LibraryViewProps) {
           value={filter}
           colorOptions={colorOptions}
           brandOptions={brandOptions}
+          typeOptions={typeOptions}
           onChange={onFilterChange}
           onClear={onClearFilter}
         />
