@@ -42,7 +42,7 @@ function accentFor(filter: RosterFilter): Accent {
 /** Filled-chip classes when a chip is the active filter (colour fill + dark
  *  text), per the 4:4 active-chip treatment (ALL/NEARLY DONE shown filled). */
 const activeFill: Record<Accent, string> = {
-  cyan: "bg-cyan border-cyan text-white",
+  cyan: "bg-cyan border-cyan text-bg",
   green: "bg-green border-green text-bg",
   yellow: "bg-yellow border-yellow text-bg",
   orange: "bg-orange border-orange text-bg",

@@ -43,7 +43,7 @@ function KindToggle({
               "rounded-[6px] border px-4 py-1.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
               "border-cyan",
               active
-                ? "bg-cyan text-white"
+                ? "bg-cyan text-bg"
                 : "bg-transparent text-cyan-lite hover:bg-cyan/10",
             )}
           >

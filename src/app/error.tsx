@@ -16,7 +16,7 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
       <button
         type="button"
         onClick={reset}
-        className="mt-2 inline-flex items-center gap-2 rounded-[6px] border border-cyan bg-cyan px-5 py-2.5 font-display text-button font-bold uppercase tracking-tight text-white transition-[background-color] duration-150 hover:bg-cyan/85 focus-visible:outline-2 motion-safe:active:scale-[0.98]"
+        className="mt-2 inline-flex items-center gap-2 rounded-[6px] border border-cyan bg-cyan px-5 py-2.5 font-display text-button font-bold uppercase tracking-tight text-bg transition-[background-color] duration-150 hover:bg-cyan/85 focus-visible:outline-2 motion-safe:active:scale-[0.98]"
       >
         ▸ Retry
       </button>

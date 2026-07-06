@@ -30,7 +30,7 @@ const button = cva(
       variant: {
         /* ---- Tiers (cyan-led primary, per the buttons sheet) ---- */
         primary:
-          "border border-cyan bg-cyan text-white hover:bg-cyan/85",
+          "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
         secondary:
           "border border-border bg-transparent text-fg hover:bg-fg/5 hover:border-fg/25",
         tertiary:
@@ -44,14 +44,14 @@ const button = cva(
            `attach` as the neutral secondary outline (variant names kept to avoid
            a churny call-site rename). Wishlist add keeps yellow (real semantic). */
         add:
-          "border border-cyan bg-cyan text-white hover:bg-cyan/85",
+          "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
         addWishlist:
           "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
         attach:
           "border border-border bg-transparent text-fg hover:bg-fg/5 hover:border-fg/25",
 
         /* ---- Solid fills (colour fill + dark text) ---- */
-        solidCyan: "border border-cyan bg-cyan text-white hover:bg-cyan/85",
+        solidCyan: "border border-cyan bg-cyan text-bg hover:bg-cyan/85",
         solidGreen: "border border-green bg-green text-bg hover:bg-green/85",
         solidYellow: "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
         solidPurple: "border border-purple bg-purple text-bg hover:bg-purple/85",

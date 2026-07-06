@@ -192,7 +192,7 @@ export function RecipeWorkbench({
               type="button"
               onClick={() => router.push("/recipes/new")}
               // ≥44px tap target on touch widths, compact on desktop (UX-011).
-              className="inline-flex min-h-[44px] items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-white transition-colors hover:bg-cyan/85 md:min-h-0"
+              className="inline-flex min-h-[44px] items-center rounded-[6px] bg-cyan px-3 py-1.5 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-cyan/85 md:min-h-0"
             >
               + NEW
             </button>
@@ -442,7 +442,7 @@ export function RecipeWorkbench({
             <button
               type="button"
               onClick={() => router.push("/recipes/new")}
-              className="inline-flex items-center rounded-[6px] bg-cyan px-4 py-2.5 font-display text-[12px] font-bold uppercase tracking-tight text-white transition-colors hover:bg-cyan/85"
+              className="inline-flex items-center rounded-[6px] bg-cyan px-4 py-2.5 font-display text-[12px] font-bold uppercase tracking-tight text-bg transition-colors hover:bg-cyan/85"
             >
               Create your first recipe
             </button>

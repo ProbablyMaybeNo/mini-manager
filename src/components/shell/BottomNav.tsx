@@ -69,7 +69,7 @@ export function BottomNav() {
           className={cn(
             "relative flex min-h-[3.25rem] min-w-0 flex-col items-center justify-center gap-0.5 border-t-2 px-1 py-1.5 font-h1 text-[0.6rem] uppercase tracking-[0.08em] transition-colors",
             moreActive
-              ? "border-cyan bg-cyan/10 text-cyan-lite text-glow-cyan"
+              ? "border-cyan bg-cyan/10 text-cyan text-glow-cyan"
               : "border-transparent text-fg-dim hover:text-cyan-lite",
           )}
         >
