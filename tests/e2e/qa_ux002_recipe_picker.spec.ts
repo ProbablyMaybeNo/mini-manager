@@ -55,7 +55,10 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
       .first();
     await firstMatch.waitFor({ state: "visible", timeout: 30_000 });
     const matchName = (await firstMatch.innerText()).split("\n")[0].trim();
+    // Highlight the library paint, then commit it with the ADD PAINT button
+    // (single-click no longer adds directly — the recipe confirm flow).
     await firstMatch.click();
+    await dialog.getByRole("button", { name: "Add Paint", exact: true }).click();
 
     await page.getByRole("button", { name: "Close panel" }).click();
 

@@ -152,6 +152,10 @@ export function RecipePaintPicker({
             }
             contextLabel={contextLabel}
             mode={mode}
+            // The eyedropper is its own tab here, so drop the duplicate sub-panel;
+            // and add catalog paints via highlight → ADD PAINT, not bare clicks.
+            showEyedropper={false}
+            confirmSelection
             onSelect={onSelect}
           />
         )}

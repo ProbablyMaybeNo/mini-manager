@@ -59,6 +59,8 @@ export function ColorPicker({
   onSelect,
   contextLabel,
   mode = "add-slot",
+  showEyedropper = true,
+  confirmSelection = false,
 }: {
   paints: ReadonlyArray<Paint>;
   catalogLoading?: boolean;
@@ -66,6 +68,14 @@ export function ColorPicker({
   onSelect: (selection: ColorPickerSelection) => void;
   contextLabel?: string;
   mode?: ColorPickerMode;
+  /** Render the image-eyedropper sub-panel. Off in the recipe Pick & Paint
+   *  panel, which already exposes the eyedropper as its own top-level tab. */
+  showEyedropper?: boolean;
+  /** Recipe flow: instead of adding a paint on a single click, a library row
+   *  highlights to select and an explicit ADD PAINT button commits it — and
+   *  the bare "use this colour" wheel shortcut is dropped, so only real catalog
+   *  paints land on a slot. Defaults off (the tools keep instant single-click). */
+  confirmSelection?: boolean;
 }) {
   const seedHsl = useMemo(() => {
     if (value?.hex) {
@@ -103,6 +113,8 @@ export function ColorPicker({
   /* ---------- library sub-panel ---------- */
   const [textQuery, setTextQuery] = useState("");
   const [showFurther, setShowFurther] = useState(false);
+  // Recipe confirm-flow: the highlighted-but-not-yet-added library paint.
+  const [pendingPaint, setPendingPaint] = useState<{ hex: string; paintId: string } | null>(null);
 
   const libraryRows = useMemo<MatchResult[]>(() => {
     let pool: ReadonlyArray<Paint> = paints;
@@ -155,6 +167,9 @@ export function ColorPicker({
 
   const emitHex = (hex: string) => onSelect({ hex, paintId: null });
   const emitPaint = (hex: string, paintId: string) => onSelect({ hex, paintId });
+  // Which library row reads as selected: the pending highlight in confirm mode,
+  // otherwise the seed selection passed by the host.
+  const highlightedPaintId = confirmSelection ? pendingPaint?.paintId : value?.paintId;
 
   return (
     <div
@@ -184,9 +199,11 @@ export function ColorPicker({
             {pickedHex}
             {band ? <span className="text-fg"> · {band}</span> : null}
           </span>
-          <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
-            Use this colour
-          </Button>
+          {!confirmSelection && (
+            <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
+              Use this colour
+            </Button>
+          )}
         </div>
 
         <label className="flex items-center gap-2">
@@ -260,12 +277,16 @@ export function ColorPicker({
             <li key={m.paint.id}>
               <button
                 type="button"
-                onClick={() => emitPaint(m.paint.hex, m.paint.id)}
+                onClick={() =>
+                  confirmSelection
+                    ? setPendingPaint({ hex: m.paint.hex, paintId: m.paint.id })
+                    : emitPaint(m.paint.hex, m.paint.id)
+                }
                 className={cn(
                   "flex w-full items-center gap-3 border border-cyan/20 px-2 py-1.5 text-left transition-colors hover:border-cyan hover:bg-cyan/5",
-                  value?.paintId === m.paint.id && "border-cyan",
+                  highlightedPaintId === m.paint.id && "border-cyan bg-cyan/10",
                 )}
-                aria-current={value?.paintId === m.paint.id || undefined}
+                aria-current={highlightedPaintId === m.paint.id || undefined}
               >
                 <Swatch hex={m.paint.hex} />
                 <span className="flex min-w-0 flex-1 flex-col">
@@ -303,8 +324,22 @@ export function ColorPicker({
             </li>
           )}
         </ul>
+        {/* Recipe confirm-flow: highlight a library paint, then ADD PAINT commits
+            that specific catalog paint to the slot. Disabled until one is picked. */}
+        {confirmSelection && (
+          <Button
+            size="sm"
+            disabled={!pendingPaint}
+            onClick={() => pendingPaint && emitPaint(pendingPaint.hex, pendingPaint.paintId)}
+            className="self-start"
+          >
+            Add Paint
+          </Button>
+        )}
       </section>
 
+      {showEyedropper && (
+      <>
       <hr className="border-cyan/20" />
 
       {/* Sub-panel 3 — eyedropper */}
@@ -343,6 +378,8 @@ export function ColorPicker({
           </div>
         )}
       </section>
+      </>
+      )}
     </div>
   );
 }
