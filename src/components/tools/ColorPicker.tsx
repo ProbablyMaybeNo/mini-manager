@@ -113,11 +113,27 @@ export function ColorPicker({
   /* ---------- library sub-panel ---------- */
   const [textQuery, setTextQuery] = useState("");
   const [showFurther, setShowFurther] = useState(false);
+  // Company facet (mirrors the Library page's Company filter): a scrollable
+  // checkbox list of the distinct brands in the catalog, AND-composed with
+  // the search + ΔE cap.
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   // Recipe confirm-flow: the highlighted-but-not-yet-added library paint.
   const [pendingPaint, setPendingPaint] = useState<{ hex: string; paintId: string } | null>(null);
 
+  const brandOptions = useMemo(
+    () => Array.from(new Set(paints.map((p) => p.brand))).sort(),
+    [paints],
+  );
+  const toggleBrand = (b: string) =>
+    setSelectedBrands((prev) =>
+      prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b],
+    );
+
   const libraryRows = useMemo<MatchResult[]>(() => {
     let pool: ReadonlyArray<Paint> = paints;
+    if (selectedBrands.length) {
+      pool = pool.filter((p) => selectedBrands.includes(p.brand));
+    }
     if (textQuery.trim()) {
       const q = textQuery.trim().toLowerCase();
       pool = pool.filter(
@@ -129,7 +145,7 @@ export function ColorPicker({
     }
     const cap = showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE;
     return matchesWithinDeltaE(pickedHex, pool, cap);
-  }, [paints, textQuery, pickedHex, showFurther]);
+  }, [paints, selectedBrands, textQuery, pickedHex, showFurther]);
 
   /* ---------- eyedropper sub-panel ---------- */
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -260,6 +276,43 @@ export function ColorPicker({
           aria-label="Filter library paints"
           className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
         />
+
+        {/* Company facet — scrollable checkbox list, one per brand (mirrors
+            the Library page's Company filter). */}
+        {brandOptions.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <span className="inline-block w-fit bg-green/20 px-2 py-0.5 label-osd text-green">
+              Company{selectedBrands.length ? ` · ${selectedBrands.length}` : ""}
+            </span>
+            <div className="flex max-h-40 flex-col overflow-y-auto">
+              {brandOptions.map((b) => {
+                const checked = selectedBrands.includes(b);
+                return (
+                  <label
+                    key={b}
+                    className="flex cursor-pointer items-center justify-between py-1 font-body text-body text-fg"
+                  >
+                    <span className="uppercase tracking-[0.1em]">{b}</span>
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={checked}
+                      aria-label={b}
+                      onClick={() => toggleBrand(b)}
+                      className={cn(
+                        "flex h-4 w-4 items-center justify-center border",
+                        checked ? "border-cyan bg-cyan/20 text-cyan-lite" : "border-fg-faint",
+                      )}
+                    >
+                      {checked && "✓"}
+                    </button>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <span className="font-body text-body text-fg">
             {catalogLoading
