@@ -457,6 +457,19 @@ export const wishlistItems = sqliteTable(
       .notNull()
       .default("WISHLIST"),
     kind: text("kind", { enum: wishlistKinds }).notNull().default("paint"),
+    /**
+     * Library ↔ Collection sync (batch/library-collection-sync). References
+     * paints.json by id — same no-SQL-FK convention as
+     * `inventory_entry.paint_id` (the catalog is a static asset, not a
+     * table). Nullable: only PAINT-kind rows that are linked to a specific
+     * catalog paint carry a value; manually-typed paint rows with no
+     * catalog match stay null. At most one wishlist_item row should be
+     * linked per (owner, paint_id) — enforced at the application layer by
+     * `reconcilePaintOwnership` (src/lib/paints/reconcileOwnership.ts),
+     * not by a DB unique constraint, since a null paintId is the common
+     * case and SQLite unique indexes already treat NULLs as distinct.
+     */
+    paintId: text("paint_id"),
     notesMd: text("notes_md"),
     scrapedMetadata: text("scraped_metadata"), // JSON blob from the scraper (P2.5)
     dateAdded: integer("date_added", { mode: "timestamp_ms" })
@@ -472,6 +485,7 @@ export const wishlistItems = sqliteTable(
       t.projectId,
     ),
     ownerVendorIdx: index("wishlist_owner_vendor_idx").on(t.ownerId, t.vendor),
+    ownerPaintIdx: index("wishlist_owner_paintid_idx").on(t.ownerId, t.paintId),
   }),
 );
 
