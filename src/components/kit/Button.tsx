@@ -24,7 +24,7 @@ import { cn } from "@/lib/cn";
  * keeps working — the cyan-led `primary` is now a true filled button.
  */
 const button = cva(
-  "inline-flex items-center justify-center gap-2 rounded-[6px] font-display font-bold text-button tracking-tight transition-[background-color,border-color,color] duration-150 ease-out focus-visible:outline-2 disabled:border-border disabled:bg-transparent disabled:text-fg-muted disabled:pointer-events-none motion-safe:active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 rounded-[6px] font-display font-bold uppercase text-button tracking-tight transition-[background-color,border-color,color] duration-150 ease-out focus-visible:outline-2 disabled:border-border disabled:bg-transparent disabled:text-fg-muted disabled:pointer-events-none motion-safe:active:scale-[0.98]",
   {
     variants: {
       variant: {
@@ -78,10 +78,23 @@ const button = cva(
 
 export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof button> {}
+    VariantProps<typeof button> {
+  /**
+   * Opt out of the app-wide ALL-CAPS button casing. Use only when the label
+   * echoes user data or a value (recipe / paint names, hex codes) where forcing
+   * uppercase would misrepresent it. `text-transform` doesn't change the DOM
+   * text or accessible name, so this is purely visual.
+   */
+  normalCase?: boolean;
+}
 
-export function Button({ className, variant, size, ...props }: ButtonProps) {
-  return <button className={cn(button({ variant, size }), className)} {...props} />;
+export function Button({ className, variant, size, normalCase, ...props }: ButtonProps) {
+  return (
+    <button
+      className={cn(button({ variant, size }), normalCase && "normal-case", className)}
+      {...props}
+    />
+  );
 }
 
 export { button as buttonVariants };

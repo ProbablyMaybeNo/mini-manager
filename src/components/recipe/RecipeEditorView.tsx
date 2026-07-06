@@ -89,7 +89,9 @@ export function RecipeEditorView({
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto p-6">
       <div className="flex items-center gap-3">
-        <Button variant="tertiary" onClick={onBack}>
+        {/* backLabel can be "‹ back to <project title>" — keep the user's
+            project name in its real casing rather than shouting it. */}
+        <Button variant="tertiary" normalCase onClick={onBack}>
           {backLabel}
         </Button>
       </div>
