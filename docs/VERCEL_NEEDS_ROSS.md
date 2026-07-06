@@ -1,43 +1,34 @@
 # Vercel comments — Ross's decision queue
 
 **Snapshot:** 2026-07-06 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
-**11 unresolved threads** need your call. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**5 unresolved threads** — every one is already triaged and **awaiting your call**; none is a pending auto-fix. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-06, recipes/library/tools batch):** shipped 3 clear, bounded copy fixes (PR #84 → `main`, CI-gated, resolved after prod verify) — `NY5ieezHa3ag` + `W0TJnSWm38nP` (recipe "ADD STEP" button → "ADD PAINT" in both editors) and `s6zlyxVZ9-cI` (stacking blurb "substrate" → "undercoat", matching the field label). Six new threads were genuinely ambiguous / feature-scale, so each got ONE clarifying question and was left **open** (below). No further code shipped.
+> **This run (2026-07-06):** no code shipped. All 5 open threads already carry a clarifying/status reply and are waiting on your input — no new answers had landed, so there was nothing new to build. Refreshed this doc down from 11 → 5 to match the live unresolved set (6 threads previously listed here have since been resolved: `VAzSk3GPrJcV`, `qMFgQPyIPVcx`, `iXM7bS2hnZyH`, `yT9vvxQhK3Ce`, `PNzm-KAFYLal`, `pArUXV1syxEs`).
 >
-> **Earlier runs (2026-07-06):** two `/dashboard` clarifications posted (`PNzm-KAFYLal`, `pArUXV1syxEs`); and 3 landing/pricing colour fixes shipped via PR #82 (`Tcylyd5enVXT`, `Z2r21cCQAPQr`, `8myNPt4auK8V`).
+> **Earlier runs (2026-07-06):** shipped copy fixes via PR #84 (`NY5ieezHa3ag`, `W0TJnSWm38nP`, `s6zlyxVZ9-cI`) and colour fixes via PR #82 (`Tcylyd5enVXT`, `Z2r21cCQAPQr`, `8myNPt4auK8V`); plus the library TYPE facet, paint side-panel Wave 2 redesign, and picker Company facet now on `main`.
 
 ---
 
-## 🔴 NEEDS YOUR CALL
+## 🔴 NEEDS YOUR CALL (5)
 
-### New this run (6) — clarifying question posted, left open
-
-| Thread | Page | Ask | Question asked |
+| Thread | Page | Ask | Where it stands / what I need from you |
 |---|---|---|---|
-| `VAzSk3GPrJcV` | /recipes | Add an "Info"/help button that opens a popup explaining what each tool is and how to use it. | Real feature. Asked: Info button in the Pick & Paint header opening a per-tool popover (Match / Stacking / Wheel), or one combined "how these tools work" panel? And will you supply the copy or want me to draft it? |
-| `qMFgQPyIPVcx` | /recipes | Change the recipe filter to look like the library filter (scrollable checkbox list of companies). | UI rework. Asked: confirm the target is the recipe brand/company filter → library-style multi-select checklist, replacing the current control in the same spot. |
-| `ZtbnthysMzUv` | /recipes | "The text is messed up here and doesn't fit in the box." (RANKED MATCHES distance number.) | Can't reproduce from source — the flagged element is a single `tabular-nums` span that shouldn't overflow. Asked for a screenshot of exactly what's broken (number wrapping/overflowing vs a label overlapping). |
-| `iXM7bS2hnZyH` | /recipes | Add a way to delete a recipe (button next to SAVE / ATTACH RECIPE). | Destructive feature — no delete affordance today. Asked: place a DELETE RECIPE button on the SAVE/ATTACH row, with a confirm ("can't be undone") before removing and returning to /recipes? |
-| `yT9vvxQhK3Ce` | /library | Do the paint scrapes carry a type? If so, add a TYPE filter. | Answered: yes — catalog carries `type` (Paint/Wash/Metallic/Contrast/Air/Primer/Varnish/Pigment/Effect; Ink/Lacquer reserved). Not yet a filter axis. Asked: build it as a checkbox section like Company/Status (multi-select, AND-composed)? |
-| `lPzb4lK-RfAE` | /library | Redesign the paint side panel: STATUS dropdown replacing NOT OWNED, a RECIPE section (+ Use in a recipe + per-recipe chips), move HEX beside status, drop INVENTORY. | Substantial redesign. Asked: confirm the full layout, and should panel status auto-sync one-way (Collection → panel) or write back to the Collection table too? |
-
-### Carried over from earlier runs (5) — still awaiting your answer
-
-| Thread | Page | Ask | Why it's open / question asked |
-|---|---|---|---|
-| `PNzm-KAFYLal` | /dashboard | Do a whole-app pass so button font/casing is consistent across all button colours. | Systemic, not a one-switch fix — kit `Button` doesn't force casing; each call site's literal string decides. Most buttons are ALL-CAPS; the empty-state `+ Create your first project` is sentence-case. Asked: normalize **all** buttons to ALL-CAPS app-wide, or keep specific ones sentence-case? |
-| `pArUXV1syxEs` | /dashboard | Make the blue a tiny bit darker — more navy. (welcome banner) | No target hex + ambiguous scope. Banner blue is `#2A6FC9` (deepened `--blue` accent `#3182E0`, kept dark for AA contrast). Asked: scope (this banner vs app-wide `--blue`, also on links) + shade (`#22508F`, toward `#1B3F6E`, or a specific hex)? |
-| `trogZqV-Yo8w` | /collection | Rebuild +ADD MODEL / +ADD PAINT into a full modal: AUTO-ADD URL paste **+** MANUAL-ADD form (name, game, faction, price, project dropdown, status) → save into the table; plus an edit pencil next to the X on each row. | Substantial feature (new modal, manual-entry form + validation, edit/update flow, new row action) — beyond safe auto-fix scope. Queued as a dedicated build; asked to confirm the field set + whether the edit pencil reuses the same modal pre-filled. |
-| `d0MWLSNNjDTd` | /collection | Simplify the stats bar (drop "COLLECTION" title; `PAINT: 00 OWNED 00 WISHLIST $00 TOTAL SPENT [REMAINING] / MODELS: …`) **and** a new per-project budget feature. | Relabel is locked and shippable EXCEPT the `REMAINING` field has no data source without the budget feature. Asked: for `REMAINING`, (a) total cost of WISHLIST items — shippable now — or (b) hold `REMAINING` until per-project budgeting lands? The moment you pick, the relabel ships on its own. |
-| `8Wxk5lw0uh5c` | /tools/stacking | "Add layer button doesn't do anything — remove it or make it add another circle." | Can't reproduce: the **+ Add layer** button is wired and appends a Layer N block (up to 6). It feels dead because the new block inserts *above* the button (lands off-screen) and the Venn only renders 2 circles. Asked: does no new Layer block appear at all, or did you expect a 3rd Venn circle? |
+| `d0MWLSNNjDTd` | /collection | Simplify the stats bar (drop "COLLECTION" title → `PAINT: 00 OWNED 00 WISHLIST $00 TOTAL SPENT [REMAINING] / MODELS: …`), **plus** a per-project budget feature. | Relabel is locked and ready to ship on its own — the **only** blocker is the `REMAINING` field, which has no data source without budgeting. **Pick one and the relabel ships immediately:** (a) `REMAINING` = total cost of WISHLIST (not-yet-bought) items — shippable now; or (b) hold `REMAINING` until the per-project budget feature lands. Budgeting stays a separate feature either way. *(Note: an earlier reply falsely said the relabel was "shipped & live" — it never merged; main/prod still shows the old ▸ COLLECTION bar. Not resolving until it's genuinely on main.)* |
+| `lPzb4lK-RfAE` | /library | Redesign the paint side panel: STATUS dropdown replacing NOT OWNED, HEX beside status, TYPE row, a RECIPE section (+ Use in a recipe + per-recipe chips), drop INVENTORY. | **Mostly shipped & live** (side-panel Wave 2, `8a68401` on main): NOT OWNED + Inventory pot-counter removed; STATUS control + HEX + TYPE row + RECIPE section with "+ Use in a recipe" and linked recipe chips all in. **One gap keeping it open:** the STATUS control reads/writes the library's own ownership store but can't auto-sync with the Collections paint table (that table title-matches paints with no `paintId` link). Bridging them needs a small schema change (add `paintId` to collection paint rows). **Do you want me to make that schema change so library STATUS and the Collections list stay in lockstep?** |
+| `trogZqV-Yo8w` | /collection | Rebuild +ADD MODEL / +ADD PAINT into a full modal: AUTO-ADD URL paste **+** MANUAL-ADD form (name · game · faction · price · project dropdown · status) → save into the table; plus an edit ✎ next to the X on each row. | Substantial feature (new modal, manual-entry form + validation, edit/update flow, new row action) — beyond safe auto-fix scope, **queued as a dedicated build**. To lock scope: confirm that's the full manual field set, and that the edit ✎ reopens the same modal pre-filled with the row's values. |
+| `8Wxk5lw0uh5c` | /tools/stacking | "Add layer button doesn't do anything — remove it or make it add another circle." | **Not a bug** — the **+ Add layer** button is wired and appends a Layer N (hex + opacity) block, capped at 6. It feels dead because (1) the new block inserts *above* the button (so it lands off-screen), and (2) the Venn only renders 2 circles (undercoat ∩ top glaze) by design, so layer 3+ doesn't change it (the PREDICTED RESULT swatch does update). **Which do you want:** (a) auto-scroll/highlight the new layer when added, and/or (b) surface layers 3+ in the result preview? |
+| `ZtbnthysMzUv` | /recipes | "The text is messed up here and doesn't fit in the box." (RANKED MATCHES distance number.) | **Can't reproduce from source** — the flagged element is a single `tabular-nums` CIEDE2000 match-distance span that shouldn't overflow, and the captured DOM predates a recent recipe-panel component swap so it no longer maps to anything overflowing in the live build. **Need a fresh screenshot of the exact box (or which field/label it is)** to target the precise fix. |
 
 ---
 
-## 🟢 SHIPPED THIS RUN (resolved after prod verify)
+## 🟢 Recently shipped & resolved (context)
 
-| Thread | Page | Change | Files |
-|---|---|---|---|
-| `NY5ieezHa3ag` | /recipes | "+ ADD STEP" button → "+ ADD PAINT" | `src/components/recipe/RecipeWorkbench.tsx` |
-| `W0TJnSWm38nP` | /recipes/new | "+ Add Step" button → "+ Add Paint" | `src/components/recipe/RecipeEditorView.tsx` |
-| `s6zlyxVZ9-cI` | /recipes (stacking) | Blurb "over a substrate" → "over an undercoat" (matches the "Undercoat" field label) | `src/components/tools/LayeringTool.tsx` |
+Landed on `main` and resolved after prod verify in earlier 2026-07-06 runs — kept here only so the loop doesn't re-open them:
+
+| Thread | Change |
+|---|---|
+| `NY5ieezHa3ag` / `W0TJnSWm38nP` | Recipe "+ ADD STEP" button → "+ ADD PAINT" (both editors) — PR #84 |
+| `s6zlyxVZ9-cI` | Stacking blurb "over a substrate" → "over an undercoat" — PR #84 |
+| `Tcylyd5enVXT` / `Z2r21cCQAPQr` / `8myNPt4auK8V` | Landing/pricing colour fixes — PR #82 |
+| `yT9vvxQhK3Ce` | Library TYPE filter facet |
+| `VAzSk3GPrJcV`, `qMFgQPyIPVcx`, `iXM7bS2hnZyH`, `PNzm-KAFYLal`, `pArUXV1syxEs` | Resolved (answered / superseded) since the last snapshot |
