@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/shell";
 import type { LibraryFilter, MatchResult, Paint } from "@/lib/types";
 import { ColorMapRail } from "./ColorMapRail";
 import { FilterPanelContent } from "./FilterPanelContent";
-import { PaintInfoPanelContent } from "./PaintInfoPanelContent";
+import { PaintInfoPanelContent, type PaintStatus } from "./PaintInfoPanelContent";
 import { PaintListTable } from "./PaintListTable";
 import { SwatchWall } from "./SwatchWall";
 
@@ -22,7 +22,7 @@ export interface LibraryViewProps {
   status?: LibraryStatus;
   // selected paint detail (host-provided derived data)
   selectedPaint: Paint | null;
-  ownedCount: number;
+  recipesForPaint: { id: string; name: string }[];
   matchResults: MatchResult[];
   similar: Paint[];
   // callbacks
@@ -32,8 +32,7 @@ export interface LibraryViewProps {
   onClosePaint: () => void;
   onToggleOwned: (paint: Paint) => void;
   onToggleWishlist: (paint: Paint) => void;
-  onStepOwned: (delta: number) => void;
-  onWishlist: () => void;
+  onSetStatus: (status: PaintStatus) => void;
   onCopyHex: () => void;
   onAssignPaint: (paint: Paint) => void;
   onJumpHue?: (hue: number) => void;
@@ -50,7 +49,7 @@ export function LibraryView(props: LibraryViewProps) {
     typeOptions,
     status = "ready",
     selectedPaint,
-    ownedCount,
+    recipesForPaint,
     matchResults,
     similar,
     onFilterChange,
@@ -59,8 +58,7 @@ export function LibraryView(props: LibraryViewProps) {
     onClosePaint,
     onToggleOwned,
     onToggleWishlist,
-    onStepOwned,
-    onWishlist,
+    onSetStatus,
     onCopyHex,
     onAssignPaint,
     onJumpHue,
@@ -190,11 +188,10 @@ export function LibraryView(props: LibraryViewProps) {
         {selectedPaint && (
           <PaintInfoPanelContent
             paint={selectedPaint}
-            ownedCount={ownedCount}
+            recipesForPaint={recipesForPaint}
             matchResults={matchResults}
             similar={similar}
-            onStepOwned={onStepOwned}
-            onWishlist={onWishlist}
+            onSetStatus={onSetStatus}
             onCopyHex={onCopyHex}
             onAssignPaint={onAssignPaint}
           />

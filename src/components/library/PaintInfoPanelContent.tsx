@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Swatch } from "@/components/kit";
-import { cn } from "@/lib/cn";
+import { Button, Chip, SegmentedToggle, Swatch } from "@/components/kit";
 import { harmonies, HARMONY_SCHEMES, type HarmonyScheme } from "@/lib/color";
 import type { MatchResult, Paint } from "@/lib/types";
+
+/** The tri-state the STATUS control resolves to. */
+export type PaintStatus = "none" | "owned" | "wishlist";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -18,128 +20,116 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/** Paint-info slide-out body — exact 3.4.1 spec (no confidence/source/redundant chip). */
+const STATUS_OPTIONS = [
+  { value: "none", label: "Status" },
+  { value: "owned", label: "Owned" },
+  { value: "wishlist", label: "Wishlist" },
+] as const;
+
+/** Paint-info slide-out body (Wave 2 redesign):
+ *  swatch → STATUS + HEX → TYPE → RECIPE (use-in-recipe + chips) →
+ *  harmonies / match / similar. */
 export function PaintInfoPanelContent({
   paint,
-  ownedCount,
+  recipesForPaint,
   matchResults,
   similar,
-  onStepOwned,
-  onWishlist,
+  onSetStatus,
   onCopyHex,
   onAssignPaint,
 }: {
   paint: Paint;
-  ownedCount: number;
+  /** Recipes owned by the user that pin this paint — one chip each. */
+  recipesForPaint: { id: string; name: string }[];
   matchResults: MatchResult[];
   similar: Paint[];
-  onStepOwned: (delta: number) => void;
-  onWishlist: () => void;
+  onSetStatus: (status: PaintStatus) => void;
   onCopyHex: () => void;
   onAssignPaint: (paint: Paint) => void;
 }) {
   const [scheme, setScheme] = useState<HarmonyScheme>("Complementary");
 
+  const status: PaintStatus = paint.owned
+    ? "owned"
+    : paint.wishlisted
+      ? "wishlist"
+      : "none";
+
   return (
     <div className="flex flex-col gap-5">
-      {/* Large swatch + owned state */}
+      {/* Large swatch */}
       <div
         className="h-28 w-full border border-fg/20"
         style={{ backgroundColor: paint.hex }}
         aria-label={`${paint.name} swatch`}
       />
-      <span
-        className={cn(
-          "inline-flex w-fit items-center gap-1 label-osd",
-          paint.owned ? "text-green" : "text-fg-faint",
-        )}
-      >
-        {paint.owned ? "● Owned" : "○ Not owned"}
-      </span>
 
-      {/* DOP-015 — Library→Recipe bridge at the moment of need: assign THIS
-          paint (the one you're inspecting) straight into a recipe, instead of
-          only being able to assign one of its lower-down match alternatives. */}
-      <Button variant="attach" size="sm" className="w-fit" onClick={() => onAssignPaint(paint)}>
-        + Use in a recipe
-      </Button>
+      {/* STATUS (left) + HEX (right) on one row */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <Field label="Status">
+          <SegmentedToggle
+            aria-label="Ownership status"
+            options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            value={status}
+            onChange={onSetStatus}
+          />
+        </Field>
+
+        <Field label="Hex">
+          <div className="flex items-center gap-2">
+            <span className="font-body text-body uppercase text-fg">{paint.hex}</span>
+            <button
+              type="button"
+              onClick={onCopyHex}
+              aria-label="Copy hex"
+              title="Copy hex"
+              className="border border-green/50 p-1.5 text-green hover:bg-green/10"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden="true"
+              >
+                <rect x="9" y="9" width="11" height="11" />
+                <path d="M5 15V4h11" />
+              </svg>
+            </button>
+          </div>
+        </Field>
+      </div>
 
       <Field label="Type">
         <span className="font-body text-body text-fg">{paint.type}</span>
       </Field>
 
-      <Field label="Hex">
-        <div className="flex items-center gap-2">
-          <span className="font-body text-body uppercase text-fg">{paint.hex}</span>
-          <button
-            type="button"
-            onClick={onCopyHex}
-            aria-label="Copy hex"
-            title="Copy hex"
-            className="border border-green/50 p-1.5 text-green hover:bg-green/10"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              aria-hidden="true"
-            >
-              <rect x="9" y="9" width="11" height="11" />
-              <path d="M5 15V4h11" />
-            </svg>
-          </button>
-        </div>
-      </Field>
-
-      <Field label="Inventory">
-        <div className="flex items-center gap-3">
-          {/* Owned counter — labelled + tooltipped so it's clear the number is
-              how many of this paint you already OWN (MM-19). */}
-          <div
-            className="flex items-center border border-green/50"
-            title="How many of this paint you already own"
-          >
-            <span className="px-2 label-osd text-green">
-              Owned
-            </span>
-            <button
-              type="button"
-              aria-label="Decrease owned count"
-              onClick={() => onStepOwned(-1)}
-              className="inline-flex min-h-6 min-w-6 items-center justify-center px-2 py-1 font-button text-button text-green hover:bg-green/10"
-            >
-              −
-            </button>
-            <span
-              className="w-8 text-center font-num2 text-num2 tabular-nums text-green"
-              aria-label={`Owned: ${ownedCount}`}
-            >
-              {ownedCount}
-            </span>
-            <button
-              type="button"
-              aria-label="Increase owned count"
-              onClick={() => onStepOwned(1)}
-              className="inline-flex min-h-6 min-w-6 items-center justify-center px-2 py-1 font-button text-button text-green hover:bg-green/10"
-            >
-              +
-            </button>
+      {/* RECIPE — assign this paint + chips for the recipes already using it. */}
+      <Field label="Recipe">
+        <Button
+          variant="attach"
+          size="sm"
+          className="w-fit"
+          onClick={() => onAssignPaint(paint)}
+        >
+          + Use in a recipe
+        </Button>
+        {recipesForPaint.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {recipesForPaint.map((r) => (
+              <Link
+                key={r.id}
+                href={`/recipes/${r.id}`}
+                className="transition-opacity hover:opacity-80"
+                title={`Open recipe ${r.name}`}
+              >
+                <Chip accent="cyan">{r.name}</Chip>
+              </Link>
+            ))}
           </div>
-          {/* Wishlist toggle (MM-19): yellow, with a filled/active state when
-              the paint is on the wishlist. onWishlist persists the toggle.
-              Inactive label matches the Figma "MARK AS WANTED" CTA (UX-014). */}
-          <Button
-            variant="addWishlist"
-            size="sm"
-            aria-pressed={paint.wishlisted}
-            onClick={onWishlist}
-          >
-            {paint.wishlisted ? "★ Wishlisted" : "+ Wishlist"}
-          </Button>
-        </div>
+        )}
       </Field>
 
       <Field label="Harmonies">

@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { loadInventoryFlags } from "@/lib/appData";
+import { loadInventoryFlags, loadRecipesByPaintId } from "@/lib/appData";
 import { LibraryClient } from "./LibraryClient";
 
 /**
@@ -10,6 +10,10 @@ import { LibraryClient } from "./LibraryClient";
  */
 export default async function LibraryPage() {
   const session = await auth();
-  const flags = await loadInventoryFlags(session?.user?.id ?? null);
-  return <LibraryClient flags={flags} />;
+  const userId = session?.user?.id ?? null;
+  const [flags, recipesByPaint] = await Promise.all([
+    loadInventoryFlags(userId),
+    loadRecipesByPaintId(userId),
+  ]);
+  return <LibraryClient flags={flags} recipesByPaint={recipesByPaint} />;
 }

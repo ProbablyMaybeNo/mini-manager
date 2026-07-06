@@ -511,6 +511,42 @@ export async function getProjectRecipeMap(
   return out;
 }
 
+/**
+ * Reverse lookup — every recipe (id + name) that pins a given catalog
+ * paint, keyed by that paint's catalog id. Powers the Library paint
+ * panel's RECIPE chips ("which of my recipes use this paint?").
+ *
+ * Two owner-scoped reads: the user's recipes (for id → name + the leak
+ * guard) then their slots. Colour-only slots (no paintId) contribute
+ * nothing. A recipe appears once per paint even if it pins it twice.
+ */
+export async function getRecipesByPaintId(
+  userId: string,
+): Promise<Map<string, { id: string; name: string }[]>> {
+  const recipeRows = await db
+    .select({ id: recipes.id, name: recipes.name })
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId));
+  if (recipeRows.length === 0) return new Map();
+
+  const nameById = new Map(recipeRows.map((r) => [r.id, r.name]));
+  const slotRows = await db
+    .select({ recipeId: recipeSlots.recipeId, paintId: recipeSlots.paintId })
+    .from(recipeSlots)
+    .where(inArray(recipeSlots.recipeId, recipeRows.map((r) => r.id)));
+
+  const out = new Map<string, { id: string; name: string }[]>();
+  for (const s of slotRows) {
+    if (!s.paintId) continue;
+    const name = nameById.get(s.recipeId);
+    if (!name) continue;
+    const arr = out.get(s.paintId) ?? [];
+    if (!arr.some((r) => r.id === s.recipeId)) arr.push({ id: s.recipeId, name });
+    out.set(s.paintId, arr);
+  }
+  return out;
+}
+
 /* ============================================================
    Palette derivation
    ============================================================ */

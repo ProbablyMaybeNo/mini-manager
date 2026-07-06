@@ -6,6 +6,7 @@ import {
   getPaintMetaMap,
   getRecipeWithSlots,
   getInspoMapForOwner,
+  getRecipesByPaintId,
   listInspoForRecipe,
   listRecipesForTable,
 } from "@/db/queries/recipes";
@@ -110,6 +111,17 @@ export async function loadInventoryFlags(
     if (entry.isWishlisted) wishlistedIds.push(paintId);
   }
   return { ownedIds, wishlistedIds };
+}
+
+/** Serializable `paintId -> recipes[]` map for the Library paint panel's
+ *  RECIPE chips — the small owner-scoped slice the client merges onto the
+ *  static catalog it loads itself. */
+export async function loadRecipesByPaintId(
+  userId: string | null,
+): Promise<Record<string, { id: string; name: string }[]>> {
+  if (!userId) return {};
+  const map = await getRecipesByPaintId(userId);
+  return Object.fromEntries(map);
 }
 
 /**

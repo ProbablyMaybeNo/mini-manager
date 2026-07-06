@@ -7,6 +7,7 @@ import { useToast } from "@/components/kit";
 import { nearestMatches, similarInOtherBrands } from "@/lib/toolMatch";
 import { COLOR_OPTIONS, colorFamilyForHue, filterPaints } from "@/mock/filterPaints";
 import { EMPTY_LIBRARY_FILTER, type LibraryFilter, type Paint, type PaintType } from "@/lib/types";
+import type { PaintStatus } from "@/components/library/PaintInfoPanelContent";
 import { loadPaints } from "@/lib/paints/loader";
 import { setOwnedCount, toggleWishlistedPaint } from "@/lib/actions/inventory";
 import type { InventoryFlags } from "@/lib/appData";
@@ -32,12 +33,17 @@ const PAINT_TYPE_MAP: Record<string, PaintType> = {
  * owned/wishlisted flags onto it, then drives the kit's LibraryView. Inventory
  * mutations are wired in a later phase; browse / filter / inspect is live.
  */
-export function LibraryClient({ flags }: { flags: InventoryFlags }) {
+export function LibraryClient({
+  flags,
+  recipesByPaint,
+}: {
+  flags: InventoryFlags;
+  recipesByPaint: Record<string, { id: string; name: string }[]>;
+}) {
   const { toast, node } = useToast();
   const [library, setLibrary] = useState<Paint[] | null>(null);
   const [filter, setFilter] = useState<LibraryFilter>(EMPTY_LIBRARY_FILTER);
   const [selected, setSelected] = useState<Paint | null>(null);
-  const [ownedCount, setOwnedCount_] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const [assigning, setAssigning] = useState<Paint | null>(null);
   const [, startTransition] = useTransition();
@@ -97,17 +103,15 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
     () => (selected ? similarInOtherBrands(selected, paints, 4) : []),
     [selected, paints],
   );
-
-  function openPaint(p: Paint) {
-    setSelected(p);
-    setOwnedCount_(p.owned ? 1 : 0);
-  }
+  const recipesForPaint = useMemo(
+    () => (selected ? recipesByPaint[selected.id] ?? [] : []),
+    [selected, recipesByPaint],
+  );
 
   function toggleOwned(p: Paint) {
     const nextOwned = !p.owned;
     const count = nextOwned ? 1 : 0;
     patchPaint(p.id, { owned: nextOwned });
-    if (selected?.id === p.id) setOwnedCount_(count);
     startTransition(async () => {
       await setOwnedCount({ paintId: p.id, count });
     });
@@ -120,16 +124,16 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
     });
   }
 
-  function stepOwned(delta: number) {
-    const next = Math.max(0, ownedCount + delta);
-    setOwnedCount_(next);
-    if (selected) {
-      patchPaint(selected.id, { owned: next > 0 });
-      const id = selected.id;
-      startTransition(async () => {
-        await setOwnedCount({ paintId: id, count: next });
-      });
-    }
+  /** STATUS control (tri-state): compose the two independent inventory
+   *  flags so OWNED / WISHLIST are mutually exclusive and STATUS clears
+   *  both. Reuses the existing owned/wishlist server actions. */
+  function setStatus(next: PaintStatus) {
+    const p = selected;
+    if (!p) return;
+    const wantOwned = next === "owned";
+    const wantWish = next === "wishlist";
+    if (p.owned !== wantOwned) toggleOwned(p);
+    if (p.wishlisted !== wantWish) toggleWishlist(p);
   }
 
   return (
@@ -143,19 +147,16 @@ export function LibraryClient({ flags }: { flags: InventoryFlags }) {
       typeOptions={typeOptions}
       status={library === null ? "loading" : "ready"}
       selectedPaint={selected}
-      ownedCount={ownedCount}
+      recipesForPaint={recipesForPaint}
       matchResults={matchResults}
       similar={similar}
       onFilterChange={setFilter}
       onClearFilter={() => setFilter(EMPTY_LIBRARY_FILTER)}
-      onOpenPaint={openPaint}
+      onOpenPaint={setSelected}
       onClosePaint={() => setSelected(null)}
       onToggleOwned={toggleOwned}
       onToggleWishlist={toggleWishlist}
-      onStepOwned={stepOwned}
-      onWishlist={() => {
-        if (selected) toggleWishlist(selected);
-      }}
+      onSetStatus={setStatus}
       onCopyHex={() => {
         if (selected) void navigator.clipboard?.writeText(selected.hex);
       }}
