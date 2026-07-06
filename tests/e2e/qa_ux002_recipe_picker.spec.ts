@@ -25,7 +25,7 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
     // the SlideOutPanel renders (guards a pre-hydration click miss).
     const dialog = page.getByRole("dialog", { name: "Pick & Paint" });
     await expect(async () => {
-      await page.getByRole("button", { name: "+ Add Step" }).click();
+      await page.getByRole("button", { name: "+ Add Paint" }).click();
       await expect(dialog).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 30_000 });
 

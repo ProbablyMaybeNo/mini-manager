@@ -168,7 +168,7 @@ export function LayeringTool({
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="STACKING" accent="purple" className="flex flex-col gap-3 p-5">
           <p className="font-body text-body text-fg">
-            Stack transparent glaze layers over a substrate to predict the
+            Stack transparent glaze layers over an undercoat to predict the
             painted result (optical mix, bottom → top).
           </p>
           <HexField

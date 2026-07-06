@@ -1,23 +1,36 @@
 # Vercel comments — Ross's decision queue
 
 **Snapshot:** 2026-07-06 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
-**5 unresolved threads** need your call. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**11 unresolved threads** need your call. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-06, later):** two new comments landed on `/dashboard`, both genuinely ambiguous, so neither was auto-fixed — a clarifying question was posted on each and both left open (`PNzm-KAFYLal` app-wide button-casing standard, `pArUXV1syxEs` navy-blue shade + scope). No code shipped this run; this doc refresh is the only change. The 5 threads below are all waiting on an answer from you.
+> **This run (2026-07-06, recipes/library/tools batch):** shipped 3 clear, bounded copy fixes (PR #84 → `main`, CI-gated, resolved after prod verify) — `NY5ieezHa3ag` + `W0TJnSWm38nP` (recipe "ADD STEP" button → "ADD PAINT" in both editors) and `s6zlyxVZ9-cI` (stacking blurb "substrate" → "undercoat", matching the field label). Six new threads were genuinely ambiguous / feature-scale, so each got ONE clarifying question and was left **open** (below). No further code shipped.
 >
-> **Earlier run (2026-07-06):** shipped 3 clear, bounded fixes (PR #82 → `main`, CI-gated, resolved after prod verify) — `Tcylyd5enVXT` (landing purple text/PRO-panel/triangle bullets → neon green), `Z2r21cCQAPQr` (pricing FOUNDER tier purple → neon green), `8myNPt4auK8V` (landing page background → solid black to match the logo). Also repaired a pre-existing `package-lock.json` drift (missing `esbuild@0.28.1` subtree) that was failing `npm ci` in CI on `main` itself.
+> **Earlier runs (2026-07-06):** two `/dashboard` clarifications posted (`PNzm-KAFYLal`, `pArUXV1syxEs`); and 3 landing/pricing colour fixes shipped via PR #82 (`Tcylyd5enVXT`, `Z2r21cCQAPQr`, `8myNPt4auK8V`).
 
 ---
 
 ## 🔴 NEEDS YOUR CALL
 
+### New this run (6) — clarifying question posted, left open
+
+| Thread | Page | Ask | Question asked |
+|---|---|---|---|
+| `VAzSk3GPrJcV` | /recipes | Add an "Info"/help button that opens a popup explaining what each tool is and how to use it. | Real feature. Asked: Info button in the Pick & Paint header opening a per-tool popover (Match / Stacking / Wheel), or one combined "how these tools work" panel? And will you supply the copy or want me to draft it? |
+| `qMFgQPyIPVcx` | /recipes | Change the recipe filter to look like the library filter (scrollable checkbox list of companies). | UI rework. Asked: confirm the target is the recipe brand/company filter → library-style multi-select checklist, replacing the current control in the same spot. |
+| `ZtbnthysMzUv` | /recipes | "The text is messed up here and doesn't fit in the box." (RANKED MATCHES distance number.) | Can't reproduce from source — the flagged element is a single `tabular-nums` span that shouldn't overflow. Asked for a screenshot of exactly what's broken (number wrapping/overflowing vs a label overlapping). |
+| `iXM7bS2hnZyH` | /recipes | Add a way to delete a recipe (button next to SAVE / ATTACH RECIPE). | Destructive feature — no delete affordance today. Asked: place a DELETE RECIPE button on the SAVE/ATTACH row, with a confirm ("can't be undone") before removing and returning to /recipes? |
+| `yT9vvxQhK3Ce` | /library | Do the paint scrapes carry a type? If so, add a TYPE filter. | Answered: yes — catalog carries `type` (Paint/Wash/Metallic/Contrast/Air/Primer/Varnish/Pigment/Effect; Ink/Lacquer reserved). Not yet a filter axis. Asked: build it as a checkbox section like Company/Status (multi-select, AND-composed)? |
+| `lPzb4lK-RfAE` | /library | Redesign the paint side panel: STATUS dropdown replacing NOT OWNED, a RECIPE section (+ Use in a recipe + per-recipe chips), move HEX beside status, drop INVENTORY. | Substantial redesign. Asked: confirm the full layout, and should panel status auto-sync one-way (Collection → panel) or write back to the Collection table too? |
+
+### Carried over from earlier runs (5) — still awaiting your answer
+
 | Thread | Page | Ask | Why it's open / question asked |
 |---|---|---|---|
-| `PNzm-KAFYLal` | /dashboard | "Do a pass of the whole app so button font/casing is consistent across all button colours — one cyan button shouldn't be sentence-case while another is ALL-CAPS." | Systemic, not a one-switch fix: the kit `Button` doesn't force casing, so each call site's casing depends on the literal string it passes. Most buttons are ALL-CAPS (`CREATE YOUR FIRST PROJECT`, `BROWSE LIBRARY`); the empty-state `+ Create your first project` is sentence-case. App-wide scope + the target standard isn't locked. Asked: normalize **all** buttons to ALL-CAPS app-wide (matches the terminal chrome), or keep specific ones sentence-case? Confirm and it ships in one PR. |
-| `pArUXV1syxEs` | /dashboard | "Make the blue we're using a tiny bit darker — more of a navy blue." (Selected element: the `> SYS — WELCOME` banner.) | No target hex + ambiguous scope. The banner blue is `#2A6FC9` (a deepened step of the `--blue` accent `#3182E0`, kept darker for AA contrast on white text). Asked: (1) scope — just this welcome banner, or the app-wide `--blue` accent (also on links)? (2) shade — navy ~`#22508F`, darker toward `#1B3F6E`, or a specific hex? |
-| `trogZqV-Yo8w` | /collection | Rebuild +ADD MODEL / +ADD PAINT into a full modal: AUTO-ADD URL paste **+** MANUAL-ADD form (name, game, faction, price, project dropdown, status) → save into the table; plus an edit pencil next to the X on each row. | Substantial feature (new modal layout, manual-entry form + validation, an edit/update flow, a new row action) — beyond the safe auto-fix scope. Needs a dedicated build + your sign-off on the field set. Asked: confirm the manual fields, and should the edit pencil reuse the same modal pre-filled? |
-| `d0MWLSNNjDTd` | /collection | Simplify the stats bar (drop "COLLECTION" title; format as `PAINT: 00 OWNED 00 WISHLIST $00 TOTAL SPENT [REMAINING] / MODELS: 00 WISHLIST 00 OWNED 00 COMPLETE $00 TOTAL SPENT [REMAINING]`; drop progress tracking here) **and** a new per-project budget feature. | The relabel is locked and shippable EXCEPT the `REMAINING` field has no data source without the budget feature. Asked: for `REMAINING`, do you want (a) it to mean total cost of WISHLIST (not-yet-bought) items — shippable now — or (b) hold `REMAINING` until the per-project budget feature lands? The moment you pick, the relabel ships on its own; budgeting stays a separate feature. |
-| `8Wxk5lw0uh5c` | /tools/stacking | "Add layer button doesn't do anything — either remove it or make it add another circle." | Can't reproduce from source: the **+ Add layer** button is wired and appends a Layer N block (hex + opacity), enabled up to 6 layers. Two things make it feel dead — the new block inserts *above* the button (button slides down, new layer lands off-screen), and the predicted-result Venn only renders 2 circles. Asked: when you click it, does no new Layer block appear at all — or did you expect a 3rd Venn circle rather than a layer row? |
+| `PNzm-KAFYLal` | /dashboard | Do a whole-app pass so button font/casing is consistent across all button colours. | Systemic, not a one-switch fix — kit `Button` doesn't force casing; each call site's literal string decides. Most buttons are ALL-CAPS; the empty-state `+ Create your first project` is sentence-case. Asked: normalize **all** buttons to ALL-CAPS app-wide, or keep specific ones sentence-case? |
+| `pArUXV1syxEs` | /dashboard | Make the blue a tiny bit darker — more navy. (welcome banner) | No target hex + ambiguous scope. Banner blue is `#2A6FC9` (deepened `--blue` accent `#3182E0`, kept dark for AA contrast). Asked: scope (this banner vs app-wide `--blue`, also on links) + shade (`#22508F`, toward `#1B3F6E`, or a specific hex)? |
+| `trogZqV-Yo8w` | /collection | Rebuild +ADD MODEL / +ADD PAINT into a full modal: AUTO-ADD URL paste **+** MANUAL-ADD form (name, game, faction, price, project dropdown, status) → save into the table; plus an edit pencil next to the X on each row. | Substantial feature (new modal, manual-entry form + validation, edit/update flow, new row action) — beyond safe auto-fix scope. Queued as a dedicated build; asked to confirm the field set + whether the edit pencil reuses the same modal pre-filled. |
+| `d0MWLSNNjDTd` | /collection | Simplify the stats bar (drop "COLLECTION" title; `PAINT: 00 OWNED 00 WISHLIST $00 TOTAL SPENT [REMAINING] / MODELS: …`) **and** a new per-project budget feature. | Relabel is locked and shippable EXCEPT the `REMAINING` field has no data source without the budget feature. Asked: for `REMAINING`, (a) total cost of WISHLIST items — shippable now — or (b) hold `REMAINING` until per-project budgeting lands? The moment you pick, the relabel ships on its own. |
+| `8Wxk5lw0uh5c` | /tools/stacking | "Add layer button doesn't do anything — remove it or make it add another circle." | Can't reproduce: the **+ Add layer** button is wired and appends a Layer N block (up to 6). It feels dead because the new block inserts *above* the button (lands off-screen) and the Venn only renders 2 circles. Asked: does no new Layer block appear at all, or did you expect a 3rd Venn circle? |
 
 ---
 
@@ -25,6 +38,6 @@
 
 | Thread | Page | Change | Files |
 |---|---|---|---|
-| `Tcylyd5enVXT` | / (landing) | "Free to start…" heading, PRO panel accent/label, and PRO-perk triangle bullets: purple → neon green (`--color-green`) | `src/components/public/LandingView.tsx` |
-| `Z2r21cCQAPQr` | /pricing | Featured (FOUNDER) tier: panel accent + border, "Limited seat" chip, seats progress bar: purple → neon green | `src/components/public/PricingView.tsx` |
-| `8myNPt4auK8V` | / (landing) | Landing canvas → solid black to match the pure-black logo (app `--color-bg` `#0d0d17` read faintly blue); scoped to the landing page only | `src/components/public/LandingView.tsx` |
+| `NY5ieezHa3ag` | /recipes | "+ ADD STEP" button → "+ ADD PAINT" | `src/components/recipe/RecipeWorkbench.tsx` |
+| `W0TJnSWm38nP` | /recipes/new | "+ Add Step" button → "+ Add Paint" | `src/components/recipe/RecipeEditorView.tsx` |
+| `s6zlyxVZ9-cI` | /recipes (stacking) | Blurb "over a substrate" → "over an undercoat" (matches the "Undercoat" field label) | `src/components/tools/LayeringTool.tsx` |
