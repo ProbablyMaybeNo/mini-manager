@@ -32,8 +32,8 @@
   --color-border: rgba(255, 255, 255, 0.12); /* hairline divider / panel border — Border */
 
   /* Brand palette — HEX.CODE v2 colour contract (docs/COLOUR_CONTRACT.md). */
-  --color-cyan: #0b78b3; /* brand blue — token key kept `cyan` to avoid a repo-wide class rename. Primary CTA / active-nav / focus / logo (the fill takes white text). */
-  --color-cyan-lite: #4aa8da; /* lighter brand-blue step — blue text / links / labels on the dark bg (clears contrast where the #0b78b3 fill-colour would not) */
+  --color-cyan: #00f5ff; /* loud/important accent — the pop: primary CTAs, active states, focus, brand. Token key kept `cyan` to avoid a repo-wide class rename. (The bright fill takes dark text.) */
+  --color-cyan-lite: #4aa8da; /* quiet blue — links & lower-hierarchy text (2-tier accent) */
   --color-blue: #3182e0; /* style-guide Accent (welcome card / links) */
   --color-green: #09cd7e; /* done / COMPLETE / progress-fill / success */
   --color-yellow: #f5f17a; /* WISHLIST / wishlist add / low-stakes warning */

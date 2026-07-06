@@ -25,7 +25,7 @@ export type Accent =
 
 export const accentText: Record<Accent, string> = {
   // Blue + red as TEXT use the lighter/text-safe steps so they clear AA on the
-  // dark bg (the saturated #0b78b3 / #f7143e stay for fills/borders/icons).
+  // dark bg (the saturated #00f5ff / #f7143e stay for fills/borders/icons).
   cyan: "text-cyan-lite",
   green: "text-green",
   yellow: "text-yellow",
