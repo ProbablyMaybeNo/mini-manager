@@ -152,7 +152,7 @@ export function LandingView() {
       {/* Plans — free vs pro, with the real named benefits */}
       <section className="mx-auto w-full max-w-5xl px-6 pb-16">
         <div className="mb-6 text-center">
-          <h2 className="font-h1 text-h1 text-purple">Free to start. Pro when you need it.</h2>
+          <h2 className="font-h1 text-h1 text-green">Free to start. Pro when you need it.</h2>
           <p className="mt-2 font-body text-body text-fg">
             Run your whole hobby for free — then unlock the power features when you’re ready.
           </p>
@@ -173,14 +173,14 @@ export function LandingView() {
           </Panel>
           <Panel
             label="PRO · WHEN YOU NEED IT"
-            accent="purple"
+            accent="green"
             cornerTicks
             className="flex flex-col gap-4 p-6"
           >
             <ul className="flex flex-col gap-2 text-left">
               {PRO_PERKS.map((perk) => (
                 <li key={perk} className="flex gap-2 font-body text-body text-fg">
-                  <span aria-hidden className="text-purple">▸</span>
+                  <span aria-hidden className="text-green">▸</span>
                   <span>{perk}</span>
                 </li>
               ))}
