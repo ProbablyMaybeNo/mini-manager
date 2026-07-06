@@ -16,6 +16,7 @@ export function RecipeEditorView({
   onShare,
   onBack,
   onSave,
+  onDelete,
   resolvePaintMeta,
   backLabel = "← Recipes",
 }: {
@@ -25,6 +26,9 @@ export function RecipeEditorView({
   onShare: () => void;
   onBack: () => void;
   onSave: () => void;
+  /** Delete this recipe. Omitted (or hidden) for unsaved "new" drafts, which
+   *  have nothing to delete yet. */
+  onDelete?: () => void;
   /** Resolve a picked paint id → display brand/name (catalog lives in the
    *  picker; the editor only needs the labels for the slot row). */
   resolvePaintMeta?: (paintId: string) => { brand: string; name: string } | null;
@@ -136,6 +140,11 @@ export function RecipeEditorView({
         >
           Attach Recipe
         </Button>
+        {onDelete && (
+          <Button variant="outlineRed" onClick={onDelete}>
+            Delete
+          </Button>
+        )}
       </Panel>
 
       {/* ndZ9 — inspiration removed from the creator; the freed space lets the

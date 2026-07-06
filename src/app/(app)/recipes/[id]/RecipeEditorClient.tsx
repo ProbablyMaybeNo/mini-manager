@@ -7,6 +7,7 @@ import { ConfirmDialog, useToast } from "@/components/kit";
 import type { Paint, Project, Recipe } from "@/lib/types";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
+import { deleteRecipe } from "@/lib/actions/recipes";
 import { publishRecipe } from "@/lib/actions/recipeSharing";
 import {
   UNSAVED_CHANGES_MESSAGE,
@@ -50,8 +51,9 @@ export function RecipeEditorClient({
   const [recipe, setRecipe] = useState<Recipe>(initial);
   const [paints, setPaints] = useState<Paint[]>([]);
   const [saved, setSaved] = useState(false);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [confirmingLeave, setConfirmingLeave] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // An unsaved "new" draft is dirty as soon as it has a name or any slots
   // (leaving would discard it); an existing recipe is dirty once edited.
@@ -102,6 +104,21 @@ export function RecipeEditorClient({
     });
   }
 
+  function remove() {
+    if (recipe.id === "new") return;
+    startTransition(async () => {
+      const res = await deleteRecipe({ id: recipe.id });
+      if (res.ok) {
+        setSaved(true); // disarm the unsaved-changes guard for the redirect
+        setConfirmingDelete(false);
+        router.push("/recipes");
+        router.refresh();
+      } else {
+        toast(res.error, "red");
+      }
+    });
+  }
+
   function share() {
     if (recipe.id === "new") {
       toast("Save the recipe before sharing.", "red");
@@ -128,6 +145,7 @@ export function RecipeEditorClient({
         onChange={setRecipe}
         onShare={share}
         onSave={persist}
+        onDelete={isNew ? undefined : () => setConfirmingDelete(true)}
         backLabel={backTo ? `‹ back to ${backTo.title}` : "← Recipes"}
         onBack={() => {
           if (dirty) {
@@ -149,6 +167,19 @@ export function RecipeEditorClient({
           setConfirmingLeave(false);
           router.push(backTo ? `/projects/${backTo.projectId}` : "/recipes");
         }}
+      />
+      <ConfirmDialog
+        open={confirmingDelete}
+        breadcrumb="RECIPE"
+        title="Delete recipe?"
+        message={`“${recipe.name || "Untitled recipe"}” and its ${recipe.slots.length} paint step${
+          recipe.slots.length === 1 ? "" : "s"
+        } will be permanently deleted. This can't be undone.`}
+        confirmLabel="Delete"
+        destructive
+        busy={isPending}
+        onClose={() => setConfirmingDelete(false)}
+        onConfirm={remove}
       />
       {node}
     </>

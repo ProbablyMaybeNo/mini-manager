@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/kit";
+import { ConfirmDialog, useToast } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
+import { deleteRecipe } from "@/lib/actions/recipes";
 import { publishRecipe } from "@/lib/actions/recipeSharing";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import type { Paint, Project, Recipe, RecipeSlot } from "@/lib/types";
@@ -41,7 +42,8 @@ export function RecipeWorkbench({
   const [mobileDetail, setMobileDetail] = useState(false);
   const [paints, setPaints] = useState<Paint[]>([]);
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
-  const [, startTransition] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     let alive = true;
@@ -156,6 +158,24 @@ export function RecipeWorkbench({
       const url = `${window.location.origin}/r/${res.data.slug}`;
       void navigator.clipboard?.writeText(url);
       toast("Public link copied to clipboard", "green");
+    });
+  }
+
+  function remove() {
+    if (!selected) return;
+    startTransition(async () => {
+      const res = await deleteRecipe({ id: selected.id });
+      if (res.ok) {
+        setConfirmingDelete(false);
+        setRecipes((rs) => rs.filter((r) => r.id !== selected.id));
+        setSelectedId(null);
+        setMobileDetail(false);
+        toast("Recipe deleted", "green");
+        router.push("/recipes");
+        router.refresh();
+      } else {
+        toast(res.error, "red");
+      }
     });
   }
 
@@ -410,22 +430,32 @@ export function RecipeWorkbench({
               </button>
             </div>
 
-            {/* Footer actions (37:409 / 28:49). */}
-            <div className="flex items-center justify-between">
+            {/* Footer actions (37:409 / 28:49) — DELETE sits apart on the left so
+                it never crowds the primary SAVE / ATTACH pair. */}
+            <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={persist}
-                className="inline-flex items-center rounded-[6px] bg-green px-4 py-2 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-green/85"
+                onClick={() => setConfirmingDelete(true)}
+                className="inline-flex items-center rounded-[6px] border border-red/60 px-4 py-2 font-mono text-[12px] font-bold uppercase text-red transition-colors hover:border-red hover:bg-red/10"
               >
-                SAVE RECIPE
+                DELETE
               </button>
-              <button
-                type="button"
-                onClick={persist}
-                className="inline-flex items-center rounded-[6px] bg-blue px-4 py-2 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-blue/85"
-              >
-                ATTACH RECIPE
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={persist}
+                  className="inline-flex items-center rounded-[6px] bg-green px-4 py-2 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-green/85"
+                >
+                  SAVE RECIPE
+                </button>
+                <button
+                  type="button"
+                  onClick={persist}
+                  className="inline-flex items-center rounded-[6px] bg-blue px-4 py-2 font-mono text-[12px] font-bold uppercase text-bg transition-colors hover:bg-blue/85"
+                >
+                  ATTACH RECIPE
+                </button>
+              </div>
             </div>
           </div>
         ) : recipes.length === 0 ? (
@@ -465,6 +495,23 @@ export function RecipeWorkbench({
         mode={editing && editing.paintId ? "edit-slot" : "add-slot"}
         initialHex={editing?.swatch ?? null}
         initialPaintId={editing?.paintId || null}
+      />
+      <ConfirmDialog
+        open={confirmingDelete}
+        breadcrumb="RECIPE"
+        title="Delete recipe?"
+        message={
+          selected
+            ? `“${selected.name}” and its ${selected.slots.length} paint step${
+                selected.slots.length === 1 ? "" : "s"
+              } will be permanently deleted. This can't be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        destructive
+        busy={isPending}
+        onClose={() => setConfirmingDelete(false)}
+        onConfirm={remove}
       />
       {toastNode}
     </div>
