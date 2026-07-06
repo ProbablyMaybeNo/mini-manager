@@ -9,6 +9,7 @@ import type { RecipeSlot } from "@/lib/types";
  *  free-text `layer` field stores the chosen technique; unrecognised values fall
  *  through as a neutral pill so legacy/custom layers still render. */
 const TECHNIQUES = [
+  "UNDERCOAT",
   "BASECOAT",
   "SHADE",
   "LAYER",
@@ -19,6 +20,7 @@ const TECHNIQUES = [
 type Technique = (typeof TECHNIQUES)[number];
 
 const TECHNIQUE_ACCENT: Record<Technique, Accent> = {
+  UNDERCOAT: "orange",
   BASECOAT: "green",
   SHADE: "purple",
   LAYER: "cyan",
