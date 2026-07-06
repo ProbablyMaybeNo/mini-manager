@@ -237,13 +237,15 @@ function MatchRow({
 
   return (
     <>
-      <Swatch hex={result.paint.hex} size="lg" />
+      <Swatch hex={result.paint.hex} size="lg" className="shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span aria-hidden className={cn("inline-block h-2 w-2 rounded-full", dotColor)} />
-          <span className="truncate font-body text-body text-fg">{result.paint.name}</span>
+          <span aria-hidden className={cn("inline-block h-2 w-2 shrink-0 rounded-full", dotColor)} />
+          <span className="truncate font-body text-body text-fg" title={result.paint.name}>
+            {result.paint.name}
+          </span>
         </div>
-        <div className="label-osd text-fg">
+        <div className="label-osd truncate text-fg" title={result.paint.brand}>
           {result.paint.brand}
         </div>
         {/* MM-31 — neon-green bar + "NN% color match" label */}
@@ -256,25 +258,32 @@ function MatchRow({
           </span>
         </div>
       </div>
-      <span className="font-num2 text-num2 tabular-nums text-fg" title="CIEDE2000 distance (lower = closer)">
-        Δ{dE.toFixed(1)}
-      </span>
-      {/* MM-32 — USE is neon green (host-styled via the green token). */}
-      <Button
-        size="sm"
-        onClick={() => onUse(result.paint)}
-        className="border-green bg-green/15 text-green hover:bg-green/25"
-      >
-        Use
-      </Button>
-      {/* MM-33 — ASSIGN is pastel purple; opens a recipe dropdown. */}
-      <Button
-        size="sm"
-        onClick={() => onAssign(result.paint)}
-        className="border-purple bg-purple/15 text-purple hover:bg-purple/25"
-      >
-        Assign
-      </Button>
+      {/* ΔE + actions in their own shrink-0 lane so they never collapse onto or
+          overlap the name/brand block in a narrow panel (Pick & Paint). */}
+      <div className="flex shrink-0 items-center gap-2">
+        <span
+          className="font-num2 text-num2 tabular-nums text-fg"
+          title="CIEDE2000 distance (lower = closer)"
+        >
+          Δ{dE.toFixed(1)}
+        </span>
+        {/* MM-32 — USE is neon green (host-styled via the green token). */}
+        <Button
+          size="sm"
+          onClick={() => onUse(result.paint)}
+          className="border-green bg-green/15 text-green hover:bg-green/25"
+        >
+          Use
+        </Button>
+        {/* MM-33 — ASSIGN is pastel purple; opens a recipe dropdown. */}
+        <Button
+          size="sm"
+          onClick={() => onAssign(result.paint)}
+          className="border-purple bg-purple/15 text-purple hover:bg-purple/25"
+        >
+          Assign
+        </Button>
+      </div>
     </>
   );
 }
