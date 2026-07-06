@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { TourReplayButton } from "@/components/tour";
 import { ReportIssueButton } from "@/components/feedback/ReportIssueButton";
@@ -17,19 +18,22 @@ export function SidebarRail() {
       aria-label="Primary"
       className="hidden h-full w-[220px] shrink-0 flex-col border-r border-border bg-surface py-8 min-[840px]:flex"
     >
-      {/* Logo block — cyan accent square + product wordmark, links home. */}
+      {/* Logo block — the Mini Mainframe CRT mark, links home. The art is bright
+          cyan on black; `lighten` drops its black backdrop into the rail so it
+          reads as a glowing mark, not a boxed image. */}
       <Link
         href="/dashboard"
         aria-label="The Mini Mainframe"
-        className="mb-8 flex items-center gap-2.5 px-6"
+        className="mb-8 flex justify-center px-5"
       >
-        <span
-          aria-hidden
-          className="h-7 w-7 shrink-0 rounded-[4px] bg-cyan shadow-[0_0_10px_0_rgba(0,245,255,0.4)]"
+        <Image
+          src="/brand/mini-mainframe-logo-poster.jpg"
+          alt="The Mini Mainframe"
+          width={150}
+          height={150}
+          priority
+          className="h-auto w-[150px] mix-blend-lighten"
         />
-        <span className="font-mono text-[16px] font-extrabold tracking-tight text-fg-bright">
-          MINI&nbsp;MAINFRAME
-        </span>
       </Link>
 
       <NavLinks items={MAIN_NAV} />
