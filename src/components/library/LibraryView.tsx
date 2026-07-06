@@ -161,7 +161,6 @@ export function LibraryView(props: LibraryViewProps) {
         open={filterOpen}
         onClose={() => setFilterOpen(false)}
         title="Filter"
-        width="max-w-xs"
         footer={
           <Button variant="primary" className="w-full" onClick={() => setFilterOpen(false)}>
             Apply

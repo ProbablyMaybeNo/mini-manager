@@ -105,7 +105,6 @@ export function RecipePaintPicker({
       onClose={onClose}
       title="Pick & Paint"
       breadcrumb={contextLabel ? `RECIPE ▸ ${contextLabel.toUpperCase()}` : "RECIPE ▸ PICK & PAINT"}
-      width="max-w-4xl"
     >
       <div className="flex flex-col gap-4">
         <p className="font-mono text-body italic text-fg-dim">

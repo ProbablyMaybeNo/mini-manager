@@ -77,7 +77,6 @@ export function ColorPickerPanel({
       onClose={onClose}
       title={title}
       breadcrumb={breadcrumb}
-      width="max-w-md"
     >
       {/* Re-key on a STABLE target identity (which slot is being edited) so
           re-opening on a different slot resets the wheel / sliders / search,

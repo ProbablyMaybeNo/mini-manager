@@ -16,7 +16,11 @@ export function SlideOutPanel({
   title,
   breadcrumb,
   side = "right",
-  width = "max-w-sm",
+  // The uniform width for every right-side slide-out (detail / filter / picker /
+  // import). Only caps on desktop — the panel is `w-full` so mobile stays
+  // full-bleed regardless. Callers that need a different width (e.g. the mobile
+  // left nav drawer) override this prop.
+  width = "max-w-4xl",
   children,
   footer,
 }: {
