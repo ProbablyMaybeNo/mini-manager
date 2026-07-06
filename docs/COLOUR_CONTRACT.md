@@ -13,7 +13,8 @@ white-on-dark base, down from eight hues each doing three jobs.
 
 | Role | Colour | Hex | Notes |
 |---|---|---|---|
-| **Brand / interactive** | blue | `#0B78B3` fills · `#4AA8DA` text | Primary CTA, active nav, links, focus, logo. The dark fill takes **white** text; the lighter step is for text/links/labels on the dark bg (contrast). |
+| **Loud / important** | cyan | `#00F5FF` | The pop. Primary CTA (dark text on the bright fill), active nav tab, active filter chip, focus rings, logo/brand. The one colour that draws the eye to "act here." |
+| **Quiet / links** | blue | `#4AA8DA` | Lower-hierarchy interactive: inline links, labels, section text, chevrons. A rung below cyan by design (2-tier accent, Ross 2026-07-05) so cyan owns the spotlight. ~7:1 on the dark bg. |
 | **Done** | green | `#09CD7E` | COMPLETE, progress-fill, success, ✓ |
 | **Danger** | red | `#F7143E` | Delete, remove, error. The only saturated red. |
 | **Not-yet / low-stakes** | yellow | `#F5F17A` | WISHLIST status, wishlist add, Low priority |
