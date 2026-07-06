@@ -49,7 +49,7 @@ export function WelcomeCard({ hasProjects = false }: { hasProjects?: boolean }) 
     return (
       <section
         className="flex items-center justify-between gap-3 rounded-[10px] px-4 py-2.5 text-white"
-        style={{ backgroundColor: "#2A6FC9" }}
+        style={{ backgroundColor: "#22568F" }}
       >
         <span className="min-w-0 truncate font-mono text-[13px] text-white">
           <span className="font-bold">&gt; SYS</span> — plan armies, track models, build recipes.
@@ -78,12 +78,12 @@ export function WelcomeCard({ hasProjects = false }: { hasProjects?: boolean }) 
   return (
     // HEX.CODE blue welcome card (4:4): blue fill, white text, dismissible,
     // four jump-off CTAs rendered as inset chips on the blue.
-    // A11y (Phase 5): the card uses a slightly deeper blue than the --blue token
-    // (#2A6FC9 vs #3182E0) so white BODY text clears 4.5:1 (3.89→4.98) — the
-    // bright token stays bright everywhere else (links sit on the dark canvas).
+    // A11y: the card uses a deeper navy than the --blue token (#22568F vs
+    // #3182E0) so white BODY text clears AA comfortably (~7.5:1) — the bright
+    // token stays bright everywhere else (links sit on the dark canvas).
     <section
       className="relative overflow-hidden rounded-[12px] p-6 text-white"
-      style={{ backgroundColor: "#2A6FC9" }}
+      style={{ backgroundColor: "#22568F" }}
     >
       <div className="mb-3 flex items-center justify-between">
         <span className="font-mono text-[14px] font-bold tracking-wide text-white">
