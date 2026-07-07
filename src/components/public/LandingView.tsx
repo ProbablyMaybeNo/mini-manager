@@ -120,12 +120,13 @@ export function LandingView() {
             // never overruns a 320px viewport (MUX-008), settling at the
             // ~44.5px --text-title on wider screens.
             fontSize: "clamp(1.5rem, 7vw, var(--text-title))",
-            // Bright neon green with a strong glow (reviewer asked for more
-            // glow). Layered text-shadows build a fuller neon bloom. Set inline
-            // because the V2 text-glow-* utilities are neutralised no-ops.
+            // Bright neon green with an intense glow (reviewer asked again for
+            // more glow). Five layered text-shadows — a tight bright core out to
+            // a wide soft halo — build a fuller neon bloom. Set inline because
+            // the V2 text-glow-* utilities are neutralised no-ops.
             color: "#39ff14",
             textShadow:
-              "0 0 6px rgba(57, 255, 20, 0.9), 0 0 14px rgba(57, 255, 20, 0.7), 0 0 24px rgba(57, 255, 20, 0.45)",
+              "0 0 4px rgba(57, 255, 20, 1), 0 0 10px rgba(57, 255, 20, 0.95), 0 0 20px rgba(57, 255, 20, 0.8), 0 0 36px rgba(57, 255, 20, 0.6), 0 0 60px rgba(57, 255, 20, 0.4)",
           }}
         >
           Plan your projects.
