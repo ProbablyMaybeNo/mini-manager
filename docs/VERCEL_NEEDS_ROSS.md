@@ -1,9 +1,15 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-07-07 (late cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
-**7 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-07-07 (night cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
+**6 unresolved threads awaiting your call**, plus **2 in flight under other Claude Code tasks**. This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-07, late cron pass):** shipped **1** and posted **1** new clarifying question.
+> **This run (2026-07-07, night cron pass):** shipped **0**, posted **0** new clarifying questions — **no un-handled open threads, nothing safe to auto-fix**.
+> - Triaged all **8** open toolbar threads. Every one is already handled: **6** already carry a clarifying question awaiting your call (the table below), and **2** are picked up by other Claude Code tasks with a PR to follow — I did not touch either.
+> - `1e6NuOqXabYV` (/dashboard — "change DASHBOARD to PROJECTS across the whole app") is owned by task `t_4e2370b4`, which opened **PR #106**. ⚠️ Heads-up: #106 targets base `fix/library-list-header-opaque`, **not `main`** — the historical never-reaches-prod failure mode. Left to that task, but flag it so it doesn't evaporate on a dead branch.
+> - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) is owned by task `t_8083d79c` with a PR to follow.
+> - `XzIZJoGqnY-a` (/tools/match — "offer more than one match possibility per colour") is **no longer in the unresolved list — resolved since the last pass**; dropped from the table below (7 → 6).
+>
+> **Previous run (2026-07-07, late cron pass):** shipped **1** and posted **1** new clarifying question.
 > - Shipped `ra9QhujevTqM` — /collection "add this text into an actual box". Wrapped the "Auto-fills from…" paste-URL helper paragraph in a bordered box (`rounded-[6px] border border-border`, matching the CollectionStatsBar/CollectionTable container pattern) in `src/components/collection/PasteUrlBar.tsx`. Went through the gated loop (PR → CI → merge → prod verify → resolve).
 > - Posted a clarifying question on `XzIZJoGqnY-a` (/tools/match) — "offer more than one match possibility for each colour". With a harmony selected the tool shows exactly **one** best paint per harmony hue; surfacing alternates is a real feature and needs your call on how (see table). Left open.
 > - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) already carries a "picked up" note from another Claude Code task (`t_8083d79c`) with a PR to follow, so I left it to that run and did not touch it.
@@ -22,19 +28,29 @@
 
 ---
 
-## 🔴 NEEDS YOUR CALL (7)
+## 🔴 NEEDS YOUR CALL (6)
 
 > **Filter-placement cluster (2 threads):** `-D41OlDEcOYF`, `7rH5cPa-w3PQ` are the *same* ask on the *same* shared `ColorPicker` component (the other two, `4odMSzb6-6zR`/`haCS2-aXxUQb`, have since been resolved). One answer (keep the collapsed toggle vs. move the filter below the list) resolves both — I'll ship it once.
 
 | Thread | Page | Ask | The one thing I need from you |
 |---|---|---|---|
-| `XzIZJoGqnY-a` | /tools/match | "Offer the user more than one match possibility for each colour." | With a harmony picked, RANKED MATCHES shows **one** best paint per hue. How should alternates surface? **(1)** each colour row expands to a short top-N list (say top 3–5) you can pick from, or **(2)** a compact cycler (‹ ›) that swaps the shown match per colour. And how many candidates deep do you want per colour? |
 | `-D41OlDEcOYF` | /library (?) | "Move the filter list below the paints or hide it behind a button/dropdown — confusing having it between the search bar and the paints." | **Which screen?** On `/library` the filters already sit behind a **Filter** button (slide-out), and on the Match/recipe paint-picker the Company filter was collapsed behind a toggle in PR #90 — so this may already be sorted. Tell me the page, and whether it's good now or you still want the remaining filters **below the list** rather than behind a button. |
 | `7rH5cPa-w3PQ` | /tools/match | Same "move the filter list" ask, on the Match tool's paint-picker. | Pick one: **(1)** collapse behind a "Filters" toggle above the list (my lean), or **(2)** move the whole filter panel below the paint list. |
 | `T9TlAL3KQ3GX` | /tools/wheel | "Use a white lock icon that matches our aesthetic" (per-slot lock toggle, currently the gold emoji padlock). | Icon colour: **pure white in both states**, or **white when unlocked / keep the yellow tint when locked** (locked-yellow is the current at-a-glance signal). |
 | `APNNqpJtZIeH` | /tools/match | "Clicking GENERATE does nothing." | It's not broken — with only 1 slot there's nothing to fill. Which fix: **(1)** disable/grey GENERATE until 2+ slots (with a hint), or **(2)** auto-add slots so one click always yields a scheme. |
 | `tSx5YUJMik8i` | /tools/wheel | "Remove this GENERATE RECIPE button — we have the same one on the left." | They're **not** the same: left GENERATE fills slots from the harmony; GENERATE RECIPE builds the full layered recipe + opens the dialog. Confirm you still want GENERATE RECIPE removed (I'll also handle the matching ask on `O2QLNGljsS1A` in one go). |
 | `O2QLNGljsS1A` | /tools/wheel | "Move SLOTS −/+ under the colour list; remove GENERATE RECIPE; + a question about the save-palette / send-to-recipe buttons." | **(1)** SLOTS −/+ currently lives in the **left PICK panel**, not the right — confirm you want it pulled out and dropped under the colour list in the main SCHEME body. **(2)** GENERATE RECIPE removal — ready. **(3)** I don't have your earlier save-palette / send-to-recipe comment — tell me the change (rename / recolour / drop one) and I'll ship all three together. |
+
+---
+
+## 🟠 IN FLIGHT under other Claude Code tasks (2) — not mine to touch
+
+These carry a "🛠️ Picked up by Claude Code — PR to follow" marker from a different task, so the loop leaves them alone to avoid duplicate/conflicting work.
+
+| Thread | Page | Ask | Owner task | State |
+|---|---|---|---|---|
+| `1e6NuOqXabYV` | /dashboard | "Change DASHBOARD to PROJECTS across the whole app." | `t_4e2370b4` | **PR #106** open. ⚠️ Based on `fix/library-list-header-opaque`, **not `main`** — will not reach production unless retargeted/merged into `main`. |
+| `XeheRPMOLslU` | /tools/match | "Reuse the recipe PAINT PICKER PANEL for COLOR MATCH." | `t_8083d79c` | PR to follow. Larger feature (shared panel refactor). |
 
 ---
 
@@ -54,5 +70,4 @@ Landed on `main` and resolved after prod verify — kept here only so the loop d
 | `s6zlyxVZ9-cI` | Stacking blurb "over a substrate" → "over an undercoat" — PR #84 |
 | `Tcylyd5enVXT` / `Z2r21cCQAPQr` / `8myNPt4auK8V` | Landing/pricing colour fixes — PR #82 |
 | `yT9vvxQhK3Ce` | Library TYPE filter facet |
-</content>
-</invoke>
+| `XzIZJoGqnY-a` | /tools/match — "offer more than one match possibility per colour". Resolved since the last pass (no longer in the unresolved set); dropped from the needs-your-call table. |
