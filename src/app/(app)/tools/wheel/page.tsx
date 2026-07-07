@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ColourWheelTool } from "@/components/tools/ColourWheelTool";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { usePaletteSaver } from "@/components/tools/usePaletteSaver";
@@ -27,11 +27,10 @@ function resolveHexByName(paints: Paint[], rawTitle: string): string | null {
 
 function ColourWheelRoute() {
   const paints = useCatalog();
-  const router = useRouter();
   const params = useSearchParams();
   const { save, dialog } = usePaletteSaver("wheel");
   const { toast, node } = useToast();
-  const [assigning, setAssigning] = useState<AssignSwatch | null>(null);
+  const [assigning, setAssigning] = useState<AssignSwatch[] | null>(null);
   const [generating, setGenerating] = useState<string[] | null>(null);
 
   // MM-53 — `?hex` (canonical) and `?name` (catalog-resolved fallback) seed
@@ -55,17 +54,20 @@ function ColourWheelRoute() {
         // DOP-013 — ranked alternatives feed the "more matches" disclosure.
         rankPaints={(hex, n) => rankMatches(hex, paints, undefined, n).map((m) => m.paint)}
         onSavePalette={save}
-        onSendToRecipe={() => router.push("/recipes")}
+        // CIzKX — the whole scheme's colours (every slot, matched paint or
+        // not) go into the create-or-assign chooser instead of discarding
+        // them on a bare navigate.
+        onSendToRecipe={(swatches) => setAssigning([...swatches])}
         onGenerateRecipe={(hexes) => setGenerating(hexes)}
         // Per-swatch "assign paint" → assign that planned colour into a recipe.
         onAssignPaint={(hex) => {
           const p = closestPaint(hex, paints);
-          setAssigning({ hex, paintId: p?.id ?? null, name: p?.name });
+          setAssigning([{ hex, paintId: p?.id ?? null, name: p?.name }]);
         }}
       />
       <AssignToRecipeDialog
         open={assigning != null}
-        swatches={assigning ? [assigning] : []}
+        swatches={assigning ?? []}
         onClose={() => setAssigning(null)}
         onAssigned={(recipeName) => toast(`Added to ${recipeName}`, "green")}
       />
