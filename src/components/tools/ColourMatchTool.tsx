@@ -324,7 +324,7 @@ export function ColourMatchTool({
           breadcrumb="MATCH ▸ PICK COLOUR"
           initialHex={valid ? hex : null}
           showLibrary
-          showEyedropper
+          showEyedropper={false}
           closeOnSelect
           onSelect={(sel) => setHex(sel.hex)}
         />
