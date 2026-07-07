@@ -122,7 +122,7 @@ export function WelcomeCard({ hasProjects = false }: { hasProjects?: boolean }) 
         <button
           type="button"
           onClick={() => start()}
-          className="font-mono text-[12px] font-bold uppercase tracking-wide text-white underline underline-offset-4 transition-opacity hover:opacity-80"
+          className="inline-flex min-h-11 items-center font-mono text-[12px] font-bold uppercase tracking-wide text-white underline underline-offset-4 transition-opacity hover:opacity-80"
         >
           — TAKE THE TOUR
         </button>
