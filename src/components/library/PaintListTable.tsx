@@ -81,7 +81,7 @@ export function PaintListTable({
   return (
     <div ref={scrollRef} className="h-full overflow-auto p-4">
       <div role="table" aria-label="Paints" className="min-w-[680px]">
-        <div role="rowgroup" className="sticky top-0 z-10 bg-bg/95">
+        <div role="rowgroup" className="sticky top-0 z-10 bg-bg">
           <div role="row" className="flex border-b border-cyan/30">
             {cols.map((c, i) => (
               <div
