@@ -112,7 +112,7 @@ export function LandingView() {
           )}
         </div>
         <p
-          className="max-w-2xl leading-relaxed text-cyan-lite text-glow-cyan"
+          className="max-w-2xl leading-relaxed"
           style={{
             fontFamily:
               '"Flexi IBM VGA False", "Flexi IBM VGA True", "IBM Plex Mono", monospace',
@@ -120,6 +120,10 @@ export function LandingView() {
             // never overruns a 320px viewport (MUX-008), settling at the
             // ~44.5px --text-title on wider screens.
             fontSize: "clamp(1.5rem, 7vw, var(--text-title))",
+            // Bright neon green with a subtle glow (per reviewer request). Set
+            // inline because the V2 text-glow-* utilities are neutralised no-ops.
+            color: "#39ff14",
+            textShadow: "0 0 8px rgba(57, 255, 20, 0.5)",
           }}
         >
           Plan your projects.
