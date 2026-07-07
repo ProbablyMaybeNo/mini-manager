@@ -197,8 +197,8 @@ export function RecipeEditorView({
           value={recipe.notes ?? ""}
           onChange={(e) => update({ notes: e.target.value })}
           aria-label="Recipe notes"
-          rows={3}
-          placeholder="General notes — varnish, basing, sub-assembly order…"
+          rows={5}
+          placeholder="Master your recipe with added techniques, notes, and ideas…"
           className="w-full resize-y border border-cyan/40 bg-bg p-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
         />
       </Panel>

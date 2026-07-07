@@ -13,8 +13,6 @@ import type { Paint, Project, Recipe, RecipeSlot } from "@/lib/types";
 import { RecipePaintPicker } from "./RecipePaintPicker";
 import { SlotRow } from "./SlotRow";
 
-type RecipeTab = "MY RECIPES" | "GALLERY" | "SHARED";
-
 /**
  * Recipes 3-pane workbench (Figma 28:4) — the column-based master-detail:
  *   recipe LIST (search + cards + tabs)  →  recipe DETAIL (28:4 editor-pane).
@@ -34,7 +32,6 @@ export function RecipeWorkbench({
   const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
   const [selectedId, setSelectedId] = useState<string | null>(initialRecipes[0]?.id ?? null);
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<RecipeTab>("MY RECIPES");
   // <768px drill-down (UX-001): the 3-pane master-detail collapses to a single
   // view on phones. `mobileDetail` flips to the detail pane when a recipe row is
   // tapped; the in-pane ‹ BACK control returns to the list. ≥md both panes show
@@ -135,6 +132,7 @@ export function RecipeWorkbench({
           layer: s.layer,
         })),
         inspo: selected.inspo.map((r) => r.url),
+        notesMd: selected.notes ?? null,
       });
       if (res.ok) {
         toast("Recipe saved", "green");
@@ -301,32 +299,6 @@ export function RecipeWorkbench({
             </li>
           )}
         </ul>
-
-        {/* Bottom tabs (28:126). */}
-        <div role="tablist" aria-label="Recipe source" className="flex items-center gap-5 border-t border-border px-4 py-3">
-          {(["MY RECIPES", "GALLERY", "SHARED"] as RecipeTab[]).map((t) => {
-            const active = t === tab;
-            return (
-              <button
-                key={t}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(t)}
-                className={cn(
-                  // Padded ≥44px tap target on touch widths; stays compact on
-                  // desktop via md: overrides (UX-011).
-                  "inline-flex min-h-[44px] items-center border-b-2 px-1 font-mono text-[11px] font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite md:min-h-6 md:px-0 md:pb-0.5",
-                  active
-                    ? "border-cyan text-cyan-lite"
-                    : "border-transparent text-fg-dim hover:text-fg",
-                )}
-              >
-                {t}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* ── DETAIL column (28:131) — the 28:4 editor-pane. On phones it is the
@@ -339,7 +311,7 @@ export function RecipeWorkbench({
         )}
       >
         {selected ? (
-          <div className="flex max-w-[760px] flex-col gap-6 p-8">
+          <div className="flex w-full flex-col gap-6 p-8 xl:max-w-[1200px]">
             {/* Phone-only back control returning to the recipe list (UX-001). */}
             <button
               type="button"
@@ -469,6 +441,22 @@ export function RecipeWorkbench({
                   ATTACH RECIPE
                 </button>
               </div>
+            </div>
+
+            {/* NOTES — recipe-level notes (recipes.notesMd), persisted via the
+                same SAVE RECIPE action as the rest of the recipe. */}
+            <div className="flex flex-col gap-2 rounded-[6px] border border-border bg-surface p-4">
+              <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-fg-dim">
+                Notes
+              </span>
+              <textarea
+                value={selected.notes ?? ""}
+                onChange={(e) => patchSelected({ notes: e.target.value })}
+                aria-label="Recipe notes"
+                rows={5}
+                placeholder="Master your recipe with added techniques, notes, and ideas…"
+                className="w-full resize-y rounded-[6px] border border-border bg-bg p-3 font-mono text-[13px] text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
+              />
             </div>
           </div>
         ) : recipes.length === 0 ? (

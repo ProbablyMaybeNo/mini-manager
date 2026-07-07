@@ -107,19 +107,21 @@ export function SlotRow({
         />
       </div>
 
-      {/* Paint dot + name + brand — clicking opens the Pick & Paint picker. */}
+      {/* Paint dot + name + brand — clicking opens the Pick & Paint picker.
+          Swatch sized up (44px) and the name/brand wrap instead of truncating
+          so the full paint name is always readable (UX polish pass). */}
       <button
         type="button"
         onClick={onPick}
-        className="flex min-w-0 flex-[2] items-center gap-2 text-left"
+        className="flex min-w-0 flex-[3] items-center gap-3 text-left"
         aria-label={`Change paint for step ${index + 1}`}
       >
-        <Swatch hex={slot.swatch} size="md" className="shrink-0 rounded-full" />
+        <Swatch hex={slot.swatch} size="lg" className="h-11 w-11 shrink-0 rounded-full" />
         <span className="min-w-0">
-          <span className="block truncate font-mono text-body text-fg-bright hover:text-cyan-lite">
+          <span className="block break-words font-mono text-body text-fg-bright hover:text-cyan-lite">
             {slot.name}
           </span>
-          <span className="block truncate font-mono text-[11px] text-fg-dim">{slot.brand}</span>
+          <span className="block break-words font-mono text-[11px] text-fg-dim">{slot.brand}</span>
         </span>
       </button>
 
@@ -131,7 +133,7 @@ export function SlotRow({
         onChange={(e) => onNoteChange(e.target.value)}
         aria-label={`Note for step ${index + 1}`}
         placeholder="Note…"
-        className="min-h-7 min-w-0 flex-[3] rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
+        className="min-h-7 min-w-0 flex-[2] rounded-[6px] border border-border bg-bg px-2 py-1 font-mono text-[12px] text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
       />
 
       {/* Delete. */}

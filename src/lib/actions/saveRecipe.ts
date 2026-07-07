@@ -55,9 +55,17 @@ export async function saveRecipe(input: {
   /** Inspiration URLs, in order. Omit to leave existing inspo untouched;
    *  pass an array (even empty) to replace the recipe's inspo wholesale. */
   inspo?: string[];
+  /** Recipe-level notes (the editor's NOTES panel). Omit to leave the
+   *  existing value untouched; pass a string (even empty) to replace it —
+   *  an empty string is stored as null. */
+  notesMd?: string | null;
 }): Promise<ActionResult<{ id: string }>> {
   const userId = await currentUserId();
   let recipeId: string;
+  const notesMd =
+    input.notesMd !== undefined
+      ? (input.notesMd?.trim() ? input.notesMd : null)
+      : undefined;
 
   if (input.id && input.id !== "new") {
     const owned = await db
@@ -66,7 +74,7 @@ export async function saveRecipe(input: {
       .where(and(eq(recipes.id, input.id), eq(recipes.ownerId, userId)))
       .limit(1);
     if (!owned[0]) return { ok: false, error: "Recipe not found" };
-    const upd = await updateRecipe({ id: input.id, name: input.name });
+    const upd = await updateRecipe({ id: input.id, name: input.name, notesMd });
     if (!upd.ok) return upd;
     recipeId = input.id;
     // Replace the slot set wholesale.
@@ -75,6 +83,7 @@ export async function saveRecipe(input: {
     const created = await createRecipe({
       name: input.name,
       attachedProjectId: input.attachedProjectId ?? null,
+      notesMd,
     });
     if (!created.ok) return created;
     recipeId = created.data.id;

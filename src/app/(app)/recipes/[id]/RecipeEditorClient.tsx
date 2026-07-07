@@ -26,6 +26,7 @@ function recipeSignature(r: Recipe): string {
       note: s.note ?? null,
     })),
     inspo: r.inspo.map((i) => i.url),
+    notes: r.notes ?? null,
   });
 }
 
@@ -96,6 +97,7 @@ export function RecipeEditorClient({
           layer: s.layer,
         })),
         inspo: recipe.inspo.map((r) => r.url),
+        notesMd: recipe.notes ?? null,
       });
       if (res.ok) {
         setSaved(true); // disarm the unsaved-changes guard for the redirect

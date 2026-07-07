@@ -7,7 +7,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { asc, eq } from "drizzle-orm";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { recipeInspo } from "@/db/schema";
+import { recipeInspo, recipes } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -33,6 +33,14 @@ async function inspoFor(recipeId: string) {
     .from(recipeInspo)
     .where(eq(recipeInspo.recipeId, recipeId))
     .orderBy(asc(recipeInspo.position));
+}
+
+async function notesFor(recipeId: string): Promise<string | null> {
+  const [row] = await state
+    .db!.select({ notesMd: recipes.notesMd })
+    .from(recipes)
+    .where(eq(recipes.id, recipeId));
+  return row?.notesMd ?? null;
 }
 
 beforeEach(async () => {
@@ -102,5 +110,50 @@ describe("saveRecipe inspo persistence", () => {
 
     const rows = await inspoFor(id);
     expect(rows.map((r) => r.url)).toEqual(["https://keep.example/1"]);
+  });
+});
+
+describe("saveRecipe notes persistence", () => {
+  test("persists notesMd when creating a new recipe", async () => {
+    const res = await saveRecipe({
+      id: "new",
+      name: "Blue Scheme",
+      slots: [],
+      notesMd: "Varnish with a matte topcoat once fully dry.",
+    });
+    expect(res.ok).toBe(true);
+    const id = res.ok ? res.data.id : "";
+    expect(await notesFor(id)).toBe("Varnish with a matte topcoat once fully dry.");
+  });
+
+  test("updates notesMd on an existing recipe", async () => {
+    const created = await saveRecipe({ id: "new", name: "Scheme", slots: [] });
+    const id = created.ok ? created.data.id : "";
+    expect(await notesFor(id)).toBeNull();
+
+    await saveRecipe({
+      id,
+      name: "Scheme",
+      slots: [],
+      notesMd: "Base coat twice for full coverage.",
+    });
+    expect(await notesFor(id)).toBe("Base coat twice for full coverage.");
+
+    // Re-save with an empty string clears it to null rather than storing "".
+    await saveRecipe({ id, name: "Scheme", slots: [], notesMd: "" });
+    expect(await notesFor(id)).toBeNull();
+  });
+
+  test("omitting notesMd leaves the existing value untouched", async () => {
+    const created = await saveRecipe({
+      id: "new",
+      name: "Scheme",
+      slots: [],
+      notesMd: "Keep this note.",
+    });
+    const id = created.ok ? created.data.id : "";
+
+    await saveRecipe({ id, name: "Renamed", slots: [] });
+    expect(await notesFor(id)).toBe("Keep this note.");
   });
 });
