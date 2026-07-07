@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { listInventoryByUser } from "@/db/queries/inventory";
 import { listLinkedPaintStatuses } from "@/lib/paints/reconcileOwnership";
 import { listAllProjects } from "@/db/queries/projects";
@@ -357,8 +358,12 @@ function relativeWhen(then: Date, now: Date): string {
  * render. recipes / collection / paints / matchResults are intentionally
  * omitted here — they fall through to the fixtures until their loaders are
  * wired in a later phase.
+ *
+ * Wrapped in React `cache()` so the layout (which feeds MockProvider) and the
+ * page (e.g. the dashboard) share ONE execution per request instead of running
+ * the whole 12-query batch twice against the remote DB.
  */
-export async function loadAppData(userId: string): Promise<Partial<MockData>> {
+export const loadAppData = cache(async (userId: string): Promise<Partial<MockData>> => {
   const now = new Date();
   const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
@@ -431,4 +436,4 @@ export async function loadAppData(userId: string): Promise<Partial<MockData>> {
     sessionStats,
     projectMinutes,
   };
-}
+});
