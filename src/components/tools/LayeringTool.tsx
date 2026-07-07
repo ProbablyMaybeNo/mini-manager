@@ -226,6 +226,7 @@ export function LayeringTool({
               </div>
               <HexField
                 name={`layer-${layer.id}`}
+                aria-label={`${layer.label} hex`}
                 value={layer.hex}
                 onChange={(e) =>
                   setLayers((prev) => prev.map((l, k) => (k === i ? { ...l, hex: e.target.value } : l)))
