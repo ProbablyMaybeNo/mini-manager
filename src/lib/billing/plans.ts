@@ -91,9 +91,9 @@ export const PLAN_LABEL: Readonly<Record<PlanTier, string>> = Object.freeze({
 /** Display prices — used by /pricing and /user pages. */
 export const PLAN_PRICE: Readonly<Record<PlanTier, string>> = Object.freeze({
   free: "$0",
-  pro_monthly: "$4 / month",
-  pro_lifetime: "$36 one-time",
-  founder: "$26 one-time",
+  pro_monthly: "$3.99 / month",
+  pro_lifetime: "$25 one-time",
+  founder: "$19 one-time",
 });
 
 /**

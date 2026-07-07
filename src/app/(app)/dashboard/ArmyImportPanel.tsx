@@ -54,6 +54,10 @@ export function ArmyImportPanel({
         setError(preview.error);
         return;
       }
+      if (preview.tree.units.length === 0) {
+        setError("No units detected — check the list format and try again.");
+        return;
+      }
       setImportId(res.data.importId);
       setTree(preview.tree);
     });

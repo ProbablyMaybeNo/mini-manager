@@ -112,6 +112,23 @@ export function AuthView({
             </Link>
           )}
         </div>
+
+        {/* Testing-period notice — the launch model: free during the intro
+            period for everyone, free FOREVER for testers who send feedback. */}
+        <div className="mt-5 border-t border-border pt-4 text-center">
+          <p className="font-mono text-[12px] font-bold uppercase tracking-wide text-cyan-lite">
+            Free forever for testers
+          </p>
+          <p className="mt-1.5 font-body text-[12px] leading-relaxed text-fg-dim">
+            Sign up and send feedback — in the app or via the Beacon Hobbies
+            Discord — and your account stays free for good. Limited spots before
+            some features move behind a paywall.
+          </p>
+          <p className="mt-2 font-body text-[12px] leading-relaxed text-fg-dim">
+            Just exploring? Go ahead — the whole app is free for everyone during
+            the introduction period.
+          </p>
+        </div>
       </div>
     </main>
   );

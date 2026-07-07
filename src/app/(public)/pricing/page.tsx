@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PricingView } from "@/components/public/PricingView";
 import { priceKeyForTierId } from "@/lib/billing/checkout";
+import { BILLING_ENFORCED } from "@/lib/billing/plans";
 import { mockPricingTiers } from "@/mock/fixtures";
 
 function PricingInner() {
@@ -19,6 +20,14 @@ function PricingInner() {
     // Free tier (or anything without a Stripe price) → straight to sign-up.
     if (!priceKey) {
       router.push("/sign-up");
+      return;
+    }
+
+    // Testing period: billing isn't enforced, so we never open a live Stripe
+    // checkout — the whole app is free during the intro period. Paid CTAs just
+    // route to sign-up (the silent auto-resume path stops instead of looping).
+    if (!BILLING_ENFORCED) {
+      if (!opts?.silent) router.push("/sign-up");
       return;
     }
 
@@ -93,6 +102,7 @@ function PricingInner() {
       ) : null}
       <PricingView
         tiers={mockPricingTiers}
+        betaFree={!BILLING_ENFORCED}
         onChoose={(tierId) => startCheckout(tierId)}
       />
     </>

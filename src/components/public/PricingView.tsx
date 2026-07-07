@@ -10,9 +10,13 @@ import { PublicPageTitle } from "./PublicPageTitle";
 export function PricingView({
   tiers,
   onChoose,
+  betaFree = false,
 }: {
   tiers: PricingTier[];
   onChoose: (tierId: string) => void;
+  /** During the free intro period, paid tiers show "Free during beta" and the
+   *  CTA routes to sign-up instead of opening a live checkout. */
+  betaFree?: boolean;
 }) {
   return (
     <div className="flex min-h-dvh flex-col">
@@ -69,7 +73,7 @@ export function PricingView({
                 className="w-full"
                 onClick={() => onChoose(t.id)}
               >
-                {t.cta}
+                {betaFree && t.id !== "free" ? "Free during beta" : t.cta}
               </Button>
             </Panel>
           ))}
