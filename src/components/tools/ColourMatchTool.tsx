@@ -138,7 +138,10 @@ export function ColourMatchTool({
             style={{ backgroundColor: valid ? hex : "transparent" }}
           >
             <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-              <span className="border border-cyan/60 bg-bg/80 px-2 py-1 font-button text-button text-cyan-lite">
+              {/* Fully opaque chip (bg-bg, not bg-bg/80) so the cyan-lite label
+                  keeps a stable dark ground and clears AA regardless of the
+                  live target-colour fill behind it (UX-002 / MUX-002). */}
+              <span className="border border-cyan/60 bg-bg px-2 py-1 font-button text-button text-cyan-lite">
                 ◈ Pick from library
               </span>
             </span>
