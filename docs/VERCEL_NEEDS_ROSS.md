@@ -1,9 +1,15 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-07-07 (evening pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
-**8 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-07-07 (late cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
+**7 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-07, cron pass):** shipped **1** and posted **2** new clarifying questions.
+> **This run (2026-07-07, late cron pass):** shipped **1** and posted **1** new clarifying question.
+> - Shipped `ra9QhujevTqM` — /collection "add this text into an actual box". Wrapped the "Auto-fills from…" paste-URL helper paragraph in a bordered box (`rounded-[6px] border border-border`, matching the CollectionStatsBar/CollectionTable container pattern) in `src/components/collection/PasteUrlBar.tsx`. Went through the gated loop (PR → CI → merge → prod verify → resolve).
+> - Posted a clarifying question on `XzIZJoGqnY-a` (/tools/match) — "offer more than one match possibility for each colour". With a harmony selected the tool shows exactly **one** best paint per harmony hue; surfacing alternates is a real feature and needs your call on how (see table). Left open.
+> - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) already carries a "picked up" note from another Claude Code task (`t_8083d79c`) with a PR to follow, so I left it to that run and did not touch it.
+> - `4odMSzb6-6zR` and `haCS2-aXxUQb` (the other two filter-placement cluster threads) no longer appear in the unresolved list — resolved since the last pass, shrinking the cluster to the two below.
+>
+> **Previous run (2026-07-07, cron pass):** shipped **1** and posted **2** new clarifying questions.
 > - Shipped `XvJwNsHNE89S` — hero tagline "add more glow". The intensified five-layer glow had been merged as PR #97 **but into the throwaway `fix/library-list-header-opaque` branch, not `main`** — so the "✅ live on production" reply on that thread was wrong; production still had the older subtle glow. Re-landed the exact change on `main` through the gated loop, verified prod, then resolved.
 > - Posted clarifying questions on `4odMSzb6-6zR` (/recipes/new picker) and `haCS2-aXxUQb` (/tools/match picker) — both are the same "move the Company/brand filter below the paint list" ask as `7rH5cPa`/`-D41OlDEcOYF`. All four share the one `ColorPicker` component and hinge on the same unresolved decision (keep the collapsed toggle vs. move below the list). Left open. NB: a prior agent already implemented "move below" as PR #98 on that same dead `fix/library-list-header-opaque` branch — it is **not** on `main`; I did not land it, pending your call so all four resolve consistently.
 >
@@ -16,16 +22,15 @@
 
 ---
 
-## 🔴 NEEDS YOUR CALL (8)
+## 🔴 NEEDS YOUR CALL (7)
 
-> **Filter-placement cluster (4 threads):** `-D41OlDEcOYF`, `7rH5cPa-w3PQ`, `4odMSzb6-6zR`, `haCS2-aXxUQb` are all the *same* ask on the *same* shared `ColorPicker` component. One answer (keep the collapsed toggle vs. move the filter below the list) resolves all four — I'll ship it once.
+> **Filter-placement cluster (2 threads):** `-D41OlDEcOYF`, `7rH5cPa-w3PQ` are the *same* ask on the *same* shared `ColorPicker` component (the other two, `4odMSzb6-6zR`/`haCS2-aXxUQb`, have since been resolved). One answer (keep the collapsed toggle vs. move the filter below the list) resolves both — I'll ship it once.
 
 | Thread | Page | Ask | The one thing I need from you |
 |---|---|---|---|
+| `XzIZJoGqnY-a` | /tools/match | "Offer the user more than one match possibility for each colour." | With a harmony picked, RANKED MATCHES shows **one** best paint per hue. How should alternates surface? **(1)** each colour row expands to a short top-N list (say top 3–5) you can pick from, or **(2)** a compact cycler (‹ ›) that swaps the shown match per colour. And how many candidates deep do you want per colour? |
 | `-D41OlDEcOYF` | /library (?) | "Move the filter list below the paints or hide it behind a button/dropdown — confusing having it between the search bar and the paints." | **Which screen?** On `/library` the filters already sit behind a **Filter** button (slide-out), and on the Match/recipe paint-picker the Company filter was collapsed behind a toggle in PR #90 — so this may already be sorted. Tell me the page, and whether it's good now or you still want the remaining filters **below the list** rather than behind a button. |
 | `7rH5cPa-w3PQ` | /tools/match | Same "move the filter list" ask, on the Match tool's paint-picker. | Pick one: **(1)** collapse behind a "Filters" toggle above the list (my lean), or **(2)** move the whole filter panel below the paint list. |
-| `4odMSzb6-6zR` | /recipes/new | "Move this below the list of paints" — the Company/brand filter in the recipe paint-picker. | Same decision as the cluster above: **(1)** keep the collapsed "Company" toggle (just under the search box, shipped in PR #90), or **(2)** move the whole filter block below the matches list. |
-| `haCS2-aXxUQb` | /tools/match | "Move this filter section to below the list of paints — across all the color picker side panels." | Same decision: **(1)** keep collapsed toggle vs. **(2)** move below the list. They all share one `ColorPicker`, so one change covers every panel. |
 | `T9TlAL3KQ3GX` | /tools/wheel | "Use a white lock icon that matches our aesthetic" (per-slot lock toggle, currently the gold emoji padlock). | Icon colour: **pure white in both states**, or **white when unlocked / keep the yellow tint when locked** (locked-yellow is the current at-a-glance signal). |
 | `APNNqpJtZIeH` | /tools/match | "Clicking GENERATE does nothing." | It's not broken — with only 1 slot there's nothing to fill. Which fix: **(1)** disable/grey GENERATE until 2+ slots (with a hint), or **(2)** auto-add slots so one click always yields a scheme. |
 | `tSx5YUJMik8i` | /tools/wheel | "Remove this GENERATE RECIPE button — we have the same one on the left." | They're **not** the same: left GENERATE fills slots from the harmony; GENERATE RECIPE builds the full layered recipe + opens the dialog. Confirm you still want GENERATE RECIPE removed (I'll also handle the matching ask on `O2QLNGljsS1A` in one go). |

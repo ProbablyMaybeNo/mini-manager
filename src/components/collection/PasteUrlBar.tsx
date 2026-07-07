@@ -95,7 +95,10 @@ export function PasteUrlBar({
         />
         <Button onClick={submit}>Enter</Button>
       </div>
-      <p id="paste-url-stores" className="font-body text-body leading-snug text-fg">
+      <p
+        id="paste-url-stores"
+        className="rounded-[6px] border border-border px-3 py-2 font-body text-body leading-snug text-fg"
+      >
         {unsupported ? (
           <span className="text-red">
             ▸ That store isn&apos;t supported yet — the entry will be added with just
