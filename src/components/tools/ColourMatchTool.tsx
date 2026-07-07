@@ -5,6 +5,7 @@ import { Button, HexField, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { readableText } from "@/lib/color";
 import { resolveMatchTypeFilter } from "@/lib/toolMatch";
+import { ColorPickerPanel } from "./ColorPickerPanel";
 import {
   buildHarmony,
   getHarmonyMeta,
@@ -39,6 +40,7 @@ export function ColourMatchTool({
   rankMatches,
   brandOptions,
   typeOptions = [],
+  enableLibraryPick = false,
   onUse,
   onAssign,
 }: {
@@ -48,6 +50,11 @@ export function ColourMatchTool({
    *  section entirely and disables the incompatible-type default (used by the
    *  embedded recipe-slot picker, which wants every type visible). */
   typeOptions?: string[];
+  /** Show a "Pick from library" button that opens the full wheel + searchable
+   *  catalog + eyedropper to set the target colour. On the standalone Match
+   *  page; off in the recipe-slot picker, which already has its own library
+   *  tab (avoids stacking a second slide-out over the Pick & Paint panel). */
+  enableLibraryPick?: boolean;
   onUse: (paint: Paint) => void;
   /** MM-33 — opens a recipe dropdown to assign the paint into, in place. */
   onAssign: (paint: Paint) => void;
@@ -57,6 +64,7 @@ export function ColourMatchTool({
   const [types, setTypes] = useState<ReadonlySet<string>>(new Set());
   const [harmony, setHarmony] = useState<HarmonyKey | "off">("off");
   const [page, setPage] = useState(0);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const valid = /^#[0-9a-fA-F]{6}$/.test(hex);
   const brandList = useMemo(() => [...brands], [brands]);
@@ -119,6 +127,15 @@ export function ColourMatchTool({
     <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
       <Panel label="INPUT" className="flex min-w-0 flex-col gap-4 p-5">
         <HexField label="Target hex" name="match-hex" value={hex} onChange={(e) => setHex(e.target.value)} />
+        {enableLibraryPick && (
+          <Button
+            size="sm"
+            onClick={() => setPickerOpen(true)}
+            className="w-full border-cyan/50 text-cyan-lite hover:bg-cyan/10"
+          >
+            ◈ Pick from library
+          </Button>
+        )}
         <div className="h-24 w-full border border-fg/20" style={{ backgroundColor: valid ? hex : "transparent" }} />
 
         {/* MM-30 — harmony modes */}
@@ -289,6 +306,20 @@ export function ColourMatchTool({
           </>
         )}
       </Panel>
+
+      {enableLibraryPick && (
+        <ColorPickerPanel
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          title="Pick a paint to match"
+          breadcrumb="MATCH ▸ PICK COLOUR"
+          initialHex={valid ? hex : null}
+          showLibrary
+          showEyedropper
+          closeOnSelect
+          onSelect={(sel) => setHex(sel.hex)}
+        />
+      )}
     </div>
   );
 }

@@ -33,6 +33,7 @@ export default function ColourMatchPage() {
         }
         brandOptions={brandOptions}
         typeOptions={typeOptions}
+        enableLibraryPick
         onUse={(paint) => {
           void navigator.clipboard?.writeText(paint.hex);
           toast(`Copied ${paint.name} · ${paint.hex}`, "green");
