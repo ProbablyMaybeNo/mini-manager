@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RecipeEditorView } from "@/components/recipe/RecipeEditorView";
+import { ShareLinkDialog } from "@/components/recipe/ShareLinkDialog";
 import { ConfirmDialog, useToast } from "@/components/kit";
 import type { Paint, Project, Recipe } from "@/lib/types";
 import { loadKitCatalog } from "@/lib/catalogClient";
@@ -55,6 +56,7 @@ export function RecipeEditorClient({
   const [isPending, startTransition] = useTransition();
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   // An unsaved "new" draft is dirty as soon as it has a name or any slots
   // (leaving would discard it); an existing recipe is dirty once edited.
@@ -133,8 +135,12 @@ export function RecipeEditorClient({
         return;
       }
       const url = `${window.location.origin}/r/${res.data.slug}`;
+      // Convenience clipboard write + toast are kept, but the URL is also
+      // revealed in a persistent, copyable field so it's never clipboard-only
+      // (UX-004).
       void navigator.clipboard?.writeText(url);
       toast("Public link copied to clipboard", "green");
+      setShareUrl(url);
     });
   }
 
@@ -183,6 +189,7 @@ export function RecipeEditorClient({
         onClose={() => setConfirmingDelete(false)}
         onConfirm={remove}
       />
+      <ShareLinkDialog url={shareUrl} open={shareUrl != null} onClose={() => setShareUrl(null)} />
       {node}
     </>
   );

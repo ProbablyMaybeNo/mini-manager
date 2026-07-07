@@ -11,6 +11,7 @@ import { publishRecipe } from "@/lib/actions/recipeSharing";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import type { Paint, Project, Recipe, RecipeSlot } from "@/lib/types";
 import { RecipePaintPicker } from "./RecipePaintPicker";
+import { ShareLinkDialog } from "./ShareLinkDialog";
 import { SlotRow } from "./SlotRow";
 
 /**
@@ -41,6 +42,7 @@ export function RecipeWorkbench({
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -155,8 +157,12 @@ export function RecipeWorkbench({
         return;
       }
       const url = `${window.location.origin}/r/${res.data.slug}`;
+      // Convenience clipboard write + toast are kept, but the URL is also
+      // revealed in a persistent, copyable field so it's never clipboard-only
+      // (UX-004).
       void navigator.clipboard?.writeText(url);
       toast("Public link copied to clipboard", "green");
+      setShareUrl(url);
     });
   }
 
@@ -556,6 +562,7 @@ export function RecipeWorkbench({
           </p>
         </div>
       </ModalDialog>
+      <ShareLinkDialog url={shareUrl} open={shareUrl != null} onClose={() => setShareUrl(null)} />
       {toastNode}
     </div>
   );
