@@ -20,7 +20,11 @@ const STATUS_NEXT: Record<PaintStatus, PaintStatus> = {
 /** Per-state label, colour, and spoken description for the STATUS button. */
 const STATUS_META: Record<PaintStatus, { label: string; described: string; className: string }> = {
   none: {
-    label: "Status",
+    // Resting label states the current status ("Not Owned") rather than
+    // echoing the "STATUS" field heading above it — the button affordance +
+    // aria-label carry the "tap to change" action. NB the cycle advances to
+    // WISHLIST first, so "Mark owned" would misstate what a tap does (MUX-003).
+    label: "Not Owned",
     described: "not in your collection",
     className: "border border-border bg-surface-2 text-fg-dim hover:bg-fg/5 hover:text-fg",
   },
