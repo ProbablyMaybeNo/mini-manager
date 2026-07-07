@@ -222,7 +222,7 @@ export function ColourWheelTool({
                 aria-label="Remove a slot"
                 disabled={slots.length <= MIN_SLOTS}
                 onClick={() => removeSlot(slots[slots.length - 1]!.id)}
-                className="font-button text-button inline-flex min-h-8 min-w-8 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
+                className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
               >
                 −
               </button>
@@ -231,7 +231,7 @@ export function ColourWheelTool({
                 aria-label="Add a slot"
                 disabled={slots.length >= MAX_SLOTS}
                 onClick={addSlot}
-                className="font-button text-button inline-flex min-h-8 min-w-8 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
+                className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
               >
                 +
               </button>
@@ -399,7 +399,7 @@ export function ColourWheelTool({
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="shrink-0"
+                      className="min-h-11 shrink-0"
                       onClick={() => onAssignPaint(hex)}
                     >
                       Assign

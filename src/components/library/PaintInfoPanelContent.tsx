@@ -127,7 +127,7 @@ export function PaintInfoPanelContent({
               onClick={onCopyHex}
               aria-label="Copy hex"
               title="Copy hex"
-              className="border border-green/50 p-1.5 text-green hover:bg-green/10"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center border border-green/50 text-green hover:bg-green/10"
             >
               <svg
                 viewBox="0 0 24 24"
