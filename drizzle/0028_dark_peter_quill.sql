@@ -1,0 +1,1 @@
+ALTER TABLE `recipe` ADD `is_listed` integer DEFAULT false NOT NULL;

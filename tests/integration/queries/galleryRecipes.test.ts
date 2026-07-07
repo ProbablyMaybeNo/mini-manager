@@ -17,6 +17,9 @@ vi.mock("@/db/client", () => ({
 
 const { listPublishedRecipes } = await import("@/db/queries/recipes");
 
+/** Seeds a recipe. `isListed` defaults true here so most tests exercise the
+ *  gallery grid directly — the "unlisted" tests below explicitly override it
+ *  to false to prove a shared-but-unlisted recipe never leaks in. */
 async function seedRecipe(
   overrides: Partial<typeof recipes.$inferInsert> = {},
 ): Promise<string> {
@@ -27,6 +30,7 @@ async function seedRecipe(
     name: "Test Recipe",
     bodyType: "infantry",
     isStandalone: true,
+    isListed: true,
     ...overrides,
   });
   return id;
@@ -127,6 +131,19 @@ describe("listPublishedRecipes", () => {
     expect(card.swatches).toEqual(["#112233", "#445566"]);
     // Custom-only slots contribute no brand.
     expect(card.brands).toEqual([]);
+  });
+
+  test("a shared-but-unlisted recipe never appears (sharing != listing)", async () => {
+    // Mirrors what publishRecipe actually does: mint a publicSlug, leave
+    // isListed at its default (false). The recipe is reachable at /r/<slug>
+    // but must not show up on the gallery grid.
+    await seedRecipe({
+      name: "Shared Not Listed",
+      publicSlug: "shared0000",
+      isListed: false,
+    });
+    const cards = await listPublishedRecipes();
+    expect(cards).toEqual([]);
   });
 
   test("returns an empty array when nothing is published", async () => {

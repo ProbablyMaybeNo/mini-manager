@@ -4,6 +4,7 @@ import { getRecipeBySlug, getPaintMetaMap } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/lib/recipes/techniqueLabel";
 import { Panel, Swatch } from "@/components/kit";
 import { Logo } from "@/components/shell";
+import { ShareLinkBar } from "@/components/public/ShareLinkBar";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,12 @@ export async function generateMetadata({
   };
 }
 
-/** Public, no-auth shared recipe view — composed from the kit primitives. */
+/**
+ * Public, no-auth recipe CARD — a clean, self-contained visual view of a
+ * shared recipe (unlisted: reachable only via the direct link, never
+ * surfaced on /gallery — see `recipes.isListed`). Top-to-bottom: title, the
+ * shareable link itself, the paint squares, then the recipe's notes.
+ */
 export default async function PublicRecipePage({
   params,
 }: {
@@ -39,33 +45,52 @@ export default async function PublicRecipePage({
   if (!recipe) notFound();
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
-      <header className="flex items-center gap-3">
-        <Logo href="/" size={40} />
-        <div>
-          <h1 className="font-title text-title text-cyan-lite text-glow-cyan">{recipe.name}</h1>
-          <p className="font-body text-body text-fg">
-            Shared paint recipe · {recipe.slots.length} slot
-            {recipe.slots.length === 1 ? "" : "s"}
-          </p>
-        </div>
+    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+      <Logo href="/" size={36} />
+
+      {/* TITLE — the recipe's name, top of the card. */}
+      <header className="flex flex-col gap-2">
+        <h1 className="font-title text-title text-cyan-lite text-glow-cyan">{recipe.name}</h1>
+        <p className="font-body text-body text-fg">
+          Shared paint recipe · {recipe.slots.length} slot
+          {recipe.slots.length === 1 ? "" : "s"}
+        </p>
       </header>
 
-      <Panel label="RECIPE" cornerTicks className="p-4">
+      {/* The shareable link itself — shown + copyable, directly under the title. */}
+      <ShareLinkBar path={`/r/${slug}`} />
+
+      <Panel label="RECIPE" className="p-4">
         {recipe.slots.length === 0 ? (
           <p className="font-body text-body text-fg">No slots in this recipe yet.</p>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="grid gap-3 sm:grid-cols-2">
             {recipe.slots.map((s) => {
               const meta = s.paintId ? paintMeta.get(s.paintId) : null;
               const hex = meta?.hex ?? s.customColorHex ?? "#888888";
+              // Custom-colour slots (no catalog paintId) still render
+              // gracefully: the hex stands in for the name, and the meta
+              // line drops the company/type fields it doesn't have.
+              const name = meta?.name ?? hex;
+              const metaParts = [techniqueLabel(s.technique)];
+              if (meta) {
+                if (meta.brand) metaParts.push(meta.brand);
+                metaParts.push(meta.type);
+              } else {
+                metaParts.push("Custom colour");
+              }
               return (
-                <li key={s.id} className="flex items-center gap-3">
-                  <Swatch hex={hex} size="lg" />
+                <li
+                  key={s.id}
+                  className="flex items-center gap-3 rounded-[8px] border border-border bg-bg/40 p-3"
+                >
+                  <Swatch hex={hex} size="lg" className="h-14 w-14 shrink-0 rounded-[6px]" />
                   <div className="min-w-0">
-                    <div className="font-body text-body text-fg">{meta?.label ?? hex}</div>
-                    <div className="label-osd text-fg">
-                      {techniqueLabel(s.technique)}
+                    <div className="break-words font-mono text-body font-bold text-fg-bright">
+                      {name}
+                    </div>
+                    <div className="break-words font-mono text-[11px] uppercase tracking-wide text-fg-dim">
+                      {metaParts.join(" · ")}
                     </div>
                   </div>
                 </li>
@@ -83,7 +108,7 @@ export default async function PublicRecipePage({
         </Panel>
       ) : null}
 
-      <footer className="text-center font-body text-body text-fg">
+      <footer className="mt-auto pt-4 text-center font-body text-body text-fg">
         Made with{" "}
         <a href="/" className="text-cyan-lite hover:underline">
           The Mini Mainframe

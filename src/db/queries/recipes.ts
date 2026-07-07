@@ -16,7 +16,7 @@ import {
   type Phase12LayerKey,
   type TechniqueKey,
 } from "@/db/schema";
-import type { Paint, PaintCatalog } from "@/lib/paints/types";
+import type { Paint, PaintCatalog, PaintType } from "@/lib/paints/types";
 import type { RecipeWithSlots } from "@/lib/recipes/types";
 import { getInventoryByPaintId } from "@/db/queries/paintCoverage";
 import { coverageFor, type CoverageState } from "@/lib/paints/coverage";
@@ -558,6 +558,12 @@ export interface PaintMeta {
    *  public gallery's brand facet — distinct from `label`, which is the
    *  combined "Brand Name" display string. */
   brand: string;
+  /** Bare paint name (no brand prefix) — the public recipe card's per-slot
+   *  annotation shows name/brand/type as separate fields rather than the
+   *  combined `label`. */
+  name: string;
+  /** Paint product type (Paint/Wash/Metallic/…) — same use as `name`. */
+  type: PaintType;
 }
 
 let paintMetaCache: Map<string, PaintMeta> | null = null;
@@ -603,7 +609,13 @@ export async function getPaintMetaMap(): Promise<Map<string, PaintMeta>> {
   const meta = new Map<string, PaintMeta>();
   const hex = new Map<string, string>();
   for (const p of catalog.paints as ReadonlyArray<Paint>) {
-    meta.set(p.id, { hex: p.hex, label: `${p.brand} ${p.name}`, brand: p.brand });
+    meta.set(p.id, {
+      hex: p.hex,
+      label: `${p.brand} ${p.name}`,
+      brand: p.brand,
+      name: p.name,
+      type: p.type,
+    });
     hex.set(p.id, p.hex);
   }
   paintMetaCache = meta;
@@ -748,12 +760,13 @@ export async function summarizeRecipe(
 /* ============================================================
    Public gallery — published recipes browse surface
    ============================================================
-   The public `/gallery` page lists every recipe that has been
-   shared (its `publicSlug` is minted). This is the SINGLE leak
-   guard: the SELECT below filters `publicSlug IS NOT NULL`, so a
-   private recipe (slug = null) is never returned. No owner handle
-   is exposed — the gallery is anonymous, mirroring the `/r/<slug>`
-   view which also never surfaces the author.
+   The public `/gallery` page lists only recipes that are BOTH shared
+   (`publicSlug` minted) AND explicitly `isListed`. These are deliberately
+   decoupled: the editor's "⬡ SHARE LINK" only mints a `publicSlug` so
+   `/r/<slug>` resolves — sharing a recipe never auto-lists it on the
+   gallery. Only the curated seed set (`npm run db:seed-gallery`) sets
+   `isListed`. No owner handle is exposed — the gallery is anonymous,
+   mirroring the `/r/<slug>` view which also never surfaces the author.
    ============================================================ */
 
 /** One card on the public gallery grid. */
@@ -774,15 +787,17 @@ export interface GalleryRecipeCard {
 }
 
 /**
- * Every published recipe, newest first, resolved into gallery cards.
+ * Every listed + published recipe, newest first, resolved into gallery cards.
  *
- * Two SQL reads total — published recipes (1), then their slots (1) —
- * plus the cached paint catalog for hex + brand resolution. Capped at
- * `limit` recipes so the grid stays bounded; per-recipe swatch strip is
- * capped at `swatchCap`.
+ * Two SQL reads total — listed recipes (1), then their slots (1) — plus the
+ * cached paint catalog for hex + brand resolution. Capped at `limit`
+ * recipes so the grid stays bounded; per-recipe swatch strip is capped at
+ * `swatchCap`.
  *
- * Leak guard: `isNotNull(recipes.publicSlug)` — only shared recipes are
- * ever selected, so a private recipe can never appear in the gallery.
+ * Leak guard: `isNotNull(recipes.publicSlug) AND isListed` — a recipe must
+ * both have a minted public slug AND be explicitly listed, so neither a
+ * private recipe (no slug) nor an ordinary shared-but-unlisted recipe can
+ * appear in the gallery.
  */
 export async function listPublishedRecipes(
   limit = 60,
@@ -791,7 +806,7 @@ export async function listPublishedRecipes(
   const recipeRows = await db
     .select()
     .from(recipes)
-    .where(isNotNull(recipes.publicSlug))
+    .where(and(isNotNull(recipes.publicSlug), eq(recipes.isListed, true)))
     .orderBy(desc(recipes.updatedAt))
     .limit(limit);
 

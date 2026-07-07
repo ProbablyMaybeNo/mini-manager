@@ -594,6 +594,13 @@ export const recipes = sqliteTable(
       .notNull()
       .default(false),
     publicSlug: text("public_slug").unique(),
+    /** Whether this recipe surfaces on the public `/gallery` browse grid.
+     *  Deliberately decoupled from `publicSlug`: minting a share link (the
+     *  editor's "⬡ SHARE LINK") only sets `publicSlug` so `/r/<slug>`
+     *  resolves — it does NOT set this flag, so a painter's shared recipe
+     *  never auto-lists on the public gallery. Only the curated seed set
+     *  (`npm run db:seed-gallery`) sets this true today. */
+    isListed: integer("is_listed", { mode: "boolean" }).notNull().default(false),
     notesMd: text("notes_md"),
     ...timestamps,
   },

@@ -5,8 +5,9 @@
  *
  * Each recipe is a flat ordered list of slots — one paint + its layer
  * (`technique`) per slot — pinned to REAL paint ids from the static catalog
- * (`public/data/paints.json`). The recipes are published (their `publicSlug`
- * is minted) so `listPublishedRecipes` surfaces them.
+ * (`public/data/paints.json`). The recipes are published AND listed (both
+ * `publicSlug` and `isListed` are set) so `listPublishedRecipes` surfaces
+ * them — an ordinary user's shared recipe only gets the former.
  *
  * Idempotent: keyed by a stable `publicSlug`. Re-running deletes the recipe
  * row owned by the seed user for each slug (slots cascade) and re-inserts it,
@@ -309,6 +310,10 @@ async function main(): Promise<void> {
         bodyType: recipe.bodyType,
         isStandalone: true,
         publicSlug: recipe.slug,
+        // Curated seed recipes are the only ones that opt into the public
+        // gallery grid — an ordinary user's "⬡ SHARE LINK" only mints a
+        // publicSlug and leaves isListed false (see src/db/schema.ts).
+        isListed: true,
         notesMd: recipe.notesMd,
       })
       .returning({ id: schema.recipes.id });

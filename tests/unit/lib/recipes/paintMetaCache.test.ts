@@ -26,8 +26,8 @@ const CATALOG = JSON.stringify({
   __exported_at: 111,
   __row_count: 2,
   paints: [
-    { id: "a", brand: "Citadel", name: "Macragge Blue", hex: "#0a0a55" },
-    { id: "b", brand: "Vallejo", name: "Heavy Red", hex: "#aa1111" },
+    { id: "a", brand: "Citadel", name: "Macragge Blue", hex: "#0a0a55", type: "Paint" },
+    { id: "b", brand: "Vallejo", name: "Heavy Red", hex: "#aa1111", type: "Paint" },
   ],
 });
 
@@ -48,7 +48,7 @@ afterEach(() => {
 });
 
 describe("getPaintMetaMap caching", () => {
-  test("builds the paintId -> { hex, label, brand } map from the catalog", async () => {
+  test("builds the paintId -> { hex, label, brand, name, type } map from the catalog", async () => {
     statMock.mockResolvedValue({ mtimeMs: 1000 });
     const getPaintMetaMap = await freshGetPaintMetaMap();
 
@@ -57,11 +57,15 @@ describe("getPaintMetaMap caching", () => {
       hex: "#0a0a55",
       label: "Citadel Macragge Blue",
       brand: "Citadel",
+      name: "Macragge Blue",
+      type: "Paint",
     });
     expect(map.get("b")).toEqual({
       hex: "#aa1111",
       label: "Vallejo Heavy Red",
       brand: "Vallejo",
+      name: "Heavy Red",
+      type: "Paint",
     });
   });
 
