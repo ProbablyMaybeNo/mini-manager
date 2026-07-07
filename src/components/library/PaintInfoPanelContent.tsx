@@ -2,12 +2,67 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Chip, SegmentedToggle, Swatch } from "@/components/kit";
+import { Button, Chip, Swatch } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import { harmonies, HARMONY_SCHEMES, type HarmonyScheme } from "@/lib/color";
 import type { MatchResult, Paint } from "@/lib/types";
 
 /** The tri-state the STATUS control resolves to. */
 export type PaintStatus = "none" | "owned" | "wishlist";
+
+/** Click order for the cycling STATUS button: neutral → wishlist → owned → … */
+const STATUS_NEXT: Record<PaintStatus, PaintStatus> = {
+  none: "wishlist",
+  wishlist: "owned",
+  owned: "none",
+};
+
+/** Per-state label, colour, and spoken description for the STATUS button. */
+const STATUS_META: Record<PaintStatus, { label: string; described: string; className: string }> = {
+  none: {
+    label: "Status",
+    described: "not in your collection",
+    className: "border border-border bg-surface-2 text-fg-dim hover:bg-fg/5 hover:text-fg",
+  },
+  wishlist: {
+    label: "Wishlist",
+    described: "on your wishlist",
+    className: "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
+  },
+  owned: {
+    label: "Owned",
+    described: "owned",
+    className: "border border-green bg-green text-bg hover:bg-green/85",
+  },
+};
+
+/** Single cycling ownership control — one button that advances
+ *  Status → Wishlist → Owned → Status on each click. Routes every change
+ *  through the same `onSetStatus` the tri-state control used, so the
+ *  Library↔Collection reconcile stays intact. */
+function StatusCycleButton({
+  status,
+  onSetStatus,
+}: {
+  status: PaintStatus;
+  onSetStatus: (status: PaintStatus) => void;
+}) {
+  const meta = STATUS_META[status];
+  const next = STATUS_NEXT[status];
+  return (
+    <button
+      type="button"
+      onClick={() => onSetStatus(next)}
+      aria-label={`Ownership status: ${meta.described}. Activating sets it to ${STATUS_META[next].label}.`}
+      className={cn(
+        "inline-flex min-h-11 w-fit items-center justify-center rounded-[6px] px-3 py-1 font-button text-button uppercase tracking-[0.15em] transition-colors duration-150 ease-out focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan",
+        meta.className,
+      )}
+    >
+      {meta.label}
+    </button>
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -19,12 +74,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-
-const STATUS_OPTIONS = [
-  { value: "none", label: "Status" },
-  { value: "owned", label: "Owned" },
-  { value: "wishlist", label: "Wishlist" },
-] as const;
 
 /** Paint-info slide-out body (Wave 2 redesign):
  *  swatch → STATUS + HEX → TYPE → RECIPE (use-in-recipe + chips) →
@@ -67,12 +116,7 @@ export function PaintInfoPanelContent({
       {/* STATUS (left) + HEX (right) on one row */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <Field label="Status">
-          <SegmentedToggle
-            aria-label="Ownership status"
-            options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-            value={status}
-            onChange={onSetStatus}
-          />
+          <StatusCycleButton status={status} onSetStatus={onSetStatus} />
         </Field>
 
         <Field label="Hex">
