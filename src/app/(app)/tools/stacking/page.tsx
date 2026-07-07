@@ -14,7 +14,7 @@ export default function LayeringPage() {
   return (
     <ToolShell
       title="COLOR STACKING"
-      blurb="Build a layering ladder from base to highlight and preview how glazes and washes stack on a substrate. Dial in each layer, then save the result as a palette or turn the stack into a recipe."
+      blurb="Build a layering ladder from base to highlight and preview how glazes and washes stack on an undercoat. Dial in each layer, then save the result as a palette or turn the stack into a recipe."
     >
       <LayeringTool
         closestPaint={(hex) => closestPaint(hex, paints)}
