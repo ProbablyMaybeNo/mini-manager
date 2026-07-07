@@ -27,6 +27,16 @@ export type AssignSwatch = ToolSwatch;
  */
 export type AssignDialogMode = "both" | "create" | "assign";
 
+export interface AssignedResult {
+  recipeId: string;
+  name: string;
+  /** True when this landed on a brand-new recipe (vs. appended to one that
+   *  already existed) — callers typically navigate to a freshly-created
+   *  recipe (so the painter can start grounding colours to real paints) but
+   *  just toast for an append. */
+  created: boolean;
+}
+
 /**
  * Recipe picker for "assign / send to recipe" flows. Lists the painter's
  * recipes (append a run of slots) or mints a brand-new recipe from the
@@ -44,7 +54,7 @@ export function AssignToRecipeDialog({
   swatches: AssignSwatch[];
   mode?: AssignDialogMode;
   onClose: () => void;
-  onAssigned: (recipeName: string) => void;
+  onAssigned: (result: AssignedResult) => void;
 }) {
   const [recipes, setRecipes] = useState<SendToRecipeOption[] | null>(null);
   const [newName, setNewName] = useState("");
@@ -75,6 +85,7 @@ export function AssignToRecipeDialog({
   function send(target: { targetRecipeId: string } | { newRecipeName: string }, label: string) {
     if (pending || swatches.length === 0) return;
     setError(null);
+    const created = "newRecipeName" in target;
     startTransition(async () => {
       const res = await sendPaletteToRecipe({
         swatches: swatches.map((s) => ({
@@ -88,7 +99,7 @@ export function AssignToRecipeDialog({
         setError(res.error);
         return;
       }
-      onAssigned(label);
+      onAssigned({ recipeId: res.data.recipeId, name: label, created });
       onClose();
     });
   }

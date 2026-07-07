@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ColourMatchTool } from "@/components/tools/ColourMatchTool";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { useToast } from "@/components/kit";
@@ -10,6 +11,7 @@ import { useCatalog } from "../useCatalog";
 
 export default function ColourMatchPage() {
   const paints = useCatalog();
+  const router = useRouter();
   const { toast, node } = useToast();
   const [assigning, setAssigning] = useState<AssignSwatch | null>(null);
   const brandOptions = useMemo(
@@ -45,7 +47,11 @@ export default function ColourMatchPage() {
         open={assigning != null}
         swatches={assigning ? [assigning] : []}
         onClose={() => setAssigning(null)}
-        onAssigned={(recipeName) => toast(`Added to ${recipeName}`, "green")}
+        onAssigned={(result) =>
+          result.created
+            ? router.push(`/recipes/${result.recipeId}`)
+            : toast(`Added to ${result.name}`, "green")
+        }
       />
       {node}
     </ToolShell>

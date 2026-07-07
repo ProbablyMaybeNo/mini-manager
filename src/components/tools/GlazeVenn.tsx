@@ -1,53 +1,86 @@
 "use client";
 
 import { useId } from "react";
-import { mixLayers, DEFAULT_SUBSTRATE, type GlazeLayer } from "@/lib/tools/layering/opticalMix";
+import { DEFAULT_SUBSTRATE, type GlazeLayer } from "@/lib/tools/layering/opticalMix";
+import { computeVennFills } from "@/lib/tools/layering/venn";
 
 /**
- * Two-circle optical-mix Venn for the Layering tool's glaze mode (ported from
- * the pre-rebuild tool suite). Each circle is a transparent paint laid over the
- * substrate; the lens where they overlap is filled with the *predicted painted
- * result* (computed by `mixLayers`, not a CSS blend — so per-layer thinness is
- * honoured and magenta-under-yellow reads as warm amber). Circles and the lens
- * are click targets that report their rendered hex.
+ * N-circle optical-mix Venn for the Stacking tool (Wave 2 rebuild —
+ * ESVDHH6Wg78p). There's no more "undercoat" — every layer is just
+ * "LAYER #", renderable from a single layer up. Each layer gets its own
+ * circle showing that layer alone over the substrate; the centre where
+ * EVERY circle overlaps is filled with the full stacked result (computed by
+ * `computeVennFills`, not a CSS blend — so per-layer thinness is honoured
+ * and a thin magenta under a solid yellow reads as warm amber, not average
+ * grey). Circles and the centre are click targets that report their
+ * rendered hex.
  */
 
-export interface VennCircle extends GlazeLayer {
-  /** Short caption shown under the circle (e.g. "UNDERCOAT"). */
+export interface VennLayer extends GlazeLayer {
+  id: string;
+  /** Short caption shown under the circle (e.g. "LAYER 1"). */
   label: string;
 }
 
 interface Props {
-  undercoat: VennCircle;
-  top: VennCircle;
-  /** Primer/substrate both glazes sit over. Defaults to white. */
+  /** Bottom → top stacking order. Renders from 1 layer up. */
+  layers: ReadonlyArray<VennLayer>;
+  /** Primer/substrate every layer sits over. Defaults to white. */
   substrate?: string;
-  /** Fired when a region is clicked, with that region's rendered hex. */
-  onPick?: (region: "undercoat" | "top" | "result", hex: string) => void;
+  /** Fired when a layer circle (or the centre result) is clicked. */
+  onPick?: (target: { kind: "layer"; index: number } | { kind: "result" }, hex: string) => void;
 }
 
-const W = 340;
-const H = 220;
-const R = 78;
-const CY = 100;
-const CX_A = 122; // undercoat (left)
-const CX_B = 218; // top (right)
+const W = 360;
+const H = 240;
+const CX = 180;
+const CY = 116;
+const R = 72;
 
-export function GlazeVenn({ undercoat, top, substrate = DEFAULT_SUBSTRATE, onPick }: Props) {
-  const clip = useId().replace(/:/g, "");
-  const glow = `glow-${clip}`;
-  const clipA = `clipA-${clip}`;
+/** Circle centres for N layers, evenly spaced on a ring around (CX, CY) so
+ *  they always share a common central overlap. A single layer sits dead
+ *  centre; more layers spread further out (still overlapping) so the outline
+ *  of each circle stays legible. */
+function layoutCenters(n: number): Array<{ x: number; y: number }> {
+  if (n <= 1) return [{ x: CX, y: CY }];
+  const spread = n === 2 ? R * 0.62 : R * 0.85;
+  return Array.from({ length: n }, (_, i) => {
+    const angle = ((-90 + (360 / n) * i) * Math.PI) / 180;
+    return { x: CX + spread * Math.cos(angle), y: CY + spread * Math.sin(angle) };
+  });
+}
 
-  const undercoatFill = mixLayers([undercoat], substrate);
-  const topFill = mixLayers([top], substrate);
-  const resultFill = mixLayers([undercoat, top], substrate);
+export function GlazeVenn({ layers, substrate = DEFAULT_SUBSTRATE, onPick }: Props) {
+  const uid = useId().replace(/:/g, "");
+  const glow = `glow-${uid}`;
+  const n = layers.length;
+  const centers = layoutCenters(n);
+  const { soloFills, resultFill } = computeVennFills(layers, substrate);
+
+  // Build the "every circle overlaps here" centre region by nesting a
+  // clip-path per circle — each nested <g> further restricts the visible
+  // area to inside that circle too, so the innermost content only shows
+  // through the intersection of all N circles.
+  let center: React.ReactNode = (
+    <circle
+      cx={CX}
+      cy={CY}
+      r={R * 1.4}
+      fill={resultFill}
+      className={onPick ? "cursor-pointer" : undefined}
+      onClick={() => onPick?.({ kind: "result" }, resultFill)}
+    />
+  );
+  for (let i = 0; i < n; i++) {
+    center = <g clipPath={`url(#${uid}-c${i})`}>{center}</g>;
+  }
 
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       className="mx-auto block w-full max-w-[420px]"
       role="img"
-      aria-label={`Undercoat ${undercoatFill} under ${topFill} produces ${resultFill}`}
+      aria-label={`${n} layer${n === 1 ? "" : "s"} — result ${resultFill}`}
     >
       <defs>
         <filter id={glow} x="-30%" y="-30%" width="160%" height="160%">
@@ -57,41 +90,29 @@ export function GlazeVenn({ undercoat, top, substrate = DEFAULT_SUBSTRATE, onPic
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        <clipPath id={clipA}>
-          <circle cx={CX_A} cy={CY} r={R} />
-        </clipPath>
+        {centers.map((c, i) => (
+          <clipPath id={`${uid}-c${i}`} key={i}>
+            <circle cx={c.x} cy={c.y} r={R} />
+          </clipPath>
+        ))}
       </defs>
 
-      {/* Undercoat circle (left) */}
-      <circle
-        cx={CX_A}
-        cy={CY}
-        r={R}
-        fill={undercoatFill}
-        className="cursor-pointer"
-        onClick={() => onPick?.("undercoat", undercoatFill)}
-      />
-      {/* Top-glaze circle (right) */}
-      <circle
-        cx={CX_B}
-        cy={CY}
-        r={R}
-        fill={topFill}
-        className="cursor-pointer"
-        onClick={() => onPick?.("top", topFill)}
-      />
-      {/* Lens = intersection: circle B clipped to circle A, filled with the
-          predicted layered result. Sits on top and owns the click. */}
-      <g clipPath={`url(#${clipA})`}>
+      {/* One solo circle per layer — that layer alone over the substrate. */}
+      {layers.map((layer, i) => (
         <circle
-          cx={CX_B}
-          cy={CY}
+          key={layer.id}
+          cx={centers[i]!.x}
+          cy={centers[i]!.y}
           r={R}
-          fill={resultFill}
+          fill={soloFills[i]}
           className="cursor-pointer"
-          onClick={() => onPick?.("result", resultFill)}
+          onClick={() => onPick?.({ kind: "layer", index: i }, soloFills[i]!)}
         />
-      </g>
+      ))}
+
+      {/* The centre — every circle's intersection — filled with the full
+          stacked result. */}
+      {center}
 
       {/* Cyan phosphor outlines */}
       <g
@@ -102,8 +123,9 @@ export function GlazeVenn({ undercoat, top, substrate = DEFAULT_SUBSTRATE, onPic
         filter={`url(#${glow})`}
         pointerEvents="none"
       >
-        <circle cx={CX_A} cy={CY} r={R} />
-        <circle cx={CX_B} cy={CY} r={R} />
+        {centers.map((c, i) => (
+          <circle key={i} cx={c.x} cy={c.y} r={R} />
+        ))}
       </g>
 
       {/* Captions */}
@@ -115,9 +137,12 @@ export function GlazeVenn({ undercoat, top, substrate = DEFAULT_SUBSTRATE, onPic
         pointerEvents="none"
         style={{ textTransform: "uppercase", letterSpacing: "0.15em" }}
       >
-        <text x={CX_A - 26} y={CY + R + 16}>{undercoat.label}</text>
-        <text x={CX_B + 26} y={CY + R + 16}>{top.label}</text>
-        <text x={(CX_A + CX_B) / 2} y={CY - R - 8} fill="var(--color-cyan)">
+        {layers.map((layer, i) => (
+          <text key={layer.id} x={centers[i]!.x} y={centers[i]!.y + R + 16}>
+            {layer.label}
+          </text>
+        ))}
+        <text x={CX} y={CY - R - 10} fill="var(--color-cyan)">
           RESULT
         </text>
       </g>

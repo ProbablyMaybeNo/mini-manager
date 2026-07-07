@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { EyedropperTool } from "@/components/tools/EyedropperTool";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { usePaletteSaver } from "@/components/tools/usePaletteSaver";
@@ -9,6 +10,7 @@ import { AssignToRecipeDialog } from "@/components/recipe/AssignToRecipeDialog";
 import type { ToolSwatch } from "@/lib/types";
 
 export default function EyedropperPage() {
+  const router = useRouter();
   const { save, dialog } = usePaletteSaver("eyedropper");
   const { toast, node } = useToast();
   const [assigning, setAssigning] = useState<{
@@ -32,7 +34,11 @@ export default function EyedropperPage() {
         swatches={assigning?.swatches ?? []}
         mode={assigning?.mode ?? "both"}
         onClose={() => setAssigning(null)}
-        onAssigned={(recipeName) => toast(`Added to ${recipeName}`, "green")}
+        onAssigned={(result) =>
+          result.created
+            ? router.push(`/recipes/${result.recipeId}`)
+            : toast(`Added to ${result.name}`, "green")
+        }
       />
       {dialog}
       {node}

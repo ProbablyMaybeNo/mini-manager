@@ -28,6 +28,8 @@ export function ColorPickerPanel({
   initialPaintId,
   pickerKey,
   mode = "add-slot",
+  showLibrary = true,
+  showEyedropper = true,
   closeOnSelect = false,
 }: {
   open: boolean;
@@ -38,6 +40,12 @@ export function ColorPickerPanel({
   contextLabel?: string;
   initialHex?: string | null;
   initialPaintId?: string | null;
+  /** Render the catalog-match "Library" sub-panel. Off for colours-only
+   *  tools (Stacking — lvIX6p). */
+  showLibrary?: boolean;
+  /** Render the image-eyedropper sub-panel. Off for colours-only tools
+   *  (Stacking — lvIX6p), which already are eyedropper-adjacent. */
+  showEyedropper?: boolean;
   /**
    * Stable identity of the target being edited (which lane / layer / slot).
    * The inner {@link ColorPicker} is re-keyed on this so re-opening on a
@@ -94,6 +102,8 @@ export function ColorPickerPanel({
         }
         contextLabel={contextLabel}
         mode={mode}
+        showLibrary={showLibrary}
+        showEyedropper={showEyedropper}
         onSelect={(sel) => {
           onSelect(sel);
           if (closeOnSelect) onClose();

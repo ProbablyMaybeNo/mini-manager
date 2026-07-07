@@ -8,15 +8,13 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * Color Wheel, Color Match, Color Dropper, Color Stacking. This spec
  * checks the hub renders all four, then walks the wheel path: open
  * /tools/wheel, confirm the harmony picker + "Send to Recipe" action,
- * and that Send to Recipe routes to /recipes.
- *
- * REBUILD note: the old "Send to recipe" MODAL is gone — the wheel's
- * "Send to Recipe" button now navigates straight to /recipes, so we
- * assert the navigation rather than a dialog.
+ * and that Send to Recipe actually carries the scheme's colours into a
+ * new recipe (Wave 2 / CIzKX — it used to navigate to /recipes with
+ * nothing).
  */
 
 test.describe("M4 — Tools", () => {
-  test("M4.1 hub lists the four tools; wheel → Send to Recipe routes to /recipes", async ({
+  test("M4.1 hub lists the four tools; wheel → Send to Recipe carries colours into a new recipe", async ({
     page,
   }) => {
     await signInAs(page, freshTestEmail());
@@ -44,13 +42,14 @@ test.describe("M4 — Tools", () => {
     await expect(page.getByLabel(/^Hue$/i)).toBeVisible();
     await expect(page.getByText(/^Harmony$/i)).toBeVisible();
 
-    // Send to Recipe routes to the recipes index — the 3-pane RecipeWorkbench
-    // (Figma 28:4), whose list column leads with an "RECIPES <count>" h1.
-    await page.getByRole("button", { name: /Send to Recipe/i }).click();
-    await page.waitForURL(/\/recipes/, { timeout: 30_000 });
-    await expect(
-      page.getByRole("heading", { name: /^RECIPES/ }),
-    ).toBeVisible({ timeout: 30_000 });
+    // Send to Recipe opens the create-or-assign chooser with the scheme's
+    // colours (CIzKX) — type a name and Create to land on a new recipe.
+    await page.getByRole("button", { name: /^Send to Recipe$/ }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    await dialog.getByPlaceholder("New recipe name").fill("Wheel scheme E2E");
+    await dialog.getByRole("button", { name: "Create", exact: true }).click();
+    await page.waitForURL(/\/recipes\/[^/?#]+$/, { timeout: 30_000 });
   });
 
   test("M4.2 each tool route loads its own screen", async ({ page }) => {

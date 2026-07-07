@@ -60,6 +60,7 @@ export function ColorPicker({
   contextLabel,
   mode = "add-slot",
   showEyedropper = true,
+  showLibrary = true,
   confirmSelection = false,
 }: {
   paints: ReadonlyArray<Paint>;
@@ -71,6 +72,10 @@ export function ColorPicker({
   /** Render the image-eyedropper sub-panel. Off in the recipe Pick & Paint
    *  panel, which already exposes the eyedropper as its own top-level tab. */
   showEyedropper?: boolean;
+  /** Render the filterable catalog-match "Library" sub-panel. Off for the
+   *  Stacking tool (lvIX6p — colours-only, no "closest paint" pretense on a
+   *  colour that isn't grounded yet). */
+  showLibrary?: boolean;
   /** Recipe flow: instead of adding a paint on a single click, a library row
    *  highlights to select and an explicit ADD PAINT button commits it — and
    *  the bare "use this colour" wheel shortcut is dropped, so only real catalog
@@ -261,6 +266,8 @@ export function ColorPicker({
         <Slider label="Lightness" value={Math.round(light)} onChange={setLight} />
       </section>
 
+      {showLibrary && (
+      <>
       <hr className="border-cyan/20" />
 
       {/* Sub-panel 2 — library */}
@@ -390,6 +397,8 @@ export function ColorPicker({
           </Button>
         )}
       </section>
+      </>
+      )}
 
       {showEyedropper && (
       <>

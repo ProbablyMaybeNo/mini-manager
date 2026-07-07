@@ -5,7 +5,7 @@ import { SlideOutPanel } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { loadPaints } from "@/lib/paints/loader";
-import { closestPaint, rankMatchesMulti } from "@/lib/toolMatch";
+import { rankMatchesMulti } from "@/lib/toolMatch";
 import type { Paint } from "@/lib/types";
 import type { Paint as CatalogPaint } from "@/lib/paints/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
@@ -93,11 +93,6 @@ export function RecipePaintPicker({
   // Every tool funnels its "use this paint" / "use this colour" action here.
   const assignPaint = (paint: Paint) => onSelect({ hex: paint.hex, paintId: paint.id });
   const assignHex = (hex: string) => onSelect({ hex, paintId: null });
-  // A layering/dropper "send to recipe" carries N paints; the slot takes the
-  // first (the rest would need new slots, which the recipe editor owns).
-  const assignFirst = (picks: Paint[]) => {
-    if (picks[0]) assignPaint(picks[0]);
-  };
 
   return (
     <SlideOutPanel
@@ -183,11 +178,9 @@ export function RecipePaintPicker({
 
         {tab === "layering" && (
           <LayeringTool
-            closestPaint={(hex) => closestPaint(hex, paints)}
             onSavePalette={(hexes) => {
               if (hexes[0]) assignHex(hexes[0]);
             }}
-            onSendToRecipe={assignFirst}
           />
         )}
       </div>

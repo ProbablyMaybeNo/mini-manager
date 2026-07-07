@@ -1,34 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button, CloseButton, HexField, Panel, Swatch } from "@/components/kit";
 import { readableText } from "@/lib/color";
 import { buildRamp, MAX_STEPS, MIN_STEPS } from "@/lib/tools/gradient/interpolate";
-import { mixLayers, DEFAULT_SUBSTRATE, type GlazeLayer } from "@/lib/tools/layering/opticalMix";
-import type { Paint } from "@/lib/types";
+import { computeVennFills } from "@/lib/tools/layering/venn";
+import type { ToolSwatch } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { ColorPickerPanel } from "./ColorPickerPanel";
-import { GlazeVenn } from "./GlazeVenn";
+import { GlazeVenn, type VennLayer } from "./GlazeVenn";
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/;
+const MAX_LAYERS = 6;
+
+interface StackLayer {
+  id: string;
+  label: string;
+  hex: string;
+  alpha: number;
+}
 
 /**
- * Color Stacking + Layering (MM-35). Two sections:
- *  - LAYERING: a perceptual Lab-space ramp (shadow → base → highlight) with
- *    per-step hex labels + closest library paint, per-lane colour-picker.
- *  - STACKING: transparent glaze layers stacked over a substrate, predicting
- *    the painted-result hex (optical mix). A distinct section alongside the
- *    layering ramp, per the Vercel thread.
+ * Color Stacking + Layering (MM-35 / Wave 2 item 7). Two sections, both
+ * colours-only (lvIX6p — no auto-matched-paint pretense; a swatch becomes a
+ * real paint in a recipe, not here):
+ *  - LAYERING: a perceptual Lab-space ramp (shadow → base → highlight).
+ *  - STACKING: N renamable "LAYER #" glazes, stacked bottom → top over a
+ *    fixed substrate, predicting the painted result (optical mix). Rendered
+ *    as an N-circle Venn (ESVDHH6Wg78p) — no more "undercoat" special-case;
+ *    every layer is equal, and the centre where every circle overlaps IS the
+ *    predicted result, shown from a single layer up.
  * Ported from old `components/tools/gradient/*` + `lib/tools/layering`.
  */
 export function LayeringTool({
-  closestPaint,
   onSavePalette,
-  onSendToRecipe,
+  onCreateRecipe,
+  onAssignRecipe,
 }: {
-  closestPaint: (hex: string) => Paint | null;
   onSavePalette: (hexes: string[]) => void;
-  onSendToRecipe: (paints: Paint[]) => void;
+  /** Start a brand-new recipe from the discovered colours. Omit to hide the
+   *  button (the embedded recipe-slot picker doesn't show it). */
+  onCreateRecipe?: (swatches: ToolSwatch[]) => void;
+  /** Append the discovered colours to an existing recipe. Omit to hide. */
+  onAssignRecipe?: (swatches: ToolSwatch[]) => void;
 }) {
   /* ---------- Layering (Lab ramp) ---------- */
   const [shadow, setShadow] = useState("#13243a");
@@ -37,8 +51,6 @@ export function LayeringTool({
   const [steps, setSteps] = useState(5);
   // Per-lane colour picker — which lane the shared ColorPicker is editing.
   const [pickingLane, setPickingLane] = useState<"shadow" | "base" | "highlight" | null>(null);
-  // Per-stacking-target colour picker — the substrate or a glaze-layer index.
-  const [pickingStack, setPickingStack] = useState<number | "substrate" | null>(null);
 
   const valid = [shadow, base, highlight].every((h) => HEX6.test(h));
   const ladder = valid ? buildRamp({ shadow, base, highlight, steps }) : [];
@@ -59,29 +71,53 @@ export function LayeringTool({
     else if (pickingLane === "highlight") setHighlight(hex);
   }
 
-  /* ---------- Stacking (optical glaze mix) ---------- */
-  const [substrate, setSubstrate] = useState(DEFAULT_SUBSTRATE);
-  const [layers, setLayers] = useState<GlazeLayer[]>([
-    { hex: "#8a1f1f", alpha: 0.4 },
-    { hex: "#c01010", alpha: 0.85 },
+  /* ---------- Stacking (optical glaze mix, N renamable layers) ---------- */
+  const layerSeq = useRef(0);
+  function nextLayerId(): string {
+    layerSeq.current += 1;
+    return `layer-${layerSeq.current}`;
+  }
+  const [layers, setLayers] = useState<StackLayer[]>(() => [
+    { id: nextLayerId(), label: "LAYER 1", hex: "#8a1f1f", alpha: 0.6 },
   ]);
-  const stackResult = mixLayers(layers, substrate);
+  // Which layer's colour the shared ColorPicker is editing.
+  const [pickingLayer, setPickingLayer] = useState<number | null>(null);
 
-  const stackHex =
-    pickingStack === "substrate"
-      ? substrate
-      : typeof pickingStack === "number"
-        ? (layers[pickingStack]?.hex ?? null)
-        : null;
+  const { resultFill } = computeVennFills(layers);
+  const stackHex = typeof pickingLayer === "number" ? (layers[pickingLayer]?.hex ?? null) : null;
 
-  function applyStack(sel: ColorPickerSelection) {
+  function applyLayerColor(sel: ColorPickerSelection) {
     const hex = sel.hex.toUpperCase();
-    if (pickingStack === "substrate") setSubstrate(hex);
-    else if (typeof pickingStack === "number") {
-      const idx = pickingStack;
-      setLayers((p) => p.map((l, k) => (k === idx ? { ...l, hex } : l)));
+    if (typeof pickingLayer === "number") {
+      const idx = pickingLayer;
+      setLayers((prev) => prev.map((l, k) => (k === idx ? { ...l, hex } : l)));
     }
   }
+
+  function addLayer() {
+    setLayers((prev) => {
+      if (prev.length >= MAX_LAYERS) return prev;
+      return [
+        ...prev,
+        { id: nextLayerId(), label: `LAYER ${prev.length + 1}`, hex: "#ffffff", alpha: 0.5 },
+      ];
+    });
+  }
+
+  function removeLayer(index: number) {
+    setLayers((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  }
+
+  function renameLayer(index: number, label: string) {
+    setLayers((prev) => prev.map((l, i) => (i === index ? { ...l, label } : l)));
+  }
+
+  const vennLayers: VennLayer[] = layers.map((l) => ({
+    id: l.id,
+    label: l.label,
+    hex: l.hex,
+    alpha: l.alpha,
+  }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -127,37 +163,35 @@ export function LayeringTool({
                   </div>
                 ))}
               </div>
+              {/* Colours-only (lvIX6p) — no auto-matched-paint row; a step
+                  becomes a real paint once it's in a recipe. */}
               <ol className="flex flex-col gap-1.5">
-                {ladder.map((hex, i) => {
-                  const paint = closestPaint(hex);
-                  return (
-                    <li key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
-                      <span className="w-6 font-num2 text-num2 text-fg">{i + 1}</span>
-                      <Swatch hex={hex} />
-                      <span aria-hidden className="font-osd text-fg-faint">→</span>
-                      {paint ? (
-                        <>
-                          <Swatch hex={paint.hex} />
-                          <span className="flex-1 truncate font-body text-body text-fg">
-                            {paint.name} · {paint.brand}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="flex-1 font-body text-body text-fg">No match</span>
-                      )}
-                    </li>
-                  );
-                })}
+                {ladder.map((hex, i) => (
+                  <li key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
+                    <span className="w-6 font-num2 text-num2 text-fg">{i + 1}</span>
+                    <Swatch hex={hex} />
+                    <span className="flex-1 font-body text-body text-fg">{hex}</span>
+                  </li>
+                ))}
               </ol>
               <div className="flex flex-wrap gap-2">
-                {/* +COLOR SCHEME → neon green; +RECIPE → pastel purple (CiBUwVgwwQRD). */}
-                <Button variant="add" onClick={() => onSavePalette(ladder)}>Save Palette</Button>
-                <Button
-                  variant="attach"
-                  onClick={() => onSendToRecipe(ladder.map(closestPaint).filter((p): p is Paint => p != null))}
-                >
-                  Send to Recipe
-                </Button>
+                <Button onClick={() => onSavePalette(ladder)}>Save Palette</Button>
+                {onCreateRecipe && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => onCreateRecipe(ladder.map((hex) => ({ hex })))}
+                  >
+                    Create Recipe
+                  </Button>
+                )}
+                {onAssignRecipe && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => onAssignRecipe(ladder.map((hex) => ({ hex })))}
+                  >
+                    Assign to Recipe
+                  </Button>
+                )}
               </div>
             </>
           )}
@@ -168,37 +202,36 @@ export function LayeringTool({
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="STACKING" accent="purple" className="flex flex-col gap-3 p-5">
           <p className="font-body text-body text-fg">
-            Stack transparent glaze layers over an undercoat to predict the
-            painted result (optical mix, bottom → top).
+            Paint is see-through, so what you see is every layer showing
+            through the ones above it. Stack layers bottom (LAYER 1) to top —
+            this previews the colour you'd actually get once they're all
+            painted on.
           </p>
-          <HexField
-            label="Undercoat"
-            name="substrate"
-            value={substrate}
-            onChange={(e) => setSubstrate(e.target.value)}
-            onSwatchClick={() => setPickingStack("substrate")}
-            swatchLabel="Pick undercoat colour"
-          />
           {layers.map((layer, i) => (
-            <div key={i} className="flex flex-col gap-2 border border-purple/20 p-2">
-              <div className="flex items-center justify-between">
-                <span className="label-osd text-fg">
-                  Layer {i + 1}
-                </span>
+            <div key={layer.id} className="flex flex-col gap-2 border border-purple/20 p-2">
+              <div className="flex items-center justify-between gap-2">
+                <input
+                  type="text"
+                  value={layer.label}
+                  onChange={(e) => renameLayer(i, e.target.value)}
+                  aria-label={`Layer ${i + 1} name`}
+                  className="min-w-0 flex-1 border border-transparent bg-transparent label-osd text-fg focus:border-purple/40 focus:outline-none"
+                />
                 <CloseButton
                   tone="destructive"
-                  aria-label={`Remove layer ${i + 1}`}
-                  onClick={() => setLayers((p) => p.filter((_, k) => k !== i))}
+                  aria-label={`Remove ${layer.label}`}
+                  disabled={layers.length <= 1}
+                  onClick={() => removeLayer(i)}
                 />
               </div>
               <HexField
-                name={`layer-${i}`}
+                name={`layer-${layer.id}`}
                 value={layer.hex}
                 onChange={(e) =>
-                  setLayers((p) => p.map((l, k) => (k === i ? { ...l, hex: e.target.value } : l)))
+                  setLayers((prev) => prev.map((l, k) => (k === i ? { ...l, hex: e.target.value } : l)))
                 }
-                onSwatchClick={() => setPickingStack(i)}
-                swatchLabel={`Pick layer ${i + 1} colour`}
+                onSwatchClick={() => setPickingLayer(i)}
+                swatchLabel={`Pick ${layer.label} colour`}
               />
               <label>
                 <span className="label-osd text-fg">
@@ -210,74 +243,75 @@ export function LayeringTool({
                   max={100}
                   value={Math.round(layer.alpha * 100)}
                   onChange={(e) =>
-                    setLayers((p) =>
-                      p.map((l, k) => (k === i ? { ...l, alpha: Number(e.target.value) / 100 } : l)),
+                    setLayers((prev) =>
+                      prev.map((l, k) => (k === i ? { ...l, alpha: Number(e.target.value) / 100 } : l)),
                     )
                   }
-                  aria-label={`Layer ${i + 1} opacity`}
+                  aria-label={`${layer.label} opacity`}
                   className="mt-1 w-full accent-purple"
                 />
               </label>
             </div>
           ))}
-          <Button
-            variant="add"
-            disabled={layers.length >= 6}
-            onClick={() => setLayers((p) => [...p, { hex: "#ffffff", alpha: 0.5 }])}
-          >
+          <Button variant="add" disabled={layers.length >= MAX_LAYERS} onClick={addLayer}>
             + Add layer
           </Button>
         </Panel>
 
-        <Panel label="PREDICTED RESULT" cornerTicks accent="purple" className="flex flex-col gap-4 p-5">
+        <Panel label="RESULT" cornerTicks accent="purple" className="flex flex-col gap-4 p-5">
           <div
             className="flex h-28 items-center justify-center border border-fg/20"
             style={{
-              backgroundColor: HEX6.test(stackResult) ? stackResult : "transparent",
-              color: readableText(stackResult),
+              backgroundColor: HEX6.test(resultFill) ? resultFill : "transparent",
+              color: readableText(resultFill),
             }}
           >
-            <span className="font-body text-body">{stackResult.toUpperCase()}</span>
+            <span className="font-body text-body">{resultFill.toUpperCase()}</span>
           </div>
-          {(() => {
-            const paint = closestPaint(stackResult);
-            return paint ? (
-              <div className="flex items-center gap-3 border border-purple/20 p-2">
-                <Swatch hex={paint.hex} size="lg" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-body text-body text-fg">{paint.name}</div>
-                  <div className="label-osd text-fg">
-                    {paint.brand}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <span className="font-body text-body text-fg">No close paint match.</span>
-            );
-          })()}
-          {layers.length >= 2 && (
-            <div className="flex flex-col gap-1 border-t border-purple/20 pt-3">
-              <span className="label-osd text-fg">
-                Optical mix — undercoat ∩ top glaze
-              </span>
-              <GlazeVenn
-                undercoat={{ ...layers[0]!, label: "UNDERCOAT" }}
-                top={{ ...layers[1]!, label: "TOP GLAZE" }}
-                substrate={substrate}
-                onPick={(_region, hex) => onSavePalette([hex.toUpperCase()])}
-              />
-              <span className="text-center font-body text-body text-fg">
-                Click a region to save its colour.
-              </span>
-            </div>
-          )}
-          <Button variant="secondary" onClick={() => onSavePalette([stackResult.toUpperCase()])}>
-            Save result
-          </Button>
+          <div className="flex flex-col gap-1 border-t border-purple/20 pt-3">
+            <span className="label-osd text-fg">
+              {layers.length} layer{layers.length === 1 ? "" : "s"} — the centre where every
+              circle overlaps is the result
+            </span>
+            <GlazeVenn
+              layers={vennLayers}
+              onPick={(_target, hex) => onSavePalette([hex.toUpperCase()])}
+            />
+            <span className="text-center font-body text-body text-fg">
+              Click a circle or the centre to save its colour.
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => onSavePalette([resultFill.toUpperCase()])}>
+              Save result
+            </Button>
+            {onCreateRecipe && (
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  onCreateRecipe([...layers.map((l) => ({ hex: l.hex })), { hex: resultFill }])
+                }
+              >
+                Create Recipe
+              </Button>
+            )}
+            {onAssignRecipe && (
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  onAssignRecipe([...layers.map((l) => ({ hex: l.hex })), { hex: resultFill }])
+                }
+              >
+                Assign to Recipe
+              </Button>
+            )}
+          </div>
         </Panel>
       </div>
 
-      {/* Per-lane shared ColorPicker for the layering lanes. */}
+      {/* Per-lane shared ColorPicker for the layering lanes — colours-only,
+          so the catalog-match Library + image Eyedropper sub-panels stay
+          hidden (lvIX6p). */}
       <ColorPickerPanel
         open={pickingLane != null}
         onClose={() => setPickingLane(null)}
@@ -286,27 +320,25 @@ export function LayeringTool({
         contextLabel={pickingLane ?? undefined}
         initialHex={laneHex}
         pickerKey={pickingLane ? `lane:${pickingLane}` : null}
+        showLibrary={false}
+        showEyedropper={false}
         closeOnSelect
         onSelect={applyLane}
       />
 
-      {/* Shared ColorPicker for the stacking substrate + glaze layers. */}
+      {/* Shared ColorPicker for each stacking layer — same colours-only cut. */}
       <ColorPickerPanel
-        open={pickingStack != null}
-        onClose={() => setPickingStack(null)}
+        open={pickingLayer != null}
+        onClose={() => setPickingLayer(null)}
         title="Pick a colour"
         breadcrumb="STACKING ▸ COLOR PICKER"
-        contextLabel={
-          pickingStack === "substrate"
-            ? "undercoat"
-            : typeof pickingStack === "number"
-              ? `layer ${pickingStack + 1}`
-              : undefined
-        }
+        contextLabel={typeof pickingLayer === "number" ? layers[pickingLayer]?.label : undefined}
         initialHex={stackHex}
-        pickerKey={pickingStack != null ? `stack:${pickingStack}` : null}
+        pickerKey={typeof pickingLayer === "number" ? `stack:${pickingLayer}` : null}
+        showLibrary={false}
+        showEyedropper={false}
         closeOnSelect
-        onSelect={applyStack}
+        onSelect={applyLayerColor}
       />
     </div>
   );
