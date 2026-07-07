@@ -106,7 +106,8 @@ export function PasteUrlBar({
           </span>
         ) : (
           <>
-            Auto-fills from:{" "}
+            Auto-populate your model and paint collections by pasting a product
+            URL from any major online retailer. Auto-fills from:{" "}
             <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
             Other links still add a row — you just enter the details yourself.
           </>
