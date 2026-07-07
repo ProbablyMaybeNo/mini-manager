@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Input } from "@/components/kit";
+import { Button, Input, Panel } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import {
   SUPPORTED_STORE_NAMES,
@@ -79,36 +79,43 @@ export function PasteUrlBar({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex flex-wrap items-end gap-2">
-        <KindToggle value={kind} onChange={setKind} />
-        <Input
-          name="paste-url"
-          aria-label="Paste a store URL"
-          placeholder="Paste a store URL…"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          containerClassName="min-w-[260px] flex-1"
-          aria-invalid={unsupported || undefined}
-          aria-describedby="paste-url-stores"
-        />
-        <Button onClick={submit}>Enter</Button>
+    <Panel label="IMPORT FROM A STORE LINK" className="p-5">
+      <div className="flex flex-col gap-3">
+        <p className="max-w-prose font-body text-body leading-snug text-fg-dim">
+          Auto-populate your paint and model collections by pasting a product URL
+          from any of the major online retailers — we fetch the name, price and
+          image for you. Pick Paint or Model, paste the link, and hit Enter.
+        </p>
+        <div className="flex flex-wrap items-end gap-2">
+          <KindToggle value={kind} onChange={setKind} />
+          <Input
+            name="paste-url"
+            aria-label="Paste a store URL"
+            placeholder="Paste a store URL…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            containerClassName="min-w-[260px] flex-1"
+            aria-invalid={unsupported || undefined}
+            aria-describedby="paste-url-stores"
+          />
+          <Button onClick={submit}>Enter</Button>
+        </div>
+        <p id="paste-url-stores" className="font-body text-body leading-snug text-fg">
+          {unsupported ? (
+            <span className="text-red">
+              ▸ That store isn&apos;t supported yet — the entry will be added with just
+              the link; fill in the details by hand.
+            </span>
+          ) : (
+            <>
+              Auto-fills from:{" "}
+              <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
+              Other links still add a row — you just enter the details yourself.
+            </>
+          )}
+        </p>
       </div>
-      <p id="paste-url-stores" className="font-body text-body leading-snug text-fg">
-        {unsupported ? (
-          <span className="text-red">
-            ▸ That store isn&apos;t supported yet — the entry will be added with just
-            the link; fill in the details by hand.
-          </span>
-        ) : (
-          <>
-            Auto-fills from:{" "}
-            <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
-            Other links still add a row — you just enter the details yourself.
-          </>
-        )}
-      </p>
-    </div>
+    </Panel>
   );
 }
