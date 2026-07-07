@@ -170,11 +170,9 @@ export function RecipePaintPicker({
 
         {tab === "dropper" && (
           <EyedropperTool
-            closestPaint={(hex) => closestPaint(hex, paints)}
             onSavePalette={(hexes) => {
               if (hexes[0]) assignHex(hexes[0]);
             }}
-            onSendToRecipe={assignFirst}
           />
         )}
 

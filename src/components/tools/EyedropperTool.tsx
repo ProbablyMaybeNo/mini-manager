@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, CloseButton, Panel, Swatch } from "@/components/kit";
+import { Button, CloseButton, Panel } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { extractDominantColors } from "@/lib/tools/eyedropper/kmeans";
 import { imageToPixels, validateImageBlob, type SampledImage } from "@/lib/tools/eyedropper/sample";
 import { placePins } from "@/lib/tools/eyedropper/pinPlacement";
-import type { Paint } from "@/lib/types";
+import type { ToolSwatch } from "@/lib/types";
 import { EyedropperPins, type Pin } from "./EyedropperPins";
 import { CameraSampler, isCameraSamplerSupported } from "./CameraSampler";
 
@@ -20,20 +20,34 @@ const clampDroppers = (n: number) =>
   Math.max(MIN_DROPPERS, Math.min(MAX_DROPPERS, n));
 
 /**
- * Color Dropper (MM-34). Drop / paste / capture an image → auto k-means
- * extraction of N dominant colours (N set by the + / − dropper controls,
- * default 3), shown as draggable pins on an image preview that re-sample on
- * drag. Live camera sampler too. Each swatch resolves its closest library
- * paint. Ported from old `components/tools/eyedropper/*` into the terminal UI.
+ * Color Dropper (MM-34 / Wave 2 dOySZp). Drop / paste / capture an image →
+ * auto k-means extraction of N dominant colours (N set by the + / − dropper
+ * controls, default 3), shown as draggable pins on an image preview that
+ * re-sample on drag. Live camera sampler too.
+ *
+ * Colours-not-paints (dOySZp): this tool finds colours in a reference image.
+ * It doesn't pretend to pick a specific paint for you — there's no "closest
+ * match" auto-suggestion here anymore. Turning a found colour into a real
+ * paint happens in a recipe: "Create Recipe" starts a new one from every
+ * swatch, "Assign to Recipe" appends them to an existing one, and each row's
+ * own "Assign" sends just that one colour — all via the shared
+ * create-or-assign chooser (item 1 / `AssignToRecipeDialog`).
  */
 export function EyedropperTool({
-  closestPaint,
   onSavePalette,
-  onSendToRecipe,
+  onCreateRecipe,
+  onAssignRecipe,
+  onAssignSwatch,
 }: {
-  closestPaint: (hex: string) => Paint | null;
   onSavePalette: (hexes: string[]) => void;
-  onSendToRecipe: (paints: Paint[]) => void;
+  /** Start a brand-new recipe from every swatch. Omit to hide the button
+   *  (the embedded recipe-slot picker doesn't show it — see RecipePaintPicker). */
+  onCreateRecipe?: (swatches: ToolSwatch[]) => void;
+  /** Append every swatch to an existing recipe. Omit to hide the button. */
+  onAssignRecipe?: (swatches: ToolSwatch[]) => void;
+  /** Per-row "Assign" — send just this one colour to a recipe. Omit to hide
+   *  the per-row button. */
+  onAssignSwatch?: (swatch: ToolSwatch) => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sampled, setSampled] = useState<SampledImage | null>(null);
@@ -196,43 +210,36 @@ export function EyedropperTool({
         )}
       </Panel>
 
-      <Panel label="PALETTE" cornerTicks className="flex flex-col gap-3 p-5">
+      <Panel label="COLOURS FOUND" cornerTicks className="flex flex-col gap-3 p-5">
         {swatches.length === 0 ? (
           <p className="py-8 text-center font-body text-body text-fg">
-            Drop an image to auto-extract a palette, then drag the pins to re-sample.
+            Drop an image to auto-extract its colours, then drag the pins to re-sample.
           </p>
         ) : (
-          swatches.map((hex, i) => {
-            const paint = closestPaint(hex);
-            return (
-              <div key={`${hex}-${i}`} className="flex items-center gap-3 border border-cyan/20 p-2">
-                <span className="w-5 font-num2 text-num2 text-fg">{i + 1}</span>
-                <Swatch hex={hex} size="lg" />
-                <span aria-hidden className="font-osd text-fg-faint">→</span>
-                {paint ? (
-                  <>
-                    <Swatch hex={paint.hex} size="lg" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-body text-body text-fg">{paint.name}</div>
-                      <div className="label-osd text-fg">
-                        {paint.brand}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <span className="flex-1 font-body text-body text-fg">No match</span>
-                )}
-                <CloseButton
-                  tone="destructive"
-                  aria-label={`Remove swatch ${hex}`}
-                  onClick={() => setPins((prev) => prev.filter((_, k) => k !== i))}
-                />
-              </div>
-            );
-          })
+          swatches.map((hex, i) => (
+            <div key={`${hex}-${i}`} className="flex items-center gap-3 border border-cyan/20 p-2">
+              <span className="w-5 font-num2 text-num2 text-fg">{i + 1}</span>
+              <span
+                aria-hidden
+                className="h-8 w-8 shrink-0 border border-fg/20"
+                style={{ backgroundColor: hex }}
+              />
+              <span className="flex-1 font-body text-body text-fg">{hex}</span>
+              {onAssignSwatch && (
+                <Button size="sm" variant="secondary" onClick={() => onAssignSwatch({ hex })}>
+                  Assign
+                </Button>
+              )}
+              <CloseButton
+                tone="destructive"
+                aria-label={`Remove swatch ${hex}`}
+                onClick={() => setPins((prev) => prev.filter((_, k) => k !== i))}
+              />
+            </div>
+          ))
         )}
         {/* + / − dropper controls on the left (where Save/Send used to sit per
-            Ross's sketch), Save / Send pushed to the right (wBJeqQHQLK4g). */}
+            Ross's sketch), the recipe actions pushed to the right (wBJeqQHQLK4g). */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <button
@@ -261,13 +268,24 @@ export function EyedropperTool({
             <Button disabled={swatches.length === 0} onClick={() => onSavePalette(swatches)}>
               Save
             </Button>
-            <Button
-              variant="secondary"
-              disabled={swatches.length === 0}
-              onClick={() => onSendToRecipe(swatches.map(closestPaint).filter((p): p is Paint => p != null))}
-            >
-              Send to Recipe
-            </Button>
+            {onCreateRecipe && (
+              <Button
+                variant="secondary"
+                disabled={swatches.length === 0}
+                onClick={() => onCreateRecipe(swatches.map((hex) => ({ hex })))}
+              >
+                Create Recipe
+              </Button>
+            )}
+            {onAssignRecipe && (
+              <Button
+                variant="secondary"
+                disabled={swatches.length === 0}
+                onClick={() => onAssignRecipe(swatches.map((hex) => ({ hex })))}
+              >
+                Assign to Recipe
+              </Button>
+            )}
           </div>
         </div>
       </Panel>
