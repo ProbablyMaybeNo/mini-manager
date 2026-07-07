@@ -95,6 +95,7 @@ export function RosterFilterBar({
       aria-label="Filter roster by status"
     >
       <div className="flex flex-wrap items-center gap-2">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-fg-dim">Filter</span>
         {FILTERS.map((f) => {
           const accent = accentFor(f);
           const active = f === filter;
