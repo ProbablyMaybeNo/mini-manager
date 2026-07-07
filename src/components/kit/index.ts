@@ -17,6 +17,7 @@ export { ModalDialog } from "./ModalDialog";
 export { PromptDialog } from "./PromptDialog";
 export { ConfirmDialog } from "./ConfirmDialog";
 export { EmptyState } from "./EmptyState";
+export { PageSkeleton, Skeleton } from "./PageSkeleton";
 export { useToast } from "./Toast";
 export { MiniCalendar } from "./MiniCalendar";
 export { ActivityFeed } from "./ActivityFeed";
