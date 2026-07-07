@@ -2,17 +2,30 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Button, Input, ModalDialog } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import {
   listRecipesForSendTo,
   sendPaletteToRecipe,
   type SendToRecipeOption,
 } from "@/lib/actions/sendToRecipe";
+import type { ToolSwatch } from "@/lib/types";
 
-export interface AssignSwatch {
-  hex: string;
-  paintId?: string | null;
-  name?: string;
-}
+/** @deprecated import `ToolSwatch` from `@/lib/types` — kept as an alias so
+ *  existing call sites don't all need a rename. */
+export type AssignSwatch = ToolSwatch;
+
+/**
+ * Which half of the "send colours to a recipe" flow to expose:
+ *  - "both"   — the full chooser (existing recipes to append to, OR type a
+ *               new name to create one). Used by every per-swatch "Assign"
+ *               action (one colour, ambiguous whether it wants a new or
+ *               existing home).
+ *  - "create" — only the new-recipe-name input; skips fetching the recipe
+ *               list entirely. Wheel/Dropper/Stacking's "Create Recipe" button.
+ *  - "assign" — only the existing-recipe list. Wheel/Dropper/Stacking's
+ *               "Assign to Recipe" button.
+ */
+export type AssignDialogMode = "both" | "create" | "assign";
 
 /**
  * Recipe picker for "assign / send to recipe" flows. Lists the painter's
@@ -23,11 +36,13 @@ export interface AssignSwatch {
 export function AssignToRecipeDialog({
   open,
   swatches,
+  mode = "both",
   onClose,
   onAssigned,
 }: {
   open: boolean;
   swatches: AssignSwatch[];
+  mode?: AssignDialogMode;
   onClose: () => void;
   onAssigned: (recipeName: string) => void;
 }) {
@@ -40,6 +55,11 @@ export function AssignToRecipeDialog({
     if (!open) return;
     setError(null);
     setNewName("");
+    // "create" mode never shows the recipe list — skip the fetch entirely.
+    if (mode === "create") {
+      setRecipes([]);
+      return;
+    }
     setRecipes(null);
     let alive = true;
     listRecipesForSendTo().then((res) => {
@@ -50,7 +70,7 @@ export function AssignToRecipeDialog({
     return () => {
       alive = false;
     };
-  }, [open]);
+  }, [open, mode]);
 
   function send(target: { targetRecipeId: string } | { newRecipeName: string }, label: string) {
     if (pending || swatches.length === 0) return;
@@ -74,66 +94,83 @@ export function AssignToRecipeDialog({
   }
 
   const count = swatches.length;
+  const showList = mode !== "create";
+  const showCreate = mode !== "assign";
+
+  const title =
+    mode === "create"
+      ? "Create recipe from colours"
+      : mode === "assign"
+        ? "Assign to recipe"
+        : count === 1
+          ? "Assign to recipe"
+          : "Send palette to recipe";
+
+  const intro =
+    mode === "create"
+      ? `Start a new recipe with ${count} colour${count === 1 ? "" : "s"}.`
+      : mode === "assign"
+        ? `Add ${count} colour${count === 1 ? "" : "s"} to an existing recipe.`
+        : count === 1
+          ? "Add this paint to an existing recipe, or start a new one."
+          : `Add ${count} colours to a recipe, or start a new one.`;
 
   return (
-    <ModalDialog
-      open={open}
-      onClose={onClose}
-      title={count === 1 ? "Assign to recipe" : "Send palette to recipe"}
-      breadcrumb="RECIPES"
-    >
-      <p className="mb-3 font-body text-body text-fg">
-        {count === 1
-          ? "Add this paint to an existing recipe, or start a new one."
-          : `Add ${count} colours to a recipe, or start a new one.`}
-      </p>
+    <ModalDialog open={open} onClose={onClose} title={title} breadcrumb="RECIPES">
+      <p className="mb-3 font-body text-body text-fg">{intro}</p>
 
-      <div className="mb-4 flex flex-col gap-2">
-        {recipes === null ? (
-          <p className="font-body text-body text-fg">▸ Loading recipes…</p>
-        ) : recipes.length === 0 ? (
-          <p className="font-body text-body text-fg">
-            No recipes yet — create one below.
-          </p>
-        ) : (
-          <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
-            {recipes.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                disabled={pending}
-                onClick={() => send({ targetRecipeId: r.id }, r.name)}
-                className="border border-cyan/30 px-3 py-2 text-left font-body text-body text-fg hover:border-cyan hover:bg-cyan/10 disabled:opacity-50"
-              >
-                {r.name}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {showList && (
+        <div className="mb-4 flex flex-col gap-2">
+          {recipes === null ? (
+            <p className="font-body text-body text-fg">▸ Loading recipes…</p>
+          ) : recipes.length === 0 ? (
+            <p className="font-body text-body text-fg">
+              {mode === "assign"
+                ? "No recipes yet — use Create Recipe instead."
+                : "No recipes yet — create one below."}
+            </p>
+          ) : (
+            <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
+              {recipes.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => send({ targetRecipeId: r.id }, r.name)}
+                  className="border border-cyan/30 px-3 py-2 text-left font-body text-body text-fg hover:border-cyan hover:bg-cyan/10 disabled:opacity-50"
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-      <div className="flex gap-2 border-t border-cyan/20 pt-3">
-        <Input
-          name="new-recipe-name"
-          placeholder="New recipe name"
-          value={newName}
-          disabled={pending}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) =>
-            e.key === "Enter" &&
-            newName.trim() &&
-            send({ newRecipeName: newName.trim() }, newName.trim())
-          }
-          containerClassName="flex-1"
-        />
-        <Button
-          size="sm"
-          disabled={pending || !newName.trim()}
-          onClick={() => send({ newRecipeName: newName.trim() }, newName.trim())}
-        >
-          Create
-        </Button>
-      </div>
+      {showCreate && (
+        <div className={cn("flex gap-2 pt-3", showList && "border-t border-cyan/20")}>
+          <Input
+            name="new-recipe-name"
+            placeholder="New recipe name"
+            value={newName}
+            disabled={pending}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              newName.trim() &&
+              send({ newRecipeName: newName.trim() }, newName.trim())
+            }
+            containerClassName="flex-1"
+          />
+          <Button
+            size="sm"
+            disabled={pending || !newName.trim()}
+            onClick={() => send({ newRecipeName: newName.trim() }, newName.trim())}
+          >
+            Create
+          </Button>
+        </div>
+      )}
 
       {error && (
         <p className="mt-3 font-body text-body text-red-text" role="alert">

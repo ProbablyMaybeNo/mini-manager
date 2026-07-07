@@ -168,6 +168,23 @@ export interface MatchResult {
   distanceScore: number;
 }
 
+/* ----------------------------------------------------------------------------
+ * Tool → recipe carry (Wave 2 / "Send to Recipe" plumbing)
+ * ------------------------------------------------------------------------- */
+/**
+ * One colour a tool hands off to a recipe. `paintId` is only ever a *guess*
+ * (the closest catalog match a tool happened to compute) — the recipe's own
+ * paint-picker is where a colour actually becomes a specific paint, so every
+ * carrier of a `ToolSwatch` must tolerate `paintId` being absent/null and
+ * still land the hex as a custom-colour slot. See `AssignToRecipeDialog` +
+ * `sendPaletteToRecipe`, the shared "carry" mechanism every colour tool uses.
+ */
+export interface ToolSwatch {
+  hex: Hex;
+  paintId?: string | null;
+  name?: string;
+}
+
 /** Dashboard stat-box roll-ups — all host-computed, the UI only renders them. */
 export interface DashboardSummary {
   activeProjects: number;
