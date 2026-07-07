@@ -1,9 +1,22 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { activeNavKey, type NavItem } from "./nav";
+
+/** Immediate click feedback: while the clicked link's route is loading, show a
+ *  pulsing dot so navigation never feels frozen (the "old page freezes then
+ *  jumps" symptom). Must render inside a <Link> — reads its pending state. */
+function NavPending() {
+  const { pending } = useLinkStatus();
+  return pending ? (
+    <span
+      className="ml-auto h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-cyan"
+      aria-hidden
+    />
+  ) : null;
+}
 
 /** Shared nav-item list used by both the desktop rail and the mobile menu. */
 export function NavLinks({
@@ -44,6 +57,7 @@ export function NavLinks({
             >
               {Icon && <Icon size={16} strokeWidth={2} className="shrink-0" aria-hidden />}
               {item.label}
+              <NavPending />
             </Link>
           </li>
         );

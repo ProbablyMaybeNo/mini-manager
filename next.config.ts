@@ -3,6 +3,13 @@ import path from "node:path";
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // Keep visited routes in the client Router Cache briefly so re-navigating to
+  // a page you just saw is instant (served from cache, no server round-trip).
+  // Dynamic routes default to 0s in Next 15+, which is why every revisit
+  // re-hit the server and felt laggy.
+  experimental: {
+    staleTimes: { dynamic: 30, static: 300 },
+  },
   // DOP-016 / MUX-013 — the circular "N" mark the UX audits saw overlapping
   // the bottom-left "REPORT AN ISSUE" sidebar text is the Next.js dev/preview
   // indicator (it does NOT ship to a production build, so real users never see
