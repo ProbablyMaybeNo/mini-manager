@@ -323,13 +323,17 @@ export function ColourWheelTool({
                   >
                     ⠿
                   </span>
-                  <div className="flex shrink-0 flex-col">
+                  {/* ▲/▼ are the keyboard/non-drag reorder fallback, so they get
+                      full 44px hit areas (glyph unchanged) separated by 8px —
+                      the hardest-to-hit accessible control shouldn't be the
+                      smallest (UX-003 / MUX-001). */}
+                  <div className="flex shrink-0 flex-col gap-2">
                     <button
                       type="button"
                       aria-label={`Move slot ${i + 1} up`}
                       disabled={i === 0}
                       onClick={() => moveSlot(id, -1)}
-                      className="font-osd leading-none text-fg-faint hover:text-cyan-lite disabled:opacity-20"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center font-osd leading-none text-fg-faint hover:text-cyan-lite disabled:opacity-20"
                     >
                       ▲
                     </button>
@@ -338,7 +342,7 @@ export function ColourWheelTool({
                       aria-label={`Move slot ${i + 1} down`}
                       disabled={i === slots.length - 1}
                       onClick={() => moveSlot(id, 1)}
-                      className="font-osd leading-none text-fg-faint hover:text-cyan-lite disabled:opacity-20"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center font-osd leading-none text-fg-faint hover:text-cyan-lite disabled:opacity-20"
                     >
                       ▼
                     </button>
@@ -406,7 +410,7 @@ export function ColourWheelTool({
                     disabled={slots.length <= MIN_SLOTS}
                     aria-label={`Remove slot ${i + 1}`}
                     onClick={() => removeSlot(id)}
-                    className="ml-auto shrink-0 font-osd text-fg-faint hover:text-red disabled:opacity-20"
+                    className="ml-auto inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center font-osd text-fg-faint hover:text-red disabled:opacity-20"
                   >
                     ✕
                   </button>
