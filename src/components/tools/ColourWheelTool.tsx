@@ -279,7 +279,7 @@ export function ColourWheelTool({
                     <span aria-hidden className={cn("transition-transform", isExpanded && "rotate-90")}>
                       ▸
                     </span>
-                    {isExpanded ? "Fewer matches" : `More matches (${alternates.length})`}
+                    {isExpanded ? "Fewer matches" : `Matches (${alternates.length})`}
                   </button>
                   {isExpanded && (
                     <ul className="flex flex-wrap gap-2">
