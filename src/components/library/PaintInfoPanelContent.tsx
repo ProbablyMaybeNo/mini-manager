@@ -125,7 +125,7 @@ export function PaintInfoPanelContent({
                 className="transition-opacity hover:opacity-80"
                 title={`Open recipe ${r.name}`}
               >
-                <Chip accent="cyan">{r.name}</Chip>
+                <Chip accent="green">{r.name}</Chip>
               </Link>
             ))}
           </div>

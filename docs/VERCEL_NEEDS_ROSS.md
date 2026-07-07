@@ -1,25 +1,46 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-07-06 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
-**7 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-07-07 · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app
+**13 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-06, later pass):** no new clear/bounded fixes to ship. One brand-new `/recipes` thread (`uWkPLukPw_vr`) came in and got a specific clarifying question (below); left open. The other six needs-Ross threads are unchanged — no new input from you had landed on them.
+> **This run (2026-07-07):** shipped 3 clear/bounded fixes (see *Shipped this run* below) via PR to `main`. Triaged 13 remaining open threads — 10 brand-new single-message threads each got a specific clarifying question and were left open; the 3 older needs-Ross threads are unchanged (no new input from you had landed). The 4 needs-Ross threads from the 2026-07-06 snapshot (`lPzb4lK-RfAE`, `trogZqV-Yo8w`, `d0MWLSNNjDTd`, `8Wxk5lw0uh5c`) are no longer in the unresolved list — resolved/closed since then.
 
 ---
 
-## 🔴 NEEDS YOUR CALL (7)
+## 🔴 NEEDS YOUR CALL (13)
+
+### New this run — a clarifying question is waiting on each thread (10)
+
+| Thread | Page | Ask | The one question I need answered |
+|---|---|---|---|
+| `ESVDHH6Wg78p` | /tools/stacking | Rework the Venn: 1 circle at undercoat+1 layer, 3 overlapping circles at 2 layers with result in the centre — **or** drop "undercoat" entirely and make everything renameable LAYER # with the result = where all circles overlap. | **(a)** tweak the current Venn, or **(b)** full rename-to-layers rebuild? |
+| `lvIX6pa9x_ab` | /tools/stacking | Remove the paint-library match list from the Color Picker + Eyedropper; make them pure colour-finders that feed colours into recipes (paint-matching becomes a later step). | Full rework of picker/dropper, or just **hide** the library list on those two tools as a quick first step? |
+| `jSE6LvB7hD6l` | /tools/stacking | "WTF does this even mean?!?" — confused by a line of microcopy. | Which line — the RAMP placeholder "Enter valid shadow / base / highlight hexes." or the STACKING blurb? (paste the text and I'll rewrite it) |
+| `dOySZp3HEhJs` | /tools/dropper | "Send to recipe" is dead. Keep dropper as pure colours; retitle subtitle; rename buttons → "Create Recipe" / "Assign to Recipe"; add a per-row Assign button. | Build the whole thing (incl. the send-colours→recipe wiring) as one piece, or ship the button/subtitle copy now and wire later? |
+| `4kCdsjyL0QsK` | /tools/match | Add a paint-**type** filter to the Match tool (avoid matching an acrylic to a clearcoat). | TYPE facet identical to Library's, default "all types" — and should it remember the last selection or reset each visit? |
+| `c_ruBc9qWKQy` | /library | When a filter is added, default the sort to **colour** instead of brand. | Flip to colour for **any** filter or **only** the TYPE filter? And override a manually-chosen sort, or respect it? |
+| `UPPY_FbB0xfF` | /library | Replace with one `[STATUS]` button that cycles grey [STATUS] → green [OWNED] → yellow [WISHLIST] → grey. | Each click persists status immediately (confirm), and does this **replace** the new side-panel STATUS dropdown? |
+| `CIzKXQx-W4iN` | /tools/wheel | "Send to recipe" navigates to /recipes but carries no colours — what's it meant to do? | On click: **(a)** create a new recipe from all picked colours, or **(b)** show a new-vs-existing chooser? |
+| `8tB-qrqkOfMm` | /tools/wheel | "Generate recipe" is unintuitive — proposed a seed-colour + harmony auto-fill flow. | Confirm the flow (N slots → seed → pick harmony → auto-fill rest), and should the seed stay pinned or can the harmony re-order slots? |
+| `BadRkuli5Ljp` | /tools/wheel | Add / remove / lock color slots + drag-to-reorder in the colour scheme. | Does "lock" = keep-this-colour-while-Generate-refills-the-rest, and what's the max slot count (harmonies top out ~6)? |
+
+### Carried over — older threads, still awaiting you (3)
 
 | Thread | Page | Ask | Where it stands / what I need from you |
 |---|---|---|---|
-| `rIve1fnVpm-Q` | /recipes | "What do the gallery and shared tags even do? When I click nothing happens." | **Confirmed dead:** the MY RECIPES / GALLERY / SHARED bottom tabs aren't wired — the list only filters by the search box, so GALLERY/SHARED do nothing. **What should each show?** Proposed: GALLERY = browse public/published recipes (mirrors `/gallery`), SHARED = your own recipes that have a public link. Confirm that (or say remove them) and I'll build it. |
-| `EhIoJIWORkKM` | /recipes | "What does this even share a link to? We want share on the per-recipe level, not everything." | The **⬡ SHARE LINK** button already shares *just this recipe* (publishes to `/r/<slug>`, copies that one link). The likely gotcha: minting the link **also lists the recipe on the public `/gallery`**. **Pick one:** (a) sharing a recipe should *not* also surface it in the public gallery (private/unlisted link), or (b) something else about what it shares. |
-| `lPzb4lK-RfAE` | /library | Redesign the paint side panel: STATUS dropdown replacing NOT OWNED, HEX beside status, TYPE row, a RECIPE section (+ Use in a recipe + per-recipe chips), drop INVENTORY. | **Mostly shipped & live** (side-panel Wave 2, `8a68401`): NOT OWNED + Inventory pot-counter removed; STATUS control + HEX + TYPE row + RECIPE section with "+ Use in a recipe" and linked recipe chips all in. **One gap keeping it open:** STATUS can't auto-sync with the Collections paint table (that table title-matches paints with no `paintId` link). Bridging them needs a small schema change (add `paintId` to collection paint rows). **Want me to make that schema change so library STATUS and Collections stay in lockstep?** |
-| `trogZqV-Yo8w` | /collection | Rebuild +ADD MODEL / +ADD PAINT into a full modal: AUTO-ADD URL paste **+** MANUAL-ADD form (name · game · faction · price · project dropdown · status) → save into the table; plus an edit ✎ next to the X on each row. | Substantial feature (new modal, manual-entry form + validation, edit/update flow, new row action) — beyond safe auto-fix scope, **queued as a dedicated build**. To lock scope: confirm that's the full manual field set, and that the edit ✎ reopens the same modal pre-filled with the row's values. |
-| `d0MWLSNNjDTd` | /collection | Simplify the stats bar (drop "COLLECTION" title → `PAINT: 00 OWNED 00 WISHLIST $00 TOTAL SPENT [REMAINING] / MODELS: …`), **plus** a per-project budget feature. | Relabel is locked and ready to ship on its own — the **only** blocker is the `REMAINING` field, which has no data source without budgeting. **Pick one and the relabel ships immediately:** (a) `REMAINING` = total cost of WISHLIST (not-yet-bought) items — shippable now; or (b) hold `REMAINING` until the per-project budget feature lands. Budgeting stays a separate feature either way. *(main/prod still shows the old ▸ COLLECTION bar — not resolving until it's genuinely on main.)* |
-| `8Wxk5lw0uh5c` | /tools/stacking | "Add layer button doesn't do anything — remove it or make it add another circle." | **Not a bug** — the **+ Add layer** button is wired and appends a Layer N (hex + opacity) block, capped at 6. It feels dead because (1) the new block inserts *above* the button (so it lands off-screen), and (2) the Venn only renders 2 circles (undercoat ∩ top glaze) by design, so layer 3+ doesn't change it (the PREDICTED RESULT swatch does update). **Which do you want:** (a) auto-scroll/highlight the new layer when added, and/or (b) surface layers 3+ in the result preview? |
-| `uWkPLukPw_vr` | /recipes | Widen the recipe page, bigger paint icons + full names, add a persisted NOTES box below DELETE/SAVE/ATTACH, auto-populate per-paint notes as styled lines (layer + name bold/coloured), feed into the "shared recipe experience". | Multi-part. Right-side panels were recently widened (`max-w-4xl`). A plain persisted NOTES text box is bounded/shippable; the auto-population + shared-recipe rendering is its own build. **One call to unblock:** ship the plain NOTES box now and treat auto-population + shared rendering as a follow-up, or hold and build the whole thing at once? |
+| `rIve1fnVpm-Q` | /recipes | "What do the gallery and shared tags even do? When I click nothing happens." | **Confirmed dead:** the MY RECIPES / GALLERY / SHARED tabs aren't wired — the list only filters by the search box. **What should each show?** Proposed: GALLERY = browse public recipes, SHARED = your own recipes with a public link. Confirm (or say remove them). |
+| `EhIoJIWORkKM` | /recipes | "What does this even share a link to? We want share on the per-recipe level, not everything." | The **⬡ SHARE LINK** button already shares *just this recipe* (`/r/<slug>`). Likely gotcha: minting the link **also lists it on the public `/gallery`**. Pick: (a) sharing shouldn't surface it in the gallery (unlisted link), or (b) something else. |
+| `uWkPLukPw_vr` | /recipes | Widen the recipe page, bigger paint icons + full names, add a persisted NOTES box below DELETE/SAVE/ATTACH, auto-populate per-paint notes as styled lines, feed into the shared-recipe experience. | Right-side panels were recently widened (`max-w-4xl`). A plain persisted NOTES box is shippable now; auto-population + shared rendering is its own build. **Ship the plain NOTES box now and treat the rest as a follow-up, or hold and build it all at once?** |
 
 ---
+
+## 🟢 Shipped this run (2026-07-07) — pending merge/prod-verify, then resolved
+
+| Thread | Change | Files |
+|---|---|---|
+| `g_ypRnCdHcCC` | Stacking page blurb "…stack on a **substrate**" → "…stack on an **undercoat**" | `src/app/(app)/tools/stacking/page.tsx` |
+| `glGmhi0OxcAF` | Colour-wheel disclosure label "**More matches** (N)" → "**Matches** (N)" | `src/components/tools/ColourWheelTool.tsx` |
+| `qYDF4_PrSnyZ` | Library paint side-panel recipe chips recoloured cyan → **neon green** | `src/components/library/PaintInfoPanelContent.tsx` |
 
 ## 🟢 Recently shipped & resolved (context)
 
@@ -33,3 +54,4 @@ Landed on `main` and resolved after prod verify — kept here only so the loop d
 | `Tcylyd5enVXT` / `Z2r21cCQAPQr` / `8myNPt4auK8V` | Landing/pricing colour fixes — PR #82 |
 | `yT9vvxQhK3Ce` | Library TYPE filter facet |
 | `VAzSk3GPrJcV`, `qMFgQPyIPVcx`, `iXM7bS2hnZyH`, `PNzm-KAFYLal`, `pArUXV1syxEs` | Resolved (answered / superseded) since an earlier snapshot |
+| `lPzb4lK-RfAE`, `trogZqV-Yo8w`, `d0MWLSNNjDTd`, `8Wxk5lw0uh5c` | Off the unresolved list since the 2026-07-06 snapshot (resolved/closed) |
