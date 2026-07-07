@@ -77,7 +77,7 @@ export function ArmyImportPanel({
     <SlideOutPanel
       open={open}
       onClose={close}
-      breadcrumb="DASHBOARD ▸ IMPORT"
+      breadcrumb="PROJECTS ▸ IMPORT"
       title="Upload Army List"
     >
       {!tree ? (

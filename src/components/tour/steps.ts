@@ -51,7 +51,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "dashboard",
     target: "nav-dashboard",
-    title: "DASHBOARD",
+    title: "PROJECTS",
     what: "Your command center — every project, deadline, and painting session at a glance.",
     why: "Start here each day to see what's in progress and what's next.",
     placement: "right",

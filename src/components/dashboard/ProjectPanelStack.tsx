@@ -221,7 +221,7 @@ export function ProjectPanelStack({
   // down to the active tab so the painter can see how deep the drill is.
   const activeIndex = activeId ? Math.max(0, tabIds.indexOf(activeId)) : 0;
   const breadcrumb =
-    "DASHBOARD ▸ PROJECT" + " ▸ SUB".repeat(activeIndex);
+    "PROJECTS ▸ PROJECT" + " ▸ SUB".repeat(activeIndex);
 
   const body = active ? (
     // When the tab strip is showing, the body is the tabs' panel — labelled
