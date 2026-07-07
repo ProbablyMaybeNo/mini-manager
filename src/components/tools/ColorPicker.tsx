@@ -122,6 +122,10 @@ export function ColorPicker({
   // checkbox list of the distinct brands in the catalog, AND-composed with
   // the search + ΔE cap.
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  // The Company facet is a collapsed-by-default disclosure so it no longer sits
+  // wedged between the library search box and the paint list (recipe reviewer
+  // feedback); the toggle keeps the active-brand count visible while collapsed.
+  const [brandFilterOpen, setBrandFilterOpen] = useState(false);
   // Recipe confirm-flow: the highlighted-but-not-yet-added library paint.
   const [pendingPaint, setPendingPaint] = useState<{ hex: string; paintId: string } | null>(null);
 
@@ -284,13 +288,24 @@ export function ColorPicker({
           className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
         />
 
-        {/* Company facet — scrollable checkbox list, one per brand (mirrors
-            the Library page's Company filter). */}
+        {/* Company facet — a collapsed-by-default disclosure. Tucking it behind
+            a toggle (instead of always-open between the search box and the
+            results) keeps the search → paint-list flow reading cleanly; the
+            button still surfaces the active-brand count while collapsed. */}
         {brandOptions.length > 0 && (
           <div className="flex flex-col gap-1">
-            <span className="inline-block w-fit bg-green/20 px-2 py-0.5 label-osd text-green">
+            <button
+              type="button"
+              onClick={() => setBrandFilterOpen((v) => !v)}
+              aria-expanded={brandFilterOpen}
+              className="inline-flex w-fit items-center gap-1 bg-green/20 px-2 py-0.5 label-osd text-green"
+            >
+              <span aria-hidden className={cn("transition-transform", brandFilterOpen && "rotate-90")}>
+                ▸
+              </span>
               Company{selectedBrands.length ? ` · ${selectedBrands.length}` : ""}
-            </span>
+            </button>
+            {brandFilterOpen && (
             <div className="flex max-h-40 flex-col overflow-y-auto">
               {brandOptions.map((b) => {
                 const checked = selectedBrands.includes(b);
@@ -317,6 +332,7 @@ export function ColorPicker({
                 );
               })}
             </div>
+            )}
           </div>
         )}
 
