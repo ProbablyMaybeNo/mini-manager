@@ -16,14 +16,21 @@ export default function ColourMatchPage() {
     () => Array.from(new Set(paints.map((p) => p.brand))).sort(),
     [paints],
   );
+  const typeOptions = useMemo(
+    () => Array.from(new Set(paints.map((p) => p.type))).sort(),
+    [paints],
+  );
   return (
     <ToolShell
       title="COLOR MATCH"
       blurb="Enter or pick any colour to find the nearest paints across every brand you own and wishlist. Compare ranked matches side by side, then save the best as a palette or send it to a recipe."
     >
       <ColourMatchTool
-        rankMatches={(hex, brands, limit) => rankMatchesMulti(hex, paints, brands, limit)}
+        rankMatches={(hex, brands, types, limit) =>
+          rankMatchesMulti(hex, paints, brands, limit, { types })
+        }
         brandOptions={brandOptions}
+        typeOptions={typeOptions}
         onUse={(paint) => {
           void navigator.clipboard?.writeText(paint.hex);
           toast(`Copied ${paint.name} · ${paint.hex}`, "green");

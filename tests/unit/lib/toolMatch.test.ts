@@ -1,21 +1,23 @@
 import { describe, expect, test } from "vitest";
 import {
   closestPaint,
+  INCOMPATIBLE_MATCH_TYPES,
   nearestMatches,
   rankMatches,
   rankMatchesMulti,
+  resolveMatchTypeFilter,
   similarInOtherBrands,
 } from "@/lib/toolMatch";
-import type { Paint } from "@/lib/types";
+import type { Paint, PaintType } from "@/lib/types";
 
-function paint(id: string, brand: string, hex: string): Paint {
+function paint(id: string, brand: string, hex: string, type: PaintType = "Acrylic"): Paint {
   return {
     id,
     name: `Paint ${id}`,
     brand,
     line: "",
     hex,
-    type: "Acrylic",
+    type,
     sku: "",
     owned: false,
     wishlisted: false,
@@ -65,6 +67,44 @@ describe("rankMatchesMulti", () => {
 
   test("respects the limit", () => {
     expect(rankMatchesMulti("#0000ff", pool, [], 2)).toHaveLength(2);
+  });
+
+  test("opts.types filters to exactly the given types when supplied", () => {
+    const mixed: Paint[] = [
+      paint("wash1", "Citadel", "#0000ff", "Wash"),
+      paint("acr1", "Citadel", "#0808ff", "Acrylic"),
+    ];
+    const res = rankMatchesMulti("#0000ff", mixed, [], 50, { types: ["Acrylic"] });
+    expect(res.map((r) => r.paint.id)).toEqual(["acr1"]);
+  });
+
+  test("omitting opts leaves every type visible (back-compat)", () => {
+    const mixed: Paint[] = [
+      paint("wash1", "Citadel", "#0000ff", "Wash"),
+      paint("acr1", "Citadel", "#0808ff", "Acrylic"),
+    ];
+    const res = rankMatchesMulti("#0000ff", mixed, []);
+    expect(res.map((r) => r.paint.id).sort()).toEqual(["acr1", "wash1"]);
+  });
+});
+
+describe("resolveMatchTypeFilter — item 6 incompatible-type default", () => {
+  const allTypes = ["Acrylic", "Contrast", "Wash", "Glaze", "Primer", "Clear", "Texture", "Enamel", "Oil"];
+
+  test("an explicit selection always wins, verbatim", () => {
+    expect(resolveMatchTypeFilter(["Wash"], allTypes)).toEqual(["Wash"]);
+  });
+
+  test("with nothing selected, hides the utility/finish types by default", () => {
+    const visible = resolveMatchTypeFilter([], allTypes);
+    for (const hidden of INCOMPATIBLE_MATCH_TYPES) {
+      expect(visible).not.toContain(hidden);
+    }
+    expect(visible).toEqual(["Acrylic", "Contrast", "Enamel", "Oil"]);
+  });
+
+  test("a catalog with no incompatible types is unaffected", () => {
+    expect(resolveMatchTypeFilter([], ["Acrylic", "Contrast"])).toEqual(["Acrylic", "Contrast"]);
   });
 });
 

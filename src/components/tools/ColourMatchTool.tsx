@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Button, HexField, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { readableText } from "@/lib/color";
+import { resolveMatchTypeFilter } from "@/lib/toolMatch";
 import {
   buildHarmony,
   getHarmonyMeta,
@@ -37,22 +38,35 @@ function confidence(deltaE: number): "high" | "medium" | "low" {
 export function ColourMatchTool({
   rankMatches,
   brandOptions,
+  typeOptions = [],
   onUse,
   onAssign,
 }: {
-  rankMatches: (hex: string, brands: string[], limit: number) => MatchResult[];
+  rankMatches: (hex: string, brands: string[], types: string[], limit: number) => MatchResult[];
   brandOptions: string[];
+  /** 4kCdsj — paint TYPE facet (mirrors the Library's). Omit/empty hides the
+   *  section entirely and disables the incompatible-type default (used by the
+   *  embedded recipe-slot picker, which wants every type visible). */
+  typeOptions?: string[];
   onUse: (paint: Paint) => void;
   /** MM-33 — opens a recipe dropdown to assign the paint into, in place. */
   onAssign: (paint: Paint) => void;
 }) {
   const [hex, setHex] = useState("#3a6ea5");
   const [brands, setBrands] = useState<ReadonlySet<string>>(new Set());
+  const [types, setTypes] = useState<ReadonlySet<string>>(new Set());
   const [harmony, setHarmony] = useState<HarmonyKey | "off">("off");
   const [page, setPage] = useState(0);
 
   const valid = /^#[0-9a-fA-F]{6}$/.test(hex);
   const brandList = useMemo(() => [...brands], [brands]);
+  // 4kCdsj — the painter's own TYPE checks win outright; with none checked,
+  // fall back to hiding varnish/wash/primer/texture-style "incompatible"
+  // finishes from ranked matches by default.
+  const effectiveTypes = useMemo(
+    () => resolveMatchTypeFilter([...types], typeOptions),
+    [types, typeOptions],
+  );
 
   // MM-30 — when a harmony is selected, show the closest paint per harmony
   // hue; otherwise rank the single target across the catalog.
@@ -64,17 +78,17 @@ export function ColourMatchTool({
   }, [harmony, hex, valid]);
 
   const results = useMemo(
-    () => (valid && harmony === "off" ? rankMatches(hex, brandList, 500) : []),
-    [valid, harmony, hex, brandList, rankMatches],
+    () => (valid && harmony === "off" ? rankMatches(hex, brandList, effectiveTypes, 500) : []),
+    [valid, harmony, hex, brandList, effectiveTypes, rankMatches],
   );
 
   const harmonyRows = useMemo(
     () =>
       harmonyHexes.map((h) => ({
         hex: h,
-        best: rankMatches(h, brandList, 1)[0] ?? null,
+        best: rankMatches(h, brandList, effectiveTypes, 1)[0] ?? null,
       })),
-    [harmonyHexes, brandList, rankMatches],
+    [harmonyHexes, brandList, effectiveTypes, rankMatches],
   );
 
   const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
@@ -86,6 +100,16 @@ export function ColourMatchTool({
       const next = new Set(prev);
       if (next.has(b)) next.delete(b);
       else next.add(b);
+      return next;
+    });
+    setPage(0);
+  }
+
+  function toggleType(t: string) {
+    setTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
       return next;
     });
     setPage(0);
@@ -155,6 +179,56 @@ export function ColourMatchTool({
             })}
           </div>
         </div>
+
+        {/* 4kCdsj — paint TYPE facet, same pattern as the Library's. With
+            nothing checked, ranked matches quietly hide varnish/wash/primer/
+            texture-style finishes by default (INCOMPATIBLE_MATCH_TYPES) —
+            check a box here to override and bring any of them back. */}
+        {typeOptions.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="label-osd text-fg">
+                Type {types.size > 0 ? `· ${types.size}` : "· default"}
+              </span>
+              {types.size > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setTypes(new Set())}
+                  className="font-button text-button text-red hover:underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+              {typeOptions.map((t) => {
+                const active = types.has(t);
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => toggleType(t)}
+                    className={cn(
+                      "truncate border px-2 py-1 text-left font-button text-button transition-colors",
+                      active
+                        ? "border-green bg-green/15 text-green"
+                        : "border-cyan/20 text-fg hover:border-cyan/60",
+                    )}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+            {types.size === 0 && (
+              <p className="mt-1 font-body text-body text-fg-faint">
+                Default hides varnish/wash/primer/texture-style finishes as
+                colour swaps — check a type above to include it.
+              </p>
+            )}
+          </div>
+        )}
       </Panel>
 
       <Panel label="RANKED MATCHES" cornerTicks className="flex min-w-0 flex-col gap-2 p-5">

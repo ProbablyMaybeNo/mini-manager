@@ -161,7 +161,12 @@ export function RecipePaintPicker({
 
         {tab === "match" && (
           <ColourMatchTool
-            rankMatches={(hex, brands, limit) => rankMatchesMulti(hex, paints, brands, limit)}
+            // No typeOptions here — picking a paint for a recipe slot wants
+            // every type visible, not the Match tool's incompatible-type
+            // default (that default is scoped to the standalone Match page).
+            rankMatches={(hex, brands, types, limit) =>
+              rankMatchesMulti(hex, paints, brands, limit, { types })
+            }
             brandOptions={brandOptions}
             onUse={assignPaint}
             onAssign={assignPaint}
