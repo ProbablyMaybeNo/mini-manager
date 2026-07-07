@@ -48,7 +48,7 @@ export function PlannerScreen({
           <span aria-hidden className="text-h2">‹</span>
         </button>
         <div className="min-w-0">
-          <div className="label-osd tracking-[0.2em] text-fg">DASHBOARD ▸</div>
+          <div className="label-osd tracking-[0.2em] text-fg">PROJECTS ▸</div>
           <h2 className="truncate label-osd-h2 text-cyan-lite">PLANNER</h2>
         </div>
       </header>

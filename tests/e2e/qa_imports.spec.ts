@@ -30,7 +30,7 @@ test.describe("M7 — Imports", () => {
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     // The dashboard's trigger button reads "⬆ Upload Army" (no "List" suffix)

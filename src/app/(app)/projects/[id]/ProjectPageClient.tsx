@@ -166,7 +166,7 @@ export function ProjectPageClient({
             <button
               type="button"
               onClick={() => router.push("/dashboard")}
-              aria-label="Back to dashboard"
+              aria-label="Back to projects"
               className="inline-flex h-5 w-5 items-center justify-center text-fg hover:text-cyan-lite"
             >
               ‹
