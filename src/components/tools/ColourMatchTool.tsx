@@ -358,6 +358,8 @@ function MatchRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span aria-hidden className={cn("inline-block h-2 w-2 shrink-0 rounded-full", dotColor)} />
+          {/* The dot is colour-only; name the confidence level for SR (UX-008). */}
+          <span className="sr-only">{conf} confidence match</span>
           <span className="truncate font-body text-body text-fg" title={result.paint.name}>
             {result.paint.name}
           </span>
@@ -378,9 +380,13 @@ function MatchRow({
       {/* ΔE + actions in their own shrink-0 lane so they never collapse onto or
           overlap the name/brand block in a narrow panel (Pick & Paint). */}
       <div className="flex shrink-0 items-center gap-2">
+        {/* The raw ΔE duplicates the % bar and reads as jargon — annotate it in
+            plain language for both sighted (title) and SR (aria-label) users
+            without dropping the number (UX-008). */}
         <span
           className="font-num2 text-num2 tabular-nums text-fg"
-          title="CIEDE2000 distance (lower = closer)"
+          title="Colour distance (Δ) — lower means a closer match"
+          aria-label={`Colour distance ${dE.toFixed(1)} — lower means a closer match`}
         >
           Δ{dE.toFixed(1)}
         </span>
