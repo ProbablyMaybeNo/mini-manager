@@ -689,9 +689,9 @@ export function ProjectWorkspaceBody({
           // folded into the one inspector).
           <ModelCounterGrid project={project} />
         ) : (
-          <p className="font-body text-body text-fg-dim">
-            Add sub-projects above to track their stages here.
-          </p>
+          // Empty container: the section `hint` already reads "Add sub-projects
+          // above to track their stages here." — no body copy, or it duplicates.
+          null
         )}
 
         {/* Roll-up stat strip — 2-up on phones so the 4th cell + its label
