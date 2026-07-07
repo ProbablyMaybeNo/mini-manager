@@ -127,16 +127,25 @@ export function ColourMatchTool({
     <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
       <Panel label="INPUT" className="flex min-w-0 flex-col gap-4 p-5">
         <HexField label="Target hex" name="match-hex" value={hex} onChange={(e) => setHex(e.target.value)} />
-        {enableLibraryPick && (
-          <Button
-            size="sm"
+        {enableLibraryPick ? (
+          // The colour preview IS the picker trigger — click it to open the
+          // wheel + full searchable library + eyedropper and set the target.
+          <button
+            type="button"
             onClick={() => setPickerOpen(true)}
-            className="w-full border-cyan/50 text-cyan-lite hover:bg-cyan/10"
+            aria-label="Choose a paint from the library to match against"
+            className="group relative h-24 w-full border border-fg/20 transition-colors hover:border-cyan focus:border-cyan focus:outline-none"
+            style={{ backgroundColor: valid ? hex : "transparent" }}
           >
-            ◈ Pick from library
-          </Button>
+            <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+              <span className="border border-cyan/60 bg-bg/80 px-2 py-1 font-button text-button text-cyan-lite">
+                ◈ Pick from library
+              </span>
+            </span>
+          </button>
+        ) : (
+          <div className="h-24 w-full border border-fg/20" style={{ backgroundColor: valid ? hex : "transparent" }} />
         )}
-        <div className="h-24 w-full border border-fg/20" style={{ backgroundColor: valid ? hex : "transparent" }} />
 
         {/* MM-30 — harmony modes */}
         <label>
