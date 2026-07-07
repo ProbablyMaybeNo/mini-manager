@@ -5,7 +5,7 @@ import { Button, HexField, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { readableText } from "@/lib/color";
 import { resolveMatchTypeFilter } from "@/lib/toolMatch";
-import { ColorPickerPanel } from "./ColorPickerPanel";
+import { PaintPickerPanel } from "./PaintPickerPanel";
 import {
   buildHarmony,
   getHarmonyMeta,
@@ -320,14 +320,16 @@ export function ColourMatchTool({
       </Panel>
 
       {enableLibraryPick && (
-        <ColorPickerPanel
+        // The PAINT PICKER PANEL (same tabbed panel the recipe paint picker uses)
+        // — not the wheel-only COLOR PICKER PANEL. No Match tab here: this panel
+        // only sets the target colour for the Match tool that opened it.
+        <PaintPickerPanel
           open={pickerOpen}
           onClose={() => setPickerOpen(false)}
           title="Pick a paint to match"
-          breadcrumb="MATCH ▸ PICK COLOUR"
+          breadcrumb="MATCH ▸ PAINT PICKER"
+          note="// choosing a paint sets the colour to match"
           initialHex={valid ? hex : null}
-          showLibrary
-          showEyedropper={false}
           closeOnSelect
           onSelect={(sel) => setHex(sel.hex)}
         />
