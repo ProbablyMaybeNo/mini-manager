@@ -17,6 +17,12 @@ import type { MatchResult, Paint } from "@/lib/types";
 
 const PAGE_SIZE = 50;
 
+// In harmony mode the painter gets several target hues at once, so a single
+// "best" paint per hue leaves them no room to choose. Offer the top few ranked
+// matches per harmony colour instead (rkhilarysignups-8609 review — "more than
+// one match possibility for each color").
+const HARMONY_MATCHES_PER_HUE = 3;
+
 /** ΔE2000 → "NN% color match" (MM-31). 0 ΔE = 100%; scaled so ~ΔE 20+ → 0%. */
 function matchPercent(deltaE: number): number {
   return Math.max(0, Math.round(100 - (deltaE / 20) * 100));
@@ -94,7 +100,7 @@ export function ColourMatchTool({
     () =>
       harmonyHexes.map((h) => ({
         hex: h,
-        best: rankMatches(h, brandList, effectiveTypes, 1)[0] ?? null,
+        matches: rankMatches(h, brandList, effectiveTypes, HARMONY_MATCHES_PER_HUE),
       })),
     [harmonyHexes, brandList, effectiveTypes, rankMatches],
   );
@@ -268,19 +274,27 @@ export function ColourMatchTool({
         ) : harmony !== "off" ? (
           // MM-30 — closest paint per harmony hue
           <div className="flex flex-col gap-2">
-            {harmonyRows.map(({ hex: h, best }, i) => (
-              <div key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
+            {harmonyRows.map(({ hex: h, matches }, i) => (
+              <div key={i} className="flex items-start gap-3 border border-cyan/20 p-2">
                 <span
                   className="inline-flex h-10 min-w-[80px] items-center justify-center border border-fg/20 px-2 font-body text-body"
                   style={{ backgroundColor: h, color: readableText(h) }}
                 >
                   {h}
                 </span>
-                <span aria-hidden className="font-osd text-fg-faint">→</span>
-                {best ? (
-                  <MatchRow result={best} onUse={onUse} onAssign={onAssign} />
+                <span aria-hidden className="pt-3 font-osd text-fg-faint">→</span>
+                {matches.length > 0 ? (
+                  // Stack the top few ranked paints per harmony hue so the
+                  // painter can choose, not just accept the single closest.
+                  <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    {matches.map((m) => (
+                      <div key={m.paint.id} className="flex items-center gap-3">
+                        <MatchRow result={m} onUse={onUse} onAssign={onAssign} />
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <span className="flex-1 font-body text-body text-fg">No match</span>
+                  <span className="flex-1 pt-2 font-body text-body text-fg">No match</span>
                 )}
               </div>
             ))}
