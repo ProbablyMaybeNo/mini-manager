@@ -10,11 +10,15 @@
  * components and tests that import this module never touch IndexedDB.
  */
 import type { Paint, PaintCatalog } from "./types";
+import type { PaintCatalogDb } from "./dexie";
 
 const CATALOG_URL = "/data/paints.json";
 
 /** In-memory cache so multiple components on a page share one promise. */
 let inFlight: Promise<Paint[]> | null = null;
+/** Resolved rows kept for the session so repeat navigations are instant —
+ *  no Dexie read and no network round-trip once the catalog has loaded once. */
+let memo: Paint[] | null = null;
 
 export async function loadPaints(): Promise<Paint[]> {
   if (typeof window === "undefined") {
@@ -22,10 +26,12 @@ export async function loadPaints(): Promise<Paint[]> {
     // own caching via Next.js's fetch cache; we don't try to be cute here.
     return fetchCatalog().then((c) => c.paints);
   }
+  if (memo) return memo;
   if (inFlight) return inFlight;
   inFlight = loadFromCacheOrNetwork();
   try {
-    return await inFlight;
+    memo = await inFlight;
+    return memo;
   } finally {
     inFlight = null;
   }
@@ -58,20 +64,42 @@ async function loadFromCacheOrNetwork(): Promise<Paint[]> {
   }
 
   const catalog = await fetchCatalog();
+  // Persist to IndexedDB OFF the critical path: hand the rows to the UI now,
+  // then write the cache in the background. The previous code awaited a single
+  // bulkPut of all ~7,144 rows before returning — that structured-clone
+  // serialization runs synchronously on the main thread, a multi-second long
+  // task that blocked the first navigation into any catalog route (a 5s+ INP
+  // pinned on the nav click that triggered the load).
+  void persistCatalog(db, catalog);
+  return catalog.paints;
+}
+
+const WRITE_BATCH = 500;
+
+/**
+ * Write the catalog into Dexie without ever holding the main thread for long.
+ * Rows go in in WRITE_BATCH-sized chunks with a macrotask yield between each,
+ * so paint and input can interleave. `meta` is written last, so an interrupted
+ * write (tab closed mid-flight) reads back as a cache miss and re-fetches next
+ * time rather than serving a half-populated catalog.
+ */
+async function persistCatalog(db: PaintCatalogDb, catalog: PaintCatalog): Promise<void> {
   try {
-    await db.transaction("rw", db.paints, db.meta, async () => {
-      await db.paints.clear();
-      await db.paints.bulkPut(catalog.paints);
-      await db.meta.put({
-        key: "paints",
-        exportedAt: catalog.__exported_at,
-        rowCount: catalog.__row_count,
-      });
+    await db.meta.delete("paints");
+    await db.paints.clear();
+    const rows = catalog.paints;
+    for (let i = 0; i < rows.length; i += WRITE_BATCH) {
+      await db.paints.bulkPut(rows.slice(i, i + WRITE_BATCH));
+      await new Promise<void>((resolve) => setTimeout(resolve));
+    }
+    await db.meta.put({
+      key: "paints",
+      exportedAt: catalog.__exported_at,
+      rowCount: catalog.__row_count,
     });
   } catch (err) {
-    console.warn("[paints] dexie write failed; serving from memory", err);
+    console.warn("[paints] dexie background write failed; cache skipped", err);
   }
-  return catalog.paints;
 }
 
 async function fetchCatalog(): Promise<PaintCatalog> {
