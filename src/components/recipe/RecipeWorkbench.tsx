@@ -8,8 +8,11 @@ import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
 import { deleteRecipe } from "@/lib/actions/recipes";
 import { publishRecipe } from "@/lib/actions/recipeSharing";
+import { createWishlistItem } from "@/lib/actions/wishlist";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
+import type { GroundedRecipeProposal } from "@/lib/ai/recipeSchema";
 import type { Paint, Project, Recipe, RecipeSlot } from "@/lib/types";
+import { AiRecipeDialog } from "./AiRecipeDialog";
 import { RecipePaintPicker } from "./RecipePaintPicker";
 import { ShareLinkDialog } from "./ShareLinkDialog";
 import { SlotRow } from "./SlotRow";
@@ -43,6 +46,7 @@ export function RecipeWorkbench({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -182,6 +186,43 @@ export function RecipeWorkbench({
         toast(res.error, "red");
       }
     });
+  }
+
+  /** AI creator "Approve" → build a real recipe from the grounded proposal
+   *  (catalog paints + technique notes) and persist it via the same action the
+   *  editor uses, then refresh so it appears in the list. */
+  async function approveAiRecipe(proposal: GroundedRecipeProposal) {
+    const name = proposal.summary?.trim().slice(0, 60) || "AI recipe";
+    const res = await saveRecipe({
+      id: null,
+      name,
+      attachedProjectId: null,
+      slots: proposal.slots.map((s) => ({
+        paintId: s.paintId || null,
+        hex: s.hex,
+        layer: s.layer,
+      })),
+      inspo: [],
+      notesMd: proposal.techniqueNotes || null,
+    });
+    if (res.ok) {
+      setAiOpen(false);
+      toast("AI recipe saved", "green");
+      router.refresh();
+    } else {
+      toast(res.error, "red");
+    }
+  }
+
+  /** AI creator "+ Wishlist missing" → add each not-owned catalog paint to the
+   *  collection wishlist (looked up from the loaded catalog for its name). */
+  async function addMissingToWishlist(paintIds: string[]) {
+    for (const id of paintIds) {
+      const p = paints.find((x) => x.id === id);
+      if (!p) continue;
+      await createWishlistItem({ title: p.name, company: p.brand });
+    }
+    router.refresh();
   }
 
   const editing = selected && pickingSlot != null ? selected.slots[pickingSlot] : null;
@@ -348,7 +389,7 @@ export function RecipeWorkbench({
                   </button>
                   <button
                     type="button"
-                    onClick={() => router.push("/recipes?ai=1")}
+                    onClick={() => setAiOpen(true)}
                     className="inline-flex items-center gap-2 rounded-[6px] border border-orange bg-surface px-4 py-2.5 font-mono text-[12px] font-bold text-fg-bright transition-colors hover:bg-orange/10"
                   >
                     ⚡ AI GENERATE
@@ -563,6 +604,12 @@ export function RecipeWorkbench({
         </div>
       </ModalDialog>
       <ShareLinkDialog url={shareUrl} open={shareUrl != null} onClose={() => setShareUrl(null)} />
+      <AiRecipeDialog
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        onApprove={approveAiRecipe}
+        onAddMissing={addMissingToWishlist}
+      />
       {toastNode}
     </div>
   );
