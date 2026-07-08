@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Input } from "@/components/kit";
+import { Button, Input, Panel } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { useAutoFillBoxCollapsed } from "@/lib/hooks/useAutoFillBoxCollapsed";
 import {
   SUPPORTED_STORE_NAMES,
   isSupportedStoreUrl,
@@ -55,6 +56,54 @@ function KindToggle({
   );
 }
 
+/**
+ * The "how auto-fill works" helper, restyled into the same bordered section box
+ * the project page uses (Panel + notched label) and moved above the paste box so
+ * it reads right after the page title (Ross, sFAkBUvAcSiF). Open by default with
+ * a slide-out toggle; the collapse is persistent per-device via
+ * useAutoFillBoxCollapsed. Unlike the project-page sections (mobile-only
+ * collapse), the toggle here works on every viewport.
+ */
+function AutoFillBox() {
+  const [collapsed, setCollapsed] = useAutoFillBoxCollapsed();
+  return (
+    <Panel className="p-4 pt-5">
+      <button
+        type="button"
+        aria-expanded={!collapsed}
+        aria-controls="paste-url-stores"
+        onClick={() => setCollapsed(!collapsed)}
+        className="-mt-1 flex min-h-11 w-full items-center justify-between gap-2 md:min-h-8"
+      >
+        <span className="font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim">
+          TRACKING YOUR COLLECTION MADE EASY
+        </span>
+        <span
+          aria-hidden
+          className={cn(
+            "shrink-0 text-cyan-lite transition-transform",
+            !collapsed && "rotate-90",
+          )}
+        >
+          ▸
+        </span>
+      </button>
+      <p
+        id="paste-url-stores"
+        className={cn(
+          collapsed ? "hidden" : "block",
+          "mt-2 font-body text-body leading-snug text-fg",
+        )}
+      >
+        Auto-populate your model and paint collections by pasting a product URL
+        from any major online retailer. Auto-fills from:{" "}
+        <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
+        Other links still add a row — you just enter the details yourself.
+      </p>
+    </Panel>
+  );
+}
+
 /** Paste a store URL + choose Paint/Model → emits the URL; the host fetches/auto-fills. */
 export function PasteUrlBar({
   onAddUrl,
@@ -79,40 +128,31 @@ export function PasteUrlBar({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex flex-wrap items-end gap-2">
-        <KindToggle value={kind} onChange={setKind} />
-        <Input
-          name="paste-url"
-          aria-label="Paste a store URL"
-          placeholder="Paste a store URL…"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          containerClassName="min-w-[260px] flex-1"
-          aria-invalid={unsupported || undefined}
-          aria-describedby="paste-url-stores"
-        />
-        <Button onClick={submit}>Enter</Button>
-      </div>
-      <p
-        id="paste-url-stores"
-        className="rounded-[6px] border border-border px-3 py-2 font-body text-body leading-snug text-fg"
-      >
-        {unsupported ? (
-          <span className="text-red">
+    <div className="flex flex-col gap-3">
+      <AutoFillBox />
+      <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-end gap-2">
+          <KindToggle value={kind} onChange={setKind} />
+          <Input
+            name="paste-url"
+            aria-label="Paste a store URL"
+            placeholder="Paste a URL to autofill…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            containerClassName="min-w-[260px] flex-1"
+            aria-invalid={unsupported || undefined}
+            aria-describedby="paste-url-stores"
+          />
+          <Button onClick={submit}>Enter</Button>
+        </div>
+        {unsupported && (
+          <p className="rounded-[6px] border border-border px-3 py-2 font-body text-body leading-snug text-red">
             ▸ That store isn&apos;t supported yet — the entry will be added with just
             the link; fill in the details by hand.
-          </span>
-        ) : (
-          <>
-            Auto-populate your model and paint collections by pasting a product
-            URL from any major online retailer. Auto-fills from:{" "}
-            <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
-            Other links still add a row — you just enter the details yourself.
-          </>
+          </p>
         )}
-      </p>
+      </div>
     </div>
   );
 }
