@@ -1,9 +1,14 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-07-07 (late cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
-**7 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-07-08 (cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
+**6 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-07, late cron pass):** shipped **1** and posted **1** new clarifying question.
+> **This run (2026-07-08, cron pass):** shipped **1**, posted **0** new clarifying questions.
+> - Shipped `1e6NuOqXabYV` — /dashboard "change DASHBOARD to PROJECTS across the whole app". The label rename existed as **PR #106** but that PR was based off `fix/library-list-header-opaque` (a non-`main` branch) and pointed its base there, not at `main` — the documented never-reaches-prod failure mode, so production `/dashboard` still read "DASHBOARD". Re-landed the exact vetted diff (17 files, label-only + e2e assertion alignment; typecheck 0, unit 634/634) on `main` through the gated loop, verified prod, then resolved. Same corrective pattern as `XvJwNsHNE89S` last run.
+> - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) is a large feature already carrying a "picked up" note from another Claude Code task (`t_8083d79c`, PR to follow); left it to that run and did not touch it.
+> - The 6 threads below already carry a clarifying question from earlier runs and are still waiting on you — no new action, listed so they don't get lost. (`XzIZJoGqnY-a` resolved since the last pass → dropped from the table, 7 → 6.)
+>
+> **Previous run (2026-07-07, late cron pass):** shipped **1** and posted **1** new clarifying question.
 > - Shipped `ra9QhujevTqM` — /collection "add this text into an actual box". Wrapped the "Auto-fills from…" paste-URL helper paragraph in a bordered box (`rounded-[6px] border border-border`, matching the CollectionStatsBar/CollectionTable container pattern) in `src/components/collection/PasteUrlBar.tsx`. Went through the gated loop (PR → CI → merge → prod verify → resolve).
 > - Posted a clarifying question on `XzIZJoGqnY-a` (/tools/match) — "offer more than one match possibility for each colour". With a harmony selected the tool shows exactly **one** best paint per harmony hue; surfacing alternates is a real feature and needs your call on how (see table). Left open.
 > - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) already carries a "picked up" note from another Claude Code task (`t_8083d79c`) with a PR to follow, so I left it to that run and did not touch it.
@@ -22,13 +27,12 @@
 
 ---
 
-## 🔴 NEEDS YOUR CALL (7)
+## 🔴 NEEDS YOUR CALL (6)
 
 > **Filter-placement cluster (2 threads):** `-D41OlDEcOYF`, `7rH5cPa-w3PQ` are the *same* ask on the *same* shared `ColorPicker` component (the other two, `4odMSzb6-6zR`/`haCS2-aXxUQb`, have since been resolved). One answer (keep the collapsed toggle vs. move the filter below the list) resolves both — I'll ship it once.
 
 | Thread | Page | Ask | The one thing I need from you |
 |---|---|---|---|
-| `XzIZJoGqnY-a` | /tools/match | "Offer the user more than one match possibility for each colour." | With a harmony picked, RANKED MATCHES shows **one** best paint per hue. How should alternates surface? **(1)** each colour row expands to a short top-N list (say top 3–5) you can pick from, or **(2)** a compact cycler (‹ ›) that swaps the shown match per colour. And how many candidates deep do you want per colour? |
 | `-D41OlDEcOYF` | /library (?) | "Move the filter list below the paints or hide it behind a button/dropdown — confusing having it between the search bar and the paints." | **Which screen?** On `/library` the filters already sit behind a **Filter** button (slide-out), and on the Match/recipe paint-picker the Company filter was collapsed behind a toggle in PR #90 — so this may already be sorted. Tell me the page, and whether it's good now or you still want the remaining filters **below the list** rather than behind a button. |
 | `7rH5cPa-w3PQ` | /tools/match | Same "move the filter list" ask, on the Match tool's paint-picker. | Pick one: **(1)** collapse behind a "Filters" toggle above the list (my lean), or **(2)** move the whole filter panel below the paint list. |
 | `T9TlAL3KQ3GX` | /tools/wheel | "Use a white lock icon that matches our aesthetic" (per-slot lock toggle, currently the gold emoji padlock). | Icon colour: **pure white in both states**, or **white when unlocked / keep the yellow tint when locked** (locked-yellow is the current at-a-glance signal). |
@@ -44,6 +48,7 @@ Landed on `main` and resolved after prod verify — kept here only so the loop d
 
 | Thread | Change |
 |---|---|
+| `1e6NuOqXabYV` | User-facing "DASHBOARD" label → "PROJECTS" app-wide (nav rail, phone nav, page header, breadcrumbs, tour, 404 link, landing card) — this run, re-landed on `main` from the stranded PR #106, `src/components/shell/nav.ts` + 9 more |
 | `WcnTP2Vzy1hM` | Library list-view sticky header made fully opaque (`bg-bg/95` → solid) — PR #91 (`de3b6fe`), `src/components/library/PaintListTable.tsx` |
 | `C3ygtbGZufsu` | Homepage hero tagline → bright neon green (`#39ff14`) + subtle glow — PR #92 (`f4c2de7`) |
 | `g_ypRnCdHcCC` | Stacking page blurb "…stack on a **substrate**" → "…stack on an **undercoat**" |
