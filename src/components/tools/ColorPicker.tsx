@@ -122,10 +122,6 @@ export function ColorPicker({
   // checkbox list of the distinct brands in the catalog, AND-composed with
   // the search + ΔE cap.
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  // The Company facet is a collapsed-by-default disclosure so it no longer sits
-  // wedged between the library search box and the paint list (recipe reviewer
-  // feedback); the toggle keeps the active-brand count visible while collapsed.
-  const [brandFilterOpen, setBrandFilterOpen] = useState(false);
   // Recipe confirm-flow: the highlighted-but-not-yet-added library paint.
   const [pendingPaint, setPendingPaint] = useState<{ hex: string; paintId: string } | null>(null);
 
@@ -279,62 +275,6 @@ export function ColorPicker({
         <h3 id="cp-library-heading" className="label-osd text-cyan-lite">
           Library
         </h3>
-        <input
-          type="search"
-          value={textQuery}
-          onChange={(e) => setTextQuery(e.target.value)}
-          placeholder="Search by paint name, brand, or line…"
-          aria-label="Filter library paints"
-          className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
-        />
-
-        {/* Company facet — a collapsed-by-default disclosure. Tucking it behind
-            a toggle (instead of always-open between the search box and the
-            results) keeps the search → paint-list flow reading cleanly; the
-            button still surfaces the active-brand count while collapsed. */}
-        {brandOptions.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <button
-              type="button"
-              onClick={() => setBrandFilterOpen((v) => !v)}
-              aria-expanded={brandFilterOpen}
-              className="inline-flex w-fit items-center gap-1 bg-green/20 px-2 py-0.5 label-osd text-green"
-            >
-              <span aria-hidden className={cn("transition-transform", brandFilterOpen && "rotate-90")}>
-                ▸
-              </span>
-              Company{selectedBrands.length ? ` · ${selectedBrands.length}` : ""}
-            </button>
-            {brandFilterOpen && (
-            <div className="flex max-h-40 flex-col overflow-y-auto">
-              {brandOptions.map((b) => {
-                const checked = selectedBrands.includes(b);
-                return (
-                  <label
-                    key={b}
-                    className="flex cursor-pointer items-center justify-between py-1 font-body text-body text-fg"
-                  >
-                    <span className="uppercase tracking-[0.1em]">{b}</span>
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={checked}
-                      aria-label={b}
-                      onClick={() => toggleBrand(b)}
-                      className={cn(
-                        "flex h-4 w-4 items-center justify-center border",
-                        checked ? "border-cyan bg-cyan/20 text-cyan-lite" : "border-fg-faint",
-                      )}
-                    >
-                      {checked && "✓"}
-                    </button>
-                  </label>
-                );
-              })}
-            </div>
-            )}
-          </div>
-        )}
 
         <div className="flex items-center justify-between">
           <span className="font-body text-body text-fg">
@@ -400,6 +340,55 @@ export function ColorPicker({
             </li>
           )}
         </ul>
+
+        {/* Filters sit BELOW the paint list (reviewer feedback): scan the
+            matches first, then narrow by search text or the Filter facet. */}
+        <input
+          type="search"
+          value={textQuery}
+          onChange={(e) => setTextQuery(e.target.value)}
+          placeholder="Search by paint name, brand, or line…"
+          aria-label="Filter library paints"
+          className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
+        />
+
+        {/* Filter facet — scrollable checkbox list, one per brand (mirrors
+            the Library page's filter). Generic "Filter" label so more filter
+            types can be added here later. */}
+        {brandOptions.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <span className="inline-block w-fit bg-green/20 px-2 py-0.5 label-osd text-green">
+              Filter{selectedBrands.length ? ` · ${selectedBrands.length}` : ""}
+            </span>
+            <div className="flex max-h-40 flex-col overflow-y-auto">
+              {brandOptions.map((b) => {
+                const checked = selectedBrands.includes(b);
+                return (
+                  <label
+                    key={b}
+                    className="flex cursor-pointer items-center justify-between py-1 font-body text-body text-fg"
+                  >
+                    <span className="uppercase tracking-[0.1em]">{b}</span>
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={checked}
+                      aria-label={b}
+                      onClick={() => toggleBrand(b)}
+                      className={cn(
+                        "flex h-4 w-4 items-center justify-center border",
+                        checked ? "border-cyan bg-cyan/20 text-cyan-lite" : "border-fg-faint",
+                      )}
+                    >
+                      {checked && "✓"}
+                    </button>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Recipe confirm-flow: highlight a library paint, then ADD PAINT commits
             that specific catalog paint to the slot. Disabled until one is picked. */}
         {confirmSelection && (
