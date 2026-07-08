@@ -41,7 +41,7 @@ export function Listbox<T extends string>({
   placeholder?: string;
   accent?: Accent;
   disabled?: boolean;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "xs";
   /** Extra classes on the trigger button (e.g. max-width). */
   triggerClassName?: string;
   className?: string;
@@ -144,12 +144,32 @@ export function Listbox<T extends string>({
   // font + min-height so it reads as a small control instead of a tall box
   // next to the roster's other pills (mobile Fix 2). At ≥600px "sm" resolves
   // to the original sizing unchanged; "md" is untouched at every width.
+  //
+  // "xs" is a further opt-in compaction (PR #121 follow-up) for the two
+  // roster controls that still read as chunky next to the TYPE chip on real
+  // phones: the mobile PRIORITY pill and the SORT control. It hugs its
+  // content instead of enforcing a 26px floor (matching the kit Chip's
+  // natural height), with a 40px invisible after: tap zone standing in for
+  // the touch target (same trick as the row delete button in
+  // ProjectsTable.tsx). At ≥600px "xs" resolves byte-for-byte to "sm" so
+  // desktop is untouched — only opt "xs" callers into it, never widen it to
+  // the shared default.
   const pad =
     size === "md"
       ? "px-3 py-1.5 text-button"
-      : "px-1.5 py-0.5 text-num2 min-[600px]:px-2 min-[600px]:py-1 min-[600px]:text-button";
+      : size === "xs"
+        ? "px-1.5 py-0.5 text-[10px] min-[600px]:px-2 min-[600px]:py-1 min-[600px]:text-button"
+        : "px-1.5 py-0.5 text-num2 min-[600px]:px-2 min-[600px]:py-1 min-[600px]:text-button";
   const heightClass =
-    size === "md" ? "min-h-[44px] md:min-h-0" : "min-h-[26px] min-[600px]:min-h-[44px] md:min-h-0";
+    size === "md"
+      ? "min-h-[44px] md:min-h-0"
+      : size === "xs"
+        ? "min-h-0 min-[600px]:min-h-[44px] md:min-h-0"
+        : "min-h-[26px] min-[600px]:min-h-[44px] md:min-h-0";
+  const tapZoneClass =
+    size === "xs"
+      ? "relative after:absolute after:left-1/2 after:top-1/2 after:h-10 after:w-10 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] min-[600px]:after:content-none"
+      : undefined;
 
   return (
     <div ref={rootRef} className={cn("relative inline-block", className)}>
@@ -171,6 +191,7 @@ export function Listbox<T extends string>({
           "inline-flex w-full items-center justify-between gap-2 border border-dotted bg-bg font-button tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
           heightClass,
           pad,
+          tapZoneClass,
           accentBorder[accent],
           "border-opacity-60",
           selected ? accentText[accent] : "text-fg-faint",

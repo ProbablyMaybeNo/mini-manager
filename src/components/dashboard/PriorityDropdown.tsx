@@ -59,7 +59,8 @@ export function PriorityDropdown({
         ariaLabel="Set priority"
         accent={priorityAccent[value]}
         disabled={pending}
-        triggerClassName="uppercase tracking-[0.12em]"
+        size="xs"
+        triggerClassName="uppercase tracking-[0.04em] min-[600px]:tracking-[0.12em]"
       />
       {node}
     </div>

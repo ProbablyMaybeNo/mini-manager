@@ -40,15 +40,18 @@ export function RosterFilterBar({
 }) {
   return (
     <div className={cn("flex flex-wrap items-center gap-2 py-1.5", className)}>
-      <div className="ml-auto flex items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-fg-dim">Sort</span>
+      <div className="ml-auto flex items-center gap-1 min-[600px]:gap-2">
+        <span className="font-mono text-[9px] uppercase tracking-normal text-fg-dim opacity-70 min-[600px]:text-[10px] min-[600px]:tracking-wide min-[600px]:opacity-100">
+          Sort
+        </span>
         <Listbox<RosterSort>
           value={sort}
           options={ROSTER_SORT_OPTIONS}
           onChange={onSortChange}
           ariaLabel="Sort roster"
           accent="cyan"
-          triggerClassName="min-w-[92px] min-[600px]:min-w-[140px]"
+          size="xs"
+          triggerClassName="min-w-[64px] max-w-[84px] min-[600px]:min-w-[140px] min-[600px]:max-w-none"
         />
       </div>
     </div>
