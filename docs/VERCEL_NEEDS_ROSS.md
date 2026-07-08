@@ -1,45 +1,23 @@
 # Vercel comments — Ross's decision queue
 
 **Snapshot:** 2026-07-08 (cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
-**6 unresolved threads awaiting your call + 1 BLOCKED on a broken CI gate.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**1 unresolved thread — awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **⚠️ This run (2026-07-08, cron pass): 1 fix ready but BLOCKED — `main`'s CI is red.**
-> - `1e6NuOqXabYV` (/dashboard, "change DASHBOARD to PROJECTS across the whole app") — clean, bounded label rename. The change already existed as **PR #106** but that PR targeted base `fix/library-list-header-opaque`, **not `main`** (the documented never-reaches-prod failure mode), so production `/dashboard` still reads "DASHBOARD". Re-landed the exact vetted diff on `main` as **PR #110** (17 files, label-only + e2e assertion alignment). CI's Typecheck/unit/integration/build job is **green**, but the **Playwright E2E** job is **RED** — and it's red on `main` too, on 5 pre-existing failures unrelated to this rename: `qa_credentials_signup` (M9.3), `qa_credentials_signin` (M9.4 ×2), `qa_billing_upgrade` (M8.1, M8.2). All five fail at the auth flow itself — after "create account" the app no longer lands on `/dashboard` within 45s (the email-verification feature added in `cec7f91` changed the post-signup redirect), so they time out before any heading assertion. **Left PR #110 open, did NOT merge, did NOT resolve the thread — needs a human.** Fixing the auth/billing E2E (or the feature) is a large change outside safe auto-fix scope.
->   - **🔴 Repo-wide blocker for Ross:** `main`'s merge gate is currently red on those 5 auth/billing E2E tests (commits `cec7f91`, `4025301e` both failed identically). Until they're fixed, **no** Vercel-comment fix can pass CI and merge. Either repair the post-signup redirect so signup lands on `/dashboard`, or update the M8/M9 specs to match the new email-verification flow.
-> - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) is a large feature already carrying a "picked up" note from another Claude Code task (`t_8083d79c`, PR to follow); left it to that run and did not touch it.
-> - The 6 threads below already carry a clarifying question from earlier runs and are still waiting on you — no new action, listed so they don't get lost. (`XzIZJoGqnY-a` resolved since the last pass → dropped from the table, 7 → 6.)
+> **This run (2026-07-08, cron pass): shipped 0, posted 1 new clarifying question.**
+> - Only **one** un-handled open thread this pass. Every other previously-open thread has been resolved since the last snapshot (see below).
+> - Posted a clarifying question on `sFAkBUvAcSiF` (/collection) — "make the paste-URL helper look like the project-page rectangle sections, persistent with a slide-out toggle, moved above the paste box." The visual reference (project-page `CollapsibleSection`, cyan-bordered notched-label boxes) is clear, but two things aren't: the **desktop toggle behaviour** (those sections are always-expanded on desktop; the chevron only collapses on mobile — so "persistent slide-out toggle" needs a call: collapsed-by-default vs open-by-default) and the **notch label** text. Also, that box currently doubles as the paste input's `aria-describedby` unsupported-store warning, so the restyle has to preserve that. Left the thread **open**.
 >
-> **Previous run (2026-07-07, late cron pass):** shipped **1** and posted **1** new clarifying question.
-> - Shipped `ra9QhujevTqM` — /collection "add this text into an actual box". Wrapped the "Auto-fills from…" paste-URL helper paragraph in a bordered box (`rounded-[6px] border border-border`, matching the CollectionStatsBar/CollectionTable container pattern) in `src/components/collection/PasteUrlBar.tsx`. Went through the gated loop (PR → CI → merge → prod verify → resolve).
-> - Posted a clarifying question on `XzIZJoGqnY-a` (/tools/match) — "offer more than one match possibility for each colour". With a harmony selected the tool shows exactly **one** best paint per harmony hue; surfacing alternates is a real feature and needs your call on how (see table). Left open.
-> - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) already carries a "picked up" note from another Claude Code task (`t_8083d79c`) with a PR to follow, so I left it to that run and did not touch it.
-> - `4odMSzb6-6zR` and `haCS2-aXxUQb` (the other two filter-placement cluster threads) no longer appear in the unresolved list — resolved since the last pass, shrinking the cluster to the two below.
+> **✅ Repo-wide CI blocker CLEARED.** The earlier 2026-07-08 pass flagged `main`'s merge gate as red on 5 pre-existing auth/billing Playwright E2E tests, jamming the whole auto-fix pipeline. That is fixed: `1e6NuOqXabYV` (DASHBOARD→PROJECTS) landed as **PR #110** which also repaired the post-signup / paid-upgrade E2E flows, and `main` has since advanced cleanly through **#111–#116** (now at `e164f38`). The merge gate is healthy again — future clear-and-bounded fixes can go through the gated loop and merge on green.
 >
-> **Previous run (2026-07-07, cron pass):** shipped **1** and posted **2** new clarifying questions.
-> - Shipped `XvJwNsHNE89S` — hero tagline "add more glow". The intensified five-layer glow had been merged as PR #97 **but into the throwaway `fix/library-list-header-opaque` branch, not `main`** — so the "✅ live on production" reply on that thread was wrong; production still had the older subtle glow. Re-landed the exact change on `main` through the gated loop, verified prod, then resolved.
-> - Posted clarifying questions on `4odMSzb6-6zR` (/recipes/new picker) and `haCS2-aXxUQb` (/tools/match picker) — both are the same "move the Company/brand filter below the paint list" ask as `7rH5cPa`/`-D41OlDEcOYF`. All four share the one `ColorPicker` component and hinge on the same unresolved decision (keep the collapsed toggle vs. move below the list). Left open. NB: a prior agent already implemented "move below" as PR #98 on that same dead `fix/library-list-header-opaque` branch — it is **not** on `main`; I did not land it, pending your call so all four resolve consistently.
->
-> **Previous run (2026-07-07, evening):** shipped **2** and posted **1** new clarifying question.
-> - Resolved `WcnTP2Vzy1hM` — the "floating" library list header. The fix (`bg-bg/95` → opaque) had already landed in PR #91 (`de3b6fe`) and was live; the thread just never got closed. Verified against prod and resolved.
-> - Resolved `C3ygtbGZufsu` — hero tagline → neon green + glow. Merged the pre-existing PR #92 (`f4c2de7`) after confirming CI green + that the change matched your screenshot, verified the production deploy, then resolved.
-> - `-D41OlDEcOYF` (filter placement) had only a stale "picked up" note and no reply — posted a clarifying question (see below) and left it open.
->
-> The other 5 threads already carry a clarifying question from earlier today and are still waiting on you — no new action taken, listed here so they don't get lost.
+> **The 6 threads that were awaiting your call last snapshot are all resolved now** — `-D41OlDEcOYF`, `7rH5cPa-w3PQ`, `T9TlAL3KQ3GX`, `APNNqpJtZIeH`, `tSx5YUJMik8i`, `O2QLNGljsS1A` no longer appear in the unresolved list. Dropped from the table; the queue is down to the single new item above.
 
 ---
 
-## 🔴 NEEDS YOUR CALL (6)
-
-> **Filter-placement cluster (2 threads):** `-D41OlDEcOYF`, `7rH5cPa-w3PQ` are the *same* ask on the *same* shared `ColorPicker` component (the other two, `4odMSzb6-6zR`/`haCS2-aXxUQb`, have since been resolved). One answer (keep the collapsed toggle vs. move the filter below the list) resolves both — I'll ship it once.
+## 🔴 NEEDS YOUR CALL (1)
 
 | Thread | Page | Ask | The one thing I need from you |
 |---|---|---|---|
-| `-D41OlDEcOYF` | /library (?) | "Move the filter list below the paints or hide it behind a button/dropdown — confusing having it between the search bar and the paints." | **Which screen?** On `/library` the filters already sit behind a **Filter** button (slide-out), and on the Match/recipe paint-picker the Company filter was collapsed behind a toggle in PR #90 — so this may already be sorted. Tell me the page, and whether it's good now or you still want the remaining filters **below the list** rather than behind a button. |
-| `7rH5cPa-w3PQ` | /tools/match | Same "move the filter list" ask, on the Match tool's paint-picker. | Pick one: **(1)** collapse behind a "Filters" toggle above the list (my lean), or **(2)** move the whole filter panel below the paint list. |
-| `T9TlAL3KQ3GX` | /tools/wheel | "Use a white lock icon that matches our aesthetic" (per-slot lock toggle, currently the gold emoji padlock). | Icon colour: **pure white in both states**, or **white when unlocked / keep the yellow tint when locked** (locked-yellow is the current at-a-glance signal). |
-| `APNNqpJtZIeH` | /tools/match | "Clicking GENERATE does nothing." | It's not broken — with only 1 slot there's nothing to fill. Which fix: **(1)** disable/grey GENERATE until 2+ slots (with a hint), or **(2)** auto-add slots so one click always yields a scheme. |
-| `tSx5YUJMik8i` | /tools/wheel | "Remove this GENERATE RECIPE button — we have the same one on the left." | They're **not** the same: left GENERATE fills slots from the harmony; GENERATE RECIPE builds the full layered recipe + opens the dialog. Confirm you still want GENERATE RECIPE removed (I'll also handle the matching ask on `O2QLNGljsS1A` in one go). |
-| `O2QLNGljsS1A` | /tools/wheel | "Move SLOTS −/+ under the colour list; remove GENERATE RECIPE; + a question about the save-palette / send-to-recipe buttons." | **(1)** SLOTS −/+ currently lives in the **left PICK panel**, not the right — confirm you want it pulled out and dropped under the colour list in the main SCHEME body. **(2)** GENERATE RECIPE removal — ready. **(3)** I don't have your earlier save-palette / send-to-recipe comment — tell me the change (rename / recolour / drop one) and I'll ship all three together. |
+| `sFAkBUvAcSiF` | /collection | "Make the 'Auto-populate…' paste-URL helper look like the same rectangle sections on the project page (same colour/format), persistent with a slide-out toggle — you could even move it above the URL paste box." | **(1)** Desktop toggle behaviour — the project-page section boxes are always expanded on desktop (chevron only collapses on mobile). Do you want this box **collapsed by default** with a toggle to open it, or **open by default** with a toggle to hide it? **(2)** What label goes in the notch — `AUTO-FILL`, `SUPPORTED STORES`, or something else? Answer those two and I'll ship it (cyan-bordered `CollapsibleSection` style, moved above the paste box). |
 
 ---
 
@@ -49,7 +27,15 @@ Landed on `main` and resolved after prod verify — kept here only so the loop d
 
 | Thread | Change |
 |---|---|
-| `WcnTP2Vzy1hM` | Library list-view sticky header made fully opaque (`bg-bg/95` → solid) — PR #91 (`de3b6fe`), `src/components/library/PaintListTable.tsx` |
+| `1e6NuOqXabYV` | Renamed the DASHBOARD label → PROJECTS app-wide + repaired the auth/billing E2E gate — PR #110 |
+| `XeheRPMOLslU` | /tools/match reuses the shared recipe PAINT PICKER PANEL for COLOR MATCH — PR #111 |
+| `-D41OlDEcOYF` / `7rH5cPa-w3PQ` | Filter-placement cluster (shared `ColorPicker`) — resolved |
+| `T9TlAL3KQ3GX` | /tools/wheel per-slot lock icon — resolved |
+| `APNNqpJtZIeH` | /tools/match GENERATE behaviour — resolved |
+| `tSx5YUJMik8i` / `O2QLNGljsS1A` | /tools/wheel GENERATE RECIPE / SLOTS controls — resolved |
+| `ra9QhujevTqM` | /collection "Auto-fills from…" paste-URL helper wrapped in a bordered box — `src/components/collection/PasteUrlBar.tsx` |
+| `XvJwNsHNE89S` | Hero tagline glow intensified (five-layer) — PR re-landed on `main` |
+| `WcnTP2Vzy1hM` | Library list-view sticky header made fully opaque (`bg-bg/95` → solid) — PR #91 (`de3b6fe`) |
 | `C3ygtbGZufsu` | Homepage hero tagline → bright neon green (`#39ff14`) + subtle glow — PR #92 (`f4c2de7`) |
 | `g_ypRnCdHcCC` | Stacking page blurb "…stack on a **substrate**" → "…stack on an **undercoat**" |
 | `glGmhi0OxcAF` | Colour-wheel disclosure label "**More matches** (N)" → "**Matches** (N)" |
@@ -59,5 +45,3 @@ Landed on `main` and resolved after prod verify — kept here only so the loop d
 | `s6zlyxVZ9-cI` | Stacking blurb "over a substrate" → "over an undercoat" — PR #84 |
 | `Tcylyd5enVXT` / `Z2r21cCQAPQr` / `8myNPt4auK8V` | Landing/pricing colour fixes — PR #82 |
 | `yT9vvxQhK3Ce` | Library TYPE filter facet |
-</content>
-</invoke>
