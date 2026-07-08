@@ -54,7 +54,7 @@ test.describe("M3 — Project workspace lifecycle", () => {
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     const name = `QA Squad ${Date.now()}`;
@@ -104,7 +104,7 @@ test.describe("M3 — Project workspace lifecycle", () => {
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     // A standalone project (no children) is a leaf — it gets NO expand

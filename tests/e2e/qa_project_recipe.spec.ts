@@ -71,7 +71,7 @@ test.describe("M12 — Project-page recipe wiring", () => {
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     const army = `QA Army ${Date.now()}`;
@@ -115,7 +115,7 @@ test.describe("M12 — Project-page recipe wiring", () => {
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     // Mint a recipe by creating it FOR project A (the only zero-editor path to a
@@ -134,10 +134,10 @@ test.describe("M12 — Project-page recipe wiring", () => {
 
     // Second project B — the recipe attach picker should offer recipe R so we
     // can move its link onto B (attachRecipeToProject, c5ecd31).
-    await page.getByRole("button", { name: /Back to dashboard/i }).click();
+    await page.getByRole("button", { name: /Back to projects/i }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     const armyB = `QA Bravo ${Date.now()}`;

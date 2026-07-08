@@ -82,7 +82,7 @@ export function FocusView({
           <p className="font-body text-body text-fg">▸ No project in focus.</p>
           <p className="mt-2 font-body text-body text-fg">
             Pick a project from the <span className="text-cyan-lite">+ Focus</span> menu above, or
-            launch the bench from the Dashboard.
+            launch the bench from Projects.
           </p>
         </Panel>
       </div>

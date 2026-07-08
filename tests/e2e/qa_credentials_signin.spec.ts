@@ -78,7 +78,7 @@ test.describe("M9.4 — Credentials sign-in", () => {
 
     await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
   });
 

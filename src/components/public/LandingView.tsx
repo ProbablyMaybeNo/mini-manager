@@ -19,7 +19,7 @@ const FEATURES: { title: string; blurb: string }[] = [
       "Match any colour to real paints, build schemes on the harmony wheel, and predict glaze layers before you commit a drop — the exact paint for the look in your head.",
   },
   {
-    title: "Project Dashboard",
+    title: "Projects",
     blurb:
       "Every army, unit, and model in one view. Set deadlines, watch your activity feed, and see your whole backlog at a glance.",
   },

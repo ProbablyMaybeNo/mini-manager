@@ -64,7 +64,7 @@ test.describe("M11 — Dashboard real-data features", () => {
     await signInAs(page, freshTestEmail("planner"));
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     // There's no standalone "+ Date" button anymore (MM-47) — clicking a day
@@ -102,7 +102,7 @@ test.describe("M11 — Dashboard real-data features", () => {
     await signInAs(page, freshTestEmail("workspace"));
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
 
     const army = `QA Army ${Date.now()}`;
