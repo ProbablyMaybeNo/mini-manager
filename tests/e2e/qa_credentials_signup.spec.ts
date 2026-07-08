@@ -3,11 +3,12 @@ import { expect, test } from "@playwright/test";
 /**
  * M9.3 — Sign-up happy path (current AuthView).
  *
- * The free-tier auth UI is username + password only (no email, no
- * confirm-password, no live username-availability pill). The sign-up
- * screen leads with a "Create account" h1 (AuthView) and its submit
- * button reads "Create account" too. On success the server action mints
- * a session and redirects to /dashboard.
+ * The free-tier auth UI is username + email + password (no confirm-password,
+ * no live username-availability pill). The sign-up screen leads with a
+ * "Create account" h1 (AuthView) and its submit button reads "Create account"
+ * too. On success the server action mints a session and redirects to
+ * /dashboard. Email is required + format-validated; verification is a separate
+ * post-signup step that does NOT gate the redirect.
  */
 
 function freshUsername(): string {
@@ -54,13 +55,14 @@ test.describe("M9.3 — Credentials sign-up", () => {
     await waitForHydration(page);
 
     await page.getByLabel(/username/i).fill(username);
+    await page.getByLabel(/email/i).fill(`${username}@qa.test`);
     await page.getByLabel(/password/i).fill("longenoughpw");
 
     await page.getByRole("button", { name: /create account/i }).click();
 
     await page.waitForURL(/\/dashboard/, { timeout: 45_000 });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
     ).toBeVisible({ timeout: 30_000 });
   });
 
@@ -74,6 +76,7 @@ test.describe("M9.3 — Credentials sign-up", () => {
     await waitForHydration(page);
 
     await page.getByLabel(/username/i).fill(freshUsername());
+    await page.getByLabel(/email/i).fill("qa-shortpw@qa.test");
     await page.getByLabel(/password/i).fill("short"); // < 8 chars
     await page.getByRole("button", { name: /create account/i }).click();
 

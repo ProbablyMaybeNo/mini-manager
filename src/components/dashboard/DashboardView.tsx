@@ -232,7 +232,7 @@ export function DashboardView({
         >
           {/* No tagline text bar — the "+ New Project" button + the obvious
               PROJECTS panel already make the page's purpose clear (drev). */}
-          <PageHeader title="DASHBOARD" />
+          <PageHeader title="PROJECTS" />
 
           {status === "error" ? (
             <ErrorState onRetry={onRetry} />

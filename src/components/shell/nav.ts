@@ -24,7 +24,7 @@ export interface NavItem {
 
 /** Primary rail items (top). */
 export const MAIN_NAV: NavItem[] = [
-  { key: "dashboard", label: "DASHBOARD", path: "/dashboard", icon: LayoutGrid, tour: "nav-dashboard" },
+  { key: "dashboard", label: "PROJECTS", path: "/dashboard", icon: LayoutGrid, tour: "nav-dashboard" },
   { key: "focus", label: "FOCUS", path: "/focus", icon: Crosshair, tour: "nav-focus" },
   { key: "library", label: "LIBRARY", path: "/library", icon: Database, tour: "nav-library" },
   { key: "recipe", label: "RECIPES", path: "/recipes", icon: FlaskConical, tour: "nav-recipe" },

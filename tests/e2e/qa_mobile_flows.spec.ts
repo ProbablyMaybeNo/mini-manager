@@ -93,7 +93,7 @@ test.describe("M6 — Mobile primary flows", () => {
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/}),
     ).toBeVisible({ timeout: 30_000 });
     await expectNoHorizontalScroll(page);
 
@@ -102,7 +102,7 @@ test.describe("M6 — Mobile primary flows", () => {
       { label: "LIBRARY", pathRe: /\/library/ },
       { label: "TOOLS", pathRe: /\/tools/ },
       { label: "COLLECTION", pathRe: /\/collection/ },
-      { label: "DASHBOARD", pathRe: /\/dashboard/ },
+      { label: "PROJECTS", pathRe: /\/dashboard/ },
     ];
     for (const dest of tabs) {
       await navigateViaTab(page, dest.label, dest.pathRe);
@@ -124,7 +124,7 @@ test.describe("M6 — Mobile primary flows", () => {
 
     await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: /^DASHBOARD$/ }),
+      page.getByRole("heading", { name: /^PROJECTS$/}),
     ).toBeVisible({ timeout: 30_000 });
     await expectNoHorizontalScroll(page);
 
