@@ -233,8 +233,12 @@ export function DashboardView({
             <div className="@container flex min-w-0 flex-1 flex-col gap-6">
               {/* Skip-safe welcome MOTD (DOP-006) — dismissible, persists.
                   Collapses to a slim bar once the painter has a project so the
-                  roster isn't pushed below the fold (UX-010). */}
-              <WelcomeCard hasProjects={projects.length > 0} />
+                  roster isn't pushed below the fold (UX-010). Hidden below
+                  600px — on a phone the tour banner eats a third of the first
+                  screen and reads as clutter ahead of the roster. */}
+              <div className="hidden min-[600px]:block">
+                <WelcomeCard hasProjects={projects.length > 0} />
+              </div>
               <div data-tour="dashboard-projects" className="flex flex-col gap-4">
                 {/* Section header row (4:58): PROJECTS ROSTER label + add-project
                     affordance at the right edge. */}

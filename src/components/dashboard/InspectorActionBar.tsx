@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { Button, FocusReticleIcon } from "@/components/kit";
 
 /**
@@ -68,7 +69,8 @@ export function InspectorActionBar({
           disabled={disabled}
           onClick={onDelete}
         >
-          🗑 Delete
+          <Trash2 size={16} aria-hidden />
+          Delete
         </Button>
       )}
 

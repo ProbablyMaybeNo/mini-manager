@@ -48,7 +48,7 @@ export function RosterFilterBar({
           onChange={onSortChange}
           ariaLabel="Sort roster"
           accent="cyan"
-          triggerClassName="min-w-[140px]"
+          triggerClassName="min-w-[92px] min-[600px]:min-w-[140px]"
         />
       </div>
     </div>

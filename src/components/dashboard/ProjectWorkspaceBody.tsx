@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import {
   Button,
   ConfirmDialog,
@@ -240,7 +241,7 @@ export function ProjectWorkspaceBody({
   const [pending, startTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   // PP-2: a sub-project queued for a confirm-guarded delete from the
-  // SUB-PROJECTS list's trailing 🗑 icon.
+  // SUB-PROJECTS list's trailing Trash2 icon.
   const [deletingChild, setDeletingChild] = useState<Project | null>(null);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [recipeCards, setRecipeCards] = useState<ProjectRecipeCard[] | null>(null);
@@ -829,8 +830,9 @@ export function ProjectWorkspaceBody({
           });
         }}
       />
-      {/* PP-2: confirm-guarded delete for a sub-project row's 🗑 icon. Deleting a
-          sub-project stays on this page (the parent re-renders without it). */}
+      {/* PP-2: confirm-guarded delete for a sub-project row's Trash2 icon.
+          Deleting a sub-project stays on this page (the parent re-renders
+          without it). */}
       <ConfirmDialog
         open={deletingChild != null}
         breadcrumb="SUB-PROJECT"
@@ -937,7 +939,7 @@ function SubProjectRow({
           disabled={disabled}
           onClick={onDelete}
         >
-          🗑
+          <Trash2 size={16} aria-hidden />
         </IconButton>
       </div>
     </li>
