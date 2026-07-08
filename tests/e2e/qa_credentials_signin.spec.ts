@@ -47,6 +47,7 @@ async function register(
   ).toBeVisible({ timeout: 30_000 });
   await waitForHydration(page);
   await page.getByLabel(/username/i).fill(username);
+  await page.getByLabel(/email/i).fill(`${username}@qa.test`);
   await page.getByLabel(/password/i).fill(PASSWORD);
   await page.getByRole("button", { name: /create account/i }).click();
   // Password hashing (bcrypt, deliberately slow) plus a cold dev-server

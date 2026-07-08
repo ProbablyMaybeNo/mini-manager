@@ -11,9 +11,14 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  *
  * The route now returns a JSON 401 the client acts on: it bounces to sign-in
  * carrying ?from=/pricing?upgrade=<tier>, and on return auto-resumes checkout.
+ *
+ * SKIPPED during the free beta: with BILLING_ENFORCED=false the pricing page
+ * short-circuits every paid CTA to /sign-up (no checkout POST, silent
+ * auto-resume is a no-op), so this upgrade-intent flow doesn't exist yet.
+ * Re-enable when BILLING_ENFORCED flips to true at the pricing lock date.
  */
 
-test.describe("M8 — Upgrade flow", () => {
+test.describe.skip("M8 — Upgrade flow (paid checkout disabled during free beta)", () => {
   test("M8.1 signed-out 'Go Pro' bounces to sign-in carrying the upgrade intent", async ({
     page,
   }) => {
