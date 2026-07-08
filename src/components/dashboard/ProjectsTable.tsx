@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
   ConfirmDialog,
@@ -216,7 +217,7 @@ export function ProjectsTable({
                   setDeleting(p);
                 }}
               >
-                <span aria-hidden>🗑</span>
+                <Trash2 size={16} aria-hidden />
               </IconButton>
             </div>
           </td>
@@ -283,7 +284,7 @@ export function ProjectsTable({
             ) : (
               <span className="h-7 w-7 shrink-0" aria-hidden />
             )}
-            <span className="min-w-0 flex-1 break-words font-body text-body text-fg">
+            <span className="min-w-0 flex-1 break-words font-mono text-[13px] font-bold text-fg-bright">
               {p.title}
             </span>
             <StatusText status={p.status} />
@@ -321,12 +322,14 @@ export function ProjectsTable({
             />
             <div className="ml-auto flex items-center">
               {/* Mobile card: delete only (strict-strip vs 4:4). Add-sub + focus
-                  live in the Army/Unit flow panel. 44px thumb target (MUX-002);
-                  ml-auto + the card's gap-2 keep ≥8px from the open-tap zone. */}
+                  live in the Army/Unit flow panel. Compact visible footprint
+                  (matches the desktop row) with the same invisible centered
+                  44px after: tap zone (MUX-002) so it stays a proportionate
+                  icon button instead of a large square dominating the card. */}
               <IconButton
                 variant="outlineRed"
                 size="sm"
-                className="h-11 w-11"
+                className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
                 aria-label={`Delete ${p.title}`}
                 title="Delete project"
                 disabled={pendingDelete}
@@ -335,7 +338,7 @@ export function ProjectsTable({
                   setDeleting(p);
                 }}
               >
-                <span aria-hidden>🗑</span>
+                <Trash2 size={16} aria-hidden />
               </IconButton>
             </div>
           </div>

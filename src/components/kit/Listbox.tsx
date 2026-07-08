@@ -139,8 +139,17 @@ export function Listbox<T extends string>({
     }
   }
 
-  // Trigger = Buttons category; size only changes padding.
-  const pad = size === "md" ? "px-3 py-1.5 text-button" : "px-2 py-1 text-button";
+  // Trigger = Buttons category; size only changes padding. "sm" (the
+  // default) gets a compact mobile treatment below 600px — smaller padding +
+  // font + min-height so it reads as a small control instead of a tall box
+  // next to the roster's other pills (mobile Fix 2). At ≥600px "sm" resolves
+  // to the original sizing unchanged; "md" is untouched at every width.
+  const pad =
+    size === "md"
+      ? "px-3 py-1.5 text-button"
+      : "px-1.5 py-0.5 text-num2 min-[600px]:px-2 min-[600px]:py-1 min-[600px]:text-button";
+  const heightClass =
+    size === "md" ? "min-h-[44px] md:min-h-0" : "min-h-[26px] min-[600px]:min-h-[44px] md:min-h-0";
 
   return (
     <div ref={rootRef} className={cn("relative inline-block", className)}>
@@ -159,7 +168,8 @@ export function Listbox<T extends string>({
           // pixel face (font-osd) + a DOTTED border, so a dropdown always reads
           // differently from a solid-bordered DePixel-Klein button app-wide.
           // ≥44px tap target on touch widths (MUX-003); stays compact on desktop.
-          "inline-flex min-h-[44px] w-full items-center justify-between gap-2 border border-dotted bg-bg font-button tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 md:min-h-0",
+          "inline-flex w-full items-center justify-between gap-2 border border-dotted bg-bg font-button tracking-[0.08em] transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+          heightClass,
           pad,
           accentBorder[accent],
           "border-opacity-60",
