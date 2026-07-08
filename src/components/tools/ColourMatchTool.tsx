@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, HexField, Panel, Swatch } from "@/components/kit";
+import { Button, HexField, MultiSelectDropdown, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { readableText } from "@/lib/color";
 import { resolveMatchTypeFilter } from "@/lib/toolMatch";
@@ -118,23 +118,13 @@ export function ColourMatchTool({
   const pageSafe = Math.min(page, pageCount - 1);
   const paged = results.slice(pageSafe * PAGE_SIZE, (pageSafe + 1) * PAGE_SIZE);
 
-  function toggleBrand(b: string) {
-    setBrands((prev) => {
-      const next = new Set(prev);
-      if (next.has(b)) next.delete(b);
-      else next.add(b);
-      return next;
-    });
+  function applyBrands(next: Set<string>) {
+    setBrands(next);
     setPage(0);
   }
 
-  function toggleType(t: string) {
-    setTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(t)) next.delete(t);
-      else next.add(t);
-      return next;
-    });
+  function applyTypes(next: Set<string>) {
+    setTypes(next);
     setPage(0);
   }
 
@@ -185,94 +175,33 @@ export function ColourMatchTool({
           </select>
         </label>
 
-        {/* Multi-brand chips (restored) */}
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="label-osd text-fg">
-              Brands {brands.size > 0 ? `· ${brands.size}` : "· all"}
-            </span>
-            {brands.size > 0 && (
-              <button
-                type="button"
-                onClick={() => setBrands(new Set())}
-                className="font-button text-button text-red hover:underline"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-            {brandOptions.map((b) => {
-              const active = brands.has(b);
-              return (
-                <button
-                  key={b}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => toggleBrand(b)}
-                  className={cn(
-                    "truncate border px-2 py-1 text-left font-button text-button transition-colors",
-                    active
-                      ? "border-green bg-green/15 text-green"
-                      : "border-cyan/20 text-fg hover:border-cyan/60",
-                  )}
-                >
-                  {b}
-                </button>
-              );
-            })}
-          </div>
+        {/* Compact multi-select filter dropdowns (replaces the old ~30-row
+            inline brand list + stacked type list — a scroll wall on mobile).
+            Filtering logic + defaults are unchanged: brands default to ALL,
+            type default falls back to resolveMatchTypeFilter below. */}
+        <div className="grid grid-cols-2 gap-3">
+          <MultiSelectDropdown
+            heading="Brands"
+            ariaLabel="Filter ranked matches by brand"
+            options={brandOptions}
+            selected={brands}
+            onChange={applyBrands}
+            allLabel="All brands"
+            countLabel={(n) => `${n} brand${n === 1 ? "" : "s"}`}
+          />
+          {typeOptions.length > 0 && (
+            <MultiSelectDropdown
+              heading="Type"
+              ariaLabel="Filter ranked matches by paint type"
+              options={typeOptions}
+              selected={types}
+              onChange={applyTypes}
+              allLabel="Default type"
+              countLabel={(n) => `${n} type${n === 1 ? "" : "s"}`}
+              footnote="Default hides varnish/wash/primer/texture-style finishes as colour swaps — check a type to include it."
+            />
+          )}
         </div>
-
-        {/* 4kCdsj — paint TYPE facet, same pattern as the Library's. With
-            nothing checked, ranked matches quietly hide varnish/wash/primer/
-            texture-style finishes by default (INCOMPATIBLE_MATCH_TYPES) —
-            check a box here to override and bring any of them back. */}
-        {typeOptions.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="label-osd text-fg">
-                Type {types.size > 0 ? `· ${types.size}` : "· default"}
-              </span>
-              {types.size > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setTypes(new Set())}
-                  className="font-button text-button text-red hover:underline"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-              {typeOptions.map((t) => {
-                const active = types.has(t);
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => toggleType(t)}
-                    className={cn(
-                      "truncate border px-2 py-1 text-left font-button text-button transition-colors",
-                      active
-                        ? "border-green bg-green/15 text-green"
-                        : "border-cyan/20 text-fg hover:border-cyan/60",
-                    )}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
-            {types.size === 0 && (
-              <p className="mt-1 font-body text-body text-fg-faint">
-                Default hides varnish/wash/primer/texture-style finishes as
-                colour swaps — check a type above to include it.
-              </p>
-            )}
-          </div>
-        )}
       </Panel>
 
       <Panel label="RANKED MATCHES" cornerTicks className="flex min-w-0 flex-col gap-2 p-5">
