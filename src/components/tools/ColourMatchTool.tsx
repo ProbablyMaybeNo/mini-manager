@@ -14,6 +14,7 @@ import {
   type HarmonyKey,
 } from "@/lib/tools/wheel/harmonies";
 import type { MatchResult, Paint } from "@/lib/types";
+import { AssignPaintMenu, type AssignedResult } from "@/components/recipe/AssignPaintMenu";
 
 const PAGE_SIZE = 50;
 
@@ -49,6 +50,7 @@ export function ColourMatchTool({
   enableLibraryPick = false,
   onUse,
   onAssign,
+  onRecipeAssigned,
 }: {
   rankMatches: (hex: string, brands: string[], types: string[], limit: number) => MatchResult[];
   brandOptions: string[];
@@ -62,8 +64,15 @@ export function ColourMatchTool({
    *  tab (avoids stacking a second slide-out over the Pick & Paint panel). */
   enableLibraryPick?: boolean;
   onUse: (paint: Paint) => void;
-  /** MM-33 — opens a recipe dropdown to assign the paint into, in place. */
-  onAssign: (paint: Paint) => void;
+  /** MM-33 — ROW ASSIGN for an embedded "pick a paint" context (the recipe
+   *  slot picker's Match tab): selects the paint directly, same shape as
+   *  `onUse`. Omit when `onRecipeAssigned` is supplied — see below. */
+  onAssign?: (paint: Paint) => void;
+  /** ROW ASSIGN for the standalone Match tool: opens the shared
+   *  {@link AssignPaintMenu} (recipe / wishlist / owned) instead of
+   *  selecting directly. Takes priority over `onAssign` when both are
+   *  supplied (they shouldn't be — pick one per call site). */
+  onRecipeAssigned?: (result: AssignedResult) => void;
 }) {
   const [hex, setHex] = useState("#3a6ea5");
   const [brands, setBrands] = useState<ReadonlySet<string>>(new Set());
@@ -289,7 +298,12 @@ export function ColourMatchTool({
                   <div className="flex min-w-0 flex-1 flex-col gap-2">
                     {matches.map((m) => (
                       <div key={m.paint.id} className="flex items-center gap-3">
-                        <MatchRow result={m} onUse={onUse} onAssign={onAssign} />
+                        <MatchRow
+                          result={m}
+                          onUse={onUse}
+                          onAssign={onAssign}
+                          onRecipeAssigned={onRecipeAssigned}
+                        />
                       </div>
                     ))}
                   </div>
@@ -303,7 +317,12 @@ export function ColourMatchTool({
           <>
             {paged.map((r) => (
               <div key={r.paint.id} className="flex items-center gap-3 border border-cyan/20 p-2">
-                <MatchRow result={r} onUse={onUse} onAssign={onAssign} />
+                <MatchRow
+                  result={r}
+                  onUse={onUse}
+                  onAssign={onAssign}
+                  onRecipeAssigned={onRecipeAssigned}
+                />
               </div>
             ))}
             {pageCount > 1 && (
@@ -358,10 +377,12 @@ function MatchRow({
   result,
   onUse,
   onAssign,
+  onRecipeAssigned,
 }: {
   result: MatchResult;
   onUse: (paint: Paint) => void;
-  onAssign: (paint: Paint) => void;
+  onAssign?: (paint: Paint) => void;
+  onRecipeAssigned?: (result: AssignedResult) => void;
 }) {
   const dE = result.distanceScore;
   const conf = confidence(dE);
@@ -414,14 +435,27 @@ function MatchRow({
         >
           Use
         </Button>
-        {/* MM-33 — ASSIGN is pastel purple; opens a recipe dropdown. */}
-        <Button
-          size="sm"
-          onClick={() => onAssign(result.paint)}
-          className="border-purple bg-purple/15 text-purple hover:bg-purple/25"
-        >
-          Assign
-        </Button>
+        {/* MM-33 — ASSIGN is pastel purple. Standalone Match tool gets the
+            shared 4-option menu (recipe / wishlist / owned); the recipe slot
+            picker's Match tab (onAssign, no onRecipeAssigned) keeps selecting
+            the paint straight into the slot. */}
+        {onRecipeAssigned ? (
+          <AssignPaintMenu
+            swatch={{ hex: result.paint.hex, paintId: result.paint.id, name: result.paint.name }}
+            onAssigned={onRecipeAssigned}
+            buttonClassName="border-purple bg-purple/15 text-purple hover:bg-purple/25"
+          />
+        ) : (
+          onAssign && (
+            <Button
+              size="sm"
+              onClick={() => onAssign(result.paint)}
+              className="border-purple bg-purple/15 text-purple hover:bg-purple/25"
+            >
+              Assign
+            </Button>
+          )
+        )}
       </div>
     </>
   );

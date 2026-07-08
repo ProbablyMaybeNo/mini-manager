@@ -15,7 +15,7 @@ export default function EyedropperPage() {
   const { toast, node } = useToast();
   const [assigning, setAssigning] = useState<{
     swatches: ToolSwatch[];
-    mode: "create" | "assign" | "both";
+    mode: "create" | "assign";
   } | null>(null);
 
   return (
@@ -27,7 +27,14 @@ export default function EyedropperPage() {
         onSavePalette={save}
         onCreateRecipe={(swatches) => setAssigning({ swatches, mode: "create" })}
         onAssignRecipe={(swatches) => setAssigning({ swatches, mode: "assign" })}
-        onAssignSwatch={(swatch) => setAssigning({ swatches: [swatch], mode: "both" })}
+        // Per-row ASSIGN — the shared 4-option menu (recipe / wishlist /
+        // owned). Extracted pins carry no paintId, so only the two recipe
+        // options ever show here.
+        onSwatchAssigned={(result) =>
+          result.created
+            ? router.push(`/recipes/${result.recipeId}`)
+            : toast(`Added to ${result.name}`, "green")
+        }
       />
       <AssignToRecipeDialog
         open={assigning != null}

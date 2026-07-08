@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ColourMatchTool } from "@/components/tools/ColourMatchTool";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { useToast } from "@/components/kit";
-import { AssignToRecipeDialog, type AssignSwatch } from "@/components/recipe/AssignToRecipeDialog";
 import { rankMatchesMulti } from "@/lib/toolMatch";
 import { useCatalog } from "../useCatalog";
 
@@ -13,7 +12,6 @@ export default function ColourMatchPage() {
   const paints = useCatalog();
   const router = useRouter();
   const { toast, node } = useToast();
-  const [assigning, setAssigning] = useState<AssignSwatch | null>(null);
   const brandOptions = useMemo(
     () => Array.from(new Set(paints.map((p) => p.brand))).sort(),
     [paints],
@@ -38,17 +36,9 @@ export default function ColourMatchPage() {
           void navigator.clipboard?.writeText(paint.hex);
           toast(`Copied ${paint.name} · ${paint.hex}`, "green");
         }}
-        // MM-33 — ASSIGN opens a dropdown of all recipes to add the paint into,
-        // in place, instead of navigating to the recipes page.
-        onAssign={(paint) =>
-          setAssigning({ hex: paint.hex, paintId: paint.id, name: paint.name })
-        }
-      />
-      <AssignToRecipeDialog
-        open={assigning != null}
-        swatches={assigning ? [assigning] : []}
-        onClose={() => setAssigning(null)}
-        onAssigned={(result) =>
+        // MM-33 — ASSIGN opens the shared 4-option menu (recipe / wishlist /
+        // owned) in place, instead of navigating to the recipes page.
+        onRecipeAssigned={(result) =>
           result.created
             ? router.push(`/recipes/${result.recipeId}`)
             : toast(`Added to ${result.name}`, "green")
