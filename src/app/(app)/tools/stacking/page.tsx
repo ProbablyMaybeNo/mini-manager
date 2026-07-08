@@ -21,7 +21,7 @@ export default function LayeringPage() {
   return (
     <ToolShell
       title="COLOR STACKING"
-      blurb="Build a shadow-to-highlight ramp, then stack translucent layers to see what colour they actually paint — every layer shows through the ones on top of it. Find the colours here; turn them into paints by sending them to a recipe."
+      blurb="Build a shadow-to-highlight ramp, then stack translucent layers to see what colour they actually paint — every layer shows through the ones on top of it. Assign real paints to a lane or layer, or work in raw colour and turn it into a paint later by sending it to a recipe."
     >
       <LayeringTool
         onSavePalette={save}
