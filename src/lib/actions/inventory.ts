@@ -7,6 +7,8 @@ import { db } from "@/db/client";
 import { inventoryEntries, type InventoryEntry } from "@/db/schema";
 import { getInventoryEntry, upsertInventoryEntry } from "@/db/queries/inventory";
 import { currentUserId } from "@/lib/auth-stub";
+import { auth } from "@/auth";
+import { loadInventoryFlags } from "@/lib/appData";
 import type { ActionResult } from "@/lib/actions/projects";
 
 const paintIdSchema = z.string().min(1).max(64);
@@ -20,6 +22,28 @@ const markPurchasedSchema = z.object({
   paintId: paintIdSchema,
   deltaCount: z.number().int().min(1).max(999),
 });
+
+/**
+ * LAYERING "MATCH" button — the owned-first grounding toggle. Lightweight
+ * read action surfaced directly to the client tool (same pattern as
+ * `listRecipesForSendTo`): the owned paint ids only, not the full
+ * {@link InventoryFlags} shape, since that's all the grounding toggle needs.
+ * Uses `auth()` directly (not `currentUserId()`) so a signed-out visitor
+ * browsing the tool (the guest preview) gets an empty set instead of being
+ * redirected to sign-in.
+ */
+export async function loadOwnedPaintIds(): Promise<ActionResult<string[]>> {
+  try {
+    const session = await auth();
+    const flags = await loadInventoryFlags(session?.user?.id ?? null);
+    return { ok: true, data: flags.ownedIds };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to load owned paints",
+    };
+  }
+}
 
 export async function setOwnedCount(
   raw: z.infer<typeof setOwnedSchema>,

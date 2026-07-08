@@ -89,7 +89,10 @@ export function buildRamp(input: BuildRampInput): string[] {
    Helpers — Lab interpolation + Lab → hex.
    ============================================================ */
 
-function lerp(a: LabColor, b: LabColor, t: number): LabColor {
+/** Lab-space linear interpolation — exported so other Lab-space derivations
+ *  (the LAYERING MATCH button's seed→derive math) reuse the ramp's own
+ *  interpolation instead of re-deriving it. */
+export function lerp(a: LabColor, b: LabColor, t: number): LabColor {
   return {
     L: a.L + (b.L - a.L) * t,
     a: a.a + (b.a - a.a) * t,
@@ -109,7 +112,8 @@ function clampInt(n: number, min: number, max: number): number {
 
 const D65 = { X: 0.95047, Y: 1.0, Z: 1.08883 } as const;
 
-function labToHex(lab: LabColor | null): string {
+/** Lab → hex, exported for the same reuse reason as {@link lerp}. */
+export function labToHex(lab: LabColor | null): string {
   if (!lab) return "#000000";
   const xyz = labToXyz(lab);
   const rgb = xyzToSrgb(xyz.X, xyz.Y, xyz.Z);
