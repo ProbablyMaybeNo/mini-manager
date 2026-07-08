@@ -5,7 +5,7 @@ import { Button, HexField, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { readableText } from "@/lib/color";
 import { resolveMatchTypeFilter } from "@/lib/toolMatch";
-import { ColorPickerPanel } from "./ColorPickerPanel";
+import { PaintPickerPanel } from "./PaintPickerPanel";
 import {
   buildHarmony,
   getHarmonyMeta,
@@ -16,6 +16,12 @@ import {
 import type { MatchResult, Paint } from "@/lib/types";
 
 const PAGE_SIZE = 50;
+
+// In harmony mode the painter gets several target hues at once, so a single
+// "best" paint per hue leaves them no room to choose. Offer the top few ranked
+// matches per harmony colour instead (rkhilarysignups-8609 review — "more than
+// one match possibility for each color").
+const HARMONY_MATCHES_PER_HUE = 3;
 
 /** ΔE2000 → "NN% color match" (MM-31). 0 ΔE = 100%; scaled so ~ΔE 20+ → 0%. */
 function matchPercent(deltaE: number): number {
@@ -94,7 +100,7 @@ export function ColourMatchTool({
     () =>
       harmonyHexes.map((h) => ({
         hex: h,
-        best: rankMatches(h, brandList, effectiveTypes, 1)[0] ?? null,
+        matches: rankMatches(h, brandList, effectiveTypes, HARMONY_MATCHES_PER_HUE),
       })),
     [harmonyHexes, brandList, effectiveTypes, rankMatches],
   );
@@ -268,19 +274,27 @@ export function ColourMatchTool({
         ) : harmony !== "off" ? (
           // MM-30 — closest paint per harmony hue
           <div className="flex flex-col gap-2">
-            {harmonyRows.map(({ hex: h, best }, i) => (
-              <div key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
+            {harmonyRows.map(({ hex: h, matches }, i) => (
+              <div key={i} className="flex items-start gap-3 border border-cyan/20 p-2">
                 <span
                   className="inline-flex h-10 min-w-[80px] items-center justify-center border border-fg/20 px-2 font-body text-body"
                   style={{ backgroundColor: h, color: readableText(h) }}
                 >
                   {h}
                 </span>
-                <span aria-hidden className="font-osd text-fg-faint">→</span>
-                {best ? (
-                  <MatchRow result={best} onUse={onUse} onAssign={onAssign} />
+                <span aria-hidden className="pt-3 font-osd text-fg-faint">→</span>
+                {matches.length > 0 ? (
+                  // Stack the top few ranked paints per harmony hue so the
+                  // painter can choose, not just accept the single closest.
+                  <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    {matches.map((m) => (
+                      <div key={m.paint.id} className="flex items-center gap-3">
+                        <MatchRow result={m} onUse={onUse} onAssign={onAssign} />
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <span className="flex-1 font-body text-body text-fg">No match</span>
+                  <span className="flex-1 pt-2 font-body text-body text-fg">No match</span>
                 )}
               </div>
             ))}
@@ -320,14 +334,16 @@ export function ColourMatchTool({
       </Panel>
 
       {enableLibraryPick && (
-        <ColorPickerPanel
+        // The PAINT PICKER PANEL (same tabbed panel the recipe paint picker uses)
+        // — not the wheel-only COLOR PICKER PANEL. No Match tab here: this panel
+        // only sets the target colour for the Match tool that opened it.
+        <PaintPickerPanel
           open={pickerOpen}
           onClose={() => setPickerOpen(false)}
           title="Pick a paint to match"
-          breadcrumb="MATCH ▸ PICK COLOUR"
+          breadcrumb="MATCH ▸ PAINT PICKER"
+          note="// choosing a paint sets the colour to match"
           initialHex={valid ? hex : null}
-          showLibrary
-          showEyedropper={false}
           closeOnSelect
           onSelect={(sel) => setHex(sel.hex)}
         />
