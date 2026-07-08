@@ -61,7 +61,6 @@ export function ColorPicker({
   mode = "add-slot",
   showEyedropper = true,
   showLibrary = true,
-  confirmSelection = false,
 }: {
   paints: ReadonlyArray<Paint>;
   catalogLoading?: boolean;
@@ -76,11 +75,6 @@ export function ColorPicker({
    *  Stacking tool (lvIX6p — colours-only, no "closest paint" pretense on a
    *  colour that isn't grounded yet). */
   showLibrary?: boolean;
-  /** Recipe flow: instead of adding a paint on a single click, a library row
-   *  highlights to select and an explicit ADD PAINT button commits it — and
-   *  the bare "use this colour" wheel shortcut is dropped, so only real catalog
-   *  paints land on a slot. Defaults off (the tools keep instant single-click). */
-  confirmSelection?: boolean;
 }) {
   const seedHsl = useMemo(() => {
     if (value?.hex) {
@@ -122,8 +116,6 @@ export function ColorPicker({
   // checkbox list of the distinct brands in the catalog, AND-composed with
   // the search + ΔE cap.
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  // Recipe confirm-flow: the highlighted-but-not-yet-added library paint.
-  const [pendingPaint, setPendingPaint] = useState<{ hex: string; paintId: string } | null>(null);
 
   const brandOptions = useMemo(
     () => Array.from(new Set(paints.map((p) => p.brand))).sort(),
@@ -188,9 +180,8 @@ export function ColorPicker({
 
   const emitHex = (hex: string) => onSelect({ hex, paintId: null });
   const emitPaint = (hex: string, paintId: string) => onSelect({ hex, paintId });
-  // Which library row reads as selected: the pending highlight in confirm mode,
-  // otherwise the seed selection passed by the host.
-  const highlightedPaintId = confirmSelection ? pendingPaint?.paintId : value?.paintId;
+  // Which library row reads as selected: the seed selection passed by the host.
+  const highlightedPaintId = value?.paintId;
 
   return (
     <div
@@ -220,11 +211,9 @@ export function ColorPicker({
             {pickedHex}
             {band ? <span className="text-fg"> · {band}</span> : null}
           </span>
-          {!confirmSelection && (
-            <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
-              Use this colour
-            </Button>
-          )}
+          <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
+            Use this colour
+          </Button>
         </div>
 
         <label className="flex items-center gap-2">
@@ -293,11 +282,7 @@ export function ColorPicker({
             <li key={m.paint.id}>
               <button
                 type="button"
-                onClick={() =>
-                  confirmSelection
-                    ? setPendingPaint({ hex: m.paint.hex, paintId: m.paint.id })
-                    : emitPaint(m.paint.hex, m.paint.id)
-                }
+                onClick={() => emitPaint(m.paint.hex, m.paint.id)}
                 className={cn(
                   "flex w-full items-center gap-3 border border-cyan/20 px-2 py-1.5 text-left transition-colors hover:border-cyan hover:bg-cyan/5",
                   highlightedPaintId === m.paint.id && "border-cyan bg-cyan/10",
@@ -387,19 +372,6 @@ export function ColorPicker({
               })}
             </div>
           </div>
-        )}
-
-        {/* Recipe confirm-flow: highlight a library paint, then ADD PAINT commits
-            that specific catalog paint to the slot. Disabled until one is picked. */}
-        {confirmSelection && (
-          <Button
-            size="sm"
-            disabled={!pendingPaint}
-            onClick={() => pendingPaint && emitPaint(pendingPaint.hex, pendingPaint.paintId)}
-            className="self-start"
-          >
-            Add Paint
-          </Button>
         )}
       </section>
       </>
