@@ -19,9 +19,8 @@ vi.mock("@/lib/auth-stub", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { setOwnedCount, toggleWishlistedPaint, markPurchased } = await import(
-  "@/lib/actions/inventory"
-);
+const { setOwnedCount, toggleWishlistedPaint, markPurchased, addPaintToOwned, addPaintToWishlist } =
+  await import("@/lib/actions/inventory");
 
 const PAINT = "citadel-mephiston-red";
 
@@ -118,6 +117,70 @@ describe("markPurchased", () => {
   test("rejects a non-positive delta", async () => {
     const res = await markPurchased({ paintId: PAINT, deltaCount: 0 });
     expect(res.ok).toBe(false);
+  });
+});
+
+describe("addPaintToOwned", () => {
+  test("marks a never-owned paint owned at count 1", async () => {
+    const res = await addPaintToOwned({ paintId: PAINT });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.already).toBe(false);
+    expect(res.data.entry.ownedCount).toBe(1);
+  });
+
+  test("does not clobber an existing higher count down to 1", async () => {
+    await setOwnedCount({ paintId: PAINT, count: 5 });
+    const res = await addPaintToOwned({ paintId: PAINT });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.already).toBe(true);
+    expect(res.data.entry.ownedCount).toBe(5);
+
+    const rows = await state.db!.select().from(inventoryEntries);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.ownedCount).toBe(5);
+  });
+
+  test("a zero count is treated as not-yet-owned and raised to 1", async () => {
+    await setOwnedCount({ paintId: PAINT, count: 0 });
+    const res = await addPaintToOwned({ paintId: PAINT });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.already).toBe(false);
+    expect(res.data.entry.ownedCount).toBe(1);
+  });
+});
+
+describe("addPaintToWishlist", () => {
+  test("wishlists a paint that isn't on it yet", async () => {
+    const res = await addPaintToWishlist({ paintId: PAINT });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.already).toBe(false);
+    expect(res.data.entry.isWishlisted).toBe(true);
+  });
+
+  test("does not toggle an already-wishlisted paint back off", async () => {
+    await toggleWishlistedPaint({ paintId: PAINT });
+    const res = await addPaintToWishlist({ paintId: PAINT });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.already).toBe(true);
+    expect(res.data.entry.isWishlisted).toBe(true);
+
+    const rows = await state.db!.select().from(inventoryEntries);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.isWishlisted).toBe(true);
+  });
+
+  test("preserves owned count when adding to the wishlist", async () => {
+    await setOwnedCount({ paintId: PAINT, count: 4 });
+    const res = await addPaintToWishlist({ paintId: PAINT });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.entry.isWishlisted).toBe(true);
+    expect(res.data.entry.ownedCount).toBe(4);
   });
 });
 

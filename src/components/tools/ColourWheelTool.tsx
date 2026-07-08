@@ -19,6 +19,7 @@ import {
 } from "@/lib/tools/wheel/schemeFill";
 import { captionScrim, readableText } from "@/lib/color";
 import type { Paint, ToolSwatch } from "@/lib/types";
+import { AssignPaintMenu, type AssignedResult } from "@/components/recipe/AssignPaintMenu";
 import { WheelCanvas, type WheelStop } from "./WheelCanvas";
 
 const MIN_SLOTS = 1;
@@ -49,6 +50,7 @@ export function ColourWheelTool({
   onSavePalette,
   onSendToRecipe,
   onAssignPaint,
+  onSwatchAssigned,
   seedHex,
 }: {
   closestPaint: (hex: string) => Paint | null;
@@ -62,8 +64,15 @@ export function ColourWheelTool({
    *  every slot's hex, in on-screen order, whether or not it has a matched
    *  paint (CIzKX: colours carry even when there's no close catalog match). */
   onSendToRecipe: (swatches: ToolSwatch[]) => void;
-  /** Opens the shared ColorPicker to assign a real paint to a planned swatch. */
+  /** "More matches" alternates disclosure — a quick-pick paint chip, not the
+   *  labeled ASSIGN button, so it keeps its original single-click behaviour
+   *  (straight to the recipe-only chooser) rather than opening the 4-option
+   *  menu. Omit to hide the alternates' click affordance. */
   onAssignPaint?: (hex: string) => void;
+  /** The per-slot labeled "Assign" button — opens the shared
+   *  {@link AssignPaintMenu} (recipe / wishlist / owned). Omit to hide the
+   *  button entirely (e.g. an embedding with no recipe context). */
+  onSwatchAssigned?: (result: AssignedResult) => void;
   /** Deep-link seed (`?hex`/resolved `?name`) — sets the primary pick. */
   seedHex?: string | null;
 }) {
@@ -387,15 +396,13 @@ export function ColourWheelTool({
                       <span className="font-body text-body text-fg">No match</span>
                     )}
                   </div>
-                  {onAssignPaint && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="min-h-11 shrink-0"
-                      onClick={() => onAssignPaint(hex)}
-                    >
-                      Assign
-                    </Button>
+                  {onSwatchAssigned && (
+                    <AssignPaintMenu
+                      swatch={{ hex, paintId: paint?.id ?? null, name: paint?.name }}
+                      onAssigned={onSwatchAssigned}
+                      buttonVariant="secondary"
+                      buttonClassName="min-h-11 shrink-0"
+                    />
                   )}
                   <button
                     type="button"

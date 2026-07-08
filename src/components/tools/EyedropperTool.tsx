@@ -7,6 +7,7 @@ import { extractDominantColors } from "@/lib/tools/eyedropper/kmeans";
 import { imageToPixels, validateImageBlob, type SampledImage } from "@/lib/tools/eyedropper/sample";
 import { placePins } from "@/lib/tools/eyedropper/pinPlacement";
 import type { ToolSwatch } from "@/lib/types";
+import { AssignPaintMenu, type AssignedResult } from "@/components/recipe/AssignPaintMenu";
 import { EyedropperPins, type Pin } from "./EyedropperPins";
 import { CameraSampler, isCameraSamplerSupported } from "./CameraSampler";
 
@@ -37,7 +38,7 @@ export function EyedropperTool({
   onSavePalette,
   onCreateRecipe,
   onAssignRecipe,
-  onAssignSwatch,
+  onSwatchAssigned,
 }: {
   onSavePalette: (hexes: string[]) => void;
   /** Start a brand-new recipe from every swatch. Omit to hide the button
@@ -45,9 +46,11 @@ export function EyedropperTool({
   onCreateRecipe?: (swatches: ToolSwatch[]) => void;
   /** Append every swatch to an existing recipe. Omit to hide the button. */
   onAssignRecipe?: (swatches: ToolSwatch[]) => void;
-  /** Per-row "Assign" — send just this one colour to a recipe. Omit to hide
-   *  the per-row button. */
-  onAssignSwatch?: (swatch: ToolSwatch) => void;
+  /** Per-row "Assign" — opens the shared {@link AssignPaintMenu} for just
+   *  this one colour. Extracted pins never carry a `paintId` (this tool
+   *  finds colours, not paints — dOySZp), so the menu always shows the two
+   *  recipe options only. Omit to hide the per-row button. */
+  onSwatchAssigned?: (result: AssignedResult) => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sampled, setSampled] = useState<SampledImage | null>(null);
@@ -225,10 +228,12 @@ export function EyedropperTool({
                 style={{ backgroundColor: hex }}
               />
               <span className="flex-1 font-body text-body text-fg">{hex}</span>
-              {onAssignSwatch && (
-                <Button size="sm" variant="secondary" onClick={() => onAssignSwatch({ hex })}>
-                  Assign
-                </Button>
+              {onSwatchAssigned && (
+                <AssignPaintMenu
+                  swatch={{ hex }}
+                  onAssigned={onSwatchAssigned}
+                  buttonVariant="secondary"
+                />
               )}
               <CloseButton
                 tone="destructive"

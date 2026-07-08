@@ -57,11 +57,19 @@ function ColourWheelRoute() {
         // not) go into the create-or-assign chooser instead of discarding
         // them on a bare navigate.
         onSendToRecipe={(swatches) => setAssigning([...swatches])}
-        // Per-swatch "assign paint" → assign that planned colour into a recipe.
+        // "More matches" alternates — a quick-pick chip, unchanged: straight
+        // to the recipe-only chooser (not the labeled ASSIGN button).
         onAssignPaint={(hex) => {
           const p = closestPaint(hex, paints);
           setAssigning([{ hex, paintId: p?.id ?? null, name: p?.name }]);
         }}
+        // The labeled per-slot "Assign" button — the shared 4-option menu
+        // (recipe / wishlist / owned).
+        onSwatchAssigned={(result) =>
+          result.created
+            ? router.push(`/recipes/${result.recipeId}`)
+            : toast(`Added to ${result.name}`, "green")
+        }
       />
       <AssignToRecipeDialog
         open={assigning != null}
