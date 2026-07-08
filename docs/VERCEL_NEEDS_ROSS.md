@@ -1,10 +1,11 @@
 # Vercel comments — Ross's decision queue
 
 **Snapshot:** 2026-07-08 (cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
-**6 unresolved threads awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**6 unresolved threads awaiting your call + 1 BLOCKED on a broken CI gate.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-07-08, cron pass):** shipped **1**, posted **0** new clarifying questions.
-> - Shipped `1e6NuOqXabYV` — /dashboard "change DASHBOARD to PROJECTS across the whole app". The label rename existed as **PR #106** but that PR was based off `fix/library-list-header-opaque` (a non-`main` branch) and pointed its base there, not at `main` — the documented never-reaches-prod failure mode, so production `/dashboard` still read "DASHBOARD". Re-landed the exact vetted diff (17 files, label-only + e2e assertion alignment; typecheck 0, unit 634/634) on `main` through the gated loop, verified prod, then resolved. Same corrective pattern as `XvJwNsHNE89S` last run.
+> **⚠️ This run (2026-07-08, cron pass): 1 fix ready but BLOCKED — `main`'s CI is red.**
+> - `1e6NuOqXabYV` (/dashboard, "change DASHBOARD to PROJECTS across the whole app") — clean, bounded label rename. The change already existed as **PR #106** but that PR targeted base `fix/library-list-header-opaque`, **not `main`** (the documented never-reaches-prod failure mode), so production `/dashboard` still reads "DASHBOARD". Re-landed the exact vetted diff on `main` as **PR #110** (17 files, label-only + e2e assertion alignment). CI's Typecheck/unit/integration/build job is **green**, but the **Playwright E2E** job is **RED** — and it's red on `main` too, on 5 pre-existing failures unrelated to this rename: `qa_credentials_signup` (M9.3), `qa_credentials_signin` (M9.4 ×2), `qa_billing_upgrade` (M8.1, M8.2). All five fail at the auth flow itself — after "create account" the app no longer lands on `/dashboard` within 45s (the email-verification feature added in `cec7f91` changed the post-signup redirect), so they time out before any heading assertion. **Left PR #110 open, did NOT merge, did NOT resolve the thread — needs a human.** Fixing the auth/billing E2E (or the feature) is a large change outside safe auto-fix scope.
+>   - **🔴 Repo-wide blocker for Ross:** `main`'s merge gate is currently red on those 5 auth/billing E2E tests (commits `cec7f91`, `4025301e` both failed identically). Until they're fixed, **no** Vercel-comment fix can pass CI and merge. Either repair the post-signup redirect so signup lands on `/dashboard`, or update the M8/M9 specs to match the new email-verification flow.
 > - `XeheRPMOLslU` (/tools/match — reuse the recipe PAINT PICKER PANEL for COLOR MATCH) is a large feature already carrying a "picked up" note from another Claude Code task (`t_8083d79c`, PR to follow); left it to that run and did not touch it.
 > - The 6 threads below already carry a clarifying question from earlier runs and are still waiting on you — no new action, listed so they don't get lost. (`XzIZJoGqnY-a` resolved since the last pass → dropped from the table, 7 → 6.)
 >
@@ -48,7 +49,6 @@ Landed on `main` and resolved after prod verify — kept here only so the loop d
 
 | Thread | Change |
 |---|---|
-| `1e6NuOqXabYV` | User-facing "DASHBOARD" label → "PROJECTS" app-wide (nav rail, phone nav, page header, breadcrumbs, tour, 404 link, landing card) — this run, re-landed on `main` from the stranded PR #106, `src/components/shell/nav.ts` + 9 more |
 | `WcnTP2Vzy1hM` | Library list-view sticky header made fully opaque (`bg-bg/95` → solid) — PR #91 (`de3b6fe`), `src/components/library/PaintListTable.tsx` |
 | `C3ygtbGZufsu` | Homepage hero tagline → bright neon green (`#39ff14`) + subtle glow — PR #92 (`f4c2de7`) |
 | `g_ypRnCdHcCC` | Stacking page blurb "…stack on a **substrate**" → "…stack on an **undercoat**" |
