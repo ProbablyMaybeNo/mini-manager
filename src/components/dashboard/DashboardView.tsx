@@ -7,10 +7,7 @@ import { PageHeader } from "@/components/shell";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
 import { cn } from "@/lib/cn";
 import { rollupProjectMinutes } from "@/lib/projectTime";
-import {
-  projectMatchesRoster,
-  sortRoster,
-} from "@/lib/rosterStatus";
+import { sortRoster } from "@/lib/rosterStatus";
 import type {
   ActivityEntry,
   CalendarEvent,
@@ -25,11 +22,7 @@ import {
 } from "./projectCreateWalkthroughData";
 import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectsTable } from "./ProjectsTable";
-import {
-  RosterFilterBar,
-  type RosterFilter,
-  type RosterSort,
-} from "./RosterFilterBar";
+import { RosterFilterBar, type RosterSort } from "./RosterFilterBar";
 import { RightRail } from "./RightRail";
 import { WelcomeCard } from "./WelcomeCard";
 
@@ -103,11 +96,10 @@ export function DashboardView({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   // RF-11: the mobile full-screen PLANNER, opened from the Upcoming-Events bar.
   const [plannerOpen, setPlannerOpen] = useState(false);
-  // Roster filter-chip row + SORT (4:4). Filter buckets are derived from each
-  // project's completion + lifecycle status (see lib/rosterStatus); SORT
-  // reorders the visible top-level rows. Both are view-only — they never mutate
-  // the underlying data, so a row's stored status pill is unchanged.
-  const [rosterFilter, setRosterFilter] = useState<RosterFilter>("ALL");
+  // Roster SORT (4:4) — reorders the visible top-level rows. View-only; never
+  // mutates the underlying data. (The status filter-chip row was removed: the
+  // derived buckets didn't match the projects' real status pills and read as
+  // noise above the table.)
   const [rosterSort, setRosterSort] = useState<RosterSort>("completion-desc");
   // Phase 2: the project FLOW panel (Army/Unit, 440px overlay). A row-click
   // First-create walkthrough: armed by the open-on-create effect the FIRST
@@ -127,15 +119,11 @@ export function DashboardView({
   const todayIso = new Date().toISOString().slice(0, 10);
   const upcomingEvents = events.filter((e) => e.date >= todayIso);
 
-  // Roster filter + sort applied to the TOP-LEVEL rows. A container matches a
-  // filter if it or any sub-project matches, so a filtered Army still drills.
-  const visibleProjects = useMemo(() => {
-    const filtered =
-      rosterFilter === "ALL"
-        ? projects
-        : projects.filter((p) => projectMatchesRoster(p, rosterFilter, undefined, todayIso));
-    return sortRoster(filtered, rosterSort, (p) => rollupProjectMinutes(p, projectMinutes));
-  }, [projects, rosterFilter, rosterSort, projectMinutes, todayIso]);
+  // Roster SORT applied to the TOP-LEVEL rows.
+  const visibleProjects = useMemo(
+    () => sortRoster(projects, rosterSort, (p) => rollupProjectMinutes(p, projectMinutes)),
+    [projects, rosterSort, projectMinutes],
+  );
 
   // A row click opens the full project inspector (ProjectPanelStack →
   // ProjectWorkspaceBody) — one panel with everything editable: name, type,
@@ -248,24 +236,13 @@ export function DashboardView({
                   roster isn't pushed below the fold (UX-010). */}
               <WelcomeCard hasProjects={projects.length > 0} />
               <div data-tour="dashboard-projects" className="flex flex-col gap-4">
-                {/* Section header row (4:58): PROJECTS ROSTER label + filter /
-                    add-project icon affordances at the right edge. */}
+                {/* Section header row (4:58): PROJECTS ROSTER label + add-project
+                    affordance at the right edge. */}
                 <div className="flex items-center justify-between">
                   <h2 className="label-osd text-fg">PROJECTS ROSTER</h2>
-                  {/* ≥24px padded hit area around the 16px glyph (UX-003 /
-                      WCAG 2.2 §2.5.8); gap-2 keeps the two targets from
-                      colliding. The glyph size is unchanged — only the button
-                      box grows. */}
+                  {/* ≥44px tap target around the 16px glyph (UX-003 / WCAG 2.2
+                      §2.5.8); the box grows, glyph size unchanged. */}
                   <div className="flex items-center gap-2 text-fg-dim">
-                    <button
-                      type="button"
-                      aria-label="Filter roster"
-                      title="Filter roster"
-                      onClick={() => setRosterFilter((f) => (f === "ALL" ? "IN PROGRESS" : "ALL"))}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
-                    >
-                      <FilterIcon />
-                    </button>
                     <button
                       type="button"
                       aria-label="New project"
@@ -277,41 +254,21 @@ export function DashboardView({
                     </button>
                   </div>
                 </div>
-                {/* Filter-chip row + SORT (4:4). Hidden when the painter has no
-                    projects yet — the empty roster CTA carries the moment. */}
+                {/* SORT control (4:4). Hidden when the painter has no projects
+                    yet — the empty roster CTA carries the moment. */}
                 {projects.length > 0 && (
-                  <RosterFilterBar
-                    filter={rosterFilter}
-                    sort={rosterSort}
-                    onFilterChange={setRosterFilter}
-                    onSortChange={setRosterSort}
-                  />
+                  <RosterFilterBar sort={rosterSort} onSortChange={setRosterSort} />
                 )}
                 {/* Roster table in a bordered 12px container per 4:4. */}
                 <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
-                  {projects.length > 0 && visibleProjects.length === 0 ? (
-                    // Filtered to zero, but the painter HAS projects — show a
-                    // filter-aware empty hint instead of the first-run CTA.
-                    <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-                      <p className="label-osd text-fg-dim">No projects match “{rosterFilter}”</p>
-                      <button
-                        type="button"
-                        onClick={() => setRosterFilter("ALL")}
-                        className="font-mono text-body text-cyan-lite underline-offset-4 hover:underline"
-                      >
-                        Clear filter
-                      </button>
-                    </div>
-                  ) : (
-                    <ProjectsTable
-                      projects={visibleProjects}
-                      projectMinutes={projectMinutes}
-                      selectedId={selected?.id}
-                      onOpenProject={openProject}
-                      onAttachRecipe={(p) => onAttachRecipe?.(p)}
-                      onAddProject={startCreate}
-                    />
-                  )}
+                  <ProjectsTable
+                    projects={visibleProjects}
+                    projectMinutes={projectMinutes}
+                    selectedId={selected?.id}
+                    onOpenProject={openProject}
+                    onAttachRecipe={(p) => onAttachRecipe?.(p)}
+                    onAddProject={startCreate}
+                  />
                 </div>
                 {/* In the empty state the welcome card + the table's
                     "+ Create your first project" CTA already carry create, so
@@ -377,20 +334,6 @@ export function DashboardView({
         />
       )}
     </div>
-  );
-}
-
-/** Filter-funnel icon by the PROJECTS ROSTER header (4:327). */
-function FilterIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M1.5 2.5h13l-5 6v4l-3 1.5V8.5l-5-6z"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
