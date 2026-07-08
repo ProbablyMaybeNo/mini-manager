@@ -28,6 +28,7 @@ export function ReportIssueButton({
   const [details, setDetails] = useState("");
   const [severity, setSeverity] = useState<Severity>("Medium");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+  const [freeForever, setFreeForever] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function close() {
@@ -38,6 +39,7 @@ export function ReportIssueButton({
       setDetails("");
       setSeverity("Medium");
       setState("idle");
+      setFreeForever(false);
       setError(null);
     }, 200);
   }
@@ -64,8 +66,10 @@ export function ReportIssueButton({
       const data = (await res.json().catch(() => ({ ok: false }))) as {
         ok?: boolean;
         error?: string;
+        freeForever?: boolean;
       };
       if (res.ok && data.ok) {
+        if (data.freeForever) setFreeForever(true);
         setState("sent");
       } else {
         setState("idle");
@@ -105,7 +109,9 @@ export function ReportIssueButton({
         {state === "sent" ? (
           <div className="flex flex-col gap-3">
             <p className="font-body text-body text-green text-glow-green">
-              ▸ Thanks — your report was logged. We’re on it.
+              {freeForever
+                ? "🎉 You’re FREE FOREVER — thanks for helping test. Your account keeps full access for good."
+                : "▸ Thanks — your report was logged. We’re on it."}
             </p>
             <Button onClick={close} className="self-start">
               Close

@@ -103,7 +103,7 @@ export const PLAN_PRICE: Readonly<Record<PlanTier, string>> = Object.freeze({
  */
 export type PlanRelevantUser = Pick<
   User,
-  "plan" | "planExpiresAt" | "founderClaimedAt"
+  "plan" | "planExpiresAt" | "founderClaimedAt" | "freeForeverGrantedAt"
 >;
 
 /**
@@ -123,6 +123,11 @@ export type PlanRelevantUser = Pick<
  * if the user's plan string gets reset.
  */
 export function getPlanForUser(user: PlanRelevantUser, now: Date = new Date()): PlanTier {
+  // Testing-period free-forever grant → permanent full access (never lapses),
+  // resolved as pro_lifetime (the unlimited, no-expiry tier).
+  if (user.freeForeverGrantedAt) {
+    return "pro_lifetime";
+  }
   if (user.founderClaimedAt) {
     return "founder";
   }

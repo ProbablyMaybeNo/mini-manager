@@ -8,28 +8,35 @@ import { Logo } from "@/components/shell";
 
 export type AuthMode = "sign-in" | "sign-up";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function AuthView({
   mode,
   onSubmit,
   from,
 }: {
   mode: AuthMode;
-  onSubmit: (username: string, password: string) => void;
+  onSubmit: (username: string, password: string, email?: string) => void;
   /** Post-auth return path, preserved across the sign-in ↔ sign-up switch
    *  link so an in-progress upgrade survives switching forms. */
   from?: string;
 }) {
+  const isSignUp = mode === "sign-up";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [touched, setTouched] = useState(false);
   // UX-015: show/hide password toggle so the painter can verify what they typed.
   const [showPassword, setShowPassword] = useState(false);
 
   const userError = touched && username.trim().length < 3 ? "Min 3 characters" : undefined;
   const passError = touched && password.length < 8 ? "Min 8 characters" : undefined;
-  const valid = username.trim().length >= 3 && password.length >= 8;
-
-  const isSignUp = mode === "sign-up";
+  const emailError =
+    touched && isSignUp && !EMAIL_RE.test(email.trim()) ? "Enter a valid email" : undefined;
+  const valid =
+    username.trim().length >= 3 &&
+    password.length >= 8 &&
+    (!isSignUp || EMAIL_RE.test(email.trim()));
   const switchTo = isSignUp ? "/sign-in" : "/sign-up";
   const switchHref = from
     ? `${switchTo}?from=${encodeURIComponent(from)}`
@@ -55,7 +62,7 @@ export function AuthView({
           onSubmit={(e) => {
             e.preventDefault();
             setTouched(true);
-            if (valid) onSubmit(username.trim(), password);
+            if (valid) onSubmit(username.trim(), password, isSignUp ? email.trim() : undefined);
           }}
         >
           <Input
@@ -66,6 +73,17 @@ export function AuthView({
             error={userError}
             onChange={(e) => setUsername(e.target.value)}
           />
+          {isSignUp && (
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              error={emailError}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          )}
           <Input
             label="Password"
             name="password"
@@ -120,9 +138,9 @@ export function AuthView({
             Free forever for testers
           </p>
           <p className="mt-1.5 font-body text-[12px] leading-relaxed text-fg-dim">
-            Sign up and send feedback — in the app or via the Beacon Hobbies
-            Discord — and your account stays free for good. Limited spots before
-            some features move behind a paywall.
+            Sign up with your email, verify it, and send feedback — in the app
+            or via the Beacon Hobbies Discord — and your account stays free for
+            good. Limited spots before some features move behind a paywall.
           </p>
           <p className="mt-2 font-body text-[12px] leading-relaxed text-fg-dim">
             Just exploring? Go ahead — the whole app is free for everyone during

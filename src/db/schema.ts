@@ -61,6 +61,10 @@ export const users = sqliteTable("user", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   planExpiresAt: integer("plan_expires_at", { mode: "timestamp_ms" }),
   founderClaimedAt: integer("founder_claimed_at", { mode: "timestamp_ms" }),
+  // Testing-period entitlement — set when a verified-email tester submits
+  // feedback; getPlanForUser treats it as permanent Pro (free forever), so it
+  // overrides the paywall once BILLING_ENFORCED flips on.
+  freeForeverGrantedAt: integer("free_forever_granted_at", { mode: "timestamp_ms" }),
   recoveryEmail: text("recovery_email"),
   recoveryEmailVerified: integer("recovery_email_verified", {
     mode: "timestamp_ms",

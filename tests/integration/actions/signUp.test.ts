@@ -59,6 +59,7 @@ describe("signUpWithCredentials", () => {
     const res = await signUpWithCredentials({
       username: "alice42",
       password: "hunter222",
+      email: "alice42@test.dev",
     });
 
     expect(res.ok).toBe(true);
@@ -72,7 +73,7 @@ describe("signUpWithCredentials", () => {
     expect(rows[0]!.username).toBe("alice42");
     expect(rows[0]!.passwordHash).toMatch(/^\$2[aby]\$/);
     expect(rows[0]!.plan).toBe("free");
-    expect(rows[0]!.email).toBeNull();
+    expect(rows[0]!.email).toBe("alice42@test.dev");
 
     // Cookie has been set under the NextAuth name.
     expect(cookieStore.get(SESSION_COOKIE)?.value).toBeTruthy();
@@ -82,6 +83,7 @@ describe("signUpWithCredentials", () => {
     const res = await signUpWithCredentials({
       username: "  ALICE42  ",
       password: "hunter222",
+      email: "alice-caps@test.dev",
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
@@ -98,12 +100,14 @@ describe("signUpWithCredentials", () => {
     await signUpWithCredentials({
       username: "alice42",
       password: "hunter222",
+      email: "alice42@test.dev",
     });
     cookieStore.store.clear();
 
     const dup = await signUpWithCredentials({
       username: "Alice42",
       password: "different-pw",
+      email: "alice-dup@test.dev",
     });
     expect(dup.ok).toBe(false);
     if (dup.ok) return;
@@ -115,6 +119,7 @@ describe("signUpWithCredentials", () => {
     const res = await signUpWithCredentials({
       username: "bob",
       password: "short",
+      email: "bob@test.dev",
     });
     expect(res.ok).toBe(false);
     if (res.ok) return;
@@ -125,6 +130,7 @@ describe("signUpWithCredentials", () => {
     const res = await signUpWithCredentials({
       username: "admin",
       password: "longenoughpw",
+      email: "admin@test.dev",
     });
     expect(res.ok).toBe(false);
     if (res.ok) return;
@@ -136,6 +142,7 @@ describe("signUpWithCredentials", () => {
     const res = await signUpWithCredentials({
       username: "alice.42",
       password: "longenoughpw",
+      email: "alice-dot@test.dev",
     });
     expect(res.ok).toBe(false);
     if (res.ok) return;
@@ -148,6 +155,7 @@ describe("signInWithCredentials", () => {
     await signUpWithCredentials({
       username: "alice42",
       password: "hunter222",
+      email: "alice42@test.dev",
     });
     cookieStore.store.clear();
 
@@ -165,6 +173,7 @@ describe("signInWithCredentials", () => {
     await signUpWithCredentials({
       username: "alice42",
       password: "hunter222",
+      email: "alice42@test.dev",
     });
 
     const res = await signInWithCredentials({
@@ -178,6 +187,7 @@ describe("signInWithCredentials", () => {
     await signUpWithCredentials({
       username: "alice42",
       password: "hunter222",
+      email: "alice42@test.dev",
     });
 
     const res = await signInWithCredentials({

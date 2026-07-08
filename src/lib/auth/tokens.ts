@@ -11,6 +11,7 @@ export const RECOVERY_EMAIL_TOKEN_SCOPE = "recovery-email";
 
 /** Identifier scope for password-reset tokens (P9.6). */
 export const PASSWORD_RESET_TOKEN_SCOPE = "password-reset";
+export const SIGNUP_EMAIL_TOKEN_SCOPE = "signup-email";
 
 /** Both flows use a 1-hour token lifetime. */
 export const VERIFY_TOKEN_LIFETIME_MS = 60 * 60 * 1000;

@@ -15,6 +15,7 @@ export default async function AccountPage() {
         plan: users.plan,
         planExpiresAt: users.planExpiresAt,
         founderClaimedAt: users.founderClaimedAt,
+        freeForeverGrantedAt: users.freeForeverGrantedAt,
       })
       .from(users)
       .where(eq(users.id, userId))

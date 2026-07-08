@@ -37,11 +37,13 @@ export async function signInAction(input: {
 export async function signUpAction(input: {
   username: string;
   password: string;
+  email: string;
   next?: string;
 }): Promise<AuthResult | never> {
   const res = await signUpWithCredentials({
     username: input.username,
     password: input.password,
+    email: input.email,
   });
   if (!res.ok) return { ok: false, message: res.message };
   redirect(safePostAuthPath(input.next));

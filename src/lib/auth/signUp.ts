@@ -3,9 +3,15 @@
 import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { users, verificationTokens } from "@/db/schema";
 import { hashPassword, verifyPassword } from "./password";
 import { createSession } from "./session";
+import { sendVerificationEmail } from "./sendVerificationEmail";
+import {
+  SIGNUP_EMAIL_TOKEN_SCOPE,
+  tokenIdentifier,
+  VERIFY_TOKEN_LIFETIME_MS,
+} from "./tokens";
 import {
   PASSWORD_ERROR_COPY,
   USERNAME_ERROR_COPY,
@@ -13,9 +19,11 @@ import {
   validateUsername,
 } from "./validation";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export type SignUpResult =
   | { ok: true; userId: string; username: string }
-  | { ok: false; field: "username" | "password" | "form"; message: string };
+  | { ok: false; field: "username" | "password" | "email" | "form"; message: string };
 
 /**
  * Create a free-tier account with username + password. No email — email
@@ -28,6 +36,7 @@ export type SignUpResult =
 export async function signUpWithCredentials(input: {
   username: string;
   password: string;
+  email: string;
 }): Promise<SignUpResult> {
   const u = validateUsername(input.username);
   if (!u.ok && u.error) {
@@ -44,6 +53,15 @@ export async function signUpWithCredentials(input: {
       ok: false,
       field: "password",
       message: PASSWORD_ERROR_COPY[p.error],
+    };
+  }
+
+  const email = input.email.trim().toLowerCase();
+  if (!EMAIL_RE.test(email) || email.length > 254) {
+    return {
+      ok: false,
+      field: "email",
+      message: "Enter a valid email address",
     };
   }
 
@@ -64,6 +82,19 @@ export async function signUpWithCredentials(input: {
     };
   }
 
+  const emailTaken = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  if (emailTaken[0]) {
+    return {
+      ok: false,
+      field: "email",
+      message: "That email is already registered",
+    };
+  }
+
   const hash = await hashPassword(input.password);
   const userId = nanoid(16);
 
@@ -75,12 +106,43 @@ export async function signUpWithCredentials(input: {
     // together.
     name: u.normalized,
     username: u.normalized,
+    email,
     passwordHash: hash,
     plan: "free",
   });
 
   await createSession(userId);
+  // Fire the email-verification link (the real-email gate for the testing
+  // period's free-forever reward). Non-fatal — the account already exists, and
+  // without AUTH_RESEND_KEY the link is console-logged in dev.
+  try {
+    await issueSignupEmailToken(userId, email);
+  } catch {
+    // swallow: the user can re-request verification later.
+  }
   return { ok: true, userId, username: u.normalized };
+}
+
+function signupVerifyUrl(token: string): string {
+  const base =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.AUTH_URL ??
+    "http://localhost:3000";
+  return `${base.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
+}
+
+/** Issue a one-time signup email-verification token and send the link. */
+async function issueSignupEmailToken(userId: string, email: string): Promise<void> {
+  const identifier = tokenIdentifier(SIGNUP_EMAIL_TOKEN_SCOPE, userId);
+  await db.delete(verificationTokens).where(eq(verificationTokens.identifier, identifier));
+  const token = nanoid(40);
+  const expires = new Date(Date.now() + VERIFY_TOKEN_LIFETIME_MS);
+  await db.insert(verificationTokens).values({ identifier, token, expires });
+  await sendVerificationEmail({
+    to: email,
+    subject: "Verify your email — The Mini Mainframe",
+    text: `Welcome to The Mini Mainframe! Confirm your email to lock in free-forever tester access:\n\n${signupVerifyUrl(token)}\n\nThis link expires in 1 hour. If you didn't sign up, ignore this email.`,
+  });
 }
 
 /**

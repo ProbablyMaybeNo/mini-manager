@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `free_forever_granted_at` integer;

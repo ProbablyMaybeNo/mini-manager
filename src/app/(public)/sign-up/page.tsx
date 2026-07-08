@@ -17,10 +17,15 @@ function SignUpForm() {
       <AuthView
         mode="sign-up"
         from={from}
-        onSubmit={(username, password) => {
+        onSubmit={(username, password, email) => {
           setError(null);
           startTransition(async () => {
-            const res = await signUpAction({ username, password, next: from });
+            const res = await signUpAction({
+              username,
+              password,
+              email: email ?? "",
+              next: from,
+            });
             if (res && !res.ok) setError(res.message);
           });
         }}

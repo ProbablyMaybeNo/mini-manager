@@ -15,6 +15,7 @@ function user(over: Partial<PlanRelevantUser>): PlanRelevantUser {
     plan: "free",
     planExpiresAt: null,
     founderClaimedAt: null,
+    freeForeverGrantedAt: null,
     ...over,
   };
 }
