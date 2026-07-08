@@ -117,8 +117,15 @@ export async function signUpWithCredentials(input: {
   // without AUTH_RESEND_KEY the link is console-logged in dev.
   try {
     await issueSignupEmailToken(userId, email);
-  } catch {
-    // swallow: the user can re-request verification later.
+  } catch (err) {
+    // Non-fatal: the account already exists and the user can re-request
+    // verification later. But surface the reason in the server logs — a
+    // silently-swallowed Resend rejection (e.g. an unverified sending
+    // domain) is otherwise invisible and impossible to diagnose in prod.
+    console.error(
+      `[signup] verification email to ${email} failed:`,
+      err instanceof Error ? err.message : err,
+    );
   }
   return { ok: true, userId, username: u.normalized };
 }
