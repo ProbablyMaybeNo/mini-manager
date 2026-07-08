@@ -15,7 +15,12 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * preview dialog → Save → land on the new recipe with the generated notes.
  */
 
-test.describe("M13 — Colour-first recipe generation", () => {
+// SKIPPED: the "Generate Recipe" button was removed from the Colour Wheel tool
+// per Vercel threads O2QLNGljsS1A / tSx5YUJMik8i (Ross: remove GENERATE RECIPE
+// from under the colour list). The deterministic engine + dialog still exist in
+// code (generate.test.ts still covers the maths) but have no UI entry point, so
+// this end-to-end flow can't run. Re-enable if the action is ever restored/relocated.
+test.describe.skip("M13 — Colour-first recipe generation", () => {
   test("M13.1 wheel → Generate Recipe → preview → Save → new recipe with generated notes", async ({
     page,
   }) => {

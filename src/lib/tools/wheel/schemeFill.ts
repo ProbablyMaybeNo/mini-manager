@@ -83,6 +83,14 @@ export function harmonySlotHsl(harmony: HarmonyKey, seed: Hsl, index: number): H
   };
 }
 
+/** The harmony's natural swatch count (its canonical pattern length) — e.g.
+ *  complementary=2, triadic=3, tetradic=4, monochromatic=5. Drives "Generate"
+ *  auto-adding enough slots that a single click always yields a visible
+ *  multi-colour scheme instead of silently filling just 1 slot. */
+export function harmonyNaturalSlotCount(harmony: HarmonyKey): number {
+  return HARMONY_PATTERNS[harmony].length;
+}
+
 /**
  * Fill `count` slots from a seed + harmony. Index 0 is always the seed
  * itself (every harmony pattern starts at `{dh:0, dl:0}`).

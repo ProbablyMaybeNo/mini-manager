@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Lock, Unlock } from "lucide-react";
 import { Button, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import {
@@ -10,7 +11,12 @@ import {
   hslToHex,
   type HarmonyKey,
 } from "@/lib/tools/wheel/harmonies";
-import { fillHarmonyHexes, harmonySlotHsl, type Hsl } from "@/lib/tools/wheel/schemeFill";
+import {
+  fillHarmonyHexes,
+  harmonyNaturalSlotCount,
+  harmonySlotHsl,
+  type Hsl,
+} from "@/lib/tools/wheel/schemeFill";
 import { captionScrim, readableText } from "@/lib/color";
 import type { Paint, ToolSwatch } from "@/lib/types";
 import { WheelCanvas, type WheelStop } from "./WheelCanvas";
@@ -42,7 +48,6 @@ export function ColourWheelTool({
   rankPaints,
   onSavePalette,
   onSendToRecipe,
-  onGenerateRecipe,
   onAssignPaint,
   seedHex,
 }: {
@@ -57,9 +62,6 @@ export function ColourWheelTool({
    *  every slot's hex, in on-screen order, whether or not it has a matched
    *  paint (CIzKX: colours carry even when there's no close catalog match). */
   onSendToRecipe: (swatches: ToolSwatch[]) => void;
-  /** Generate a full layered recipe from the current scheme — the colour-first
-   *  path (buildLayerRamp → ground → save). Omit to hide. */
-  onGenerateRecipe?: (hexes: string[]) => void;
   /** Opens the shared ColorPicker to assign a real paint to a planned swatch. */
   onAssignPaint?: (hex: string) => void;
   /** Deep-link seed (`?hex`/resolved `?name`) — sets the primary pick. */
@@ -122,15 +124,28 @@ export function ColourWheelTool({
   }, [hue, sat, light]);
 
   /** Fill every UNLOCKED slot from the current harmony, anchored on the active
-   *  slot's HSL — the "Generate" action (and re-run when harmony changes). */
+   *  slot's HSL — the "Generate" action (and re-run when harmony changes).
+   *  First auto-adds slots up to the harmony's natural swatch count (capped
+   *  at MAX_SLOTS) so a single click always yields a visible multi-colour
+   *  scheme instead of silently filling just 1 slot. */
   function fillScheme(nextHarmony: HarmonyKey) {
-    setSlots((prev) =>
-      prev.map((s, i) => {
+    setSlots((prev) => {
+      const needed = Math.min(harmonyNaturalSlotCount(nextHarmony), MAX_SLOTS);
+      let next = prev;
+      if (next.length < needed) {
+        const added: SchemeSlot[] = [];
+        for (let i = next.length; i < needed; i++) {
+          const hsl = harmonySlotHsl(nextHarmony, seedHsl, i);
+          added.push({ id: nextSlotId(), hex: hslToHex(hsl.h, hsl.s, hsl.l), locked: false });
+        }
+        next = [...next, ...added];
+      }
+      return next.map((s, i) => {
         if (s.locked) return s;
         const hsl = harmonySlotHsl(nextHarmony, seedHsl, i);
         return { ...s, hex: hslToHex(hsl.h, hsl.s, hsl.l) };
-      }),
-    );
+      });
+    });
   }
 
   function selectHarmony(key: HarmonyKey) {
@@ -214,30 +229,7 @@ export function ColourWheelTool({
         <Slider label="Lightness" value={light} suffix="%" min={10} max={90} onChange={setLight} />
 
         <div className="w-full">
-          <div className="flex items-center justify-between">
-            <span className="label-osd text-fg">Slots {slots.length}</span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                aria-label="Remove a slot"
-                disabled={slots.length <= MIN_SLOTS}
-                onClick={() => removeSlot(slots[slots.length - 1]!.id)}
-                className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
-              >
-                −
-              </button>
-              <button
-                type="button"
-                aria-label="Add a slot"
-                disabled={slots.length >= MAX_SLOTS}
-                onClick={addSlot}
-                className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
-              >
-                +
-              </button>
-            </div>
-          </div>
-          <Button variant="primary" className="mt-2 w-full" onClick={() => fillScheme(harmony)}>
+          <Button variant="primary" className="w-full" onClick={() => fillScheme(harmony)}>
             Generate
           </Button>
           <p className="mt-2 font-body text-body text-fg-faint">
@@ -358,7 +350,7 @@ export function ColourWheelTool({
                       locked ? "text-yellow" : "text-fg-faint hover:text-yellow",
                     )}
                   >
-                    {locked ? "🔒" : "🔓"}
+                    {locked ? <Lock size={16} aria-hidden /> : <Unlock size={16} aria-hidden />}
                   </button>
                   <button
                     type="button"
@@ -468,17 +460,35 @@ export function ColourWheelTool({
             );
           })}
         </div>
+
+        <div className="flex items-center justify-between">
+          <span className="label-osd text-fg">Slots {slots.length}</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Remove a slot"
+              disabled={slots.length <= MIN_SLOTS}
+              onClick={() => removeSlot(slots[slots.length - 1]!.id)}
+              className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              aria-label="Add a slot"
+              disabled={slots.length >= MAX_SLOTS}
+              onClick={addSlot}
+              className="font-button text-button inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {/* Save Palette = +COLOR SCHEME → neon green; Send to Recipe = +RECIPE
               → pastel purple attach (9lgIwII2oBy7 / CiBUwVgwwQRD). DePixel Klein
               font kept (ruling #1). */}
-          {/* Generate Recipe is the single primary "make a real recipe" action;
-              Save Palette + Send to Recipe demote to outline (UX-004). */}
-          {onGenerateRecipe && (
-            <Button variant="primary" onClick={() => onGenerateRecipe(slots.map((s) => s.hex))}>
-              Generate Recipe
-            </Button>
-          )}
           <Button variant="secondary" onClick={() => onSavePalette(slots.map((s) => s.hex))}>
             Save Palette
           </Button>
