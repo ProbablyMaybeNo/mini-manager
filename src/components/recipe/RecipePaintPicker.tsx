@@ -40,6 +40,7 @@ export function RecipePaintPicker({
       initialHex={initialHex}
       initialPaintId={initialPaintId}
       mode={mode}
+      closeOnSelect
       renderMatchTab={({ paints, brandOptions, assignPaint }) => (
         <ColourMatchTool
           // No typeOptions here — picking a paint for a recipe slot wants

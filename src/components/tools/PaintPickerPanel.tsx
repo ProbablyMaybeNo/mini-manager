@@ -177,9 +177,8 @@ export function PaintPickerPanel({
             contextLabel={contextLabel}
             mode={mode}
             // The eyedropper is its own tab here, so drop the duplicate sub-panel;
-            // and add catalog paints via highlight → ADD PAINT, not bare clicks.
+            // a click on a library paint selects it immediately.
             showEyedropper={false}
-            confirmSelection
             onSelect={handleSelect}
           />
         )}
