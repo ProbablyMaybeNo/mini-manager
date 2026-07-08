@@ -88,18 +88,34 @@ function AutoFillBox() {
           ▸
         </span>
       </button>
-      <p
+      <div
         id="paste-url-stores"
-        className={cn(
-          collapsed ? "hidden" : "block",
-          "mt-2 font-body text-body leading-snug text-fg",
-        )}
+        className={cn(collapsed ? "hidden" : "flex", "mt-2 flex-col gap-3")}
       >
-        Auto-populate your model and paint collections by pasting a product URL
-        from any major online retailer. Auto-fills from:{" "}
-        <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
-        Other links still add a row — you just enter the details yourself.
-      </p>
+        <p className="font-body text-body leading-snug text-fg">
+          Auto-populate your model and paint collections by pasting a product URL
+          from any major online retailer. Auto-fills from:{" "}
+          <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
+          Other links still add a row — you just enter the details yourself.
+        </p>
+        <div className="border-t border-border/60 pt-3">
+          <p className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim">
+            Browser extension
+            <span className="rounded-[4px] border border-cyan/50 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-cyan-lite">
+              Coming soon
+            </span>
+          </p>
+          <p className="mt-1.5 font-body text-body leading-snug text-fg">
+            Skip the copy-paste entirely — a Chrome extension that adds whatever
+            product page you&apos;re on to your collection with one keyboard
+            shortcut (<span className="text-purple">Alt+Shift+M</span>) or a click
+            of the toolbar button, tagged{" "}
+            <span className="text-purple">Owned</span> or{" "}
+            <span className="text-purple">Wishlist</span> on the spot. Landing on
+            the Chrome Web Store soon.
+          </p>
+        </div>
+      </div>
     </Panel>
   );
 }
