@@ -42,9 +42,10 @@ export function Panel({
       {label && (
         <span
           className={cn(
-            "mb-3 block font-mono text-[12px] font-bold uppercase tracking-wide",
-            accent === "cyan" ? "text-fg-dim" : accentText[accent],
+            "mb-3 block text-[13px] font-bold uppercase tracking-wide",
+            accent === "cyan" ? "text-cyan-lite" : accentText[accent],
           )}
+          style={{ fontFamily: "var(--font-section)" }}
         >
           {label}
         </span>

@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 /**
  * Centered public-page title — the frameless-page counterpart to the app's
- * PageHeader (4:4). JetBrains Mono ExtraBold, uppercase, bright-white title
+ * PageHeader (4:4). UAV OSD Mono ExtraBold, uppercase, bright-white title
  * with the short cyan underline bar beneath it, so /pricing, /privacy, /terms
  * etc. read native to the HEX.CODE system. clamp() keeps it inside a 320px
  * viewport (MUX-008).
@@ -19,8 +19,8 @@ export function PublicPageTitle({
   return (
     <div className={cn(align === "center" ? "flex flex-col items-center" : "flex flex-col items-start", className)}>
       <h1
-        className="font-mono font-extrabold uppercase leading-none tracking-tight text-fg-bright"
-        style={{ fontSize: "clamp(1.75rem, 9vw, var(--text-title))" }}
+        className="font-title font-extrabold uppercase leading-none tracking-tight text-fg-bright"
+        style={{ fontSize: "clamp(1.875rem, 9.5vw, calc(var(--text-title) * 1.08))" }}
       >
         {children}
       </h1>

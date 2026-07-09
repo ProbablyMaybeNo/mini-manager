@@ -2,15 +2,31 @@
 
 /* ----------------------------------------------------------------------------
    Fonts — V2 "HEX.CODE" (REDESIGN_V2_HEXCODE.md)
-   ONE FACE: JetBrains Mono everywhere (Ross, 2026-06-28).
-   Titles  → JetBrains Mono Bold/heavy (uppercase, tight tracking) → --font-display
-   Body / labels / table / values / numbers → JetBrains Mono → --font-mono
-   The variable package covers the full weight axis from one file.
-   Inter is dropped from the active token mapping; IBM Plex Mono stays only as a
-   glyph fallback for monospace.
+   TWO-FACE SYSTEM (Ross, 2026-07-09): the single-face era (2026-06-28) is over.
+   Body / buttons / labels / table / values / numbers → JetBrains Mono → --font-mono / --font-body / --font-button
+   Page titles      → UAV OSD Mono (HUD/OSD face)      → --font-title
+   Section/panel headers → Flexi IBM VGA True (bitmap terminal face) → --font-section
+   Both display faces fall back to JetBrains Mono Variable so nothing breaks if
+   a bitmap glyph is missing. IBM Plex Mono stays as a glyph fallback only.
    ------------------------------------------------------------------------- */
 @import "@fontsource-variable/jetbrains-mono/index.css";
 @import "@fontsource/ibm-plex-mono/400.css";
+
+@font-face {
+  font-family: "UAV OSD Mono";
+  src: url("/fonts/uav-osd-mono.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Flexi IBM VGA True";
+  src: url("/fonts/flexi-ibm-vga-true.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 /* ----------------------------------------------------------------------------
    Design tokens — exact values from the HEX.CODE style guide (Figma node 1:13).
@@ -65,17 +81,22 @@
   --color-fg-faint: #e6e5e5;
   --color-fg-muted: #8a8a8a;
 
-  /* Type families — ONE FACE: JetBrains Mono (Ross, 2026-06-28).
-     --font-display  JetBrains Bold/heavy — page titles + section/panel headers
-     --font-mono     JetBrains            — body, labels, tables, numbers, hex */
+  /* Type families — TWO-FACE SYSTEM (Ross, 2026-07-09).
+     --font-display  JetBrains Bold/heavy — retained for existing callers
+     --font-mono     JetBrains            — body, labels, tables, numbers, hex
+     --font-title    UAV OSD Mono         — big page titles only
+     --font-section  Flexi IBM VGA True   — section/panel header labels only
+     Buttons and body text stay JetBrains Mono — do not repoint --font-button
+     or --font-body/--font-mono onto the display faces. */
   --font-display: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
+  --font-title: "UAV OSD Mono", "JetBrains Mono Variable", monospace;
+  --font-section: "Flexi IBM VGA True", "JetBrains Mono Variable", monospace;
 
   /* Back-compat aliases for the 7-category taxonomy used across the app.
-     They all collapse onto the single HEX.CODE face (JetBrains Mono).
-     Kept so existing font-title / font-h1 / font-h2 / font-body / font-num*
-     / font-button / font-osd class usage keeps resolving without edits. */
-  --font-title: var(--font-display);
+     Kept so existing font-h1 / font-h2 / font-body / font-num* / font-button
+     / font-osd class usage keeps resolving without edits. --font-title is now
+     its own face (see above) rather than an alias of --font-display. */
   --font-h1: var(--font-display);
   --font-h2: var(--font-display);
   --font-osd: var(--font-mono);
