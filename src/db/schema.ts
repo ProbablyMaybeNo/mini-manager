@@ -115,6 +115,19 @@ export const users = sqliteTable("user", {
   tutorialCompletedAt: integer("tutorial_completed_at", {
     mode: "timestamp_ms",
   }),
+  /**
+   * First-touch acquisition attribution. Captured by the proxy
+   * (`src/proxy.ts`) from `?ref=` / `utm_*` query params on landing into
+   * the `mm_ref` cookie, then stamped onto the user row at signup
+   * (`signUpWithCredentials`). JSON-encoded object of whichever of
+   * `ref` / `utm_source` / `utm_medium` / `utm_campaign` were present
+   * (see `src/lib/acquisition.ts`) — a single column rather than four so
+   * this stays additive if more UTM-style params show up later. Null =
+   * no tracked link on first visit (organic/direct). First-touch only:
+   * never overwritten by a later visit or a later signup attempt.
+   * Capture + persist only — no reporting UI reads this yet.
+   */
+  acquisitionRef: text("acquisition_ref"),
 });
 
 export const accounts = sqliteTable(
