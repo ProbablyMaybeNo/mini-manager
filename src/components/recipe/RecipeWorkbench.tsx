@@ -14,6 +14,7 @@ import type { GroundedRecipeProposal } from "@/lib/ai/recipeSchema";
 import type { Paint, Project, Recipe, RecipeSlot } from "@/lib/types";
 import { AiRecipeDialog } from "./AiRecipeDialog";
 import { RecipePaintPicker } from "./RecipePaintPicker";
+import { ShareCardComposer } from "./ShareCardComposer";
 import { ShareLinkDialog } from "./ShareLinkDialog";
 import { SlotRow } from "./SlotRow";
 
@@ -46,6 +47,7 @@ export function RecipeWorkbench({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -389,6 +391,13 @@ export function RecipeWorkbench({
                   </button>
                   <button
                     type="button"
+                    onClick={() => setShareCardOpen(true)}
+                    className="inline-flex items-center rounded-[6px] border border-cyan/50 px-4 py-2.5 font-mono text-[12px] font-bold text-cyan-lite transition-colors hover:border-cyan hover:bg-cyan/10"
+                  >
+                    ⬡ SHARE AS CARD
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setAiOpen(true)}
                     className="inline-flex items-center gap-2 rounded-[6px] border border-orange bg-surface px-4 py-2.5 font-mono text-[12px] font-bold text-fg-bright transition-colors hover:bg-orange/10"
                   >
@@ -604,6 +613,16 @@ export function RecipeWorkbench({
         </div>
       </ModalDialog>
       <ShareLinkDialog url={shareUrl} open={shareUrl != null} onClose={() => setShareUrl(null)} />
+      {selected && (
+        <ShareCardComposer
+          open={shareCardOpen}
+          onClose={() => setShareCardOpen(false)}
+          recipeName={selected.name}
+          slots={selected.slots}
+          initialNotes={selected.notes ?? null}
+          projectId={selected.assignedProjectId ?? null}
+        />
+      )}
       <AiRecipeDialog
         open={aiOpen}
         onClose={() => setAiOpen(false)}

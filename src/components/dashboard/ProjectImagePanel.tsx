@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { upload } from "@vercel/blob/client";
-import { ChevronLeft, ChevronRight, Trash2, Upload as UploadIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, Trash2, Upload as UploadIcon } from "lucide-react";
 import { Button, EmptyState, IconButton, ModalDialog } from "@/components/kit";
 import {
   deleteProjectImage,
@@ -12,6 +12,7 @@ import {
 import { MAX_IMAGES_PER_PROJECT, validateImageFile } from "@/lib/blob/limits";
 import { cn } from "@/lib/cn";
 import type { ProjectImage } from "@/db/schema";
+import { ShareCardComposer } from "@/components/recipe/ShareCardComposer";
 
 const ACCEPT = "image/png,image/jpeg,image/webp";
 
@@ -36,6 +37,7 @@ export function ProjectImagePanel({ projectId }: { projectId: string }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -208,16 +210,21 @@ export function ProjectImagePanel({ projectId }: { projectId: string }) {
       {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
 
       {current && (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="self-start"
-          disabled={uploading}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <UploadIcon size={16} aria-hidden />
-          {uploading ? "Uploading…" : "Upload"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <UploadIcon size={16} aria-hidden />
+            {uploading ? "Uploading…" : "Upload"}
+          </Button>
+          <Button variant="outlineCyan" size="sm" onClick={() => setShareCardOpen(true)}>
+            <Share2 size={16} aria-hidden />
+            Share
+          </Button>
+        </div>
       )}
 
       {viewerOpen && images && images.length > 0 && (
@@ -228,6 +235,20 @@ export function ProjectImagePanel({ projectId }: { projectId: string }) {
           onClose={() => setViewerOpen(false)}
         />
       )}
+
+      {/* Phase 2 — SHARE opens the branded card composer with no recipe data
+          attached (the image-section entry point), scoped to this project's
+          photos. The composer's imageless/no-recipe fallback still brands
+          the download with the MINI-MAINFRAME frame + wordmark. */}
+      <ShareCardComposer
+        open={shareCardOpen}
+        onClose={() => setShareCardOpen(false)}
+        recipeName={null}
+        slots={[]}
+        initialNotes={null}
+        projectId={projectId}
+        initialImageUrl={current?.url ?? null}
+      />
     </div>
   );
 }
