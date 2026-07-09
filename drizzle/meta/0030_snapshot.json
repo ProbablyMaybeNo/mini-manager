@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2bcef4dd-6b88-4d06-94b7-0f208efb75c4",
+  "id": "82e91e5e-9b0c-4b3a-baaf-537bf5853c55",
   "prevId": "a5979031-b672-4034-a3de-e020baac01ec",
   "tables": {
     "account": {
@@ -984,115 +984,6 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "project_image": {
-      "name": "project_image",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "project_id": {
-          "name": "project_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "owner_id": {
-          "name": "owner_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "pathname": {
-          "name": "pathname",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "project_image_project_idx": {
-          "name": "project_image_project_idx",
-          "columns": [
-            "project_id"
-          ],
-          "isUnique": false
-        },
-        "project_image_owner_idx": {
-          "name": "project_image_owner_idx",
-          "columns": [
-            "owner_id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "project_image_project_id_project_id_fk": {
-          "name": "project_image_project_id_project_id_fk",
-          "tableFrom": "project_image",
-          "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "project_image_owner_id_user_id_fk": {
-          "name": "project_image_owner_id_user_id_fk",
-          "tableFrom": "project_image",
-          "tableTo": "user",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "project": {
       "name": "project",
       "columns": {
@@ -1927,6 +1818,13 @@
         "tutorial_completed_at": {
           "name": "tutorial_completed_at",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "acquisition_ref": {
+          "name": "acquisition_ref",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

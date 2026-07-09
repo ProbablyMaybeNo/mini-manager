@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import {
+  ACQUISITION_COOKIE,
+  ACQUISITION_COOKIE_MAX_AGE_SECONDS,
+  buildAcquisitionCookieValue,
+} from "@/lib/acquisition";
 
 /**
  * Session-gated edge proxy (formerly `middleware.ts` — renamed per
@@ -31,9 +36,37 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
+/**
+ * First-touch acquisition capture (?ref= / utm_*). Only writes the cookie
+ * when it isn't already set, so the ORIGINAL source wins over later
+ * visits — a bookmark revisit or an internal link click never overwrites
+ * the link that actually brought the visitor in.
+ */
+function withAcquisitionCookie(
+  res: NextResponse,
+  hasExistingCookie: boolean,
+  url: URL,
+): NextResponse {
+  if (hasExistingCookie) return res;
+  const value = buildAcquisitionCookieValue(url);
+  if (!value) return res;
+  res.cookies.set(ACQUISITION_COOKIE, value, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: ACQUISITION_COOKIE_MAX_AGE_SECONDS,
+  });
+  return res;
+}
+
 export default auth((req) => {
-  if (req.auth?.user) return;
-  if (isPublicPath(req.nextUrl.pathname)) return;
+  const hasAcquisitionCookie = Boolean(req.cookies.get(ACQUISITION_COOKIE));
+
+  if (req.auth?.user)
+    return withAcquisitionCookie(NextResponse.next(), hasAcquisitionCookie, req.nextUrl);
+  if (isPublicPath(req.nextUrl.pathname))
+    return withAcquisitionCookie(NextResponse.next(), hasAcquisitionCookie, req.nextUrl);
 
   const url = req.nextUrl.clone();
   const from = url.pathname + (url.search || "");
@@ -41,7 +74,11 @@ export default auth((req) => {
   if (from && from !== "/" && from !== "/sign-in") {
     signInUrl.searchParams.set("from", from);
   }
-  return NextResponse.redirect(signInUrl);
+  return withAcquisitionCookie(
+    NextResponse.redirect(signInUrl),
+    hasAcquisitionCookie,
+    req.nextUrl,
+  );
 });
 
 /**
