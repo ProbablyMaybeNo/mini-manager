@@ -30,7 +30,7 @@ export default async function GalleryPage() {
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
         <header className="mb-8 flex flex-col gap-2">
-          <h1 className="font-title text-title text-cyan-lite text-glow-cyan">
+          <h1 className="font-title text-title uppercase text-cyan-lite text-glow-cyan">
             Recipe Gallery
           </h1>
           <p className="max-w-2xl font-body text-body text-fg">
