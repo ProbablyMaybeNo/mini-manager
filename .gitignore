@@ -68,5 +68,8 @@ docs/research/sources/
 # UX audit screenshots (local reference only)
 ux-audit/shots/
 
+# typography review screenshots (local reference only — never commit)
+_type-review/
+
 # Claude Code agent worktrees (local batch checkouts — never commit)
 .claude/worktrees/
