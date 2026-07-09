@@ -1,9 +1,11 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
 import { users, verificationTokens } from "@/db/schema";
+import { ACQUISITION_COOKIE } from "@/lib/acquisition";
 import { hashPassword, verifyPassword } from "./password";
 import { createSession } from "./session";
 import { sendVerificationEmail } from "./sendVerificationEmail";
@@ -98,6 +100,12 @@ export async function signUpWithCredentials(input: {
   const hash = await hashPassword(input.password);
   const userId = nanoid(16);
 
+  // First-touch acquisition attribution — the proxy stamps this cookie
+  // from ?ref=/utm_* on the visitor's first landing (src/lib/acquisition.ts).
+  // Absent cookie => organic/direct signup, leave the column null.
+  const jar = await cookies();
+  const acquisitionRef = jar.get(ACQUISITION_COOKIE)?.value ?? null;
+
   await db.insert(users).values({
     id: userId,
     // `name` mirrors the username so the NavRail / MobileHeader pick
@@ -109,6 +117,7 @@ export async function signUpWithCredentials(input: {
     email,
     passwordHash: hash,
     plan: "free",
+    acquisitionRef,
   });
 
   await createSession(userId);

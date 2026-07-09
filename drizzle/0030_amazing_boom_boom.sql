@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `acquisition_ref` text;

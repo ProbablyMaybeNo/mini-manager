@@ -43,6 +43,7 @@ const { signUpWithCredentials, signInWithCredentials } = await import(
   "@/lib/auth/signUp"
 );
 const { SESSION_COOKIE } = await import("@/lib/auth/session");
+const { ACQUISITION_COOKIE } = await import("@/lib/acquisition");
 
 beforeEach(async () => {
   const { db } = await makeTestDb();
@@ -147,6 +148,46 @@ describe("signUpWithCredentials", () => {
     expect(res.ok).toBe(false);
     if (res.ok) return;
     expect(res.field).toBe("username");
+  });
+
+  test("stamps acquisitionRef onto the new user when mm_ref cookie is set", async () => {
+    cookieStore.store.set(ACQUISITION_COOKIE, {
+      value: JSON.stringify({ ref: "reddit-minipainting-0709" }),
+    });
+
+    const res = await signUpWithCredentials({
+      username: "trackedsam",
+      password: "hunter222",
+      email: "trackedsam@test.dev",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const rows = await state
+      .db!.select()
+      .from(users)
+      .where(eq(users.id, res.userId));
+    expect(rows[0]!.acquisitionRef).toBe(
+      JSON.stringify({ ref: "reddit-minipainting-0709" }),
+    );
+  });
+
+  test("leaves acquisitionRef null when no mm_ref cookie is present", async () => {
+    cookieStore.store.delete(ACQUISITION_COOKIE);
+
+    const res = await signUpWithCredentials({
+      username: "organicsam",
+      password: "hunter222",
+      email: "organicsam@test.dev",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const rows = await state
+      .db!.select()
+      .from(users)
+      .where(eq(users.id, res.userId));
+    expect(rows[0]!.acquisitionRef).toBeNull();
   });
 });
 
