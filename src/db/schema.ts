@@ -844,6 +844,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   children: many(projects, { relationName: "project_tree" }),
   wishlistItems: many(wishlistItems),
   attachedRecipes: many(recipes, { relationName: "recipe_attached_project" }),
+  images: many(projectImages),
 }));
 
 export const recipesRelations = relations(recipes, ({ one, many }) => ({
@@ -1185,6 +1186,50 @@ export const activityLogRelations = relations(activityLog, ({ one }) => ({
 export const inspoImagesRelations = relations(inspoImages, ({ one }) => ({
   user: one(users, { fields: [inspoImages.userId], references: [users.id] }),
 }));
+
+/**
+ * Recipe-card phase 1 — real uploaded photos of a painter's model, attached
+ * to a project node (any type: Army / Warband / Unit / Model / Terrain
+ * Piece / Diorama). Unlike `project.referenceImageUrl` (a pasted external
+ * URL, no storage), this is a genuine binary upload stored in Vercel Blob:
+ * `url` is the public blob URL to render, `pathname` is the blob object key
+ * needed to call `del()` on delete. `position` orders the per-project
+ * carousel (0 = first); the upload action appends at the current max + 1.
+ * Cascade-deletes with its project; `ownerId` is denormalized off the
+ * project row so ownership checks + the (ownerId) index don't require a
+ * join.
+ */
+export const projectImages = sqliteTable(
+  "project_image",
+  {
+    id: id(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    pathname: text("pathname").notNull(),
+    position: integer("position").notNull().default(0),
+    ...timestamps,
+  },
+  (t) => ({
+    projectIdx: index("project_image_project_idx").on(t.projectId),
+    ownerIdx: index("project_image_owner_idx").on(t.ownerId),
+  }),
+);
+
+export const projectImagesRelations = relations(projectImages, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectImages.projectId],
+    references: [projects.id],
+  }),
+  owner: one(users, { fields: [projectImages.ownerId], references: [users.id] }),
+}));
+
+export type ProjectImage = typeof projectImages.$inferSelect;
+export type NewProjectImage = typeof projectImages.$inferInsert;
 
 /**
  * Phase-14 spillover — stopwatch sessions.
