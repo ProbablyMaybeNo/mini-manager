@@ -28,6 +28,18 @@
   font-display: swap;
 }
 
+/* Trial title face (Ross, 2026-07-09): CS Gayle Mono Extrude — an extruded 3D
+   display face, A–Z + a–z only, NO digits (0-9). --font-title's fallback
+   chain covers the gap: any digit in a title falls through to UAV OSD Mono
+   (still registered above), then JetBrains. */
+@font-face {
+  font-family: "CS Gayle Mono Extrude";
+  src: url("/fonts/csgayle-mono-extrude.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ----------------------------------------------------------------------------
    Design tokens — exact values from the HEX.CODE style guide (Figma node 1:13).
    PALETTE DECISION (Ross, 2026-06-28): follow the style guide for surfaces +
@@ -84,13 +96,16 @@
   /* Type families — TWO-FACE SYSTEM (Ross, 2026-07-09).
      --font-display  JetBrains Bold/heavy — retained for existing callers
      --font-mono     JetBrains            — body, labels, tables, numbers, hex
-     --font-title    UAV OSD Mono         — big page titles only
+     --font-title    CS Gayle Mono Extrude (trial, 2026-07-09) — big page
+                     titles only. CS Gayle has NO digits (0-9), so the chain
+                     falls through to UAV OSD Mono for numerals, then
+                     JetBrains as the final safety net.
      --font-section  Flexi IBM VGA True   — section/panel header labels only
      Buttons and body text stay JetBrains Mono — do not repoint --font-button
      or --font-body/--font-mono onto the display faces. */
   --font-display: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
-  --font-title: "UAV OSD Mono", "JetBrains Mono Variable", monospace;
+  --font-title: "CS Gayle Mono Extrude", "UAV OSD Mono", "JetBrains Mono Variable", monospace;
   --font-section: "Flexi IBM VGA True", "JetBrains Mono Variable", monospace;
 
   /* Back-compat aliases for the 7-category taxonomy used across the app.
