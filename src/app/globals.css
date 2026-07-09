@@ -96,16 +96,14 @@
   /* Type families — TWO-FACE SYSTEM (Ross, 2026-07-09).
      --font-display  JetBrains Bold/heavy — retained for existing callers
      --font-mono     JetBrains            — body, labels, tables, numbers, hex
-     --font-title    CS Gayle Mono Extrude (trial, 2026-07-09) — big page
-                     titles only. CS Gayle has NO digits (0-9), so the chain
-                     falls through to UAV OSD Mono for numerals, then
-                     JetBrains as the final safety net.
+     --font-title    UAV OSD Mono (Ross, 2026-07-09) — big page titles only.
+                     Has digits, so it's safe for fixed page names.
      --font-section  Flexi IBM VGA True   — section/panel header labels only
      Buttons and body text stay JetBrains Mono — do not repoint --font-button
      or --font-body/--font-mono onto the display faces. */
   --font-display: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
-  --font-title: "CS Gayle Mono Extrude", "UAV OSD Mono", "JetBrains Mono Variable", monospace;
+  --font-title: "UAV OSD Mono", "JetBrains Mono Variable", monospace;
   --font-section: "Flexi IBM VGA True", "JetBrains Mono Variable", monospace;
 
   /* Back-compat aliases for the 7-category taxonomy used across the app.
