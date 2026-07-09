@@ -218,6 +218,13 @@
       "when": 1783589791813,
       "tag": "0030_amazing_boom_boom",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1783590367588,
+      "tag": "0031_complex_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }

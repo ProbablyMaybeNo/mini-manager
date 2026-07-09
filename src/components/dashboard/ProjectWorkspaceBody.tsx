@@ -44,6 +44,7 @@ import { formatMinutes, priorityAccent, statusAccent, STATUS_LABEL } from "@/lib
 import type { Priority, Project, ProjectStatus, ProjectType } from "@/lib/types";
 import { InspectorActionBar } from "./InspectorActionBar";
 import { ModelCounterGrid } from "./ModelCounterGrid";
+import { ProjectImagePanel } from "./ProjectImagePanel";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
   "WISHLIST",
@@ -86,6 +87,7 @@ const CHILD_TYPES: Partial<Record<ProjectType, ProjectType[]>> = {
 /** Mobile quick-jump rail targets (MOP-005) — order matches the section order. */
 const QUICK_JUMP_SECTIONS: { anchorId: string; label: string }[] = [
   { anchorId: "inspector-details", label: "Details" },
+  { anchorId: "inspector-photos", label: "Photos" },
   { anchorId: "inspector-sub-projects", label: "Sub" },
   { anchorId: "inspector-recipes", label: "Recipes" },
   { anchorId: "inspector-progress", label: "Progress" },
@@ -407,73 +409,86 @@ export function ProjectWorkspaceBody({
         </div>
       )}
 
-      {/* DETAILS — name / type / status / priority. Secondary on the page
-          (order-2, collapsed by default on mobile); leads the panel's
-          DETAILS-first order. A freshly-created draft still named "New Project"
-          opens DETAILS by default so the name field is immediately visible to
-          rename on phones (UX-005 / MUX-005). */}
-      <CollapsibleSection
-        label="DETAILS"
-        anchorId="inspector-details"
-        defaultOpen={project.title === "New Project"}
-        className={isPage ? "order-2" : undefined}
-        hint="Rename it, set the type, where it sits in your pipeline, and how urgent it is."
-      >
-        {/* Rename lives here now (RF-4) — the big in-panel title was removed. */}
-        <div className="mb-3" data-walkthrough="name">
-          <RenameField
-            id={project.id}
-            name={project.title}
-            disabled={pending}
-            onSaved={() => router.refresh()}
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" data-walkthrough="meta">
-          <label className="flex flex-col gap-1">
-            <span className="label-osd text-fg-dim">Type</span>
-            <Listbox
-              value={project.type}
+      {/* DETAILS + PHOTOS — side by side on desktop (lg:grid-cols), stacked on
+          mobile. Secondary on the page (order-2, both collapsed by default on
+          mobile); leads the panel's DETAILS-first order. A freshly-created
+          draft still named "New Project" opens DETAILS by default so the name
+          field is immediately visible to rename on phones (UX-005 / MUX-005). */}
+      <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]", isPage && "order-2")}>
+        <CollapsibleSection
+          label="DETAILS"
+          anchorId="inspector-details"
+          defaultOpen={project.title === "New Project"}
+          hint="Rename it, set the type, where it sits in your pipeline, and how urgent it is."
+        >
+          {/* Rename lives here now (RF-4) — the big in-panel title was removed. */}
+          <div className="mb-3" data-walkthrough="name">
+            <RenameField
+              id={project.id}
+              name={project.title}
               disabled={pending}
-              ariaLabel="Project type"
-              options={TYPE_OPTIONS.map((t) => ({ value: t, label: t.toUpperCase() }))}
-              onChange={(t) =>
-                run(() => updateProjectType({ id: project.id, type: TYPE_TO_DB[t] }))
-              }
+              onSaved={() => router.refresh()}
             />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="label-osd text-fg-dim">Status</span>
-            <Listbox
-              value={project.status}
-              disabled={pending}
-              ariaLabel="Project status"
-              accent={statusAccent[project.status]}
-              options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
-              onChange={(s) => run(() => bumpProjectStatus({ id: project.id, status: s }))}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="label-osd text-fg-dim">Priority</span>
-            <Listbox
-              value={project.priority}
-              disabled={pending}
-              ariaLabel="Project priority"
-              accent={priorityAccent[project.priority]}
-              options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p.toUpperCase() }))}
-              onChange={(p) =>
-                run(() =>
-                  updateProjectPriority({ id: project.id, priority: PRIORITY_TO_DB[p] }),
-                )
-              }
-            />
-          </label>
-        </div>
-        {(detail?.faction || detail?.game) && (
-          <p className="mt-3 font-body text-body text-fg">
-            {[detail.faction, detail.game].filter(Boolean).join(" · ")}
-          </p>
-        )}
-      </CollapsibleSection>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" data-walkthrough="meta">
+            <label className="flex flex-col gap-1">
+              <span className="label-osd text-fg-dim">Type</span>
+              <Listbox
+                value={project.type}
+                disabled={pending}
+                ariaLabel="Project type"
+                options={TYPE_OPTIONS.map((t) => ({ value: t, label: t.toUpperCase() }))}
+                onChange={(t) =>
+                  run(() => updateProjectType({ id: project.id, type: TYPE_TO_DB[t] }))
+                }
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="label-osd text-fg-dim">Status</span>
+              <Listbox
+                value={project.status}
+                disabled={pending}
+                ariaLabel="Project status"
+                accent={statusAccent[project.status]}
+                options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
+                onChange={(s) => run(() => bumpProjectStatus({ id: project.id, status: s }))}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="label-osd text-fg-dim">Priority</span>
+              <Listbox
+                value={project.priority}
+                disabled={pending}
+                ariaLabel="Project priority"
+                accent={priorityAccent[project.priority]}
+                options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p.toUpperCase() }))}
+                onChange={(p) =>
+                  run(() =>
+                    updateProjectPriority({ id: project.id, priority: PRIORITY_TO_DB[p] }),
+                  )
+                }
+              />
+            </label>
+          </div>
+          {(detail?.faction || detail?.game) && (
+            <p className="mt-3 font-body text-body text-fg">
+              {[detail.faction, detail.game].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </CollapsibleSection>
+
+        {/* PHOTOS — Recipe-card phase 1: real uploaded photos of the finished
+            model (distinct from the pasted-URL "Reference image" in INFO
+            below). Cycle with `< >`, click to open the full-screen viewer. */}
+        <CollapsibleSection
+          label="PHOTOS"
+          anchorId="inspector-photos"
+          defaultOpen
+          hint="A photo of your finished model — cycle with the arrows, click to view full-screen."
+        >
+          <ProjectImagePanel projectId={project.id} />
+        </CollapsibleSection>
+      </div>
 
       {/* SUB-PROJECTS — the structure list and the page's centerpiece (PP-2):
           each row is name + recipe swatches + progress + edit/focus/delete.
