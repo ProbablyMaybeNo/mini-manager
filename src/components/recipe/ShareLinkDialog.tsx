@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, ModalDialog } from "@/components/kit";
+import { Button, Checkbox, ModalDialog } from "@/components/kit";
 
 /**
  * Public share-link reveal (UX-004). After a recipe is published the caller
@@ -9,15 +9,24 @@ import { Button, ModalDialog } from "@/components/kit";
  * clipboard write, the URL lives in a read-only, selectable field with an
  * explicit Copy button + "✓ Copied" confirmation — so the link is always
  * retrievable even when programmatic clipboard writes are blocked.
+ *
+ * Also carries the gallery-listing opt-out (defaulted ON) — this is the
+ * other half of the moat loop: a shared recipe lists on `/gallery` by
+ * default so it's discoverable, but painters who only want a link-only
+ * share can flip it off here.
  */
 export function ShareLinkDialog({
   url,
   open,
   onClose,
+  listed,
+  onListedChange,
 }: {
   url: string | null;
   open: boolean;
   onClose: () => void;
+  listed: boolean;
+  onListedChange: (listed: boolean) => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -63,6 +72,14 @@ export function ShareLinkDialog({
             {copied ? "✓ Copied" : "Copy"}
           </Button>
         </div>
+        <label className="flex items-center gap-2 font-body text-body text-fg">
+          <Checkbox
+            checked={listed}
+            onChange={onListedChange}
+            ariaLabel="Also show in the public gallery"
+          />
+          Also show in the public gallery
+        </label>
       </div>
     </ModalDialog>
   );

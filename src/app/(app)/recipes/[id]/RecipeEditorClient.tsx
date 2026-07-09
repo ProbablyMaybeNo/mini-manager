@@ -57,6 +57,8 @@ export function RecipeEditorClient({
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  // Gallery-listing opt-out (defaulted ON) — see ShareLinkDialog.
+  const [listed, setListed] = useState(true);
 
   // An unsaved "new" draft is dirty as soon as it has a name or any slots
   // (leaving would discard it); an existing recipe is dirty once edited.
@@ -129,7 +131,7 @@ export function RecipeEditorClient({
       return;
     }
     startTransition(async () => {
-      const res = await publishRecipe({ recipeId: recipe.id });
+      const res = await publishRecipe({ recipeId: recipe.id, listed });
       if (!res.ok) {
         toast(res.error, "red");
         return;
@@ -141,6 +143,15 @@ export function RecipeEditorClient({
       void navigator.clipboard?.writeText(url);
       toast("Public link copied to clipboard", "green");
       setShareUrl(url);
+    });
+  }
+
+  function updateListed(next: boolean) {
+    setListed(next);
+    if (!shareUrl || recipe.id === "new") return; // not published yet — the next share() call carries it
+    startTransition(async () => {
+      const res = await publishRecipe({ recipeId: recipe.id, listed: next });
+      if (!res.ok) toast(res.error, "red");
     });
   }
 
@@ -189,7 +200,13 @@ export function RecipeEditorClient({
         onClose={() => setConfirmingDelete(false)}
         onConfirm={remove}
       />
-      <ShareLinkDialog url={shareUrl} open={shareUrl != null} onClose={() => setShareUrl(null)} />
+      <ShareLinkDialog
+        url={shareUrl}
+        open={shareUrl != null}
+        onClose={() => setShareUrl(null)}
+        listed={listed}
+        onListedChange={updateListed}
+      />
       {node}
     </>
   );

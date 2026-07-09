@@ -46,6 +46,8 @@ export function RecipeWorkbench({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  // Gallery-listing opt-out (defaulted ON) — see ShareLinkDialog.
+  const [listed, setListed] = useState(true);
   const [aiOpen, setAiOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -155,7 +157,7 @@ export function RecipeWorkbench({
       return;
     }
     startTransition(async () => {
-      const res = await publishRecipe({ recipeId: selected.id });
+      const res = await publishRecipe({ recipeId: selected.id, listed });
       if (!res.ok) {
         toast(res.error, "red");
         return;
@@ -167,6 +169,15 @@ export function RecipeWorkbench({
       void navigator.clipboard?.writeText(url);
       toast("Public link copied to clipboard", "green");
       setShareUrl(url);
+    });
+  }
+
+  function updateListed(next: boolean) {
+    setListed(next);
+    if (!shareUrl || !selected || selected.id === "new") return;
+    startTransition(async () => {
+      const res = await publishRecipe({ recipeId: selected.id, listed: next });
+      if (!res.ok) toast(res.error, "red");
     });
   }
 
@@ -603,7 +614,13 @@ export function RecipeWorkbench({
           </p>
         </div>
       </ModalDialog>
-      <ShareLinkDialog url={shareUrl} open={shareUrl != null} onClose={() => setShareUrl(null)} />
+      <ShareLinkDialog
+        url={shareUrl}
+        open={shareUrl != null}
+        onClose={() => setShareUrl(null)}
+        listed={listed}
+        onListedChange={updateListed}
+      />
       <AiRecipeDialog
         open={aiOpen}
         onClose={() => setAiOpen(false)}

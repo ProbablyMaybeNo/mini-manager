@@ -22,7 +22,15 @@ const PRO_FEATURE_ERROR =
 const recipeIdSchema = z.string().min(1).max(64);
 const slugSchema = z.string().min(1).max(64);
 
-const publishSchema = z.object({ recipeId: recipeIdSchema });
+const publishSchema = z.object({
+  recipeId: recipeIdSchema,
+  /** Also surface the recipe on the public `/gallery` grid. Defaults to
+   *  `true` — sharing a recipe now lists it by default (the moat loop
+   *  depends on shared recipes being discoverable), with an explicit
+   *  opt-out checkbox in the share UI for painters who want a link-only
+   *  share. */
+  listed: z.boolean().optional(),
+});
 const unpublishSchema = z.object({ recipeId: recipeIdSchema });
 const cloneFromSlugSchema = z.object({ slug: slugSchema });
 
@@ -49,8 +57,14 @@ function revalidateForRecipe(recipe: Recipe) {
 
 /**
  * Mint or reuse a public slug for a recipe. Idempotent — if the recipe
- * already has a slug, the existing value is returned. New slugs retry
- * up to 3 times on the (vanishingly rare) unique-index collision.
+ * already has a slug, the existing value is returned (and `isListed` is
+ * synced to `listed` in case the painter flipped the gallery toggle after
+ * the first publish). New slugs retry up to 3 times on the (vanishingly
+ * rare) unique-index collision.
+ *
+ * `listed` defaults to `true` — this is the moat-loop fix (UX audit
+ * blocker): a shared recipe now reaches `/gallery` unless the painter
+ * opts out via the share-flow checkbox.
  */
 export async function publishRecipe(
   raw: z.infer<typeof publishSchema>,
@@ -73,7 +87,22 @@ export async function publishRecipe(
   const existing = await getOwnedRecipe(userId, parsed.data.recipeId);
   if (!existing) return { ok: false, error: "Recipe not found" };
 
+  const listed = parsed.data.listed ?? true;
+
   if (existing.publicSlug) {
+    if (existing.isListed !== listed) {
+      const updated = await db
+        .update(recipes)
+        .set({ isListed: listed })
+        .where(eq(recipes.id, existing.id))
+        .returning();
+      const row = updated[0];
+      if (row) {
+        revalidateForRecipe(row);
+        revalidateForSlug(existing.publicSlug);
+        revalidatePath("/gallery");
+      }
+    }
     return { ok: true, data: { slug: existing.publicSlug } };
   }
 
@@ -86,13 +115,14 @@ export async function publishRecipe(
     try {
       const updated = await db
         .update(recipes)
-        .set({ publicSlug: slug })
+        .set({ publicSlug: slug, isListed: listed })
         .where(eq(recipes.id, existing.id))
         .returning();
       const row = updated[0];
       if (!row) return { ok: false, error: "Publish returned no row" };
       revalidateForRecipe(row);
       revalidateForSlug(slug);
+      revalidatePath("/gallery");
       return { ok: true, data: { slug } };
     } catch (err) {
       lastError = err;
@@ -140,10 +170,11 @@ export async function unpublishRecipe(
   try {
     await db
       .update(recipes)
-      .set({ publicSlug: null })
+      .set({ publicSlug: null, isListed: false })
       .where(eq(recipes.id, existing.id));
     revalidateForRecipe(existing);
     revalidateForSlug(previousSlug);
+    revalidatePath("/gallery");
     return { ok: true, data: { id: existing.id } };
   } catch (err) {
     return {

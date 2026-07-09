@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { getRecipeBySlug, getPaintMetaMap } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/lib/recipes/techniqueLabel";
 import { Panel, Swatch } from "@/components/kit";
 import { Logo } from "@/components/shell";
 import { ShareLinkBar } from "@/components/public/ShareLinkBar";
+import { CloneRecipeButton } from "@/components/recipe/CloneRecipeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +43,11 @@ export default async function PublicRecipePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [recipe, paintMeta] = await Promise.all([load(slug), getPaintMetaMap()]);
+  const [recipe, paintMeta, session] = await Promise.all([
+    load(slug),
+    getPaintMetaMap(),
+    auth(),
+  ]);
   if (!recipe) notFound();
 
   return (
@@ -59,6 +65,14 @@ export default async function PublicRecipePage({
 
       {/* The shareable link itself — shown + copyable, directly under the title. */}
       <ShareLinkBar path={`/r/${slug}`} />
+
+      {/* Clone-to-library CTA — the browse → clone → signup moat loop. */}
+      <CloneRecipeButton
+        slug={slug}
+        isLoggedIn={Boolean(session?.user?.id)}
+        size="lg"
+        className="w-full sm:w-auto"
+      />
 
       <Panel label="RECIPE" className="p-4">
         {recipe.slots.length === 0 ? (

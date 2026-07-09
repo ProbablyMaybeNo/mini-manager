@@ -94,6 +94,49 @@ describe("publishRecipe", () => {
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/not found/i);
   });
+
+  test("lists the recipe on the gallery by default (moat-loop fix)", async () => {
+    const recipeId = await seedRecipe();
+    const res = await publishRecipe({ recipeId });
+    expect(res.ok).toBe(true);
+
+    const [row] = await state
+      .db!.select({ isListed: recipes.isListed })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId));
+    expect(row?.isListed).toBe(true);
+  });
+
+  test("honours listed: false as an opt-out", async () => {
+    const recipeId = await seedRecipe();
+    const res = await publishRecipe({ recipeId, listed: false });
+    expect(res.ok).toBe(true);
+
+    const [row] = await state
+      .db!.select({ isListed: recipes.isListed })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId));
+    expect(row?.isListed).toBe(false);
+  });
+
+  test("re-publishing with a different `listed` value updates an already-shared recipe", async () => {
+    const recipeId = await seedRecipe();
+    const first = await publishRecipe({ recipeId });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+
+    const second = await publishRecipe({ recipeId, listed: false });
+    expect(second.ok).toBe(true);
+    if (!second.ok) return;
+    // Idempotent slug — same slug returned even though isListed flipped.
+    expect(second.data.slug).toBe(first.data.slug);
+
+    const [row] = await state
+      .db!.select({ isListed: recipes.isListed })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId));
+    expect(row?.isListed).toBe(false);
+  });
 });
 
 describe("unpublishRecipe", () => {

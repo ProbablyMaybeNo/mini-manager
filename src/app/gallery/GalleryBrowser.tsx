@@ -5,6 +5,7 @@ import Link from "next/link";
 import { EmptyState, Panel, SearchField, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { GalleryRecipeCard } from "@/db/queries/recipes";
+import { CloneRecipeButton } from "@/components/recipe/CloneRecipeButton";
 
 /**
  * Client browse layer over the server-fetched published-recipe list.
@@ -13,8 +14,13 @@ import type { GalleryRecipeCard } from "@/db/queries/recipes";
  */
 export function GalleryBrowser({
   recipes,
+  isLoggedIn,
 }: {
   recipes: ReadonlyArray<GalleryRecipeCard>;
+  /** Drives the clone button's logged-in vs. sign-up-redirect behaviour —
+   *  resolved once server-side and threaded down rather than re-checked
+   *  per card. */
+  isLoggedIn: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState<string | null>(null);
@@ -88,7 +94,7 @@ export function GalleryBrowser({
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((r) => (
             <li key={r.slug}>
-              <RecipeCard recipe={r} />
+              <RecipeCard recipe={r} isLoggedIn={isLoggedIn} />
             </li>
           ))}
         </ul>
@@ -124,15 +130,21 @@ function BrandChip({
   );
 }
 
-function RecipeCard({ recipe }: { recipe: GalleryRecipeCard }) {
+function RecipeCard({
+  recipe,
+  isLoggedIn,
+}: {
+  recipe: GalleryRecipeCard;
+  isLoggedIn: boolean;
+}) {
   return (
-    <Link
-      href={`/r/${recipe.slug}`}
-      className="group block h-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
-    >
-      <Panel
-        cornerTicks
-        className="flex h-full flex-col gap-3 p-4 transition-shadow group-hover:shadow-[0_0_6px_rgba(0,210,255,0.35)]"
+    <Panel cornerTicks className="flex h-full flex-col gap-3 p-4">
+      {/* The card's view surface — everything above the clone button is the
+       *  link target. The clone button lives outside it (a <button> nested
+       *  inside an <a> is invalid HTML and would steal clicks). */}
+      <Link
+        href={`/r/${recipe.slug}`}
+        className="group flex flex-1 flex-col gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
       >
         <h2 className="font-h1 text-h1 text-cyan-lite group-hover:text-glow-cyan">
           {recipe.name}
@@ -168,7 +180,14 @@ function RecipeCard({ recipe }: { recipe: GalleryRecipeCard }) {
         <p className="label-osd text-fg-dim">
           {recipe.slotCount} slot{recipe.slotCount === 1 ? "" : "s"}
         </p>
-      </Panel>
-    </Link>
+      </Link>
+
+      <CloneRecipeButton
+        slug={recipe.slug}
+        isLoggedIn={isLoggedIn}
+        size="sm"
+        className="w-full"
+      />
+    </Panel>
   );
 }
