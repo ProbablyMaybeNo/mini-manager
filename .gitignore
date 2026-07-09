@@ -42,6 +42,8 @@ coverage/
 playwright-report/
 test-results/
 .vitest-cache/
+# recipe-card phase 2 — sample exported share-card PNGs for human review
+_card-review/
 
 # stray dev-server output
 .dev-server.log

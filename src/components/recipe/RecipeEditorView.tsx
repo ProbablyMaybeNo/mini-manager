@@ -7,6 +7,7 @@ import type { Project, Recipe, RecipeSlot } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { RecipePaintPicker } from "./RecipePaintPicker";
 import { EmptySchemeExample, SchemePreview } from "./SchemePreview";
+import { ShareCardComposer } from "./ShareCardComposer";
 import { SlotRow } from "./SlotRow";
 
 export function RecipeEditorView({
@@ -38,6 +39,7 @@ export function RecipeEditorView({
   backLabel?: string;
 }) {
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
 
   const update = (patch: Partial<Recipe>) => onChange({ ...recipe, ...patch });
   const updateSlots = (slots: RecipeSlot[]) => update({ slots });
@@ -132,6 +134,9 @@ export function RecipeEditorView({
         <Button variant="secondary" onClick={onShare}>
           ⛓ Share Link
         </Button>
+        <Button variant="outlineCyan" onClick={() => setShareCardOpen(true)}>
+          ⬡ Share as Card
+        </Button>
         <Button variant="add" onClick={onSave}>
           Save Recipe
         </Button>
@@ -215,6 +220,14 @@ export function RecipeEditorView({
         mode={editing && editing.paintId ? "edit-slot" : "add-slot"}
         initialHex={editing?.swatch ?? null}
         initialPaintId={editing?.paintId || null}
+      />
+      <ShareCardComposer
+        open={shareCardOpen}
+        onClose={() => setShareCardOpen(false)}
+        recipeName={recipe.name}
+        slots={recipe.slots}
+        initialNotes={recipe.notes ?? null}
+        projectId={recipe.assignedProjectId ?? null}
       />
     </div>
   );
