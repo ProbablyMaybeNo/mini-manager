@@ -7,7 +7,6 @@ import { db } from "@/db/client";
 import { inventoryEntries, type InventoryEntry } from "@/db/schema";
 import { getInventoryEntry, upsertInventoryEntry } from "@/db/queries/inventory";
 import { currentUserId } from "@/lib/auth-stub";
-import { auth } from "@/auth";
 import { loadInventoryFlags } from "@/lib/appData";
 import type { ActionResult } from "@/lib/actions/projects";
 
@@ -28,14 +27,15 @@ const markPurchasedSchema = z.object({
  * read action surfaced directly to the client tool (same pattern as
  * `listRecipesForSendTo`): the owned paint ids only, not the full
  * {@link InventoryFlags} shape, since that's all the grounding toggle needs.
- * Uses `auth()` directly (not `currentUserId()`) so a signed-out visitor
- * browsing the tool (the guest preview) gets an empty set instead of being
- * redirected to sign-in.
+ * Resolves the user via `currentUserId()` like every sibling action (importing
+ * `@/auth` here pulls next-auth's `next/server` into this server-action module
+ * and breaks the integration suite's import). The try/catch swallows the
+ * signed-out redirect, so a guest still just gets an empty set.
  */
 export async function loadOwnedPaintIds(): Promise<ActionResult<string[]>> {
   try {
-    const session = await auth();
-    const flags = await loadInventoryFlags(session?.user?.id ?? null);
+    const userId = await currentUserId();
+    const flags = await loadInventoryFlags(userId);
     return { ok: true, data: flags.ownedIds };
   } catch (err) {
     return {
