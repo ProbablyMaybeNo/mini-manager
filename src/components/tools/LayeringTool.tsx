@@ -1,10 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Button, CloseButton, HexField, Panel, Swatch } from "@/components/kit";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Button, Checkbox, CloseButton, HexField, Panel, SegmentedToggle, Swatch, useToast } from "@/components/kit";
 import { readableText } from "@/lib/color";
 import { buildRamp, MAX_STEPS, MIN_STEPS } from "@/lib/tools/gradient/interpolate";
 import { computeVennFills } from "@/lib/tools/layering/venn";
+import { deriveLanesFromSeed, type LaneKey } from "@/lib/tools/layering/deriveLanes";
+import { groundLane } from "@/lib/tools/layering/groundLane";
+import { closestPaint, rankMatchesMulti, similarInOtherBrands } from "@/lib/toolMatch";
+import { loadOwnedPaintIds } from "@/lib/actions/inventory";
+import { AssignPaintMenu, type AssignedResult } from "@/components/recipe/AssignPaintMenu";
 import type { Paint, ToolSwatch } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { useCatalog } from "@/app/(app)/tools/useCatalog";
@@ -13,6 +18,32 @@ import { GlazeVenn, type VennLayer } from "./GlazeVenn";
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/;
 const MAX_LAYERS = 6;
+/** MATCH button alternatives — "a handful" per lane (Ross's spec). */
+const LANE_ALT_COUNT = 4;
+
+const LANE_SEED_OPTIONS: { value: LaneKey; label: string }[] = [
+  { value: "shadow", label: "Shadow" },
+  { value: "base", label: "Base" },
+  { value: "highlight", label: "Highlight" },
+];
+
+/** Other-brand-ranked alternatives for a lane's grounded paint. With a brand
+ *  filter active, ranks across exactly those brands (may include the
+ *  grounded paint's own brand); with no filter, falls back to the "closest
+ *  equivalents from OTHER brands" default (reuses `similarInOtherBrands`). */
+function laneAlternatives(
+  paint: Paint | null,
+  catalog: Paint[],
+  brands: ReadonlySet<string>,
+): Paint[] {
+  if (!paint || catalog.length === 0) return [];
+  if (brands.size > 0) {
+    return rankMatchesMulti(paint.hex, catalog, [...brands], LANE_ALT_COUNT)
+      .map((m) => m.paint)
+      .filter((p) => p.id !== paint.id);
+  }
+  return similarInOtherBrands(paint, catalog, LANE_ALT_COUNT);
+}
 
 interface Anchor {
   hex: string;
@@ -96,6 +127,100 @@ export function LayeringTool({
     else if (pickingLane === "highlight") setHighlight({ hex, paintId });
   }
 
+  /* ---------- MATCH button — seed one lane, derive the other two ---------- */
+  const { toast: laneToast, node: laneToastNode } = useToast();
+  const [seedLane, setSeedLane] = useState<LaneKey>("base");
+  // Owned-first grounding toggle (default OFF — closest catalog match
+  // regardless of ownership). Owned paint ids load once on mount; a
+  // signed-out visitor (guest preview) just gets an empty set, so the
+  // toggle quietly behaves like "closest match" for them.
+  const [ownedFirst, setOwnedFirst] = useState(false);
+  const [ownedIds, setOwnedIds] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    let alive = true;
+    loadOwnedPaintIds().then((res) => {
+      if (alive && res.ok) setOwnedIds(new Set(res.data));
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Per-lane brand multi-select filter for the "alternatives" lists below.
+  const [laneBrandFilters, setLaneBrandFilters] = useState<Record<LaneKey, ReadonlySet<string>>>({
+    shadow: new Set(),
+    base: new Set(),
+    highlight: new Set(),
+  });
+  function toggleLaneBrand(lane: LaneKey, brand: string) {
+    setLaneBrandFilters((prev) => {
+      const next = new Set(prev[lane]);
+      if (next.has(brand)) next.delete(brand);
+      else next.add(brand);
+      return { ...prev, [lane]: next };
+    });
+  }
+  function clearLaneBrands(lane: LaneKey) {
+    setLaneBrandFilters((prev) => ({ ...prev, [lane]: new Set() }));
+  }
+  const brandOptions = useMemo(
+    () => Array.from(new Set(catalog.map((p) => p.brand))).sort(),
+    [catalog],
+  );
+
+  // Every lane always shows a "grounded" catalog paint — the one it's
+  // explicitly set to (a Library pick), or, failing that, the closest
+  // catalog match to its raw hex — so the alternatives list + ASSIGN below
+  // always has a paint to rank against, even for a hand-typed hex.
+  const groundedShadow = useMemo(
+    () => resolvePaint(shadow.paintId) ?? (catalog.length ? closestPaint(shadow.hex, catalog) : null) ?? null,
+    [shadow, catalog],
+  );
+  const groundedBase = useMemo(
+    () => resolvePaint(base.paintId) ?? (catalog.length ? closestPaint(base.hex, catalog) : null) ?? null,
+    [base, catalog],
+  );
+  const groundedHighlight = useMemo(
+    () => resolvePaint(highlight.paintId) ?? (catalog.length ? closestPaint(highlight.hex, catalog) : null) ?? null,
+    [highlight, catalog],
+  );
+  const shadowAlternatives = useMemo(
+    () => laneAlternatives(groundedShadow, catalog, laneBrandFilters.shadow),
+    [groundedShadow, catalog, laneBrandFilters.shadow],
+  );
+  const baseAlternatives = useMemo(
+    () => laneAlternatives(groundedBase, catalog, laneBrandFilters.base),
+    [groundedBase, catalog, laneBrandFilters.base],
+  );
+  const highlightAlternatives = useMemo(
+    () => laneAlternatives(groundedHighlight, catalog, laneBrandFilters.highlight),
+    [groundedHighlight, catalog, laneBrandFilters.highlight],
+  );
+
+  function handleLaneAssigned(result: AssignedResult) {
+    laneToast(result.created ? `Created ${result.name}` : `Added to ${result.name}`, "green");
+  }
+
+  const seedAnchor = seedLane === "shadow" ? shadow : seedLane === "base" ? base : highlight;
+  const matchEnabled = HEX6.test(seedAnchor.hex);
+
+  /** Ground one derived hex to a real catalog paint (owned-first per the
+   *  toggle) and land it on the given lane setter. Falls back to the raw
+   *  derived hex with no paintId when the catalog hasn't loaded yet. */
+  function applyDerivedLane(setter: (a: Anchor) => void, derivedHex: string) {
+    const paint = catalog.length ? groundLane(derivedHex, catalog, ownedIds, ownedFirst) : null;
+    setter(paint ? { hex: paint.hex.toUpperCase(), paintId: paint.id } : { hex: derivedHex, paintId: null });
+  }
+
+  function handleMatch() {
+    if (!matchEnabled) return;
+    const derived = deriveLanesFromSeed(seedLane, seedAnchor.hex);
+    if (!derived) return;
+    if (seedLane !== "shadow") applyDerivedLane(setShadow, derived.shadow);
+    if (seedLane !== "base") applyDerivedLane(setBase, derived.base);
+    if (seedLane !== "highlight") applyDerivedLane(setHighlight, derived.highlight);
+  }
+
   /* ---------- Stacking (optical glaze mix, N renamable layers) ---------- */
   const layerSeq = useRef(0);
   function nextLayerId(): string {
@@ -168,23 +293,78 @@ export function LayeringTool({
             label="Shadow"
             anchor={shadow}
             paint={resolvePaint(shadow.paintId)}
+            groundedPaint={groundedShadow}
+            alternatives={shadowAlternatives}
+            brandOptions={brandOptions}
+            selectedBrands={laneBrandFilters.shadow}
+            onToggleBrand={(b) => toggleLaneBrand("shadow", b)}
+            onClearBrands={() => clearLaneBrands("shadow")}
             onChange={(hex) => setShadow({ hex, paintId: null })}
             onPick={() => setPickingLane("shadow")}
+            onAssigned={handleLaneAssigned}
           />
           <LaneField
             label="Base"
             anchor={base}
             paint={resolvePaint(base.paintId)}
+            groundedPaint={groundedBase}
+            alternatives={baseAlternatives}
+            brandOptions={brandOptions}
+            selectedBrands={laneBrandFilters.base}
+            onToggleBrand={(b) => toggleLaneBrand("base", b)}
+            onClearBrands={() => clearLaneBrands("base")}
             onChange={(hex) => setBase({ hex, paintId: null })}
             onPick={() => setPickingLane("base")}
+            onAssigned={handleLaneAssigned}
           />
           <LaneField
             label="Highlight"
             anchor={highlight}
             paint={resolvePaint(highlight.paintId)}
+            groundedPaint={groundedHighlight}
+            alternatives={highlightAlternatives}
+            brandOptions={brandOptions}
+            selectedBrands={laneBrandFilters.highlight}
+            onToggleBrand={(b) => toggleLaneBrand("highlight", b)}
+            onClearBrands={() => clearLaneBrands("highlight")}
             onChange={(hex) => setHighlight({ hex, paintId: null })}
             onPick={() => setPickingLane("highlight")}
+            onAssigned={handleLaneAssigned}
           />
+
+          {/* MATCH — seed one lane above, derive the other two in Lab space
+              and ground them to real catalog paints. */}
+          <div className="flex flex-col gap-2 border-t border-cyan/10 pt-3">
+            <SegmentedToggle
+              options={LANE_SEED_OPTIONS}
+              value={seedLane}
+              onChange={setSeedLane}
+              aria-label="Seed lane for MATCH"
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="solidGreen"
+                size="sm"
+                disabled={!matchEnabled}
+                onClick={handleMatch}
+              >
+                Match
+              </Button>
+              <label className="flex items-center gap-1.5">
+                <Checkbox
+                  checked={ownedFirst}
+                  onChange={setOwnedFirst}
+                  ariaLabel="Owned first — prefer paints you already own"
+                />
+                <span className="label-osd text-fg">Owned first</span>
+              </label>
+            </div>
+            <p className="font-body text-body text-fg-faint">
+              Derives the other two lanes from the {seedLane} lane, grounded
+              to {ownedFirst ? "a paint you own when one's close enough" : "the closest catalog paint"}.
+            </p>
+          </div>
+
           <label>
             <span className="label-osd text-fg">Steps {steps}</span>
             <input
@@ -406,6 +586,7 @@ export function LayeringTool({
         closeOnSelect
         onSelect={applyLayerColor}
       />
+      {laneToastNode}
     </div>
   );
 }
@@ -414,17 +595,36 @@ function LaneField({
   label,
   anchor,
   paint,
+  groundedPaint,
+  alternatives,
+  brandOptions,
+  selectedBrands,
+  onToggleBrand,
+  onClearBrands,
   onChange,
   onPick,
+  onAssigned,
 }: {
   label: string;
   anchor: Anchor;
   paint: Paint | undefined;
+  /** The lane's catalog paint for alternatives/ASSIGN — the paintId pick if
+   *  set, else the closest catalog match to the raw hex. Null while the
+   *  catalog hasn't loaded. */
+  groundedPaint: Paint | null;
+  /** ΔE-ranked "other similar paints" for the grounded paint, respecting
+   *  `selectedBrands` when set. */
+  alternatives: Paint[];
+  brandOptions: string[];
+  selectedBrands: ReadonlySet<string>;
+  onToggleBrand: (brand: string) => void;
+  onClearBrands: () => void;
   onChange: (hex: string) => void;
   onPick: () => void;
+  onAssigned: (result: AssignedResult) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <HexField
         label={label}
         name={label.toLowerCase()}
@@ -434,6 +634,59 @@ function LaneField({
         swatchLabel={`Pick ${label} colour`}
       />
       <PaintLabel paint={paint} />
+
+      {groundedPaint && (
+        <div className="flex flex-col gap-1.5 border-t border-cyan/10 pt-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="min-w-0 truncate label-osd text-fg-dim"
+              title={`${groundedPaint.name} · ${groundedPaint.brand}`}
+            >
+              {groundedPaint.name} · {groundedPaint.brand}
+            </span>
+            <AssignPaintMenu
+              swatch={{ hex: groundedPaint.hex, paintId: groundedPaint.id, name: groundedPaint.name }}
+              onAssigned={onAssigned}
+              buttonSize="sm"
+            />
+          </div>
+
+          {alternatives.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="label-osd text-fg-faint">Alternatives</span>
+                <BrandFilterPopover
+                  brandOptions={brandOptions}
+                  selected={selectedBrands}
+                  onToggle={onToggleBrand}
+                  onClear={onClearBrands}
+                />
+              </div>
+              <ul className="flex flex-col gap-1">
+                {alternatives.map((alt) => (
+                  <li
+                    key={alt.id}
+                    className="flex items-center gap-2 border border-cyan/10 px-1.5 py-1"
+                  >
+                    <Swatch hex={alt.hex} size="sm" />
+                    <span
+                      className="min-w-0 flex-1 truncate font-body text-body text-fg"
+                      title={`${alt.name} · ${alt.brand}`}
+                    >
+                      {alt.name} <span className="text-fg-faint">· {alt.brand}</span>
+                    </span>
+                    <AssignPaintMenu
+                      swatch={{ hex: alt.hex, paintId: alt.id, name: alt.name }}
+                      onAssigned={onAssigned}
+                      buttonSize="sm"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -447,5 +700,82 @@ function PaintLabel({ paint }: { paint: Paint | undefined }) {
     <span className="label-osd text-fg-dim">
       {paint.name} · {paint.brand}
     </span>
+  );
+}
+
+/** Small terminal-styled checkbox popover — per-lane brand multi-select
+ *  filter for the MATCH alternatives list. No shared brand-multi-select
+ *  primitive exists yet in the kit, so this is self-contained (same
+ *  open/close-on-outside-click idiom as {@link AssignPaintMenu}). */
+function BrandFilterPopover({
+  brandOptions,
+  selected,
+  onToggle,
+  onClear,
+}: {
+  brandOptions: string[];
+  selected: ReadonlySet<string>;
+  onToggle: (brand: string) => void;
+  onClear: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative inline-block">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="border border-cyan/30 px-1.5 py-0.5 font-button text-button text-fg-dim transition-colors hover:border-cyan/60 hover:text-fg"
+      >
+        Brands{selected.size > 0 ? ` · ${selected.size}` : ""}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label="Filter alternatives by brand"
+          className="absolute right-0 top-full z-30 mt-1 max-h-52 w-44 overflow-y-auto border border-dotted border-cyan/60 bg-bg p-2 panel-depth motion-safe:animate-menu-in"
+        >
+          {selected.size > 0 && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="mb-1 block font-button text-button text-red hover:underline"
+            >
+              Clear
+            </button>
+          )}
+          <ul className="flex flex-col gap-1">
+            {brandOptions.map((b) => (
+              <li key={b}>
+                <label className="flex min-h-6 items-center gap-2 font-body text-body text-fg">
+                  <Checkbox checked={selected.has(b)} onChange={() => onToggle(b)} ariaLabel={b} />
+                  <span className="min-w-0 truncate">{b}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
