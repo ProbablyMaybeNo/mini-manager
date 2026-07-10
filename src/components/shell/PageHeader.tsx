@@ -21,7 +21,7 @@ export function PageHeader({
         {/* HEX.CODE page title (4:4): Flexi IBM VGA True, uppercase, with a
             short cyan underline bar beneath it. Flexi is a bitmap VGA face —
             kept at a moderate size so it reads crisp, not arcade-huge. */}
-        <h1 className="font-title text-[clamp(1.5rem,3.5vw,2.25rem)] font-extrabold uppercase leading-none tracking-tight text-fg-bright">
+        <h1 className="font-title text-[clamp(2.25rem,5.25vw,3.375rem)] font-extrabold uppercase leading-none tracking-tight text-fg-bright">
           {title}
         </h1>
         <span aria-hidden className="mt-2 block h-1 w-12 rounded-full bg-cyan" />
