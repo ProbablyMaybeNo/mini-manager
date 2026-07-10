@@ -4,6 +4,7 @@ import { currentUserId } from "@/lib/auth-stub";
 import { loadAppData } from "@/lib/appData";
 import { db } from "@/db/client";
 import { projects } from "@/db/schema";
+import { countProjectImages } from "@/db/queries/projectImages";
 import { rollupProjectMinutes } from "@/lib/projectTime";
 import type { Project } from "@/lib/types";
 import { ProjectPageClient } from "./ProjectPageClient";
@@ -73,6 +74,11 @@ export default async function ProjectPage({
     swatches: r.slots.map((s) => s.swatch),
   }));
 
+  // Seed the full-page layout: the photo column only mounts when the project
+  // already has a photo, otherwise the page reads left-heavy with an empty
+  // column. Uploading the first one (via the inline UPLOAD affordance) flips it.
+  const initialHasPhotos = (await countProjectImages(id)) > 0;
+
   return (
     <ProjectPageClient
       project={project}
@@ -80,6 +86,7 @@ export default async function ProjectPage({
       loggedMinutes={loggedMinutes}
       meta={meta}
       recipeOptions={recipeOptions}
+      initialHasPhotos={initialHasPhotos}
     />
   );
 }

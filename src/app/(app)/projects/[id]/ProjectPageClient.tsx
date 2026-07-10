@@ -126,6 +126,7 @@ export function ProjectPageClient({
   loggedMinutes,
   meta,
   recipeOptions = [],
+  initialHasPhotos = false,
 }: {
   project: Project;
   ancestors?: ProjectCrumb[];
@@ -133,11 +134,19 @@ export function ProjectPageClient({
   meta?: ProjectMeta;
   /** The user's recipes (recently-used first) for the attach dropdown. */
   recipeOptions?: RecipePickerOption[];
+  /** Server-seeded: does this project already have ≥1 uploaded photo? Drives
+   *  whether the right-hand photo column mounts on first paint. */
+  initialHasPhotos?: boolean;
 }) {
   const router = useRouter();
   const { toast, node: toastNode } = useToast();
   const [attachOpen, setAttachOpen] = useState(false);
   const [attachPending, startAttach] = useTransition();
+  // Show the photo column only once a photo exists (Ross) — otherwise the page
+  // reads left-heavy with an empty column. The inline PHOTOS block (below the
+  // editable details) carries the UPLOAD affordance until then; adding the first
+  // photo flips this true and the column appears.
+  const [hasPhotos, setHasPhotos] = useState(initialHasPhotos);
 
   // Attach an existing recipe to this project, then refresh in place so the
   // RECIPE card's swatches update without navigating away.
@@ -433,21 +442,39 @@ export function ProjectPageClient({
               target date / notes right here, instead of the old collapsed
               accordions that just bounced you to `/dashboard?open=`. */}
           <EditableDetails project={project} meta={meta} />
+
+          {/* No photos yet → the PHOTOS panel lives inline here (with its UPLOAD
+              button) instead of reserving an empty right column. Uploading the
+              first photo flips hasPhotos and it moves out to the column. */}
+          {!hasPhotos && (
+            <section
+              aria-label="Model photos"
+              className="flex flex-col gap-4 rounded-[12px] border border-border bg-surface p-6"
+            >
+              <h2 className="font-mono text-[15px] font-bold uppercase tracking-wide text-cyan-lite">
+                PHOTOS
+              </h2>
+              <ProjectImagePanel projectId={project.id} onHasPhotosChange={setHasPhotos} />
+            </section>
+          )}
         </div>
       </div>
 
       {/* IMAGE COLUMN (project-view overhaul) — a full-height model-photo column
           sitting between the central sections and the right timeline rail, so the
-          finished-model photos live on the page too (not just the panel). Shows
-          from lg (the rail only appears at xl), giving a graceful 2-then-3 column
-          build-up. Below lg the photos are reachable via the dashboard panel. */}
-      <aside
-        aria-label="Model photos"
-        className="hidden w-[320px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-border bg-bg p-6 lg:flex"
-      >
-        <h2 className="font-mono text-[14px] font-bold uppercase text-cyan-lite">PHOTOS</h2>
-        <ProjectImagePanel projectId={project.id} />
-      </aside>
+          finished-model photos live on the page too (not just the panel). Only
+          mounts once the project has a photo (else the inline block above carries
+          it). Shows from lg (the rail only appears at xl), giving a graceful
+          2-then-3 column build-up. */}
+      {hasPhotos && (
+        <aside
+          aria-label="Model photos"
+          className="hidden w-[320px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-border bg-bg p-6 lg:flex"
+        >
+          <h2 className="font-mono text-[14px] font-bold uppercase text-cyan-lite">PHOTOS</h2>
+          <ProjectImagePanel projectId={project.id} onHasPhotosChange={setHasPhotos} />
+        </aside>
+      )}
 
       {/* RIGHT RAIL (13:248) — TIMELINE + RELATED + QUICK STATS, flush right. */}
       <aside
