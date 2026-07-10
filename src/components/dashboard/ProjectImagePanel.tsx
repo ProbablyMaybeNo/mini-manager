@@ -31,7 +31,15 @@ const ACCEPT = "image/png,image/jpeg,image/webp";
  * reorder is a fast-follow (the `reorderProjectImages` action already
  * ships — see `src/lib/actions/projectImages.ts`).
  */
-export function ProjectImagePanel({ projectId }: { projectId: string }) {
+export function ProjectImagePanel({
+  projectId,
+  onHasPhotosChange,
+}: {
+  projectId: string;
+  /** Fired whenever the loaded photo set becomes empty / non-empty, so a parent
+   *  (e.g. the full project page) can show or hide the photo column. */
+  onHasPhotosChange?: (hasPhotos: boolean) => void;
+}) {
   const [images, setImages] = useState<ProjectImage[] | null>(null);
   const [index, setIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -55,6 +63,12 @@ export function ProjectImagePanel({ projectId }: { projectId: string }) {
       alive = false;
     };
   }, [projectId]);
+
+  // Report emptiness up once the set is known (and on every add/delete) so the
+  // parent can reflow the layout around a present-or-absent photo column.
+  useEffect(() => {
+    if (images !== null) onHasPhotosChange?.(images.length > 0);
+  }, [images, onHasPhotosChange]);
 
   const safeIndex = images && images.length > 0 ? Math.min(index, images.length - 1) : 0;
   const current = images && images.length > 0 ? images[safeIndex] : null;

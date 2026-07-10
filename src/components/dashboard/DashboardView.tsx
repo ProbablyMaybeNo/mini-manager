@@ -258,6 +258,15 @@ export function DashboardView({
                     </button>
                   </div>
                 </div>
+                {/* Mobile-reachable create (MUX-004): a full-width primary button
+                    at the top of the roster so "add project" is in the thumb zone
+                    without hunting the corner ⊕ or scrolling past the whole list.
+                    Desktop keeps the ⊕ + the below-roster button. */}
+                {projects.length > 0 && (
+                  <Button variant="primary" onClick={startCreate} className="w-full md:hidden">
+                    + New project
+                  </Button>
+                )}
                 {/* SORT control (4:4). Hidden when the painter has no projects
                     yet — the empty roster CTA carries the moment. */}
                 {projects.length > 0 && (

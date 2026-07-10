@@ -727,7 +727,7 @@ export function ProjectWorkspaceBody({
                       onClick={() =>
                         run(() => setProjectComplete({ id: c.id, complete: Math.max(0, done - 1) }))
                       }
-                      className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-6 md:min-w-6"
                     >
                       −
                     </button>
@@ -739,7 +739,7 @@ export function ProjectWorkspaceBody({
                       aria-label={`Increase completed for ${c.title}`}
                       disabled={pending || (total > 0 && done >= total)}
                       onClick={() => run(() => setProjectComplete({ id: c.id, complete: done + 1 }))}
-                      className="inline-flex min-h-6 min-w-6 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-6 md:min-w-6"
                     >
                       +
                     </button>
