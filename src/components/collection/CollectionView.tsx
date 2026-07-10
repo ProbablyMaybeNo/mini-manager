@@ -44,10 +44,19 @@ export function CollectionView({
   return (
     <div className="flex h-full flex-col p-6">
       <div className="flex flex-1 flex-col gap-6 pb-4">
-      <PageHeader
-        title="COLLECTION"
-        tagline="// paints & models — track what each costs"
-      />
+      <PageHeader title="COLLECTION" />
+
+      {/* Blue intro banner matching the project + recipes pages (WelcomeCard
+          slim bar — #22568F navy, white mono "> SYS —" prefix). */}
+      <section
+        className="rounded-[10px] px-4 py-2.5 text-white"
+        style={{ backgroundColor: "#22568F" }}
+      >
+        <span className="block font-mono text-[13px] leading-snug text-white">
+          <span className="font-bold">&gt; SYS</span> — track every paint &amp; model
+          you own or want, and what each one costs.
+        </span>
+      </section>
 
       <PasteUrlBar onAddUrl={onAddUrl} />
 
