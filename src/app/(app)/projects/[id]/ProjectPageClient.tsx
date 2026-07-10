@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   Button,
   Chip,
+  DateField,
   FocusReticleIcon,
+  Listbox,
   PriorityTag,
   ProgressBar,
   StatusText,
@@ -15,15 +17,55 @@ import {
   RecipePickerDialog,
   type RecipePickerOption,
 } from "@/components/recipe/RecipePickerDialog";
+import { ProjectImagePanel } from "@/components/dashboard/ProjectImagePanel";
 import { attachRecipeToProject, createRecipe } from "@/lib/actions/recipes";
+import {
+  bumpProjectStatus,
+  updateProjectPriority,
+  updateProjectType,
+} from "@/lib/actions/projects";
+import {
+  setProjectTargetDate,
+  updateProjectNotes,
+} from "@/lib/actions/projectMeta";
 import { cn } from "@/lib/cn";
 import {
   accentDot,
   formatMinutes,
   priorityAccent,
   projectTypeAccent,
+  statusAccent,
+  STATUS_LABEL,
 } from "@/lib/palette";
-import type { Hex, Project, ProjectStatus, ProjectType } from "@/lib/types";
+import type { Hex, Priority, Project, ProjectStatus, ProjectType } from "@/lib/types";
+
+const STATUS_OPTIONS: ProjectStatus[] = [
+  "WISHLIST",
+  "OWNED",
+  "BUILDING",
+  "PRIMING",
+  "PAINTING",
+  "BASING",
+  "COMPLETE",
+  "SHELVED",
+];
+const PRIORITY_OPTIONS: Priority[] = ["Low", "Med", "High"];
+const TYPE_OPTIONS: ProjectType[] = ["Army", "Warband", "Unit", "Model", "Terrain"];
+
+/** App display priority → DB priority enum. Mirrors ProjectWorkspaceBody. */
+const PRIORITY_TO_DB: Record<Priority, "Low" | "Medium" | "High"> = {
+  Low: "Low",
+  Med: "Medium",
+  High: "High",
+};
+/** App type → DB projectTypes literal. Mirrors ProjectWorkspaceBody. */
+const TYPE_TO_DB: Record<ProjectType, "Army" | "Warband" | "Unit" | "Model" | "Terrain Piece"> = {
+  Army: "Army",
+  Warband: "Warband",
+  Unit: "Unit",
+  Model: "Model",
+  Terrain: "Terrain Piece",
+};
 
 /** Lightweight ancestor descriptor for the breadcrumb (PP-2). */
 export interface ProjectCrumb {
@@ -196,7 +238,7 @@ export function ProjectPageClient({
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-4">
-              <h1 className="font-mono text-[clamp(1.75rem,4vw,2.5rem)] font-bold uppercase leading-none tracking-tight text-fg-bright">
+              <h1 className="font-title text-[clamp(1.75rem,4vw,2.5rem)] font-extrabold uppercase leading-none tracking-[0.08em] text-fg-bright">
                 {project.title}
               </h1>
               <Chip accent={accent} className="px-2.5 py-1 text-[12px] tracking-wide">
@@ -378,31 +420,26 @@ export function ProjectPageClient({
             </div>
           </section>
 
-          {/* DETAILS accordion header (13:228) — collapsed summary strip. */}
-          <AccordionStrip
-            label="DETAILS"
-            summary={[
-              createdLong ? `Created ${createdLong}` : null,
-              deadlineLong ? `Deadline ${deadlineLong}` : null,
-              meta?.tags.length ? `Tags: ${meta.tags.map((t) => `'${t}'`).join(" ")}` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-            onClick={() => router.push(`/dashboard?open=${project.id}`)}
-          />
-
-          {/* NOTES accordion header (13:243) — collapsed first-line preview. */}
-          {meta?.notes && (
-            <AccordionStrip
-              label="NOTES"
-              summary={`'${meta.notes.split("\n")[0].slice(0, 80)}${
-                meta.notes.length > 80 ? "…" : ""
-              }'`}
-              onClick={() => router.push(`/dashboard?open=${project.id}`)}
-            />
-          )}
+          {/* DETAILS — now editable inline (project-view overhaul): full parity
+              with the dashboard panel so you can set type / status / priority /
+              target date / notes right here, instead of the old collapsed
+              accordions that just bounced you to `/dashboard?open=`. */}
+          <EditableDetails project={project} meta={meta} />
         </div>
       </div>
+
+      {/* IMAGE COLUMN (project-view overhaul) — a full-height model-photo column
+          sitting between the central sections and the right timeline rail, so the
+          finished-model photos live on the page too (not just the panel). Shows
+          from lg (the rail only appears at xl), giving a graceful 2-then-3 column
+          build-up. Below lg the photos are reachable via the dashboard panel. */}
+      <aside
+        aria-label="Model photos"
+        className="hidden w-[320px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-border bg-bg p-6 lg:flex"
+      >
+        <h2 className="font-mono text-[14px] font-bold uppercase text-cyan-lite">PHOTOS</h2>
+        <ProjectImagePanel projectId={project.id} />
+      </aside>
 
       {/* RIGHT RAIL (13:248) — TIMELINE + RELATED + QUICK STATS, flush right. */}
       <aside
@@ -569,31 +606,96 @@ function SubProjectRow({
   );
 }
 
-/** Collapsed accordion header strip (13:228 / 13:243) — label + summary + ›. */
-function AccordionStrip({
-  label,
-  summary,
-  onClick,
-}: {
-  label: string;
-  summary: string;
-  onClick: () => void;
-}) {
-  if (!summary) return null;
+/**
+ * Editable DETAILS section on the full project page (project-view overhaul) —
+ * brings the full page to parity with the dashboard panel: type / status /
+ * priority dropdowns, a target date, and a notes textarea, all writing straight
+ * through the same server actions the panel uses. Replaces the old read-only
+ * DETAILS / NOTES accordion strips that just deep-linked to the dashboard.
+ */
+function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMeta }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [notes, setNotes] = useState(meta?.notes ?? "");
+  const [targetDate, setTargetDate] = useState(meta?.deadlineIso ?? "");
+
+  function run(action: () => Promise<{ ok: boolean; error?: string }>) {
+    start(async () => {
+      const res = await action();
+      if (res.ok) router.refresh();
+    });
+  }
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center justify-between gap-4 rounded-[8px] border border-border bg-surface p-4 text-left transition-colors hover:border-cyan/40 focus:outline-none focus-visible:border-cyan"
+    <section
+      aria-label="Edit details"
+      className="flex flex-col gap-4 rounded-[12px] border border-border bg-surface p-6"
     >
-      <span className="flex min-w-0 items-center gap-4">
-        <span className="shrink-0 font-mono text-[13px] font-bold uppercase text-fg-bright">
-          {label}
-        </span>
-        <span className="min-w-0 truncate font-mono text-[12px] text-fg-dim">{summary}</span>
-      </span>
-      <span aria-hidden className="shrink-0 text-fg-dim">›</span>
-    </button>
+      <h2 className="font-mono text-[15px] font-bold uppercase tracking-wide text-cyan-lite">
+        DETAILS
+      </h2>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <label className="flex flex-col gap-1">
+          <span className="label-osd text-fg-dim">Type</span>
+          <Listbox
+            value={project.type}
+            disabled={pending}
+            ariaLabel="Project type"
+            options={TYPE_OPTIONS.map((t) => ({ value: t, label: t.toUpperCase() }))}
+            onChange={(t) => run(() => updateProjectType({ id: project.id, type: TYPE_TO_DB[t] }))}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="label-osd text-fg-dim">Status</span>
+          <Listbox
+            value={project.status}
+            disabled={pending}
+            ariaLabel="Project status"
+            accent={statusAccent[project.status]}
+            options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
+            onChange={(s) => run(() => bumpProjectStatus({ id: project.id, status: s }))}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="label-osd text-fg-dim">Priority</span>
+          <Listbox
+            value={project.priority}
+            disabled={pending}
+            ariaLabel="Project priority"
+            accent={priorityAccent[project.priority]}
+            options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p.toUpperCase() }))}
+            onChange={(p) =>
+              run(() => updateProjectPriority({ id: project.id, priority: PRIORITY_TO_DB[p] }))
+            }
+          />
+        </label>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="label-osd text-fg-dim">Target date</span>
+        <DateField
+          value={targetDate}
+          ariaLabel="Target date"
+          onChange={(v) => {
+            setTargetDate(v);
+            run(() => setProjectTargetDate({ id: project.id, date: v || null }));
+          }}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <span className="label-osd text-fg-dim">Notes &amp; techniques</span>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          onBlur={() => run(() => updateProjectNotes({ id: project.id, notes }))}
+          rows={4}
+          aria-label="Notes & techniques"
+          placeholder="Notes & techniques — e.g. edge highlight Terminators with Stormhost Silver…"
+          className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-body text-body text-fg focus:border-cyan focus:outline-none"
+        />
+      </div>
+    </section>
   );
 }
 

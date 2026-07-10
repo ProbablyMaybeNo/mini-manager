@@ -91,7 +91,7 @@ const QUICK_JUMP_SECTIONS: { anchorId: string; label: string }[] = [
   { anchorId: "inspector-sub-projects", label: "Sub" },
   { anchorId: "inspector-recipes", label: "Recipes" },
   { anchorId: "inspector-progress", label: "Progress" },
-  { anchorId: "inspector-info", label: "Info" },
+  { anchorId: "inspector-info", label: "Ref" },
 ];
 
 /**
@@ -117,6 +117,7 @@ function CollapsibleSection({
   defaultOpen,
   className,
   dataWalkthrough,
+  fill,
   children,
 }: {
   label: string;
@@ -127,15 +128,23 @@ function CollapsibleSection({
   className?: string;
   /** First-create walkthrough anchor id placed on the section's outer Panel. */
   dataWalkthrough?: string;
+  /** Stretch the body to fill the panel's grid-stretched height (md+), so a
+   *  trailing `flex-1` child (e.g. DETAILS' Notes) anchors to the bottom and
+   *  balances a taller sibling panel like PHOTOS. */
+  fill?: boolean;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = `${anchorId}-body`;
   return (
-    <Panel label={label} className={cn("p-4 pt-5", className)} data-walkthrough={dataWalkthrough}>
+    <Panel
+      label={label}
+      className={cn("p-4 pt-5", fill && "flex flex-col", className)}
+      data-walkthrough={dataWalkthrough}
+    >
       {/* scroll-mt keeps the notched label clear of the sticky header when the
           quick-jump rail scrolls this section into view. */}
-      <div id={anchorId} className="scroll-mt-4">
+      <div id={anchorId} className={cn("scroll-mt-4", fill && "flex flex-1 flex-col")}>
         {/* Mobile-only collapse toggle. The Panel's notched label is the section
             identity, so the toggle is chevron-only with an aria-label naming the
             section; it sits as a full-width row above the body to give a ≥44px
@@ -153,8 +162,17 @@ function CollapsibleSection({
           </span>
         </button>
 
-        {/* Body: hidden when collapsed on mobile; always shown on md+. */}
-        <div id={bodyId} className={cn(open ? "block" : "hidden", "md:block")}>
+        {/* Body: hidden when collapsed on mobile; always shown on md+. When
+            `fill`, the md+ body becomes a flex column so a trailing flex-1 child
+            stretches to the bottom (we swap `md:block` for `md:flex` to avoid a
+            display-utility collision). */}
+        <div
+          id={bodyId}
+          className={cn(
+            open ? "block" : "hidden",
+            fill ? "md:flex md:flex-1 md:flex-col" : "md:block",
+          )}
+        >
           {hint && <p className="mb-3 font-body text-body text-fg-dim">{hint}</p>}
           {children}
         </div>
@@ -362,19 +380,32 @@ export function ProjectWorkspaceBody({
         ))}
       </nav>
 
-      {/* The inspector holds everything editable, but the roomy read-first
-          project PAGE (timeline / related / quick stats) is still one tap away. */}
+      {/* Panel header row (RF-4 / project-view overhaul): the editable NAME leads
+          at the top-left — moved up out of DETAILS so it's the first thing you
+          see and edit — with "⤢ Open full page" pushed across to the top-right.
+          The inspector chrome (InspectorPane / ProjectBottomSheet) still carries
+          the breadcrumb + close X above this, so we don't repeat those here. */}
       {!isPage && (
-        <button
-          type="button"
-          // Navigate forward (no onClose) — the inspector's history-unwind on
-          // close would fight the push. ProjectPanelStack's unmount cleanup
-          // skips its unwind when we've navigated past the inspector entry.
-          onClick={() => router.push(`/projects/${project.id}`)}
-          className="inline-flex min-h-11 items-center gap-1.5 self-start font-mono text-[11px] text-fg-faint transition-colors hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite md:min-h-6"
-        >
-          ⤢ Open full page
-        </button>
+        <div className="flex items-start justify-between gap-3" data-walkthrough="name">
+          <div className="min-w-0 flex-1">
+            <RenameField
+              id={project.id}
+              name={project.title}
+              disabled={pending}
+              onSaved={() => router.refresh()}
+            />
+          </div>
+          <button
+            type="button"
+            // Navigate forward (no onClose) — the inspector's history-unwind on
+            // close would fight the push. ProjectPanelStack's unmount cleanup
+            // skips its unwind when we've navigated past the inspector entry.
+            onClick={() => router.push(`/projects/${project.id}`)}
+            className="mt-6 inline-flex min-h-11 shrink-0 items-center gap-1.5 font-mono text-[11px] text-fg-faint transition-colors hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite md:min-h-6"
+          >
+            ⤢ Open full page
+          </button>
+        </div>
       )}
 
       {/* Compact PROGRESS summary strip (RF-6): a dense, glanceable trio at the
@@ -419,17 +450,9 @@ export function ProjectWorkspaceBody({
           label="DETAILS"
           anchorId="inspector-details"
           defaultOpen={project.title === "New Project"}
-          hint="Rename it, set the type, where it sits in your pipeline, and how urgent it is."
+          fill
+          hint="Set the type, where it sits in your pipeline, and how urgent it is — plus a target date and your notes."
         >
-          {/* Rename lives here now (RF-4) — the big in-panel title was removed. */}
-          <div className="mb-3" data-walkthrough="name">
-            <RenameField
-              id={project.id}
-              name={project.title}
-              disabled={pending}
-              onSaved={() => router.refresh()}
-            />
-          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" data-walkthrough="meta">
             <label className="flex flex-col gap-1">
               <span className="label-osd text-fg-dim">Type</span>
@@ -475,6 +498,35 @@ export function ProjectWorkspaceBody({
               {[detail.faction, detail.game].filter(Boolean).join(" · ")}
             </p>
           )}
+
+          {/* Target date — pulled up from the old INFO section (absorbed). */}
+          <div className="mt-3 flex items-center gap-2">
+            <span className="label-osd text-fg-dim">Target date</span>
+            <DateField
+              value={targetDate}
+              ariaLabel="Target date"
+              onChange={(v) => {
+                setTargetDate(v);
+                run(() => setProjectTargetDate({ id: project.id, date: v || null }));
+              }}
+            />
+          </div>
+
+          {/* Notes — anchored to the bottom (md+ flex-1) so DETAILS fills its
+              grid-stretched cell and balances the tall PHOTOS panel beside it,
+              killing the empty gap that sat below the old short DETAILS. */}
+          <div className="mt-3 flex flex-col md:flex-1">
+            <span className="label-osd text-fg-dim">Notes &amp; techniques</span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={() => run(() => updateProjectNotes({ id: project.id, notes }))}
+              rows={4}
+              aria-label="Notes & techniques"
+              placeholder="Notes & techniques — e.g. edge highlight Terminators with Stormhost Silver…"
+              className="mt-1 w-full flex-1 resize-y border border-cyan/40 bg-bg px-3 py-2 font-body text-body text-fg focus:border-cyan focus:outline-none"
+            />
+          </div>
         </CollapsibleSection>
 
         {/* PHOTOS — Recipe-card phase 1: real uploaded photos of the finished
@@ -730,36 +782,17 @@ export function ProjectWorkspaceBody({
         )}
       </CollapsibleSection>
 
-      {/* INFO — notes / techniques, deadline, reference image. */}
+      {/* REFERENCE — the pasted-URL inspiration image to paint towards (distinct
+          from the uploaded model PHOTOS above). Notes + target date moved up into
+          DETAILS (INFO absorbed), so this section is now just the reference. */}
       <CollapsibleSection
-        label="INFO"
+        label="REFERENCE"
         anchorId="inspector-info"
         defaultOpen={false}
         className={isPage ? "order-5" : undefined}
-        hint="Notes and techniques, a target date, and a reference image to paint towards."
+        hint="A reference image to paint towards — paste a link to your inspiration (kept separate from your own model photos above)."
       >
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          onBlur={() => run(() => updateProjectNotes({ id: project.id, notes }))}
-          rows={3}
-          aria-label="Notes & techniques"
-          placeholder="Notes & techniques — e.g. edge highlight Terminators with Stormhost Silver…"
-          className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-body text-body text-fg focus:border-cyan focus:outline-none"
-        />
-        <div className="mt-3 flex items-center gap-2">
-          <span className="label-osd text-fg-dim">Target date</span>
-          <DateField
-            value={targetDate}
-            ariaLabel="Target date"
-            onChange={(v) => {
-              setTargetDate(v);
-              run(() => setProjectTargetDate({ id: project.id, date: v || null }));
-            }}
-          />
-        </div>
-        <div className="mt-3 flex flex-col gap-2">
-          <span className="label-osd text-fg-dim">Reference image</span>
+        <div className="flex flex-col gap-2">
           {refUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
