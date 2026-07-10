@@ -209,7 +209,7 @@ export function ProjectPageClient({
               type="button"
               onClick={() => router.push("/dashboard")}
               aria-label="Back to projects"
-              className="inline-flex h-5 w-5 items-center justify-center text-fg hover:text-cyan-lite"
+              className="inline-flex h-6 w-6 items-center justify-center text-fg hover:text-cyan-lite"
             >
               ‹
             </button>
@@ -308,7 +308,7 @@ export function ProjectPageClient({
             aria-label="Attached recipes"
             className="flex flex-wrap items-center justify-between gap-4 rounded-[12px] border border-border bg-surface p-4"
           >
-            <div className="flex min-w-0 items-center gap-4">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
               <span className="shrink-0 font-mono text-[13px] font-bold uppercase text-fg-bright">
                 RECIPE
               </span>
@@ -318,11 +318,14 @@ export function ProjectPageClient({
                   : "NO RECIPES ATTACHED"}
               </span>
               {recipeSwatches.length > 0 && (
+                // Responsive swatch size (MUX-005): three 100px squares overran
+                // the column on phones and forced horizontal page scroll. Shrink
+                // on small screens; the row also wraps now so it never overflows.
                 <span className="flex shrink-0 items-center gap-1">
                   {recipeSwatches.slice(0, 3).map((hex, i) => (
                     <span
                       key={`${hex}-${i}`}
-                      className="h-[100px] w-[100px] rounded-[2px]"
+                      className="h-12 w-12 rounded-[2px] sm:h-16 sm:w-16 lg:h-[100px] lg:w-[100px]"
                       style={{ backgroundColor: hex }}
                       aria-hidden
                     />
@@ -377,7 +380,11 @@ export function ProjectPageClient({
 
             <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
               {childCount > 0 ? (
-                <table className="w-full border-collapse">
+                // Horizontal-scroll wrapper (MUX-002): below ~560px the columns
+                // no longer fit; scroll rather than silently clipping the right
+                // half (PRIORITY / actions) off-screen with no cue.
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] border-collapse">
                   <thead>
                     <tr className="border-b border-border">
                       {["TITLE", "TYPE", "STATUS", "PRIORITY", "COMPLETION", "TIME", ""].map(
@@ -404,6 +411,7 @@ export function ProjectPageClient({
                     ))}
                   </tbody>
                 </table>
+                </div>
               ) : (
                 <div className="px-6 py-10 text-center font-mono text-[13px] text-fg-dim">
                   No sub-projects yet.
@@ -595,7 +603,7 @@ function SubProjectRow({
               e.stopPropagation();
               onFocus();
             }}
-            className="inline-flex h-5 w-5 items-center justify-center hover:text-purple focus:outline-none focus-visible:text-purple"
+            className="inline-flex h-6 w-6 items-center justify-center hover:text-purple focus:outline-none focus-visible:text-purple"
           >
             <FocusReticleIcon size={16} />
           </button>

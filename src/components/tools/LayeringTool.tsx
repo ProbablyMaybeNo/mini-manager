@@ -350,7 +350,9 @@ export function LayeringTool({
               >
                 Match
               </Button>
-              <label className="flex items-center gap-1.5">
+              {/* min-h-11 gives the whole clickable label a ≥44px tap target
+                  (MUX-001) — the checkbox glyph itself stays ~16px. */}
+              <label className="flex min-h-11 items-center gap-1.5">
                 <Checkbox
                   checked={ownedFirst}
                   onChange={setOwnedFirst}
