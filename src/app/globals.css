@@ -149,7 +149,7 @@
   --text-dropdown: 0.8125rem; /* 13px */
   --text-element: 0.75rem; /* 12px */
 
-  --text-title: 3rem; /* 48px — page titles (DASHBOARD); Nouveau IBM, −25% from the initial sizing */
+  --text-title: 2rem; /* 32px — page titles (DASHBOARD); Nouveau IBM, −50% from the initial sizing */
   --text-h1: 0.875rem; /* 14px — section headers / nav / panel labels */
   --text-h2: 0.8125rem; /* 13px — column headers / in-section labels */
   --text-body: 0.8125rem; /* 13px — regular text */
