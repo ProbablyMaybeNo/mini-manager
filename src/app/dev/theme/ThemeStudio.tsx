@@ -46,6 +46,16 @@ const CATEGORIES: Cat[] = [
 
 /** The faces currently loaded in the app (globals.css @font-face / @fontsource). */
 const FONT_CHOICES = [
+  // New trial faces (Ross, 2026-07-09)
+  "Epeldorne",
+  "Square Block",
+  "Nouveau IBM",
+  "Nouveau IBM Stretch",
+  "Neon Glow",
+  "UAV OSD Sans Mono",
+  "Patrick",
+  "DEC Terminal",
+  // Existing
   "Flexi IBM VGA True",
   "VT323",
   "IBM BIOS",
