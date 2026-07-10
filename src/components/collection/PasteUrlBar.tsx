@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Input, Panel } from "@/components/kit";
+import { Button, Input } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { useAutoFillBoxCollapsed } from "@/lib/hooks/useAutoFillBoxCollapsed";
 import {
@@ -67,7 +67,14 @@ function KindToggle({
 function AutoFillBox() {
   const [collapsed, setCollapsed] = useAutoFillBoxCollapsed();
   return (
-    <Panel className="p-4 pt-5">
+    // The auto-fill helper IS the page's blue intro section now (Ross,
+    // 2026-07-10): #22568F navy + white text, same treatment as the project /
+    // recipes "> SYS" banner, rather than a separate blue bar stacked above a
+    // bordered card. Still collapsible on every viewport.
+    <section
+      className="rounded-[10px] px-4 py-3.5 text-white"
+      style={{ backgroundColor: "#22568F" }}
+    >
       <button
         type="button"
         aria-expanded={!collapsed}
@@ -75,13 +82,13 @@ function AutoFillBox() {
         onClick={() => setCollapsed(!collapsed)}
         className="-mt-1 flex min-h-11 w-full items-center justify-between gap-2 md:min-h-8"
       >
-        <span className="font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim">
+        <span className="font-mono text-[12px] font-bold uppercase tracking-wide text-white">
           TRACKING YOUR COLLECTION MADE EASY
         </span>
         <span
           aria-hidden
           className={cn(
-            "shrink-0 text-cyan-lite transition-transform",
+            "shrink-0 text-white transition-transform",
             !collapsed && "rotate-90",
           )}
         >
@@ -92,7 +99,7 @@ function AutoFillBox() {
         id="paste-url-stores"
         className={cn(collapsed ? "hidden" : "flex", "mt-2 flex-col gap-3")}
       >
-        <p className="font-body text-body leading-snug text-fg">
+        <p className="font-body text-body leading-snug text-white">
           Auto-populate your model and paint collections by pasting a product URL
           from any major online retailer. Auto-fills from:{" "}
           {SUPPORTED_STORE_LINKS.map((store, i) => (
@@ -101,7 +108,7 @@ function AutoFillBox() {
                 href={store.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple hover:underline"
+                className="font-semibold text-white underline decoration-white/50 underline-offset-2 hover:decoration-white"
               >
                 {store.name}
               </a>
@@ -110,25 +117,25 @@ function AutoFillBox() {
           ))}
           . Other links still add a row — you just enter the details yourself.
         </p>
-        <div className="border-t border-border/60 pt-3">
-          <p className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim">
+        <div className="border-t border-white/25 pt-3">
+          <p className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-wide text-white">
             Browser extension
-            <span className="rounded-[4px] border border-cyan/50 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-cyan-lite">
+            <span className="rounded-[4px] border border-white/60 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white">
               Coming soon
             </span>
           </p>
-          <p className="mt-1.5 font-body text-body leading-snug text-fg">
+          <p className="mt-1.5 font-body text-body leading-snug text-white">
             Skip the copy-paste entirely — a Chrome extension that adds whatever
             product page you&apos;re on to your collection with one keyboard
-            shortcut (<span className="text-purple">Alt+Shift+M</span>) or a click
+            shortcut (<span className="font-semibold text-white">Alt+Shift+M</span>) or a click
             of the toolbar button, tagged{" "}
-            <span className="text-purple">Owned</span> or{" "}
-            <span className="text-purple">Wishlist</span> on the spot. Landing on
+            <span className="font-semibold text-white">Owned</span> or{" "}
+            <span className="font-semibold text-white">Wishlist</span> on the spot. Landing on
             the Chrome Web Store soon.
           </p>
         </div>
       </div>
-    </Panel>
+    </section>
   );
 }
 

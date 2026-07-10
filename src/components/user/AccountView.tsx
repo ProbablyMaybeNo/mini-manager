@@ -53,6 +53,7 @@ export function AccountView({
           <Input
             label="Username"
             name="username"
+            autoComplete="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -60,6 +61,7 @@ export function AccountView({
             label="Recovery email"
             name="email"
             type="email"
+            autoComplete="email"
             value={email}
             error={emailValid ? undefined : "Enter a valid email"}
             onChange={(e) => setEmail(e.target.value)}
