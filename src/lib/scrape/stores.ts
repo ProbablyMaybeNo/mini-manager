@@ -57,6 +57,15 @@ export const SUPPORTED_STORES: ReadonlyArray<SupportedStore> = [
 export const SUPPORTED_STORE_NAMES: ReadonlyArray<string> =
   SUPPORTED_STORES.map((s) => s.name);
 
+/**
+ * Store name + homepage URL pairs (derived from each store's primary
+ * hostname), in helper-text order. Lets the collection UI render the
+ * supported-stores list as clickable links without duplicating hostname
+ * logic (Ross — click-through to the store's site).
+ */
+export const SUPPORTED_STORE_LINKS: ReadonlyArray<{ name: string; url: string }> =
+  SUPPORTED_STORES.map((s) => ({ name: s.name, url: `https://${s.hostnames[0]}` }));
+
 /** Normalise a hostname: lowercase + strip a leading `www.`. */
 function normalizeHost(host: string): string {
   return host.toLowerCase().replace(/^www\./, "");

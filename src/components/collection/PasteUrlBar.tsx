@@ -5,7 +5,7 @@ import { Button, Input, Panel } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { useAutoFillBoxCollapsed } from "@/lib/hooks/useAutoFillBoxCollapsed";
 import {
-  SUPPORTED_STORE_NAMES,
+  SUPPORTED_STORE_LINKS,
   isSupportedStoreUrl,
 } from "@/lib/scrape/stores";
 import type { CollectionKind } from "@/lib/types";
@@ -95,8 +95,20 @@ function AutoFillBox() {
         <p className="font-body text-body leading-snug text-fg">
           Auto-populate your model and paint collections by pasting a product URL
           from any major online retailer. Auto-fills from:{" "}
-          <span className="text-purple">{SUPPORTED_STORE_NAMES.join(", ")}</span>.
-          Other links still add a row — you just enter the details yourself.
+          {SUPPORTED_STORE_LINKS.map((store, i) => (
+            <span key={store.url}>
+              <a
+                href={store.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple hover:underline"
+              >
+                {store.name}
+              </a>
+              {i < SUPPORTED_STORE_LINKS.length - 1 && ", "}
+            </span>
+          ))}
+          . Other links still add a row — you just enter the details yourself.
         </p>
         <div className="border-t border-border/60 pt-3">
           <p className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-wide text-fg-dim">

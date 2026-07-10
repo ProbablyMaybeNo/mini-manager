@@ -51,7 +51,6 @@ export function RecipeIndexView({
     <div className="flex h-full flex-col gap-6 p-6">
       <PageHeader
         title="RECIPE"
-        tagline="// build, manage, and share repeatable paint schemes"
         actions={
           <div className="flex items-center gap-2">
             <SegmentedToggle
@@ -75,6 +74,19 @@ export function RecipeIndexView({
           </div>
         }
       />
+
+      {/* Blue intro banner matching the project page's WelcomeCard slim bar
+          (same #22568F navy + white mono "> SYS —" prefix) so the recipes
+          page reads as the same family. */}
+      <section
+        className="rounded-[10px] px-4 py-2.5 text-white"
+        style={{ backgroundColor: "#22568F" }}
+      >
+        <span className="font-mono text-[13px] text-white">
+          <span className="font-bold">&gt; SYS</span> — build, manage &amp; share repeatable
+          paint schemes.
+        </span>
+      </section>
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">

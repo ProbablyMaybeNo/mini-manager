@@ -73,5 +73,8 @@ ux-audit/shots/
 # typography review screenshots (local reference only — never commit)
 _type-review/
 
+# ad-hoc PR review screenshots (local reference only — never commit)
+_review/
+
 # Claude Code agent worktrees (local batch checkouts — never commit)
 .claude/worktrees/
