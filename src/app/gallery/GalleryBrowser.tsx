@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { EmptyState, Panel, SearchField, Swatch } from "@/components/kit";
+import { CloneButton } from "@/components/recipe/CloneButton";
 import { cn } from "@/lib/cn";
 import type { GalleryRecipeCard } from "@/db/queries/recipes";
 
@@ -13,8 +14,10 @@ import type { GalleryRecipeCard } from "@/db/queries/recipes";
  */
 export function GalleryBrowser({
   recipes,
+  isSignedIn,
 }: {
   recipes: ReadonlyArray<GalleryRecipeCard>;
+  isSignedIn: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState<string | null>(null);
@@ -88,7 +91,7 @@ export function GalleryBrowser({
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((r) => (
             <li key={r.slug}>
-              <RecipeCard recipe={r} />
+              <RecipeCard recipe={r} isSignedIn={isSignedIn} />
             </li>
           ))}
         </ul>
@@ -124,28 +127,68 @@ function BrandChip({
   );
 }
 
-function RecipeCard({ recipe }: { recipe: GalleryRecipeCard }) {
-  return (
-    <Link
-      href={`/r/${recipe.slug}`}
-      className="group block h-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
-    >
-      <Panel
-        cornerTicks
-        className="flex h-full flex-col gap-3 p-4 transition-shadow group-hover:shadow-[0_0_6px_rgba(0,210,255,0.35)]"
-      >
-        <h2 className="font-h1 text-h1 text-cyan-lite group-hover:text-glow-cyan">
-          {recipe.name}
-        </h2>
+function RecipeCard({
+  recipe,
+  isSignedIn,
+}: {
+  recipe: GalleryRecipeCard;
+  isSignedIn: boolean;
+}) {
+  // Recipe-card phase 3 — an admin-approved gallery card renders as the
+  // real branded PNG (a visual wall of cards); older `isListed` entries
+  // (the curated `db:seed-gallery` set) have no cardImageUrl and keep the
+  // original swatch-strip rendering. `imageFailed` catches a card image
+  // that 404s/fails to load and falls back to the same swatch rendering
+  // rather than showing a broken tile.
+  const [imageFailed, setImageFailed] = useState(false);
+  const showCardImage = recipe.cardImageUrl != null && !imageFailed;
 
-        {recipe.swatches.length > 0 ? (
-          <div className="flex flex-wrap gap-1" aria-label="Recipe colours">
-            {recipe.swatches.map((hex, i) => (
-              <Swatch key={`${hex}-${i}`} hex={hex} size="md" />
-            ))}
+  return (
+    <Panel
+      cornerTicks
+      className="flex h-full flex-col gap-3 p-4 transition-shadow hover:shadow-[0_0_6px_rgba(0,210,255,0.35)]"
+    >
+      <Link
+        href={`/r/${recipe.slug}`}
+        className="group flex flex-1 flex-col gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+      >
+        {showCardImage ? (
+          <div
+            className={cn(
+              "-mx-4 -mt-4 overflow-hidden bg-bg",
+              recipe.cardImageRatio === "9:16" ? "aspect-[9/16]" : "aspect-square",
+            )}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={recipe.cardImageUrl ?? undefined}
+              alt={`${recipe.name} — paint recipe card`}
+              className="h-full w-full object-cover"
+              onError={() => setImageFailed(true)}
+            />
           </div>
         ) : (
-          <p className="font-body text-body text-fg-faint">No colours yet</p>
+          <>
+            <h2 className="font-h1 text-h1 text-cyan-lite group-hover:text-glow-cyan">
+              {recipe.name}
+            </h2>
+
+            {recipe.swatches.length > 0 ? (
+              <div className="flex flex-wrap gap-1" aria-label="Recipe colours">
+                {recipe.swatches.map((hex, i) => (
+                  <Swatch key={`${hex}-${i}`} hex={hex} size="md" />
+                ))}
+              </div>
+            ) : (
+              <p className="font-body text-body text-fg-faint">No colours yet</p>
+            )}
+          </>
+        )}
+
+        {showCardImage && (
+          <h2 className="font-h1 text-h1 text-cyan-lite group-hover:text-glow-cyan">
+            {recipe.name}
+          </h2>
         )}
 
         <div className="mt-auto flex flex-wrap items-center gap-2">
@@ -168,7 +211,9 @@ function RecipeCard({ recipe }: { recipe: GalleryRecipeCard }) {
         <p className="label-osd text-fg-dim">
           {recipe.slotCount} slot{recipe.slotCount === 1 ? "" : "s"}
         </p>
-      </Panel>
-    </Link>
+      </Link>
+
+      <CloneButton slug={recipe.slug} isSignedIn={isSignedIn} size="sm" />
+    </Panel>
   );
 }

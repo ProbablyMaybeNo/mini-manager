@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { auth } from "@/auth";
 import { listPublishedRecipes } from "@/db/queries/recipes";
 import { EmptyState, Panel } from "@/components/kit";
 import { PublicHeader } from "@/components/public/PublicHeader";
@@ -22,7 +23,8 @@ export const metadata: Metadata = {
 };
 
 export default async function GalleryPage() {
-  const recipes = await listPublishedRecipes();
+  const [recipes, session] = await Promise.all([listPublishedRecipes(), auth()]);
+  const isSignedIn = Boolean(session?.user?.id);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -57,7 +59,7 @@ export default async function GalleryPage() {
             </div>
           </Panel>
         ) : (
-          <GalleryBrowser recipes={recipes} />
+          <GalleryBrowser recipes={recipes} isSignedIn={isSignedIn} />
         )}
       </main>
 

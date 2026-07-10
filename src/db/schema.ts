@@ -595,6 +595,16 @@ export const phase12LayerLabel: Record<Phase12LayerKey, string> = {
   metallic: "Metallic",
 };
 
+/**
+ * Recipe-card phase 3 — gallery moderation lifecycle for a recipe's branded
+ * share card. `none` = never submitted; `pending` = awaiting admin review
+ * (`/admin/gallery`); `approved` = the card is live on `/gallery`;
+ * `rejected` = an admin declined it (the card image fields are cleared, the
+ * painter can resubmit a fresh render). See `src/lib/actions/gallerySubmissions.ts`.
+ */
+export const galleryStatuses = ["none", "pending", "approved", "rejected"] as const;
+export type GalleryStatus = (typeof galleryStatuses)[number];
+
 export const recipes = sqliteTable(
   "recipe",
   {
@@ -616,8 +626,28 @@ export const recipes = sqliteTable(
      *  editor's "⬡ SHARE LINK") only sets `publicSlug` so `/r/<slug>`
      *  resolves — it does NOT set this flag, so a painter's shared recipe
      *  never auto-lists on the public gallery. Only the curated seed set
-     *  (`npm run db:seed-gallery`) sets this true today. */
+     *  (`npm run db:seed-gallery`) and an admin-approved gallery submission
+     *  (phase 3) set this true. */
     isListed: integer("is_listed", { mode: "boolean" }).notNull().default(false),
+    /** Recipe-card phase 3 — the branded share-card PNG a painter submitted
+     *  for gallery review (Vercel Blob URL). Null until the first SUBMIT;
+     *  cleared on rejection. This is the image `/gallery` renders once
+     *  `galleryStatus` is `approved` — deliberately a single "current"
+     *  image rather than a history table (see PR notes for the data-model
+     *  rationale: reuses the existing publicSlug/isListed decoupling
+     *  instead of a separate submissions table). */
+    galleryImageUrl: text("gallery_image_url"),
+    /** Blob object key for `galleryImageUrl` — needed to call `del()` on
+     *  rejection / resubmission. */
+    galleryImagePathname: text("gallery_image_pathname"),
+    /** The card's export ratio ("1:1" / "9:16") — lets the gallery grid
+     *  size the tile without loading the image first. */
+    galleryImageRatio: text("gallery_image_ratio"),
+    galleryStatus: text("gallery_status", { enum: galleryStatuses })
+      .notNull()
+      .default("none"),
+    gallerySubmittedAt: integer("gallery_submitted_at", { mode: "timestamp_ms" }),
+    galleryReviewedAt: integer("gallery_reviewed_at", { mode: "timestamp_ms" }),
     notesMd: text("notes_md"),
     ...timestamps,
   },
@@ -627,6 +657,7 @@ export const recipes = sqliteTable(
       t.isStandalone,
     ),
     attachedProjectIdx: index("recipe_attached_project_idx").on(t.attachedProjectId),
+    galleryStatusIdx: index("recipe_gallery_status_idx").on(t.galleryStatus),
   }),
 );
 

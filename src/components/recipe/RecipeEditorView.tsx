@@ -228,6 +228,7 @@ export function RecipeEditorView({
         slots={recipe.slots}
         initialNotes={recipe.notes ?? null}
         projectId={recipe.assignedProjectId ?? null}
+        recipeId={recipe.id === "new" ? null : recipe.id}
       />
     </div>
   );

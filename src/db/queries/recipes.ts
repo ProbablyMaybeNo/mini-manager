@@ -784,6 +784,13 @@ export interface GalleryRecipeCard {
   slotCount: number;
   /** ms-timestamp of publish-adjacent recency (the recipe's updatedAt). */
   updatedAt: number;
+  /** Recipe-card phase 3 — the admin-approved branded card PNG (Vercel
+   *  Blob URL), when this recipe has one. Null for recipes listed the old
+   *  way (the curated `db:seed-gallery` set) — the gallery grid falls back
+   *  to the plain swatch-card rendering for those. */
+  cardImageUrl: string | null;
+  /** "1:1" | "9:16" — paired with cardImageUrl for aspect-correct tiles. */
+  cardImageRatio: string | null;
 }
 
 /**
@@ -855,6 +862,8 @@ export async function listPublishedRecipes(
       brands: Array.from(brandSet).sort((a, b) => a.localeCompare(b)),
       slotCount: slots.length,
       updatedAt: r.updatedAt.getTime(),
+      cardImageUrl: r.galleryImageUrl,
+      cardImageRatio: r.galleryImageRatio,
     });
   }
   return out;
