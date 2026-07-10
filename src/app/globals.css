@@ -40,6 +40,17 @@
   font-display: swap;
 }
 
+/* Trial faces loaded for the Theme Builder (Ross, 2026-07-09). Square Block has
+   NO digits (0-9); the rest include numerals. */
+@font-face { font-family: "Epeldorne"; src: url("/fonts/epeldorne.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Square Block"; src: url("/fonts/square-block.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Nouveau IBM"; src: url("/fonts/nouveau-ibm.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Nouveau IBM Stretch"; src: url("/fonts/nouveau-ibm-stretch.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Neon Glow"; src: url("/fonts/neon-glow.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "UAV OSD Sans Mono"; src: url("/fonts/uav-osd-sans-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Patrick"; src: url("/fonts/patrick.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "DEC Terminal"; src: url("/fonts/dec-terminal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+
 /* ----------------------------------------------------------------------------
    Design tokens — exact values from the HEX.CODE style guide (Figma node 1:13).
    PALETTE DECISION (Ross, 2026-06-28): follow the style guide for surfaces +
