@@ -107,15 +107,17 @@
   /* Type families — TWO-FACE SYSTEM (Ross, 2026-07-09).
      --font-display  JetBrains Bold/heavy — retained for existing callers
      --font-mono     JetBrains            — body, labels, tables, numbers, hex
-     --font-title    Flexi IBM VGA True (Ross, 2026-07-09) — page titles ONLY.
-                     Has digits; the one display face in the system.
+     --font-title    Square Block (Ross, 2026-07-09) — page titles ONLY (all
+                     fixed, uppercase, letter-only names). Square Block has NO
+                     digits, so JetBrains follows in the chain as a numeral
+                     safety net for any stray digit.
      --font-section  (legacy) Flexi — no longer used; section headers + dynamic
                      titles now use JetBrains, differentiated by blue + size.
      Buttons and body text stay JetBrains Mono — do not repoint --font-button
      or --font-body/--font-mono onto the display faces. */
   --font-display: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
-  --font-title: "Flexi IBM VGA True", "JetBrains Mono Variable", monospace;
+  --font-title: "Square Block", "JetBrains Mono Variable", monospace;
   --font-section: "Flexi IBM VGA True", "JetBrains Mono Variable", monospace;
 
   /* Back-compat aliases for the 7-category taxonomy used across the app.
