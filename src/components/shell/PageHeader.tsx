@@ -22,7 +22,7 @@ export function PageHeader({
             uppercase, wide letter-spacing, with a short cyan underline bar
             beneath it. Nouveau IBM reads small, so the point size is pushed
             well above a normal display face. */}
-        <h1 className="font-title text-[clamp(3rem,7.5vw,4.75rem)] font-extrabold uppercase leading-none tracking-[0.15em] text-fg-bright">
+        <h1 className="font-title text-[clamp(2.25rem,5.6vw,3.5rem)] font-extrabold uppercase leading-none tracking-[0.15em] text-fg-bright">
           {title}
         </h1>
         <span aria-hidden className="mt-2 block h-1 w-12 rounded-full bg-cyan" />
