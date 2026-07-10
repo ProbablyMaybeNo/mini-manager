@@ -238,7 +238,7 @@ export function ProjectPageClient({
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-4">
-              <h1 className="font-title text-[clamp(1.75rem,4vw,2.5rem)] font-extrabold uppercase leading-none tracking-[0.08em] text-fg-bright">
+              <h1 className="font-title text-[clamp(2.25rem,5.5vw,3.5rem)] font-extrabold uppercase leading-none tracking-[0.15em] text-fg-bright">
                 {project.title}
               </h1>
               <Chip accent={accent} className="px-2.5 py-1 text-[12px] tracking-wide">

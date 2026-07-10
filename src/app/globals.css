@@ -107,17 +107,18 @@
   /* Type families — TWO-FACE SYSTEM (Ross, 2026-07-09).
      --font-display  JetBrains Bold/heavy — retained for existing callers
      --font-mono     JetBrains            — body, labels, tables, numbers, hex
-     --font-title    Square Block (Ross, 2026-07-09) — page titles ONLY (all
-                     fixed, uppercase, letter-only names). Square Block has NO
-                     digits, so JetBrains follows in the chain as a numeral
-                     safety net for any stray digit.
+     --font-title    Nouveau IBM (Ross, 2026-07-10 — FINAL) — page titles ONLY,
+                     uppercase, with wide letter-spacing and an outsized point
+                     size (this face reads small, so titles are pushed larger
+                     than a normal display face). JetBrains follows in the chain
+                     as a numeral safety net for any glyph the face lacks.
      --font-section  (legacy) Flexi — no longer used; section headers + dynamic
                      titles now use JetBrains, differentiated by blue + size.
      Buttons and body text stay JetBrains Mono — do not repoint --font-button
      or --font-body/--font-mono onto the display faces. */
   --font-display: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", "IBM Plex Mono", monospace;
-  --font-title: "Square Block", "JetBrains Mono Variable", monospace;
+  --font-title: "Nouveau IBM", "JetBrains Mono Variable", monospace;
   --font-section: "Flexi IBM VGA True", "JetBrains Mono Variable", monospace;
 
   /* Back-compat aliases for the 7-category taxonomy used across the app.
@@ -148,7 +149,7 @@
   --text-dropdown: 0.8125rem; /* 13px */
   --text-element: 0.75rem; /* 12px */
 
-  --text-title: 3rem; /* 48px — page titles (DASHBOARD) */
+  --text-title: 4rem; /* 64px — page titles (DASHBOARD); Nouveau IBM reads small so it's sized up */
   --text-h1: 0.875rem; /* 14px — section headers / nav / panel labels */
   --text-h2: 0.8125rem; /* 13px — column headers / in-section labels */
   --text-body: 0.8125rem; /* 13px — regular text */
