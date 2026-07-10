@@ -277,6 +277,19 @@ export function RecipeWorkbench({
               </button>
             </div>
           </div>
+          {/* Blue intro banner matching the project page's WelcomeCard slim bar
+              (same #22568F navy + white mono "> SYS —" prefix) so the recipes
+              page reads as the same family. Wraps (rather than truncates) in
+              the narrow 320px column. */}
+          <section
+            className="rounded-[10px] px-3 py-2 text-white"
+            style={{ backgroundColor: "#22568F" }}
+          >
+            <span className="block font-mono text-[12px] leading-snug text-white">
+              <span className="font-bold">&gt; SYS</span> — build &amp; share repeatable
+              paint schemes.
+            </span>
+          </section>
           <label className="flex items-center gap-2 rounded-[6px] border border-border bg-surface px-3 py-2">
             <span aria-hidden className="text-fg-dim">⌕</span>
             <input
