@@ -21,7 +21,7 @@ export function PageHeader({
         {/* HEX.CODE page title (4:4): UAV OSD Mono, uppercase, with a short
             cyan underline bar beneath it. UAV OSD is a bitmap/HUD face —
             slightly larger than the old JetBrains title to hold cap-height. */}
-        <h1 className="font-title text-[clamp(2.125rem,5.25vw,3.25rem)] font-extrabold uppercase leading-none tracking-tight text-fg-bright">
+        <h1 className="font-title text-[clamp(1.0625rem,2.625vw,1.625rem)] font-extrabold uppercase leading-none tracking-tight text-fg-bright">
           {title}
         </h1>
         <span aria-hidden className="mt-2 block h-1 w-12 rounded-full bg-cyan" />
