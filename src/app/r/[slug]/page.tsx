@@ -50,7 +50,7 @@ export default async function PublicRecipePage({
 
       {/* TITLE — the recipe's name, top of the card. */}
       <header className="flex flex-col gap-2">
-        <h1 className="font-section text-title text-cyan-lite text-glow-cyan">{recipe.name}</h1>
+        <h1 className="font-mono text-title font-bold text-cyan-lite text-glow-cyan">{recipe.name}</h1>
         <p className="font-body text-body text-fg">
           Shared paint recipe · {recipe.slots.length} slot
           {recipe.slots.length === 1 ? "" : "s"}
