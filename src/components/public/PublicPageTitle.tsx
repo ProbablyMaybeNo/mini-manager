@@ -21,7 +21,7 @@ export function PublicPageTitle({
     <div className={cn(align === "center" ? "flex flex-col items-center" : "flex flex-col items-start", className)}>
       <h1
         className="font-title font-extrabold uppercase leading-none tracking-[0.15em] text-fg-bright"
-        style={{ fontSize: "clamp(1.25rem, 4.5vw, calc(var(--text-title) * 1.15))" }}
+        style={{ fontSize: "clamp(0.9375rem, 3.375vw, calc(var(--text-title) * 1.15))" }}
       >
         {children}
       </h1>
