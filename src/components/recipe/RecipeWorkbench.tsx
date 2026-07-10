@@ -634,6 +634,7 @@ export function RecipeWorkbench({
           slots={selected.slots}
           initialNotes={selected.notes ?? null}
           projectId={selected.assignedProjectId ?? null}
+          recipeId={selected.id === "new" ? null : selected.id}
         />
       )}
       <AiRecipeDialog

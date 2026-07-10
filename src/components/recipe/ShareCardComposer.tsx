@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { toPng } from "html-to-image";
-import { Download, ImagePlus, X } from "lucide-react";
+import { upload } from "@vercel/blob/client";
+import { CheckCircle2, Download, ImagePlus, Send, X } from "lucide-react";
 import { Button, ModalDialog, SegmentedToggle } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { loadProjectImages } from "@/lib/actions/projectImages";
+import { submitRecipeToGallery } from "@/lib/actions/gallerySubmissions";
 import { validateImageFile } from "@/lib/blob/limits";
 import { exportableImageSrc } from "@/lib/shareCard/imageSrc";
 import {
@@ -71,6 +73,11 @@ export interface ShareCardComposerProps {
   /** Preselect a specific already-known photo (e.g. the one currently shown
    *  in ProjectImagePanel) ahead of the project's full list loading. */
   initialImageUrl?: string | null;
+  /** Recipe-card phase 3 — the recipe this card belongs to. Required for
+   *  SUBMIT (a gallery card is always tied to a real, saved recipe); null
+   *  for the imageless project-photo entry point and for an unsaved "new"
+   *  recipe draft, both of which hide the SUBMIT button. */
+  recipeId?: string | null;
 }
 
 export function ShareCardComposer({
@@ -81,6 +88,7 @@ export function ShareCardComposer({
   initialNotes,
   projectId,
   initialImageUrl,
+  recipeId,
 }: ShareCardComposerProps) {
   const [ratio, setRatio] = useState<ShareCardRatio>("1:1");
   const [notes, setNotes] = useState(initialNotes ?? "");
@@ -88,6 +96,8 @@ export function ShareCardComposer({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadingImages, setLoadingImages] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +111,7 @@ export function ShareCardComposer({
     setRatio("1:1");
     setNotes(initialNotes ?? "");
     setError(null);
+    setSubmitted(false);
     setCandidates(
       initialImageUrl
         ? [{ id: "initial", exportSrc: initialImageUrl, isLocal: false }]
@@ -194,26 +205,33 @@ export function ShareCardComposer({
     [ratio, slots.length, swatchAreaWidth],
   );
 
+  /** Raster the live preview node to a PNG data URL. Shared by DOWNLOAD and
+   *  SUBMIT so both export byte-identical cards. */
+  const renderCardPng = useCallback(async (): Promise<string | null> => {
+    if (!cardRef.current) return null;
+    // Wait for JetBrains Mono (and any future custom face) to finish
+    // loading — otherwise the raster can catch the fallback system face
+    // mid-swap.
+    if (typeof document !== "undefined" && "fonts" in document) {
+      await document.fonts.ready;
+    }
+    return toPng(cardRef.current, {
+      pixelRatio: EXPORT_PIXEL_RATIO,
+      backgroundColor: "#0d0d17",
+      // NOT cacheBust: true — it appends a `?<timestamp>` query param to
+      // every embedded <img> src before fetching, which breaks local
+      // picks (blob: object URLs don't support query params) and is
+      // unnecessary for proxied Blob URLs anyway (our own route already
+      // controls freshness).
+    });
+  }, []);
+
   const handleDownload = useCallback(async () => {
-    if (!cardRef.current) return;
     setExporting(true);
     setError(null);
     try {
-      // Wait for JetBrains Mono (and any future custom face) to finish
-      // loading — otherwise the raster can catch the fallback system face
-      // mid-swap.
-      if (typeof document !== "undefined" && "fonts" in document) {
-        await document.fonts.ready;
-      }
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: EXPORT_PIXEL_RATIO,
-        backgroundColor: "#0d0d17",
-        // NOT cacheBust: true — it appends a `?<timestamp>` query param to
-        // every embedded <img> src before fetching, which breaks local
-        // picks (blob: object URLs don't support query params) and is
-        // unnecessary for proxied Blob URLs anyway (our own route already
-        // controls freshness).
-      });
+      const dataUrl = await renderCardPng();
+      if (!dataUrl) return;
       const a = document.createElement("a");
       a.href = dataUrl;
       a.download = shareCardFilename(recipeName);
@@ -229,7 +247,46 @@ export function ShareCardComposer({
     } finally {
       setExporting(false);
     }
-  }, [recipeName]);
+  }, [recipeName, renderCardPng]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!recipeId) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const dataUrl = await renderCardPng();
+      if (!dataUrl) return;
+      const pngBlob = await (await fetch(dataUrl)).blob();
+      const uploaded = await upload(
+        `gallery-cards/${recipeId}/${Date.now()}.png`,
+        pngBlob,
+        {
+          access: "public",
+          handleUploadUrl: "/api/gallery-submissions/upload",
+          clientPayload: JSON.stringify({ recipeId }),
+        },
+      );
+      const res = await submitRecipeToGallery({
+        recipeId,
+        imageUrl: uploaded.url,
+        imagePathname: uploaded.pathname,
+        ratio,
+      });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Couldn't submit the card: ${err.message}`
+          : "Couldn't submit the card — try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }, [ratio, recipeId, renderCardPng]);
 
   const hasContent = slots.length > 0 || trimmedNotes.length > 0 || selectedImage != null;
 
@@ -454,15 +511,44 @@ export function ShareCardComposer({
 
           {error && <p className="font-mono text-[12px] text-red-text">▸ {error}</p>}
 
-          <Button
-            variant="primary"
-            onClick={handleDownload}
-            disabled={exporting}
-            className="self-start"
-          >
-            <Download size={16} aria-hidden />
-            {exporting ? "Rendering…" : "Download PNG"}
-          </Button>
+          {submitted && (
+            <p className="flex items-center gap-2 font-mono text-[12px] text-green">
+              <CheckCircle2 size={14} aria-hidden />
+              Submitted for review — an admin will approve it before it shows on
+              the public gallery.
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="primary"
+              onClick={handleDownload}
+              disabled={exporting}
+              className="self-start"
+            >
+              <Download size={16} aria-hidden />
+              {exporting ? "Rendering…" : "Download PNG"}
+            </Button>
+
+            {recipeId && (
+              <Button
+                variant="outlineCyan"
+                onClick={handleSubmit}
+                disabled={submitting || exporting}
+                className="self-start"
+              >
+                <Send size={16} aria-hidden />
+                {submitting ? "Submitting…" : submitted ? "Resubmit" : "Submit to gallery"}
+              </Button>
+            )}
+          </div>
+          {recipeId && !submitted && (
+            <p className="font-mono text-[11px] text-fg-dim">
+              ▸ Free to submit. A card goes live on{" "}
+              <span className="text-cyan-lite">/gallery</span> only after an
+              admin approves it.
+            </p>
+          )}
         </div>
       </div>
     </ModalDialog>

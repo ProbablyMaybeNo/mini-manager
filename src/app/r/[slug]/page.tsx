@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { getRecipeBySlug, getPaintMetaMap } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/lib/recipes/techniqueLabel";
 import { Panel, Swatch } from "@/components/kit";
 import { Logo } from "@/components/shell";
 import { ShareLinkBar } from "@/components/public/ShareLinkBar";
+import { CloneButton } from "@/components/recipe/CloneButton";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +25,18 @@ export async function generateMetadata({
   if (!recipe) {
     return { title: "Recipe not found · The Mini Mainframe", robots: { index: false } };
   }
+  const title = `${recipe.name} · The Mini Mainframe`;
+  const description = `A paint recipe shared via The Mini Mainframe — ${recipe.slots.length} slot${recipe.slots.length === 1 ? "" : "s"}.`;
+
+  // No `openGraph.images` / `twitter.images` here on purpose — this
+  // route's `opengraph-image.tsx` (file-convention image) resolves the
+  // real image per-slug: the admin-approved gallery card PNG when one
+  // exists, else a generated name+swatches fallback. Next wires that file
+  // into both `og:image` and `twitter:image` automatically.
   return {
-    title: `${recipe.name} · The Mini Mainframe`,
-    description: `A paint recipe shared via The Mini Mainframe — ${recipe.slots.length} slot${recipe.slots.length === 1 ? "" : "s"}.`,
+    title,
+    description,
+    openGraph: { title, description, type: "website" },
   };
 }
 
@@ -41,8 +52,13 @@ export default async function PublicRecipePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [recipe, paintMeta] = await Promise.all([load(slug), getPaintMetaMap()]);
+  const [recipe, paintMeta, session] = await Promise.all([
+    load(slug),
+    getPaintMetaMap(),
+    auth(),
+  ]);
   if (!recipe) notFound();
+  const isSignedIn = Boolean(session?.user?.id);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -57,8 +73,11 @@ export default async function PublicRecipePage({
         </p>
       </header>
 
-      {/* The shareable link itself — shown + copyable, directly under the title. */}
-      <ShareLinkBar path={`/r/${slug}`} />
+      <div className="flex flex-wrap items-center gap-3">
+        {/* The shareable link itself — shown + copyable, directly under the title. */}
+        <ShareLinkBar path={`/r/${slug}`} />
+        <CloneButton slug={slug} isSignedIn={isSignedIn} size="sm" />
+      </div>
 
       <Panel label="RECIPE" className="p-4">
         {recipe.slots.length === 0 ? (
