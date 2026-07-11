@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Button, Chip, Panel } from "@/components/kit";
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { PublicPageTitle } from "@/components/public/PublicPageTitle";
+import { TrackPageView } from "@/components/analytics/TrackPageView";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 
 export const metadata: Metadata = {
   title: "Pricing · The Mini Mainframe",
@@ -57,6 +59,7 @@ function Check({ children }: { children: React.ReactNode }) {
 export default function PricingPage() {
   return (
     <div className="flex min-h-dvh flex-col">
+      <TrackPageView event={AnalyticsEvent.PricingView} />
       <PublicHeader />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 p-6">
         <div className="flex flex-col items-center text-center">
