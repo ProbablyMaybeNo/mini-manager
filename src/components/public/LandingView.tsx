@@ -42,6 +42,31 @@ const FEATURES: { title: string; blurb: string }[] = [
   },
 ];
 
+// Real in-app screens (captured 2026-07-10, 1440×900) — no mockups.
+const SHOWCASE: { src: string; label: string; alt: string; caption: string }[] = [
+  {
+    src: "/showcase/library.png",
+    label: "PAINT LIBRARY",
+    alt: "The Mini Mainframe paint library — a grid of thousands of paint swatches mapped by colour",
+    caption:
+      "Every paint on the market — 7,000+ across every major brand — mapped by colour. Flag what you own, wishlist the rest.",
+  },
+  {
+    src: "/showcase/color-wheel.png",
+    label: "COLOUR TOOLS",
+    alt: "The colour wheel tool matching a picked colour to the closest real paints",
+    caption:
+      "Spin the wheel, pick a harmony, and match every colour to a real paint you can buy — then send it straight to a recipe.",
+  },
+  {
+    src: "/showcase/focus.png",
+    label: "FOCUS BENCH",
+    alt: "The Focus screen showing a recipe, notes, session timer and progress for one model",
+    caption:
+      "Your painting bench: the recipe, notes, a session timer, and inspiration for one model on a single screen. Sit down and paint.",
+  },
+];
+
 const FREE_PERKS = [
   "Unlimited projects — armies, units, models, terrain",
   "Your full collection — log every paint & model, add by pasting a store link",
@@ -158,6 +183,37 @@ export function LandingView() {
               Start for Free
             </Button>
           </Link>
+        </div>
+      </section>
+
+      {/* Product showcase — real in-app screens, not mockups */}
+      <section className="mx-auto w-full max-w-5xl px-6 pb-16">
+        <div className="mb-8 text-center">
+          <h2 className="font-h1 text-h1 text-cyan-lite text-glow-cyan">
+            See inside the terminal
+          </h2>
+          <p className="mt-2 font-body text-body text-fg">
+            Real screens from the app — no mockups.
+          </p>
+        </div>
+        <div className="flex flex-col gap-10">
+          {SHOWCASE.map((shot) => (
+            <figure key={shot.src} className="flex flex-col gap-3">
+              <Panel label={shot.label} cornerTicks className="p-2 sm:p-3">
+                <Image
+                  src={shot.src}
+                  alt={shot.alt}
+                  width={1440}
+                  height={900}
+                  sizes="(max-width: 1024px) 100vw, 960px"
+                  className="h-auto w-full rounded-[4px] border border-border"
+                />
+              </Panel>
+              <figcaption className="px-1 font-body text-body text-fg-dim">
+                {shot.caption}
+              </figcaption>
+            </figure>
+          ))}
         </div>
       </section>
 
