@@ -39,10 +39,6 @@ export function LegalDoc({
             ))}
           </div>
         </Panel>
-        <p className="mt-6 font-body text-body text-fg-dim">
-          This is a starting template — review it with legal counsel before
-          relying on it.
-        </p>
       </main>
     </div>
   );

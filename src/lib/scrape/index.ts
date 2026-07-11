@@ -26,7 +26,7 @@ const PARSERS: ReadonlyArray<VendorParser> = [
   gamersroll,
 ];
 
-const USER_AGENT = "Mini Manager / wishlist-scrape (https://miniaturemanager.app/bot)";
+const USER_AGENT = "Mini Mainframe / wishlist-scrape (https://mini-mainframe.com/bot)";
 const FETCH_TIMEOUT_MS = 10_000;
 
 /**
