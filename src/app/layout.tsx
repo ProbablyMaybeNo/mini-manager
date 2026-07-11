@@ -8,8 +8,26 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://mini-mainframe.com"),
   title: "The Mini Mainframe",
   description:
-    "Command center for miniature & wargaming painters — projects, paints, recipes, and the focus bench.",
+    "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking for miniature painters. Free to start.",
   applicationName: "The Mini Mainframe",
+  // Explicit Open Graph + Twitter so every link unfurl (Reddit, Discord,
+  // Facebook, X, Slack, iMessage) shows the branded card with a controlled
+  // title/description and the large-image layout — not a bare <title>. The
+  // og:image / twitter:image themselves come from the file-based
+  // opengraph-image.tsx / twitter-image.tsx in (public) and are merged in.
+  openGraph: {
+    type: "website",
+    siteName: "The Mini Mainframe",
+    title: "The Mini Mainframe — paint & project manager for miniatures",
+    description:
+      "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking. Free to start.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Mini Mainframe — paint & project manager for miniatures",
+    description:
+      "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking. Free to start.",
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
