@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, count as countFn, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { bodyTypes, projects, recipes, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { logActivity } from "@/lib/activityLog";
+import { trackFirst } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { enforceRecipeNodeLimit } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 
@@ -140,6 +142,13 @@ export async function createRecipe(
 
     // P14.1 — feed the PLANNER activity stream.
     await logActivity(userId, "recipe_created", row.id);
+
+    // Funnel: first recipe = a key activation milestone.
+    const [recipeCount] = await db
+      .select({ n: countFn() })
+      .from(recipes)
+      .where(eq(recipes.ownerId, userId));
+    await trackFirst(recipeCount?.n ?? 0, AnalyticsEvent.FirstRecipeCreated);
 
     revalidatePath("/recipes");
     if (attachedProjectId) {

@@ -1,8 +1,9 @@
 import "server-only";
 
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, count as countFn, eq, gt, isNotNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  inventoryEntries,
   wishlistItems,
   type CollectionPaintType,
   type InventoryEntry,
@@ -11,6 +12,8 @@ import {
 } from "@/db/schema";
 import { upsertInventoryEntry, getInventoryEntry } from "@/db/queries/inventory";
 import { getServerCatalog } from "@/lib/paints/serverCatalog";
+import { trackFirst } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import type { Paint, PaintType } from "@/lib/paints/types";
 import type { OwnershipStatus } from "@/lib/paints/ownership";
 
@@ -95,13 +98,26 @@ export async function applyOwnershipToInventory(
   status: OwnershipStatus,
 ): Promise<InventoryEntry> {
   const current = await getInventoryEntry(ownerId, paintId);
+  const wasOwned = Boolean(current && current.ownedCount > 0);
   const patch =
     status === "OWNED"
       ? { ownedCount: current && current.ownedCount > 0 ? current.ownedCount : 1, isWishlisted: false }
       : status === "WISHLIST"
         ? { ownedCount: 0, isWishlisted: true }
         : { ownedCount: 0, isWishlisted: false };
-  return upsertInventoryEntry(ownerId, paintId, patch);
+  const entry = await upsertInventoryEntry(ownerId, paintId, patch);
+
+  // Funnel: first paint the painter marks OWNED. Only on a NONE/wishlist →
+  // owned transition, and only when it's their very first owned entry.
+  if (status === "OWNED" && !wasOwned) {
+    const [ownedRows] = await db
+      .select({ n: countFn() })
+      .from(inventoryEntries)
+      .where(and(eq(inventoryEntries.ownerId, ownerId), gt(inventoryEntries.ownedCount, 0)));
+    await trackFirst(ownedRows?.n ?? 0, AnalyticsEvent.FirstPaintOwned);
+  }
+
+  return entry;
 }
 
 /**

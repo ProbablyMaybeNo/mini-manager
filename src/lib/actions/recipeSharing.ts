@@ -7,6 +7,8 @@ import { db } from "@/db/client";
 import { recipes, recipeSlots, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { generatePublicSlug } from "@/lib/recipes/slug";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { isProUser } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 
@@ -93,6 +95,9 @@ export async function publishRecipe(
       if (!row) return { ok: false, error: "Publish returned no row" };
       revalidateForRecipe(row);
       revalidateForSlug(slug);
+      // Funnel: a recipe just went public — the distribution/moat loop.
+      // Reaching here means it wasn't already published (that returns early).
+      await trackServer(AnalyticsEvent.PublicRecipeShared);
       return { ok: true, data: { slug } };
     } catch (err) {
       lastError = err;

@@ -8,6 +8,8 @@ import { db } from "@/db/client";
 import { priorities, projects, projectTypes } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { logActivity } from "@/lib/activityLog";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { enforceCreateLimit } from "@/lib/billing/enforce";
 import type { DisplayStatus } from "@/lib/progress";
 
@@ -182,6 +184,12 @@ export async function createProject(
 
   // P14.1 — feed the PLANNER activity stream.
   await logActivity(userId, "project_created", newRow.id);
+
+  // Funnel: first project = the core activation milestone. The pre-insert
+  // owner count (ownedRows) was 0 when this is the painter's first.
+  if ((ownedRows[0]?.n ?? 0) === 0) {
+    await trackServer(AnalyticsEvent.FirstProjectCreated);
+  }
 
   // REBUILD — return the new id (the redesign drives navigation client-side);
   // the old server redirect targeted the retired /projects route.

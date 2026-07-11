@@ -4,6 +4,8 @@ import { Suspense, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthView } from "@/components/public/AuthView";
 import { signUpAction } from "@/lib/actions/auth";
+import { trackClient } from "@/lib/analytics/track.client";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { AuthError } from "../AuthError";
 
 function SignUpForm() {
@@ -19,6 +21,10 @@ function SignUpForm() {
         from={from}
         onSubmit={(username, password, email) => {
           setError(null);
+          // Funnel: the painter submitted the sign-up form (attempt), the
+          // step between landing on /sign-up and account_created firing
+          // server-side.
+          trackClient(AnalyticsEvent.SignUpStarted);
           startTransition(async () => {
             const res = await signUpAction({
               username,

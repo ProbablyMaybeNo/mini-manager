@@ -49,3 +49,31 @@ export function buildAcquisitionCookieValue(url: URL): string | null {
   }
   return Object.keys(fields).length > 0 ? JSON.stringify(fields) : null;
 }
+
+export type AcquisitionSource = Partial<
+  Record<(typeof ACQUISITION_QUERY_KEYS)[number], string>
+>;
+
+/**
+ * Parse a stored acquisition value (the JSON blob `buildAcquisitionCookieValue`
+ * produced, later persisted onto `user.acquisitionRef`) back into its
+ * fields. Returns null for absent / malformed / empty input — callers
+ * treat that as an organic/direct signup.
+ */
+export function parseAcquisitionSource(
+  raw: string | null | undefined,
+): AcquisitionSource | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return null;
+    const out: AcquisitionSource = {};
+    for (const key of ACQUISITION_QUERY_KEYS) {
+      const value = (parsed as Record<string, unknown>)[key];
+      if (typeof value === "string" && value) out[key] = value;
+    }
+    return Object.keys(out).length > 0 ? out : null;
+  } catch {
+    return null;
+  }
+}
