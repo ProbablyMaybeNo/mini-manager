@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
+import { trackClient } from "@/lib/analytics/track.client";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { PublicHeader } from "./PublicHeader";
 
 // Feature copy — benefit-led, per Ross's landing pass.
@@ -71,6 +73,11 @@ function usePrefersReducedMotion(): boolean {
 
 export function LandingView() {
   const reducedMotion = usePrefersReducedMotion();
+
+  // Funnel: top-of-funnel landing impression.
+  useEffect(() => {
+    trackClient(AnalyticsEvent.LandingView);
+  }, []);
 
   return (
     // Solid black canvas so the page matches the logo's pure-black background
@@ -142,7 +149,14 @@ export function LandingView() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
-            <Button size="lg">Start for Free</Button>
+            <Button
+              size="lg"
+              onClick={() =>
+                trackClient(AnalyticsEvent.CtaStartForFree, { location: "hero" })
+              }
+            >
+              Start for Free
+            </Button>
           </Link>
         </div>
       </section>
@@ -177,7 +191,16 @@ export function LandingView() {
               ))}
             </ul>
             <Link href="/sign-up" className="mt-auto">
-              <Button variant="secondary">Start for Free</Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  trackClient(AnalyticsEvent.CtaStartForFree, {
+                    location: "free-tier-card",
+                  })
+                }
+              >
+                Start for Free
+              </Button>
             </Link>
           </Panel>
           <Panel
@@ -210,7 +233,14 @@ export function LandingView() {
           Your whole painting setup, organized in one terminal. Free to start — no card needed.
         </p>
         <Link href="/sign-up">
-          <Button size="lg">Start for Free</Button>
+          <Button
+            size="lg"
+            onClick={() =>
+              trackClient(AnalyticsEvent.CtaStartForFree, { location: "footer" })
+            }
+          >
+            Start for Free
+          </Button>
         </Link>
       </section>
       </main>

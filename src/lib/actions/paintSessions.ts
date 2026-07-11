@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, count as countFn, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { paintSessions, projects } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { logActivity } from "@/lib/activityLog";
+import { trackFirst } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
@@ -98,6 +100,14 @@ export async function startSession(
     if (!sessionId) {
       return { ok: false, error: "Failed to open session" };
     }
+
+    // Funnel: first focus/paint session = a strong activation signal.
+    const [sessionCount] = await db
+      .select({ n: countFn() })
+      .from(paintSessions)
+      .where(eq(paintSessions.userId, userId));
+    await trackFirst(sessionCount?.n ?? 0, AnalyticsEvent.FirstFocusSession);
+
     revalidatePath("/projects");
     return {
       ok: true,

@@ -5,7 +5,9 @@ import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
 import { users, verificationTokens } from "@/db/schema";
-import { ACQUISITION_COOKIE } from "@/lib/acquisition";
+import { ACQUISITION_COOKIE, parseAcquisitionSource } from "@/lib/acquisition";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { hashPassword, verifyPassword } from "./password";
 import { createSession } from "./session";
 import { sendVerificationEmail } from "./sendVerificationEmail";
@@ -121,6 +123,24 @@ export async function signUpWithCredentials(input: {
   });
 
   await createSession(userId);
+
+  // Funnel: a new account exists. Attach the first-touch source (if any)
+  // so the acquisition → signup join is visible in the analytics funnel,
+  // and fire a dedicated source_captured event when a tracked link
+  // actually brought this painter in.
+  const source = parseAcquisitionSource(acquisitionRef);
+  await trackServer(AnalyticsEvent.AccountCreated, {
+    source: source?.ref ?? source?.utm_source ?? "organic",
+  });
+  if (source) {
+    await trackServer(AnalyticsEvent.SourceCaptured, {
+      ref: source.ref ?? null,
+      utm_source: source.utm_source ?? null,
+      utm_medium: source.utm_medium ?? null,
+      utm_campaign: source.utm_campaign ?? null,
+    });
+  }
+
   // Fire the email-verification link (the real-email gate for the testing
   // period's free-forever reward). Non-fatal — the account already exists, and
   // without AUTH_RESEND_KEY the link is console-logged in dev.

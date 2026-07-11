@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Button, Chip, Panel } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { trackClient } from "@/lib/analytics/track.client";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import type { PricingTier } from "@/lib/types";
 import { PublicHeader } from "./PublicHeader";
 import { PublicPageTitle } from "./PublicPageTitle";
@@ -18,6 +21,11 @@ export function PricingView({
    *  CTA routes to sign-up instead of opening a live checkout. */
   betaFree?: boolean;
 }) {
+  // Funnel: pricing impression.
+  useEffect(() => {
+    trackClient(AnalyticsEvent.PricingView);
+  }, []);
+
   return (
     <div className="flex min-h-dvh flex-col">
       <PublicHeader />

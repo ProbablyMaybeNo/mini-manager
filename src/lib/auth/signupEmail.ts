@@ -4,6 +4,8 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { users, verificationTokens } from "@/db/schema";
 import { SIGNUP_EMAIL_TOKEN_SCOPE } from "@/lib/auth/tokens";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 
 export type VerifyEmailResult = { ok: true } | { ok: false; message: string };
 
@@ -50,6 +52,10 @@ export async function verifySignupEmailToken(input: {
   await db
     .delete(verificationTokens)
     .where(eq(verificationTokens.identifier, row.identifier));
+
+  // Funnel: email confirmed — the real-email gate for the free-forever
+  // reward. The token is single-use (deleted above), so this fires once.
+  await trackServer(AnalyticsEvent.EmailVerified);
 
   return { ok: true };
 }
