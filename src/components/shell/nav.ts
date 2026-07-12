@@ -5,6 +5,7 @@ import {
   Database,
   FlaskConical,
   Hammer,
+  Images,
   LayoutGrid,
   type LucideIcon,
   User,
@@ -30,6 +31,7 @@ export const MAIN_NAV: NavItem[] = [
   { key: "recipe", label: "RECIPES", path: "/recipes", icon: FlaskConical, tour: "nav-recipe" },
   { key: "tools", label: "TOOLS", path: "/tools", icon: Hammer, tour: "nav-tools" },
   { key: "collection", label: "COLLECTION", path: "/collection", icon: Archive, tour: "nav-collection" },
+  { key: "gallery", label: "GALLERY", path: "/gallery", icon: Images, tour: "nav-gallery" },
 ];
 
 /** Pinned-bottom rail items. */
@@ -63,6 +65,7 @@ export const BOTTOM_NAV_PRIMARY: NavItem[] = [
 export const BOTTOM_NAV_MORE: NavItem[] = [
   byKey("focus"),
   byKey("recipe"),
+  byKey("gallery"),
   byKey("account"),
 ];
 

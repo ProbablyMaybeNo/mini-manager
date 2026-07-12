@@ -240,5 +240,6 @@ export type NavKey =
   | "recipe"
   | "tools"
   | "collection"
+  | "gallery"
   | "settings"
   | "account";
