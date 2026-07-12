@@ -4,8 +4,8 @@
  * simple env-configured email allowlist: `MM_ADMIN_EMAILS`, a
  * comma-separated list of admin emails.
  *
- * TODO(Ross): set `MM_ADMIN_EMAILS` in the Vercel project env (comma-
- * separated, e.g. "admin@hrumf.com,other@example.com"). Until it's set,
+ * Set `MM_ADMIN_EMAILS` in the Vercel project env (comma-separated, e.g.
+ * "ross@beaconhobbies.com,other@example.com") to override. Until it's set,
  * this falls back to the app owner's email below so the gate isn't wide
  * open by default.
  *
@@ -15,7 +15,7 @@
  * (see recipeSharing.ts / projectImages.ts for why).
  */
 
-const FALLBACK_ADMIN_EMAIL = "admin@hrumf.com";
+const FALLBACK_ADMIN_EMAIL = "ross@beaconhobbies.com";
 
 function adminAllowlist(): ReadonlySet<string> {
   const raw = process.env.MM_ADMIN_EMAILS?.trim();
