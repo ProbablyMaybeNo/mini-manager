@@ -519,27 +519,44 @@ export function ShareCardComposer({
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="primary"
-              onClick={handleDownload}
-              disabled={exporting}
-              className="self-start"
-            >
-              <Download size={16} aria-hidden />
-              {exporting ? "Rendering…" : "Download PNG"}
-            </Button>
+          {/* Two clearly-labelled, equally-weighted paths — save it yourself,
+              or post it to the community gallery. The gallery path is hidden
+              for the imageless / unsaved-recipe entry points (no recipeId). */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Button
+                variant="primary"
+                onClick={handleDownload}
+                disabled={exporting}
+                className="w-full justify-center"
+              >
+                <Download size={16} aria-hidden />
+                {exporting ? "Rendering…" : "Download card"}
+              </Button>
+              <p className="label-osd text-fg-dim">
+                Save the PNG to post anywhere yourself.
+              </p>
+            </div>
 
             {recipeId && (
-              <Button
-                variant="outlineCyan"
-                onClick={handleSubmit}
-                disabled={submitting || exporting}
-                className="self-start"
-              >
-                <Send size={16} aria-hidden />
-                {submitting ? "Submitting…" : submitted ? "Resubmit" : "Submit to gallery"}
-              </Button>
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Button
+                  variant="outlineCyan"
+                  onClick={handleSubmit}
+                  disabled={submitting || exporting}
+                  className="w-full justify-center"
+                >
+                  <Send size={16} aria-hidden />
+                  {submitting
+                    ? "Submitting…"
+                    : submitted
+                      ? "Resubmit to gallery"
+                      : "Post to gallery"}
+                </Button>
+                <p className="label-osd text-fg-dim">
+                  Publish it to the Mini Mainframe community gallery.
+                </p>
+              </div>
             )}
           </div>
           {recipeId && !submitted && (
