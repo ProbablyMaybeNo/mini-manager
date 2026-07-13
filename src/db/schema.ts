@@ -605,6 +605,20 @@ export const phase12LayerLabel: Record<Phase12LayerKey, string> = {
 export const galleryStatuses = ["none", "pending", "approved", "rejected"] as const;
 export type GalleryStatus = (typeof galleryStatuses)[number];
 
+/**
+ * Automated image-moderation verdict for a gallery submission (Claude Haiku
+ * vision, see `src/lib/ai/imageModeration.ts`). Advisory — it never overrides
+ * the human review gate except for `fail` (clear photographic explicit
+ * content), which blocks the submit outright. `pass`/`flag`/`error` all still
+ * land in the admin `pending` queue; the verdict just directs attention.
+ *   - `pass`  — clean hobby content
+ *   - `flag`  — borderline / uncertain; admin should look closely
+ *   - `fail`  — clear real-world explicit/inappropriate content (submit blocked)
+ *   - `error` — moderation couldn't run (no key, timeout, bad image); fail-open
+ */
+export const galleryModerationVerdicts = ["pass", "flag", "fail", "error"] as const;
+export type GalleryModerationVerdict = (typeof galleryModerationVerdicts)[number];
+
 export const recipes = sqliteTable(
   "recipe",
   {
@@ -648,6 +662,14 @@ export const recipes = sqliteTable(
       .default("none"),
     gallerySubmittedAt: integer("gallery_submitted_at", { mode: "timestamp_ms" }),
     galleryReviewedAt: integer("gallery_reviewed_at", { mode: "timestamp_ms" }),
+    /** Automated moderation verdict recorded at submit time (advisory; see
+     *  `galleryModerationVerdicts`). Null on rows submitted before moderation
+     *  shipped / never submitted. */
+    galleryModeration: text("gallery_moderation", { enum: galleryModerationVerdicts }),
+    /** Short human-readable reason the moderator gave (shown to the admin on
+     *  a `flag`; the user-facing block message on a `fail`). */
+    galleryModerationReason: text("gallery_moderation_reason"),
+    galleryModeratedAt: integer("gallery_moderated_at", { mode: "timestamp_ms" }),
     /** How many times this recipe has been cloned from its public slug — the
      *  gallery's "Most Popular" signal. Bumped best-effort on each successful
      *  `cloneRecipeFromSlug`; never blocks the clone if the increment fails. */
