@@ -54,7 +54,7 @@ existing `handleDownload` and `handleSubmit`; do not change their behaviour.
 - Acceptance: both actions visible with helper text; download + submit still
   work; build green.
 
-## M3 — "Your cards" submission status  ✅  (halt for Ross if the status shape is unclear)
+## M3 — "Your cards" submission status  ⬜  (halt for Ross if the status shape is unclear)
 Let a signed-in painter see the status of cards they've submitted.
 - Inspect `src/lib/actions/gallerySubmissions.ts` + the gallery* columns in
   `src/db/schema.ts` for the submission status field (pending review / listed /
@@ -66,7 +66,7 @@ Let a signed-in painter see the status of cards they've submitted.
 - Acceptance: a user who submitted a card sees its status; nothing renders for
   users with no submissions; build green.
 
-## M4 — /pricing horizontal overflow at 320px (MUX-010)  ✅
+## M4 — /pricing horizontal overflow at 320px (MUX-010)  ⬜
 - At 320px viewport width, `/pricing` scrolls ~4px horizontally. Find the
   offending element (likely a fixed min-width / padding on a tier card, chip, or
   price row) and make it reflow within 320px — no body horizontal scroll.
