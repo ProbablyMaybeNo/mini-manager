@@ -98,6 +98,9 @@ export function ShareCardComposer({
   const [exporting, setExporting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // Whether the last submit auto-published straight to the live gallery
+  // (moderation `pass`) vs landed in the admin review queue (`pending`).
+  const [wentLive, setWentLive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -112,6 +115,7 @@ export function ShareCardComposer({
     setNotes(initialNotes ?? "");
     setError(null);
     setSubmitted(false);
+    setWentLive(false);
     setCandidates(
       initialImageUrl
         ? [{ id: "initial", exportSrc: initialImageUrl, isLocal: false }]
@@ -276,6 +280,7 @@ export function ShareCardComposer({
         setError(res.error);
         return;
       }
+      setWentLive(res.data.status === "approved");
       setSubmitted(true);
     } catch (err) {
       setError(
@@ -514,8 +519,9 @@ export function ShareCardComposer({
           {submitted && (
             <p className="flex items-center gap-2 font-mono text-[12px] text-green">
               <CheckCircle2 size={14} aria-hidden />
-              Submitted for review — an admin will approve it before it shows on
-              the public gallery.
+              {wentLive
+                ? "Live on the gallery now — thanks for sharing!"
+                : "Submitted for review — an admin will take a quick look before it shows on the public gallery."}
             </p>
           )}
 
@@ -561,9 +567,10 @@ export function ShareCardComposer({
           </div>
           {recipeId && !submitted && (
             <p className="font-mono text-[11px] text-fg-dim">
-              ▸ Free to submit. A card goes live on{" "}
-              <span className="text-cyan-lite">/gallery</span> only after an
-              admin approves it.
+              ▸ Free to post. Cards go live on{" "}
+              <span className="text-cyan-lite">/gallery</span> right away once
+              they pass our automatic content check — anything borderline is
+              reviewed by an admin first.
             </p>
           )}
         </div>

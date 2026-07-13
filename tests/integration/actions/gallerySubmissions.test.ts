@@ -18,6 +18,15 @@ const state = vi.hoisted(() => ({
 
 const delMock = vi.hoisted(() => vi.fn(async () => undefined));
 
+// Controllable moderation verdict — defaults to `flag` (→ human review queue)
+// so the existing submit/approve/reject flow tests all see a `pending`
+// submission; individual tests override `moderation.verdict` to exercise the
+// auto-publish (`pass`) and block (`fail`) branches.
+const moderation = vi.hoisted(() => ({
+  verdict: "flag" as "pass" | "flag" | "fail" | "error",
+  reason: null as string | null,
+}));
+
 vi.mock("@/db/client", () => ({
   get db() {
     if (!state.db) throw new Error("Test DB not initialised in beforeEach");
@@ -29,6 +38,9 @@ vi.mock("@/lib/auth-stub", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@vercel/blob", () => ({ del: delMock }));
+vi.mock("@/lib/ai/imageModeration", () => ({
+  moderateGalleryImage: async () => ({ verdict: moderation.verdict, reason: moderation.reason }),
+}));
 
 const { submitRecipeToGallery, approveGallerySubmission, rejectGallerySubmission } =
   await import("@/lib/actions/gallerySubmissions");
@@ -74,6 +86,8 @@ beforeEach(async () => {
   state.db = db;
   state.userId = userId;
   delMock.mockClear();
+  moderation.verdict = "flag";
+  moderation.reason = null;
   process.env.MM_ADMIN_EMAILS = ADMIN_EMAIL;
 });
 
@@ -113,6 +127,51 @@ describe("submitRecipeToGallery", () => {
     const res = await submitFixture(recipeId);
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/not found/i);
+  });
+
+  test("auto-publishes a clean (pass) submission straight to the live gallery", async () => {
+    moderation.verdict = "pass";
+    const recipeId = await seedRecipe({ name: "Clean Auto Publish" });
+    const res = await submitFixture(recipeId);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.status).toBe("approved");
+
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.galleryStatus).toBe("approved");
+    expect(row?.isListed).toBe(true);
+    expect(row?.publicSlug).not.toBeNull();
+    expect(row?.galleryReviewedAt).not.toBeNull();
+    expect(row?.galleryModeration).toBe("pass");
+
+    const gallery = await listPublishedRecipes();
+    expect(gallery.some((g) => g.name === "Clean Auto Publish")).toBe(true);
+  });
+
+  test("blocks a submission the moderator fails and deletes the uploaded blob", async () => {
+    moderation.verdict = "fail";
+    moderation.reason = "photographic explicit content";
+    process.env.BLOB_READ_WRITE_TOKEN = "test-token";
+    const recipeId = await seedRecipe({ name: "Blocked" });
+    const res = await submitFixture(recipeId);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/inappropriate/i);
+    expect(delMock).toHaveBeenCalledWith("gallery-cards/x/1.png", expect.anything());
+
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.galleryStatus).toBe("none");
+    expect(row?.isListed).toBe(false);
+  });
+
+  test("routes a moderation error to the review queue (fail-open, not blocked)", async () => {
+    moderation.verdict = "error";
+    const recipeId = await seedRecipe({ name: "Fail Open" });
+    const res = await submitFixture(recipeId);
+    expect(res.ok).toBe(true);
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.galleryStatus).toBe("pending");
+    expect(row?.isListed).toBe(false);
   });
 
   test("resubmitting an approved recipe pulls it off the gallery until re-approved", async () => {

@@ -100,7 +100,7 @@ const submitSchema = z.object({
 
 export async function submitRecipeToGallery(
   raw: z.infer<typeof submitSchema>,
-): Promise<ActionResult<{ recipeId: string }>> {
+): Promise<ActionResult<{ recipeId: string; status: "approved" | "pending" }>> {
   const parsed = submitSchema.safeParse(raw);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -134,6 +134,21 @@ export async function submitRecipeToGallery(
     await deleteBlobBestEffort(existing.galleryImagePathname);
   }
 
+  // Moderation-gated auto-publish: a clean `pass` goes straight to the live
+  // gallery; `flag` / `error` route to the human review queue (`pending`)
+  // instead. Auto-publish needs a public slug (the card is only reachable at
+  // /r/<slug>) — if minting one fails, fall back to `pending` rather than
+  // losing the submission.
+  let status: "approved" | "pending" = "pending";
+  let liveSlug = existing.publicSlug;
+  if (moderation.verdict === "pass") {
+    const slugRes = await ensurePublicSlug(existing);
+    if (slugRes.ok) {
+      status = "approved";
+      liveSlug = slugRes.slug;
+    }
+  }
+
   try {
     await db
       .update(recipes)
@@ -141,21 +156,20 @@ export async function submitRecipeToGallery(
         galleryImageUrl: imageUrl,
         galleryImagePathname: imagePathname,
         galleryImageRatio: ratio,
-        galleryStatus: "pending",
+        galleryStatus: status,
         gallerySubmittedAt: new Date(),
-        galleryReviewedAt: null,
+        galleryReviewedAt: status === "approved" ? new Date() : null,
         galleryModeration: moderation.verdict,
         galleryModerationReason: moderation.reason,
         galleryModeratedAt: new Date(),
-        // Pull the card off public view while it's under (re-)review —
-        // only `approveGallerySubmission` may flip this back to true, so a
-        // resubmit of a previously-approved recipe can't leak an
-        // unreviewed image onto /gallery.
-        isListed: false,
+        // Only an auto-published `pass` or an admin approval sets this true, so
+        // a `pending` (flagged) or unreviewed image can never leak onto
+        // /gallery. A resubmit that lands in `pending` correctly delists.
+        isListed: status === "approved",
       })
       .where(eq(recipes.id, recipeId));
-    revalidateGallery(existing.publicSlug);
-    return { ok: true, data: { recipeId } };
+    revalidateGallery(liveSlug);
+    return { ok: true, data: { recipeId, status } };
   } catch (err) {
     return {
       ok: false,
