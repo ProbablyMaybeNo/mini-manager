@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, asc, eq, like } from "drizzle-orm";
+import { and, asc, eq, like, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { recipes, recipeSlots, type Recipe } from "@/db/schema";
@@ -261,6 +261,18 @@ export async function cloneRecipeFromSlug(
         notesMd: slot.notesMd,
         notes: slot.notes,
       });
+    }
+
+    // Best-effort popularity signal — bump the SOURCE recipe's clone count
+    // (the recipe the slug points to, not the fresh copy). Never fail the
+    // clone if this errors; the clone itself already succeeded.
+    try {
+      await db
+        .update(recipes)
+        .set({ cloneCount: sql`${recipes.cloneCount} + 1` })
+        .where(eq(recipes.id, source.id));
+    } catch {
+      /* best-effort — the clone stands regardless */
     }
 
     revalidatePath("/recipes");
