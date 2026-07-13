@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button, HexField, MultiSelectDropdown, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
-import { readableText } from "@/lib/color";
+import { captionScrim, readableText } from "@/lib/color";
 import { resolveMatchTypeFilter } from "@/lib/toolMatch";
 import { PaintPickerPanel } from "./PaintPickerPanel";
 import {
@@ -216,7 +216,7 @@ export function ColourMatchTool({
               <div key={i} className="flex items-start gap-3 border border-cyan/20 p-2">
                 <span
                   className="inline-flex h-10 min-w-[80px] items-center justify-center border border-fg/20 px-2 font-body text-body"
-                  style={{ backgroundColor: h, color: readableText(h) }}
+                  style={{ backgroundColor: h, color: readableText(h), textShadow: captionScrim(h) }}
                 >
                   {h}
                 </span>

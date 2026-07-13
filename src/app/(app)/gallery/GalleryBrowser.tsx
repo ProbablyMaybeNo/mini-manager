@@ -55,7 +55,7 @@ export function GalleryBrowser({
         </div>
 
         <div
-          className="flex items-center gap-2"
+          className="flex flex-wrap items-center gap-2"
           role="group"
           aria-label="Sort cards"
         >
@@ -117,8 +117,8 @@ function SortChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        // min-h-6 keeps the hit area ≥24px (WCAG 2.2 §2.5.8).
-        "inline-flex min-h-6 items-center border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
+        // min-h-11 → 44px comfortable touch target (WCAG 2.2 §2.5.8).
+        "inline-flex min-h-11 items-center border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
         active
           ? "border-cyan bg-cyan/15 text-cyan-lite"
           : "border-cyan/40 text-fg hover:border-cyan hover:text-cyan-lite",

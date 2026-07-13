@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Checkbox, CloseButton, HexField, Panel, SegmentedToggle, Swatch, useToast } from "@/components/kit";
-import { readableText } from "@/lib/color";
+import { captionScrim, readableText } from "@/lib/color";
 import { buildRamp, MAX_STEPS, MIN_STEPS } from "@/lib/tools/gradient/interpolate";
 import { computeVennFills } from "@/lib/tools/layering/venn";
 import { deriveLanesFromSeed, type LaneKey } from "@/lib/tools/layering/deriveLanes";
@@ -284,8 +284,8 @@ export function LayeringTool({
   return (
     <div className="flex flex-col gap-6">
       {/* ===================== LAYERING ===================== */}
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <Panel label="LAYERING" className="flex flex-col gap-3 p-5">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        <Panel label="LAYERING" className="flex min-w-0 flex-col gap-3 p-5">
           <p className="font-body text-body text-fg">
             Perceptual Lab-space ramp — even transitions across the eye.
           </p>
@@ -381,7 +381,7 @@ export function LayeringTool({
           </label>
         </Panel>
 
-        <Panel label="RAMP" cornerTicks className="flex flex-col gap-4 p-5">
+        <Panel label="RAMP" cornerTicks className="flex min-w-0 flex-col gap-4 p-5">
           {!valid ? (
             <p className="py-8 text-center font-body text-body text-fg">
               Enter valid shadow / base / highlight hexes.
@@ -393,10 +393,10 @@ export function LayeringTool({
                 {ladder.map((hex, i) => (
                   <div
                     key={i}
-                    className="flex h-14 flex-1 items-center justify-center"
-                    style={{ backgroundColor: hex, color: readableText(hex) }}
+                    className="flex h-14 min-w-0 flex-1 items-center justify-center overflow-hidden"
+                    style={{ backgroundColor: hex, color: readableText(hex), textShadow: captionScrim(hex) }}
                   >
-                    <span className="font-body text-body">{hex}</span>
+                    <span className="max-w-full truncate font-body text-body">{hex}</span>
                   </div>
                 ))}
               </div>
@@ -438,8 +438,8 @@ export function LayeringTool({
       </div>
 
       {/* ===================== STACKING ===================== */}
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <Panel label="STACKING" accent="purple" className="flex flex-col gap-3 p-5">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        <Panel label="STACKING" accent="purple" className="flex min-w-0 flex-col gap-3 p-5">
           <p className="font-body text-body text-fg">
             Paint is see-through, so what you see is every layer showing
             through the ones above it. Stack layers bottom (LAYER 1) to top —
@@ -503,12 +503,13 @@ export function LayeringTool({
           </Button>
         </Panel>
 
-        <Panel label="RESULT" cornerTicks accent="purple" className="flex flex-col gap-4 p-5">
+        <Panel label="RESULT" cornerTicks accent="purple" className="flex min-w-0 flex-col gap-4 p-5">
           <div
             className="flex h-28 items-center justify-center border border-fg/20"
             style={{
               backgroundColor: HEX6.test(resultFill) ? resultFill : "transparent",
               color: readableText(resultFill),
+              textShadow: captionScrim(resultFill),
             }}
           >
             <span className="font-body text-body">{resultFill.toUpperCase()}</span>

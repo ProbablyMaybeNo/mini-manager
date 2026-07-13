@@ -525,7 +525,7 @@ export function ShareCardComposer({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex flex-1 flex-col gap-1.5">
               <Button
-                variant="primary"
+                variant="outlineCyan"
                 onClick={handleDownload}
                 disabled={exporting}
                 className="w-full justify-center"
@@ -541,7 +541,7 @@ export function ShareCardComposer({
             {recipeId && (
               <div className="flex flex-1 flex-col gap-1.5">
                 <Button
-                  variant="outlineCyan"
+                  variant="primary"
                   onClick={handleSubmit}
                   disabled={submitting || exporting}
                   className="w-full justify-center"
