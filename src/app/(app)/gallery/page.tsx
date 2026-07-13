@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { listPublishedRecipes } from "@/db/queries/recipes";
-import { Button, EmptyState, Panel } from "@/components/kit";
+import { EmptyState, Panel } from "@/components/kit";
 import { PublicHeader } from "@/components/public/PublicHeader";
+import { ShareYourModelButton } from "@/components/gallery/ShareYourModelButton";
 import { GalleryBrowser } from "./GalleryBrowser";
 
 // Published recipes change as painters share/unshare — render on request so
@@ -46,9 +47,9 @@ export default async function GalleryPage() {
           </p>
         </div>
         {isSignedIn ? (
-          <Link href="/recipes" className="shrink-0">
-            <Button variant="primary">Share your model</Button>
-          </Link>
+          <div className="shrink-0">
+            <ShareYourModelButton />
+          </div>
         ) : null}
       </header>
 
@@ -65,9 +66,7 @@ export default async function GalleryPage() {
           />
           <div className="flex justify-center pb-4">
             {isSignedIn ? (
-              <Link href="/recipes">
-                <Button variant="primary">Share your model</Button>
-              </Link>
+              <ShareYourModelButton />
             ) : (
               <Link
                 href="/sign-up"

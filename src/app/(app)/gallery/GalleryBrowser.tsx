@@ -7,10 +7,13 @@ import { CloneButton } from "@/components/recipe/CloneButton";
 import { cn } from "@/lib/cn";
 import type { GalleryRecipeCard } from "@/db/queries/recipes";
 
+type SortKey = "newest" | "oldest";
+
 /**
- * Client browse layer over the server-fetched published-recipe list.
- * v1 keeps it simple: a name search + a brand facet, both filtering the
- * already-fetched array in memory. No extra round-trips.
+ * Client browse layer over the server-fetched published-card list: a name
+ * search + a Newest/Oldest sort, both applied in memory (no round-trips).
+ * Brand faceting was dropped — painters browse the gallery by what's new, not
+ * by paint company.
  */
 export function GalleryBrowser({
   recipes,
@@ -20,76 +23,64 @@ export function GalleryBrowser({
   isSignedIn: boolean;
 }) {
   const [query, setQuery] = useState("");
-  const [brand, setBrand] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortKey>("newest");
 
-  // Every distinct brand across the published set, sorted — drives the facet.
-  const allBrands = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of recipes) for (const b of r.brands) set.add(b);
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [recipes]);
-
-  const filtered = useMemo(() => {
+  const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return recipes.filter((r) => {
-      const matchesQuery = q === "" || r.name.toLowerCase().includes(q);
-      const matchesBrand = brand === null || r.brands.includes(brand);
-      return matchesQuery && matchesBrand;
-    });
-  }, [recipes, query, brand]);
+    const matched = recipes.filter(
+      (r) => q === "" || r.name.toLowerCase().includes(q),
+    );
+    return [...matched].sort((a, b) =>
+      sort === "newest" ? b.updatedAt - a.updatedAt : a.updatedAt - b.updatedAt,
+    );
+  }, [recipes, query, sort]);
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <div className="max-w-md">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full max-w-md">
           <SearchField
             name="gallery-search"
-            aria-label="Search recipes by name"
-            placeholder="Search recipes…"
+            aria-label="Search cards by name"
+            placeholder="Search cards…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
 
-        {allBrands.length > 0 && (
-          <div
-            className="flex flex-wrap items-center gap-2"
-            role="group"
-            aria-label="Filter by brand"
-          >
-            <BrandChip
-              label="All"
-              active={brand === null}
-              onClick={() => setBrand(null)}
-            />
-            {allBrands.map((b) => (
-              <BrandChip
-                key={b}
-                label={b}
-                active={brand === b}
-                onClick={() => setBrand((cur) => (cur === b ? null : b))}
-              />
-            ))}
-          </div>
-        )}
+        <div
+          className="flex items-center gap-2"
+          role="group"
+          aria-label="Sort cards"
+        >
+          <SortChip
+            label="Newest"
+            active={sort === "newest"}
+            onClick={() => setSort("newest")}
+          />
+          <SortChip
+            label="Oldest"
+            active={sort === "oldest"}
+            onClick={() => setSort("oldest")}
+          />
+        </div>
       </div>
 
       <p className="label-osd text-fg-dim" aria-live="polite">
-        {filtered.length} recipe{filtered.length === 1 ? "" : "s"}
-        {brand ? ` · ${brand}` : ""}
+        {visible.length} card{visible.length === 1 ? "" : "s"}
       </p>
 
-      {filtered.length === 0 ? (
+      {visible.length === 0 ? (
         <Panel label="GALLERY" className="p-4">
           <EmptyState
             glyph="▦"
-            title="No recipes match"
-            hint="Try a different search term or clear the brand filter."
+            title="No cards match"
+            hint="Try a different search term."
           />
         </Panel>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((r) => (
+          {visible.map((r) => (
             <li key={r.slug}>
               <RecipeCard recipe={r} isSignedIn={isSignedIn} />
             </li>
@@ -100,7 +91,7 @@ export function GalleryBrowser({
   );
 }
 
-function BrandChip({
+function SortChip({
   label,
   active,
   onClick,
