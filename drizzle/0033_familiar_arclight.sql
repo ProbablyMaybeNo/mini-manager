@@ -1,0 +1,1 @@
+ALTER TABLE `recipe` ADD `clone_count` integer DEFAULT 0 NOT NULL;
