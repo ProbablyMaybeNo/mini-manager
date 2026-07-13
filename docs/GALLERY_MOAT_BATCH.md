@@ -39,7 +39,7 @@ Give the gallery a real popularity signal, then sort by it.
 - Acceptance: build green; cloning a card bumps the source's count; Popular
   chip reorders the grid.
 
-## M2 — Upfront Download-vs-Post choice in the share card  ⬜
+## M2 — Upfront Download-vs-Post choice in the share card  ✅
 Make the two share intents unmistakable in
 `src/components/recipe/ShareCardComposer.tsx`. Presentation only — reuse the
 existing `handleDownload` and `handleSubmit`; do not change their behaviour.
@@ -54,7 +54,7 @@ existing `handleDownload` and `handleSubmit`; do not change their behaviour.
 - Acceptance: both actions visible with helper text; download + submit still
   work; build green.
 
-## M3 — "Your cards" submission status  ⬜  (halt for Ross if the status shape is unclear)
+## M3 — "Your cards" submission status  ✅  (halt for Ross if the status shape is unclear)
 Let a signed-in painter see the status of cards they've submitted.
 - Inspect `src/lib/actions/gallerySubmissions.ts` + the gallery* columns in
   `src/db/schema.ts` for the submission status field (pending review / listed /

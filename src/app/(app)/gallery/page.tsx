@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { listPublishedRecipes } from "@/db/queries/recipes";
+import { listMyGallerySubmissions } from "@/db/queries/gallerySubmissions";
 import { EmptyState, Panel } from "@/components/kit";
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { ShareYourModelButton } from "@/components/gallery/ShareYourModelButton";
+import { YourCardsStrip } from "@/components/gallery/YourCardsStrip";
 import { GalleryBrowser } from "./GalleryBrowser";
 
 // Published recipes change as painters share/unshare — render on request so
@@ -31,7 +33,12 @@ export const metadata: Metadata = {
  */
 export default async function GalleryPage() {
   const [recipes, session] = await Promise.all([listPublishedRecipes(), auth()]);
-  const isSignedIn = Boolean(session?.user?.id);
+  const userId = session?.user?.id;
+  const isSignedIn = Boolean(userId);
+
+  // "Your cards" — the signed-in painter's own submissions + moderation
+  // status. Skipped entirely for signed-out visitors.
+  const myCards = userId ? await listMyGallerySubmissions(userId) : [];
 
   const content = (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
@@ -52,6 +59,8 @@ export default async function GalleryPage() {
           </div>
         ) : null}
       </header>
+
+      {isSignedIn && <YourCardsStrip cards={myCards} />}
 
       {recipes.length === 0 ? (
         <Panel label="GALLERY" cornerTicks className="p-4">

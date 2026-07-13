@@ -1,8 +1,8 @@
 import "server-only";
 
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db/client";
-import { recipes, users } from "@/db/schema";
+import { recipes, users, type GalleryStatus } from "@/db/schema";
 
 /**
  * Recipe-card phase 3 — the admin review queue read (`/admin/gallery`).
@@ -59,4 +59,42 @@ export async function listPendingGallerySubmissions(): Promise<
     });
   }
   return out;
+}
+
+/**
+ * "Your cards" — one row per gallery card the signed-in painter has
+ * submitted, with its current moderation status. A "submission" is just a
+ * recipe row whose `galleryStatus` has left the default `none` (see
+ * `src/lib/actions/gallerySubmissions.ts` for the single-table rationale),
+ * so this is a single owner-scoped read filtering out `none`. Newest
+ * submission first.
+ */
+export interface MyGalleryCard {
+  recipeId: string;
+  name: string;
+  /** "pending" | "approved" | "rejected" — never "none" (filtered out). */
+  status: GalleryStatus;
+  submittedAt: number | null;
+}
+
+export async function listMyGallerySubmissions(
+  userId: string,
+): Promise<ReadonlyArray<MyGalleryCard>> {
+  const rows = await db
+    .select({
+      recipeId: recipes.id,
+      name: recipes.name,
+      status: recipes.galleryStatus,
+      submittedAt: recipes.gallerySubmittedAt,
+    })
+    .from(recipes)
+    .where(and(eq(recipes.ownerId, userId), ne(recipes.galleryStatus, "none")))
+    .orderBy(desc(recipes.gallerySubmittedAt));
+
+  return rows.map((r) => ({
+    recipeId: r.recipeId,
+    name: r.name,
+    status: r.status,
+    submittedAt: r.submittedAt ? r.submittedAt.getTime() : null,
+  }));
 }
