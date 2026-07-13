@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Checkbox, CloseButton, HexField, Panel, SegmentedToggle, Swatch, useToast } from "@/components/kit";
-import { readableText } from "@/lib/color";
+import { captionScrim, readableText } from "@/lib/color";
 import { buildRamp, MAX_STEPS, MIN_STEPS } from "@/lib/tools/gradient/interpolate";
 import { computeVennFills } from "@/lib/tools/layering/venn";
 import { deriveLanesFromSeed, type LaneKey } from "@/lib/tools/layering/deriveLanes";
@@ -394,7 +394,7 @@ export function LayeringTool({
                   <div
                     key={i}
                     className="flex h-14 flex-1 items-center justify-center"
-                    style={{ backgroundColor: hex, color: readableText(hex) }}
+                    style={{ backgroundColor: hex, color: readableText(hex), textShadow: captionScrim(hex) }}
                   >
                     <span className="font-body text-body">{hex}</span>
                   </div>
@@ -509,6 +509,7 @@ export function LayeringTool({
             style={{
               backgroundColor: HEX6.test(resultFill) ? resultFill : "transparent",
               color: readableText(resultFill),
+              textShadow: captionScrim(resultFill),
             }}
           >
             <span className="font-body text-body">{resultFill.toUpperCase()}</span>
