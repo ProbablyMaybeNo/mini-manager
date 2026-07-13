@@ -7,13 +7,14 @@ import { CloneButton } from "@/components/recipe/CloneButton";
 import { cn } from "@/lib/cn";
 import type { GalleryRecipeCard } from "@/db/queries/recipes";
 
-type SortKey = "newest" | "oldest";
+type SortKey = "newest" | "oldest" | "popular";
 
 /**
  * Client browse layer over the server-fetched published-card list: a name
- * search + a Newest/Oldest sort, both applied in memory (no round-trips).
- * Brand faceting was dropped — painters browse the gallery by what's new, not
- * by paint company.
+ * search + a Newest/Oldest/Popular sort, all applied in memory (no
+ * round-trips). Popular ranks by clone count (desc), tie-breaking on
+ * recency. Brand faceting was dropped — painters browse the gallery by
+ * what's new or what's loved, not by paint company.
  */
 export function GalleryBrowser({
   recipes,
@@ -30,9 +31,14 @@ export function GalleryBrowser({
     const matched = recipes.filter(
       (r) => q === "" || r.name.toLowerCase().includes(q),
     );
-    return [...matched].sort((a, b) =>
-      sort === "newest" ? b.updatedAt - a.updatedAt : a.updatedAt - b.updatedAt,
-    );
+    return [...matched].sort((a, b) => {
+      if (sort === "popular") {
+        return b.cloneCount - a.cloneCount || b.updatedAt - a.updatedAt;
+      }
+      return sort === "newest"
+        ? b.updatedAt - a.updatedAt
+        : a.updatedAt - b.updatedAt;
+    });
   }, [recipes, query, sort]);
 
   return (
@@ -53,6 +59,11 @@ export function GalleryBrowser({
           role="group"
           aria-label="Sort cards"
         >
+          <SortChip
+            label="Popular"
+            active={sort === "popular"}
+            onClick={() => setSort("popular")}
+          />
           <SortChip
             label="Newest"
             active={sort === "newest"}

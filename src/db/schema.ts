@@ -648,6 +648,10 @@ export const recipes = sqliteTable(
       .default("none"),
     gallerySubmittedAt: integer("gallery_submitted_at", { mode: "timestamp_ms" }),
     galleryReviewedAt: integer("gallery_reviewed_at", { mode: "timestamp_ms" }),
+    /** How many times this recipe has been cloned from its public slug — the
+     *  gallery's "Most Popular" signal. Bumped best-effort on each successful
+     *  `cloneRecipeFromSlug`; never blocks the clone if the increment fails. */
+    cloneCount: integer("clone_count").notNull().default(0),
     notesMd: text("notes_md"),
     ...timestamps,
   },
