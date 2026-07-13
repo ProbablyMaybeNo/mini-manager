@@ -36,7 +36,7 @@ const button = cva(
         tertiary:
           "border-0 bg-transparent text-fg-dim underline-offset-4 hover:text-cyan-lite hover:underline",
         danger:
-          "border border-red bg-red text-white hover:bg-red/85",
+          "border border-red bg-red-deep text-white hover:bg-red-deep/85",
 
         /* ---- "+" / add buttons ----
            Colour contract §4: the "+" glyph + label already say "add", so the
@@ -55,7 +55,7 @@ const button = cva(
         solidGreen: "border border-green bg-green text-bg hover:bg-green/85",
         solidYellow: "border border-yellow bg-yellow text-bg hover:bg-yellow/85",
         solidPurple: "border border-purple bg-purple text-bg hover:bg-purple/85",
-        solidRed: "border border-red bg-red text-white hover:bg-red/85",
+        solidRed: "border border-red bg-red-deep text-white hover:bg-red-deep/85",
 
         /* ---- Outlines (colour border + transparent fill + colour text) ---- */
         outlineCyan: "border border-cyan/60 bg-transparent text-cyan-lite hover:bg-cyan/10 hover:border-cyan",

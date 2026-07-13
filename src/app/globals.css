@@ -78,6 +78,7 @@
   --color-yellow: #f5f17a; /* WISHLIST / wishlist add / low-stakes warning */
   --color-purple: #bf7bff; /* retained for the decorative systems only (statBox / activity / event) — no longer a core-surface accent */
   --color-red: #f7143e; /* danger — delete / remove / error (the only saturated red) */
+  --color-red-deep: #c81032; /* deeper danger red for white-text fills — #f7143e under white is ~4.1:1 (below AA); #c81032 ≈ 5.6:1. Borders/icons/small fills keep #f7143e. */
   --color-red-text: #ff5a74; /* text-safe danger red — small red TEXT on dark (#f7143e as text is ~4.2:1 on the #1a1a1f card; #ff5a74 ≈ 5.7:1). Fills / borders / icons keep #f7143e. */
   --color-highlight: #ff2b6d; /* highlight / pink — retained, decorative only */
   /* Retained warm tone; no longer the MED-priority source (priority now has its
