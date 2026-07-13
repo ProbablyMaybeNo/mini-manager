@@ -91,7 +91,7 @@ test.describe("Recipe-card phase 2 — ShareCardComposer PNG export", () => {
     // --- 1:1 (default) download ---
     const download1 = await Promise.all([
       page.waitForEvent("download"),
-      dialog.getByRole("button", { name: /download png/i }).click(),
+      dialog.getByRole("button", { name: /download card/i }).click(),
     ]).then(([d]) => d);
     const path1 = path.join(OUT_DIR, "sample-card-1x1.png");
     await download1.saveAs(path1);
@@ -102,7 +102,7 @@ test.describe("Recipe-card phase 2 — ShareCardComposer PNG export", () => {
     await dialog.getByRole("radio", { name: /9:16 STORY/i }).click();
     const download2 = await Promise.all([
       page.waitForEvent("download"),
-      dialog.getByRole("button", { name: /download png/i }).click(),
+      dialog.getByRole("button", { name: /download card/i }).click(),
     ]).then(([d]) => d);
     const path2 = path.join(OUT_DIR, "sample-card-9x16.png");
     await download2.saveAs(path2);
