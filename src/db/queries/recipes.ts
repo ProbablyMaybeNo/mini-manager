@@ -791,6 +791,8 @@ export interface GalleryRecipeCard {
   cardImageUrl: string | null;
   /** "1:1" | "9:16" — paired with cardImageUrl for aspect-correct tiles. */
   cardImageRatio: string | null;
+  /** How many times this recipe has been cloned — the "Most Popular" sort key. */
+  cloneCount: number;
 }
 
 /**
@@ -864,6 +866,7 @@ export async function listPublishedRecipes(
       updatedAt: r.updatedAt.getTime(),
       cardImageUrl: r.galleryImageUrl,
       cardImageRatio: r.galleryImageRatio,
+      cloneCount: r.cloneCount,
     });
   }
   return out;
