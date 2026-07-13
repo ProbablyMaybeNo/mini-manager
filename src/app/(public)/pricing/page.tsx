@@ -117,8 +117,8 @@ export default function PricingPage() {
 
           {/* Pro */}
           <Panel className="flex flex-col gap-4 border-green/40 p-6">
-            <div className="flex items-start justify-between gap-2">
-              <div>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
                 <h2 className="font-mono text-[12px] font-bold uppercase tracking-wide text-green">
                   Pro
                 </h2>
@@ -126,9 +126,7 @@ export default function PricingPage() {
                   The features that save you real time.
                 </p>
               </div>
-              <Chip accent="yellow" className="shrink-0">
-                Planned — free during testing
-              </Chip>
+              <Chip accent="yellow">Planned — free during testing</Chip>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -166,8 +164,8 @@ export default function PricingPage() {
 
           {/* Founder's Lifetime */}
           <Panel className="flex flex-col gap-4 border-purple/30 p-6">
-            <div className="flex items-start justify-between gap-2">
-              <div>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
                 <h2 className="font-mono text-[12px] font-bold uppercase tracking-wide text-purple">
                   Founder&apos;s Lifetime
                 </h2>
@@ -175,9 +173,7 @@ export default function PricingPage() {
                   Back it early, own it for good.
                 </p>
               </div>
-              <Chip accent="yellow" className="shrink-0">
-                Planned — free during testing
-              </Chip>
+              <Chip accent="yellow">Planned — free during testing</Chip>
             </div>
             <div className="flex items-baseline gap-1">
               <span className="font-num1 text-num1 text-fg-bright">$49.99</span>
