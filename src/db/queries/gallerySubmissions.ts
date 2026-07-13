@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db/client";
-import { recipes, users, type GalleryStatus } from "@/db/schema";
+import { recipes, users, type GalleryStatus, type GalleryModerationVerdict } from "@/db/schema";
 
 /**
  * Recipe-card phase 3 — the admin review queue read (`/admin/gallery`).
@@ -20,6 +20,10 @@ export interface PendingGallerySubmission {
   submitterId: string;
   submitterEmail: string | null;
   submitterUsername: string | null;
+  /** Automated moderation verdict recorded at submit time (null on rows
+   *  submitted before moderation shipped). */
+  moderation: GalleryModerationVerdict | null;
+  moderationReason: string | null;
 }
 
 export async function listPendingGallerySubmissions(): Promise<
@@ -35,6 +39,8 @@ export async function listPendingGallerySubmissions(): Promise<
       submitterId: recipes.ownerId,
       submitterEmail: users.email,
       submitterUsername: users.username,
+      moderation: recipes.galleryModeration,
+      moderationReason: recipes.galleryModerationReason,
     })
     .from(recipes)
     .innerJoin(users, eq(users.id, recipes.ownerId))
@@ -56,6 +62,8 @@ export async function listPendingGallerySubmissions(): Promise<
       submitterId: r.submitterId,
       submitterEmail: r.submitterEmail,
       submitterUsername: r.submitterUsername,
+      moderation: r.moderation,
+      moderationReason: r.moderationReason,
     });
   }
   return out;

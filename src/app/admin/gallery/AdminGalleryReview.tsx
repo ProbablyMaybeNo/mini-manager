@@ -8,6 +8,7 @@ import {
   rejectGallerySubmission,
 } from "@/lib/actions/gallerySubmissions";
 import type { PendingGallerySubmission } from "@/db/queries/gallerySubmissions";
+import type { GalleryModerationVerdict } from "@/db/schema";
 
 /**
  * Recipe-card phase 3 — Ross's control surface. A flat list of pending
@@ -76,6 +77,7 @@ export function AdminGalleryReview({
               <p className="font-body text-body text-fg-dim">
                 by {s.submitterUsername ?? s.submitterEmail ?? s.submitterId}
               </p>
+              <ModerationBadge verdict={s.moderation} reason={s.moderationReason} />
               <div className="mt-auto flex gap-2">
                 <Button
                   variant="solidGreen"
@@ -102,5 +104,39 @@ export function AdminGalleryReview({
       </ul>
       {node}
     </>
+  );
+}
+
+/**
+ * Automated-moderation verdict chip. `pass` is reassurance; `flag` and the
+ * fail-open `error`/`null` states carry the moderator's reason so the admin
+ * knows where to look. A `fail` never reaches this queue — it's blocked at
+ * submit — so it isn't rendered here.
+ */
+function ModerationBadge({
+  verdict,
+  reason,
+}: {
+  verdict: GalleryModerationVerdict | null;
+  reason: string | null;
+}) {
+  const style =
+    verdict === "pass"
+      ? { cls: "border-green/50 text-green", label: "AI ✓ passed" }
+      : verdict === "flag"
+        ? { cls: "border-yellow/60 text-yellow", label: "AI ⚠ flagged — review closely" }
+        : { cls: "border-border text-fg-dim", label: "AI check unavailable" };
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span
+        className={`inline-flex w-fit items-center border px-1.5 py-0.5 font-button text-button uppercase tracking-[0.12em] ${style.cls}`}
+      >
+        {style.label}
+      </span>
+      {verdict !== "pass" && reason ? (
+        <p className="font-body text-[11px] leading-snug text-fg-dim">{reason}</p>
+      ) : null}
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import { currentUserId } from "@/lib/auth-stub";
 import { isAdminEmail } from "@/lib/admin/allowlist";
 import { blobReadWriteToken, isBlobConfigured } from "@/lib/blob/env";
 import { generatePublicSlug } from "@/lib/recipes/slug";
+import { moderateGalleryImage } from "@/lib/ai/imageModeration";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
@@ -110,6 +111,23 @@ export async function submitRecipeToGallery(
   const existing = await getOwnedRecipe(userId, recipeId);
   if (!existing) return { ok: false, error: "Recipe not found" };
 
+  // Automated image moderation (Claude Haiku vision) — defence-in-depth ahead
+  // of the human review queue. Only a clear `fail` (real-world explicit
+  // content) blocks the submit; `pass` / `flag` / `error` all still proceed to
+  // `pending` for admin review, with the verdict recorded to direct attention.
+  // Miniature gore/nudity on a sculpt is expected to PASS (see the prompt).
+  const moderation = await moderateGalleryImage(imageUrl);
+  if (moderation.verdict === "fail") {
+    // Drop the just-uploaded blob — a blocked image shouldn't linger.
+    await deleteBlobBestEffort(imagePathname);
+    return {
+      ok: false,
+      error:
+        "This image can't be posted to the public gallery — it was flagged as inappropriate. " +
+        "If you think that's a mistake, email support and we'll take a look.",
+    };
+  }
+
   // Best-effort cleanup of a prior card image — a re-submit (e.g. after a
   // rejection) shouldn't leave the old blob object orphaned.
   if (existing.galleryImagePathname && existing.galleryImagePathname !== imagePathname) {
@@ -126,6 +144,9 @@ export async function submitRecipeToGallery(
         galleryStatus: "pending",
         gallerySubmittedAt: new Date(),
         galleryReviewedAt: null,
+        galleryModeration: moderation.verdict,
+        galleryModerationReason: moderation.reason,
+        galleryModeratedAt: new Date(),
         // Pull the card off public view while it's under (re-)review —
         // only `approveGallerySubmission` may flip this back to true, so a
         // resubmit of a previously-approved recipe can't leak an
