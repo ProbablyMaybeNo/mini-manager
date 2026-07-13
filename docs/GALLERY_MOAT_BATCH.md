@@ -66,7 +66,7 @@ Let a signed-in painter see the status of cards they've submitted.
 - Acceptance: a user who submitted a card sees its status; nothing renders for
   users with no submissions; build green.
 
-## M4 — /pricing horizontal overflow at 320px (MUX-010)  ⬜
+## M4 — /pricing horizontal overflow at 320px (MUX-010)  ✅
 - At 320px viewport width, `/pricing` scrolls ~4px horizontally. Find the
   offending element (likely a fixed min-width / padding on a tier card, chip, or
   price row) and make it reflow within 320px — no body horizontal scroll.
