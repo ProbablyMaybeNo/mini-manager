@@ -112,7 +112,6 @@ export function ColourWheelTool({
       setSlots([{ id, hex: seedHex, locked: false }]);
       setActiveId(id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seedHex]);
 
   const activeIndex = Math.max(
@@ -243,7 +242,7 @@ export function ColourWheelTool({
           </Button>
           <p className="mt-2 font-body text-body text-fg-faint">
             ▸ How it works: pick a slot count, drag the wheel to set the active
-            slot's colour, hit Generate, then pick a harmony below — the rest of
+            slot&apos;s colour, hit Generate, then pick a harmony below — the rest of
             the unlocked slots fill in around it. Lock a slot to keep it fixed.
           </p>
         </div>

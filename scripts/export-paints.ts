@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Export the canonical paint catalog from the Webscraper SQLite DB into
  * the static asset consumed by the library page.

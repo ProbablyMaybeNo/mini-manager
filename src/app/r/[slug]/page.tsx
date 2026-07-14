@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getRecipeBySlug, getPaintMetaMap } from "@/db/queries/recipes";
@@ -129,9 +130,9 @@ export default async function PublicRecipePage({
 
       <footer className="mt-auto pt-4 text-center font-body text-body text-fg">
         Made with{" "}
-        <a href="/" className="text-cyan-lite hover:underline">
+        <Link href="/" className="text-cyan-lite hover:underline">
           The Mini Mainframe
-        </a>
+        </Link>
       </footer>
     </main>
   );

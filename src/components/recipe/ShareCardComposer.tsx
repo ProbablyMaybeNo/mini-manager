@@ -122,7 +122,6 @@ export function ShareCardComposer({
         : [],
     );
     setSelectedId(initialImageUrl ? "initial" : null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, recipeName, initialNotes, initialImageUrl]);
 
   // Pull the attached project's already-uploaded model photos as pickable

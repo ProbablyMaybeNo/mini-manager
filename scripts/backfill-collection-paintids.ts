@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Best-effort backfill: link existing Collection paint rows
  * (`wishlist_item`, kind='paint', paint_id IS NULL) to a catalog paint by

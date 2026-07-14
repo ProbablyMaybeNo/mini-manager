@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // Generate favicon + apple-icon + PWA manifest PNGs from the brand logo.
 // Run once whenever public/brand/logo.png changes — the outputs are
 // committed to source. The Next 16 app router conventions pick up

@@ -25,6 +25,18 @@
  *
  * Idempotent + safe: if the token is already gone (re-run) we no-op rather
  * than fail the build.
+ *
+ * Scoped to the BUILD_ID assignment line ONLY. An earlier version replaced
+ * every occurrence of the token in the file, which rewrote the prose in the
+ * comments above (including the line insisting the token stay spelled
+ * `__BUILD_ID__`) and left the source permanently mangled.
+ *
+ * `postbuild` restores the placeholder (see restore-sw-placeholder.mjs), so
+ * a local `npm run build` no longer dirties the working tree — which is what
+ * failed tests/unit/lib/sw/strategy.test.ts. Restoring is safe on Vercel:
+ * `next build` snapshots /public *during* the build (the Round-18 finding
+ * that forced this script from postbuild to prebuild in the first place), so
+ * a postbuild write to the source cannot reach the deploy.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -35,6 +47,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const swPath = join(here, "..", "public", "sw.js");
 
 const TOKEN = "__BUILD_ID__";
+/** The one line that carries the token. Kept in lock-step with sw.js. */
+const ASSIGNMENT = /^const BUILD_ID = .*;$/m;
 
 function buildId() {
   const sha = process.env.VERCEL_GIT_COMMIT_SHA;
@@ -50,16 +64,29 @@ let src;
 try {
   src = readFileSync(swPath, "utf-8");
 } catch (err) {
-  console.error(`[postbuild] could not read ${swPath}: ${err.message}`);
+  console.error(`[prebuild] could not read ${swPath}: ${err.message}`);
   process.exit(1);
 }
 
-if (!src.includes(TOKEN)) {
-  console.log(`[postbuild] sw.js has no ${TOKEN} token — already stamped, skipping`);
+const assignment = src.match(ASSIGNMENT);
+
+if (!assignment) {
+  console.error(
+    `[prebuild] sw.js has no 'const BUILD_ID = …;' line — cannot stamp. ` +
+      `Did the assignment get renamed?`,
+  );
+  process.exit(1);
+}
+
+// Test the ASSIGNMENT LINE, not the whole file: the token also appears in the
+// doc comments above (deliberately — they explain it), so a whole-file check
+// would never register as already-stamped.
+if (!assignment[0].includes(TOKEN)) {
+  console.log(`[prebuild] sw.js BUILD_ID already stamped — skipping`);
   process.exit(0);
 }
 
 const id = buildId();
-const stamped = src.split(TOKEN).join(id);
+const stamped = src.replace(ASSIGNMENT, `const BUILD_ID = ${JSON.stringify(id)};`);
 writeFileSync(swPath, stamped, "utf-8");
-console.log(`[postbuild] stamped sw.js BUILD_ID = ${id}`);
+console.log(`[prebuild] stamped sw.js BUILD_ID = ${id}`);

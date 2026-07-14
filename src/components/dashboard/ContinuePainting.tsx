@@ -64,7 +64,7 @@ export function ContinuePainting({
   return (
     <Panel label="CONTINUE PAINTING" cornerTicks className="p-4">
       <p className="mb-3 font-body text-body text-fg-dim">
-        // pick up where you left off — {active.length} in progress
+        {"// pick up where you left off"} — {active.length} in progress
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 @3xl:grid-cols-3">
         {active.map((p) => {
