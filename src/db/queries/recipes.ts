@@ -147,6 +147,19 @@ export async function getInspoMapForOwner(
     .innerJoin(recipes, eq(recipeInspo.recipeId, recipes.id))
     .where(eq(recipes.ownerId, userId))
     .orderBy(asc(recipeInspo.position));
+  return buildInspoMap(rows);
+}
+
+/** Pure builder: inspo rows (already owner-filtered + position-ordered) →
+ *  recipeId → inspo entries. Shared with `loadDashboardRecipeBundle`. */
+function buildInspoMap(
+  rows: ReadonlyArray<{
+    id: string;
+    url: string;
+    imageUrl: string | null;
+    recipeId: string;
+  }>,
+): Map<string, { id: string; url: string; imageUrl: string | null }[]> {
   const map = new Map<string, { id: string; url: string; imageUrl: string | null }[]>();
   for (const r of rows) {
     const entry = { id: r.id, url: r.url, imageUrl: r.imageUrl };
@@ -280,17 +293,32 @@ export async function listRecipesForTable(
     .where(inArray(recipeSlots.recipeId, recipeIds))
     .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position));
 
+  const [paintMeta, inventory] = await Promise.all([
+    getPaintMetaMap(),
+    getInventoryByPaintId(userId),
+  ]);
+
+  return buildRecipeTableRows(recipeRows, slotRows, paintMeta, inventory, perRecipeSlotCap);
+}
+
+/**
+ * Pure builder: recipe rows + their slot rows → RecipeTableRow[]. Shared by
+ * `listRecipesForTable` and `loadDashboardRecipeBundle` so the dashboard reads
+ * `recipe` + `recipe_slot` once per request rather than once per consumer.
+ */
+function buildRecipeTableRows(
+  recipeRows: ReadonlyArray<Recipe>,
+  slotRows: ReadonlyArray<RecipeSlot>,
+  paintMeta: Map<string, PaintMeta>,
+  inventory: Awaited<ReturnType<typeof getInventoryByPaintId>>,
+  perRecipeSlotCap: number,
+): RecipeTableRow[] {
   const slotsByRecipeId = new Map<string, RecipeSlot[]>();
   for (const s of slotRows) {
     const arr = slotsByRecipeId.get(s.recipeId) ?? [];
     arr.push(s);
     slotsByRecipeId.set(s.recipeId, arr);
   }
-
-  const [paintMeta, inventory] = await Promise.all([
-    getPaintMetaMap(),
-    getInventoryByPaintId(userId),
-  ]);
 
   const out: RecipeTableRow[] = [];
   for (const r of recipeRows) {
@@ -432,13 +460,6 @@ export async function getProjectPalettesMap(
     .from(recipes)
     .where(eq(recipes.ownerId, userId));
 
-  const recipesByProject = new Map<string, string[]>();
-  for (const r of recipeRows) {
-    if (!r.attachedProjectId) continue;
-    const arr = recipesByProject.get(r.attachedProjectId) ?? [];
-    arr.push(r.id);
-    recipesByProject.set(r.attachedProjectId, arr);
-  }
   const allRecipeIds = recipeRows
     .filter((r) => r.attachedProjectId)
     .map((r) => r.id);
@@ -456,6 +477,34 @@ export async function getProjectPalettesMap(
     .where(inArray(recipeSlots.recipeId, allRecipeIds))
     .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position));
 
+  const paintHex = await getPaintHexMap();
+  return buildProjectPalettes(recipeRows, slotRows, paintHex);
+}
+
+/**
+ * Pure builder: attached-recipe rows + their slot rows → projectId → palette
+ * hexes (bounded at 8, in slot-position order). Shared by
+ * `getProjectPalettesMap` and `loadDashboardRecipeBundle`. Slot rows for
+ * un-attached recipes are simply never looked up, so passing the full owner
+ * slot set is safe.
+ */
+function buildProjectPalettes(
+  recipeRows: ReadonlyArray<{ id: string; attachedProjectId: string | null }>,
+  slotRows: ReadonlyArray<{
+    recipeId: string;
+    paintId: string | null;
+    customColorHex: string | null;
+  }>,
+  paintHex: Map<string, string>,
+): Map<string, string[]> {
+  const recipesByProject = new Map<string, string[]>();
+  for (const r of recipeRows) {
+    if (!r.attachedProjectId) continue;
+    const arr = recipesByProject.get(r.attachedProjectId) ?? [];
+    arr.push(r.id);
+    recipesByProject.set(r.attachedProjectId, arr);
+  }
+
   const slotsByRecipeId = new Map<
     string,
     Array<{ paintId: string | null; customColorHex: string | null }>
@@ -466,7 +515,6 @@ export async function getProjectPalettesMap(
     slotsByRecipeId.set(s.recipeId, arr);
   }
 
-  const paintHex = await getPaintHexMap();
   const out = new Map<string, string[]>();
   for (const [projectId, recipeIds] of recipesByProject) {
     const hexes: string[] = [];
@@ -486,6 +534,67 @@ export async function getProjectPalettesMap(
     if (hexes.length > 0) out.set(projectId, hexes);
   }
   return out;
+}
+
+export interface DashboardRecipeBundle {
+  /** RecipeTableRow[] — same shape as listRecipesForTable. */
+  recipeRows: RecipeTableRow[];
+  /** projectId → palette hexes — same shape as getProjectPalettesMap. */
+  palettesMap: Map<string, string[]>;
+  /** recipeId → inspo entries — same shape as getInspoMapForOwner. */
+  inspoMap: Map<string, { id: string; url: string; imageUrl: string | null }[]>;
+}
+
+/**
+ * One combined owner-recipe read for the dashboard's `loadAppData` batch.
+ * Reads `recipe` once, `recipe_slot` once, and `recipe_inspo` once, then
+ * derives the three shapes the dashboard previously fetched via three separate
+ * functions — each of which independently re-read `recipe` (and two of them
+ * `recipe_slot`). P5 — collapses 3× recipe + 2× slot reads per request to one
+ * each. Output is identical to calling listRecipesForTable +
+ * getProjectPalettesMap + getInspoMapForOwner (see the equivalence test).
+ */
+export async function loadDashboardRecipeBundle(
+  userId: string,
+  perRecipeSlotCap = 12,
+): Promise<DashboardRecipeBundle> {
+  const recipeRows = await db
+    .select()
+    .from(recipes)
+    .where(eq(recipes.ownerId, userId))
+    .orderBy(desc(recipes.updatedAt));
+
+  if (recipeRows.length === 0) {
+    return { recipeRows: [], palettesMap: new Map(), inspoMap: new Map() };
+  }
+
+  const recipeIds = recipeRows.map((r) => r.id);
+  const [slotRows, inspoRows, paintMeta, paintHex, inventory] = await Promise.all([
+    db
+      .select()
+      .from(recipeSlots)
+      .where(inArray(recipeSlots.recipeId, recipeIds))
+      .orderBy(asc(recipeSlots.recipeId), asc(recipeSlots.position)),
+    db
+      .select({
+        id: recipeInspo.id,
+        url: recipeInspo.url,
+        imageUrl: recipeInspo.imageUrl,
+        recipeId: recipeInspo.recipeId,
+      })
+      .from(recipeInspo)
+      .where(inArray(recipeInspo.recipeId, recipeIds))
+      .orderBy(asc(recipeInspo.position)),
+    getPaintMetaMap(),
+    getPaintHexMap(),
+    getInventoryByPaintId(userId),
+  ]);
+
+  return {
+    recipeRows: buildRecipeTableRows(recipeRows, slotRows, paintMeta, inventory, perRecipeSlotCap),
+    palettesMap: buildProjectPalettes(recipeRows, slotRows, paintHex),
+    inspoMap: buildInspoMap(inspoRows),
+  };
 }
 
 /**
