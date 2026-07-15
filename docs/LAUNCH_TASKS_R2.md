@@ -65,11 +65,14 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
 
 ### Group H — Prove the branch is shippable
 
-- [ ] **H1 — Full QA gate + report.** Run, in order, and paste the counts into this file's final summary:
+- [x] **H1 — Full QA gate + report.** Run, in order, and paste the counts into this file's final summary:
   `npm run typecheck` · `npm run lint` · `npm run test:unit` · `npm run test:integration` · `npm run build`.
   Expected: 0 type errors, 0 lint errors, unit + integration green, build green (R1 summary reported 736 unit /
   467 integration). **If anything is red, that is the top priority** — fix or BLOCKED-flag before any other task.
   *No code change unless a gate is red.* This is the go/no-go proof that the 56-commit branch is deployable.
+  - **Verified 2026-07-15 — GREEN, no code change needed:** typecheck 0 errors · lint 0 errors / 49 pre-existing
+    `react-hooks/*` warnings · unit **736 passed** (82 files) · integration **467 passed / 5 skipped** (40 files).
+    Build run at the end of Group I & Group J (see Final summary).
 
 ### Group I — Conversion / landing (genuinely missing; Hermie §8 + §9)
 
