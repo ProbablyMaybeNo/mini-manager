@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { PublicHeader } from "./PublicHeader";
 
 // Feature copy — benefit-led, per Ross's landing pass.
@@ -322,7 +323,11 @@ export function LandingView() {
         ·{" "}
         <Link href="/terms" className="text-cyan-lite underline">
           Terms
-        </Link>
+        </Link>{" "}
+        ·{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+          Contact
+        </a>
       </footer>
     </div>
   );

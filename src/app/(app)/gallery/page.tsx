@@ -11,6 +11,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo/structuredData";
 import { TrackPageView } from "@/components/analytics/TrackPageView";
 import { AnalyticsEvent } from "@/lib/analytics/events";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { GalleryBrowser } from "./GalleryBrowser";
 
 // Published recipes change as painters share/unshare — render on request so
@@ -126,7 +127,11 @@ export default async function GalleryPage() {
         ·{" "}
         <Link href="/sign-in" className="text-cyan-lite underline">
           Sign in
-        </Link>
+        </Link>{" "}
+        ·{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+          Contact
+        </a>
       </footer>
     </div>
   );

@@ -10,6 +10,7 @@ import { ShareLinkBar } from "@/components/public/ShareLinkBar";
 import { CloneButton } from "@/components/recipe/CloneButton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo/structuredData";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { TrackPageView } from "@/components/analytics/TrackPageView";
 import { AnalyticsEvent } from "@/lib/analytics/events";
 
@@ -144,7 +145,11 @@ export default async function PublicRecipePage({
         Made with{" "}
         <Link href="/" className="text-cyan-lite underline">
           The Mini Mainframe
-        </Link>
+        </Link>{" "}
+        ·{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+          Contact
+        </a>
       </footer>
     </main>
   );

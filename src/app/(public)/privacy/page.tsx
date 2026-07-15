@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalDoc } from "@/components/public/LegalDoc";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Privacy Policy · The Mini Mainframe",
@@ -59,7 +60,16 @@ export default function PrivacyPage() {
         },
         {
           heading: "Contact",
-          body: "Questions about privacy? Contact the operator at the email listed on the site.",
+          body: (
+            <>
+              Questions about privacy, or want to exercise a data right? Email us
+              at{" "}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+                {SUPPORT_EMAIL}
+              </a>
+              .
+            </>
+          ),
         },
       ]}
     />
