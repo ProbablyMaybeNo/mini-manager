@@ -8,6 +8,8 @@ import {
   planTierForPriceKey,
 } from "@/lib/billing/checkout";
 import { stripeSecretKey, stripeWebhookSecret } from "@/lib/billing/env";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 
 /**
  * P10.5 — Stripe webhook receiver.
@@ -118,6 +120,7 @@ async function handleCheckoutCompleted(
   if (priceKey === "founder") update.founderClaimedAt = new Date();
 
   await db.update(users).set(update).where(eq(users.id, userId));
+  await trackServer(AnalyticsEvent.BillingCheckoutCompleted, { priceKey, plan });
 }
 
 async function handleSubscriptionChange(

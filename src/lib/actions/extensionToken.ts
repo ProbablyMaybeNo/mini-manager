@@ -5,6 +5,8 @@ import {
   issueExtensionToken,
   regenerateExtensionToken,
 } from "@/lib/auth/extensionToken";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
@@ -22,6 +24,7 @@ export async function generateExtensionToken(): Promise<ActionResult<string>> {
   const userId = await currentUserId();
   const token = await issueExtensionToken(userId);
   if (!token) return { ok: false, error: "Could not issue a token" };
+  await trackServer(AnalyticsEvent.ExtensionTokenCreated, { mode: "generate" });
   return { ok: true, data: token };
 }
 
@@ -30,5 +33,6 @@ export async function rotateExtensionToken(): Promise<ActionResult<string>> {
   const userId = await currentUserId();
   const token = await regenerateExtensionToken(userId);
   if (!token) return { ok: false, error: "Could not regenerate the token" };
+  await trackServer(AnalyticsEvent.ExtensionTokenCreated, { mode: "rotate" });
   return { ok: true, data: token };
 }

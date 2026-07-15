@@ -7,6 +7,8 @@ import { db } from "@/db/client";
 import { recipes, recipeSlots, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { isProUser } from "@/lib/billing/enforce";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import type { ActionResult } from "@/lib/actions/projects";
 import { validatePaletteColors } from "@/lib/palettes/cascade";
 
@@ -122,12 +124,14 @@ export async function sendPaletteToRecipe(
 
   // Branch 1 — create a brand-new standalone recipe.
   if (d.newRecipeName) {
-    return createRecipeFromPalette({
+    const res = await createRecipeFromPalette({
       userId,
       name: d.newRecipeName,
       hexes: normalisedHexes,
       paintIds: d.swatches.map((s) => s.paintId ?? null),
     });
+    if (res.ok) await trackServer(AnalyticsEvent.ToolResultSaved, { mode: "new" });
+    return res;
   }
 
   // Branch 2 — append to an existing recipe.
@@ -135,12 +139,14 @@ export async function sendPaletteToRecipe(
     // Shouldn't reach here — the refine() above enforces it.
     return { ok: false, error: "Missing target recipe" };
   }
-  return appendPaletteToRecipe({
+  const res = await appendPaletteToRecipe({
     userId,
     recipeId: d.targetRecipeId,
     hexes: normalisedHexes,
     paintIds: d.swatches.map((s) => s.paintId ?? null),
   });
+  if (res.ok) await trackServer(AnalyticsEvent.ToolResultSaved, { mode: "append" });
+  return res;
 }
 
 /* ============================================================

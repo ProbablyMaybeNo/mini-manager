@@ -10,6 +10,8 @@ import {
   STRIPE_PRICE_KEYS,
 } from "@/lib/billing/checkout";
 import { stripePriceId, stripeSecretKey } from "@/lib/billing/env";
+import { trackServer } from "@/lib/analytics/track.server";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 
 /**
  * P10.4 — Stripe Checkout session creation.
@@ -139,6 +141,7 @@ export async function POST(req: Request): Promise<Response> {
         { status: 502 },
       );
     }
+    await trackServer(AnalyticsEvent.BillingCheckoutStarted, { priceKey });
     return NextResponse.json({ url: session.url });
   } catch (err) {
     // A Stripe rejection (invalid/revoked key, a price id that doesn't exist

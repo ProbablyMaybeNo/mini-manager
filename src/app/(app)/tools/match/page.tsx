@@ -6,6 +6,8 @@ import { ColourMatchTool } from "@/components/tools/ColourMatchTool";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { useToast } from "@/components/kit";
 import { rankMatchesMulti } from "@/lib/toolMatch";
+import { trackClient } from "@/lib/analytics/track.client";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { useCatalog } from "../useCatalog";
 
 export default function ColourMatchPage() {
@@ -34,6 +36,7 @@ export default function ColourMatchPage() {
         enableLibraryPick
         onUse={(paint) => {
           void navigator.clipboard?.writeText(paint.hex);
+          trackClient(AnalyticsEvent.ToolMatchCompleted, { brand: paint.brand });
           toast(`Copied ${paint.name} · ${paint.hex}`, "green");
         }}
         // MM-33 — ASSIGN opens the shared 4-option menu (recipe / wishlist /

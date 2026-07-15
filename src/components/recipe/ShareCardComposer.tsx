@@ -10,6 +10,8 @@ import { loadProjectImages } from "@/lib/actions/projectImages";
 import { submitRecipeToGallery } from "@/lib/actions/gallerySubmissions";
 import { validateImageFile } from "@/lib/blob/limits";
 import { exportableImageSrc } from "@/lib/shareCard/imageSrc";
+import { trackClient } from "@/lib/analytics/track.client";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import {
   cardHeightFor,
   computeSwatchGrid,
@@ -241,6 +243,7 @@ export function ShareCardComposer({
       document.body.appendChild(a);
       a.click();
       a.remove();
+      trackClient(AnalyticsEvent.ShareCardDownloaded, { recipeId: recipeId ?? null });
     } catch (err) {
       setError(
         err instanceof Error
@@ -250,12 +253,13 @@ export function ShareCardComposer({
     } finally {
       setExporting(false);
     }
-  }, [recipeName, renderCardPng]);
+  }, [recipeId, recipeName, renderCardPng]);
 
   const handleSubmit = useCallback(async () => {
     if (!recipeId) return;
     setSubmitting(true);
     setError(null);
+    trackClient(AnalyticsEvent.GallerySubmitStarted, { recipeId });
     try {
       const dataUrl = await renderCardPng();
       if (!dataUrl) return;
@@ -279,6 +283,10 @@ export function ShareCardComposer({
         setError(res.error);
         return;
       }
+      trackClient(AnalyticsEvent.GallerySubmitCompleted, {
+        recipeId,
+        status: res.data.status,
+      });
       setWentLive(res.data.status === "approved");
       setSubmitted(true);
     } catch (err) {

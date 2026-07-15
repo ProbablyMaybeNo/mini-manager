@@ -10,6 +10,8 @@ import { ShareLinkBar } from "@/components/public/ShareLinkBar";
 import { CloneButton } from "@/components/recipe/CloneButton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo/structuredData";
+import { TrackPageView } from "@/components/analytics/TrackPageView";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +67,7 @@ export default async function PublicRecipePage({
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+      <TrackPageView event={AnalyticsEvent.RecipeCardView} props={{ slug }} />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },

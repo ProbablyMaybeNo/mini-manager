@@ -9,6 +9,8 @@ import { ShareYourModelButton } from "@/components/gallery/ShareYourModelButton"
 import { YourCardsStrip } from "@/components/gallery/YourCardsStrip";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo/structuredData";
+import { TrackPageView } from "@/components/analytics/TrackPageView";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import { GalleryBrowser } from "./GalleryBrowser";
 
 // Published recipes change as painters share/unshare — render on request so
@@ -45,6 +47,7 @@ export default async function GalleryPage() {
 
   const content = (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+      <TrackPageView event={AnalyticsEvent.GalleryView} />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },

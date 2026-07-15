@@ -27,6 +27,20 @@ export const AnalyticsEvent = {
   FirstFocusSession: "first_focus_session",
   /** Distribution — a recipe made public (the share/moat loop). */
   PublicRecipeShared: "public_recipe_shared",
+  /** Growth loop — the share-card / gallery / clone moat. */
+  ShareCardDownloaded: "share_card_downloaded",
+  GalleryView: "gallery_view",
+  RecipeCardView: "recipe_card_view",
+  RecipeCloned: "recipe_cloned",
+  GallerySubmitStarted: "gallery_submit_started",
+  GallerySubmitCompleted: "gallery_submit_completed",
+  /** Colour tools — the search-discoverable surface. */
+  ToolMatchCompleted: "tool_match_completed",
+  ToolResultSaved: "tool_result_saved",
+  /** Extension + billing. */
+  ExtensionTokenCreated: "extension_token_created",
+  BillingCheckoutStarted: "billing_checkout_started",
+  BillingCheckoutCompleted: "billing_checkout_completed",
 } as const;
 
 export type AnalyticsEventName =
