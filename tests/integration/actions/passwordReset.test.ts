@@ -53,8 +53,8 @@ const { requestPasswordReset, applyPasswordReset } = await import(
 async function seedUser(opts: {
   username: string;
   password: string;
-  recoveryEmail?: string | null;
-  recoveryEmailVerified?: boolean;
+  email?: string | null;
+  emailVerified?: boolean;
 }): Promise<string> {
   const userId = nanoid(16);
   const hash = await hashPassword(opts.password);
@@ -62,9 +62,8 @@ async function seedUser(opts: {
     id: userId,
     username: opts.username,
     passwordHash: hash,
-    recoveryEmail: opts.recoveryEmail ?? null,
-    recoveryEmailVerified:
-      opts.recoveryEmailVerified ? new Date() : null,
+    email: opts.email ?? null,
+    emailVerified: opts.emailVerified ? new Date() : null,
   });
   return userId;
 }
@@ -81,12 +80,11 @@ afterEach(() => {
 });
 
 describe("requestPasswordReset", () => {
-  test("happy path — verified recovery email gets a token + mail", async () => {
+  test("happy path — a normal signup email gets a token + mail", async () => {
     await seedUser({
       username: "alice",
       password: "oldpassword123",
-      recoveryEmail: "alice@example.com",
-      recoveryEmailVerified: true,
+      email: "alice@example.com",
     });
 
     const res = await requestPasswordReset({ username: "alice" });
@@ -101,29 +99,30 @@ describe("requestPasswordReset", () => {
     expect(tokens).toHaveLength(1);
   });
 
+  test("unverified signup email still gets a reset (no lockout)", async () => {
+    await seedUser({
+      username: "carol",
+      password: "oldpassword123",
+      email: "carol@example.com",
+      emailVerified: false,
+    });
+
+    const res = await requestPasswordReset({ username: "carol" });
+    expect(res.ok).toBe(true);
+    expect(state.mailLog).toHaveLength(1);
+    expect(state.mailLog[0]!.to).toBe("carol@example.com");
+  });
+
   test("unknown username returns ok + no mail (enumeration safety)", async () => {
     const res = await requestPasswordReset({ username: "ghostuser" });
     expect(res.ok).toBe(true);
     expect(state.mailLog).toHaveLength(0);
   });
 
-  test("known username without recovery email returns ok + no mail", async () => {
+  test("known username without an email on file returns ok + no mail", async () => {
     await seedUser({ username: "bob", password: "oldpassword123" });
 
     const res = await requestPasswordReset({ username: "bob" });
-    expect(res.ok).toBe(true);
-    expect(state.mailLog).toHaveLength(0);
-  });
-
-  test("known username with unverified recovery email returns ok + no mail", async () => {
-    await seedUser({
-      username: "carol",
-      password: "oldpassword123",
-      recoveryEmail: "carol@example.com",
-      recoveryEmailVerified: false,
-    });
-
-    const res = await requestPasswordReset({ username: "carol" });
     expect(res.ok).toBe(true);
     expect(state.mailLog).toHaveLength(0);
   });
@@ -138,8 +137,7 @@ describe("requestPasswordReset", () => {
     await seedUser({
       username: "alice",
       password: "oldpassword123",
-      recoveryEmail: "alice@example.com",
-      recoveryEmailVerified: true,
+      email: "alice@example.com",
     });
 
     await requestPasswordReset({ username: "alice" });
@@ -158,8 +156,7 @@ describe("applyPasswordReset", () => {
     await seedUser({
       username,
       password: "oldpassword123",
-      recoveryEmail: `${username}@example.com`,
-      recoveryEmailVerified: true,
+      email: `${username}@example.com`,
     });
     await requestPasswordReset({ username });
     const token = state.mailLog[0]!.text.match(/token=([^\s]+)/)![1]!;
