@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getRecipeBySlug, getPaintMetaMap } from "@/db/queries/recipes";
+import { isProxiableBlobUrl } from "@/lib/shareCard/imageSrc";
 
 /**
  * Recipe-card phase 3 — per-recipe OG image so an `/r/<slug>` link
@@ -36,8 +37,15 @@ export default async function Image({
   const { slug } = await params;
   const recipe = slug && slug.length <= 64 ? await getRecipeBySlug(slug) : null;
 
-  // Path 1 — relay the real, already-branded card PNG.
-  if (recipe?.galleryStatus === "approved" && recipe.galleryImageUrl) {
+  // Path 1 — relay the real, already-branded card PNG. Only ever fetch our
+  // own Vercel Blob store — this is a public, server-side fetch whose bytes
+  // are embedded into the OG image, so an off-host galleryImageUrl would be
+  // a strong SSRF. A non-blob URL falls through to the generated fallback.
+  if (
+    recipe?.galleryStatus === "approved" &&
+    recipe.galleryImageUrl &&
+    isProxiableBlobUrl(recipe.galleryImageUrl)
+  ) {
     try {
       const res = await fetch(recipe.galleryImageUrl);
       if (res.ok) {

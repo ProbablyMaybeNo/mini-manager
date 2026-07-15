@@ -71,6 +71,16 @@ describe("moderateGalleryImage — with a mocked vision client", () => {
     expect(res.reason).toContain("529");
   });
 
+  test("an off-host image url is refused before any fetch (SSRF guard)", async () => {
+    const { client, create } = mockClient({ verdict: "pass", reason: "x" });
+    // No `image` supplied → the real fetchImage path runs and must reject
+    // the non-blob host before any network call or model invocation.
+    const res = await moderateGalleryImage("https://evil.example/x.png", { client });
+    expect(res.verdict).toBe("error");
+    expect(res.reason).toMatch(/host not allowed/i);
+    expect(create).not.toHaveBeenCalled();
+  });
+
   test("no client and no API key → error (not a throw)", async () => {
     const prev = process.env["ANTHROPIC_API_KEY"];
     delete process.env["ANTHROPIC_API_KEY"];

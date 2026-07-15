@@ -5,6 +5,7 @@ import Link from "next/link";
 import { EmptyState, Panel, SearchField, Swatch } from "@/components/kit";
 import { CloneButton } from "@/components/recipe/CloneButton";
 import { cn } from "@/lib/cn";
+import { exportableImageSrc } from "@/lib/shareCard/imageSrc";
 import type { GalleryRecipeCard } from "@/db/queries/recipes";
 
 type SortKey = "newest" | "oldest" | "popular";
@@ -163,7 +164,7 @@ function RecipeCard({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={recipe.cardImageUrl ?? undefined}
+              src={recipe.cardImageUrl ? exportableImageSrc(recipe.cardImageUrl) : undefined}
               alt={`${recipe.name} — paint recipe card`}
               className="h-full w-full object-cover"
               onError={() => setImageFailed(true)}

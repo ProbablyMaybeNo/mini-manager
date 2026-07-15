@@ -2,6 +2,7 @@ import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
 import type { GalleryModerationVerdict } from "@/db/schema";
+import { isProxiableBlobUrl } from "@/lib/shareCard/imageSrc";
 
 /**
  * Automated image moderation for gallery submissions.
@@ -137,6 +138,10 @@ function normalizeMediaType(contentType: string | null): SupportedMediaType | nu
 async function fetchImage(
   url: string,
 ): Promise<{ data: string; mediaType: SupportedMediaType } | { error: string }> {
+  // SSRF guard — only ever fetch our own Vercel Blob store. The caller
+  // (submitRecipeToGallery) already enforces this, but the moderator must
+  // not be a fetch-anything primitive if reused elsewhere.
+  if (!isProxiableBlobUrl(url)) return { error: "image host not allowed" };
   let res: Response;
   try {
     res = await fetch(url);
