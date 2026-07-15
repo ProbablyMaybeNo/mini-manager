@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { RecipePickerDialog } from "@/components/recipe/RecipePickerDialog";
 import { ArmyImportPanel } from "./ArmyImportPanel";
 import { useToast } from "@/components/kit";
 import { createProject } from "@/lib/actions/projects";
+import { createSingleFlightGuard } from "@/lib/guards/singleFlight";
 import { attachRecipeToProject, createRecipe } from "@/lib/actions/recipes";
 import { deriveDashboardSummary } from "@/mock/derive";
 import type {
@@ -56,8 +57,13 @@ export function DashboardClient({
   const [importOpen, setImportOpen] = useState(false);
   // The project whose recipe-attach picker is open — null when closed.
   const [attaching, setAttaching] = useState<Project | null>(null);
-  const [, creatingProject] = useTransition();
+  const [creating, creatingProject] = useTransition();
   const [attachPending, startAttach] = useTransition();
+  // Synchronous single-flight guard — a native double-click on "+ New Project"
+  // fires faster than the disabled-prop re-render, so the disabled flag alone
+  // let a double-click create two projects (E2). The ref-held guard rejects the
+  // second call before it can start a second createProject.
+  const createGuard = useRef(createSingleFlightGuard());
   const { toast, node: toastNode } = useToast();
 
   // Recipe picker options, recently-used first. `recipes` arrives already
@@ -77,13 +83,15 @@ export function DashboardClient({
   // create form — the panel itself is where name/type/units are set (Ross).
   function handleAddProject() {
     creatingProject(async () => {
-      const res = await createProject({ name: "New Project", type: "Army", count: 0 });
-      if (res.ok && res.data?.id) {
-        setOpenId(res.data.id);
-        router.refresh();
-      } else if (!res.ok) {
-        toast(res.error ?? "Couldn’t create the project.", "red");
-      }
+      await createGuard.current(async () => {
+        const res = await createProject({ name: "New Project", type: "Army", count: 0 });
+        if (res.ok && res.data?.id) {
+          setOpenId(res.data.id);
+          router.refresh();
+        } else if (!res.ok) {
+          toast(res.error ?? "Couldn’t create the project.", "red");
+        }
+      });
     });
   }
 
@@ -161,6 +169,7 @@ export function DashboardClient({
         openProjectId={openId}
         onOpenConsumed={() => setOpenId(null)}
         onAddProject={handleAddProject}
+        creatingProject={creating}
         autoCreate={autoCreate}
         onAutoCreateConsumed={() => setAutoCreate(false)}
         onStartSession={(p) => router.push(`/focus?project=${p.id}`)}
