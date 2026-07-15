@@ -1,12 +1,58 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
+import { del } from "@vercel/blob";
 import Stripe from "stripe";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { projectImages, recipes, users } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { stripeSecretKey } from "@/lib/billing/env";
+import { blobReadWriteToken, isBlobConfigured } from "@/lib/blob/env";
 import type { ActionResult } from "@/lib/actions/projects";
+
+/**
+ * Best-effort deletion of every Vercel Blob object the user owns (model
+ * photos on project nodes + submitted gallery-card PNGs) so their public
+ * URLs stop resolving once the account is gone. The user-row cascade drops
+ * the DB rows but leaves the blob objects orphaned in the store, so we
+ * enumerate the pathnames FIRST — before the row delete — then `del()` each.
+ * Never throws: an orphaned blob is cheap and a delete failure must not block
+ * the account deletion. (`inspo_image` URLs are external references we never
+ * stored, so there's nothing to delete for them.)
+ */
+async function deleteUserBlobs(userId: string): Promise<void> {
+  if (!isBlobConfigured()) return;
+  const token = blobReadWriteToken() ?? undefined;
+
+  const [imageRows, galleryRows] = await Promise.all([
+    db
+      .select({ pathname: projectImages.pathname })
+      .from(projectImages)
+      .where(eq(projectImages.ownerId, userId)),
+    db
+      .select({ pathname: recipes.galleryImagePathname })
+      .from(recipes)
+      .where(
+        and(
+          eq(recipes.ownerId, userId),
+          isNotNull(recipes.galleryImagePathname),
+        ),
+      ),
+  ]);
+
+  const pathnames = [
+    ...imageRows.map((r) => r.pathname),
+    ...galleryRows.map((r) => r.pathname),
+  ].filter((p): p is string => typeof p === "string" && p.length > 0);
+
+  await Promise.all(
+    pathnames.map((pathname) =>
+      del(pathname, { token }).catch(() => {
+        /* orphaned blob object is cheap and recoverable */
+      }),
+    ),
+  );
+}
 
 /**
  * Permanently delete the signed-in user's account and all their data.
@@ -40,6 +86,10 @@ export async function deleteAccount(): Promise<ActionResult<{ deleted: true }>> 
       /* best-effort — proceed with deletion regardless */
     }
   }
+
+  // Purge the user's blob objects before the cascade removes the rows that
+  // point at them (best-effort — never blocks the delete).
+  await deleteUserBlobs(userId);
 
   try {
     await db.delete(users).where(eq(users.id, userId));
