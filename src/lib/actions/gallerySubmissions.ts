@@ -12,6 +12,11 @@ import { blobReadWriteToken, isBlobConfigured } from "@/lib/blob/env";
 import { generatePublicSlug } from "@/lib/recipes/slug";
 import { moderateGalleryImage } from "@/lib/ai/imageModeration";
 import { isProxiableBlobUrl } from "@/lib/shareCard/imageSrc";
+import {
+  enforceDailyLimit,
+  gallerySubmitDailyLimit,
+  RateLimitBucket,
+} from "@/lib/rateLimit/quota";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
@@ -127,6 +132,21 @@ export async function submitRecipeToGallery(
 
   const existing = await getOwnedRecipe(userId, recipeId);
   if (!existing) return { ok: false, error: "Recipe not found" };
+
+  // Per-user daily quota (E7) — cap gallery submissions per account per day,
+  // independent of the billing flag. Metered before the paid Haiku vision
+  // moderation call so an over-limit user is refused without burning it.
+  const quota = await enforceDailyLimit(
+    RateLimitBucket.GallerySubmit,
+    userId,
+    gallerySubmitDailyLimit(),
+  );
+  if (!quota.allowed) {
+    return {
+      ok: false,
+      error: `You've hit today's gallery submission limit (${quota.limit}/day). It resets tomorrow.`,
+    };
+  }
 
   // Automated image moderation (Claude Haiku vision) — defence-in-depth ahead
   // of the human review queue. Only a clear `fail` (real-world explicit

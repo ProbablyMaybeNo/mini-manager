@@ -1,11 +1,16 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
 import { users, verificationTokens } from "@/db/schema";
 import { ACQUISITION_COOKIE, parseAcquisitionSource } from "@/lib/acquisition";
+import {
+  enforceDailyLimit,
+  RateLimitBucket,
+  signupDailyLimitPerIp,
+} from "@/lib/rateLimit/quota";
 import { trackServer } from "@/lib/analytics/track.server";
 import { AnalyticsEvent } from "@/lib/analytics/events";
 import { hashPassword, verifyPassword } from "./password";
@@ -67,6 +72,27 @@ export async function signUpWithCredentials(input: {
       field: "email",
       message: "Enter a valid email address",
     };
+  }
+
+  // IP-based signup rate limit (E7) — cap new accounts per client IP per day
+  // so one host can't mass-create accounts. Independent of the billing flag.
+  // Best-effort: if we can't determine the IP (missing proxy headers), we
+  // don't block. Metered here, after cheap input validation, so a genuine
+  // user's typo doesn't burn their network's budget.
+  const ip = await clientIp();
+  if (ip) {
+    const limit = await enforceDailyLimit(
+      RateLimitBucket.Signup,
+      ip,
+      signupDailyLimitPerIp(),
+    );
+    if (!limit.allowed) {
+      return {
+        ok: false,
+        field: "form",
+        message: "Too many sign-ups from your network today. Please try again tomorrow.",
+      };
+    }
   }
 
   // Case-insensitive uniqueness check. We store the already-normalised
@@ -157,6 +183,20 @@ export async function signUpWithCredentials(input: {
     );
   }
   return { ok: true, userId, username: u.normalized };
+}
+
+/**
+ * Best-effort client IP from proxy headers (Vercel sets `x-forwarded-for`).
+ * Returns the first hop, or null when no forwarding header is present.
+ */
+async function clientIp(): Promise<string | null> {
+  const h = await headers();
+  const forwarded = h.get("x-forwarded-for");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return h.get("x-real-ip")?.trim() || null;
 }
 
 function signupVerifyUrl(token: string): string {

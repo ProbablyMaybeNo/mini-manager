@@ -5,6 +5,11 @@ import { isProUser } from "@/lib/billing/enforce";
 import { getServerCatalog } from "@/lib/paints/serverCatalog";
 import { getInventoryByPaintId } from "@/db/queries/paintCoverage";
 import { generateRecipe } from "@/lib/ai/recipeAi";
+import {
+  enforceDailyLimit,
+  RateLimitBucket,
+  recipeAiDailyLimit,
+} from "@/lib/rateLimit/quota";
 
 /**
  * POST /api/recipe/ai
@@ -57,6 +62,24 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Invalid input" },
       { status: 400 },
+    );
+  }
+
+  // Per-user daily quota (E7) — a hard ceiling on how many AI generations one
+  // account can trigger in a day, independent of the billing flag. Metered
+  // before the expensive catalog load + model call so an over-limit user is
+  // refused cheaply.
+  const quota = await enforceDailyLimit(
+    RateLimitBucket.RecipeAi,
+    userId,
+    recipeAiDailyLimit(),
+  );
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        error: `You've hit today's AI recipe limit (${quota.limit}/day). It resets tomorrow.`,
+      },
+      { status: 429 },
     );
   }
 

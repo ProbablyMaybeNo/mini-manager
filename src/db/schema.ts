@@ -1434,3 +1434,40 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
 
 export type Feedback = typeof feedback.$inferSelect;
 export type NewFeedback = typeof feedback.$inferInsert;
+
+/* ============================================================
+   Rate-limit / daily-quota counters (E7)
+   ============================================================
+   A generic (bucket, subject, window) counter. Independent of the
+   billing flag — a hard abuse ceiling that always applies:
+     - bucket  = the metered action ("recipe_ai", "gallery_submit",
+                 "signup").
+     - subject = who/what is limited — a userId for per-user daily
+                 quotas, or a client IP for the signup limiter.
+     - window  = the UTC calendar day ("YYYY-MM-DD"); a new day resets
+                 the count. Stale rows age out naturally.
+   No FK on `subject` on purpose — it holds either a userId OR an IP, and
+   IPs are not users. Orphaned rows after an account delete are tiny and
+   window-bound, so they cost nothing. Increments are atomic via
+   INSERT ... ON CONFLICT so concurrent requests can't race past the cap.
+   ============================================================ */
+
+export const rateLimitCounters = sqliteTable(
+  "rate_limit_counter",
+  {
+    bucket: text("bucket").notNull(),
+    subject: text("subject").notNull(),
+    window: text("window").notNull(),
+    count: integer("count").notNull().default(0),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.bucket, t.subject, t.window] }),
+  }),
+);
+
+export type RateLimitCounter = typeof rateLimitCounters.$inferSelect;
+export type NewRateLimitCounter = typeof rateLimitCounters.$inferInsert;

@@ -354,3 +354,24 @@ describe("rejectGallerySubmission", () => {
     if (!res.ok) expect(res.error).toMatch(/pending/i);
   });
 });
+
+describe("gallery submit daily quota (E7)", () => {
+  afterEach(() => {
+    delete process.env.MM_GALLERY_DAILY_LIMIT;
+  });
+
+  test("refuses the N+1th submission from one user in a day", async () => {
+    process.env.MM_GALLERY_DAILY_LIMIT = "2";
+    const recipeId = await seedRecipe();
+
+    const first = await submitFixture(recipeId);
+    const second = await submitFixture(recipeId);
+    const third = await submitFixture(recipeId);
+
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    expect(third.ok).toBe(false);
+    if (third.ok) return;
+    expect(third.error).toMatch(/gallery submission limit/i);
+  });
+});
