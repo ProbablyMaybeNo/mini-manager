@@ -8,6 +8,8 @@ import {
   sendPaletteToRecipe,
   type SendToRecipeOption,
 } from "@/lib/actions/sendToRecipe";
+import { useMockData } from "@/mock/MockProvider";
+import { SignInToSaveDialog } from "@/components/tools/SignInToSaveDialog";
 import type { ToolSwatch } from "@/lib/types";
 
 /** @deprecated import `ToolSwatch` from `@/lib/types` — kept as an alias so
@@ -56,6 +58,7 @@ export function AssignToRecipeDialog({
   onClose: () => void;
   onAssigned: (result: AssignedResult) => void;
 }) {
+  const { signedIn } = useMockData();
   const [recipes, setRecipes] = useState<SendToRecipeOption[] | null>(null);
   const [newName, setNewName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +66,10 @@ export function AssignToRecipeDialog({
 
   useEffect(() => {
     if (!open) return;
+    // J2 — a signed-out visitor gets the "sign in to save" cue (below);
+    // never fetch recipes, which would 307 to /sign-in via currentUserId()
+    // and discard the palette.
+    if (!signedIn) return;
     setError(null);
     setNewName("");
     // "create" mode never shows the recipe list — skip the fetch entirely.
@@ -80,7 +87,7 @@ export function AssignToRecipeDialog({
     return () => {
       alive = false;
     };
-  }, [open, mode]);
+  }, [open, mode, signedIn]);
 
   function send(target: { targetRecipeId: string } | { newRecipeName: string }, label: string) {
     if (pending || swatches.length === 0) return;
@@ -102,6 +109,13 @@ export function AssignToRecipeDialog({
       onAssigned({ recipeId: res.data.recipeId, name: label, created });
       onClose();
     });
+  }
+
+  // J2 — signed-out: swap the recipe picker for the "sign in to save" cue.
+  // Placed after all hooks so hook order is stable. Nothing navigates, so
+  // the colours the painter built on the tool are preserved.
+  if (!signedIn) {
+    return <SignInToSaveDialog open={open} what="these colours" onClose={onClose} />;
   }
 
   const count = swatches.length;

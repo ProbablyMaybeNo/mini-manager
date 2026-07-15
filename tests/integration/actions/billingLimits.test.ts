@@ -47,6 +47,13 @@ vi.mock("@/lib/auth-stub", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
+// Stub the scrape so the uncapped-scrape test drives a deterministic,
+// USABLE product (no real network) — J1 now returns an honest "unreadable"
+// failure for a no-result scrape, so a bare hostname URL is no longer a
+// stand-in for "the cap didn't block me".
+const scrapeMock = vi.hoisted(() => ({ scrapeUrl: vi.fn() }));
+vi.mock("@/lib/scrape", () => scrapeMock);
+
 const { createProject } = await import("@/lib/actions/projects");
 const { createRecipe } = await import("@/lib/actions/recipes");
 const { createWishlistItem, scrapeAndCreateWishlistItem } = await import(
@@ -318,6 +325,12 @@ describe("createWishlistItem — free tier collection is UNLIMITED", () => {
   });
 
   test("the scrape path is also uncapped on free", async () => {
+    scrapeMock.scrapeUrl.mockResolvedValueOnce({
+      title: "Widget",
+      vendor: "Some Shop",
+      price: 9.99,
+      raw: { parser: "og" },
+    });
     await seedWishlistForUser(3);
     const result = await scrapeAndCreateWishlistItem({
       url: "https://example.com/widget",

@@ -164,6 +164,75 @@ describe("scrapeAndCreateWishlistItem — kind routing (MM-36)", () => {
   });
 });
 
+describe("scrapeAndCreateWishlistItem — unreadable scrape (J1)", () => {
+  afterEach(() => {
+    scrapeMock.scrapeUrl.mockReset();
+  });
+
+  test("a no-result scrape returns the honest unreadable state, not a success", async () => {
+    // Games Workshop 405s behind Cloudflare → scrapeUrl resolves null.
+    scrapeMock.scrapeUrl.mockResolvedValue(null);
+    const res = await scrapeAndCreateWishlistItem({
+      url: "https://www.games-workshop.com/en-GB/some-kit",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.reason).toBe("unreadable");
+  });
+
+  test("an unreadable scrape inserts no hostname-named row", async () => {
+    scrapeMock.scrapeUrl.mockResolvedValue(null);
+    await scrapeAndCreateWishlistItem({
+      url: "https://www.games-workshop.com/en-GB/some-kit",
+    });
+    const rows = await state.db!.select().from(wishlistItems);
+    expect(rows).toHaveLength(0);
+  });
+
+  test("a bare hostname title (no product signal) is also unreadable", async () => {
+    scrapeMock.scrapeUrl.mockResolvedValue({
+      title: "games-workshop.com",
+      vendor: "Games Workshop",
+      raw: { parser: "gw" },
+    });
+    const res = await scrapeAndCreateWishlistItem({
+      url: "https://www.games-workshop.com/x",
+    });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.reason).toBe("unreadable");
+    const rows = await state.db!.select().from(wishlistItems);
+    expect(rows).toHaveLength(0);
+  });
+
+  test("a real product scrape still succeeds and inserts a row", async () => {
+    scrapeMock.scrapeUrl.mockResolvedValue({
+      title: "Combat Patrol: Space Marines",
+      vendor: "Games Workshop",
+      price: 110,
+      raw: { parser: "gw" },
+    });
+    const res = await scrapeAndCreateWishlistItem({
+      url: "https://www.games-workshop.com/combat-patrol",
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.title).toBe("Combat Patrol: Space Marines");
+  });
+
+  test("a weak title is salvaged when the scrape pulled a price", async () => {
+    scrapeMock.scrapeUrl.mockResolvedValue({
+      title: "games-workshop.com",
+      vendor: "Games Workshop",
+      price: 42.5,
+      raw: { parser: "gw" },
+    });
+    const res = await scrapeAndCreateWishlistItem({
+      url: "https://www.games-workshop.com/x",
+    });
+    expect(res.ok).toBe(true);
+  });
+});
+
 describe("setWishlistStatus", () => {
   test("stamps dateResolved when leaving Wanted", async () => {
     const created = await createWishlistItem({ title: "Buy me" });

@@ -118,7 +118,14 @@ export function LandingView() {
         <h1 className="sr-only">
           The Mini Mainframe — paint &amp; project manager for miniatures
         </h1>
-        <div className="w-full max-w-[440px] sm:max-w-lg">
+        {/* The square CRT mark is capped at ~42vh so the hero "Start for
+            Free" CTA clears the fold at 1366×768 (where the button top used
+            to sit ≈893px). `w-auto max-w-full max-h-[42vh]` scales the 1080²
+            asset down to fit whichever is smaller — the container width or
+            42vh — preserving the square with no letterbox. On phones width
+            still governs (42vh > the ~342px column), so the brand mark stays
+            full-width there. */}
+        <div className="flex w-full max-w-[440px] justify-center sm:max-w-lg">
           {reducedMotion ? (
             <Image
               src="/brand/mini-mainframe-logo-poster.jpg"
@@ -126,11 +133,11 @@ export function LandingView() {
               width={1080}
               height={1080}
               priority
-              className="h-auto w-full"
+              className="h-auto max-h-[42vh] w-auto max-w-full"
             />
           ) : (
             <video
-              className="h-auto w-full"
+              className="h-auto max-h-[42vh] w-auto max-w-full"
               autoPlay
               muted
               loop

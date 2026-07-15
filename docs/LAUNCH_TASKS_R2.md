@@ -65,15 +65,18 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
 
 ### Group H — Prove the branch is shippable
 
-- [ ] **H1 — Full QA gate + report.** Run, in order, and paste the counts into this file's final summary:
+- [x] **H1 — Full QA gate + report.** Run, in order, and paste the counts into this file's final summary:
   `npm run typecheck` · `npm run lint` · `npm run test:unit` · `npm run test:integration` · `npm run build`.
   Expected: 0 type errors, 0 lint errors, unit + integration green, build green (R1 summary reported 736 unit /
   467 integration). **If anything is red, that is the top priority** — fix or BLOCKED-flag before any other task.
   *No code change unless a gate is red.* This is the go/no-go proof that the 56-commit branch is deployable.
+  - **Verified 2026-07-15 — GREEN, no code change needed:** typecheck 0 errors · lint 0 errors / 49 pre-existing
+    `react-hooks/*` warnings · unit **736 passed** (82 files) · integration **467 passed / 5 skipped** (40 files).
+    Build run at the end of Group I & Group J (see Final summary).
 
 ### Group I — Conversion / landing (genuinely missing; Hermie §8 + §9)
 
-- [ ] **I1 — Persistent "Start for Free" CTA in the public header.**
+- [x] **I1 — Persistent "Start for Free" CTA in the public header.** `56f5136`
   `src/components/public/PublicHeader.tsx` currently exposes only Gallery / Pricing / **Sign in** — the wrong
   door for a first-time visitor, and the hero CTA is below the fold at 1366×768 / mobile. Add a primary
   "Start for Free" link (→ `/sign-up`) to `PublicHeader`, styled as the primary action (distinct from the
@@ -81,7 +84,7 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
   header renders a `/sign-up` CTA at mobile + desktop widths; build green. Fire the existing
   `cta_start_for_free` analytics event on click if it isn't already wired from the header.
 
-- [ ] **I2 — Above-the-fold CTA + proof, verify-or-fix.** The landing proof copy ("7,000+ real paints"…)
+- [x] **I2 — Above-the-fold CTA + proof, verify-or-fix.** `923edae` The landing proof copy ("7,000+ real paints"…)
   already lives in `LandingView.tsx`; the gap is the hero **"Start for Free"** sitting below the fold at
   1366×768 (button top ≈ 893px) because the CRT logo/video is large. Cap the hero illustration (≈40vh) so the
   primary CTA clears the fold at 768px **without** shrinking the brand mark to nothing. If it already clears
@@ -92,7 +95,7 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
 
 ### Group J — Honest-failure polish (Hermie §4 High / §8 — non-gating but cheap, ship in the same push)
 
-- [ ] **J1 — Kill the false "Added" toast on Games Workshop URL paste.**
+- [x] **J1 — Kill the false "Added" toast on Games Workshop URL paste.** `20c082e`
   Pasting a GW paint URL creates a row titled `games-workshop.com` with brand/type/price `—` **and fires a
   green success toast** (worse than silence). `src/lib/scrape/parsers/gw.ts`, `src/lib/wishlist/scrapeInsert.ts`,
   `collection/page.tsx`. **Do not** try to make the GW scrape work (it 405s behind Cloudflare — a hostname add
@@ -100,7 +103,7 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
   enter details below" state and **do not** show the success toast or a hostname-named row. *Acceptance:*
   integration/unit test — a no-result scrape returns the honest state, not a success; build green.
 
-- [ ] **J2 — Signed-out color-tool "sign in to save" cue that preserves state.**
+- [x] **J2 — Signed-out color-tool "sign in to save" cue that preserves state.** `d90cdee`
   `/tools/wheel|match|dropper|stacking` are 200 signed-out (the most search-discoverable pages) but Save /
   Send-to-Recipe silently 307 to `/sign-in`, **discarding the generated palette + typed name**. Add an inline
   "sign in to save" affordance that preserves the in-progress state (the `MockProvider` already exposes
@@ -178,4 +181,50 @@ Monitor items and next-project-sized work. Ship launch without them; schedule af
 
 ## Final summary
 
-*(agent: fill after the run — QA gate counts from H1, what shipped in I/J, what's BLOCKED/NEEDS-ROSS.)*
+**Run completed 2026-07-15 by milestone-builder on `launch/pre-launch-batch`. All five §DO tasks
+shipped; nothing BLOCKED.** One atomic commit per task + a small tick commit each.
+
+### QA gate (H1 — verified GREEN, re-confirmed after Group J)
+
+| Gate | Result |
+|---|---|
+| `npm run typecheck` | **0 errors** |
+| `npm run lint` | **0 errors**, 49 warnings (all pre-existing `react-hooks/*` — untouched) |
+| `npm run test:unit` | **736 passed** (82 files) |
+| `npm run test:integration` | **472 passed / 5 skipped** (40 files) — up from 467 (5 new J1 tests) |
+| `npm run build` | **green** — landing `/` still prerenders static; ran after Group I and Group J |
+
+### What shipped
+
+- **H1** `5533cb6` — QA gate verified green; go/no-go proof the branch is deployable. No code change.
+- **I1** `56f5136` — persistent primary **"Start for Free"** CTA in `PublicHeader` (→ `/sign-up`), distinct
+  from the ghost nav links, visible at every width via `flex-wrap`. Fires `cta_start_for_free`
+  (`location:"header"`). Header is now a client component; covers landing + pricing + legal pages.
+- **I2** `923edae` — capped the hero CRT mark at `max-h-[42vh]` (`w-auto`/`max-w-full`, aspect-preserving,
+  no letterbox) so the hero CTA clears the 768px fold; phones still show the mark full-width.
+- **J1** `20c082e` — the shared scrape+insert pipeline now detects an **unusable scrape** (null result, or a
+  bare hostname title with no price/image) and returns `{ ok:false, reason:"unreadable" }` **without**
+  persisting a `games-workshop.com` row or firing a green "Added" toast. The collection UI drops the painter
+  into manual entry with a neutral "couldn't auto-read that link — add the details below" cue. The extension
+  add route inherits the honest 422. (No attempt to make the GW scrape work — it 405s behind Cloudflare.)
+  5 new integration tests; `billingLimits` "scrape uncapped" test now mocks a usable product.
+- **J2** `d90cdee` — signed-out `SignInToSaveDialog` for the colour tools. Save (`usePaletteSaver`) and
+  Send-to-Recipe (`AssignToRecipeDialog`) now show an inline "sign in to save" cue instead of the silent 307
+  that discarded the palette. Nothing navigates, so the in-progress palette is preserved; sign-in/create-
+  account links carry a `?from=` return path. `AssignToRecipeDialog` no longer fetches recipes when
+  signed-out (that fetch was itself a redirect). Anonymous-dead-end fix only — the Pro gate is untouched.
+
+### Notes / decisions made unilaterally (for Ross to review)
+
+- **No component-render test harness in this repo** (unit project is node-env, `*.test.ts` only; no
+  `@testing-library/react`). I1/I2/J2 are JSX/CSS changes gated by typecheck + build, consistent with how
+  `LandingView`'s own CTAs are covered. J1 is pipeline-level and got real integration tests.
+- **J1 changes intended behaviour**: an unreadable URL paste is now an honest failure, not a silent minimal
+  row. This is what the task asked for, but it flips the old "paste in bulk, edit later" fallback for
+  no-signal pages. Rows still get created for any scrape that reads a real title/price/image.
+- **`?from=` return path** on the J2 sign-in cue uses the param the sign-in/sign-up pages already honour.
+- **Merge status**: `main` (`834aa49`) already contains the R1 batch; this branch adds only the R2 §DO delta
+  on top of the shared base `91b2ecd`. Merging to `main` is a normal (non-fast-forward) merge — **Ross's call**
+  (R1 gate). Branch pushed once at end of run.
+
+**§R (NEEDS-ROSS) and §POST-LAUNCH were intentionally not touched** — they are credential/decision-gated.
