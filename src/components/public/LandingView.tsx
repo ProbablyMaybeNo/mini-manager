@@ -13,7 +13,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Paint Library",
     blurb:
-      "Browse 7,000+ paints from every major brand. Flag what you own, wishlist what you want, and drop any paint straight into a project.",
+      "Browse 7,000+ paints from Citadel, Vallejo, Army Painter and every major brand. Flag what you own, wishlist what you want, and drop any paint straight into a Warhammer or wargame project.",
   },
   {
     title: "Color Tools",
@@ -23,7 +23,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Projects",
     blurb:
-      "Every army, unit, and model in one view. Set deadlines, watch your activity feed, and see your whole backlog at a glance.",
+      "A wargame project tracker for every army, unit, and model in one view. Set deadlines, watch your activity feed, and shrink your pile of shame one unit at a time.",
   },
   {
     title: "Focus",
@@ -38,7 +38,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Collection",
     blurb:
-      "Catalogue your paints and models, track what you've spent, and auto-add items from the store as you browse. Know what you own — and what you still need.",
+      "A paint collection manager for your paints and models — track what you've spent and auto-add items from the store as you browse. Know what you own, and what you still need.",
   },
 ];
 
@@ -167,10 +167,11 @@ export function LandingView() {
           <br />
           Manage your minis.
         </p>
-        <p className="max-w-xl font-body text-body text-fg">
-          One command center for your whole hobby — paint library, colour tools, recipes,
-          collection, and project tracking, all in one terminal. Free to start. Pro when you
-          need it.
+        <p className="max-w-2xl font-body text-body text-fg">
+          A miniature painting tracker and paint collection manager for wargamers: manage
+          your armies, paint recipes, backlog, colour matches, and hobby sessions in one
+          place — with 7,000+ paints from Warhammer, Citadel, Vallejo and Army Painter.
+          Free to start. Pro when you need it.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
