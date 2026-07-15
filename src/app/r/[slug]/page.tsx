@@ -142,7 +142,7 @@ export default async function PublicRecipePage({
 
       <footer className="mt-auto pt-4 text-center font-body text-body text-fg">
         Made with{" "}
-        <Link href="/" className="text-cyan-lite hover:underline">
+        <Link href="/" className="text-cyan-lite underline">
           The Mini Mainframe
         </Link>
       </footer>

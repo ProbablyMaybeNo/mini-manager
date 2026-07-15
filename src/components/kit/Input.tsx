@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from "react";
+import { useId, type InputHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -20,7 +20,10 @@ export function Input({
   id,
   ...props
 }: FieldProps) {
-  const inputId = id ?? props.name;
+  const reactId = useId();
+  const inputId = id ?? props.name ?? reactId;
+  // Stable id so the input's aria-describedby can point at its error text.
+  const errorId = `${inputId}-error`;
   return (
     <div className={cn("flex flex-col gap-1", containerClassName)}>
       {label && (
@@ -43,6 +46,7 @@ export function Input({
         <input
           id={inputId}
           aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={cn(
             // min-h-6 floors the field at 24px (WCAG 2.2 §2.5.8) — the 23.5px
             // Body line-box otherwise drops the bare input to 23px (UX-006).
@@ -56,7 +60,16 @@ export function Input({
         />
         {trailing}
       </div>
-      {error && <span className="font-body text-body text-red-text">{error}</span>}
+      {/* Always-rendered live region so a screen reader announces the error
+          the moment it appears; `empty:hidden` keeps it out of layout (no gap)
+          while there's no message. */}
+      <span
+        id={errorId}
+        aria-live="polite"
+        className="font-body text-body text-red-text empty:hidden"
+      >
+        {error}
+      </span>
     </div>
   );
 }

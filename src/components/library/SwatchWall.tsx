@@ -108,7 +108,11 @@ export function SwatchWall({
                   <button
                     key={p.id}
                     type="button"
-                    role={selectMode ? "checkbox" : "listitem"}
+                    // F2(b) — no role in browse mode: `role="listitem"` on a
+                    // <button> overrode its native button semantics (SRs
+                    // announced a list item, not an actionable control). The
+                    // selectMode branch keeps role="checkbox" (it IS a toggle).
+                    role={selectMode ? "checkbox" : undefined}
                     aria-checked={selectMode ? isSelected : undefined}
                     onClick={() =>
                       selectMode ? onToggleSelect?.(p.id) : onOpenPaint(p)

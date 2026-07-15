@@ -236,7 +236,6 @@ export function ColorPicker({
             <button
               key={`${i}-${hex}`}
               type="button"
-              role="listitem"
               onClick={() => emitHex(hex)}
               aria-label={`Use harmony swatch ${hex}`}
               className="h-9 w-9 border-2 border-fg/30 transition-transform hover:scale-110"
@@ -406,7 +405,6 @@ export function ColorPicker({
               <button
                 key={`${i}-${hex}`}
                 type="button"
-                role="listitem"
                 onClick={() => emitHex(hex)}
                 aria-label={`Use extracted swatch ${hex}`}
                 className="h-9 w-9 border-2 border-fg/30 transition-transform hover:scale-110"
