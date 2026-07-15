@@ -95,7 +95,7 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
 
 ### Group J — Honest-failure polish (Hermie §4 High / §8 — non-gating but cheap, ship in the same push)
 
-- [ ] **J1 — Kill the false "Added" toast on Games Workshop URL paste.**
+- [x] **J1 — Kill the false "Added" toast on Games Workshop URL paste.** `20c082e`
   Pasting a GW paint URL creates a row titled `games-workshop.com` with brand/type/price `—` **and fires a
   green success toast** (worse than silence). `src/lib/scrape/parsers/gw.ts`, `src/lib/wishlist/scrapeInsert.ts`,
   `collection/page.tsx`. **Do not** try to make the GW scrape work (it 405s behind Cloudflare — a hostname add
