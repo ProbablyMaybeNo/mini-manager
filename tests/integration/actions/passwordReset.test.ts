@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { users, verificationTokens } from "@/db/schema";
+import { sessions, users, verificationTokens } from "@/db/schema";
 import { hashPassword } from "@/lib/auth/password";
 
 const state = vi.hoisted(() => ({
@@ -241,5 +241,32 @@ describe("applyPasswordReset", () => {
       .db!.select()
       .from(verificationTokens);
     expect(tokens).toHaveLength(1);
+  });
+
+  test("revokes all pre-existing sessions on reset", async () => {
+    const token = await setupTokenFor("alice");
+    const alice = (
+      await state.db!.select().from(users).where(eq(users.username, "alice"))
+    )[0]!;
+    // A second, pre-existing session — e.g. an attacker's stolen cookie.
+    await state.db!.insert(sessions).values({
+      sessionToken: "stolen-session-token",
+      userId: alice.id,
+      expires: new Date(Date.now() + 60 * 60 * 1000),
+    });
+
+    const res = await applyPasswordReset({
+      token,
+      password: "freshpassword456",
+    });
+    expect(res.ok).toBe(true);
+
+    const rows = await state
+      .db!.select()
+      .from(sessions)
+      .where(eq(sessions.userId, alice.id));
+    // The stolen session is gone; exactly the freshly-minted one remains.
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.sessionToken).not.toBe("stolen-session-token");
   });
 });

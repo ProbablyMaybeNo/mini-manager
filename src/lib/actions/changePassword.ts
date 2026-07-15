@@ -1,11 +1,13 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { sessions, users } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { SESSION_COOKIE } from "@/lib/auth/session";
 import { validatePassword, PASSWORD_ERROR_COPY } from "@/lib/auth/validation";
 
 export type ChangePasswordResult =
@@ -91,6 +93,19 @@ export async function changePasswordAction(
     .update(users)
     .set({ passwordHash: nextHash })
     .where(eq(users.id, userId));
+
+  // Revoke every OTHER session on a password change — a stolen cookie must
+  // not outlive the change — while keeping the caller signed in on the
+  // device they're changing it from.
+  const currentToken = (await cookies()).get(SESSION_COOKIE)?.value;
+  await db
+    .delete(sessions)
+    .where(
+      and(
+        eq(sessions.userId, userId),
+        currentToken ? ne(sessions.sessionToken, currentToken) : undefined,
+      ),
+    );
 
   return { ok: true };
 }

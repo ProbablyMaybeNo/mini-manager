@@ -3,7 +3,7 @@
 import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
-import { users, verificationTokens } from "@/db/schema";
+import { sessions, users, verificationTokens } from "@/db/schema";
 import { hashPassword } from "./password";
 import { createSession } from "./session";
 import {
@@ -156,6 +156,10 @@ export async function applyPasswordReset(input: {
         eq(verificationTokens.token, token),
       ),
     );
+
+  // A stolen session cookie must not survive a reset — revoke every
+  // existing session for this user, then mint the fresh one returned below.
+  await db.delete(sessions).where(eq(sessions.userId, userId));
 
   await createSession(userId);
   return { ok: true };
