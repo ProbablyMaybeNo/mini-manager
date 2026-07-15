@@ -103,7 +103,7 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
   enter details below" state and **do not** show the success toast or a hostname-named row. *Acceptance:*
   integration/unit test — a no-result scrape returns the honest state, not a success; build green.
 
-- [ ] **J2 — Signed-out color-tool "sign in to save" cue that preserves state.**
+- [x] **J2 — Signed-out color-tool "sign in to save" cue that preserves state.** `d90cdee`
   `/tools/wheel|match|dropper|stacking` are 200 signed-out (the most search-discoverable pages) but Save /
   Send-to-Recipe silently 307 to `/sign-in`, **discarding the generated palette + typed name**. Add an inline
   "sign in to save" affordance that preserves the in-progress state (the `MockProvider` already exposes
