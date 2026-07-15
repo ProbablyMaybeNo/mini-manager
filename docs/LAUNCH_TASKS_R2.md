@@ -76,7 +76,7 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
 
 ### Group I — Conversion / landing (genuinely missing; Hermie §8 + §9)
 
-- [ ] **I1 — Persistent "Start for Free" CTA in the public header.**
+- [x] **I1 — Persistent "Start for Free" CTA in the public header.** `56f5136`
   `src/components/public/PublicHeader.tsx` currently exposes only Gallery / Pricing / **Sign in** — the wrong
   door for a first-time visitor, and the hero CTA is below the fold at 1366×768 / mobile. Add a primary
   "Start for Free" link (→ `/sign-up`) to `PublicHeader`, styled as the primary action (distinct from the
