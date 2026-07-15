@@ -82,14 +82,17 @@ const config: NextConfig = {
   // this halves the bytes for those on modern phones.
   images: {
     formats: ["image/avif", "image/webp"],
-    // MM-26 — inspiration tiles render painter-pasted reference image URLs
-    // from arbitrary hosts. next/image blocks unknown remote hosts by
-    // default, so a pasted URL silently failed to render. Allow any
-    // remote image (these are user-supplied references shown small) via
-    // the documented remotePatterns wildcard.
+    // E5 — remotePatterns is intentionally NARROW: only Vercel Blob, where our
+    // own uploaded images live. The previous `hostname:'**'` wildcard turned
+    // /_next/image into an open image proxy/optimizer for any host on the
+    // internet (SSRF + bandwidth-abuse surface). Painter-pasted reference URLs
+    // (inspiration tiles, model photos) are NOT rendered through next/image —
+    // they use plain <img> (see InspoBoard.tsx / ProjectImagePanel.tsx), which
+    // is not subject to remotePatterns — so tightening this does not break the
+    // pasted-reference feature. next/image is used only for local /brand and
+    // /tools static assets, which need no remote allowance at all.
     remotePatterns: [
-      { protocol: "https", hostname: "**" },
-      { protocol: "http", hostname: "**" },
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
   // Legacy-route redirects. Each of these paths existed in an earlier
