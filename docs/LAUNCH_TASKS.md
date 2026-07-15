@@ -120,4 +120,79 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 ---
 
 ## Final summary
-*(agent fills this in at the end)*
+
+**Run complete — every §DO task shipped. Nothing BLOCKED, nothing skipped inside §DO.**
+
+Final gate (whole suite, after the Group-G build): `npm run typecheck` 0 errors ·
+`npm run lint` 0 errors (49 pre-existing react-hooks warnings, untouched) ·
+`npm run test:unit` **736 passing** · `npm run test:integration` **467 passing, 5 skipped** ·
+`npm run build` green. Each lettered group ran its own `npm run build` at the end; all green.
+
+Each task is one code commit + one `chore:` tick commit. Branch `launch/pre-launch-batch`,
+pushed once at the very end. No PR opened, `main` untouched.
+
+### Shipped
+
+| Task | Commit | What |
+|---|---|---|
+| A1 | `8bac532` | Un-gate OG/Twitter image + verify-email + extension in proxy matcher |
+| A2 | `da0bef2` | Password reset issues against `users.email` (no emailVerified gate) |
+| A3 | `3a469ef` | Revoke other sessions on password reset + change |
+| A4 | `76c0fe3` | Lock the gallery image path (moderation bypass + SSRF) |
+| B1 | `b87c924` | Optimistic Status/Type/Priority + kill the RSC storm (P1+P2+P3) |
+| B2 | `5bf1777` | Library mobile virtualization (`min-h-0`) |
+| B3 | `cb95a7a` | De-dup `loadAppData` recipe reads |
+| C1 | `86e36f6` | Canonical host → www |
+| C2 | `07e896b` | Dynamic sitemap (published `/r/` slugs; drop auth pages) |
+| C3 | `3570f42` | Structured data (JSON-LD: WebApplication/FAQPage/BreadcrumbList) |
+| C4 | `b8f093c` | Homepage keyword copy |
+| D1 | `ec78b46` | Stamp the URL onto the share card |
+| D2 | `87e14e9` | Add the 11 missing analytics events |
+| E1 | `4d9d829` | `saveRecipe` transactional slot replace |
+| E2 | `36bd51f` | Guard double-submit `+ New Project` |
+| E3 | `5213a8a` | Fail the admin allowlist closed + require verified email |
+| E4 | `1f42543` | HTTP security headers (CSP report-only + HSTS/XFO/nosniff/etc.) |
+| E5 | `6f34397` | Tighten `next/image` remotePatterns off the `**` wildcard |
+| E6 | `f543775` | Enable SQLite `foreign_keys = ON` on connection init |
+| E7 | `02126af` | Per-user daily quotas + IP signup rate limit (DB counter, migration 0035) |
+| F1 | `5395acf` | Stop iOS focus-zoom — 16px form controls on mobile (no scale lock) |
+| F2 | `2365d0a` | a11y trio: error live-region, real button swatches, persistent footer links |
+| G1 | `d4676df` | Complete data export — all 16 owner-scoped tables (`__exportVersion` 4) |
+| G2 | `145b595` | Delete a user's Vercel Blob objects on account deletion |
+| G3 | `28b2d1d` | Disclose AI + analytics subprocessors (Anthropic / Groq / Vercel Analytics) |
+| G4 | `9e7c5da` | Support-email plumbing across public surfaces |
+
+### NEEDS-ROSS (values only — the wiring is shipped)
+
+- **G4 — real support address.** Everything is wired to a `SUPPORT_EMAIL` constant that
+  currently renders the placeholder `CHANGE_ME@mini-mainframe.com`. Set **`SUPPORT_EMAIL`**
+  and **`NEXT_PUBLIC_SUPPORT_EMAIL`** (the public one is needed for the client-rendered
+  footer/auth screens) in the Vercel project env to the real inbox. No code change required.
+
+### New env vars introduced (all optional, sane defaults)
+
+- **E3:** `MM_ADMIN_EMAILS` — comma-separated admin allowlist. **Fails closed when unset**
+  (nobody is admin), and admin now also requires a *verified* email. Set this in prod, and
+  make sure the admin account's email is verified, or `/admin/gallery` will 404 for everyone.
+- **E7:** `MM_AI_DAILY_LIMIT` (default 50), `MM_GALLERY_DAILY_LIMIT` (default 20),
+  `MM_SIGNUP_DAILY_LIMIT` (default 10 per IP). All work out-of-the-box; override only to tune.
+- **G4:** `SUPPORT_EMAIL` / `NEXT_PUBLIC_SUPPORT_EMAIL` (see NEEDS-ROSS above).
+
+### Notes / things to watch
+
+- **B1 collides with the faction/wargame WIP** on `feat/project-faction-wargame` — it touches
+  the same 4 files (`ProjectWorkspaceBody`, `ProjectPageClient`, `PriorityDropdown`,
+  `ProjectsTable`). A later merge of that branch will need manual reconciliation. (Flagged in the
+  B1 commit body.)
+- **E4 CSP is report-only on purpose** — the app renders inline styles + Next inline bootstrap.
+  It logs what a strict policy *would* block without affecting users. Flip the header key from
+  `Content-Security-Policy-Report-Only` to `Content-Security-Policy` once the violation reports
+  are clean. `X-Frame-Options: DENY` is the enforced clickjacking guard in the meantime.
+- **E5** narrowed `next/image` remotePatterns to the Vercel Blob host only. Pasted reference
+  images render via plain `<img>` (not `next/image`), so that feature is unaffected — verified
+  in the code before tightening.
+- **E7 signup limit is per-IP and best-effort** — it keys off `x-forwarded-for` and simply
+  doesn't limit when no proxy header is present (fine locally; Vercel always sets it).
+- **§SKIP untouched** — Sentry, Turnstile, gallery seeding, tier reset/`BILLING_ENFORCED`,
+  programmatic paint SEO, weekly digest cron, and the drizzle-orm upgrade were all left alone
+  as instructed.
