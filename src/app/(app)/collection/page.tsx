@@ -137,7 +137,16 @@ function CollectionRoute() {
       // heuristic guessed.
       const res = await scrapeAndCreateWishlistItem({ url, kind });
       if (!res.ok) {
-        toast(res.error, "red");
+        // J1 — an unreadable scrape (e.g. a Games Workshop page blocked
+        // behind Cloudflare) is an honest dead-end, not a success. Drop
+        // the painter into manual entry instead of creating a hostname-
+        // named row and firing a green "Added" toast.
+        if (res.reason === "unreadable") {
+          setAdding(kind);
+          toast("Couldn’t auto-read that link — add the details below.", "cyan");
+        } else {
+          toast(res.error, "red");
+        }
         return;
       }
       absorb(toCollectionItem(res.data));

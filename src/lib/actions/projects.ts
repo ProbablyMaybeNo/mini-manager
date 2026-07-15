@@ -33,6 +33,15 @@ export type ActionResult<T = unknown> =
        * the link doesn't render.
        */
       upgradeUrl?: string;
+      /**
+       * J1 — set to "unreadable" when a URL scrape produced no usable
+       * product data (e.g. a Cloudflare-blocked Games Workshop page).
+       * The UI drops the painter into manual entry with an honest "we
+       * couldn't auto-read that" cue instead of silently creating a
+       * hostname-named row + a false success toast. Any other rejection
+       * leaves this unset.
+       */
+      reason?: "unreadable";
     };
 
 /**

@@ -11,8 +11,36 @@ import {
 } from "@/db/schema";
 import { enforceCreateLimit } from "@/lib/billing/enforce";
 import { scrapeUrl } from "@/lib/scrape";
+import type { ScrapedProduct } from "@/lib/scrape/types";
 import { inferWishlistKind } from "@/lib/wishlist/kindInference";
 import type { ActionResult } from "@/lib/actions/projects";
+
+/**
+ * J1 — did the scrape actually read a product, or just fall back to the
+ * page hostname? A parser that can't reach the page (Games Workshop 405s
+ * behind Cloudflare) yields `null`; one that reaches an unreadable page
+ * yields a bare hostname title with no other signal. Either way there's
+ * nothing worth persisting, so we surface an honest "couldn't auto-read"
+ * state instead of a `games-workshop.com` row + a green success toast.
+ *
+ * A real product title (anything other than the hostname) counts as
+ * usable, as does a scraped price or image even when the title is weak.
+ */
+function scrapeIsUsable(
+  scraped: ScrapedProduct | null,
+  hostname: string,
+): boolean {
+  if (!scraped) return false;
+  const title = scraped.title?.trim() ?? "";
+  const titleUsable =
+    title.length > 0 && title.toLowerCase() !== hostname.toLowerCase();
+  if (titleUsable) return true;
+  // A hostname/blank title is still salvageable if the parser pulled a
+  // real signal we can show the painter.
+  if (scraped.price !== undefined && scraped.price !== null) return true;
+  if (scraped.imageUrl) return true;
+  return false;
+}
 
 /**
  * Shared "scrape a vendor URL → insert a collection (wishlist) row"
@@ -54,6 +82,18 @@ export async function scrapeAndInsertWishlistItem(params: {
 
   const hostname = url.hostname.replace(/^www\./, "");
   const scraped = await scrapeUrl(url);
+
+  // J1 — bail honestly rather than persist a hostname-named placeholder
+  // row (and fire a false "Added" toast) when the scrape read nothing
+  // usable. The caller drops the painter into manual entry instead.
+  if (!scrapeIsUsable(scraped, hostname)) {
+    return {
+      ok: false,
+      error:
+        "We couldn’t auto-read that page. Add the details yourself below.",
+      reason: "unreadable",
+    };
+  }
 
   const title = scraped?.title?.trim() || hostname;
   const vendor = scraped?.vendor ?? hostname;
