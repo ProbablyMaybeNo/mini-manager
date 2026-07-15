@@ -28,7 +28,11 @@ export function AppShell({
         Skip to content
       </a>
       <SidebarRail />
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* min-h-0 bounds this column-flex child so the inner <main> scroll
+          container is height-constrained on mobile. Without it the whole
+          document scrolls and react-virtual renders every /library node
+          (7,000+) instead of the visible window (P4). */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <MobileTopBar />
         <main
           id="main"
