@@ -55,7 +55,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
   - **P3 (must ship with P2):** swap every `revalidatePath("/projects")` → `revalidatePath("/dashboard")` (~35 sites; also the non-route `/projects/import` in `imports.ts`). `/projects` is a 308 redirect, not a page — once `router.refresh()` is gone this is what keeps the dashboard fresh.
   *Acceptance:* typecheck + unit + integration green; existing project-action integration tests still pass. This is subtle — read report §5 P1–P3 first. *Note in your commit:* this touches the same 4 files as the uncommitted faction/wargame WIP on `feat/project-faction-wargame`; a later merge will need manual reconciliation.
 
-- [ ] **B2 — Library mobile virtualization (one line).**
+- [x] `5bf1777` **B2 — Library mobile virtualization (one line).**
   Add `min-h-0` to the content column in `src/components/shell/AppShell.tsx` (~line 31) so the mobile scroll container is bounded and `react-virtual` stops rendering all 7,000+ paint nodes. *Acceptance:* build green. (P4)
 
 - [ ] **B3 — De-dup `loadAppData` recipe reads.**
