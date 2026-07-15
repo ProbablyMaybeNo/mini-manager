@@ -38,7 +38,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 - [x] `da0bef2` **A2 — Password reset issues against `users.email`.**
   In `src/lib/auth/passwordReset.ts` `requestPasswordReset`: look the user up by username and send the reset to `users.email` directly. Do **not** gate on `emailVerified` (the majority never clicked verify and would stay locked out). Keep the always-`ok:true` enumeration-safe behaviour. Send the mail to `users.email`. *Acceptance:* an integration test where a normal credentials signup can request a reset and a mail is dispatched to their signup email; existing reset tests updated. (B4)
 
-- [ ] **A3 — Revoke other sessions on password reset + change.**
+- [x] `3a469ef` **A3 — Revoke other sessions on password reset + change.**
   In `applyPasswordReset` (`passwordReset.ts`) delete all sessions for the user, then re-mint the one you return. In `changePassword` delete all sessions **except** the current token. *Acceptance:* integration test proving a second session is invalidated after reset. (B4 companion)
 
 - [ ] **A4 — Lock the gallery image path (moderation bypass + SSRF).**
