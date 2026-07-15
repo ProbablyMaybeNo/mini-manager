@@ -432,6 +432,19 @@ export function ShareCardComposer({
                 </div>
               )}
             </div>
+
+            {/* URL stamp — baked INSIDE the rasterized node (mirrors the top
+                wordmark on the frame line) so every exported/shared card carries
+                a route back. Static text, so it covers the DOWNLOAD path where
+                recipeId is null too. */}
+            <div
+              className="absolute left-1/2 bg-bg px-2"
+              style={{ bottom: FRAME_INSET, transform: "translate(-50%, 50%)" }}
+            >
+              <span className="font-display text-[9px] font-bold tracking-[0.12em] text-cyan">
+                mini-mainframe.com
+              </span>
+            </div>
           </div>
           <span className="font-mono text-[10px] text-fg-dim">
             {CARD_EXPORT_WIDTH}×{Math.round(CARD_EXPORT_WIDTH * (height / CARD_DISPLAY_WIDTH))}px
