@@ -19,9 +19,11 @@ The audit pass left the repo in a worse state than it found it. Fix this before 
 
 ---
 
-## B1 — Prod origin (Ross, Vercel dashboard — not an agent task)
+## B1 — Prod origin (Ross, Vercel dashboard — not an agent task) ✅ DONE 2026-07-15
 
-**This is the single highest-priority item. Re-verified live today:**
+**Resolved and verified live 2026-07-15:** `/dashboard` signed-out now redirects to a relative `/sign-in` (stays on www), the `callback-url` cookie is stamped `www.mini-mainframe.com`, and zero dead-host references remain in prod headers. The env vars were set and a redeploy picked them up. (Billing pause also cleared same day — the account was upgraded to Pro after a Hobby usage cap tripped a 402; see the P2 amplification note.) Remaining redirect-gated routes below — og:image, verify-email, extension — are NOT B1; they need the proxy-matcher code change (B2/B3).
+
+**Original diagnosis, re-verified live earlier:**
 - `GET https://www.mini-mainframe.com/dashboard` (signed out) → `307 → https://miniaturemanager.vercel.app/sign-in` → **`404 DEPLOYMENT_NOT_FOUND`**
 - Every gated response sets `__Secure-authjs.callback-url=https%3A%2F%2Fminiaturemanager.vercel.app` → cookies are host-scoped, so a session minted on the preview host never carries back to `www`.
 - Every password-reset and verify-email link is built from that same dead host → all mail links 404.
