@@ -36,7 +36,6 @@ export async function logActivity(
   } catch (err) {
     // Best-effort write — the painter's primary action already
     // succeeded. Surface for ops without bubbling.
-    // eslint-disable-next-line no-console
     console.warn("[activityLog] insert failed", err);
   }
 }

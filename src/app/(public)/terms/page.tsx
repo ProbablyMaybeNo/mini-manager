@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { LegalDoc } from "@/components/public/LegalDoc";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Terms of Service · The Mini Mainframe",
   description: "The terms for using The Mini Mainframe.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {
@@ -36,6 +38,18 @@ export default function TermsPage() {
         {
           heading: "Changes",
           body: "We may update these terms; continued use after an update means you accept the changes.",
+        },
+        {
+          heading: "Contact",
+          body: (
+            <>
+              Questions about these terms? Email us at{" "}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+                {SUPPORT_EMAIL}
+              </a>
+              .
+            </>
+          ),
         },
       ]}
     />

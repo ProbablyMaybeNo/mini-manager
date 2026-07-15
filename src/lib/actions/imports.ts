@@ -321,7 +321,7 @@ export async function applyImport(
       })
       .where(eq(imports.id, importId));
 
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${armyId}`);
     return { ok: true, data: { armyProjectId: armyId } };
   } catch (err) {
@@ -403,7 +403,7 @@ async function persistImport(
     return { ok: false, error: "Failed to persist import." };
   }
 
-  revalidatePath("/projects/import");
+  revalidatePath("/dashboard");
   return { ok: true, data: { importId } };
 }
 

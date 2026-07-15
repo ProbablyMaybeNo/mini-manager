@@ -10,6 +10,8 @@ import { loadProjectImages } from "@/lib/actions/projectImages";
 import { submitRecipeToGallery } from "@/lib/actions/gallerySubmissions";
 import { validateImageFile } from "@/lib/blob/limits";
 import { exportableImageSrc } from "@/lib/shareCard/imageSrc";
+import { trackClient } from "@/lib/analytics/track.client";
+import { AnalyticsEvent } from "@/lib/analytics/events";
 import {
   cardHeightFor,
   computeSwatchGrid,
@@ -122,7 +124,6 @@ export function ShareCardComposer({
         : [],
     );
     setSelectedId(initialImageUrl ? "initial" : null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, recipeName, initialNotes, initialImageUrl]);
 
   // Pull the attached project's already-uploaded model photos as pickable
@@ -242,6 +243,7 @@ export function ShareCardComposer({
       document.body.appendChild(a);
       a.click();
       a.remove();
+      trackClient(AnalyticsEvent.ShareCardDownloaded, { recipeId: recipeId ?? null });
     } catch (err) {
       setError(
         err instanceof Error
@@ -251,12 +253,13 @@ export function ShareCardComposer({
     } finally {
       setExporting(false);
     }
-  }, [recipeName, renderCardPng]);
+  }, [recipeId, recipeName, renderCardPng]);
 
   const handleSubmit = useCallback(async () => {
     if (!recipeId) return;
     setSubmitting(true);
     setError(null);
+    trackClient(AnalyticsEvent.GallerySubmitStarted, { recipeId });
     try {
       const dataUrl = await renderCardPng();
       if (!dataUrl) return;
@@ -280,6 +283,10 @@ export function ShareCardComposer({
         setError(res.error);
         return;
       }
+      trackClient(AnalyticsEvent.GallerySubmitCompleted, {
+        recipeId,
+        status: res.data.status,
+      });
       setWentLive(res.data.status === "approved");
       setSubmitted(true);
     } catch (err) {
@@ -432,6 +439,19 @@ export function ShareCardComposer({
                   </span>
                 </div>
               )}
+            </div>
+
+            {/* URL stamp — baked INSIDE the rasterized node (mirrors the top
+                wordmark on the frame line) so every exported/shared card carries
+                a route back. Static text, so it covers the DOWNLOAD path where
+                recipeId is null too. */}
+            <div
+              className="absolute left-1/2 bg-bg px-2"
+              style={{ bottom: FRAME_INSET, transform: "translate(-50%, 50%)" }}
+            >
+              <span className="font-display text-[9px] font-bold tracking-[0.12em] text-cyan">
+                mini-mainframe.com
+              </span>
             </div>
           </div>
           <span className="font-mono text-[10px] text-fg-dim">

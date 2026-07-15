@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import {
@@ -196,7 +196,7 @@ function RenameField({
   id: string;
   name: string;
   disabled?: boolean;
-  onSaved: () => void;
+  onSaved?: () => void;
 }) {
   const [value, setValue] = useState(name);
   const [, start] = useTransition();
@@ -215,7 +215,7 @@ function RenameField({
     }
     start(async () => {
       const res = await updateProjectName({ id, name: next });
-      if (res.ok) onSaved();
+      if (res.ok) onSaved?.();
       else setValue(name);
     });
   }
@@ -259,6 +259,14 @@ export function ProjectWorkspaceBody({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // Optimistic view-model for the DETAILS Type/Status/Priority dropdowns: the
+  // picked value paints synchronously (no waiting on the server round-trip),
+  // then resets to the freshly-rendered prop once the force-dynamic host
+  // re-renders from the server-action POST (P1 — no useState freeze).
+  const [optimisticProject, applyOptimistic] = useOptimistic(
+    project,
+    (state: Project, patch: Partial<Project>) => ({ ...state, ...patch }),
+  );
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   // PP-2: a sub-project queued for a confirm-guarded delete from the
   // SUB-PROJECTS list's trailing Trash2 icon.
@@ -308,15 +316,23 @@ export function ProjectWorkspaceBody({
     };
   }, [project.id]);
 
-  function run(action: () => Promise<{ ok: boolean; error?: string }>) {
+  function run(
+    action: () => Promise<{ ok: boolean; error?: string }>,
+    optimistic?: Partial<Project>,
+  ) {
     setError(null);
     startTransition(async () => {
+      // Apply the optimistic patch synchronously before awaiting, so the
+      // dropdown shows the new value immediately.
+      if (optimistic) applyOptimistic(optimistic);
       const res = await action();
       if (!res.ok) {
         setError(res.error ?? "Something went wrong.");
         return;
       }
-      router.refresh();
+      // No router.refresh(): both host pages are force-dynamic, so the
+      // server-action POST already re-renders the tree with fresh props
+      // (P2). Dropping it also kills the redundant ~18-request RSC storm.
     });
   }
 
@@ -392,7 +408,6 @@ export function ProjectWorkspaceBody({
               id={project.id}
               name={project.title}
               disabled={pending}
-              onSaved={() => router.refresh()}
             />
           </div>
           <button
@@ -457,37 +472,37 @@ export function ProjectWorkspaceBody({
             <label className="flex flex-col gap-1">
               <span className="label-osd text-fg-dim">Type</span>
               <Listbox
-                value={project.type}
-                disabled={pending}
+                value={optimisticProject.type}
                 ariaLabel="Project type"
                 options={TYPE_OPTIONS.map((t) => ({ value: t, label: t.toUpperCase() }))}
                 onChange={(t) =>
-                  run(() => updateProjectType({ id: project.id, type: TYPE_TO_DB[t] }))
+                  run(() => updateProjectType({ id: project.id, type: TYPE_TO_DB[t] }), { type: t })
                 }
               />
             </label>
             <label className="flex flex-col gap-1">
               <span className="label-osd text-fg-dim">Status</span>
               <Listbox
-                value={project.status}
-                disabled={pending}
+                value={optimisticProject.status}
                 ariaLabel="Project status"
-                accent={statusAccent[project.status]}
+                accent={statusAccent[optimisticProject.status]}
                 options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
-                onChange={(s) => run(() => bumpProjectStatus({ id: project.id, status: s }))}
+                onChange={(s) =>
+                  run(() => bumpProjectStatus({ id: project.id, status: s }), { status: s })
+                }
               />
             </label>
             <label className="flex flex-col gap-1">
               <span className="label-osd text-fg-dim">Priority</span>
               <Listbox
-                value={project.priority}
-                disabled={pending}
+                value={optimisticProject.priority}
                 ariaLabel="Project priority"
-                accent={priorityAccent[project.priority]}
+                accent={priorityAccent[optimisticProject.priority]}
                 options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p.toUpperCase() }))}
                 onChange={(p) =>
-                  run(() =>
-                    updateProjectPriority({ id: project.id, priority: PRIORITY_TO_DB[p] }),
+                  run(
+                    () => updateProjectPriority({ id: project.id, priority: PRIORITY_TO_DB[p] }),
+                    { priority: p },
                   )
                 }
               />

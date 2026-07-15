@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://mini-mainframe.com";
+const BASE = "https://www.mini-mainframe.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -7,6 +7,11 @@ import { EmptyState, Panel } from "@/components/kit";
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { ShareYourModelButton } from "@/components/gallery/ShareYourModelButton";
 import { YourCardsStrip } from "@/components/gallery/YourCardsStrip";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo/structuredData";
+import { TrackPageView } from "@/components/analytics/TrackPageView";
+import { AnalyticsEvent } from "@/lib/analytics/events";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { GalleryBrowser } from "./GalleryBrowser";
 
 // Published recipes change as painters share/unshare — render on request so
@@ -17,6 +22,7 @@ export const metadata: Metadata = {
   title: "Recipe Gallery — The Mini Mainframe",
   description:
     "Browse paint recipes shared by the community — colour schemes, swatches, and brands for your next miniature. Free to view on The Mini Mainframe.",
+  alternates: { canonical: "/gallery" },
   openGraph: {
     title: "Recipe Gallery — The Mini Mainframe",
     description:
@@ -42,6 +48,13 @@ export default async function GalleryPage() {
 
   const content = (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+      <TrackPageView event={AnalyticsEvent.GalleryView} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Recipe Gallery", path: "/gallery" },
+        ])}
+      />
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="font-title text-title uppercase text-cyan-lite text-glow-cyan">
@@ -104,17 +117,21 @@ export default async function GalleryPage() {
       {content}
       <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
         ▸ THE MINI MAINFRAME · made for painters ·{" "}
-        <Link href="/" className="text-cyan-lite hover:underline">
+        <Link href="/" className="text-cyan-lite underline">
           Home
         </Link>{" "}
         ·{" "}
-        <Link href="/pricing" className="text-cyan-lite hover:underline">
+        <Link href="/pricing" className="text-cyan-lite underline">
           Pricing
         </Link>{" "}
         ·{" "}
-        <Link href="/sign-in" className="text-cyan-lite hover:underline">
+        <Link href="/sign-in" className="text-cyan-lite underline">
           Sign in
-        </Link>
+        </Link>{" "}
+        ·{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+          Contact
+        </a>
       </footer>
     </div>
   );

@@ -3,7 +3,7 @@
 import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db/client";
-import { users, verificationTokens } from "@/db/schema";
+import { sessions, users, verificationTokens } from "@/db/schema";
 import { hashPassword } from "./password";
 import { createSession } from "./session";
 import {
@@ -37,9 +37,13 @@ function buildResetUrl(token: string): string {
  *
  * **Enumeration safety**: this function ALWAYS returns ok:true. The
  * caller renders the same 'If an account exists, we sent a link' copy
- * regardless of whether the username matched, whether the user has a
- * recovery email set, or whether that email is verified. Token issuance
- * + mail dispatch only happen on the happy branch — silently.
+ * regardless of whether the username matched or whether the account has
+ * an email on file. Token issuance + mail dispatch only happen on the
+ * happy branch — silently.
+ *
+ * The reset is issued against the mandatory `users.email` (every
+ * credentials signup fills it) and is NOT gated on `emailVerified` — the
+ * majority never click the verify link and would otherwise be locked out.
  *
  * The form is rate-limit-amenable; v1 ships without RL on the request
  * route and assumes Vercel's per-IP function-invocation backstop.
@@ -55,16 +59,15 @@ export async function requestPasswordReset(input: {
   const hit = await db
     .select({
       id: users.id,
-      recoveryEmail: users.recoveryEmail,
-      recoveryEmailVerified: users.recoveryEmailVerified,
+      email: users.email,
     })
     .from(users)
     .where(sql`LOWER(${users.username}) = ${v.normalized}`)
     .limit(1);
 
   const user = hit[0];
-  if (!user || !user.recoveryEmail || !user.recoveryEmailVerified) {
-    // No account / no verified recovery email — silent ok:true.
+  if (!user || !user.email) {
+    // No account / no email on file — silent ok:true.
     return { ok: true };
   }
 
@@ -80,7 +83,7 @@ export async function requestPasswordReset(input: {
 
   const url = buildResetUrl(token);
   await sendVerificationEmail({
-    to: user.recoveryEmail,
+    to: user.email,
     subject: "Reset your Mini Mainframe password",
     text: `Click to reset your password:\n\n${url}\n\nThis link expires in 1 hour. If you didn't request it, ignore this email.`,
   });
@@ -153,6 +156,10 @@ export async function applyPasswordReset(input: {
         eq(verificationTokens.token, token),
       ),
     );
+
+  // A stolen session cookie must not survive a reset — revoke every
+  // existing session for this user, then mint the fresh one returned below.
+  await db.delete(sessions).where(eq(sessions.userId, userId));
 
   await createSession(userId);
   return { ok: true };

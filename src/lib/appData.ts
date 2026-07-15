@@ -4,13 +4,11 @@ import { listInventoryByUser } from "@/db/queries/inventory";
 import { listLinkedPaintStatuses } from "@/lib/paints/reconcileOwnership";
 import { listAllProjects } from "@/db/queries/projects";
 import {
-  getProjectPalettesMap,
   getPaintMetaMap,
   getRecipeWithSlots,
-  getInspoMapForOwner,
   getRecipesByPaintId,
   listInspoForRecipe,
-  listRecipesForTable,
+  loadDashboardRecipeBundle,
 } from "@/db/queries/recipes";
 import { techniqueLabel } from "@/lib/recipes/techniqueLabel";
 import {
@@ -369,9 +367,7 @@ export const loadAppData = cache(async (userId: string): Promise<Partial<MockDat
 
   const [
     projects,
-    palettes,
-    recipeRows,
-    inspoMap,
+    recipeBundle,
     collectionPaints,
     collectionModels,
     activityRows,
@@ -382,9 +378,9 @@ export const loadAppData = cache(async (userId: string): Promise<Partial<MockDat
     projectSecondsMap,
   ] = await Promise.all([
     listAllProjects(userId),
-    getProjectPalettesMap(userId),
-    listRecipesForTable(userId),
-    getInspoMapForOwner(userId),
+    // One combined read of recipe/recipe_slot/recipe_inspo (P5) — replaces the
+    // three separate calls that each re-read the recipe table.
+    loadDashboardRecipeBundle(userId),
     listPaintCollection(userId),
     listModelCollection(userId),
     getRecentActivity(userId, 20),
@@ -397,6 +393,7 @@ export const loadAppData = cache(async (userId: string): Promise<Partial<MockDat
     getActivityByDay(userId, new Date(now.getTime() - SIXTY_DAYS_MS)),
     getProjectRollupSecondsMap(userId),
   ]);
+  const { recipeRows, palettesMap: palettes, inspoMap } = recipeBundle;
 
   const sessionStats: SessionStats = {
     todayMinutes: Math.round(rollups.todaySeconds / 60),

@@ -22,7 +22,6 @@ export async function sendVerificationEmail(mail: VerifyMail): Promise<void> {
     process.env.AUTH_EMAIL_FROM ?? "Mini Mainframe <no-reply@localhost>";
 
   if (!process.env.AUTH_RESEND_KEY) {
-    // eslint-disable-next-line no-console
     console.log(
       [
         "",

@@ -87,7 +87,7 @@ function revalidateAttachments(recipe: Recipe) {
   revalidatePath(`/recipes/${recipe.id}`);
   if (recipe.attachedProjectId) {
     revalidatePath(`/projects/${recipe.attachedProjectId}`);
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
   }
 }
 
@@ -153,7 +153,7 @@ export async function createRecipe(
     revalidatePath("/recipes");
     if (attachedProjectId) {
       revalidatePath(`/projects/${attachedProjectId}`);
-      revalidatePath("/projects");
+      revalidatePath("/dashboard");
     }
     return { ok: true, data: { id: row.id } };
   } catch (err) {
@@ -283,7 +283,7 @@ export async function attachRecipeToProject(
     revalidatePath("/recipes");
     revalidatePath(`/recipes/${row.id}`);
     revalidatePath(`/projects/${projectId}`);
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     if (previousProjectId && previousProjectId !== projectId) {
       revalidatePath(`/projects/${previousProjectId}`);
     }
@@ -328,7 +328,7 @@ export async function detachRecipe(
     revalidatePath(`/recipes/${row.id}`);
     if (previousProjectId) {
       revalidatePath(`/projects/${previousProjectId}`);
-      revalidatePath("/projects");
+      revalidatePath("/dashboard");
     }
     return { ok: true, data: row };
   } catch (err) {

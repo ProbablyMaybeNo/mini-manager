@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { Button, Input } from "@/components/kit";
 import { Logo } from "@/components/shell";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 export type AuthMode = "sign-in" | "sign-up";
 
@@ -147,6 +148,13 @@ export function AuthView({
             the introduction period.
           </p>
         </div>
+
+        <p className="mt-4 text-center font-body text-[12px] text-fg-dim">
+          Need help or can’t sign in? Email{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
       </div>
     </main>
   );

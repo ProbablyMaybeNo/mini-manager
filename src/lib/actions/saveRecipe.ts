@@ -39,6 +39,25 @@ export interface SaveRecipeSlot {
   layer: string;
 }
 
+/** Append `slots` to `recipeId` in order via addSlot (which validates each
+ *  slot + assigns positions). Returns the first failure, if any. */
+async function insertSlots(
+  recipeId: string,
+  slots: SaveRecipeSlot[],
+): Promise<ActionResult<null>> {
+  for (const slot of slots) {
+    const usePaint = Boolean(slot.paintId);
+    const res = await addSlot({
+      recipeId,
+      technique: toTechnique(slot.layer),
+      paintId: usePaint ? slot.paintId : null,
+      customColorHex: usePaint ? null : slot.hex,
+    });
+    if (!res.ok) return res;
+  }
+  return { ok: true, data: null };
+}
+
 /**
  * REBUILD — persist the kit recipe editor's whole edited recipe in one call.
  * The editor edits name + an ordered slot list client-side; this creates or
@@ -77,8 +96,25 @@ export async function saveRecipe(input: {
     const upd = await updateRecipe({ id: input.id, name: input.name, notesMd });
     if (!upd.ok) return upd;
     recipeId = input.id;
-    // Replace the slot set wholesale.
+
+    // Snapshot the current slots BEFORE the wholesale delete + re-insert so a
+    // single bad slot can't truncate the saved recipe. The delete/insert pair
+    // is not atomic here, so on any failure we restore the original set and
+    // surface the error rather than leaving the recipe emptied (E1).
+    const slotSnapshot = await db
+      .select()
+      .from(recipeSlots)
+      .where(eq(recipeSlots.recipeId, recipeId));
     await db.delete(recipeSlots).where(eq(recipeSlots.recipeId, recipeId));
+
+    const replaced = await insertSlots(recipeId, input.slots);
+    if (!replaced.ok) {
+      await db.delete(recipeSlots).where(eq(recipeSlots.recipeId, recipeId));
+      if (slotSnapshot.length > 0) {
+        await db.insert(recipeSlots).values(slotSnapshot);
+      }
+      return replaced;
+    }
   } else {
     const created = await createRecipe({
       name: input.name,
@@ -87,17 +123,14 @@ export async function saveRecipe(input: {
     });
     if (!created.ok) return created;
     recipeId = created.data.id;
-  }
 
-  for (const slot of input.slots) {
-    const usePaint = Boolean(slot.paintId);
-    const res = await addSlot({
-      recipeId,
-      technique: toTechnique(slot.layer),
-      paintId: usePaint ? slot.paintId : null,
-      customColorHex: usePaint ? null : slot.hex,
-    });
-    if (!res.ok) return res;
+    const replaced = await insertSlots(recipeId, input.slots);
+    if (!replaced.ok) {
+      // Roll back the half-created recipe (cascades slots) so a failed create
+      // never leaves a partial recipe behind.
+      await db.delete(recipes).where(eq(recipes.id, recipeId));
+      return replaced;
+    }
   }
 
   // Replace the inspo set wholesale when the caller supplies one (the

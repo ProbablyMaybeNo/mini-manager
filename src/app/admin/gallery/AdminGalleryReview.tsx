@@ -7,6 +7,7 @@ import {
   approveGallerySubmission,
   rejectGallerySubmission,
 } from "@/lib/actions/gallerySubmissions";
+import { exportableImageSrc } from "@/lib/shareCard/imageSrc";
 import type { PendingGallerySubmission } from "@/db/queries/gallerySubmissions";
 import type { GalleryModerationVerdict } from "@/db/schema";
 
@@ -68,7 +69,7 @@ export function AdminGalleryReview({
               <div className="aspect-square overflow-hidden rounded-[6px] border border-border bg-bg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={s.cardImageUrl}
+                  src={exportableImageSrc(s.cardImageUrl)}
                   alt={`${s.recipeName} — submitted card`}
                   className="h-full w-full object-cover"
                 />

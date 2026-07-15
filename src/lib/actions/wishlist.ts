@@ -336,7 +336,7 @@ export async function setWishlistStatus(
     }
 
     revalidatePath("/collection");
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath("/library");
     return { ok: true, data: row };
   } catch (err) {

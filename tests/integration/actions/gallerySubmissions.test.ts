@@ -48,6 +48,11 @@ const { listPublishedRecipes } = await import("@/db/queries/recipes");
 
 const ADMIN_EMAIL = "admin-review@example.com";
 
+// Submissions must point at our own Vercel Blob store; build url+pathname
+// from one source so they always agree (the submit path rejects a mismatch).
+const BLOB_HOST = "https://teststore.public.blob.vercel-storage.com";
+const blobUrl = (pathname: string) => `${BLOB_HOST}/${pathname}`;
+
 async function seedRecipe(overrides: Partial<typeof recipes.$inferInsert> = {}) {
   const id = nanoid(16);
   await state.db!.insert(recipes).values({
@@ -68,15 +73,18 @@ async function seedAdmin(): Promise<string> {
     email: ADMIN_EMAIL,
     name: "Admin",
     plan: "pro_lifetime",
+    // E3: admin requires a VERIFIED email — an unverified account, even on
+    // the allowlist, is no longer authorized.
+    emailVerified: new Date(),
   });
   return id;
 }
 
-async function submitFixture(recipeId: string, imageUrl = "https://blob.example/card.png") {
+async function submitFixture(recipeId: string, pathname = "gallery-cards/x/1.png") {
   return submitRecipeToGallery({
     recipeId,
-    imageUrl,
-    imagePathname: "gallery-cards/x/1.png",
+    imageUrl: blobUrl(pathname),
+    imagePathname: pathname,
     ratio: "1:1",
   });
 }
@@ -106,12 +114,52 @@ describe("submitRecipeToGallery", () => {
 
     const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
     expect(row?.galleryStatus).toBe("pending");
-    expect(row?.galleryImageUrl).toBe("https://blob.example/card.png");
+    expect(row?.galleryImageUrl).toBe(blobUrl("gallery-cards/x/1.png"));
     expect(row?.galleryImagePathname).toBe("gallery-cards/x/1.png");
     expect(row?.galleryImageRatio).toBe("1:1");
     expect(row?.gallerySubmittedAt).not.toBeNull();
     // Not visible on /gallery until an admin approves it.
     expect(row?.isListed).toBe(false);
+  });
+
+  test("rejects an off-host imageUrl (moderation-bypass / SSRF lock)", async () => {
+    moderation.verdict = "pass";
+    const recipeId = await seedRecipe({ name: "Off Host" });
+    const res = await submitRecipeToGallery({
+      recipeId,
+      imageUrl: "https://evil.example/gallery-cards/x/1.png",
+      imagePathname: "gallery-cards/x/1.png",
+      ratio: "1:1",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/uploaded gallery card/i);
+
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.galleryStatus).toBe("none");
+    expect(row?.galleryImageUrl).toBeNull();
+  });
+
+  test("rejects when the blob URL pathname does not match imagePathname", async () => {
+    const recipeId = await seedRecipe({ name: "Mismatch" });
+    const res = await submitRecipeToGallery({
+      recipeId,
+      imageUrl: blobUrl("gallery-cards/x/1.png"),
+      imagePathname: "gallery-cards/x/other.png",
+      ratio: "1:1",
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/does not match/i);
+  });
+
+  test("accepts an on-host blob URL whose pathname matches", async () => {
+    moderation.verdict = "pass";
+    const recipeId = await seedRecipe({ name: "On Host Ok" });
+    const res = await submitFixture(recipeId);
+    expect(res.ok).toBe(true);
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.galleryImageUrl).toBe(blobUrl("gallery-cards/x/1.png"));
   });
 
   test("does not appear on the public gallery while pending", async () => {
@@ -177,7 +225,7 @@ describe("submitRecipeToGallery", () => {
   test("resubmitting an approved recipe pulls it off the gallery until re-approved", async () => {
     const ownerId = state.userId;
     const recipeId = await seedRecipe({ name: "Round Two" });
-    await submitFixture(recipeId, "https://blob.example/v1.png");
+    await submitFixture(recipeId, "gallery-cards/x/1.png");
 
     const adminId = await seedAdmin();
     state.userId = adminId;
@@ -192,7 +240,7 @@ describe("submitRecipeToGallery", () => {
     state.userId = ownerId;
     await submitRecipeToGallery({
       recipeId,
-      imageUrl: "https://blob.example/v2.png",
+      imageUrl: blobUrl("gallery-cards/x/2.png"),
       imagePathname: "gallery-cards/x/2.png",
       ratio: "1:1",
     });
@@ -202,7 +250,7 @@ describe("submitRecipeToGallery", () => {
 
     const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
     expect(row?.galleryStatus).toBe("pending");
-    expect(row?.galleryImageUrl).toBe("https://blob.example/v2.png");
+    expect(row?.galleryImageUrl).toBe(blobUrl("gallery-cards/x/2.png"));
   });
 });
 
@@ -227,7 +275,7 @@ describe("approveGallerySubmission", () => {
     const gallery = await listPublishedRecipes();
     const card = gallery.find((g) => g.slug === res.data.slug);
     expect(card?.name).toBe("Approved Salamanders");
-    expect(card?.cardImageUrl).toBe("https://blob.example/card.png");
+    expect(card?.cardImageUrl).toBe(blobUrl("gallery-cards/x/1.png"));
   });
 
   test("keeps an existing public slug rather than minting a new one", async () => {
@@ -304,5 +352,26 @@ describe("rejectGallerySubmission", () => {
     const res = await rejectGallerySubmission({ recipeId });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/pending/i);
+  });
+});
+
+describe("gallery submit daily quota (E7)", () => {
+  afterEach(() => {
+    delete process.env.MM_GALLERY_DAILY_LIMIT;
+  });
+
+  test("refuses the N+1th submission from one user in a day", async () => {
+    process.env.MM_GALLERY_DAILY_LIMIT = "2";
+    const recipeId = await seedRecipe();
+
+    const first = await submitFixture(recipeId);
+    const second = await submitFixture(recipeId);
+    const third = await submitFixture(recipeId);
+
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    expect(third.ok).toBe(false);
+    if (third.ok) return;
+    expect(third.error).toMatch(/gallery submission limit/i);
   });
 });

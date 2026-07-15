@@ -23,13 +23,15 @@ import {
  * them entirely. `/sign-in` / `/sign-up` / `/r` are already matcher-
  * excluded, so they don't need listing.
  */
-function isPublicPath(pathname: string): boolean {
+export function isPublicPath(pathname: string): boolean {
   return (
     pathname === "/" ||
     pathname === "/pricing" ||
     pathname.startsWith("/pricing/") ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
+    pathname === "/verify-email" ||
+    pathname === "/user/verify-recovery" ||
     // Dev-only theme studio (/dev/*) — public in dev so it needs no sign-in;
     // the page itself 404s in production, so this is a no-op there.
     (process.env.NODE_ENV !== "production" && pathname.startsWith("/dev"))
@@ -94,6 +96,11 @@ export default auth((req) => {
  *   - `/api/test/*`           the test reset endpoint
  *   - `/r/*`                  public recipe view (P5.2 — anyone with the
  *                              slug URL can read; auth is NOT required)
+ *   - `/verify-email`,        token-validated pages that need no session
+ *     `/user/verify-recovery`
+ *   - `opengraph-image`,      metadata image routes for link unfurls —
+ *     `twitter-image`         must never redirect or crawlers get no image
+ *   - `/api/extension/*`      Bearer-token API; the route runs its own auth
  *   - `/_next/*`              Next.js internals (static, image, RSC payloads)
  *   - `favicon.ico` + assets  obvious public files
  *   - `/brand/*`              brand artwork served from /public/brand/
@@ -103,6 +110,6 @@ export default auth((req) => {
  */
 export const config = {
   matcher: [
-    "/((?!sign-in|sign-up|reset|gallery|api/auth|api/test|api/billing|r/|brand/|data/|icons/|tools/|logo.png|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf|webmanifest)).*)",
+    "/((?!sign-in|sign-up|reset|gallery|verify-email|user/verify-recovery|opengraph-image|twitter-image|api/auth|api/test|api/billing|api/extension|r/|brand/|data/|icons/|tools/|logo.png|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf|webmanifest)).*)",
   ],
 };

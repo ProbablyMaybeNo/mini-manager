@@ -443,7 +443,7 @@ export function LayeringTool({
           <p className="font-body text-body text-fg">
             Paint is see-through, so what you see is every layer showing
             through the ones above it. Stack layers bottom (LAYER 1) to top —
-            this previews the colour you'd actually get once they're all
+            this previews the colour you&apos;d actually get once they&apos;re all
             painted on.
           </p>
           {layers.map((layer, i) => (

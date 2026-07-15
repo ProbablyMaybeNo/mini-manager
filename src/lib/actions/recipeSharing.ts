@@ -277,6 +277,7 @@ export async function cloneRecipeFromSlug(
 
     revalidatePath("/recipes");
     revalidatePath(`/recipes/${newRecipeId}`);
+    await trackServer(AnalyticsEvent.RecipeCloned, { sourceRecipeId: source.id });
     return { ok: true, data: { id: newRecipeId } };
   } catch (err) {
     // Roll back any partial state — deleting the recipe cascades slots.

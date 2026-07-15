@@ -1,6 +1,51 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
+// E4 — Content-Security-Policy shipped REPORT-ONLY first. The app renders
+// inline styles (Tailwind + styled canvas share cards) and Next's inline
+// bootstrap scripts, so enforcing a strict policy now would break the render.
+// Report-only lets the browser log what a strict policy WOULD block (console /
+// any future report endpoint) without affecting users — flip the header key to
+// `Content-Security-Policy` to enforce once the violation reports are clean.
+//   img-src allows https:/data:/blob: because painters paste reference-image
+//   URLs from arbitrary hosts and canvas exports are data:/blob: URIs.
+//   connect-src https: covers the Vercel Analytics beacon + blob uploads.
+const contentSecurityPolicyReportOnly = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https:",
+  "frame-src 'self'",
+]
+  .join("; ");
+
+// Applied to every response. X-Frame-Options is the ENFORCED clickjacking
+// guard (report-only CSP frame-ancestors does not block framing); the rest are
+// safe to enforce immediately.
+const securityHeaders = [
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value: contentSecurityPolicyReportOnly,
+  },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains",
+  },
+];
+
 const config: NextConfig = {
   reactStrictMode: true,
   // Keep visited routes in the client Router Cache briefly so re-navigating to
@@ -37,14 +82,17 @@ const config: NextConfig = {
   // this halves the bytes for those on modern phones.
   images: {
     formats: ["image/avif", "image/webp"],
-    // MM-26 — inspiration tiles render painter-pasted reference image URLs
-    // from arbitrary hosts. next/image blocks unknown remote hosts by
-    // default, so a pasted URL silently failed to render. Allow any
-    // remote image (these are user-supplied references shown small) via
-    // the documented remotePatterns wildcard.
+    // E5 — remotePatterns is intentionally NARROW: only Vercel Blob, where our
+    // own uploaded images live. The previous `hostname:'**'` wildcard turned
+    // /_next/image into an open image proxy/optimizer for any host on the
+    // internet (SSRF + bandwidth-abuse surface). Painter-pasted reference URLs
+    // (inspiration tiles, model photos) are NOT rendered through next/image —
+    // they use plain <img> (see InspoBoard.tsx / ProjectImagePanel.tsx), which
+    // is not subject to remotePatterns — so tightening this does not break the
+    // pasted-reference feature. next/image is used only for local /brand and
+    // /tools static assets, which need no remote allowance at all.
     remotePatterns: [
-      { protocol: "https", hostname: "**" },
-      { protocol: "http", hostname: "**" },
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
   // Legacy-route redirects. Each of these paths existed in an earlier
@@ -69,6 +117,11 @@ const config: NextConfig = {
   // conservative cache. We override per the P6.7 perf pass.
   async headers() {
     return [
+      {
+        // Security headers on every response (E4).
+        source: "/:path*",
+        headers: securityHeaders,
+      },
       {
         source: "/data/paints.json",
         headers: [

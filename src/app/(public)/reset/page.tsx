@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, Input } from "@/components/kit";
 import { Logo } from "@/components/shell";
 import { requestPasswordReset } from "@/lib/auth/passwordReset";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 export default function ResetPage() {
   const [username, setUsername] = useState("");
@@ -63,6 +64,13 @@ export default function ResetPage() {
             ← Back to sign in
           </Link>
         </div>
+
+        <p className="mt-4 text-center font-body text-[12px] text-fg-dim">
+          Locked out or no recovery email? Email{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
       </div>
     </div>
   );

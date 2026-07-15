@@ -191,6 +191,20 @@ button {
   font-family: var(--font-mono);
 }
 
+/* iOS Safari auto-zooms the viewport whenever a focused form control computes
+   below 16px — jarring on phones and it doesn't zoom back out. Floor every
+   control at 16px at mobile widths so tapping a field never triggers it; the
+   desktop scale (13px body) is unaffected. We deliberately do NOT lock
+   `maximum-scale` in the viewport meta — that would defeat pinch-zoom and fail
+   WCAG 1.4.4. (F1) */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Visible focus ring everywhere (WCAG 2.2) */
 :focus-visible {
   outline: 2px solid var(--color-cyan);

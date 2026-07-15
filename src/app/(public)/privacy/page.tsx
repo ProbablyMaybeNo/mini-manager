@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { LegalDoc } from "@/components/public/LegalDoc";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Privacy Policy · The Mini Mainframe",
   description: "How The Mini Mainframe handles your data.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
   return (
     <LegalDoc
       title="PRIVACY POLICY"
-      updated="June 2026"
+      updated="July 2026"
       intro="The Mini Mainframe is a hobby paint-and-miniature management tool. This policy explains what we collect, why, and the choices you have. We aim to collect as little as possible."
       sections={[
         {
@@ -26,11 +28,31 @@ export default function PrivacyPage() {
         },
         {
           heading: "How we use it",
-          body: "To provide the app, authenticate you, process payments, send account emails (e.g. password resets), and keep the service secure. We do not sell your data.",
+          body: "To provide the app, authenticate you, process payments, send account emails (e.g. password resets), and keep the service secure. Some optional features send the input you provide to the AI subprocessors listed below. We do not sell your data.",
         },
         {
-          heading: "Third parties",
-          body: "We use Vercel (hosting), our database provider, Stripe (payments), and an email provider for transactional email. Each processes data only to provide their service.",
+          heading: "Third parties (subprocessors)",
+          body: (
+            <>
+              <p className="mb-2">
+                We share data with the following subprocessors, each only to
+                provide their part of the service:
+              </p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>Vercel — hosting, and Vercel Analytics for privacy-friendly, aggregate usage metrics.</li>
+                <li>Our database provider — stores your account and content.</li>
+                <li>Stripe — payments (if you subscribe).</li>
+                <li>An email provider — transactional email (e.g. password resets, verification).</li>
+                <li>Anthropic — powers our AI features: the prompts you send to the AI recipe creator, and the images you submit to the public gallery (which are checked by automated moderation).</li>
+                <li>Groq — parses the army-list text you upload when importing a list.</li>
+              </ul>
+              <p className="mt-2">
+                Each processes data only to provide their service. The AI
+                subprocessors (Anthropic, Groq) receive data only when you use
+                the optional feature that relies on them.
+              </p>
+            </>
+          ),
         },
         {
           heading: "Your choices",
@@ -38,7 +60,16 @@ export default function PrivacyPage() {
         },
         {
           heading: "Contact",
-          body: "Questions about privacy? Contact the operator at the email listed on the site.",
+          body: (
+            <>
+              Questions about privacy, or want to exercise a data right? Email us
+              at{" "}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+                {SUPPORT_EMAIL}
+              </a>
+              .
+            </>
+          ),
         },
       ]}
     />

@@ -7,10 +7,16 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { recipes, users, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
-import { isAdminEmail } from "@/lib/admin/allowlist";
+import { isAdminUser } from "@/lib/admin/allowlist";
 import { blobReadWriteToken, isBlobConfigured } from "@/lib/blob/env";
 import { generatePublicSlug } from "@/lib/recipes/slug";
 import { moderateGalleryImage } from "@/lib/ai/imageModeration";
+import { isProxiableBlobUrl } from "@/lib/shareCard/imageSrc";
+import {
+  enforceDailyLimit,
+  gallerySubmitDailyLimit,
+  RateLimitBucket,
+} from "@/lib/rateLimit/quota";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
@@ -70,12 +76,11 @@ async function requireAdmin(): Promise<
 > {
   const userId = await currentUserId();
   const rows = await db
-    .select({ email: users.email })
+    .select({ email: users.email, emailVerified: users.emailVerified })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  const email = rows[0]?.email;
-  if (!isAdminEmail(email)) {
+  if (!isAdminUser(rows[0])) {
     return { ok: false, error: "Not authorized" };
   }
   return { ok: true, userId };
@@ -106,10 +111,42 @@ export async function submitRecipeToGallery(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
   const { recipeId, imageUrl, imagePathname, ratio } = parsed.data;
+
+  // Lock the submitted image to our own Vercel Blob store. `z.url()` alone
+  // let a signed-in user point `imageUrl` at any host — serving a clean
+  // mini during the moderation fetch, then swapping to arbitrary content
+  // for every visitor (TOCTOU), and using the server-side fetch as a blind
+  // SSRF. Require the blob host AND that the URL points at the exact
+  // pathname the client claims it uploaded.
+  if (!isProxiableBlobUrl(imageUrl)) {
+    return { ok: false, error: "Image must be an uploaded gallery card" };
+  }
+  if (
+    new URL(imageUrl).pathname.replace(/^\/+/, "") !==
+    imagePathname.replace(/^\/+/, "")
+  ) {
+    return { ok: false, error: "Image URL does not match the uploaded file" };
+  }
+
   const userId = await currentUserId();
 
   const existing = await getOwnedRecipe(userId, recipeId);
   if (!existing) return { ok: false, error: "Recipe not found" };
+
+  // Per-user daily quota (E7) — cap gallery submissions per account per day,
+  // independent of the billing flag. Metered before the paid Haiku vision
+  // moderation call so an over-limit user is refused without burning it.
+  const quota = await enforceDailyLimit(
+    RateLimitBucket.GallerySubmit,
+    userId,
+    gallerySubmitDailyLimit(),
+  );
+  if (!quota.allowed) {
+    return {
+      ok: false,
+      error: `You've hit today's gallery submission limit (${quota.limit}/day). It resets tomorrow.`,
+    };
+  }
 
   // Automated image moderation (Claude Haiku vision) — defence-in-depth ahead
   // of the human review queue. Only a clear `fail` (real-world explicit

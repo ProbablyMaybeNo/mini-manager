@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { users } from "@/db/schema";
+import { sessions, users } from "@/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { SESSION_COOKIE } from "@/lib/auth/session";
 
 /**
  * P12.18 — Change-password server action.
@@ -18,6 +18,23 @@ const state = vi.hoisted(() => ({
   userId: "" as string,
 }));
 
+const cookieStore = vi.hoisted(() => {
+  const store = new Map<string, { value: string }>();
+  return {
+    store,
+    get: (name: string) => {
+      const e = store.get(name);
+      return e ? { value: e.value } : undefined;
+    },
+    set: (name: string, value: string) => {
+      store.set(name, { value });
+    },
+    delete: (name: string) => {
+      store.delete(name);
+    },
+  };
+});
+
 vi.mock("@/db/client", () => ({
   get db() {
     if (!state.db) throw new Error("Test DB not initialised in beforeEach");
@@ -26,6 +43,9 @@ vi.mock("@/db/client", () => ({
 }));
 vi.mock("@/lib/auth-stub", () => ({
   currentUserId: async () => state.userId,
+}));
+vi.mock("next/headers", () => ({
+  cookies: async () => cookieStore,
 }));
 
 const { changePasswordAction } = await import(
@@ -44,6 +64,7 @@ beforeEach(async () => {
   const { db, userId } = await makeTestDb();
   state.db = db;
   state.userId = userId;
+  cookieStore.store.clear();
 });
 
 afterEach(() => {
@@ -72,6 +93,29 @@ describe("changePasswordAction — happy path", () => {
     const newOk = await verifyPassword("newpassword2", row?.hash ?? "");
     expect(oldOk).toBe(false);
     expect(newOk).toBe(true);
+  });
+
+  test("revokes other sessions but keeps the caller's current one", async () => {
+    await seedUserWithPassword("oldpassword1");
+    cookieStore.set(SESSION_COOKIE, "current-token");
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
+    await state.db!.insert(sessions).values([
+      { sessionToken: "current-token", userId: state.userId, expires },
+      { sessionToken: "other-device-token", userId: state.userId, expires },
+    ]);
+
+    const result = await changePasswordAction({
+      currentPassword: "oldpassword1",
+      newPassword: "newpassword2",
+      confirmPassword: "newpassword2",
+    });
+    expect(result.ok).toBe(true);
+
+    const rows = await state.db!
+      .select({ token: sessions.sessionToken })
+      .from(sessions)
+      .where(eq(sessions.userId, state.userId));
+    expect(rows.map((r) => r.token)).toEqual(["current-token"]);
   });
 });
 

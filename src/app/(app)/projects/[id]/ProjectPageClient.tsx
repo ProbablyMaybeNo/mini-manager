@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -156,8 +156,9 @@ export function ProjectPageClient({
     startAttach(async () => {
       const res = await attachRecipeToProject({ recipeId, projectId: project.id });
       if (res.ok) {
+        // No router.refresh(): the force-dynamic page re-renders on the
+        // server-action POST, updating the RECIPE swatches in place (P2).
         toast(`Attached ${name}`, "green");
-        router.refresh();
       } else {
         toast(res.error, "red");
       }
@@ -649,15 +650,24 @@ function SubProjectRow({
  * DETAILS / NOTES accordion strips that just deep-linked to the dashboard.
  */
 function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMeta }) {
-  const router = useRouter();
-  const [pending, start] = useTransition();
+  const [, start] = useTransition();
+  // Optimistic Type/Status/Priority — paints the pick synchronously, then
+  // resets to the fresh prop once the force-dynamic page re-renders from the
+  // server-action POST (P1). No router.refresh() (P2).
+  const [optimisticProject, applyOptimistic] = useOptimistic(
+    project,
+    (state: Project, patch: Partial<Project>) => ({ ...state, ...patch }),
+  );
   const [notes, setNotes] = useState(meta?.notes ?? "");
   const [targetDate, setTargetDate] = useState(meta?.deadlineIso ?? "");
 
-  function run(action: () => Promise<{ ok: boolean; error?: string }>) {
+  function run(
+    action: () => Promise<{ ok: boolean; error?: string }>,
+    optimistic?: Partial<Project>,
+  ) {
     start(async () => {
-      const res = await action();
-      if (res.ok) router.refresh();
+      if (optimistic) applyOptimistic(optimistic);
+      await action();
     });
   }
 
@@ -673,34 +683,38 @@ function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMe
         <label className="flex flex-col gap-1">
           <span className="label-osd text-fg-dim">Type</span>
           <Listbox
-            value={project.type}
-            disabled={pending}
+            value={optimisticProject.type}
             ariaLabel="Project type"
             options={TYPE_OPTIONS.map((t) => ({ value: t, label: t.toUpperCase() }))}
-            onChange={(t) => run(() => updateProjectType({ id: project.id, type: TYPE_TO_DB[t] }))}
+            onChange={(t) =>
+              run(() => updateProjectType({ id: project.id, type: TYPE_TO_DB[t] }), { type: t })
+            }
           />
         </label>
         <label className="flex flex-col gap-1">
           <span className="label-osd text-fg-dim">Status</span>
           <Listbox
-            value={project.status}
-            disabled={pending}
+            value={optimisticProject.status}
             ariaLabel="Project status"
-            accent={statusAccent[project.status]}
+            accent={statusAccent[optimisticProject.status]}
             options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
-            onChange={(s) => run(() => bumpProjectStatus({ id: project.id, status: s }))}
+            onChange={(s) =>
+              run(() => bumpProjectStatus({ id: project.id, status: s }), { status: s })
+            }
           />
         </label>
         <label className="flex flex-col gap-1">
           <span className="label-osd text-fg-dim">Priority</span>
           <Listbox
-            value={project.priority}
-            disabled={pending}
+            value={optimisticProject.priority}
             ariaLabel="Project priority"
-            accent={priorityAccent[project.priority]}
+            accent={priorityAccent[optimisticProject.priority]}
             options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p.toUpperCase() }))}
             onChange={(p) =>
-              run(() => updateProjectPriority({ id: project.id, priority: PRIORITY_TO_DB[p] }))
+              run(
+                () => updateProjectPriority({ id: project.id, priority: PRIORITY_TO_DB[p] }),
+                { priority: p },
+              )
             }
           />
         </label>

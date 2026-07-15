@@ -50,6 +50,8 @@ export interface DashboardViewProps {
   onOpenProject?: (project: Project) => void;
   onAttachRecipe?: (project: Project) => void;
   onAddProject?: () => void;
+  /** True while a create is in flight — disables the create buttons (E2). */
+  creatingProject?: boolean;
   /** Opens the army-list import panel (re-homed to the dashboard, opposite
    *  + NEW PROJECT, per Ross). */
   onUploadArmyList?: () => void;
@@ -82,6 +84,7 @@ export function DashboardView({
   onOpenProject,
   onAttachRecipe,
   onAddProject,
+  creatingProject = false,
   onUploadArmyList,
   onStartSession,
   onRetry,
@@ -252,7 +255,8 @@ export function DashboardView({
                       aria-label="New project"
                       title="New project"
                       onClick={startCreate}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan md:h-9 md:w-9"
+                      disabled={creatingProject}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan disabled:opacity-50 md:h-9 md:w-9"
                     >
                       <PlusCircleIcon />
                     </button>
@@ -263,7 +267,12 @@ export function DashboardView({
                     without hunting the corner ⊕ or scrolling past the whole list.
                     Desktop keeps the ⊕ + the below-roster button. */}
                 {projects.length > 0 && (
-                  <Button variant="primary" onClick={startCreate} className="w-full md:hidden">
+                  <Button
+                    variant="primary"
+                    onClick={startCreate}
+                    disabled={creatingProject}
+                    className="w-full md:hidden"
+                  >
                     + New project
                   </Button>
                 )}
@@ -289,7 +298,7 @@ export function DashboardView({
                     roster (Ross). Upload Army stays — import is a valid first move. */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   {projects.length > 0 && (
-                    <Button variant="primary" onClick={startCreate} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
+                    <Button variant="primary" onClick={startCreate} disabled={creatingProject} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
                   )}
                   {onUploadArmyList && (
                     <Button variant="secondary" onClick={onUploadArmyList}>⬆ Upload Army</Button>

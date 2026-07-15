@@ -36,12 +36,18 @@
  *
  * The fix: derive every cache name from a per-deploy BUILD_ID. The
  * `__BUILD_ID__` token is stamped at build time by
- * `scripts/stamp-sw-build-id.mjs` (the `postbuild` npm hook) with the
- * Vercel commit SHA / a timestamp fallback, so each deploy gets brand-new
- * cache names. On `activate` every cache NOT in KEEP_CACHES (i.e. every
- * cache from a previous BUILD_ID) is deleted, and skipWaiting() +
- * clients.claim() make the new worker take over immediately — a fresh
- * deploy now reaches returning users WITHOUT a manual cache clear.
+ * `scripts/stamp-sw-build-id.mjs` (the `prebuild` npm hook — stamping at
+ * postbuild shipped an UNSTAMPED sw.js, the Round-18 finding) with the Vercel
+ * commit SHA / a timestamp fallback, so each deploy gets brand-new cache
+ * names. On `activate` every cache NOT in KEEP_CACHES (i.e. every cache from a
+ * previous BUILD_ID) is deleted, and skipWaiting() + clients.claim() make the
+ * new worker take over immediately — a fresh deploy now reaches returning
+ * users WITHOUT a manual cache clear.
+ *
+ * `scripts/restore-sw-placeholder.mjs` (the `postbuild` hook) puts the
+ * placeholder back afterwards so a LOCAL build never leaves this file dirty;
+ * it deliberately no-ops on Vercel/CI. Both scripts touch ONLY the
+ * `const BUILD_ID = …;` line below — never this prose.
  *
  * The literal token must stay exactly `__BUILD_ID__` so the stamp script's
  * replace finds it; in dev (unstamped) it falls back to "dev", which still

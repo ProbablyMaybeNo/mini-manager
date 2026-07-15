@@ -7,7 +7,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { asc, eq } from "drizzle-orm";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { recipeInspo, recipes } from "@/db/schema";
+import { recipeInspo, recipeSlots, recipes } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -41,6 +41,15 @@ async function notesFor(recipeId: string): Promise<string | null> {
     .from(recipes)
     .where(eq(recipes.id, recipeId));
   return row?.notesMd ?? null;
+}
+
+async function slotHexesFor(recipeId: string): Promise<Array<string | null>> {
+  const rows = await state
+    .db!.select()
+    .from(recipeSlots)
+    .where(eq(recipeSlots.recipeId, recipeId))
+    .orderBy(asc(recipeSlots.position));
+  return rows.map((r) => r.customColorHex);
 }
 
 beforeEach(async () => {
@@ -110,6 +119,38 @@ describe("saveRecipe inspo persistence", () => {
 
     const rows = await inspoFor(id);
     expect(rows.map((r) => r.url)).toEqual(["https://keep.example/1"]);
+  });
+});
+
+describe("saveRecipe slot transactionality (E1)", () => {
+  test("a mid-save failure leaves the original slots intact", async () => {
+    // Seed a recipe with two valid custom-colour slots.
+    const created = await saveRecipe({
+      id: "new",
+      name: "Original",
+      slots: [
+        { paintId: null, hex: "#111111", layer: "basecoat" },
+        { paintId: null, hex: "#222222", layer: "highlight" },
+      ],
+    });
+    expect(created.ok).toBe(true);
+    const id = created.ok ? created.data.id : "";
+    expect(await slotHexesFor(id)).toEqual(["#111111", "#222222"]);
+
+    // Re-save with a new set whose second slot has a malformed hex — addSlot
+    // rejects it, so the wholesale replace fails partway through.
+    const res = await saveRecipe({
+      id,
+      name: "Original",
+      slots: [
+        { paintId: null, hex: "#333333", layer: "basecoat" },
+        { paintId: null, hex: "not-a-hex", layer: "highlight" },
+      ],
+    });
+    expect(res.ok).toBe(false);
+
+    // The original slot set is restored — no truncation, no partial write.
+    expect(await slotHexesFor(id)).toEqual(["#111111", "#222222"]);
   });
 });
 

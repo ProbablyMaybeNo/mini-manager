@@ -96,7 +96,7 @@ export async function addInspoImage(
       .returning({ id: inspoImages.id });
     const row = inserted[0];
     if (!row) return { ok: false, error: "Failed to add inspo image" };
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return { ok: true, data: { id: row.id } };
   } catch (err) {
     return {
@@ -136,7 +136,7 @@ export async function toggleInspoDisplay(
       .update(inspoImages)
       .set({ isDisplayed })
       .where(eq(inspoImages.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return { ok: true, data: { id, isDisplayed } };
   } catch (err) {
     return {
@@ -172,7 +172,7 @@ export async function deleteInspoImage(
 
   try {
     await db.delete(inspoImages).where(eq(inspoImages.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return { ok: true, data: { id } };
   } catch (err) {
     return {
@@ -228,7 +228,7 @@ export async function reorderInspoImages(
         .where(eq(inspoImages.id, orderedIds[i]!));
       updated++;
     }
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return { ok: true, data: { updated } };
   } catch (err) {
     return {

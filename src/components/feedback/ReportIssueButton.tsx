@@ -4,6 +4,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { useState } from "react";
 import { Button, Input, Listbox, ModalDialog } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 const SEVERITIES = ["Critical", "High", "Medium", "Low"] as const;
 type Severity = (typeof SEVERITIES)[number];
@@ -155,7 +156,12 @@ export function ReportIssueButton({
               </Button>
             </div>
             <p className="font-body text-[0.65rem] leading-tight text-fg-dim">
-              Your current page and browser are attached automatically.
+              Your current page and browser are attached automatically. Prefer
+              email? Reach us at{" "}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+                {SUPPORT_EMAIL}
+              </a>
+              .
             </p>
           </div>
         )}

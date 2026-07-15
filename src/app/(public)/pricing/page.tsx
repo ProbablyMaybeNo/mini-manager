@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Pricing · The Mini Mainframe",
   description:
     "See what Free, Pro, and Founder's Lifetime will look like when The Mini Mainframe locks in pricing. Everything is free during the testing period, and testers who give feedback keep their accounts free — forever.",
+  alternates: { canonical: "/pricing" },
 };
 
 /**

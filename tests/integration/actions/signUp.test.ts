@@ -35,8 +35,12 @@ const cookieStore = vi.hoisted(() => {
     },
   };
 });
+// Mutable request-headers stub so tests can set x-forwarded-for for the
+// signup IP rate-limit path (E7). Default is empty ⇒ no IP ⇒ limit skipped.
+const headerStore = vi.hoisted(() => ({ current: new Headers() }));
 vi.mock("next/headers", () => ({
   cookies: async () => cookieStore,
+  headers: async () => headerStore.current,
 }));
 
 const { signUpWithCredentials, signInWithCredentials } = await import(
@@ -49,6 +53,7 @@ beforeEach(async () => {
   const { db } = await makeTestDb();
   state.db = db;
   cookieStore.store.clear();
+  headerStore.current = new Headers();
 });
 
 afterEach(() => {
@@ -188,6 +193,75 @@ describe("signUpWithCredentials", () => {
       .from(users)
       .where(eq(users.id, res.userId));
     expect(rows[0]!.acquisitionRef).toBeNull();
+  });
+
+  describe("IP signup rate limit (E7)", () => {
+    afterEach(() => {
+      delete process.env.MM_SIGNUP_DAILY_LIMIT;
+    });
+
+    test("refuses the N+1th signup from the same IP in a day", async () => {
+      process.env.MM_SIGNUP_DAILY_LIMIT = "2";
+      headerStore.current = new Headers({ "x-forwarded-for": "203.0.113.7" });
+
+      const a = await signUpWithCredentials({
+        username: "ipuser1",
+        password: "hunter222",
+        email: "ipuser1@test.dev",
+      });
+      const b = await signUpWithCredentials({
+        username: "ipuser2",
+        password: "hunter222",
+        email: "ipuser2@test.dev",
+      });
+      const c = await signUpWithCredentials({
+        username: "ipuser3",
+        password: "hunter222",
+        email: "ipuser3@test.dev",
+      });
+
+      expect(a.ok).toBe(true);
+      expect(b.ok).toBe(true);
+      expect(c.ok).toBe(false);
+      if (c.ok) return;
+      expect(c.field).toBe("form");
+      expect(c.message).toMatch(/too many sign-ups/i);
+
+      // The blocked attempt created no account.
+      const rows = await state
+        .db!.select()
+        .from(users)
+        .where(eq(users.username, "ipuser3"));
+      expect(rows).toHaveLength(0);
+    });
+
+    test("a different IP is metered separately", async () => {
+      process.env.MM_SIGNUP_DAILY_LIMIT = "1";
+      headerStore.current = new Headers({ "x-forwarded-for": "198.51.100.1" });
+      const first = await signUpWithCredentials({
+        username: "netauser",
+        password: "hunter222",
+        email: "netauser@test.dev",
+      });
+      expect(first.ok).toBe(true);
+
+      // Same network, second signup ⇒ blocked.
+      const blocked = await signUpWithCredentials({
+        username: "netauser2",
+        password: "hunter222",
+        email: "netauser2@test.dev",
+      });
+      expect(blocked.ok).toBe(false);
+
+      // A different IP still gets its own allowance.
+      headerStore.current = new Headers({ "x-forwarded-for": "198.51.100.2" });
+      const other = await signUpWithCredentials({
+        username: "netbuser",
+        password: "hunter222",
+        email: "netbuser@test.dev",
+      });
+      expect(other.ok).toBe(true);
+    });
   });
 });
 

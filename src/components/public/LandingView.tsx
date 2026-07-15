@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { PublicHeader } from "./PublicHeader";
 
 // Feature copy — benefit-led, per Ross's landing pass.
@@ -13,7 +14,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Paint Library",
     blurb:
-      "Browse 7,000+ paints from every major brand. Flag what you own, wishlist what you want, and drop any paint straight into a project.",
+      "Browse 7,000+ paints from Citadel, Vallejo, Army Painter and every major brand. Flag what you own, wishlist what you want, and drop any paint straight into a Warhammer or wargame project.",
   },
   {
     title: "Color Tools",
@@ -23,7 +24,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Projects",
     blurb:
-      "Every army, unit, and model in one view. Set deadlines, watch your activity feed, and see your whole backlog at a glance.",
+      "A wargame project tracker for every army, unit, and model in one view. Set deadlines, watch your activity feed, and shrink your pile of shame one unit at a time.",
   },
   {
     title: "Focus",
@@ -38,7 +39,7 @@ const FEATURES: { title: string; blurb: string }[] = [
   {
     title: "Collection",
     blurb:
-      "Catalogue your paints and models, track what you've spent, and auto-add items from the store as you browse. Know what you own — and what you still need.",
+      "A paint collection manager for your paints and models — track what you've spent and auto-add items from the store as you browse. Know what you own, and what you still need.",
   },
 ];
 
@@ -167,10 +168,11 @@ export function LandingView() {
           <br />
           Manage your minis.
         </p>
-        <p className="max-w-xl font-body text-body text-fg">
-          One command center for your whole hobby — paint library, colour tools, recipes,
-          collection, and project tracking, all in one terminal. Free to start. Pro when you
-          need it.
+        <p className="max-w-2xl font-body text-body text-fg">
+          A miniature painting tracker and paint collection manager for wargamers: manage
+          your armies, paint recipes, backlog, colour matches, and hobby sessions in one
+          place — with 7,000+ paints from Warhammer, Citadel, Vallejo and Army Painter.
+          Free to start. Pro when you need it.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
@@ -303,25 +305,29 @@ export function LandingView() {
 
       <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
         ▸ THE MINI MAINFRAME · made for painters ·{" "}
-        <Link href="/gallery" className="text-cyan-lite hover:underline">
+        <Link href="/gallery" className="text-cyan-lite underline">
           Gallery
         </Link>{" "}
         ·{" "}
-        <Link href="/pricing" className="text-cyan-lite hover:underline">
+        <Link href="/pricing" className="text-cyan-lite underline">
           Pricing
         </Link>{" "}
         ·{" "}
-        <Link href="/sign-in" className="text-cyan-lite hover:underline">
+        <Link href="/sign-in" className="text-cyan-lite underline">
           Sign in
         </Link>{" "}
         ·{" "}
-        <Link href="/privacy" className="text-cyan-lite hover:underline">
+        <Link href="/privacy" className="text-cyan-lite underline">
           Privacy
         </Link>{" "}
         ·{" "}
-        <Link href="/terms" className="text-cyan-lite hover:underline">
+        <Link href="/terms" className="text-cyan-lite underline">
           Terms
-        </Link>
+        </Link>{" "}
+        ·{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
+          Contact
+        </a>
       </footer>
     </div>
   );

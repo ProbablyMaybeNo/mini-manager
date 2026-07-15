@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Seed the public recipe gallery with a set of well-known starter schemes
  * so `/gallery` (and the `/r/<slug>` detail view) isn't empty at launch.

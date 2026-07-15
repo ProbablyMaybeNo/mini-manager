@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
 import { LandingView } from "@/components/public/LandingView";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqPageJsonLd, webApplicationJsonLd } from "@/lib/seo/structuredData";
 
 export const metadata: Metadata = {
-  title: "The Mini Mainframe — paint & project manager for miniatures",
+  title: "Miniature Painting Tracker & Paint Collection Manager · Mini Mainframe",
   description:
-    "One command center for your whole hobby — paint library, colour tools, recipes, collection, and project tracking. Free to start, Pro when you need it.",
+    "The miniature painting tracker and paint collection manager for wargamers — track your armies from wishlist to finished, save cross-brand paint recipes for Warhammer, Citadel, Vallejo and Army Painter, and clear your pile of shame. Free to start.",
+  alternates: { canonical: "/" },
 };
 
 export default function LandingPage() {
-  return <LandingView />;
+  return (
+    <>
+      <JsonLd data={webApplicationJsonLd()} />
+      <JsonLd data={faqPageJsonLd()} />
+      <LandingView />
+    </>
+  );
 }

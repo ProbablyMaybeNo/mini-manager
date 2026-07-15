@@ -1,7 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useOptimistic, useTransition } from "react";
 import { Listbox } from "@/components/kit";
 import { useToast } from "@/components/kit";
 import { updateProjectPriority } from "@/lib/actions/projects";
@@ -23,7 +22,8 @@ const TO_DB_PRIORITY: Record<Priority, "High" | "Medium" | "Low"> = {
  * so painters can set priority from the table. Inherits the kit Listbox
  * "+Attach" treatment (thinner font + dotted border) and colours the trigger by
  * priority: Red = High, orange = Med, Yellow = Low (priorityAccent). Persists
- * via the updateProjectPriority server action, then refreshes.
+ * via the updateProjectPriority server action; the force-dynamic dashboard
+ * re-renders on the POST, so no manual refresh (P1/P2).
  */
 export function PriorityDropdown({
   projectId,
@@ -32,19 +32,21 @@ export function PriorityDropdown({
   projectId: string;
   value: Priority;
 }) {
-  const router = useRouter();
   const { toast, node } = useToast();
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  // Optimistic value — the pick shows instantly, then resets to the fresh
+  // prop when the dashboard re-renders from the server-action POST.
+  const [optimisticValue, setOptimisticValue] = useOptimistic(value);
 
   function onChange(next: Priority) {
-    if (next === value) return;
+    if (next === optimisticValue) return;
     startTransition(async () => {
+      setOptimisticValue(next);
       const res = await updateProjectPriority({
         id: projectId,
         priority: TO_DB_PRIORITY[next],
       });
-      if (res.ok) router.refresh();
-      else toast(res.error, "red");
+      if (!res.ok) toast(res.error, "red");
     });
   }
 
@@ -53,12 +55,11 @@ export function PriorityDropdown({
     // painter is operating the dropdown.
     <div onClick={(e) => e.stopPropagation()}>
       <Listbox<Priority>
-        value={value}
+        value={optimisticValue}
         options={PRIORITIES.map((p) => ({ value: p, label: p.toUpperCase() }))}
         onChange={onChange}
         ariaLabel="Set priority"
-        accent={priorityAccent[value]}
-        disabled={pending}
+        accent={priorityAccent[optimisticValue]}
         size="xs"
         triggerClassName="uppercase tracking-[0.04em] min-[600px]:tracking-[0.12em]"
       />

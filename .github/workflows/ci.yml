@@ -19,7 +19,7 @@ env:
 
 jobs:
   quality:
-    name: Typecheck, unit tests, build
+    name: Lint, typecheck, unit tests, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +31,7 @@ jobs:
       # The DB client opens file:./data/local.db at import time, so unit tests
       # that transitively import db modules need the schema to exist first.
       - run: npm run db:migrate
+      - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit
       - run: npm run test:integration
