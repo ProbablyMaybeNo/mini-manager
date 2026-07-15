@@ -91,7 +91,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 
 ### Group F — a11y / mobile polish
 
-- [ ] **F1 — iOS input zoom.** Raise form-control font-size to ≥16px on `input`/`select`/`textarea`, scoped to mobile widths. Do **not** lock `maximum-scale` (WCAG 1.4.4). Source: `globals.css` `--text-body`, `Input.tsx`. *Acceptance:* build green; controls compute ≥16px at mobile widths.
+- [x] `5395acf` **F1 — iOS input zoom.** Raise form-control font-size to ≥16px on `input`/`select`/`textarea`, scoped to mobile widths. Do **not** lock `maximum-scale` (WCAG 1.4.4). Source: `globals.css` `--text-body`, `Input.tsx`. *Acceptance:* build green; controls compute ≥16px at mobile widths.
 - [ ] **F2 — a11y trio.** (a) In `src/components/kit/Input.tsx` give the error span a stable `id`, wire `aria-describedby`, add `aria-live="polite"`. (b) Drop `role="listitem"` from the native `<button>` swatches in `SwatchWall.tsx` + `ColorPicker.tsx` (only the non-selectMode branch; keep the `role="checkbox"` selectMode branch). (c) Give footer links a persistent `underline` (`LandingView.tsx`, `/gallery` footer, `r/[slug]/page.tsx`). *Acceptance:* build green.
 
 **→ run `npm run build` after Group F.**
