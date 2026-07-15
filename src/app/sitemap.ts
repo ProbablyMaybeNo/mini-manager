@@ -1,24 +1,41 @@
 import type { MetadataRoute } from "next";
+import { listPublishedRecipes } from "@/db/queries/recipes";
 
 const BASE = "https://www.mini-mainframe.com";
 
-/** Public, indexable routes. Authed app routes live under /(app) and are
- *  excluded here + disallowed in robots.ts. */
-const PUBLIC_ROUTES = [
-  "/",
-  "/pricing",
-  "/sign-in",
-  "/sign-up",
-  "/privacy",
-  "/terms",
-] as const;
+/**
+ * Static public, indexable routes. `/sign-in` + `/sign-up` are deliberately
+ * absent — they carry `robots: { index: false }` (see their layouts) and have
+ * no organic value. Authed app routes live under /(app) and are disallowed in
+ * robots.ts.
+ */
+const STATIC_ROUTES = ["/", "/pricing", "/gallery", "/privacy", "/terms"] as const;
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date();
-  return PUBLIC_ROUTES.map((route) => ({
+
+  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
     url: `${BASE}${route}`,
     lastModified,
     changeFrequency: route === "/" ? "weekly" : "monthly",
     priority: route === "/" ? 1 : 0.7,
   }));
+
+  // Every published recipe card is a keyword-rich, ever-growing UGC surface —
+  // the gallery's whole SEO value. Wrapped so a DB hiccup serves the static
+  // routes rather than 500-ing the sitemap.
+  let recipeEntries: MetadataRoute.Sitemap = [];
+  try {
+    const published = await listPublishedRecipes(5000);
+    recipeEntries = published.map((r) => ({
+      url: `${BASE}/r/${r.slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // Serve the static routes only.
+  }
+
+  return [...staticEntries, ...recipeEntries];
 }
