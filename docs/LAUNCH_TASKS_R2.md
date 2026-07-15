@@ -84,7 +84,7 @@ Do **not** burn time re-implementing anything in the table above — it exists, 
   header renders a `/sign-up` CTA at mobile + desktop widths; build green. Fire the existing
   `cta_start_for_free` analytics event on click if it isn't already wired from the header.
 
-- [ ] **I2 — Above-the-fold CTA + proof, verify-or-fix.** The landing proof copy ("7,000+ real paints"…)
+- [x] **I2 — Above-the-fold CTA + proof, verify-or-fix.** `923edae` The landing proof copy ("7,000+ real paints"…)
   already lives in `LandingView.tsx`; the gap is the hero **"Start for Free"** sitting below the fold at
   1366×768 (button top ≈ 893px) because the CRT logo/video is large. Cap the hero illustration (≈40vh) so the
   primary CTA clears the fold at 768px **without** shrinking the brand mark to nothing. If it already clears
