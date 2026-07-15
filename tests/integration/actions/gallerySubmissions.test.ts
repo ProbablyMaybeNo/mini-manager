@@ -73,6 +73,9 @@ async function seedAdmin(): Promise<string> {
     email: ADMIN_EMAIL,
     name: "Admin",
     plan: "pro_lifetime",
+    // E3: admin requires a VERIFIED email — an unverified account, even on
+    // the allowlist, is no longer authorized.
+    emailVerified: new Date(),
   });
   return id;
 }

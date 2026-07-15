@@ -7,7 +7,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { recipes, users, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
-import { isAdminEmail } from "@/lib/admin/allowlist";
+import { isAdminUser } from "@/lib/admin/allowlist";
 import { blobReadWriteToken, isBlobConfigured } from "@/lib/blob/env";
 import { generatePublicSlug } from "@/lib/recipes/slug";
 import { moderateGalleryImage } from "@/lib/ai/imageModeration";
@@ -71,12 +71,11 @@ async function requireAdmin(): Promise<
 > {
   const userId = await currentUserId();
   const rows = await db
-    .select({ email: users.email })
+    .select({ email: users.email, emailVerified: users.emailVerified })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  const email = rows[0]?.email;
-  if (!isAdminEmail(email)) {
+  if (!isAdminUser(rows[0])) {
     return { ok: false, error: "Not authorized" };
   }
   return { ok: true, userId };

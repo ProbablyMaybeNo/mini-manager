@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { isAdminEmail } from "@/lib/admin/allowlist";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { isAdminUser } from "@/lib/admin/allowlist";
 import { listPendingGallerySubmissions } from "@/db/queries/gallerySubmissions";
 import { AdminGalleryReview } from "./AdminGalleryReview";
 
@@ -20,7 +23,19 @@ export const dynamic = "force-dynamic";
  */
 export default async function AdminGalleryPage() {
   const session = await auth();
-  if (!isAdminEmail(session?.user?.email)) notFound();
+  const userId = session?.user?.id;
+  // Read email + emailVerified from the DB rather than trusting the session
+  // token — admin requires a VERIFIED email, which the session claim omits.
+  const adminRow = userId
+    ? (
+        await db
+          .select({ email: users.email, emailVerified: users.emailVerified })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1)
+      )[0]
+    : undefined;
+  if (!isAdminUser(adminRow)) notFound();
 
   const pending = await listPendingGallerySubmissions();
 
