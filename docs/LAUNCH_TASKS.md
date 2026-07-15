@@ -41,7 +41,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 - [x] `3a469ef` **A3 — Revoke other sessions on password reset + change.**
   In `applyPasswordReset` (`passwordReset.ts`) delete all sessions for the user, then re-mint the one you return. In `changePassword` delete all sessions **except** the current token. *Acceptance:* integration test proving a second session is invalidated after reset. (B4 companion)
 
-- [ ] **A4 — Lock the gallery image path (moderation bypass + SSRF).**
+- [x] `76c0fe3` **A4 — Lock the gallery image path (moderation bypass + SSRF).**
   In `src/lib/actions/gallerySubmissions.ts` `submitRecipeToGallery`: reject any `imageUrl` whose host isn't `*.public.blob.vercel-storage.com` — reuse `isProxiableBlobUrl` from `src/lib/shareCard/imageSrc.ts`; also confirm the URL's pathname matches the `imagePathname` the client already sends. Apply the same allowlist inside `fetchImage` in `src/lib/ai/imageModeration.ts`. Render `cardImageUrl` through the blob-proxy at all three sinks: `GalleryBrowser.tsx`, `AdminGalleryReview.tsx`, and `src/app/r/[slug]/opengraph-image.tsx` (this last one embeds fetched bytes into a public OG image — the strongest SSRF; route it through the locked path too). *Acceptance:* integration test — a submit with an off-host `imageUrl` is rejected; an on-host one passes. Build green. (B2)
 
 **→ run `npm run build` after Group A.**
