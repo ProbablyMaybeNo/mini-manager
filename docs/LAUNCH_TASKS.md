@@ -58,7 +58,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 - [x] `5bf1777` **B2 — Library mobile virtualization (one line).**
   Add `min-h-0` to the content column in `src/components/shell/AppShell.tsx` (~line 31) so the mobile scroll container is bounded and `react-virtual` stops rendering all 7,000+ paint nodes. *Acceptance:* build green. (P4)
 
-- [ ] **B3 — De-dup `loadAppData` recipe reads.**
+- [x] `cb95a7a` **B3 — De-dup `loadAppData` recipe reads.**
   In `src/lib/appData.ts` (~366–399) the `recipe` table is read 3× and `recipe_slot` 2× per request. Collapse to one read each. Lowest-risk perf win; keep the returned shape identical. *Acceptance:* all integration tests that exercise `loadAppData` still pass. (P5)
 
 **→ run `npm run build` after Group B.**
