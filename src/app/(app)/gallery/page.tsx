@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: "Recipe Gallery — The Mini Mainframe",
   description:
     "Browse paint recipes shared by the community — colour schemes, swatches, and brands for your next miniature. Free to view on The Mini Mainframe.",
+  alternates: { canonical: "/gallery" },
   openGraph: {
     title: "Recipe Gallery — The Mini Mainframe",
     description:

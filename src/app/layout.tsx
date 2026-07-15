@@ -5,7 +5,7 @@ import { PwaRegister } from "@/components/pwa";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mini-mainframe.com"),
+  metadataBase: new URL("https://www.mini-mainframe.com"),
   title: "The Mini Mainframe",
   description:
     "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking for miniature painters. Free to start.",

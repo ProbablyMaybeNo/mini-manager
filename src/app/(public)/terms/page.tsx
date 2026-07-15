@@ -4,6 +4,7 @@ import { LegalDoc } from "@/components/public/LegalDoc";
 export const metadata: Metadata = {
   title: "Terms of Service · The Mini Mainframe",
   description: "The terms for using The Mini Mainframe.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

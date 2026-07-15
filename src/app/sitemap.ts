@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://mini-mainframe.com";
+const BASE = "https://www.mini-mainframe.com";
 
 /** Public, indexable routes. Authed app routes live under /(app) and are
  *  excluded here + disallowed in robots.ts. */

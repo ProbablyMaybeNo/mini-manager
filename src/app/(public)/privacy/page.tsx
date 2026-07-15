@@ -4,6 +4,7 @@ import { LegalDoc } from "@/components/public/LegalDoc";
 export const metadata: Metadata = {
   title: "Privacy Policy · The Mini Mainframe",
   description: "How The Mini Mainframe handles your data.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
