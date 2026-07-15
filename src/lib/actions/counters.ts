@@ -100,7 +100,7 @@ export async function bumpCounter(
   await logActivity(userId, "stage_bump", projectId);
 
   revalidatePath(`/projects/${projectId}`);
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
 
   return { ok: true, data: { ...snap, ...patch } };
 }
@@ -164,7 +164,7 @@ export async function setCounter(
 
   await logActivity(userId, "stage_bump", projectId);
   revalidatePath(`/projects/${projectId}`);
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
 
   return { ok: true, data: { ...snap, ...patch } };
 }

@@ -139,7 +139,7 @@ export async function markBoughtAsNewProject(
   // the activity row to the original kit purchase.
   await logActivity(userId, "paint_added", wishlistItemId);
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   revalidatePath(`/projects/${newRow.id}`);
   revalidatePath("/collection");
   return { ok: true, data: { projectId: newRow.id } };
@@ -188,7 +188,7 @@ export async function markBoughtAsExistingUnit(
   // P14.1 — feed the PLANNER activity stream.
   await logActivity(userId, "paint_added", wishlistItemId);
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/collection");
   return { ok: true, data: { projectId, ownedCount: newOwned } };

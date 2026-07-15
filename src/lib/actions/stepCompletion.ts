@@ -86,7 +86,7 @@ export async function setStepCompletion(
     };
   }
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   revalidatePath(`/recipes/${owned.recipeId}`);
   return { ok: true, data: { stepId, done } };
 }
@@ -177,7 +177,7 @@ export async function advanceSlot(
     }
   }
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   revalidatePath(`/recipes/${recipeId}`);
   return { ok: true, data: { completedZoneId: slotId, nextSlotId } };
 }

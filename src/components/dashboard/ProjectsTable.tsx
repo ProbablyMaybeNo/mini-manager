@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
@@ -43,7 +42,6 @@ export function ProjectsTable({
   /** Open the create-project flow — wires the first-run empty-state CTA. */
   onAddProject?: () => void;
 }) {
-  const router = useRouter();
   const { toast, node: toastNode } = useToast();
   const [pendingDelete, startDelete] = useTransition();
   // Which container rows are expanded. Sub-projects render inline beneath
@@ -57,9 +55,10 @@ export function ProjectsTable({
     if (!target) return;
     setDeleting(null);
     startDelete(async () => {
+      // No router.refresh(): the force-dynamic dashboard re-renders on the
+      // server-action POST, dropping the deleted row (P2).
       const res = await deleteProject({ id: target.id });
-      if (res.ok) router.refresh();
-      else toast(res.error, "red");
+      if (!res.ok) toast(res.error, "red");
     });
   }
 

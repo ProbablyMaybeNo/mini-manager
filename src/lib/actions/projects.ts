@@ -257,7 +257,7 @@ export async function updateProjectCount(
         completeCount: complete,
       })
       .where(eq(projects.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${id}`);
     if (project.parentId) {
       revalidatePath(`/projects/${project.parentId}`);
@@ -327,7 +327,7 @@ export async function setProjectComplete(
         completeCount: complete,
       })
       .where(eq(projects.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${id}`);
     revalidatePath("/focus");
     if (project.parentId) revalidatePath(`/projects/${project.parentId}`);
@@ -373,7 +373,7 @@ export async function updateProjectName(
 
   try {
     await db.update(projects).set({ name }).where(eq(projects.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${id}`);
     if (project.parentId) {
       revalidatePath(`/projects/${project.parentId}`);
@@ -434,7 +434,7 @@ export async function setModelClass(
 
   try {
     await db.update(projects).set({ modelClass }).where(eq(projects.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${id}`);
     if (project.parentId) {
       revalidatePath(`/projects/${project.parentId}`);
@@ -481,7 +481,7 @@ export async function updateProjectType(
 
   try {
     await db.update(projects).set({ type }).where(eq(projects.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${id}`);
     return { ok: true, data: { id, type } };
   } catch (err) {
@@ -523,7 +523,7 @@ export async function updateProjectPriority(
 
   try {
     await db.update(projects).set({ priority }).where(eq(projects.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${id}`);
     return { ok: true, data: { id, priority } };
   } catch (err) {
@@ -591,7 +591,7 @@ export async function bumpProjectStatus(
       // P14.1 — every status bump counts as a stage_bump for the
       // PLANNER stream, regardless of which branch we took.
       await logActivity(userId, "stage_bump", id);
-      revalidatePath("/projects");
+      revalidatePath("/dashboard");
       revalidatePath(`/projects/${id}`);
       return { ok: true, data: { id, status } };
     } catch (err) {
@@ -620,7 +620,7 @@ export async function bumpProjectStatus(
         })
         .where(eq(projects.id, id));
       await logActivity(userId, "stage_bump", id);
-      revalidatePath("/projects");
+      revalidatePath("/dashboard");
       revalidatePath(`/projects/${id}`);
       return { ok: true, data: { id, status } };
     } catch (err) {
@@ -726,7 +726,7 @@ export async function bumpProjectStatus(
       })
       .where(eq(projects.id, id));
     await logActivity(userId, "stage_bump", id);
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     revalidatePath(`/projects/${id}`);
     if (project.parentId) {
       revalidatePath(`/projects/${project.parentId}`);
@@ -812,7 +812,7 @@ export async function deleteProject(
     // Cascade is handled by `onDelete: cascade` on project.parentId —
     // a single DELETE removes the whole sub-tree.
     await db.delete(projects).where(eq(projects.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     if (parentId) revalidatePath(`/projects/${parentId}`);
     return {
       ok: true,

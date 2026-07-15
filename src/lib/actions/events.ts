@@ -83,7 +83,7 @@ export async function createEvent(
     const row = inserted[0];
     if (!row) return { ok: false, error: "Failed to create event" };
 
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return { ok: true, data: { id: row.id } };
   } catch (err) {
     return {
@@ -140,7 +140,7 @@ export async function updateEvent(
         notes: notes ?? null,
       })
       .where(eq(events.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return { ok: true, data: { id } };
   } catch (err) {
     return {
@@ -176,7 +176,7 @@ export async function deleteEvent(
 
   try {
     await db.delete(events).where(eq(events.id, id));
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return { ok: true, data: { id } };
   } catch (err) {
     return {

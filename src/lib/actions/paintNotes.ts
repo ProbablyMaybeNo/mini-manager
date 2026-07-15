@@ -57,7 +57,7 @@ export async function setPaintNote(
             eq(paintNotes.paintId, parsed.data.paintId),
           ),
         );
-      revalidatePath("/projects");
+      revalidatePath("/dashboard");
       return { ok: true, data: { paintId: parsed.data.paintId, cleared: true } };
     }
 
@@ -75,6 +75,6 @@ export async function setPaintNote(
     };
   }
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   return { ok: true, data: { paintId: parsed.data.paintId, cleared: false } };
 }

@@ -31,6 +31,7 @@ const {
   setProjectComplete,
 } = await import("@/lib/actions/projects");
 const { redirect } = await import("next/navigation");
+const { revalidatePath } = await import("next/cache");
 const { displayStatus } = await import("@/lib/progress");
 
 beforeEach(async () => {
@@ -38,11 +39,26 @@ beforeEach(async () => {
   state.db = db;
   state.userId = userId;
   vi.mocked(redirect).mockClear();
+  vi.mocked(revalidatePath).mockClear();
 });
 
 afterEach(() => {
   state.db = null;
   state.userId = "";
+});
+
+describe("revalidation target (P3)", () => {
+  test("a project mutation revalidates /dashboard, never the /projects redirect", async () => {
+    const created = await createProject({ name: "Reval", type: "Unit", count: 1 });
+    if (!created.ok) throw new Error("setup failed");
+    vi.mocked(revalidatePath).mockClear();
+
+    await updateProjectPriority({ id: created.data.id, priority: "High" });
+
+    const paths = vi.mocked(revalidatePath).mock.calls.map((c) => c[0]);
+    expect(paths).toContain("/dashboard");
+    expect(paths).not.toContain("/projects");
+  });
 });
 
 describe("createProject", () => {

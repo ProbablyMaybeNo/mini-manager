@@ -108,7 +108,7 @@ export async function startSession(
       .where(eq(paintSessions.userId, userId));
     await trackFirst(sessionCount?.n ?? 0, AnalyticsEvent.FirstFocusSession);
 
-    revalidatePath("/projects");
+    revalidatePath("/dashboard");
     return {
       ok: true,
       data: { sessionId, startedAt: now.getTime() },
@@ -242,7 +242,7 @@ export async function endSession(
   // Emit activity row on STOP only — start would clutter the stream.
   await logActivity(userId, "paint_session", row.projectId);
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   return { ok: true, data: { sessionId, durationSeconds } };
 }
 

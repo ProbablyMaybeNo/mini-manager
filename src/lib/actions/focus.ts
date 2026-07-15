@@ -52,7 +52,7 @@ export async function setFocusProject(
     };
   }
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   return { ok: true, data: { projectId } };
 }
 
@@ -75,6 +75,6 @@ export async function clearFocusProject(): Promise<
       error: err instanceof Error ? err.message : "Failed to clear focus",
     };
   }
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
   return { ok: true, data: { cleared: true } };
 }
