@@ -75,7 +75,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 ### Group D — Growth loop instrumentation
 
 - [x] `ec78b46` **D1 — Stamp the URL onto the share card.** Add a footer strip **inside** the rasterized `cardRef` node reading `mini-mainframe.com` (static text — must cover the `recipeId == null` DOWNLOAD path too). Both DOWNLOAD and SUBMIT share `renderCardPng`, so one change covers both. `src/components/recipe/ShareCardComposer.tsx`. *Acceptance:* build green; the stamp is inside the captured node, not the surrounding UI.
-- [ ] **D2 — Add the missing analytics events.** Extend `src/lib/analytics/events.ts` and fire: `share_card_downloaded` (client — priority), `gallery_view`, `recipe_card_view`, `recipe_cloned`, `gallery_submit_started`, `gallery_submit_completed`, `tool_match_completed`, `tool_result_saved`, `extension_token_created`, `billing_checkout_started`, `billing_checkout_completed`. Wire each at its natural call site. *Acceptance:* events defined + fired; typecheck green.
+- [x] `87e14e9` **D2 — Add the missing analytics events.** Extend `src/lib/analytics/events.ts` and fire: `share_card_downloaded` (client — priority), `gallery_view`, `recipe_card_view`, `recipe_cloned`, `gallery_submit_started`, `gallery_submit_completed`, `tool_match_completed`, `tool_result_saved`, `extension_token_created`, `billing_checkout_started`, `billing_checkout_completed`. Wire each at its natural call site. *Acceptance:* events defined + fired; typecheck green.
 
 ### Group E — Correctness / security hardening
 
