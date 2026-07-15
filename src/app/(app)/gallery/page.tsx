@@ -7,6 +7,8 @@ import { EmptyState, Panel } from "@/components/kit";
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { ShareYourModelButton } from "@/components/gallery/ShareYourModelButton";
 import { YourCardsStrip } from "@/components/gallery/YourCardsStrip";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo/structuredData";
 import { GalleryBrowser } from "./GalleryBrowser";
 
 // Published recipes change as painters share/unshare — render on request so
@@ -43,6 +45,12 @@ export default async function GalleryPage() {
 
   const content = (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Recipe Gallery", path: "/gallery" },
+        ])}
+      />
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="font-title text-title uppercase text-cyan-lite text-glow-cyan">

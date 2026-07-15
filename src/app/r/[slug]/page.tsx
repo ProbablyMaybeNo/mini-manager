@@ -8,6 +8,8 @@ import { Panel, Swatch } from "@/components/kit";
 import { Logo } from "@/components/shell";
 import { ShareLinkBar } from "@/components/public/ShareLinkBar";
 import { CloneButton } from "@/components/recipe/CloneButton";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo/structuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +65,13 @@ export default async function PublicRecipePage({
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Recipe Gallery", path: "/gallery" },
+          { name: recipe.name, path: `/r/${slug}` },
+        ])}
+      />
       <Logo href="/" size={36} />
 
       {/* TITLE — the recipe's name, top of the card. */}

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { LandingView } from "@/components/public/LandingView";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqPageJsonLd, webApplicationJsonLd } from "@/lib/seo/structuredData";
 
 export const metadata: Metadata = {
   title: "The Mini Mainframe — paint & project manager for miniatures",
@@ -9,5 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default function LandingPage() {
-  return <LandingView />;
+  return (
+    <>
+      <JsonLd data={webApplicationJsonLd()} />
+      <JsonLd data={faqPageJsonLd()} />
+      <LandingView />
+    </>
+  );
 }
