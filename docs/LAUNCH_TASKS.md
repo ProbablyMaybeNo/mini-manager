@@ -35,7 +35,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 - [x] `8bac532` **A1 — Un-gate OG/Twitter image + verify-email + extension in the proxy matcher.**
   In `src/proxy.ts`: add `opengraph-image|twitter-image` and `api/extension` to the matcher negative-lookahead (`config.matcher`, ~line 106); add `/verify-email` and `/user/verify-recovery` to **both** `isPublicPath()` (~line 26) and the matcher. *Acceptance:* `isPublicPath("/verify-email")` is true; build green. If a `proxy`/middleware unit test exists, extend it; otherwise add one asserting these paths are public and `opengraph-image`/`api/extension` are matcher-excluded. (Covers B3 + the verify-email/extension parts of B2.)
 
-- [ ] **A2 — Password reset issues against `users.email`.**
+- [x] `da0bef2` **A2 — Password reset issues against `users.email`.**
   In `src/lib/auth/passwordReset.ts` `requestPasswordReset`: look the user up by username and send the reset to `users.email` directly. Do **not** gate on `emailVerified` (the majority never clicked verify and would stay locked out). Keep the always-`ok:true` enumeration-safe behaviour. Send the mail to `users.email`. *Acceptance:* an integration test where a normal credentials signup can request a reset and a mail is dispatched to their signup email; existing reset tests updated. (B4)
 
 - [ ] **A3 — Revoke other sessions on password reset + change.**
