@@ -48,7 +48,7 @@ Commit style: `type(scope): summary`, end body with `Co-Authored-By: Claude Opus
 
 ### Group B — Amplification / cost (promoted to before-traffic; the thing that caused the 402)
 
-- [ ] **B1 — Optimistic Status/Type/Priority + kill the RSC storm (P1+P2+P3 together — they interlock, ship as ONE task).**
+- [x] `b87c924` **B1 — Optimistic Status/Type/Priority + kill the RSC storm (P1+P2+P3 together — they interlock, ship as ONE task).**
   These three must land together or the UI regresses. Files: `src/components/dashboard/ProjectWorkspaceBody.tsx`, `src/app/(app)/projects/[id]/ProjectPageClient.tsx`, `src/components/dashboard/PriorityDropdown.tsx`, `src/components/dashboard/ProjectsTable.tsx`, plus the 35 action sites.
   - **P1:** wrap the project view-model in `useOptimistic`, apply the picked value synchronously before awaiting the action, and **drop `disabled={pending}`** from the three Listboxes. Do it in all three control surfaces.
   - **P2:** delete the six `router.refresh()` calls in the mutation handlers (both host pages are `force-dynamic`, so the POST already re-renders).
