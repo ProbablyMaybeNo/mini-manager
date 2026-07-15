@@ -46,7 +46,10 @@ export function Input({
           className={cn(
             // min-h-6 floors the field at 24px (WCAG 2.2 §2.5.8) — the 23.5px
             // Body line-box otherwise drops the bare input to 23px (UX-006).
-            "min-h-6 w-full bg-transparent font-body text-body text-fg placeholder:text-fg-muted focus:outline-none",
+            // text-[16px] on mobile stops iOS Safari's focus zoom (F1); the
+            // desktop scale (sm:text-body → 13px) is unchanged. The utility
+            // class is needed because it outranks the element-level 16px floor.
+            "min-h-6 w-full bg-transparent font-body text-[16px] text-fg placeholder:text-fg-muted focus:outline-none sm:text-body",
             className,
           )}
           {...props}
