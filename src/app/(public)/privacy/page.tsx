@@ -40,6 +40,7 @@ export default function PrivacyPage() {
               </p>
               <ul className="list-disc space-y-1 pl-5">
                 <li>Vercel — hosting, and Vercel Analytics for privacy-friendly, aggregate usage metrics.</li>
+                <li>Sentry — error monitoring: when the app hits an error we send Sentry a diagnostic report (error details and basic request context) so we can diagnose and fix it.</li>
                 <li>Our database provider — stores your account and content.</li>
                 <li>Stripe — payments (if you subscribe).</li>
                 <li>An email provider — transactional email (e.g. password resets, verification).</li>
