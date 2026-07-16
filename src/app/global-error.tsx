@@ -1,9 +1,23 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
 /** Last-resort boundary — replaces the ROOT layout on a render crash, so it
  *  must ship its own <html>/<body>. Inline styles (globals.css isn't applied
- *  here) keep it on-brand: black ground, cyan phosphor. */
-export default function GlobalError({ reset }: { error: Error; reset: () => void }) {
+ *  here) keep it on-brand: black ground, cyan phosphor. Reports the crash to
+ *  Sentry before rendering the fallback. */
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <html lang="en">
       <body
