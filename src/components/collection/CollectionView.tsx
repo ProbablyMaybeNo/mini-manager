@@ -3,9 +3,16 @@
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
+import type { ScanImageMediaType } from "@/lib/paints/scanLimits";
 import { CollectionTable } from "./CollectionTable";
 import { CollectionStatsBar } from "./CollectionStatsBar";
 import { PasteUrlBar } from "./PasteUrlBar";
+import {
+  ScanPaintsFlow,
+  type ConfirmedScanPaint,
+  type ConfirmScanOutcome,
+  type ScanPhotoOutcome,
+} from "./ScanPaintsFlow";
 
 export type CollectionStatus = "ready" | "loading" | "error";
 
@@ -15,6 +22,8 @@ export function CollectionView({
   projects,
   status = "ready",
   onAddUrl,
+  onScanPhoto,
+  onConfirmScan,
   onStatusChange,
   onAssignProject,
   onAttachRecipe,
@@ -30,6 +39,11 @@ export function CollectionView({
   projects: Project[];
   status?: CollectionStatus;
   onAddUrl: (url: string, kind: CollectionKind) => void;
+  /** "Scan paints" — sends a photo to vision + matches it against the
+   *  catalog. Does not persist anything (see ScanPaintsFlow). */
+  onScanPhoto: (imageBase64: string, mediaType: ScanImageMediaType) => Promise<ScanPhotoOutcome>;
+  /** Confirm dialog's "Add N paints" — persists the confirmed matches. */
+  onConfirmScan: (confirmed: ConfirmedScanPaint[]) => Promise<ConfirmScanOutcome>;
   onStatusChange: (item: CollectionItem, status: ProjectStatus) => void;
   onAssignProject: (item: CollectionItem, projectId: string) => void;
   onAttachRecipe: (item: CollectionItem) => void;
@@ -47,6 +61,7 @@ export function CollectionView({
       <PageHeader title="COLLECTION" />
 
       <PasteUrlBar onAddUrl={onAddUrl} />
+      <ScanPaintsFlow onScan={onScanPhoto} onConfirm={onConfirmScan} />
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">

@@ -3,10 +3,18 @@
 import { Suspense, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CollectionView, type CollectionStatus } from "@/components/collection/CollectionView";
+import type {
+  ConfirmedScanPaint,
+  ConfirmScanOutcome,
+  ScanPhotoOutcome,
+} from "@/components/collection/ScanPaintsFlow";
 import { PromptDialog, useToast } from "@/components/kit";
 import { RecipePickerDialog } from "@/components/recipe/RecipePickerDialog";
 import { useMockData } from "@/mock/MockProvider";
 import type { CollectionItem, CollectionKind, ProjectStatus } from "@/lib/types";
+import type { ScanImageMediaType } from "@/lib/paints/scanLimits";
+import type { BulkOwnershipStatus } from "@/lib/paints/ownership";
+import { toCollectionItem } from "@/lib/collection/mapWishlistItem";
 import {
   setWishlistStatus,
   updateWishlistItem,
@@ -14,7 +22,8 @@ import {
   createWishlistItem,
   scrapeAndCreateWishlistItem,
 } from "@/lib/actions/wishlist";
-import type { WishlistItem } from "@/db/schema";
+import { scanPaintsFromPhoto } from "@/lib/actions/paintScan";
+import { bulkAddPaintsToCollection } from "@/lib/actions/paintOwnership";
 
 /** kit ProjectStatus → DB wishlist status (collection rows persist on the
  *  wishlist_item table, whose lifecycle uses BUILT/PRIMED/… labels). */
@@ -28,43 +37,6 @@ const TO_DB_STATUS: Record<ProjectStatus, string> = {
   COMPLETE: "COMPLETE",
   SHELVED: "HOLD",
 };
-
-/** DB wishlist status → kit ProjectStatus (reverse of TO_DB_STATUS, plus
- *  the lifecycle labels the picker doesn't emit). Mirrors appData's
- *  server-side map so optimistically-added rows render identically. */
-const FROM_DB_STATUS: Record<string, ProjectStatus> = {
-  WISHLIST: "WISHLIST",
-  OWNED: "OWNED",
-  HOLD: "SHELVED",
-  BUILT: "BUILDING",
-  PRIMED: "PRIMING",
-  PAINTED: "PAINTING",
-  BASED: "BASING",
-  COMPLETE: "COMPLETE",
-  PURCHASED: "OWNED",
-};
-
-/** Map a persisted wishlist row to the kit's CollectionItem so a freshly
- *  added item can drop straight into local state without a round-trip. */
-function toCollectionItem(i: WishlistItem): CollectionItem {
-  return {
-    id: i.id,
-    kind: i.kind,
-    thumbnail: i.imageUrl ?? "",
-    name: i.title,
-    company: i.company ?? "",
-    vendor: i.vendor ?? "",
-    game: i.game ?? undefined,
-    army: i.army ?? undefined,
-    price: i.price != null ? `$${(i.price / 100).toFixed(2)}` : "",
-    status: FROM_DB_STATUS[i.status ?? "WISHLIST"] ?? "WISHLIST",
-    sourceUrl: i.sourceUrl ?? "",
-    projectId: i.projectId ?? undefined,
-    recipeId: i.recipeId ?? undefined,
-    paintType: i.paintType ?? undefined,
-    paintId: i.paintId ?? undefined,
-  };
-}
 
 function CollectionRoute() {
   const data = useMockData();
@@ -154,6 +126,42 @@ function CollectionRoute() {
     });
   }
 
+  /** "Scan paints" — send the photo to vision + catalog matching. Nothing
+   *  is persisted here; the confirm dialog's own "Add N paints" drives
+   *  `confirmScan` below. */
+  async function scanPhoto(
+    imageBase64: string,
+    mediaType: ScanImageMediaType,
+  ): Promise<ScanPhotoOutcome> {
+    const res = await scanPaintsFromPhoto({ imageBase64, mediaType });
+    if (!res.ok) return { ok: false, error: res.error };
+    return { ok: true, items: res.data.items };
+  }
+
+  /** Confirm dialog's "Add N paints" — splits the confirmed matches by
+   *  Owned/Wishlist and persists each group through the EXISTING bulk-add
+   *  path (same write `bulkAddPaintsToCollection` the Library grid uses),
+   *  then absorbs the newly linked rows into local state. */
+  async function confirmScan(confirmed: ConfirmedScanPaint[]): Promise<ConfirmScanOutcome> {
+    const groups: { status: BulkOwnershipStatus; paintIds: string[] }[] = [
+      { status: "OWNED", paintIds: confirmed.filter((c) => c.status === "OWNED").map((c) => c.paintId) },
+      {
+        status: "WISHLIST",
+        paintIds: confirmed.filter((c) => c.status === "WISHLIST").map((c) => c.paintId),
+      },
+    ];
+    let total = 0;
+    for (const group of groups) {
+      if (group.paintIds.length === 0) continue;
+      const res = await bulkAddPaintsToCollection({ paintIds: group.paintIds, status: group.status });
+      if (!res.ok) return { ok: false, error: res.error };
+      total += res.data.count;
+      for (const item of res.data.items) absorb(toCollectionItem(item));
+    }
+    toast(`Added ${total} paint${total === 1 ? "" : "s"} to Collection`, "green");
+    return { ok: true };
+  }
+
   function renameItem(title: string) {
     const item = editing;
     if (!item) return;
@@ -189,6 +197,8 @@ function CollectionRoute() {
       status={status}
       recipeSwatches={recipeSwatches}
       onAddUrl={(url, kind) => addUrl(url, kind)}
+      onScanPhoto={scanPhoto}
+      onConfirmScan={confirmScan}
       onStatusChange={(item, s: ProjectStatus) => {
         patch(item, { status: s });
         startTransition(async () => {

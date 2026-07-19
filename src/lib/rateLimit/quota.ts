@@ -14,6 +14,7 @@ export const RateLimitBucket = {
   RecipeAi: "recipe_ai",
   GallerySubmit: "gallery_submit",
   Signup: "signup",
+  PaintScan: "paint_scan",
 } as const;
 export type RateLimitBucket = (typeof RateLimitBucket)[keyof typeof RateLimitBucket];
 
@@ -39,6 +40,11 @@ export function gallerySubmitDailyLimit(): number {
 }
 export function signupDailyLimitPerIp(): number {
   return envLimit("MM_SIGNUP_DAILY_LIMIT", 10);
+}
+/** Paint-scan (vision) calls cost money per photo — cap it, same as the
+ *  gallery moderation and AI recipe buckets. */
+export function paintScanDailyLimit(): number {
+  return envLimit("MM_SCAN_DAILY_LIMIT", 20);
 }
 
 /**
