@@ -54,7 +54,7 @@ function Verify() {
         )}
         <div className="mt-4">
           <Link
-            href="/user/account"
+            href="/user"
             className="label-osd text-cyan-lite underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
           >
             ← Back to account

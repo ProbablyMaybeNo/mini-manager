@@ -1,6 +1,6 @@
 # Mini Mainframe Collection — browser extension
 
-Add a paint or model to your [Mini Mainframe](https://miniaturemanager.vercel.app)
+Add a paint or model to your [Mini Mainframe](https://www.mini-mainframe.com)
 collection straight from a supported store's product page. Click the
 toolbar icon (or press **Alt+Shift+M**) on a product page, pick **Owned**
 or **Wishlist**, and hit **Add to collection** — no leaving the page.
@@ -23,9 +23,9 @@ eBay. (The server is the source of truth — `src/lib/scrape/stores.ts`.)
 
 ## Generate + paste your token
 
-1. Sign in to the app (`https://miniaturemanager.vercel.app`, or
+1. Sign in to the app (`https://www.mini-mainframe.com`, or
    `http://localhost:3000` in dev).
-2. Go to **Account → Browser extension** and click **Generate token**.
+2. Go to **Settings → Browser extension** and click **Generate token**.
 3. Click **Copy**.
 4. Open the extension popup → **settings** (or right-click the icon →
    **Options**) → paste the token → **Save**.
@@ -71,19 +71,17 @@ is added.
 Both require `Authorization: Bearer <token>` and respond with permissive
 CORS for `chrome-extension://` origins.
 
-## Publishing to the Chrome Web Store (stub)
+## Publishing to the Chrome Web Store
 
-> Not done yet — needs Ross's call on the developer account.
+Full listing copy + the submission checklist live in
+[`STORE_LISTING.md`](./STORE_LISTING.md). In short:
 
-1. Create / use a **Chrome Web Store developer account**
-   (one-time US $5 registration fee).
-2. Replace the placeholder `icons/` with final-art 128×128 (and the
-   smaller sizes) plus store screenshots + a 440×280 promo tile.
-3. Bump `manifest.json` `version`.
-4. Zip the **contents** of `extension/` (not the folder itself):
-   `cd extension && zip -r ../mini-manager-collection.zip .`
-5. Upload at <https://chrome.google.com/webstore/devconsole>, fill in the
-   listing (description, category = Productivity, privacy practices —
-   declare the token + activeTab usage), and submit for review.
-6. After approval, share the store URL. Edge Add-ons + Firefox AMO can
-   reuse the same MV3 package with minor manifest tweaks if wanted later.
+1. Register a **Chrome Web Store developer account** (one-time US $5 fee).
+2. Build the review-clean package: `node scripts/package-extension.mjs`
+   (writes `dist/extension-store/` with only the prod host permissions),
+   then zip it:
+   `Compress-Archive -Path dist/extension-store/* -DestinationPath dist/mini-mainframe-extension.zip -Force`.
+3. Upload the zip, attach the icon + screenshots, paste the listing copy
+   from `STORE_LISTING.md`, and submit for review.
+4. After approval, share the store URL. Edge Add-ons + Firefox AMO can
+   reuse the same MV3 package later with minor manifest tweaks.

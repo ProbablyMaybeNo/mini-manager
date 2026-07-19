@@ -3,7 +3,7 @@
 // popup and options pages.
 
 export const API_BASES = {
-  prod: "https://mini-mainframe.com",
+  prod: "https://www.mini-mainframe.com",
   local: "http://localhost:3000",
 };
 
@@ -28,9 +28,10 @@ export async function saveApiBase(apiBaseKey) {
   await chrome.storage.sync.set({ apiBaseKey: key });
 }
 
-/** The app's account/settings URL for the current base. */
+/** The app's settings URL for the current base (Browser-extension token
+ *  panel lives on the Settings page). */
 export function settingsUrl(apiBase) {
-  return `${apiBase}/user/account`;
+  return `${apiBase}/user`;
 }
 
 /**

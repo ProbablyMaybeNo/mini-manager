@@ -34,7 +34,7 @@ that drops the product you're looking at straight into your collection on
 copy-pasting URLs.
 
 **How it works**
-1. Sign in to The Mini Mainframe and open **Account → Browser extension**.
+1. Sign in to The Mini Mainframe and open **Settings → Browser extension**.
 2. Click **Generate token**, copy it, and paste it into the extension's options.
 3. On any supported store's product page, click the toolbar icon (or press
    Alt+Shift+M), choose Owned or Wishlist, and hit **Add to collection**.
