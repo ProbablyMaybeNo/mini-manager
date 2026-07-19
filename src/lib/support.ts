@@ -21,3 +21,19 @@ export function supportMailto(subject?: string): string {
   const base = `mailto:${SUPPORT_EMAIL}`;
   return subject ? `${base}?subject=${encodeURIComponent(subject)}` : base;
 }
+
+/**
+ * Optional "support the project" (donation) link shown on the pricing page.
+ * Empty when unset, so the UI renders plain text / hides the button rather than
+ * a dead link.
+ *
+ * NEEDS-ROSS: set `NEXT_PUBLIC_SUPPORT_URL` in the Vercel env to the real
+ * support/donation URL (Ko-fi / Buy Me a Coffee / Stripe payment link / etc.).
+ */
+export const SUPPORT_URL =
+  process.env.NEXT_PUBLIC_SUPPORT_URL?.trim() ||
+  process.env.SUPPORT_URL?.trim() ||
+  "";
+
+/** True once a real support/donation URL is configured. */
+export const hasSupportUrl = SUPPORT_URL.length > 0;

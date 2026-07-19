@@ -179,7 +179,7 @@ export function LandingView() {
           A miniature painting tracker and paint collection manager for wargamers: manage
           your armies, paint recipes, backlog, colour matches, and hobby sessions in one
           place — with 7,000+ paints from Warhammer, Citadel, Vallejo and Army Painter.
-          Free to start. Pro when you need it.
+          Completely free.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
@@ -237,56 +237,35 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* Plans — free vs pro, with the real named benefits */}
-      <section className="mx-auto w-full max-w-5xl px-6 pb-16">
+      {/* Everything's free — the full feature list, no tiers */}
+      <section className="mx-auto w-full max-w-3xl px-6 pb-16">
         <div className="mb-6 text-center">
-          <h2 className="font-h1 text-h1 text-green">Free to start. Pro when you need it.</h2>
+          <h2 className="font-h1 text-h1 text-green">Everything, free.</h2>
           <p className="mt-2 font-body text-body text-fg">
-            Run your whole hobby for free — then unlock the power features when you’re ready.
+            The whole toolkit — no tiers, no paywall. Make an account and go.
           </p>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Panel label="FREE" cornerTicks className="flex flex-col gap-4 p-6">
-            <ul className="flex flex-col gap-2 text-left">
-              {FREE_PERKS.map((perk) => (
-                <li key={perk} className="flex gap-2 font-body text-body text-fg">
-                  <span aria-hidden className="text-green">▸</span>
-                  <span>{perk}</span>
-                </li>
-              ))}
-            </ul>
-            <Link href="/sign-up" className="mt-auto">
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  trackClient(AnalyticsEvent.CtaStartForFree, {
-                    location: "free-tier-card",
-                  })
-                }
-              >
-                Start for Free
-              </Button>
-            </Link>
-          </Panel>
-          <Panel
-            label="PRO · WHEN YOU NEED IT"
-            accent="green"
-            cornerTicks
-            className="flex flex-col gap-4 p-6"
-          >
-            <ul className="flex flex-col gap-2 text-left">
-              {PRO_PERKS.map((perk) => (
-                <li key={perk} className="flex gap-2 font-body text-body text-fg">
-                  <span aria-hidden className="text-green">▸</span>
-                  <span>{perk}</span>
-                </li>
-              ))}
-            </ul>
-            <Link href="/pricing" className="mt-auto">
-              <Button>See Pricing</Button>
-            </Link>
-          </Panel>
-        </div>
+        <Panel label="WHAT YOU GET" cornerTicks className="flex flex-col gap-4 p-6">
+          <ul className="grid gap-2 text-left sm:grid-cols-2">
+            {[...FREE_PERKS, ...PRO_PERKS].map((perk) => (
+              <li key={perk} className="flex gap-2 font-body text-body text-fg">
+                <span aria-hidden className="text-green">▸</span>
+                <span>{perk}</span>
+              </li>
+            ))}
+          </ul>
+          <Link href="/sign-up" className="mt-2">
+            <Button
+              onClick={() =>
+                trackClient(AnalyticsEvent.CtaStartForFree, {
+                  location: "features-card",
+                })
+              }
+            >
+              Start for Free
+            </Button>
+          </Link>
+        </Panel>
       </section>
 
       {/* Final CTA */}
@@ -317,7 +296,7 @@ export function LandingView() {
         </Link>{" "}
         ·{" "}
         <Link href="/pricing" className="text-cyan-lite underline">
-          Pricing
+          Support
         </Link>{" "}
         ·{" "}
         <Link href="/sign-in" className="text-cyan-lite underline">

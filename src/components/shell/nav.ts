@@ -8,7 +8,6 @@ import {
   Images,
   LayoutGrid,
   type LucideIcon,
-  User,
 } from "lucide-react";
 import type { NavKey } from "@/lib/types";
 
@@ -34,10 +33,11 @@ export const MAIN_NAV: NavItem[] = [
   { key: "gallery", label: "GALLERY", path: "/gallery", icon: Images, tour: "nav-gallery" },
 ];
 
-/** Pinned-bottom rail items. */
+/** Pinned-bottom rail items. Account was folded into the Settings page (one
+ *  entry, one page with a SETTINGS + ACCOUNT section), so it's no longer a
+ *  separate nav item. */
 export const FOOTER_NAV: NavItem[] = [
   { key: "settings", label: "SETTINGS", path: "/user", icon: Cog },
-  { key: "account", label: "ACCOUNT", path: "/user/account", icon: User },
 ];
 
 export const ALL_NAV = [...MAIN_NAV, ...FOOTER_NAV];
@@ -66,7 +66,7 @@ export const BOTTOM_NAV_MORE: NavItem[] = [
   byKey("focus"),
   byKey("recipe"),
   byKey("gallery"),
-  byKey("account"),
+  byKey("settings"),
 ];
 
 /**

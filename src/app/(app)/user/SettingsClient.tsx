@@ -5,17 +5,15 @@ import { useRouter } from "next/navigation";
 import { SettingsView, type TableDensity } from "@/components/user/SettingsView";
 import { exportAllUserData } from "@/lib/actions/exportData";
 
-export function SettingsClient({ planName }: { planName: string }) {
+export function SettingsClient() {
   const router = useRouter();
   const [density, setDensity] = useState<TableDensity>("comfortable");
   const [, startTransition] = useTransition();
 
   return (
     <SettingsView
-      plan={{ name: planName }}
       density={density}
       onDensityChange={setDensity}
-      onUpgrade={() => router.push("/pricing")}
       onImport={() => router.push("/collection")}
       onExport={() => {
         startTransition(async () => {
@@ -34,8 +32,7 @@ export function SettingsClient({ planName }: { planName: string }) {
       }}
       onSignOut={() => {
         // Hit the real signout route — it tears down the DB-backed session
-        // cookie and redirects to /sign-in (the old onSignOut just navigated
-        // home and left the user logged in).
+        // cookie and redirects to /sign-in.
         window.location.href = "/auth/signout";
       }}
     />
