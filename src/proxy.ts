@@ -110,6 +110,9 @@ export default auth((req) => {
  */
 export const config = {
   matcher: [
-    "/((?!sign-in|sign-up|reset|gallery|verify-email|user/verify-recovery|opengraph-image|twitter-image|api/auth|api/test|api/billing|api/extension|r/|brand/|data/|icons/|tools/|logo.png|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf|webmanifest)).*)",
+    // `googleb…html` is the Google Search Console file-verification token —
+    // GSC fetches it without following redirects, so it must stay un-gated
+    // (same rationale as robots.txt / sitemap.xml above).
+    "/((?!sign-in|sign-up|reset|gallery|verify-email|user/verify-recovery|opengraph-image|twitter-image|api/auth|api/test|api/billing|api/extension|r/|brand/|data/|icons/|tools/|logo.png|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|googleb42109f0776d368a.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf|otf|webmanifest)).*)",
   ],
 };
