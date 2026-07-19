@@ -91,7 +91,7 @@ export async function POST(req: Request): Promise<Response> {
     const origin = originFromHeaders(req);
     const portal = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/user/account`,
+      return_url: `${origin}/user`,
     });
 
     if (!portal.url) {
