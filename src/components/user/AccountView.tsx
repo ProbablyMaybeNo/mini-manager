@@ -45,7 +45,7 @@ export function AccountView({
   const emailValid = email === "" || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <PageHeader title="ACCOUNT" tagline="Profile, password, and recovery." />
 
       <div className="grid gap-6 lg:grid-cols-2">

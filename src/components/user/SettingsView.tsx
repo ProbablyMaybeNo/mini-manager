@@ -3,52 +3,26 @@
 import { Button, Panel, SegmentedToggle } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 
-export interface PlanInfo {
-  name: string;
-  renews?: string;
-}
-
 export type TableDensity = "comfortable" | "compact";
 
 export function SettingsView({
-  plan,
   density,
   onDensityChange,
-  onUpgrade,
   onImport,
   onExport,
   onSignOut,
 }: {
-  plan: PlanInfo;
   density: TableDensity;
   onDensityChange: (density: TableDensity) => void;
-  onUpgrade: () => void;
   onImport: () => void;
   onExport: () => void;
   onSignOut: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <PageHeader title="SETTINGS" tagline="Plan, preferences, and data." />
+    <div className="flex flex-col gap-6 p-6">
+      <PageHeader title="SETTINGS" tagline="Preferences and data." />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel label="PLAN" className="flex flex-col gap-3 p-5">
-          <div className="flex items-baseline justify-between">
-            <span className="font-display text-base font-bold text-cyan-lite">{plan.name}</span>
-            {plan.renews && (
-              <span className="font-body text-body text-fg-dim">Renews {plan.renews}</span>
-            )}
-          </div>
-          <p className="font-body text-body text-fg-dim">
-            {plan.name === "Free"
-              ? "Upgrade for unlimited projects, sharing, and the full tool suite."
-              : "Thanks for supporting The Mini Mainframe."}
-          </p>
-          <div>
-            <Button onClick={onUpgrade}>{plan.name === "Free" ? "Upgrade" : "Manage billing"}</Button>
-          </div>
-        </Panel>
-
         <Panel label="PREFERENCES" className="flex flex-col gap-4 p-5">
           <div className="flex items-center justify-between">
             <span className="label-osd text-fg">

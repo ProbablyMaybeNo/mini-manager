@@ -1,18 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { db } from "@/db/client";
-import { users } from "@/db/schema";
 import { insertFeedback } from "@/db/queries/feedback";
 
 /**
  * In-app "Report an Issue" / feedback sink.
  *
- * Primary store is the DB `feedback` table. A signed-in tester whose email is
- * verified earns the permanent free-forever entitlement (`freeForeverGrantedAt`)
- * on their feedback — the testing-period reward. If `NOTION_TOKEN` is set we
- * ALSO fan the report out to the Notion "Testing Task Tracker" (best-effort,
- * never blocks the response).
+ * Primary store is the DB `feedback` table (for signed-in users). If
+ * `NOTION_TOKEN` is set we ALSO fan the report out to the Notion "Testing Task
+ * Tracker" (best-effort, never blocks the response).
  */
 
 const NOTION_PAGES_URL = "https://api.notion.com/v1/pages";
@@ -56,9 +51,7 @@ export async function POST(req: NextRequest) {
   const session = await auth().catch(() => null);
   const userId = session?.user?.id ?? null;
 
-  // Persist to the DB (the real record) and grant free-forever to a
-  // verified-email tester on their feedback.
-  let freeForever = false;
+  // Persist to the DB (the real record) for signed-in users.
   if (userId) {
     try {
       const message = [title, details].filter(Boolean).join("\n\n") || title || details;
@@ -68,21 +61,6 @@ export async function POST(req: NextRequest) {
         category: "bug",
         pageUrl: url || null,
       });
-      const [u] = await db
-        .select({
-          emailVerified: users.emailVerified,
-          granted: users.freeForeverGrantedAt,
-        })
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-      if (u?.emailVerified && !u.granted) {
-        await db
-          .update(users)
-          .set({ freeForeverGrantedAt: new Date() })
-          .where(eq(users.id, userId));
-        freeForever = true;
-      }
     } catch (err) {
       console.error("[feedback] DB write failed", err);
       return NextResponse.json(
@@ -132,5 +110,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, freeForever });
+  return NextResponse.json({ ok: true });
 }
