@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   description:
     "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking for miniature painters. Free to start.",
   applicationName: "The Mini Mainframe",
+  // Google Search Console ownership (renders the google-site-verification
+  // <meta> into the <head> of every page — covers the homepage + all landing
+  // pages we add later, from this one place).
+  verification: {
+    google: "7rzFq1XBWryYJjt02OEo0D6uj1ix8yX0O7S_5Sn2euU",
+  },
   // Explicit Open Graph + Twitter so every link unfurl (Reddit, Discord,
   // Facebook, X, Slack, iMessage) shows the branded card with a controlled
   // title/description and the large-image layout — not a bare <title>. The
