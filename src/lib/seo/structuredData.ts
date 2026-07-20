@@ -17,7 +17,18 @@ export function webApplicationJsonLd(): Record<string, unknown> {
     operatingSystem: "Web browser",
     description:
       "Miniature painting tracker, paint collection manager, and wargame project tracker — 7,000+ paints across Citadel, Vallejo and Army Painter, colour tools, and shareable paint recipes.",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    offers: {
+      "@type": "Offer",
+      price: "3.99",
+      priceCurrency: "USD",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "3.99",
+        priceCurrency: "USD",
+        billingIncrement: 1,
+        unitCode: "MON",
+      },
+    },
   };
 }
 
@@ -29,8 +40,8 @@ const HOME_FAQ: ReadonlyArray<{ q: string; a: string }> = [
     a: "A miniature painting tracker and paint collection manager for wargamers. Track every model from wishlist to finished, save cross-brand paint recipes, and manage your Warhammer, Citadel, Vallejo and Army Painter paints in one place.",
   },
   {
-    q: "Is The Mini Mainframe free?",
-    a: "Yes — you can start for free. Track projects, browse the paint library, and use the colour tools without paying.",
+    q: "Does The Mini Mainframe cost anything?",
+    a: "You can sign up and start tracking projects, browsing the paint library, and building recipes at no cost. Subscribing for $3.99/mo unlocks the full colour toolkit, the Paint Scanner, and AI recipe generation.",
   },
   {
     q: "Which paint brands does it support?",

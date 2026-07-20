@@ -25,7 +25,7 @@ export default function TermsPage() {
         },
         {
           heading: "Plans & billing",
-          body: "Free and paid plans are described on the pricing page. Paid subscriptions renew until cancelled; one-time plans are charged once. Payments are handled by Stripe. Prices and limits may change with notice.",
+          body: "The base app is usable without a subscription; the tools and AI features are a monthly subscription described on the pricing page. Subscriptions renew until cancelled. Payments are handled by Stripe. Prices and what's included may change with notice.",
         },
         {
           heading: "Availability",

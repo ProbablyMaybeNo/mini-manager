@@ -8,7 +8,7 @@ import { AnalyticsEvent } from "@/lib/analytics/events";
 
 /**
  * Minimal public top nav: logo + Gallery + Pricing + Sign in + a primary
- * "Start for Free" CTA.
+ * "Get Started" CTA.
  *
  * The ghost links are the returning-visitor doors; the filled CTA is the
  * first-time-visitor door (→ /sign-up) so acquisition doesn't depend on the
@@ -32,14 +32,14 @@ export function PublicHeader() {
         <Link href="/sign-in" className={linkClass}>
           Sign in
         </Link>
-        <Link href="/sign-up" aria-label="Start for Free">
+        <Link href="/sign-up" aria-label="Get started">
           <Button
             size="sm"
             onClick={() =>
               trackClient(AnalyticsEvent.CtaStartForFree, { location: "header" })
             }
           >
-            Start for Free
+            Get Started
           </Button>
         </Link>
       </nav>

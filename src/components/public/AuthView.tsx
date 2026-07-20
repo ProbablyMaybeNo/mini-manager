@@ -134,7 +134,8 @@ export function AuthView({
 
         <div className="mt-5 border-t border-border pt-4 text-center">
           <p className="font-body text-[12px] leading-relaxed text-fg-dim">
-            The whole app is free for everyone — no card, no catch.
+            No card needed to get started — support the Mainframe anytime to
+            unlock the full toolset.
           </p>
         </div>
 
