@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { makeTestDb, seedExtraUser, type TestDb } from "../_helpers/testDb";
-import { recipes, recipeSlots } from "@/db/schema";
+import { recipes, recipeSlots, users } from "@/db/schema";
 
 const state = vi.hoisted(() => ({
   db: null as TestDb | null,
@@ -93,6 +93,17 @@ describe("publishRecipe", () => {
     const res = await publishRecipe({ recipeId });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error).toMatch(/not found/i);
+  });
+
+  // Subscription paywall — gallery/sharing is free for every account (see
+  // the "gallery/sharing" call in docs/SUBSCRIPTION_PAYWALL.md): gating a
+  // painter's own marketing would cost more than it earns. This action must
+  // NOT check isProUser, even on a plain free plan.
+  test("a FREE (non-subscriber) user can publish — sharing is not Pro-gated", async () => {
+    await state.db!.update(users).set({ plan: "free" }).where(eq(users.id, state.userId));
+    const recipeId = await seedRecipe();
+    const res = await publishRecipe({ recipeId });
+    expect(res.ok).toBe(true);
   });
 });
 

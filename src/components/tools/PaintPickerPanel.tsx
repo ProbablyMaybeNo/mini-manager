@@ -11,8 +11,16 @@ import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { ColorPicker } from "@/components/tools/ColorPicker";
 import { EyedropperTool } from "@/components/tools/EyedropperTool";
 import { LayeringTool } from "@/components/tools/LayeringTool";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 
 type Tab = "picker" | "match" | "dropper" | "layering";
+
+/** The recipe creator's power-feature tabs — colour matching, image
+ *  eyedropper, and glaze-layering — gated behind a subscription
+ *  (docs/SUBSCRIPTION_PAYWALL.md). The default "picker" (wheel + library
+ *  search) tab is the free, manual add-a-paint flow and stays open. */
+const GATED_TABS: ReadonlySet<Tab> = new Set(["match", "dropper", "layering"]);
 
 /** Context handed to a caller-supplied Match tab so this module never has to
  *  import {@link ColourMatchTool} itself — keeping `tools/ ↔ recipe/` acyclic. */
@@ -76,6 +84,20 @@ export function PaintPickerPanel({
   const [catalogPaints, setCatalogPaints] = useState<ReadonlyArray<CatalogPaint>>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("picker");
+  const isSubscriber = useSubscriber();
+  const [gateOpen, setGateOpen] = useState(false);
+
+  /** Route every tab click through the subscriber check — Match / Dropper /
+   *  Layering are the recipe creator's power features (docs/
+   *  SUBSCRIPTION_PAYWALL.md); a non-subscriber gets the gate dialog
+   *  instead of the tab switching. */
+  function selectTab(key: Tab) {
+    if (GATED_TABS.has(key) && !isSubscriber) {
+      setGateOpen(true);
+      return;
+    }
+    setTab(key);
+  }
 
   const tabs = useMemo<ReadonlyArray<{ key: Tab; label: string }>>(
     () => [
@@ -142,13 +164,14 @@ export function PaintPickerPanel({
         <div role="tablist" aria-label="Paint picker tools" className="flex flex-wrap gap-5 border-b border-border">
           {tabs.map((t) => {
             const active = t.key === tab;
+            const locked = GATED_TABS.has(t.key) && !isSubscriber;
             return (
               <button
                 key={t.key}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() => setTab(t.key)}
+                onClick={() => selectTab(t.key)}
                 className={cn(
                   "-mb-px border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite",
                   active
@@ -157,6 +180,7 @@ export function PaintPickerPanel({
                 )}
               >
                 {t.label}
+                {locked && <span aria-hidden> 🔒</span>}
               </button>
             );
           })}
@@ -183,9 +207,9 @@ export function PaintPickerPanel({
           />
         )}
 
-        {tab === "match" && renderMatchTab?.({ paints, brandOptions, assignPaint })}
+        {tab === "match" && isSubscriber && renderMatchTab?.({ paints, brandOptions, assignPaint })}
 
-        {tab === "dropper" && (
+        {tab === "dropper" && isSubscriber && (
           <EyedropperTool
             onSavePalette={(hexes) => {
               if (hexes[0]) assignHex(hexes[0]);
@@ -193,7 +217,7 @@ export function PaintPickerPanel({
           />
         )}
 
-        {tab === "layering" && (
+        {tab === "layering" && isSubscriber && (
           <LayeringTool
             onSavePalette={(hexes) => {
               if (hexes[0]) assignHex(hexes[0]);
@@ -201,6 +225,7 @@ export function PaintPickerPanel({
           />
         )}
       </div>
+      <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
     </SlideOutPanel>
   );
 }

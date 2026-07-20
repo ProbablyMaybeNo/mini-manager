@@ -9,17 +9,14 @@ import { currentUserId } from "@/lib/auth-stub";
 import { generatePublicSlug } from "@/lib/recipes/slug";
 import { trackServer } from "@/lib/analytics/track.server";
 import { AnalyticsEvent } from "@/lib/analytics/events";
-import { isProUser } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
- * Standard PRO-gate rejection. Mirrors the free-tier limit shape
- * (`upgradeUrl` lets the UI render an inline "Upgrade →"). Inert while
- * BILLING_ENFORCED is false — `isProUser` returns true for everyone, so
- * the gates below never fire until Stripe is live.
+ * Recipe SHARING (publish / clone) is free for every account — see the
+ * "gallery/sharing" call in docs/SUBSCRIPTION_PAYWALL.md: sharing your own
+ * work is the loop that recruits subscribers, so gating it would cost more
+ * than it earns. This module intentionally does NOT check `isProUser`.
  */
-const PRO_FEATURE_ERROR =
-  "This is a Pro feature. Upgrade to share recipes publicly.";
 
 const recipeIdSchema = z.string().min(1).max(64);
 const slugSchema = z.string().min(1).max(64);
@@ -65,12 +62,6 @@ export async function publishRecipe(
     };
   }
   const userId = await currentUserId();
-
-  // Gating-layer — recipe SHARING is Pro-only. Inert until Stripe is live
-  // (isProUser returns true while BILLING_ENFORCED is false).
-  if (!(await isProUser(userId))) {
-    return { ok: false, error: PRO_FEATURE_ERROR, upgradeUrl: "/pricing" };
-  }
 
   const existing = await getOwnedRecipe(userId, parsed.data.recipeId);
   if (!existing) return { ok: false, error: "Recipe not found" };

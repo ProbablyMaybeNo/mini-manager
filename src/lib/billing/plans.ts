@@ -24,19 +24,23 @@
 import type { User } from "@/db/schema";
 
 /**
- * Whether free-tier caps are actually ENFORCED at the action layer.
+ * Whether plan caps + `isProUser` gates are actually ENFORCED at the
+ * action layer.
  *
- * Temporarily `false` until Stripe checkout is live (P10.4–P10.8): with no
- * way to upgrade past the wall, enforcing the caps would make the product
- * untestable for free users — including the recruit beta, who can't pay yet.
- * So enforcement is gated off and every user is effectively unlimited.
+ * `true` as of the subscription-paywall build (docs/SUBSCRIPTION_PAYWALL.md)
+ * — Stripe checkout + webhook are live, so there's a real path from "free"
+ * to "pro_monthly" and the gates can bite for real. `isWithinLimit` now
+ * defers to the real `PLAN_LIMITS` cap math, and `isProUser` (enforce.ts)
+ * resolves the caller's actual plan instead of always returning true.
  *
- * `PLAN_LIMITS` below stays at the real advertised caps so the /pricing +
- * /user pages keep showing what the free tier WILL be — only the runtime
- * gate in `isWithinLimit` is relaxed. Flip this to `true` in the Stripe
- * wire-up so the caps bite again the moment upgrading is possible.
+ * Only the tools/AI/creator-power-feature gates described in the spec check
+ * `isProUser`; the base app (projects, library, add-paint-to-project/recipe,
+ * collection, gallery browse + share) never calls it, so flipping this to
+ * `true` does NOT wall anything outside that gated set. `PLAN_LIMITS.free`
+ * keeps projects/wishlist at `Infinity` — only the per-project-node recipe
+ * cap (1) actually changed behaviour when this flipped.
  */
-export const BILLING_ENFORCED = false;
+export const BILLING_ENFORCED = true;
 
 /** The four plan tiers. Free + the three paid identities. */
 export type PlanTier = "free" | "pro_monthly" | "pro_lifetime" | "founder";

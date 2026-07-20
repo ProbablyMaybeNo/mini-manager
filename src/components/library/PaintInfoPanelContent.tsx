@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Chip, Swatch } from "@/components/kit";
+import { Button, Chip, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { harmonies, HARMONY_SCHEMES, type HarmonyScheme } from "@/lib/color";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import type { MatchResult, Paint } from "@/lib/types";
 
 /** The tri-state the STATUS control resolves to. */
@@ -100,6 +102,8 @@ export function PaintInfoPanelContent({
   onCopyHex: () => void;
   onAssignPaint: (paint: Paint) => void;
 }) {
+  const isSubscriber = useSubscriber();
+  const [gateOpen, setGateOpen] = useState(false);
   const [scheme, setScheme] = useState<HarmonyScheme>("Complementary");
 
   const status: PaintStatus = paint.owned
@@ -180,77 +184,97 @@ export function PaintInfoPanelContent({
         )}
       </Field>
 
-      <Field label="Harmonies">
-        <select
-          value={scheme}
-          onChange={(e) => setScheme(e.target.value as HarmonyScheme)}
-          aria-label="Harmony scheme"
-          className="border border-cyan/50 bg-bg px-2 py-1 font-body text-body text-fg focus:border-cyan focus:outline-none"
-        >
-          {HARMONY_SCHEMES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <div className="mt-2 flex gap-1">
-          {harmonies(paint.hex, scheme).map((hex, i) => (
-            <Swatch key={`${hex}-${i}`} hex={hex} size="lg" />
-          ))}
-        </div>
-        {/* DOP-015 — Library→Wheel bridge at the moment of need: jump to the
-            full Color Wheel seeded with this paint's hex to explore the harmony
-            interactively + match every leg to real paints. */}
-        <Link
-          href={`/tools/wheel?hex=${encodeURIComponent(paint.hex)}`}
-          className="mt-2 inline-flex w-fit items-center gap-1 label-osd text-cyan-lite hover:text-glow-cyan"
-        >
-          ◑ Open in Color Wheel →
-        </Link>
-      </Field>
+      {isSubscriber ? (
+        <>
+          <Field label="Harmonies">
+            <select
+              value={scheme}
+              onChange={(e) => setScheme(e.target.value as HarmonyScheme)}
+              aria-label="Harmony scheme"
+              className="border border-cyan/50 bg-bg px-2 py-1 font-body text-body text-fg focus:border-cyan focus:outline-none"
+            >
+              {HARMONY_SCHEMES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <div className="mt-2 flex gap-1">
+              {harmonies(paint.hex, scheme).map((hex, i) => (
+                <Swatch key={`${hex}-${i}`} hex={hex} size="lg" />
+              ))}
+            </div>
+            {/* DOP-015 — Library→Wheel bridge at the moment of need: jump to the
+                full Color Wheel seeded with this paint's hex to explore the harmony
+                interactively + match every leg to real paints. */}
+            <Link
+              href={`/tools/wheel?hex=${encodeURIComponent(paint.hex)}`}
+              className="mt-2 inline-flex w-fit items-center gap-1 label-osd text-cyan-lite hover:text-glow-cyan"
+            >
+              ◑ Open in Color Wheel →
+            </Link>
+          </Field>
 
-      <Field label="Match — closest across brands">
-        <ul className="flex flex-col gap-1.5">
-          {matchResults.map((m) => (
-            <li key={m.paint.id} className="flex items-center gap-2">
-              <Swatch hex={m.paint.hex} size="sm" />
-              <span className="flex-1 truncate font-body text-body text-fg">
-                {m.paint.name} · {m.paint.brand}
-              </span>
-              <span className="font-num2 text-num2 tabular-nums text-fg">
-                Δ{m.distanceScore.toFixed(1)}
-              </span>
-              <button
-                type="button"
-                onClick={() => onAssignPaint(m.paint)}
-                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan-lite hover:bg-cyan/10"
-              >
-                Use
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Field>
+          <Field label="Match — closest across brands">
+            <ul className="flex flex-col gap-1.5">
+              {matchResults.map((m) => (
+                <li key={m.paint.id} className="flex items-center gap-2">
+                  <Swatch hex={m.paint.hex} size="sm" />
+                  <span className="flex-1 truncate font-body text-body text-fg">
+                    {m.paint.name} · {m.paint.brand}
+                  </span>
+                  <span className="font-num2 text-num2 tabular-nums text-fg">
+                    Δ{m.distanceScore.toFixed(1)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onAssignPaint(m.paint)}
+                    className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan-lite hover:bg-cyan/10"
+                  >
+                    Use
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Field>
 
-      <Field label="Similar in other brands">
-        <ul className="flex flex-col gap-1.5">
-          {similar.map((p) => (
-            <li key={p.id} className="flex items-center gap-2">
-              <Swatch hex={p.hex} size="sm" />
-              <span className="flex-1 truncate font-body text-body text-fg">
-                {p.name} · {p.brand}
-              </span>
-              <button
-                type="button"
-                onClick={() => onAssignPaint(p)}
-                className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan-lite hover:bg-cyan/10"
-              >
-                Use
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Field>
+          <Field label="Similar in other brands">
+            <ul className="flex flex-col gap-1.5">
+              {similar.map((p) => (
+                <li key={p.id} className="flex items-center gap-2">
+                  <Swatch hex={p.hex} size="sm" />
+                  <span className="flex-1 truncate font-body text-body text-fg">
+                    {p.name} · {p.brand}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onAssignPaint(p)}
+                    className="inline-flex min-h-11 items-center border border-cyan/50 px-2 font-button text-button uppercase text-cyan-lite hover:bg-cyan/10"
+                  >
+                    Use
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Field>
+        </>
+      ) : (
+        // Non-subscriber — the power section (harmonies/matching/colour
+        // science) is HIDDEN, not greyed out, in favour of one tidy unlock
+        // card (docs/SUBSCRIPTION_PAYWALL.md — greying a wall of dead
+        // controls reads as broken).
+        <Panel accent="cyan" className="p-4">
+          <button
+            type="button"
+            onClick={() => setGateOpen(true)}
+            className="flex w-full items-center justify-between gap-2 text-left font-body text-body text-cyan-lite hover:text-glow-cyan"
+          >
+            <span>🔒 Subscribe to unlock a range of tools</span>
+            <span aria-hidden>→</span>
+          </button>
+        </Panel>
+      )}
+      <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
     </div>
   );
 }

@@ -231,6 +231,9 @@ export function LibraryClient({
       }
       onClose={() => setAssigning(null)}
       onAssigned={(recipeName) => toast(`Added to ${recipeName}`, "green")}
+      // The Library's plain "Add to Recipe" — base-app functionality, free
+      // even for non-subscribers (docs/SUBSCRIPTION_PAYWALL.md boundary).
+      surface="library"
     />
     {node}
     </>

@@ -13,10 +13,20 @@ import type { ActionResult } from "@/lib/actions/projects";
 import { validatePaletteColors } from "@/lib/palettes/cascade";
 
 /**
- * Gating-layer — sending a tool palette to a recipe is a Pro-only "apply
- * tool result" action (free users can USE the colour tools, not persist
- * their output). Mirrors the free-tier limit shape so the UI can render
- * an inline "Upgrade →". Inert while BILLING_ENFORCED is false.
+ * Gating-layer — `AssignToRecipeDialog` (this action's only caller) is
+ * shared by two surfaces that must NOT share a gate:
+ *
+ *   - "toolHandoff" — a colour tool's per-swatch ASSIGN / send-to-recipe
+ *     (AssignPaintMenu, and the Wheel/Dropper/Stacking "Create/Assign
+ *     recipe" buttons). This is the subscriber-only "send-from-tools
+ *     hand-off" named in docs/SUBSCRIPTION_PAYWALL.md — gated.
+ *   - "library" — the Library paint panel's plain "Add to Recipe" action.
+ *     Adding paints to a recipe is base-app functionality and must stay
+ *     free even once BILLING_ENFORCED is on.
+ *
+ * Defaults to "toolHandoff" (the gated, higher-friction option) so any
+ * caller that forgets to pass `surface` fails closed rather than silently
+ * opening a free bypass.
  */
 const PRO_FEATURE_ERROR =
   "Sending palettes to a recipe is a Pro feature. Upgrade to apply your tool results.";
@@ -71,6 +81,9 @@ const sendSchema = z
     targetRecipeId: z.string().min(1).max(64).optional(),
     /** Create-new-recipe target: ignored if targetRecipeId is set. */
     newRecipeName: z.string().trim().min(1).max(120).optional(),
+    /** Which surface is calling — see the gating-layer doc comment above.
+     *  Defaults to the gated "toolHandoff" surface. */
+    surface: z.enum(["toolHandoff", "library"]).default("toolHandoff"),
   })
   .refine(
     (d) => Boolean(d.targetRecipeId) !== Boolean(d.newRecipeName),
@@ -103,8 +116,9 @@ export async function sendPaletteToRecipe(
   const d = parsed.data;
   const userId = await currentUserId();
 
-  // Gating-layer — Send to Recipe is a Pro-only "apply tool result" action.
-  if (!(await isProUser(userId))) {
+  // Gating-layer — gated for a tool hand-off, free for the Library's plain
+  // "Add to Recipe" (see the doc comment above `PRO_FEATURE_ERROR`).
+  if (d.surface === "toolHandoff" && !(await isProUser(userId))) {
     return { ok: false, error: PRO_FEATURE_ERROR, upgradeUrl: "/pricing" };
   }
 

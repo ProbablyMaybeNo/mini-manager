@@ -10,10 +10,17 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 const verifyExtensionToken = vi.fn<(t: string) => Promise<string | null>>();
 const scrapeUrl = vi.fn();
 const scrapeAndInsertWishlistItem = vi.fn();
+// The browser extension is a Pro-only surface (src/app/api/extension/add/
+// route.ts). Mocked so these route tests control subscriber status
+// explicitly instead of hitting a real, unmocked `@/db/client` — most
+// tests here are about the OTHER gates (token/store/status), so default to
+// a subscriber and flip it per-test where the Pro gate itself is under test.
+const isProUser = vi.fn<(userId: string) => Promise<boolean>>();
 
 vi.mock("@/lib/auth/extensionToken", () => ({ verifyExtensionToken }));
 vi.mock("@/lib/scrape", () => ({ scrapeUrl }));
 vi.mock("@/lib/wishlist/scrapeInsert", () => ({ scrapeAndInsertWishlistItem }));
+vi.mock("@/lib/billing/enforce", () => ({ isProUser }));
 
 // Imported AFTER the mocks are registered.
 const { POST: previewPOST } = await import(
@@ -40,7 +47,9 @@ beforeEach(() => {
   verifyExtensionToken.mockReset();
   scrapeUrl.mockReset();
   scrapeAndInsertWishlistItem.mockReset();
+  isProUser.mockReset();
   verifyExtensionToken.mockResolvedValue("user_1");
+  isProUser.mockResolvedValue(true);
 });
 
 describe("POST /api/extension/preview", () => {
@@ -157,5 +166,18 @@ describe("POST /api/extension/add", () => {
     expect(res.status).toBe(402);
     const body = (await res.json()) as { upgradeUrl?: string };
     expect(body.upgradeUrl).toBe("/pricing");
+  });
+
+  // The extension itself is a pre-existing Pro-only surface (not part of
+  // docs/SUBSCRIPTION_PAYWALL.md's gated set, but it shares `isProUser` and
+  // is now live now that BILLING_ENFORCED is on).
+  test("402 for a non-subscriber, before the store/scrape pipeline runs", async () => {
+    isProUser.mockResolvedValue(false);
+    const res = await addPOST(req({ url: SUPPORTED, status: "OWNED" }));
+    expect(res.status).toBe(402);
+    const body = (await res.json()) as { error?: string; upgradeUrl?: string };
+    expect(body.error).toMatch(/Pro feature/i);
+    expect(body.upgradeUrl).toBe("/pricing");
+    expect(scrapeAndInsertWishlistItem).not.toHaveBeenCalled();
   });
 });

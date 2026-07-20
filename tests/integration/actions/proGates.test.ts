@@ -1,19 +1,16 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
 import { imports, recipes, users } from "@/db/schema";
 
 /**
- * Gating-layer — Pro-only "apply / share" actions are gated on
- * `isProUser`. The production gate is inert pre-Stripe (BILLING_ENFORCED
- * === false → isProUser returns true for everyone), so it changes nothing
- * for users today. THIS suite forces enforcement ON (real plan resolution
- * otherwise) to prove the gates actually bite when a user is NOT Pro and
- * pass through for paid users.
+ * Gating-layer — Pro-only "apply" actions are gated on `isProUser`.
+ * BILLING_ENFORCED is live in production now, but this suite still forces
+ * enforcement ON via its own `@/lib/billing/plans` mock so the gate
+ * assertions don't depend on (or get silently disabled by) that module-level
+ * flag ever moving again.
  *
  * Covered Pro-only actions:
- *   - publishRecipe         (recipe SHARING)
  *   - createPalette         (Save Palette — apply tool result)
  *   - sendPaletteToRecipe   (Send to Recipe — apply tool result)
  *   - createTextImport      (army-list PARSE — pasted text)
@@ -52,7 +49,6 @@ vi.mock("@/lib/billing/plans", async (importOriginal) => {
   };
 });
 
-const { publishRecipe } = await import("@/lib/actions/recipeSharing");
 const { createPalette } = await import("@/lib/actions/palettes");
 const { sendPaletteToRecipe } = await import("@/lib/actions/sendToRecipe");
 const { createTextImport, createFileImport } = await import(
@@ -76,18 +72,6 @@ async function setPlan(plan: string): Promise<void> {
   await state.db!.update(users).set({ plan }).where(eq(users.id, state.userId));
 }
 
-async function seedRecipe(): Promise<string> {
-  const id = nanoid(16);
-  await state.db!.insert(recipes).values({
-    id,
-    ownerId: state.userId,
-    name: "Sharable",
-    bodyType: "infantry",
-    isStandalone: true,
-  });
-  return id;
-}
-
 beforeEach(async () => {
   const { db, userId } = await makeTestDb();
   state.db = db;
@@ -97,33 +81,6 @@ beforeEach(async () => {
 afterEach(() => {
   state.db = null;
   state.userId = "";
-});
-
-describe("publishRecipe — Pro-gated recipe sharing", () => {
-  test("a FREE user is blocked with an upgrade URL", async () => {
-    await setPlan("free");
-    const recipeId = await seedRecipe();
-    const res = await publishRecipe({ recipeId });
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.error).toMatch(/Pro feature/i);
-    expect(res.upgradeUrl).toBe("/pricing");
-    // Gate ran before minting — no slug persisted.
-    const [row] = await state.db!
-      .select({ publicSlug: recipes.publicSlug })
-      .from(recipes)
-      .where(eq(recipes.id, recipeId));
-    expect(row?.publicSlug).toBeNull();
-  });
-
-  test("a PRO user can publish", async () => {
-    await setPlan("pro_lifetime");
-    const recipeId = await seedRecipe();
-    const res = await publishRecipe({ recipeId });
-    expect(res.ok).toBe(true);
-    if (!res.ok) return;
-    expect(res.data.slug).toHaveLength(10);
-  });
 });
 
 describe("createPalette — Pro-gated Save Palette", () => {
@@ -174,6 +131,28 @@ describe("sendPaletteToRecipe — Pro-gated Send to Recipe", () => {
       newRecipeName: "From tool",
     });
     expect(res.ok).toBe(true);
+  });
+
+  // The Library paint panel's plain "Add to Recipe" shares this action but
+  // must stay free — see the gating-layer doc comment on `PRO_FEATURE_ERROR`
+  // in sendToRecipe.ts.
+  test("surface: 'library' stays free for a FREE user", async () => {
+    await setPlan("free");
+    const res = await sendPaletteToRecipe({
+      swatches: [{ hex: "#0e4a8a" }],
+      newRecipeName: "From library",
+      surface: "library",
+    });
+    expect(res.ok).toBe(true);
+  });
+
+  test("omitting surface defaults to the gated 'toolHandoff' path (fails closed)", async () => {
+    await setPlan("free");
+    const res = await sendPaletteToRecipe({
+      swatches: [{ hex: "#0e4a8a" }],
+      newRecipeName: "No surface",
+    });
+    expect(res.ok).toBe(false);
   });
 });
 

@@ -133,7 +133,7 @@ function CollectionRoute() {
     imageBase64: string,
     mediaType: ScanImageMediaType,
   ): Promise<ScanPhotoOutcome> {
-    const res = await scanPaintsFromPhoto({ imageBase64, mediaType });
+    const res = await scanPaintsFromPhoto({ imageBase64, mediaType, surface: "collection" });
     if (!res.ok) return { ok: false, error: res.error };
     return { ok: true, items: res.data.items };
   }

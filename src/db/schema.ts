@@ -1471,3 +1471,28 @@ export const rateLimitCounters = sqliteTable(
 
 export type RateLimitCounter = typeof rateLimitCounters.$inferSelect;
 export type NewRateLimitCounter = typeof rateLimitCounters.$inferInsert;
+
+/* ============================================================
+   Stripe webhook idempotency (subscription paywall)
+   ============================================================
+   One row per successfully-dispatched Stripe event id. The webhook route
+   inserts the event id BEFORE running the handler; a UNIQUE violation means
+   this exact event was already processed (Stripe retries undelivered/slow
+   webhooks, and the dashboard's "resend" replays old ones) — the route skips
+   the handler and still returns 200 so Stripe stops retrying. This is what
+   stops a replayed `checkout.session.completed` from double-granting a plan.
+   No TTL/cleanup — event ids only replay transiently, so the table stays
+   small in practice.
+   ============================================================ */
+
+export const processedStripeEvents = sqliteTable("processed_stripe_event", {
+  /** The Stripe `event.id` (`evt_...`) — globally unique per Stripe. */
+  id: text("id").primaryKey(),
+  eventType: text("event_type").notNull(),
+  processedAt: integer("processed_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type ProcessedStripeEvent = typeof processedStripeEvents.$inferSelect;
+export type NewProcessedStripeEvent = typeof processedStripeEvents.$inferInsert;

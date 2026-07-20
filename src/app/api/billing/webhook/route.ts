@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { processedStripeEvents, users } from "@/db/schema";
 import {
   isStripePriceKey,
   isOneTimePriceKey,
@@ -28,6 +28,17 @@ import { AnalyticsEvent } from "@/lib/analytics/events";
  *
  * IMPORTANT: the raw body must reach `constructEvent` un-parsed, so we read
  * `await req.text()` and never `req.json()` before verification.
+ *
+ * IDEMPOTENCY (subscription paywall) — Stripe redelivers events it doesn't
+ * get a fast 200 for, and the dashboard's "resend" can replay an old event
+ * on demand. Without a guard, a replayed `checkout.session.completed` would
+ * re-run `handleCheckoutCompleted` — harmless for the plan fields (an
+ * idempotent `UPDATE ... SET plan = ...`), but this is the one place a bug
+ * would mean a subscriber gets billed without ever landing here, or a
+ * replay races a legitimate cancellation. `isDuplicateEvent` inserts the
+ * Stripe event id into `processed_stripe_event` (unique PK) BEFORE any
+ * handler runs; a UNIQUE violation means this exact event already ran, so
+ * the handler is skipped and we still return 200 (Stripe stops retrying).
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +68,13 @@ export async function POST(req: Request): Promise<Response> {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch {
     return new Response("Invalid signature", { status: 400 });
+  }
+
+  // Idempotency gate — see module docstring. Runs for every event type
+  // (not just the ones we handle) so a replay never double-fires anything,
+  // present or future.
+  if (await isDuplicateEvent(event.id, event.type)) {
+    return new Response(null, { status: 200 });
   }
 
   switch (event.type) {
@@ -144,4 +162,29 @@ async function handleSubscriptionChange(
     .update(users)
     .set({ plan: "free", planExpiresAt: null, stripeSubscriptionId: null })
     .where(eq(users.stripeCustomerId, customerId));
+}
+
+/**
+ * Record `eventId` as processed. Returns `true` when it was ALREADY
+ * recorded (a duplicate delivery the caller should skip), `false` the
+ * first time an id is seen (caller proceeds to dispatch the handler).
+ *
+ * The insert racing a concurrent delivery of the same event is exactly
+ * the case this guards — the loser hits the unique-index violation and
+ * is correctly told "duplicate, skip", same as a later replay.
+ */
+async function isDuplicateEvent(
+  eventId: string,
+  eventType: string,
+): Promise<boolean> {
+  try {
+    await db.insert(processedStripeEvents).values({ id: eventId, eventType });
+    return false;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.toUpperCase().includes("UNIQUE")) return true;
+    // Not a duplicate-key failure — a real DB error should surface (Stripe
+    // will retry on a non-200, which is the correct behaviour here).
+    throw err;
+  }
 }

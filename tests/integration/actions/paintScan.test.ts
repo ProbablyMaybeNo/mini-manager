@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { wishlistItems } from "@/db/schema";
+import { users, wishlistItems } from "@/db/schema";
 import type { Paint } from "@/lib/paints/types";
 import type { ExtractedPaintLabel } from "@/lib/paints/matchScan";
 
@@ -138,6 +138,53 @@ describe("scanPaintsFromPhoto", () => {
       expect(third.ok).toBe(false);
       if (third.ok) return;
       expect(third.error).toMatch(/paint-scan limit/i);
+    });
+  });
+
+  // Subscription paywall — this action is shared by the free Collection
+  // "Scan paints" entry point and the subscriber-only Tools-hub Paint
+  // Scanner (/tools/scan). `surface` is the only thing that tells them
+  // apart server-side, so it's covered explicitly against a FREE user
+  // (the seeded test user defaults to pro_lifetime — see makeTestDb).
+  describe("scanPaintsFromPhoto — surface gating (subscription paywall)", () => {
+    beforeEach(async () => {
+      await state.db!.update(users).set({ plan: "free" }).where(eq(users.id, state.userId));
+    });
+
+    test("surface: 'tool' is blocked for a free (non-subscriber) user", async () => {
+      const res = await scanPaintsFromPhoto({
+        imageBase64: "AAAA",
+        mediaType: "image/jpeg",
+        surface: "tool",
+      });
+      expect(res.ok).toBe(false);
+      if (res.ok) return;
+      expect(res.error).toMatch(/Pro feature/i);
+      expect(res.upgradeUrl).toBe("/pricing");
+    });
+
+    test("surface: 'collection' stays free for a free (non-subscriber) user", async () => {
+      const res = await scanPaintsFromPhoto({
+        imageBase64: "AAAA",
+        mediaType: "image/jpeg",
+        surface: "collection",
+      });
+      expect(res.ok).toBe(true);
+    });
+
+    test("omitting surface defaults to the gated 'tool' path (fails closed)", async () => {
+      const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
+      expect(res.ok).toBe(false);
+    });
+
+    test("surface: 'tool' succeeds for a pro subscriber", async () => {
+      await state.db!.update(users).set({ plan: "pro_monthly" }).where(eq(users.id, state.userId));
+      const res = await scanPaintsFromPhoto({
+        imageBase64: "AAAA",
+        mediaType: "image/jpeg",
+        surface: "tool",
+      });
+      expect(res.ok).toBe(true);
     });
   });
 });

@@ -10,6 +10,8 @@ import {
 } from "@/lib/actions/sendToRecipe";
 import { useMockData } from "@/mock/MockProvider";
 import { SignInToSaveDialog } from "@/components/tools/SignInToSaveDialog";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import type { ToolSwatch } from "@/lib/types";
 
 /** @deprecated import `ToolSwatch` from `@/lib/types` — kept as an alias so
@@ -51,14 +53,24 @@ export function AssignToRecipeDialog({
   mode = "both",
   onClose,
   onAssigned,
+  surface = "toolHandoff",
 }: {
   open: boolean;
   swatches: AssignSwatch[];
   mode?: AssignDialogMode;
   onClose: () => void;
   onAssigned: (result: AssignedResult) => void;
+  /** Which surface opened this dialog — forwarded to `sendPaletteToRecipe`,
+   *  which gates on it (see that action's doc comment). Every colour-tool
+   *  "Assign" flow is a "toolHandoff" (the default); the Library paint
+   *  panel's plain "Add to Recipe" passes "library" to stay free. */
+  surface?: "toolHandoff" | "library";
 }) {
   const { signedIn } = useMockData();
+  const isSubscriber = useSubscriber();
+  // A "toolHandoff" open by a non-subscriber gets the gate dialog instead of
+  // the recipe picker — client-side UX only, the server action re-checks.
+  const gated = surface === "toolHandoff" && !isSubscriber;
   const [recipes, setRecipes] = useState<SendToRecipeOption[] | null>(null);
   const [newName, setNewName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +82,9 @@ export function AssignToRecipeDialog({
     // never fetch recipes, which would 307 to /sign-in via currentUserId()
     // and discard the palette.
     if (!signedIn) return;
+    // Gated + non-subscriber gets the SubscribeGateDialog instead — skip the
+    // fetch, same reasoning as the signed-out branch above.
+    if (gated) return;
     setError(null);
     setNewName("");
     // "create" mode never shows the recipe list — skip the fetch entirely.
@@ -87,7 +102,7 @@ export function AssignToRecipeDialog({
     return () => {
       alive = false;
     };
-  }, [open, mode, signedIn]);
+  }, [open, mode, signedIn, gated]);
 
   function send(target: { targetRecipeId: string } | { newRecipeName: string }, label: string) {
     if (pending || swatches.length === 0) return;
@@ -100,6 +115,7 @@ export function AssignToRecipeDialog({
           paintId: s.paintId ?? undefined,
           name: s.name,
         })),
+        surface,
         ...target,
       });
       if (!res.ok) {
@@ -116,6 +132,10 @@ export function AssignToRecipeDialog({
   // the colours the painter built on the tool are preserved.
   if (!signedIn) {
     return <SignInToSaveDialog open={open} what="these colours" onClose={onClose} />;
+  }
+
+  if (gated) {
+    return <SubscribeGateDialog open={open} onClose={onClose} />;
   }
 
   const count = swatches.length;

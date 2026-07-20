@@ -71,16 +71,17 @@ describe("isWithinPlanLimit — free tier cap math", () => {
   });
 });
 
-// Until Stripe is live, BILLING_ENFORCED is false → isWithinLimit never
-// blocks (no upgrade path exists). When the flag flips, isWithinLimit
-// defers to isWithinPlanLimit (covered above).
+// Stripe is live (subscription-paywall build) — BILLING_ENFORCED is true, so
+// isWithinLimit defers to the real isWithinPlanLimit cap math.
 describe("isWithinLimit — enforcement gate (BILLING_ENFORCED)", () => {
-  test("caps are NOT enforced while billing is off", () => {
-    expect(BILLING_ENFORCED).toBe(false);
-    // Past every free cap, still allowed — there's no way to upgrade yet.
+  test("caps ARE enforced now that billing is live", () => {
+    expect(BILLING_ENFORCED).toBe(true);
+    // Projects + wishlist stay unlimited on free regardless (Infinity cap).
     expect(isWithinLimit("free", "projects", 99)).toBe(true);
-    expect(isWithinLimit("free", "recipes", 99)).toBe(true);
     expect(isWithinLimit("free", "wishlist", 99)).toBe(true);
+    // Recipes are the one real free cap (1 per node) — it now bites.
+    expect(isWithinLimit("free", "recipes", 1)).toBe(false);
+    expect(isWithinLimit("free", "recipes", 0)).toBe(true);
   });
 });
 
@@ -106,11 +107,10 @@ describe("isWithinLimit — user-row input", () => {
   test("resolves a free user from a user row", () => {
     const u = user({ plan: "free" });
     // Recipes are the only free-capped resource now (1 per node). The cap
-    // math (gate-independent) blocks the 2nd under a node; the live gate
-    // currently allows it because BILLING_ENFORCED is off.
+    // math and the live gate agree now that billing is enforced.
     expect(isWithinPlanLimit(u, "recipes", 0)).toBe(true);
     expect(isWithinPlanLimit(u, "recipes", 1)).toBe(false);
-    expect(isWithinLimit(u, "recipes", 1)).toBe(true);
+    expect(isWithinLimit(u, "recipes", 1)).toBe(false);
     // Projects + wishlist are unlimited on free now.
     expect(isWithinPlanLimit(u, "projects", 99)).toBe(true);
     expect(isWithinPlanLimit(u, "wishlist", 99)).toBe(true);
