@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 import { db } from "@/db/client";
-import { processedStripeEvents, users } from "@/db/schema";
+import { processedStripeEvents, sponsorships, users } from "@/db/schema";
 import {
   isStripePriceKey,
   isOneTimePriceKey,
@@ -19,7 +19,14 @@ import { AnalyticsEvent } from "@/lib/analytics/events";
  * Verifies the Stripe signature against the raw body, then promotes /
  * demotes the user's plan in response to the events we care about:
  *
- *   - checkout.session.completed       → set the bought plan tier.
+ *   - checkout.session.completed       → set the bought plan tier — OR,
+ *     when `metadata.kind === "sponsor"`, record a one-off sponsorship
+ *     instead (fix 7 — the Settings-page pay-what-you-want tip). The two
+ *     session kinds are mutually exclusive by construction: the plan
+ *     checkout (/api/billing/checkout) sets `metadata.priceKey`; the
+ *     sponsor checkout (/api/billing/sponsor-checkout) sets
+ *     `metadata.kind` and no `priceKey`. A sponsor session never touches
+ *     `plan`/`freeForeverGrantedAt` — it's pure support, not an unlock.
  *   - customer.subscription.deleted    → drop a monthly sub back to free.
  *   - customer.subscription.updated    → if no longer active, drop to free.
  *
@@ -29,16 +36,29 @@ import { AnalyticsEvent } from "@/lib/analytics/events";
  * IMPORTANT: the raw body must reach `constructEvent` un-parsed, so we read
  * `await req.text()` and never `req.json()` before verification.
  *
- * IDEMPOTENCY (subscription paywall) — Stripe redelivers events it doesn't
- * get a fast 200 for, and the dashboard's "resend" can replay an old event
- * on demand. Without a guard, a replayed `checkout.session.completed` would
- * re-run `handleCheckoutCompleted` — harmless for the plan fields (an
- * idempotent `UPDATE ... SET plan = ...`), but this is the one place a bug
- * would mean a subscriber gets billed without ever landing here, or a
- * replay races a legitimate cancellation. `isDuplicateEvent` inserts the
- * Stripe event id into `processed_stripe_event` (unique PK) BEFORE any
- * handler runs; a UNIQUE violation means this exact event already ran, so
- * the handler is skipped and we still return 200 (Stripe stops retrying).
+ * IDEMPOTENCY (subscription paywall, revised on review) — Stripe redelivers
+ * events it doesn't get a fast 200 for, and the dashboard's "resend" can
+ * replay an old event on demand. Two failure modes to avoid, and they pull
+ * in opposite directions:
+ *
+ *   1. A genuine REPLAY (the handler already succeeded once) must be a
+ *      no-op — never re-run, never risk re-granting a plan a later,
+ *      legitimate event already revoked.
+ *   2. A handler that THROWS must NOT be marked processed — if it were,
+ *      Stripe's retry (the only recovery path — there is no other way to
+ *      re-trigger a failed webhook) would be silently swallowed by the
+ *      dedup check, and the paid subscriber never gets access. Recorded
+ *      only on failure is strictly worse than not recording at all.
+ *
+ * So the record happens AFTER the handler returns successfully, not
+ * before: `wasAlreadyProcessed` is a plain SELECT run first (skip a known
+ * duplicate without re-running anything); the handler runs inside a
+ * try/catch that returns a non-200 on failure (Stripe retries — the plan
+ * UPDATE is idempotent, so re-running on retry is safe); only on success
+ * does `recordProcessedEvent` INSERT the event id into
+ * `processed_stripe_event` (unique PK) — a UNIQUE violation there just
+ * means a concurrent delivery already recorded it, which is harmless and
+ * swallowed (the write it recorded already happened too).
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,33 +90,46 @@ export async function POST(req: Request): Promise<Response> {
     return new Response("Invalid signature", { status: 400 });
   }
 
-  // Idempotency gate — see module docstring. Runs for every event type
-  // (not just the ones we handle) so a replay never double-fires anything,
-  // present or future.
-  if (await isDuplicateEvent(event.id, event.type)) {
+  // Idempotency pre-check — see module docstring. A cheap read; skips a
+  // known-duplicate delivery without re-running anything. Runs for every
+  // event type (not just the ones we handle) so a replay never double-fires
+  // anything, present or future.
+  if (await wasAlreadyProcessed(event.id)) {
     return new Response(null, { status: 200 });
   }
 
-  switch (event.type) {
-    case "checkout.session.completed": {
-      await handleCheckoutCompleted(
-        event.data.object as Stripe.Checkout.Session,
-      );
-      break;
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const checkoutSession = event.data.object as Stripe.Checkout.Session;
+        if (checkoutSession.metadata?.kind === "sponsor") {
+          await handleSponsorCompleted(checkoutSession);
+        } else {
+          await handleCheckoutCompleted(checkoutSession);
+        }
+        break;
+      }
+      case "customer.subscription.deleted":
+      case "customer.subscription.updated": {
+        await handleSubscriptionChange(
+          event.data.object as Stripe.Subscription,
+          event.type,
+        );
+        break;
+      }
+      default:
+        // Unhandled event types are acknowledged so Stripe stops retrying.
+        break;
     }
-    case "customer.subscription.deleted":
-    case "customer.subscription.updated": {
-      await handleSubscriptionChange(
-        event.data.object as Stripe.Subscription,
-        event.type,
-      );
-      break;
-    }
-    default:
-      // Unhandled event types are acknowledged so Stripe stops retrying.
-      break;
+  } catch (err) {
+    // Do NOT record — a non-200 tells Stripe to retry, and the retry re-runs
+    // this same handler (safe: the plan UPDATE is idempotent).
+    console.error("[billing/webhook] handler failed:", err);
+    return new Response("Webhook handler failed", { status: 500 });
   }
 
+  // Only mark processed once the handler has actually succeeded.
+  await recordProcessedEvent(event.id, event.type);
   return new Response(null, { status: 200 });
 }
 
@@ -141,6 +174,38 @@ async function handleCheckoutCompleted(
   await trackServer(AnalyticsEvent.BillingCheckoutCompleted, { priceKey, plan });
 }
 
+/**
+ * The one-off "Sponsor the Mini-Mainframe" tip (fix 7) — record it and stop.
+ * Deliberately does NOT touch `plan`/`planExpiresAt`/`freeForeverGrantedAt`;
+ * a sponsorship is pure support, not an unlock. `amountCents` is read from
+ * Stripe's own `session.amount_total` (the authoritative charged amount),
+ * never trusted from the checkout-creation request body.
+ */
+async function handleSponsorCompleted(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const userId = session.metadata?.userId ?? session.client_reference_id ?? null;
+  const amountCents = session.amount_total;
+  if (!userId || !amountCents || amountCents <= 0) {
+    // Nothing we can map this to, or Stripe reports a non-positive charge
+    // (shouldn't happen given the $1 minimum enforced at checkout creation)
+    // — ack and move on rather than record a bogus row.
+    return;
+  }
+
+  const customerId =
+    typeof session.customer === "string"
+      ? session.customer
+      : (session.customer?.id ?? null);
+
+  await db.insert(sponsorships).values({
+    userId,
+    amountCents,
+    stripeSessionId: session.id,
+    stripeCustomerId: customerId,
+  });
+}
+
 async function handleSubscriptionChange(
   subscription: Stripe.Subscription,
   eventType: "customer.subscription.deleted" | "customer.subscription.updated",
@@ -164,27 +229,40 @@ async function handleSubscriptionChange(
     .where(eq(users.stripeCustomerId, customerId));
 }
 
+/** Cheap pre-check — true when this event id is already recorded as
+ *  processed (a genuine replay; the caller should skip the handler
+ *  entirely). A plain SELECT, not the source of truth for dedup (that's
+ *  the unique constraint `recordProcessedEvent` relies on) — just an
+ *  early-out so a replay doesn't re-run a handler for no reason. */
+async function wasAlreadyProcessed(eventId: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: processedStripeEvents.id })
+    .from(processedStripeEvents)
+    .where(eq(processedStripeEvents.id, eventId))
+    .limit(1);
+  return rows.length > 0;
+}
+
 /**
- * Record `eventId` as processed. Returns `true` when it was ALREADY
- * recorded (a duplicate delivery the caller should skip), `false` the
- * first time an id is seen (caller proceeds to dispatch the handler).
- *
- * The insert racing a concurrent delivery of the same event is exactly
- * the case this guards — the loser hits the unique-index violation and
- * is correctly told "duplicate, skip", same as a later replay.
+ * Record `eventId` as processed — called ONLY after its handler has
+ * already returned successfully (see module docstring for why the order
+ * matters). A UNIQUE violation here means a concurrent delivery of the
+ * SAME event already recorded it first; that delivery's handler run
+ * already did the (idempotent) work too, so this is a harmless no-op, not
+ * an error.
  */
-async function isDuplicateEvent(
+async function recordProcessedEvent(
   eventId: string,
   eventType: string,
-): Promise<boolean> {
+): Promise<void> {
   try {
     await db.insert(processedStripeEvents).values({ id: eventId, eventType });
-    return false;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.toUpperCase().includes("UNIQUE")) return true;
-    // Not a duplicate-key failure — a real DB error should surface (Stripe
-    // will retry on a non-200, which is the correct behaviour here).
+    if (msg.toUpperCase().includes("UNIQUE")) return;
+    // Not a duplicate-key failure — let it surface. Stripe will retry on
+    // the resulting non-200; the retry's pre-check will see the handler's
+    // write already landed (if it did) and just re-attempt the record.
     throw err;
   }
 }

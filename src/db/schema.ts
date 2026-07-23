@@ -1479,13 +1479,16 @@ export type NewRateLimitCounter = typeof rateLimitCounters.$inferInsert;
    Stripe webhook idempotency (subscription paywall)
    ============================================================
    One row per successfully-dispatched Stripe event id. The webhook route
-   inserts the event id BEFORE running the handler; a UNIQUE violation means
-   this exact event was already processed (Stripe retries undelivered/slow
-   webhooks, and the dashboard's "resend" replays old ones) — the route skips
-   the handler and still returns 200 so Stripe stops retrying. This is what
-   stops a replayed `checkout.session.completed` from double-granting a plan.
-   No TTL/cleanup — event ids only replay transiently, so the table stays
-   small in practice.
+   records the event id AFTER its handler returns successfully (never
+   before — see src/app/api/billing/webhook/route.ts's module docstring for
+   why the order matters); a UNIQUE violation on a later insert means this
+   exact event was already processed (Stripe retries undelivered/slow
+   webhooks, and the dashboard's "resend" replays old ones) — the route
+   skips the handler and still returns 200 so Stripe stops retrying. This is
+   what stops a replayed `checkout.session.completed` from double-granting a
+   plan, while still letting a genuinely FAILED delivery be retried. No
+   TTL/cleanup — event ids only replay transiently, so the table stays small
+   in practice.
    ============================================================ */
 
 export const processedStripeEvents = sqliteTable("processed_stripe_event", {
@@ -1496,6 +1499,43 @@ export const processedStripeEvents = sqliteTable("processed_stripe_event", {
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+/* ============================================================
+   Sponsorships — the one-off "Sponsor the Mini-Mainframe" tip
+   ============================================================
+   A pay-what-you-want (min $1) one-time Stripe payment, separate from the
+   monthly sponsorship that unlocks the tools — this one does NOT grant
+   `plan`/`freeForeverGrantedAt`; it's pure support with a top-supporter
+   reward hook (Ross finds these manually — no automated reward flow yet).
+   One row per successful `checkout.session.completed` where
+   `metadata.kind === "sponsor"` (see the webhook route). `amountCents`
+   comes from Stripe's own `session.amount_total` post-payment, never a
+   client-supplied figure, so a row always reflects what was actually
+   charged.
+   ============================================================ */
+
+export const sponsorships = sqliteTable(
+  "sponsorship",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amountCents: integer("amount_cents").notNull(),
+    stripeSessionId: text("stripe_session_id"),
+    stripeCustomerId: text("stripe_customer_id"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    /** "Who are our top supporters" — ordered by amount within a user. */
+    userAmountIdx: index("sponsorship_user_amount_idx").on(t.userId, t.amountCents),
+  }),
+);
+
+export type Sponsorship = typeof sponsorships.$inferSelect;
+export type NewSponsorship = typeof sponsorships.$inferInsert;
 
 export type ProcessedStripeEvent = typeof processedStripeEvents.$inferSelect;
 export type NewProcessedStripeEvent = typeof processedStripeEvents.$inferInsert;
