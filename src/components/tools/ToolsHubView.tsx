@@ -39,7 +39,7 @@ export function ToolsHubView() {
         tagline={
           isSubscriber
             ? "// colour utilities — turn an idea, photo, or colour into named, buyable paints"
-            : "// colour utilities — subscribe to unlock the full toolset"
+            : "// colour utilities — sponsor to unlock the full toolset"
         }
       />
       <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
@@ -77,7 +77,7 @@ export function ToolsHubView() {
                 <div>
                   <h2 className="label-osd text-cyan-lite">
                     {t.title}
-                    {!isSubscriber && <span className="sr-only"> (subscribers only)</span>}
+                    {!isSubscriber && <span className="sr-only"> (sponsor access only)</span>}
                   </h2>
                   <p className="mt-1 font-body text-body text-fg">{t.blurb}</p>
                 </div>

@@ -1,6 +1,6 @@
 # Subscription paywall — spec
 
-**Model:** the app is usable without paying, but **the tools + creation surfaces are a $3.99/mo subscription** ("Support the Mainframe"). Never use the word "free" in user-facing copy — frame it as *support + unlock*.
+**Model:** the app is usable without paying, but **the tools + creation surfaces are a $3.99/mo sponsorship** ("Sponsor the Mainframe"). Never use the word "free" in user-facing copy — frame it as *sponsor + unlock*. Terminology (locked, revised on review): the word is **"Sponsor"** everywhere in paywall/gate/pricing copy — never "Subscribe", "Support", or "Donate". Internal code/plan names (`pro_monthly`, `isProUser`, etc.) are unaffected.
 
 **Subscriber = an active `pro_monthly` Stripe subscription.** `isProUser(userId)` returns true only for active subscribers once `BILLING_ENFORCED` is on. Everything below gates on `isProUser`.
 
@@ -35,10 +35,9 @@ When a non-subscriber clicks a paint, the panel opens but the power section is *
 - **In place of the tools/matching section:** one tidy card — `🔒 Subscribe to unlock a range of tools →` (hyperlink → checkout)
 
 ## The gate popup (reusable modal)
-Any non-subscriber who taps a gated tool / feature gets:
-> **Subscribe to unlock the tools**
-> *Support the Mainframe and unlock a whole range of useful tools — tracking, managing, and painting your minis has never been easier.*
-> **[ Subscribe · $3.99/mo → ]** (→ Stripe checkout)
+Any non-subscriber who taps a gated tool / feature gets `SubscribeGateDialog` — copy revised on review (shipped version, supersedes the original draft above the fold):
+> **Sponsor the Mainframe →** (the headline IS the checkout link, not a separate button)
+> Unlock a range of tools to help plan, paint, and track your entire wargaming collection.
 
 Same component used at every gate point (tool routes, recipe-creator power features, AI, panel card).
 
@@ -62,7 +61,7 @@ Same component used at every gate point (tool routes, recipe-creator power featu
 - **AI + Paint Scanner:** gate on `isProUser` (add the gate to `scanPaintsFromPhoto` — it has none yet).
 
 **Phase D — Copy.**
-- **Strip every "free"** from the landing + pricing pages. Landing "Everything, free" → the support/tools framing. Pricing page (currently the support page) → a **"Support the Mainframe — $3.99/mo"** section listing what it unlocks (all tools, Paint Scanner, AI, the full recipe creator, the paint panel), keeping the Beacon Hobbies link and the existing donation link as a separate "one-off tip" option.
+- **Strip every "free"** from the landing + pricing pages. Landing "Everything, free" → the sponsor/tools framing. Pricing page (currently the support page) → a **"Sponsor the Mainframe — $3.99/mo"** section listing what it unlocks (all tools, Paint Scanner, AI, the full recipe creator, the paint panel), keeping the Beacon Hobbies link and the existing donation link as a separate "one-off tip" option.
 
 **Gate before each commit:** `npm run typecheck` (0) · `npm run lint` (0 errors) · `npm run test:unit` · `npm run test:integration`; `npm run build` at the end. Cover the new gate logic with tests (subscriber vs non-subscriber). Commit per logical chunk. Work on the branch; do NOT touch `main` — a human reviews + merges.
 

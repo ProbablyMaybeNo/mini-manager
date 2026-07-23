@@ -27,7 +27,7 @@ export function PublicHeader() {
           Gallery
         </Link>
         <Link href="/pricing" className={linkClass}>
-          Support
+          Sponsor
         </Link>
         <Link href="/sign-in" className={linkClass}>
           Sign in

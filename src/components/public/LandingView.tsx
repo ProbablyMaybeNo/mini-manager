@@ -76,7 +76,7 @@ const INCLUDED_PERKS = [
   "The entire 7,000+ paint library, browsable and searchable",
 ];
 
-const SUPPORT_PERKS = [
+const SPONSOR_PERKS = [
   "The full colour toolkit — Colour Wheel, Match, Dropper, Stacking, and the Paint Scanner",
   "One-click adds while you browse — drop any paint or model into your collection or wishlist straight from the store page, no copy-paste",
   "Army-list auto-build — paste an army list and it fills your whole project tree in seconds",
@@ -241,7 +241,7 @@ export function LandingView() {
         <div className="mb-6 text-center">
           <h2 className="font-h1 text-h1 text-cyan-lite text-glow-cyan">Two ways to play.</h2>
           <p className="mt-2 font-body text-body text-fg">
-            Make an account and track your whole hobby — no strings. Support the Mainframe
+            Make an account and track your whole hobby — no strings. Sponsor the Mainframe
             to unlock the full colour toolkit and AI recipe generation.
           </p>
         </div>
@@ -267,9 +267,9 @@ export function LandingView() {
               </Button>
             </Link>
           </Panel>
-          <Panel label="SUPPORT THE MAINFRAME · $3.99/MO" cornerTicks className="flex flex-col gap-4 p-6">
+          <Panel label="SPONSOR THE MAINFRAME · $3.99/MO" cornerTicks className="flex flex-col gap-4 p-6">
             <ul className="flex flex-col gap-2 text-left">
-              {SUPPORT_PERKS.map((perk) => (
+              {SPONSOR_PERKS.map((perk) => (
                 <li key={perk} className="flex gap-2 font-body text-body text-fg">
                   <span aria-hidden className="text-cyan-lite">▸</span>
                   <span>{perk}</span>
@@ -277,7 +277,7 @@ export function LandingView() {
               ))}
             </ul>
             <Link href="/pricing" className="mt-2">
-              <Button variant="secondary">Subscribe · $3.99/mo →</Button>
+              <Button variant="secondary">Sponsor · $3.99/mo →</Button>
             </Link>
           </Panel>
         </div>

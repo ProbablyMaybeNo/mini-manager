@@ -41,7 +41,7 @@ const HOME_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Does The Mini Mainframe cost anything?",
-    a: "You can sign up and start tracking projects, browsing the paint library, and building recipes at no cost. Subscribing for $3.99/mo unlocks the full colour toolkit, the Paint Scanner, and AI recipe generation.",
+    a: "You can sign up and start tracking projects, browsing the paint library, and building recipes at no cost. Sponsoring the Mainframe for $3.99/mo unlocks the full colour toolkit, the Paint Scanner, and AI recipe generation.",
   },
   {
     q: "Which paint brands does it support?",

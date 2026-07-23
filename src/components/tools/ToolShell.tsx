@@ -40,10 +40,10 @@ export function ToolShell({
         <>
           <Panel accent="cyan" label="LOCKED" className="max-w-md p-6">
             <p className="font-body text-body text-fg">
-              ▸ {title} is part of the tool suite — subscribe to unlock it.
+              ▸ {title} is part of the tool suite — sponsor to unlock it.
             </p>
             <Button className="mt-4" onClick={() => setGateOpen(true)}>
-              Subscribe · $3.99/mo →
+              Sponsor · $3.99/mo →
             </Button>
           </Panel>
           <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />

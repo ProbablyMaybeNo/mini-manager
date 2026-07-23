@@ -1,8 +1,10 @@
 "use client";
 
 /**
- * Client-side trigger for Stripe Checkout — the one place every "Subscribe"
- * button (the gate dialog, /pricing) posts to `/api/billing/checkout`.
+ * Client-side trigger for Stripe Checkout — the one place every "Sponsor"
+ * button (the gate dialog, /pricing) posts to `/api/billing/checkout`. NOT
+ * used by the one-off "Feed the Mainframe" tip (Settings page) — that posts
+ * to its own `/api/billing/sponsor-checkout` (see SponsorPanel.tsx).
  * Monthly only: the price key is hardcoded to `pro_monthly`, the sole tier
  * this app surfaces or sells (docs/SUBSCRIPTION_PAYWALL.md).
  */

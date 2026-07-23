@@ -269,7 +269,7 @@ export function PaintInfoPanelContent({
             onClick={() => setGateOpen(true)}
             className="flex w-full items-center justify-between gap-2 text-left font-body text-body text-cyan-lite hover:text-glow-cyan"
           >
-            <span>🔒 Subscribe to unlock a range of tools</span>
+            <span>🔒 Sponsor to unlock a range of tools</span>
             <span aria-hidden>→</span>
           </button>
         </Panel>

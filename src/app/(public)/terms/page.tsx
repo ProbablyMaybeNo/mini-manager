@@ -25,7 +25,7 @@ export default function TermsPage() {
         },
         {
           heading: "Plans & billing",
-          body: "The base app is usable without a subscription; the tools and AI features are a monthly subscription described on the pricing page. Subscriptions renew until cancelled. Payments are handled by Stripe. Prices and what's included may change with notice.",
+          body: "The base app is usable without sponsoring; the tools and AI features unlock via a monthly sponsorship described on the pricing page. Sponsorships renew until cancelled. Payments are handled by Stripe. Prices and what's included may change with notice.",
         },
         {
           heading: "Availability",

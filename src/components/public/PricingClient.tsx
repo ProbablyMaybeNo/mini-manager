@@ -11,7 +11,7 @@ import { startProMonthlyCheckout } from "@/lib/billing/startCheckout";
 
 const BEACON_HOBBIES_URL = "https://beaconhobbies.com";
 
-/** What subscribing unlocks — mirrors the gated set in
+/** What sponsoring unlocks — mirrors the gated set in
  *  docs/SUBSCRIPTION_PAYWALL.md exactly. */
 const UNLOCKS = [
   "All the tools — Colour Wheel, Match, Dropper, Stacking, and the Paint Scanner",
@@ -25,13 +25,13 @@ const UNLOCKS = [
  *  auto-resumes on return (see the effect below). */
 const RESUME_PATH = "/pricing?upgrade=pro-monthly";
 
-function SubscribeButton() {
+function SponsorButton() {
   const searchParams = useSearchParams();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const firedRef = useRef(false);
 
-  // Auto-resume — a signed-out visitor who clicked Subscribe got bounced to
+  // Auto-resume — a signed-out visitor who clicked Sponsor got bounced to
   // /sign-in?from=/pricing?upgrade=pro-monthly; landing back here with that
   // query re-fires checkout automatically instead of making them click twice.
   useEffect(() => {
@@ -61,7 +61,7 @@ function SubscribeButton() {
   return (
     <div className="flex flex-col items-center gap-2">
       <Button size="lg" onClick={onClick} disabled={pending}>
-        {pending ? "Redirecting…" : "Subscribe · $3.99/mo →"}
+        {pending ? "Redirecting…" : "Sponsor · $3.99/mo →"}
       </Button>
       {error && (
         <p className="font-body text-body text-red-text" role="alert">
@@ -77,11 +77,11 @@ export function PricingClient() {
     <>
       <TrackPageView event={AnalyticsEvent.PricingView} />
 
-      <Panel accent="cyan" label="SUPPORT THE MAINFRAME · $3.99/MO" className="w-full max-w-xl p-6 sm:p-8">
+      <Panel accent="cyan" label="SPONSOR THE MAINFRAME · $3.99/MO" className="w-full max-w-xl p-6 sm:p-8">
         <p className="font-h1 text-h1 text-cyan-lite">Unlock the full toolset.</p>
         <p className="mt-4 font-body text-body text-fg">
           Projects, the paint library, recipes, and collection tracking are yours from the
-          start. Subscribing unlocks the tools and AI on top:
+          start. Sponsoring unlocks the tools and AI on top:
         </p>
         <ul className="mt-4 flex flex-col gap-2 text-left">
           {UNLOCKS.map((u) => (
@@ -92,14 +92,14 @@ export function PricingClient() {
           ))}
         </ul>
         <div className="mt-6">
-          <Suspense fallback={<Button size="lg" disabled>Subscribe · $3.99/mo →</Button>}>
-            <SubscribeButton />
+          <Suspense fallback={<Button size="lg" disabled>Sponsor · $3.99/mo →</Button>}>
+            <SponsorButton />
           </Suspense>
         </div>
       </Panel>
 
       <p className="font-body text-body text-fg-dim">
-        Prefer a one-off tip instead of a subscription? Chip in via{" "}
+        Prefer a one-off tip instead of a monthly sponsorship? Chip in via{" "}
         {hasSupportUrl ? (
           <a
             href={SUPPORT_URL}
@@ -107,12 +107,13 @@ export function PricingClient() {
             rel="noopener noreferrer"
             className="text-cyan-lite underline underline-offset-4 hover:text-cyan"
           >
-            our support link
+            our tip link
           </a>
         ) : (
-          "our support link"
+          "our tip link"
         )}
-        .
+        , or feed the Mainframe directly from your Settings page once
+        you&apos;re signed in.
       </p>
 
       <p className="font-body text-body text-fg-dim">
