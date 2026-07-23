@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { Button, ModalDialog, Swatch, useToast } from "@/components/kit";
 import { readableText } from "@/lib/color";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import type {
   GroundedRecipeProposal,
   GroundedSlot,
 } from "@/lib/ai/recipeSchema";
 
 /**
- * The AI Recipe Creator surface.
+ * The AI Recipe Creator surface — one of the recipe creator's power
+ * features gated behind a subscription (docs/SUBSCRIPTION_PAYWALL.md).
  *
  * Flow: command textbox → POST /api/recipe/ai → confirmation card (proposed
  * paint chips + roles + technique summary) with Approve / Tweak / Regenerate.
@@ -21,8 +24,11 @@ import type {
  *   - onApprove(proposal): build the recipe (fill slots + technique notes)
  *   - onAddMissing(paintIds): add the buy-list to the wishlist
  *
- * Pro gating is enforced on the server (402); a 402 here renders the inline
- * upgrade prompt rather than a recipe.
+ * Gating: a known non-subscriber gets the shared `SubscribeGateDialog`
+ * immediately — no wasted round trip to the gated endpoint. `/api/recipe/ai`
+ * ALSO re-checks server-side (402) as defence in depth; that path renders
+ * the same gate dialog as a fallback in case the client's cached subscriber
+ * status is stale (e.g. a subscription just lapsed mid-session).
  */
 
 const PROMPT_SUGGESTIONS = [
@@ -46,6 +52,7 @@ export function AiRecipeDialog({
   /** Add the not-owned catalog paints to the wishlist. */
   onAddMissing: (paintIds: string[]) => void | Promise<void>;
 }) {
+  const isSubscriber = useSubscriber();
   const { toast, node } = useToast();
   const [phase, setPhase] = useState<Phase>("compose");
   const [command, setCommand] = useState("");
@@ -122,6 +129,13 @@ export function AiRecipeDialog({
     }
   }
 
+  // A known non-subscriber never sees the compose form, and a stale-client
+  // 402 (phase "upgrade") falls back to the same gate — see the module
+  // doc comment.
+  if (!isSubscriber || phase === "upgrade") {
+    return <SubscribeGateDialog open={open} onClose={close} />;
+  }
+
   const footer = renderFooter();
 
   return (
@@ -134,9 +148,7 @@ export function AiRecipeDialog({
         width="max-w-lg"
         footer={footer}
       >
-        {phase === "upgrade" ? (
-          <UpgradePrompt />
-        ) : phase === "review" && proposal ? (
+        {phase === "review" && proposal ? (
           <ReviewCard proposal={proposal} />
         ) : (
           <ComposeForm
@@ -153,18 +165,6 @@ export function AiRecipeDialog({
   );
 
   function renderFooter() {
-    if (phase === "upgrade") {
-      return (
-        <div className="flex justify-end gap-2">
-          <Button variant="tertiary" onClick={close}>
-            Close
-          </Button>
-          <a href="/pricing" className="contents">
-            <Button variant="solidCyan">See Pro</Button>
-          </a>
-        </div>
-      );
-    }
     if (phase === "review" && proposal) {
       const missingCount = proposal.missingPaintIds.length;
       return (
@@ -312,21 +312,6 @@ function SlotChip({ slot }: { slot: GroundedSlot }) {
       >
         {slot.owned ? "owned" : "buy"}
       </span>
-    </div>
-  );
-}
-
-function UpgradePrompt() {
-  return (
-    <div className="flex flex-col gap-3 py-2 text-center">
-      <span aria-hidden className="font-osd text-3xl text-cyan/50">
-        ✨
-      </span>
-      <p className="label-osd tracking-[0.18em] text-fg">PRO FEATURE</p>
-      <p className="mx-auto max-w-sm font-body text-body text-fg">
-        The AI Recipe Creator generates catalog-grounded paint recipes from a plain-language
-        prompt. Upgrade to Pro to use it.
-      </p>
     </div>
   );
 }

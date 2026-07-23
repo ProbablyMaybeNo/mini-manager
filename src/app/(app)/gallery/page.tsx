@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Recipe Gallery — The Mini Mainframe",
   description:
-    "Browse paint recipes shared by the community — colour schemes, swatches, and brands for your next miniature. Free to view on The Mini Mainframe.",
+    "Browse paint recipes shared by the community — colour schemes, swatches, and brands for your next miniature, open to everyone on The Mini Mainframe.",
   alternates: { canonical: "/gallery" },
   openGraph: {
     title: "Recipe Gallery — The Mini Mainframe",
@@ -94,7 +94,7 @@ export default async function GalleryPage() {
                 href="/sign-up"
                 className="border border-cyan bg-cyan/15 px-4 py-2 font-button text-button uppercase tracking-[0.15em] text-cyan-lite hover:bg-cyan/25"
               >
-                Start for Free
+                Get Started
               </Link>
             )}
           </div>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import { TOOL_THUMBS } from "./ToolThumbnails";
 
 interface ToolCard {
@@ -30,11 +31,16 @@ const TOOLS: ToolCard[] = [
 ];
 
 export function ToolsHubView() {
+  const isSubscriber = useSubscriber();
   return (
     <div className="flex h-full flex-col gap-6 p-6">
       <PageHeader
         title="TOOLS"
-        tagline="// colour utilities — turn an idea, photo, or colour into named, buyable paints"
+        tagline={
+          isSubscriber
+            ? "// colour utilities — turn an idea, photo, or colour into named, buyable paints"
+            : "// colour utilities — sponsor to unlock the full toolset"
+        }
       />
       <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
         {TOOLS.map((t) => {
@@ -59,10 +65,19 @@ export function ToolsHubView() {
                   ) : Thumb ? (
                     <Thumb />
                   ) : null}
+                  {!isSubscriber && (
+                    <span
+                      aria-hidden
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-cyan/60 bg-black/70 text-body text-cyan-lite"
+                    >
+                      🔒
+                    </span>
+                  )}
                 </div>
                 <div>
                   <h2 className="label-osd text-cyan-lite">
                     {t.title}
+                    {!isSubscriber && <span className="sr-only"> (sponsor access only)</span>}
                   </h2>
                   <p className="mt-1 font-body text-body text-fg">{t.blurb}</p>
                 </div>

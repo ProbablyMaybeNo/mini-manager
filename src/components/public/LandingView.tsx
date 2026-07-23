@@ -68,20 +68,20 @@ const SHOWCASE: { src: string; label: string; alt: string; caption: string }[] =
   },
 ];
 
-const FREE_PERKS = [
+const INCLUDED_PERKS = [
   "Unlimited projects — armies, units, models, terrain",
   "Your full collection — log every paint & model, add by pasting a store link",
-  "A recipe for every model",
+  "A recipe for every model — add paints, tag techniques, share any scheme with a link",
   "The focus bench — recipe, notes, inspiration & a session timer",
-  "The entire 7,000+ paint library",
+  "The entire 7,000+ paint library, browsable and searchable",
 ];
 
-const PRO_PERKS = [
+const SPONSOR_PERKS = [
+  "The full colour toolkit — Colour Wheel, Match, Dropper, Stacking, and the Paint Scanner",
   "One-click adds while you browse — drop any paint or model into your collection or wishlist straight from the store page, no copy-paste",
   "Army-list auto-build — paste an army list and it fills your whole project tree in seconds",
-  "The full colour toolkit — push matches & schemes straight into recipes, save palettes, predict glaze layers",
+  "AI recipe generation — describe a scheme, get a catalog-grounded recipe back",
   "Unlimited recipes — a recipe for every scheme, variant, and sub-unit",
-  "Recipe sharing — share any scheme with a link",
 ];
 
 /** Respect the OS "reduce motion" setting — reduced users get the static poster. */
@@ -118,8 +118,8 @@ export function LandingView() {
         <h1 className="sr-only">
           The Mini Mainframe — paint &amp; project manager for miniatures
         </h1>
-        {/* The square CRT mark is capped at ~42vh so the hero "Start for
-            Free" CTA clears the fold at 1366×768 (where the button top used
+        {/* The square CRT mark is capped at ~42vh so the hero "Get Started"
+            CTA clears the fold at 1366×768 (where the button top used
             to sit ≈893px). `w-auto max-w-full max-h-[42vh]` scales the 1080²
             asset down to fit whichever is smaller — the container width or
             42vh — preserving the square with no letterbox. On phones width
@@ -179,7 +179,6 @@ export function LandingView() {
           A miniature painting tracker and paint collection manager for wargamers: manage
           your armies, paint recipes, backlog, colour matches, and hobby sessions in one
           place — with 7,000+ paints from Warhammer, Citadel, Vallejo and Army Painter.
-          Completely free.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
@@ -189,7 +188,7 @@ export function LandingView() {
                 trackClient(AnalyticsEvent.CtaStartForFree, { location: "hero" })
               }
             >
-              Start for Free
+              Get Started
             </Button>
           </Link>
         </div>
@@ -237,35 +236,51 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* Everything's free — the full feature list, no tiers */}
+      {/* Two ways to play — base app vs. the supported toolkit */}
       <section className="mx-auto w-full max-w-3xl px-6 pb-16">
         <div className="mb-6 text-center">
-          <h2 className="font-h1 text-h1 text-green">Everything, free.</h2>
+          <h2 className="font-h1 text-h1 text-cyan-lite text-glow-cyan">Two ways to play.</h2>
           <p className="mt-2 font-body text-body text-fg">
-            The whole toolkit — no tiers, no paywall. Make an account and go.
+            Make an account and track your whole hobby — no strings. Sponsor the Mainframe
+            to unlock the full colour toolkit and AI recipe generation.
           </p>
         </div>
-        <Panel label="WHAT YOU GET" cornerTicks className="flex flex-col gap-4 p-6">
-          <ul className="grid gap-2 text-left sm:grid-cols-2">
-            {[...FREE_PERKS, ...PRO_PERKS].map((perk) => (
-              <li key={perk} className="flex gap-2 font-body text-body text-fg">
-                <span aria-hidden className="text-green">▸</span>
-                <span>{perk}</span>
-              </li>
-            ))}
-          </ul>
-          <Link href="/sign-up" className="mt-2">
-            <Button
-              onClick={() =>
-                trackClient(AnalyticsEvent.CtaStartForFree, {
-                  location: "features-card",
-                })
-              }
-            >
-              Start for Free
-            </Button>
-          </Link>
-        </Panel>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Panel label="INCLUDED" cornerTicks className="flex flex-col gap-4 p-6">
+            <ul className="flex flex-col gap-2 text-left">
+              {INCLUDED_PERKS.map((perk) => (
+                <li key={perk} className="flex gap-2 font-body text-body text-fg">
+                  <span aria-hidden className="text-green">▸</span>
+                  <span>{perk}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/sign-up" className="mt-2">
+              <Button
+                onClick={() =>
+                  trackClient(AnalyticsEvent.CtaStartForFree, {
+                    location: "features-card",
+                  })
+                }
+              >
+                Get Started
+              </Button>
+            </Link>
+          </Panel>
+          <Panel label="SPONSOR THE MAINFRAME · $3.99/MO" cornerTicks className="flex flex-col gap-4 p-6">
+            <ul className="flex flex-col gap-2 text-left">
+              {SPONSOR_PERKS.map((perk) => (
+                <li key={perk} className="flex gap-2 font-body text-body text-fg">
+                  <span aria-hidden className="text-cyan-lite">▸</span>
+                  <span>{perk}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/pricing" className="mt-2">
+              <Button variant="secondary">Sponsor · $3.99/mo →</Button>
+            </Link>
+          </Panel>
+        </div>
       </section>
 
       {/* Final CTA */}
@@ -274,7 +289,7 @@ export function LandingView() {
           Ready to take your hobby to the next level?
         </h2>
         <p className="max-w-md font-body text-body text-fg">
-          Your whole painting setup, organized in one terminal. Free to start — no card needed.
+          Your whole painting setup, organized in one terminal. No card needed to get started.
         </p>
         <Link href="/sign-up">
           <Button
@@ -283,7 +298,7 @@ export function LandingView() {
               trackClient(AnalyticsEvent.CtaStartForFree, { location: "footer" })
             }
           >
-            Start for Free
+            Get Started
           </Button>
         </Link>
       </section>

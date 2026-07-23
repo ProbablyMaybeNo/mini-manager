@@ -587,7 +587,7 @@ export function ShareCardComposer({
           </div>
           {recipeId && !submitted && (
             <p className="font-mono text-[11px] text-fg-dim">
-              ▸ Free to post. Cards go live on{" "}
+              ▸ Sharing is open to everyone. Cards go live on{" "}
               <span className="text-cyan-lite">/gallery</span> right away once
               they pass our automatic content check — anything borderline is
               reviewed by an admin first.

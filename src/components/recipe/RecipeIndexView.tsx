@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, EmptyState, Panel, SegmentedToggle } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { ColorPickerPanel } from "@/components/tools/ColorPickerPanel";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import type { Project, Recipe } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { RecipeCardGrid } from "./RecipeCard";
@@ -43,6 +44,7 @@ export function RecipeIndexView({
   const [editingPaint, setEditingPaint] = useState<{ recipe: Recipe; index: number } | null>(
     null,
   );
+  const isSubscriber = useSubscriber();
   // DOP-009 — table (dense, sortable scan) vs card (colour-first) view. Cards
   // lead with the scheme palette; the table keeps the per-row paint tiles.
   const [view, setView] = useState<"table" | "cards">("table");
@@ -143,8 +145,11 @@ export function RecipeIndexView({
       )}
 
       {/* MM-51 — clicking a recipe-table paint opens the SAME shared
-          ColorPicker (wheel + library + eyedropper) used in the recipe
-          creator, so colours can be changed without opening the full editor. */}
+          ColorPicker used in the recipe creator, so colours can be changed
+          without opening the full editor. Subscription paywall (fix 3):
+          the wheel + eyedropper are subscriber-only tools, so a
+          non-subscriber gets library search only here too — same rule as
+          the recipe creator's empty-slot panel, just without its tabs. */}
       <ColorPickerPanel
         open={editingPaint != null}
         onClose={() => setEditingPaint(null)}
@@ -158,6 +163,8 @@ export function RecipeIndexView({
         mode="edit-slot"
         initialHex={editingPaint?.recipe.slots[editingPaint.index]?.swatch ?? null}
         initialPaintId={editingPaint?.recipe.slots[editingPaint.index]?.paintId || null}
+        showWheel={isSubscriber}
+        showEyedropper={isSubscriber}
         closeOnSelect
         onSelect={(sel) => {
           if (editingPaint) onEditPaint?.(editingPaint.recipe, editingPaint.index, sel);

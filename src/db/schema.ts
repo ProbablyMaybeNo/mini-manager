@@ -61,9 +61,12 @@ export const users = sqliteTable("user", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   planExpiresAt: integer("plan_expires_at", { mode: "timestamp_ms" }),
   founderClaimedAt: integer("founder_claimed_at", { mode: "timestamp_ms" }),
-  // Testing-period entitlement — set when a verified-email tester submits
-  // feedback; getPlanForUser treats it as permanent Pro (free forever), so it
-  // overrides the paywall once BILLING_ENFORCED flips on.
+  // Admin-granted comp access (subscription paywall, fix 5). Set/cleared
+  // ONLY by the admin comp actions (src/lib/actions/adminComp.ts —
+  // grantCompAccess/revokeCompAccess, gated on the MM_ADMIN_EMAILS
+  // allowlist); `getPlanForUser` treats it as permanent Pro. Every prior
+  // grant (from the removed testing-period "submit feedback" flow) was
+  // cleared in drizzle/0037 — nobody is comped until an admin grants it.
   freeForeverGrantedAt: integer("free_forever_granted_at", { mode: "timestamp_ms" }),
   recoveryEmail: text("recovery_email"),
   recoveryEmailVerified: integer("recovery_email_verified", {
@@ -1471,3 +1474,80 @@ export const rateLimitCounters = sqliteTable(
 
 export type RateLimitCounter = typeof rateLimitCounters.$inferSelect;
 export type NewRateLimitCounter = typeof rateLimitCounters.$inferInsert;
+
+/* ============================================================
+   Stripe webhook idempotency (subscription paywall)
+   ============================================================
+   One row per successfully-dispatched Stripe event id. The webhook route
+   records the event id AFTER its handler returns successfully (never
+   before — see src/app/api/billing/webhook/route.ts's module docstring for
+   why the order matters); a UNIQUE violation on a later insert means this
+   exact event was already processed (Stripe retries undelivered/slow
+   webhooks, and the dashboard's "resend" replays old ones) — the route
+   skips the handler and still returns 200 so Stripe stops retrying. This is
+   what stops a replayed `checkout.session.completed` from double-granting a
+   plan, while still letting a genuinely FAILED delivery be retried. No
+   TTL/cleanup — event ids only replay transiently, so the table stays small
+   in practice.
+   ============================================================ */
+
+export const processedStripeEvents = sqliteTable("processed_stripe_event", {
+  /** The Stripe `event.id` (`evt_...`) — globally unique per Stripe. */
+  id: text("id").primaryKey(),
+  eventType: text("event_type").notNull(),
+  processedAt: integer("processed_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+/* ============================================================
+   Sponsorships — the one-off "Sponsor the Mini-Mainframe" tip
+   ============================================================
+   A pay-what-you-want (min $1) one-time Stripe payment, separate from the
+   monthly sponsorship that unlocks the tools — this one does NOT grant
+   `plan`/`freeForeverGrantedAt`; it's pure support with a top-supporter
+   reward hook (Ross finds these manually — no automated reward flow yet).
+   One row per successful `checkout.session.completed` where
+   `metadata.kind === "sponsor"` (see the webhook route). `amountCents`
+   comes from Stripe's own `session.amount_total` post-payment, never a
+   client-supplied figure, so a row always reflects what was actually
+   charged.
+   ============================================================ */
+
+export const sponsorships = sqliteTable(
+  "sponsorship",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amountCents: integer("amount_cents").notNull(),
+    stripeSessionId: text("stripe_session_id"),
+    stripeCustomerId: text("stripe_customer_id"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    /** "Who are our top supporters" — ordered by amount within a user. */
+    userAmountIdx: index("sponsorship_user_amount_idx").on(t.userId, t.amountCents),
+    /** Idempotency guard — one row per Stripe checkout session. A rare
+     *  concurrent duplicate delivery of the same sponsor
+     *  `checkout.session.completed` (both getting past the processed-event
+     *  pre-check before either records) would otherwise INSERT twice and
+     *  double-count the tip; this rejects the second insert (the webhook's
+     *  outer try/catch turns it into a Stripe retry, which the
+     *  already-processed check then no-ops). Nullable column — real rows
+     *  always carry Stripe's `session.id`; SQLite keeps multiple NULLs
+     *  distinct if one ever slips through. */
+    stripeSessionIdIdx: uniqueIndex("sponsorship_stripe_session_id_idx").on(
+      t.stripeSessionId,
+    ),
+  }),
+);
+
+export type Sponsorship = typeof sponsorships.$inferSelect;
+export type NewSponsorship = typeof sponsorships.$inferInsert;
+
+export type ProcessedStripeEvent = typeof processedStripeEvents.$inferSelect;
+export type NewProcessedStripeEvent = typeof processedStripeEvents.$inferInsert;

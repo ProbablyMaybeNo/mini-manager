@@ -111,18 +111,21 @@ export async function enforceCreateLimit(
 }
 
 /**
- * Gate the next recipe insert on the free-tier PER-PROJECT-NODE cap.
+ * DORMANT — the free-tier per-project-node recipe cap this gated was
+ * removed (docs/SUBSCRIPTION_PAYWALL.md fix 3: recipes are unlimited on
+ * every plan now; `PLAN_LIMITS.free.recipes` is `Infinity`). This still
+ * runs on every `createRecipe` call and still counts the node correctly,
+ * but `enforceCreateLimit` can never actually block with an infinite cap —
+ * kept in place (rather than deleted) the same way the already-unlimited
+ * `projects`/`wishlist` gates are, so re-introducing a node cap later is a
+ * one-line change to `PLAN_LIMITS`, not new plumbing.
  *
- * Unlike projects / wishlist (which are capped on the per-account total),
- * the free recipe allowance is "1 recipe per project node": a free painter
- * can keep one recipe on every project they own, plus one standalone
- * recipe. The "node" is the recipe's `attachedProjectId`; standalone
- * recipes (`attachedProjectId === null`) share one "no-project" node.
- *
- * So instead of counting ALL the user's recipes, this counts only the
- * recipes already sharing the target node, then defers to
- * `enforceCreateLimit` with the `recipes` resource (free cap = 1). The
- * count is taken owner-scoped so it can never see another user's rows.
+ * Original design, for context: "1 recipe per project node" — a free
+ * painter could keep one recipe on every project they owned, plus one
+ * standalone recipe. The "node" is the recipe's `attachedProjectId`;
+ * standalone recipes (`attachedProjectId === null`) share one "no-project"
+ * node. Counts only the recipes already sharing the target node
+ * (owner-scoped, so it can never see another user's rows).
  *
  * @returns `null` when the create is allowed. Otherwise an ActionResult
  *          payload the caller should `return` directly.

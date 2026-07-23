@@ -48,7 +48,7 @@ function VerifyEmail() {
           {status === "pending"
             ? "Confirming your email…"
             : status === "ok"
-              ? "You're verified — submit feedback in the app to lock in free-forever tester access."
+              ? "You're verified — you're all set."
               : message}
         </p>
         <Link

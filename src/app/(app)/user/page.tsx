@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { getPlanForUser } from "@/lib/billing/plans";
 import { SettingsClient } from "./SettingsClient";
+import { SponsorPanel } from "./SponsorPanel";
 import { AccountClient } from "./account/AccountClient";
 
 export default async function UserPage() {
@@ -19,6 +20,7 @@ export default async function UserPage() {
   return (
     <div className="h-full overflow-y-auto">
       <SettingsClient />
+      <SponsorPanel />
       <AccountClient
         username={row?.username ?? ""}
         recoveryEmail={row?.recoveryEmail ?? ""}

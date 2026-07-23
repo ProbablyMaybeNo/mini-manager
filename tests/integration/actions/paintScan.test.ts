@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { makeTestDb, type TestDb } from "../_helpers/testDb";
-import { wishlistItems } from "@/db/schema";
+import { users, wishlistItems } from "@/db/schema";
 import type { Paint } from "@/lib/paints/types";
 import type { ExtractedPaintLabel } from "@/lib/paints/matchScan";
 
@@ -138,6 +138,39 @@ describe("scanPaintsFromPhoto", () => {
       expect(third.ok).toBe(false);
       if (third.ok) return;
       expect(third.error).toMatch(/paint-scan limit/i);
+    });
+  });
+
+  // Subscription paywall (fix 1: "no free AI, no exceptions") — Paint
+  // Scanner is subscriber-only on EVERY entry point (the Collection page's
+  // "Scan paints" button and the Tools-hub Paint Scanner both call this
+  // exact action; there is no free surface anymore).
+  describe("scanPaintsFromPhoto — always subscriber-gated", () => {
+    test("blocked for a free (non-subscriber) user", async () => {
+      await state.db!.update(users).set({ plan: "free" }).where(eq(users.id, state.userId));
+      const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
+      expect(res.ok).toBe(false);
+      if (res.ok) return;
+      expect(res.error).toMatch(/Pro feature/i);
+      expect(res.upgradeUrl).toBe("/pricing");
+    });
+
+    test("succeeds for a pro_monthly subscriber", async () => {
+      await state.db!.update(users).set({ plan: "pro_monthly" }).where(eq(users.id, state.userId));
+      const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
+      expect(res.ok).toBe(true);
+    });
+
+    test("the free gate runs BEFORE the daily-quota check and the vision call", async () => {
+      await state.db!.update(users).set({ plan: "free" }).where(eq(users.id, state.userId));
+      process.env.MM_SCAN_DAILY_LIMIT = "2";
+      const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
+      expect(res.ok).toBe(false);
+      if (res.ok) return;
+      // Pro-gate error, NOT the daily-quota error — proves the gate is
+      // checked first and the (paid) vision call never fires for free users.
+      expect(res.error).toMatch(/Pro feature/i);
+      expect(res.error).not.toMatch(/paint-scan limit/i);
     });
   });
 });

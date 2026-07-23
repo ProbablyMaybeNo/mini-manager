@@ -7,13 +7,21 @@ import { scanPaintLabels } from "@/lib/ai/paintScan";
 import { matchScannedPaints, type PaintScanMatch } from "@/lib/paints/matchScan";
 import { SCAN_ACCEPTED_TYPES } from "@/lib/paints/scanLimits";
 import { enforceDailyLimit, paintScanDailyLimit, RateLimitBucket } from "@/lib/rateLimit/quota";
+import { isProUser } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
- * "Scan paints from a photo" — the Collection page's photo -> Claude Haiku
- * vision -> catalog match pipeline. The photo never touches disk/DB: the
- * client posts a base64 payload straight through and it's discarded once
- * this call returns (privacy + simplicity — it's a scan, not an upload).
+ * "Scan paints from a photo" — Claude Haiku vision -> catalog match
+ * pipeline. Subscriber-only on EVERY entry point (docs/SUBSCRIPTION_PAYWALL.md
+ * fix 1: "no free AI, no exceptions") — the Collection page's "Scan paints"
+ * button and the Tools-hub Paint Scanner (/tools/scan) both call this same
+ * action, and both are gated. There used to be a free "collection" surface;
+ * removed — a real vision-model call costs money on every invocation, so
+ * there's no free entry point for it anywhere.
+ *
+ * The photo never touches disk/DB: the client posts a base64 payload
+ * straight through and it's discarded once this call returns (privacy +
+ * simplicity — it's a scan, not an upload).
  *
  * This action only extracts + matches; it never writes. Bulk-adding the
  * CONFIRMED matches to Collection is a separate step the client drives via
@@ -29,13 +37,24 @@ const scanSchema = z.object({
 });
 
 export async function scanPaintsFromPhoto(
-  raw: z.infer<typeof scanSchema>,
+  raw: z.input<typeof scanSchema>,
 ): Promise<ActionResult<{ items: PaintScanMatch[] }>> {
   const parsed = scanSchema.safeParse(raw);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid photo" };
   }
   const userId = await currentUserId();
+
+  // Gating-layer — Paint Scanner is subscriber-only everywhere it's reached
+  // from. Gate BEFORE the daily-quota check and the vision call so a
+  // non-subscriber never burns either.
+  if (!(await isProUser(userId))) {
+    return {
+      ok: false,
+      error: "Paint Scanner is a Pro feature. Upgrade to scan paint labels.",
+      upgradeUrl: "/pricing",
+    };
+  }
 
   // Per-user daily quota (E7 pattern) — metered before the paid Haiku
   // vision call so an over-limit user is refused without burning it.

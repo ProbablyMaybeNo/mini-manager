@@ -8,6 +8,8 @@ import {
   fetchImportForPreview,
   applyImport,
 } from "@/lib/actions/imports";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import type { ImportedTree } from "@/lib/imports/types";
 
 /**
@@ -15,6 +17,11 @@ import type { ImportedTree } from "@/lib/imports/types";
  * importer: paste a list → createTextImport (parse + store) →
  * fetchImportForPreview (show the parsed army + units) → applyImport (create
  * the Army container + a child Unit per parsed entry), then refresh.
+ *
+ * Gated — army-list import is part of the "AI" bucket in
+ * docs/SUBSCRIPTION_PAYWALL.md. A non-subscriber gets the shared
+ * SubscribeGateDialog instead of the paste form; the server actions
+ * (createTextImport / createFileImport / applyImport) re-check regardless.
  */
 export function ArmyImportPanel({
   open,
@@ -24,6 +31,7 @@ export function ArmyImportPanel({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const isSubscriber = useSubscriber();
   const [raw, setRaw] = useState("");
   const [importId, setImportId] = useState<string | null>(null);
   const [tree, setTree] = useState<ImportedTree | null>(null);
@@ -75,6 +83,10 @@ export function ArmyImportPanel({
       close();
       router.refresh();
     });
+  }
+
+  if (!isSubscriber) {
+    return <SubscribeGateDialog open={open} onClose={onClose} />;
   }
 
   return (

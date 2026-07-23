@@ -5,22 +5,19 @@ import { makeTestDb, type TestDb } from "../_helpers/testDb";
 import { projects, recipes, users } from "@/db/schema";
 
 /**
- * Gating-layer — the FREE recipe cap is PER PROJECT NODE (1 recipe per
- * `attachedProjectId`; standalone recipes share the null node), NOT a
- * per-account total. The production runtime gate is inert pre-Stripe
- * (BILLING_ENFORCED === false), so the enforcement assertions in
- * billingLimits.test.ts are skipped today. To keep the per-node MATH +
- * the action-layer counting under live coverage right now, THIS suite
- * mocks `BILLING_ENFORCED` to `true` (everything else in plans.ts stays
- * real) so the gate actually bites and we can prove:
+ * Gating-layer — recipes are UNLIMITED on every plan, including free
+ * (docs/SUBSCRIPTION_PAYWALL.md fix 3: "unlimited free recipes, only the
+ * creator's TOOLS are gated"). This suite used to prove a "1 recipe per
+ * project node" free cap; that cap is now removed (`PLAN_LIMITS.free.recipes
+ * = Infinity`) and this suite proves the removal empirically — many recipes
+ * on the SAME node (standalone or attached to one project) all succeed for
+ * a free user, not just theoretically via the constant.
  *
- *   - a 2nd recipe under the SAME node is blocked,
- *   - a recipe on project A does NOT block a first recipe on project B,
- *   - a recipe on a project does NOT block a first standalone recipe.
- *
- * The "block on same node" property + the "different node is free"
- * property together are exactly what separates a per-node cap from a
- * per-account total.
+ * Enforcement is forced ON via the `@/lib/billing/plans` mock (mirrors the
+ * pattern in proGates.test.ts / billingLimits.test.ts) so these assertions
+ * don't depend on — or get silently invalidated by — BILLING_ENFORCED ever
+ * moving again; `isWithinLimit` is repointed at the real, gate-independent
+ * `isWithinPlanLimit` so the (now-Infinity) cap math actually runs.
  */
 
 const state = vi.hoisted(() => ({
@@ -39,10 +36,6 @@ vi.mock("@/lib/auth-stub", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-// Force enforcement ON for this suite only — keep the real cap math.
-// `isWithinLimit` closes over the module-internal BILLING_ENFORCED const,
-// so overriding the export alone wouldn't make it bite; point it at the
-// real, gate-independent `isWithinPlanLimit` so the per-node MATH runs.
 vi.mock("@/lib/billing/plans", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/billing/plans")>();
   return {
@@ -93,7 +86,7 @@ afterEach(() => {
   state.userId = "";
 });
 
-describe("per-node recipe cap (enforcement forced ON)", () => {
+describe("recipes are unlimited on free — no per-node cap", () => {
   test("first recipe under a node is allowed", async () => {
     const projectId = await seedProject();
     const res = await createRecipe({
@@ -103,32 +96,40 @@ describe("per-node recipe cap (enforcement forced ON)", () => {
     expect(res.ok).toBe(true);
   });
 
-  test("second recipe UNDER THE SAME PROJECT is blocked + upgrade URL", async () => {
+  test("a SECOND recipe under the SAME project node is also allowed", async () => {
     const projectId = await seedProject();
     await seedRecipeUnderNode(projectId);
     const res = await createRecipe({
       name: "Second on node",
       attachedProjectId: projectId,
     });
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.error).toMatch(/Free tier limit reached/);
-    expect(res.upgradeUrl).toBe("/pricing");
-    // Gate ran before the insert — only the seeded row exists.
+    expect(res.ok).toBe(true);
     const rows = await state.db!.select().from(recipes);
-    expect(rows).toHaveLength(1);
+    expect(rows).toHaveLength(2);
   });
 
-  test("second STANDALONE recipe (same null node) is blocked", async () => {
+  test("a THIRD, FOURTH, FIFTH recipe under the same node all succeed", async () => {
+    const projectId = await seedProject();
+    await seedRecipeUnderNode(projectId);
+    await seedRecipeUnderNode(projectId);
+    for (const name of ["Third", "Fourth", "Fifth"]) {
+      const res = await createRecipe({ name, attachedProjectId: projectId });
+      expect(res.ok).toBe(true);
+    }
+    const rows = await state.db!
+      .select()
+      .from(recipes)
+      .where(eq(recipes.attachedProjectId, projectId));
+    expect(rows).toHaveLength(5);
+  });
+
+  test("a second STANDALONE recipe (same null node) is also allowed", async () => {
     await seedRecipeUnderNode(null);
     const res = await createRecipe({ name: "Second standalone" });
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.error).toMatch(/Free tier limit reached/);
-    expect(res.upgradeUrl).toBe("/pricing");
+    expect(res.ok).toBe(true);
   });
 
-  test("a recipe on project A does NOT block a first recipe on project B", async () => {
+  test("a recipe on project A does not affect a recipe on project B", async () => {
     const projectA = await seedProject();
     const projectB = await seedProject();
     await seedRecipeUnderNode(projectA);
@@ -139,24 +140,7 @@ describe("per-node recipe cap (enforcement forced ON)", () => {
     expect(res.ok).toBe(true);
   });
 
-  test("a recipe on a project does NOT block a first standalone recipe", async () => {
-    const projectId = await seedProject();
-    await seedRecipeUnderNode(projectId);
-    const res = await createRecipe({ name: "First standalone" });
-    expect(res.ok).toBe(true);
-  });
-
-  test("a standalone recipe does NOT block a first recipe on a project", async () => {
-    await seedRecipeUnderNode(null);
-    const projectId = await seedProject();
-    const res = await createRecipe({
-      name: "First on project",
-      attachedProjectId: projectId,
-    });
-    expect(res.ok).toBe(true);
-  });
-
-  test("paid users are NOT capped per node", async () => {
+  test("paid users are also unlimited (unchanged)", async () => {
     await state.db!
       .update(users)
       .set({ plan: "pro_lifetime" })

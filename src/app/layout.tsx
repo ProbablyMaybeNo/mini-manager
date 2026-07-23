@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.mini-mainframe.com"),
   title: "The Mini Mainframe",
   description:
-    "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking for miniature painters. Free to start.",
+    "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking for miniature painters.",
   applicationName: "The Mini Mainframe",
   // Google Search Console ownership (renders the google-site-verification
   // <meta> into the <head> of every page — covers the homepage + all landing
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
     siteName: "The Mini Mainframe",
     title: "The Mini Mainframe — paint & project manager for miniatures",
     description:
-      "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking. Free to start.",
+      "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking.",
   },
   twitter: {
     card: "summary_large_image",
     title: "The Mini Mainframe — paint & project manager for miniatures",
     description:
-      "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking. Free to start.",
+      "One terminal for your whole hobby — 7,000+ paints, colour tools, recipes, collection, and project tracking.",
   },
   manifest: "/manifest.webmanifest",
   appleWebApp: {

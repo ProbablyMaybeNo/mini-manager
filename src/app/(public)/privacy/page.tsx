@@ -21,7 +21,7 @@ export default function PrivacyPage() {
             <ul className="list-disc space-y-1 pl-5">
               <li>Account: your username and a password (stored only as a salted hash), plus an optional recovery email.</li>
               <li>Your content: projects, recipes, paint inventory, collection items, sessions, and events you create.</li>
-              <li>Billing: if you subscribe, Stripe processes your payment; we store your Stripe customer id and plan status, never your card details.</li>
+              <li>Billing: if you sponsor the Mainframe, Stripe processes your payment; we store your Stripe customer id and plan status, never your card details.</li>
               <li>Basic technical logs needed to run and secure the service.</li>
             </ul>
           ),
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
                 <li>Vercel — hosting, and Vercel Analytics for privacy-friendly, aggregate usage metrics.</li>
                 <li>Sentry — error monitoring: when the app hits an error we send Sentry a diagnostic report (error details and basic request context) so we can diagnose and fix it.</li>
                 <li>Our database provider — stores your account and content.</li>
-                <li>Stripe — payments (if you subscribe).</li>
+                <li>Stripe — payments (if you sponsor).</li>
                 <li>An email provider — transactional email (e.g. password resets, verification).</li>
                 <li>Anthropic — powers our AI features: the prompts you send to the AI recipe creator, and the images you submit to the public gallery (which are checked by automated moderation).</li>
                 <li>Groq — parses the army-list text you upload when importing a list.</li>

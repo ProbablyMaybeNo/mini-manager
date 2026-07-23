@@ -11,8 +11,17 @@ import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { ColorPicker } from "@/components/tools/ColorPicker";
 import { EyedropperTool } from "@/components/tools/EyedropperTool";
 import { LayeringTool } from "@/components/tools/LayeringTool";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 
-type Tab = "picker" | "match" | "dropper" | "layering";
+type Tab = "library" | "wheel" | "match" | "dropper" | "layering";
+
+/** Every TOOL tab is gated — colour wheel, matching, image eyedropper, and
+ *  glaze-layering (docs/SUBSCRIPTION_PAYWALL.md, fix 3: "no free AI/tools,
+ *  no exceptions"). Only "library" (plain catalog search — manually typing
+ *  a name and clicking a real paint) is free; it's the base-app "add a
+ *  paint to a recipe" capability, not a tool. */
+const GATED_TABS: ReadonlySet<Tab> = new Set(["wheel", "match", "dropper", "layering"]);
 
 /** Context handed to a caller-supplied Match tab so this module never has to
  *  import {@link ColourMatchTool} itself — keeping `tools/ ↔ recipe/` acyclic. */
@@ -25,11 +34,15 @@ export type PaintPickerMatchContext = {
 /**
  * The **PAINT PICKER PANEL** — the tabbed "pick a paint" side panel, as opposed
  * to the wheel-only {@link ColorPickerPanel} (the "COLOR PICKER PANEL"). It wraps
- * the standalone paint-creator tools — the 3-panel {@link ColorPicker} (wheel +
- * filterable library), {@link EyedropperTool} (image → palette), and
+ * {@link ColorPicker} twice (a library-search-only "Library" tab, and a
+ * wheel-only "Wheel" tab), {@link EyedropperTool} (image → palette), and
  * {@link LayeringTool} (Lab ramp + glaze stacking) — behind a tabbed
  * {@link SlideOutPanel}, funnelling every tool's "use this paint/colour" action
  * through one {@link onSelect}.
+ *
+ * Subscription paywall (docs/SUBSCRIPTION_PAYWALL.md) — "Library" is the only
+ * free tab (manually search + click a real paint); every tool tab (Wheel,
+ * Match, Dropper, Layering) is subscriber-gated, per `GATED_TABS` below.
  *
  * The optional ranked-Match tab is injected by the caller via {@link renderMatchTab}
  * (recipes wire {@link ColourMatchTool} there); callers that don't need it — e.g.
@@ -75,11 +88,26 @@ export function PaintPickerPanel({
   const [paints, setPaints] = useState<Paint[]>([]);
   const [catalogPaints, setCatalogPaints] = useState<ReadonlyArray<CatalogPaint>>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("picker");
+  const [tab, setTab] = useState<Tab>("library");
+  const isSubscriber = useSubscriber();
+  const [gateOpen, setGateOpen] = useState(false);
+
+  /** Route every tab click through the subscriber check — Match / Dropper /
+   *  Layering are the recipe creator's power features (docs/
+   *  SUBSCRIPTION_PAYWALL.md); a non-subscriber gets the gate dialog
+   *  instead of the tab switching. */
+  function selectTab(key: Tab) {
+    if (GATED_TABS.has(key) && !isSubscriber) {
+      setGateOpen(true);
+      return;
+    }
+    setTab(key);
+  }
 
   const tabs = useMemo<ReadonlyArray<{ key: Tab; label: string }>>(
     () => [
-      { key: "picker", label: "Wheel · Library" },
+      { key: "library", label: "Library" },
+      { key: "wheel", label: "Wheel" },
       ...(renderMatchTab ? [{ key: "match" as const, label: "Match" }] : []),
       { key: "dropper", label: "Dropper" },
       { key: "layering", label: "Layering" },
@@ -105,9 +133,9 @@ export function PaintPickerPanel({
   }, []);
 
   // Reset to the primary tab whenever the panel re-opens, so it always starts on
-  // the wheel/library view regardless of the prior session.
+  // the free library view regardless of the prior session.
   useEffect(() => {
-    if (open) setTab("picker");
+    if (open) setTab("library");
   }, [open, initialHex, initialPaintId]);
 
   const brandOptions = useMemo(
@@ -142,13 +170,14 @@ export function PaintPickerPanel({
         <div role="tablist" aria-label="Paint picker tools" className="flex flex-wrap gap-5 border-b border-border">
           {tabs.map((t) => {
             const active = t.key === tab;
+            const locked = GATED_TABS.has(t.key) && !isSubscriber;
             return (
               <button
                 key={t.key}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() => setTab(t.key)}
+                onClick={() => selectTab(t.key)}
                 className={cn(
                   "-mb-px border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite",
                   active
@@ -157,14 +186,17 @@ export function PaintPickerPanel({
                 )}
               >
                 {t.label}
+                {locked && <span aria-hidden> 🔒</span>}
               </button>
             );
           })}
         </div>
 
-        {tab === "picker" && (
+        {tab === "library" && (
           // Re-key on the seed so re-opening on a different slot resets the
-          // wheel / sliders / search instead of bleeding the prior session.
+          // search instead of bleeding the prior session. Wheel + eyedropper
+          // are their own (gated) tabs here, so both stay off — this is the
+          // free "search + manually add a real paint" surface only.
           <ColorPicker
             key={initialHex ?? initialPaintId ?? "no-initial"}
             paints={catalogPaints}
@@ -176,16 +208,33 @@ export function PaintPickerPanel({
             }
             contextLabel={contextLabel}
             mode={mode}
-            // The eyedropper is its own tab here, so drop the duplicate sub-panel;
-            // a click on a library paint selects it immediately.
+            showWheel={false}
             showEyedropper={false}
             onSelect={handleSelect}
           />
         )}
 
-        {tab === "match" && renderMatchTab?.({ paints, brandOptions, assignPaint })}
+        {tab === "wheel" && isSubscriber && (
+          <ColorPicker
+            key={initialHex ?? initialPaintId ?? "no-initial"}
+            paints={catalogPaints}
+            catalogLoading={loading}
+            value={
+              initialHex || initialPaintId
+                ? { hex: initialHex ?? "#000000", paintId: initialPaintId ?? null }
+                : null
+            }
+            contextLabel={contextLabel}
+            mode={mode}
+            showLibrary={false}
+            showEyedropper={false}
+            onSelect={handleSelect}
+          />
+        )}
 
-        {tab === "dropper" && (
+        {tab === "match" && isSubscriber && renderMatchTab?.({ paints, brandOptions, assignPaint })}
+
+        {tab === "dropper" && isSubscriber && (
           <EyedropperTool
             onSavePalette={(hexes) => {
               if (hexes[0]) assignHex(hexes[0]);
@@ -193,7 +242,7 @@ export function PaintPickerPanel({
           />
         )}
 
-        {tab === "layering" && (
+        {tab === "layering" && isSubscriber && (
           <LayeringTool
             onSavePalette={(hexes) => {
               if (hexes[0]) assignHex(hexes[0]);
@@ -201,6 +250,7 @@ export function PaintPickerPanel({
           />
         )}
       </div>
+      <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
     </SlideOutPanel>
   );
 }

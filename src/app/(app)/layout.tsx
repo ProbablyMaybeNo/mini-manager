@@ -6,6 +6,8 @@ import { MockProvider } from "@/mock/MockProvider";
 import { auth } from "@/auth";
 import { loadAppData } from "@/lib/appData";
 import { hasSeenTutorial } from "@/db/queries/users";
+import { isProUser } from "@/lib/billing/enforce";
+import { SubscriberProvider } from "@/lib/billing/SubscriberContext";
 
 /**
  * Signed-in surface. Server component: resolves the real session, loads the
@@ -24,17 +26,19 @@ export default async function AppGroupLayout({
 }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const [data, seenTutorial] = userId
-    ? await Promise.all([loadAppData(userId), hasSeenTutorial(userId)])
-    : [undefined, true];
+  const [data, seenTutorial, subscriber] = userId
+    ? await Promise.all([loadAppData(userId), hasSeenTutorial(userId), isProUser(userId)])
+    : [undefined, true, false];
   const signedIn = Boolean(userId);
 
   return (
-    <MockProvider variant="populated" signedIn={signedIn} data={data}>
-      <TourProvider seen={seenTutorial} signedIn={signedIn}>
-        <AppShell signedIn={signedIn}>{children}</AppShell>
-        {signedIn && <InstallBanner />}
-      </TourProvider>
-    </MockProvider>
+    <SubscriberProvider isSubscriber={subscriber}>
+      <MockProvider variant="populated" signedIn={signedIn} data={data}>
+        <TourProvider seen={seenTutorial} signedIn={signedIn}>
+          <AppShell signedIn={signedIn}>{children}</AppShell>
+          {signedIn && <InstallBanner />}
+        </TourProvider>
+      </MockProvider>
+    </SubscriberProvider>
   );
 }
