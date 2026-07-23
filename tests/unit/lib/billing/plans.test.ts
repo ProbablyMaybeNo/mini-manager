@@ -21,12 +21,13 @@ function user(over: Partial<PlanRelevantUser>): PlanRelevantUser {
 }
 
 describe("PLAN_LIMITS", () => {
-  test("free tier: projects + wishlist unlimited, recipes capped at 1 per node", () => {
-    // Gating-layer model — free is unlimited on projects + collection;
-    // only recipes are capped, and that 1 is a PER-PROJECT-NODE ceiling
-    // (enforced by enforceRecipeNodeLimit, not a per-account total).
+  test("free tier: every resource is unlimited", () => {
+    // Gating-layer model (fix 3, docs/SUBSCRIPTION_PAYWALL.md) — the
+    // free/paid boundary is entirely about which FEATURES a user can reach
+    // (isProUser), not resource counts. Recipes lost their per-project-node
+    // cap here; projects/wishlist were already unlimited.
     expect(PLAN_LIMITS.free.projects).toBe(Infinity);
-    expect(PLAN_LIMITS.free.recipes).toBe(1);
+    expect(PLAN_LIMITS.free.recipes).toBe(Infinity);
     expect(PLAN_LIMITS.free.wishlist).toBe(Infinity);
   });
 
@@ -39,31 +40,15 @@ describe("PLAN_LIMITS", () => {
   });
 });
 
-// The free-tier CAP MATH is tested via `isWithinPlanLimit` (which ignores
-// the BILLING_ENFORCED gate) so coverage survives while enforcement is
-// relaxed pre-Stripe. The runtime gate itself is covered separately below.
 describe("isWithinPlanLimit — free tier cap math", () => {
-  test("projects are unlimited on free (no per-account cap)", () => {
+  test("every resource is unlimited on free (no per-account or per-node cap)", () => {
     expect(isWithinPlanLimit("free", "projects", 0)).toBe(true);
-    expect(isWithinPlanLimit("free", "projects", 1)).toBe(true);
     expect(isWithinPlanLimit("free", "projects", 99)).toBe(true);
-  });
-
-  test("wishlist/collection is unlimited on free (no per-account cap)", () => {
     expect(isWithinPlanLimit("free", "wishlist", 0)).toBe(true);
-    expect(isWithinPlanLimit("free", "wishlist", 3)).toBe(true);
     expect(isWithinPlanLimit("free", "wishlist", 99)).toBe(true);
-  });
-
-  // The free `recipes` cap is 1 — but it's a PER-PROJECT-NODE ceiling. The
-  // count passed here is "how many recipes already share this node", so the
-  // first under a node is allowed and the second is blocked. The action-
-  // layer plumbing (count per attachedProjectId) is covered in the
-  // billingLimits integration suite.
-  test("recipes cap is 1 PER NODE — first allowed, second blocked", () => {
     expect(isWithinPlanLimit("free", "recipes", 0)).toBe(true);
-    expect(isWithinPlanLimit("free", "recipes", 1)).toBe(false);
-    expect(isWithinPlanLimit("free", "recipes", 5)).toBe(false);
+    expect(isWithinPlanLimit("free", "recipes", 1)).toBe(true);
+    expect(isWithinPlanLimit("free", "recipes", 99)).toBe(true);
   });
 
   test("negative currentCount is treated as 0", () => {
@@ -72,16 +57,15 @@ describe("isWithinPlanLimit — free tier cap math", () => {
 });
 
 // Stripe is live (subscription-paywall build) — BILLING_ENFORCED is true, so
-// isWithinLimit defers to the real isWithinPlanLimit cap math.
+// isWithinLimit defers to the real isWithinPlanLimit cap math. There is no
+// longer a real resource cap on any plan, so this just re-confirms nothing
+// blocks now that enforcement is live.
 describe("isWithinLimit — enforcement gate (BILLING_ENFORCED)", () => {
-  test("caps ARE enforced now that billing is live", () => {
+  test("no resource cap bites now that billing is live", () => {
     expect(BILLING_ENFORCED).toBe(true);
-    // Projects + wishlist stay unlimited on free regardless (Infinity cap).
     expect(isWithinLimit("free", "projects", 99)).toBe(true);
     expect(isWithinLimit("free", "wishlist", 99)).toBe(true);
-    // Recipes are the one real free cap (1 per node) — it now bites.
-    expect(isWithinLimit("free", "recipes", 1)).toBe(false);
-    expect(isWithinLimit("free", "recipes", 0)).toBe(true);
+    expect(isWithinLimit("free", "recipes", 99)).toBe(true);
   });
 });
 
@@ -104,14 +88,10 @@ describe("isWithinLimit — paid tiers", () => {
 });
 
 describe("isWithinLimit — user-row input", () => {
-  test("resolves a free user from a user row", () => {
+  test("resolves a free user from a user row — every resource unlimited", () => {
     const u = user({ plan: "free" });
-    // Recipes are the only free-capped resource now (1 per node). The cap
-    // math and the live gate agree now that billing is enforced.
-    expect(isWithinPlanLimit(u, "recipes", 0)).toBe(true);
-    expect(isWithinPlanLimit(u, "recipes", 1)).toBe(false);
-    expect(isWithinLimit(u, "recipes", 1)).toBe(false);
-    // Projects + wishlist are unlimited on free now.
+    expect(isWithinPlanLimit(u, "recipes", 99)).toBe(true);
+    expect(isWithinLimit(u, "recipes", 99)).toBe(true);
     expect(isWithinPlanLimit(u, "projects", 99)).toBe(true);
     expect(isWithinPlanLimit(u, "wishlist", 99)).toBe(true);
   });
@@ -134,9 +114,10 @@ describe("isWithinLimit — user-row input", () => {
     const now = new Date("2026-06-01");
     expect(getPlanForUser(expired, now)).toBe("free");
     // isWithinLimit uses now=new Date() so call getPlanForUser directly
-    // to test the cap behaviour without mocking the system clock. Recipes
-    // are the only free-capped resource now (1 per node).
-    expect(PLAN_LIMITS[getPlanForUser(expired, now)].recipes).toBe(1);
+    // to test the cap behaviour without mocking the system clock. No
+    // resource is actually capped on free anymore — this just confirms the
+    // resolved tier is "free" and its limits object still reads Infinity.
+    expect(PLAN_LIMITS[getPlanForUser(expired, now)].recipes).toBe(Infinity);
   });
 });
 

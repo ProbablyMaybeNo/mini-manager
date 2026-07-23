@@ -61,6 +61,7 @@ export function ColorPicker({
   mode = "add-slot",
   showEyedropper = true,
   showLibrary = true,
+  showWheel = true,
 }: {
   paints: ReadonlyArray<Paint>;
   catalogLoading?: boolean;
@@ -75,6 +76,10 @@ export function ColorPicker({
    *  Stacking tool (lvIX6p — colours-only, no "closest paint" pretense on a
    *  colour that isn't grounded yet). */
   showLibrary?: boolean;
+  /** Render the wheel/harmony/sliders sub-panel. Off for the paywall's
+   *  free "plain Library" surface (subscription paywall, fix 3) — the
+   *  colour wheel is a subscriber-only tool, manual library search isn't. */
+  showWheel?: boolean;
 }) {
   const seedHsl = useMemo(() => {
     if (value?.hex) {
@@ -195,6 +200,8 @@ export function ColorPicker({
           : "▸ Picking a colour ADDS a new slot."}
       </p>
 
+      {showWheel && (
+      <>
       {/* Sub-panel 1 — wheel + harmony + sliders */}
       <section aria-labelledby="cp-wheel-heading" className="flex flex-col gap-3">
         <h3 id="cp-wheel-heading" className="label-osd text-cyan-lite">
@@ -253,10 +260,12 @@ export function ColorPicker({
         )}
         <Slider label="Lightness" value={Math.round(light)} onChange={setLight} />
       </section>
+      </>
+      )}
 
       {showLibrary && (
       <>
-      <hr className="border-cyan/20" />
+      {showWheel && <hr className="border-cyan/20" />}
 
       {/* Sub-panel 2 — library */}
       <section aria-labelledby="cp-library-heading" className="flex flex-col gap-3">

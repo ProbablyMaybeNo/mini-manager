@@ -5,20 +5,19 @@
  * actions gate on `isWithinLimit(...)` before any insert; the /pricing
  * page reads `PLAN_LIMITS` to render the comparison table.
  *
- * Four tiers (locked in PHASE10_PLAN.md, gating-layer revision):
- *   free          — UNLIMITED projects + wishlist/collection, but only
- *                   1 recipe PER PROJECT NODE (per attachedProjectId). The
- *                   `recipes` cap is special — see the per-node note on
- *                   PLAN_LIMITS. Sign-up needs only a username + password.
- *   pro_monthly   — unlimited. $4 / month.
- *   pro_lifetime  — unlimited. $36 one-time (3 free months vs monthly).
- *   founder       — unlimited. $26 one-time. Capped at 100 seats; same
- *                   limits as pro_lifetime, separate identity (badge,
- *                   About-page listing).
+ * Four tiers (locked in PHASE10_PLAN.md, revised again for the
+ * subscription-paywall build — docs/SUBSCRIPTION_PAYWALL.md):
+ *   free          — UNLIMITED projects, recipes, and wishlist/collection.
+ *                   The paywall is the CREATOR'S TOOLS (colour wheel,
+ *                   matching, layering, AI, etc.), not a resource count —
+ *                   see `isProUser` (enforce.ts) for that gate. Sign-up
+ *                   needs only a username + password.
+ *   pro_monthly   — unlimited. $3.99 / month. The only tier sold.
+ *   pro_lifetime  — unlimited. Dormant — not currently sold.
+ *   founder       — unlimited. Dormant — not currently sold.
  *
- * Stripe wiring isn't live yet — `getPlanForUser()` derives the tier
- * from columns the webhook will populate later. Until then every user
- * resolves to "free".
+ * `getPlanForUser()` derives the tier from columns the Stripe webhook
+ * populates (or `freeForeverGrantedAt` for an admin-granted comp account).
  */
 
 import type { User } from "@/db/schema";
@@ -50,23 +49,21 @@ export type LimitedResource = "projects" | "recipes" | "wishlist";
 
 /**
  * Per-tier caps. `Infinity` means "no cap" — `isWithinLimit` returns
- * true unconditionally for that resource. Pro Monthly, Pro Lifetime,
- * and Founder all share the same unlimited shape; they're separate
- * tiers for identity / billing, not for capability.
+ * true unconditionally for that resource. Every tier is unlimited for
+ * every resource now — the free/paid boundary is entirely about WHICH
+ * FEATURES a user can reach (`isProUser`, enforce.ts), not how many
+ * projects/recipes/wishlist items they can create.
  *
- * NOTE on `recipes` (gating-layer): the free `recipes` cap is special.
- * It is NOT a per-account total — projects and wishlist are unlimited on
- * free, and a free painter can keep one recipe on EVERY project node.
- * The cap is enforced PER PROJECT NODE: `createRecipe` counts only the
- * recipes sharing the new recipe's `attachedProjectId` (standalone
- * recipes — `attachedProjectId === null` — form their own "no-project"
- * node) and blocks the 2nd under that same node. The `1` here is that
- * per-node ceiling; the cap MATH in `isWithinPlanLimit` is unchanged
- * (count < cap), only the count the caller passes differs.
+ * `recipes` was previously capped at 1 PER PROJECT NODE on free — removed
+ * (docs/SUBSCRIPTION_PAYWALL.md fix 3: "unlimited free recipes, only the
+ * creator's TOOLS are gated"). `enforceRecipeNodeLimit` (enforce.ts) still
+ * runs the per-node count + defers to this cap, but with `Infinity` here
+ * it's a permanent no-op — left in place rather than ripped out, same as
+ * how `projects`/`wishlist` already ran their (also-unlimited) gate.
  */
 export const PLAN_LIMITS: Readonly<Record<PlanTier, Readonly<Record<LimitedResource, number>>>> =
   Object.freeze({
-    free: Object.freeze({ projects: Infinity, recipes: 1, wishlist: Infinity }),
+    free: Object.freeze({ projects: Infinity, recipes: Infinity, wishlist: Infinity }),
     pro_monthly: Object.freeze({
       projects: Infinity,
       recipes: Infinity,
@@ -127,8 +124,9 @@ export type PlanRelevantUser = Pick<
  * if the user's plan string gets reset.
  */
 export function getPlanForUser(user: PlanRelevantUser, now: Date = new Date()): PlanTier {
-  // Testing-period free-forever grant → permanent full access (never lapses),
-  // resolved as pro_lifetime (the unlimited, no-expiry tier).
+  // Admin-granted comp access → permanent full access (never lapses),
+  // resolved as pro_lifetime (the unlimited, no-expiry tier). Set/cleared
+  // only via grantCompAccess/revokeCompAccess (src/lib/actions/adminComp.ts).
   if (user.freeForeverGrantedAt) {
     return "pro_lifetime";
   }

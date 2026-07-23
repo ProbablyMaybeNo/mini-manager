@@ -30,6 +30,7 @@ export function ColorPickerPanel({
   mode = "add-slot",
   showLibrary = true,
   showEyedropper = true,
+  showWheel = true,
   closeOnSelect = false,
 }: {
   open: boolean;
@@ -46,6 +47,11 @@ export function ColorPickerPanel({
   /** Render the image-eyedropper sub-panel. Off for colours-only tools
    *  (Stacking — lvIX6p), which already are eyedropper-adjacent. */
   showEyedropper?: boolean;
+  /** Render the wheel/harmony/sliders sub-panel. Subscription paywall
+   *  (fix 3) — the wheel is a subscriber-only tool; a caller editing a
+   *  recipe paint as a non-subscriber passes `false` to fall back to a
+   *  plain library search. */
+  showWheel?: boolean;
   /**
    * Stable identity of the target being edited (which lane / layer / slot).
    * The inner {@link ColorPicker} is re-keyed on this so re-opening on a
@@ -104,6 +110,7 @@ export function ColorPickerPanel({
         mode={mode}
         showLibrary={showLibrary}
         showEyedropper={showEyedropper}
+        showWheel={showWheel}
         onSelect={(sel) => {
           onSelect(sel);
           if (closeOnSelect) onClose();
