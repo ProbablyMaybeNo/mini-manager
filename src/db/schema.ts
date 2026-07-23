@@ -61,9 +61,12 @@ export const users = sqliteTable("user", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   planExpiresAt: integer("plan_expires_at", { mode: "timestamp_ms" }),
   founderClaimedAt: integer("founder_claimed_at", { mode: "timestamp_ms" }),
-  // Testing-period entitlement — set when a verified-email tester submits
-  // feedback; getPlanForUser treats it as permanent Pro (free forever), so it
-  // overrides the paywall once BILLING_ENFORCED flips on.
+  // Admin-granted comp access (subscription paywall, fix 5). Set/cleared
+  // ONLY by the admin comp actions (src/lib/actions/adminComp.ts —
+  // grantCompAccess/revokeCompAccess, gated on the MM_ADMIN_EMAILS
+  // allowlist); `getPlanForUser` treats it as permanent Pro. Every prior
+  // grant (from the removed testing-period "submit feedback" flow) was
+  // cleared in drizzle/0037 — nobody is comped until an admin grants it.
   freeForeverGrantedAt: integer("free_forever_granted_at", { mode: "timestamp_ms" }),
   recoveryEmail: text("recovery_email"),
   recoveryEmailVerified: integer("recovery_email_verified", {

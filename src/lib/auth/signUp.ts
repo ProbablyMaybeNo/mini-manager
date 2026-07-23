@@ -167,9 +167,8 @@ export async function signUpWithCredentials(input: {
     });
   }
 
-  // Fire the email-verification link (the real-email gate for the testing
-  // period's free-forever reward). Non-fatal — the account already exists, and
-  // without AUTH_RESEND_KEY the link is console-logged in dev.
+  // Fire the email-verification link. Non-fatal — the account already
+  // exists, and without AUTH_RESEND_KEY the link is console-logged in dev.
   try {
     await issueSignupEmailToken(userId, email);
   } catch (err) {
@@ -217,7 +216,7 @@ async function issueSignupEmailToken(userId: string, email: string): Promise<voi
   await sendVerificationEmail({
     to: email,
     subject: "Verify your email — The Mini Mainframe",
-    text: `Welcome to The Mini Mainframe! Confirm your email to lock in free-forever tester access:\n\n${signupVerifyUrl(token)}\n\nThis link expires in 1 hour. If you didn't sign up, ignore this email.`,
+    text: `Welcome to The Mini Mainframe! Confirm your email to finish setting up your account:\n\n${signupVerifyUrl(token)}\n\nThis link expires in 1 hour. If you didn't sign up, ignore this email.`,
   });
 }
 

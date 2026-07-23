@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { desc, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 
@@ -20,4 +20,30 @@ export async function hasSeenTutorial(userId: string): Promise<boolean> {
   const user = row[0];
   if (!user) return true;
   return user.tutorialCompletedAt != null;
+}
+
+export interface CompedUser {
+  id: string;
+  username: string | null;
+  email: string | null;
+  freeForeverGrantedAt: Date;
+}
+
+/**
+ * Every account with admin-granted comp access (subscription paywall, fix
+ * 5) — `/admin/comp` lists these so Ross can see + revoke without hunting
+ * through the DB. Newest grant first.
+ */
+export async function listCompedUsers(): Promise<CompedUser[]> {
+  const rows = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      freeForeverGrantedAt: users.freeForeverGrantedAt,
+    })
+    .from(users)
+    .where(isNotNull(users.freeForeverGrantedAt))
+    .orderBy(desc(users.freeForeverGrantedAt));
+  return rows.map((r) => ({ ...r, freeForeverGrantedAt: r.freeForeverGrantedAt! }));
 }

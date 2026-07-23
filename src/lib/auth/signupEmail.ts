@@ -53,8 +53,8 @@ export async function verifySignupEmailToken(input: {
     .delete(verificationTokens)
     .where(eq(verificationTokens.identifier, row.identifier));
 
-  // Funnel: email confirmed — the real-email gate for the free-forever
-  // reward. The token is single-use (deleted above), so this fires once.
+  // Funnel: email confirmed. The token is single-use (deleted above), so
+  // this fires once.
   await trackServer(AnalyticsEvent.EmailVerified);
 
   return { ok: true };

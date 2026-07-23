@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db/client";
@@ -49,6 +50,12 @@ export default async function AdminGalleryPage() {
           Recipe cards submitted for the public `/gallery`. Approve to list, reject
           to decline (the card image is removed either way once you act).
         </p>
+        <Link
+          href="/admin/comp"
+          className="w-fit font-body text-body text-cyan-lite underline-offset-4 hover:underline"
+        >
+          → Comp access
+        </Link>
       </header>
 
       <AdminGalleryReview initialSubmissions={pending} />
