@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `sponsorship_stripe_session_id_idx` ON `sponsorship` (`stripe_session_id`);

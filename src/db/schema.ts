@@ -1531,6 +1531,18 @@ export const sponsorships = sqliteTable(
   (t) => ({
     /** "Who are our top supporters" — ordered by amount within a user. */
     userAmountIdx: index("sponsorship_user_amount_idx").on(t.userId, t.amountCents),
+    /** Idempotency guard — one row per Stripe checkout session. A rare
+     *  concurrent duplicate delivery of the same sponsor
+     *  `checkout.session.completed` (both getting past the processed-event
+     *  pre-check before either records) would otherwise INSERT twice and
+     *  double-count the tip; this rejects the second insert (the webhook's
+     *  outer try/catch turns it into a Stripe retry, which the
+     *  already-processed check then no-ops). Nullable column — real rows
+     *  always carry Stripe's `session.id`; SQLite keeps multiple NULLs
+     *  distinct if one ever slips through. */
+    stripeSessionIdIdx: uniqueIndex("sponsorship_stripe_session_id_idx").on(
+      t.stripeSessionId,
+    ),
   }),
 );
 
