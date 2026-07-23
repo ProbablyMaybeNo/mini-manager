@@ -5,6 +5,8 @@ import { Button } from "@/components/kit";
 import { validateScanImageFile, type ScanImageMediaType } from "@/lib/paints/scanLimits";
 import type { BulkOwnershipStatus } from "@/lib/paints/ownership";
 import type { PaintScanMatch } from "@/lib/paints/matchScan";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import { ScanPaintsDialog } from "./ScanPaintsDialog";
 
 export type ScanPhotoOutcome =
@@ -37,11 +39,15 @@ function readFileAsBase64(file: File): Promise<string> {
 }
 
 /**
- * The Collection page's "Scan paints" entry point: a photo picker (camera on
- * phones) -> vision scan -> confirm dialog -> bulk-add. Presentational
- * orchestration only — `onScan` and `onConfirm` are supplied by the route,
- * which owns the actual server-action calls and local-state absorption
- * (matching PasteUrlBar's `onAddUrl` pattern).
+ * The "Scan paints" entry point — a photo picker (camera on phones) -> vision
+ * scan -> confirm dialog -> bulk-add. Shared verbatim by the Collection page
+ * and the Tools-hub Paint Scanner (/tools/scan); the Tools route is already
+ * gated a layer up (ToolShell), but the Collection page has no other gate,
+ * so the subscriber check lives HERE — the one place both callers pass
+ * through — rather than being duplicated at each call site. Presentational
+ * orchestration otherwise — `onScan` and `onConfirm` are supplied by the
+ * route, which owns the actual server-action calls and local-state
+ * absorption (matching PasteUrlBar's `onAddUrl` pattern).
  */
 export function ScanPaintsFlow({
   onScan,
@@ -50,6 +56,8 @@ export function ScanPaintsFlow({
   onScan: (imageBase64: string, mediaType: ScanImageMediaType) => Promise<ScanPhotoOutcome>;
   onConfirm: (confirmed: ConfirmedScanPaint[]) => Promise<ConfirmScanOutcome>;
 }) {
+  const isSubscriber = useSubscriber();
+  const [gateOpen, setGateOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -116,7 +124,13 @@ export function ScanPaintsFlow({
       <div>
         <Button
           variant="secondary"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            if (!isSubscriber) {
+              setGateOpen(true);
+              return;
+            }
+            fileInputRef.current?.click();
+          }}
           disabled={scanning}
         >
           {scanning ? "Scanning…" : "Scan paints"}
@@ -138,6 +152,7 @@ export function ScanPaintsFlow({
           setConfirmError(null);
         }}
       />
+      <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
     </div>
   );
 }

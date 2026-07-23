@@ -12,16 +12,12 @@ import type { ActionResult } from "@/lib/actions/projects";
 
 /**
  * "Scan paints from a photo" — Claude Haiku vision -> catalog match
- * pipeline shared by TWO surfaces with different gating:
- *
- *   - "collection" — the Collection page's photo entry point. This is base
- *     Collection tracking (docs/SUBSCRIPTION_PAYWALL.md free bucket) — free.
- *   - "tool" — the Tools hub's Paint Scanner (/tools/scan), one of the
- *     `/tools/*` power tools — subscriber-only.
- *
- * Defaults to "tool" (the gated, higher-friction option) so a caller that
- * forgets to pass `surface` fails closed rather than silently opening a
- * free bypass.
+ * pipeline. Subscriber-only on EVERY entry point (docs/SUBSCRIPTION_PAYWALL.md
+ * fix 1: "no free AI, no exceptions") — the Collection page's "Scan paints"
+ * button and the Tools-hub Paint Scanner (/tools/scan) both call this same
+ * action, and both are gated. There used to be a free "collection" surface;
+ * removed — a real vision-model call costs money on every invocation, so
+ * there's no free entry point for it anywhere.
  *
  * The photo never touches disk/DB: the client posts a base64 payload
  * straight through and it's discarded once this call returns (privacy +
@@ -38,7 +34,6 @@ import type { ActionResult } from "@/lib/actions/projects";
 const scanSchema = z.object({
   imageBase64: z.string().min(1).max(7_500_000),
   mediaType: z.enum(SCAN_ACCEPTED_TYPES),
-  surface: z.enum(["collection", "tool"]).default("tool"),
 });
 
 export async function scanPaintsFromPhoto(
@@ -50,11 +45,10 @@ export async function scanPaintsFromPhoto(
   }
   const userId = await currentUserId();
 
-  // Gating-layer — only the Tools-hub Paint Scanner surface is subscriber
-  // gated; the Collection page's photo scan stays free. Gate BEFORE the
-  // daily-quota check and the vision call so a non-subscriber never burns
-  // either.
-  if (parsed.data.surface === "tool" && !(await isProUser(userId))) {
+  // Gating-layer — Paint Scanner is subscriber-only everywhere it's reached
+  // from. Gate BEFORE the daily-quota check and the vision call so a
+  // non-subscriber never burns either.
+  if (!(await isProUser(userId))) {
     return {
       ok: false,
       error: "Paint Scanner is a Pro feature. Upgrade to scan paint labels.",

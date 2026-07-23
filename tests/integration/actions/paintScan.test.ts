@@ -141,50 +141,36 @@ describe("scanPaintsFromPhoto", () => {
     });
   });
 
-  // Subscription paywall — this action is shared by the free Collection
-  // "Scan paints" entry point and the subscriber-only Tools-hub Paint
-  // Scanner (/tools/scan). `surface` is the only thing that tells them
-  // apart server-side, so it's covered explicitly against a FREE user
-  // (the seeded test user defaults to pro_lifetime — see makeTestDb).
-  describe("scanPaintsFromPhoto — surface gating (subscription paywall)", () => {
-    beforeEach(async () => {
+  // Subscription paywall (fix 1: "no free AI, no exceptions") — Paint
+  // Scanner is subscriber-only on EVERY entry point (the Collection page's
+  // "Scan paints" button and the Tools-hub Paint Scanner both call this
+  // exact action; there is no free surface anymore).
+  describe("scanPaintsFromPhoto — always subscriber-gated", () => {
+    test("blocked for a free (non-subscriber) user", async () => {
       await state.db!.update(users).set({ plan: "free" }).where(eq(users.id, state.userId));
-    });
-
-    test("surface: 'tool' is blocked for a free (non-subscriber) user", async () => {
-      const res = await scanPaintsFromPhoto({
-        imageBase64: "AAAA",
-        mediaType: "image/jpeg",
-        surface: "tool",
-      });
+      const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
       expect(res.ok).toBe(false);
       if (res.ok) return;
       expect(res.error).toMatch(/Pro feature/i);
       expect(res.upgradeUrl).toBe("/pricing");
     });
 
-    test("surface: 'collection' stays free for a free (non-subscriber) user", async () => {
-      const res = await scanPaintsFromPhoto({
-        imageBase64: "AAAA",
-        mediaType: "image/jpeg",
-        surface: "collection",
-      });
+    test("succeeds for a pro_monthly subscriber", async () => {
+      await state.db!.update(users).set({ plan: "pro_monthly" }).where(eq(users.id, state.userId));
+      const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
       expect(res.ok).toBe(true);
     });
 
-    test("omitting surface defaults to the gated 'tool' path (fails closed)", async () => {
+    test("the free gate runs BEFORE the daily-quota check and the vision call", async () => {
+      await state.db!.update(users).set({ plan: "free" }).where(eq(users.id, state.userId));
+      process.env.MM_SCAN_DAILY_LIMIT = "2";
       const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
       expect(res.ok).toBe(false);
-    });
-
-    test("surface: 'tool' succeeds for a pro subscriber", async () => {
-      await state.db!.update(users).set({ plan: "pro_monthly" }).where(eq(users.id, state.userId));
-      const res = await scanPaintsFromPhoto({
-        imageBase64: "AAAA",
-        mediaType: "image/jpeg",
-        surface: "tool",
-      });
-      expect(res.ok).toBe(true);
+      if (res.ok) return;
+      // Pro-gate error, NOT the daily-quota error — proves the gate is
+      // checked first and the (paid) vision call never fires for free users.
+      expect(res.error).toMatch(/Pro feature/i);
+      expect(res.error).not.toMatch(/paint-scan limit/i);
     });
   });
 });
