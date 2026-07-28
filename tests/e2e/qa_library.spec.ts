@@ -29,7 +29,10 @@ test.describe("M1 — Library quick-lookup", () => {
 
     // Default GRID view: swatches are list items labelled "Name, Brand…".
     const swatchWall = page.getByRole("list", { name: /Paint swatches/i });
-    const firstSwatch = swatchWall.getByRole("listitem").first();
+    // Swatches are BUTTONS, not listitems: `role="listitem"` was deliberately
+    // removed from them (SwatchWall F2(b)) because it overrode the native
+    // button semantics screen readers need for an actionable control.
+    const firstSwatch = swatchWall.getByRole("button").first();
     await expect(firstSwatch).toBeVisible({ timeout: 30_000 });
 
     const label = (await firstSwatch.getAttribute("aria-label")) ?? "";

@@ -179,7 +179,10 @@ test.describe("M6 — Mobile primary flows", () => {
     await page.locator('input[name="library-search"]').fill("Mephiston Red");
 
     const swatchWall = page.getByRole("list", { name: /Paint swatches/i });
-    const firstSwatch = swatchWall.getByRole("listitem").first();
+    // Swatches are BUTTONS, not listitems: `role="listitem"` was deliberately
+    // removed from them (SwatchWall F2(b)) because it overrode the native
+    // button semantics screen readers need for an actionable control.
+    const firstSwatch = swatchWall.getByRole("button").first();
     await expect(firstSwatch).toBeVisible({ timeout: 30_000 });
     const label = (await firstSwatch.getAttribute("aria-label")) ?? "";
     const paintName = label.split(",")[0]?.trim() ?? "";

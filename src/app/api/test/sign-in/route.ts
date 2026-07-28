@@ -29,9 +29,9 @@ export async function POST(req: Request) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  let body: { email?: unknown };
+  let body: { email?: unknown; comp?: unknown };
   try {
-    body = (await req.json()) as { email?: unknown };
+    body = (await req.json()) as { email?: unknown; comp?: unknown };
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -39,6 +39,18 @@ export async function POST(req: Request) {
   if (!email) {
     return NextResponse.json({ error: "email required" }, { status: 400 });
   }
+  // Test users are COMPED by default (Ross, 2026-07-28): every spec predates the
+  // 2026-07-22 paywall and signs in with a fresh email, so `/tools/*` and the
+  // recipe picker's tool tabs rendered their LOCKED state and the specs failed
+  // asserting the pre-paywall world. `getPlanForUser` resolves
+  // `freeForeverGrantedAt` to pro_lifetime, so this is the same mechanism as an
+  // admin comp — not a paywall bypass in product code.
+  //
+  // Pass `{ comp: false }` to mint a NON-subscriber and assert the gate itself.
+  // Nothing does yet; the trade-off of comping by default is that the paywall
+  // goes untested until a spec opts out, so this hook exists to make that a
+  // one-line change rather than a revert.
+  const comped = body.comp !== false;
 
   const existing = await db
     .select()
@@ -46,22 +58,23 @@ export async function POST(req: Request) {
     .where(eq(users.email, email))
     .limit(1);
 
+  const compGrantedAt = comped ? new Date() : null;
+
   let userId: string;
   if (existing[0]) {
     userId = existing[0].id;
     // Ensure existing legacy rows are also "complete" so the migration
-    // shim doesn't bounce parallel test runs to /finish-account.
-    if (!existing[0].passwordHash || !existing[0].username) {
-      const placeholder = await hashPassword(nanoid(32));
-      const usernameFromEmail = synthUsername(email);
-      await db
-        .update(users)
-        .set({
-          passwordHash: existing[0].passwordHash ?? placeholder,
-          username: existing[0].username ?? usernameFromEmail,
-        })
-        .where(eq(users.id, userId));
-    }
+    // shim doesn't bounce parallel test runs to /finish-account, and reconcile
+    // the comp flag so a re-used email picks up the requested tier.
+    const placeholder = await hashPassword(nanoid(32));
+    await db
+      .update(users)
+      .set({
+        passwordHash: existing[0].passwordHash ?? placeholder,
+        username: existing[0].username ?? synthUsername(email),
+        freeForeverGrantedAt: compGrantedAt,
+      })
+      .where(eq(users.id, userId));
   } else {
     userId = nanoid(16);
     const placeholder = await hashPassword(nanoid(32));
@@ -71,6 +84,7 @@ export async function POST(req: Request) {
       name: email,
       username: synthUsername(email),
       passwordHash: placeholder,
+      freeForeverGrantedAt: compGrantedAt,
     });
   }
 

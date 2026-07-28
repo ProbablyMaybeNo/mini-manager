@@ -29,8 +29,12 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
       await expect(dialog).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 30_000 });
 
-    // The full toolset is present as tabs.
-    await expect(page.getByRole("tab", { name: "Wheel · Library" })).toBeVisible();
+    // The full toolset is present as tabs. Library and Wheel are SEPARATE tabs
+    // now — the picker was split so Library is the one free tab and every tool
+    // tab is subscriber-gated, which retired the combined "Wheel · Library"
+    // label this spec used to assert.
+    await expect(page.getByRole("tab", { name: "Library" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Wheel" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Match" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Dropper" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Layering" })).toBeVisible();
@@ -44,7 +48,7 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
     await expect(page.getByText("LAYERING").first()).toBeVisible();
 
     // Back to the library list: search, then assign the first match to the slot.
-    await page.getByRole("tab", { name: "Wheel · Library" }).click();
+    await page.getByRole("tab", { name: "Library" }).click();
     await page
       .getByPlaceholder("Search by paint name, brand, or line…")
       .fill("red");

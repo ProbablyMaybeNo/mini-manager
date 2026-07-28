@@ -35,7 +35,7 @@ test.describe("Library — view mode toggle", () => {
     // to the handful of "Mephiston Red" rows (guards a pre-hydration fill).
     await expect(async () => {
       await search.fill("Mephiston Red");
-      const count = await swatchWall.getByRole("listitem").count();
+      const count = await swatchWall.getByRole("button").count();
       expect(count).toBeGreaterThan(0);
       expect(count).toBeLessThan(30);
     }).toPass({ timeout: 30_000 });
@@ -45,7 +45,7 @@ test.describe("Library — view mode toggle", () => {
     await expect(gridBtn).toHaveAttribute("aria-checked", "true");
 
     // --- Grid view: open detail from a swatch. ---
-    const firstSwatch = swatchWall.getByRole("listitem").first();
+    const firstSwatch = swatchWall.getByRole("button").first();
     await expect(firstSwatch).toBeVisible({ timeout: 30_000 });
     const gridLabel = (await firstSwatch.getAttribute("aria-label")) ?? "";
     const gridName = gridLabel.split(",")[0]?.trim() ?? "";
