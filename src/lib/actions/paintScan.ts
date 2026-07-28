@@ -51,7 +51,7 @@ export async function scanPaintsFromPhoto(
   if (!(await isProUser(userId))) {
     return {
       ok: false,
-      error: "Paint Scanner is a Pro feature. Upgrade to scan paint labels.",
+      error: "The Paint Scanner unlocks when you sponsor the Mainframe.",
       upgradeUrl: "/pricing",
     };
   }

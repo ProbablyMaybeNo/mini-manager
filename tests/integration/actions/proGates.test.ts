@@ -93,7 +93,7 @@ describe("createPalette — Pro-gated Save Palette", () => {
     });
     expect(res.ok).toBe(false);
     if (res.ok) return;
-    expect(res.error).toMatch(/Pro feature/i);
+    expect(res.error).toMatch(/sponsor the Mainframe/i);
     expect(res.upgradeUrl).toBe("/pricing");
   });
 
@@ -117,7 +117,7 @@ describe("sendPaletteToRecipe — Pro-gated Send to Recipe", () => {
     });
     expect(res.ok).toBe(false);
     if (res.ok) return;
-    expect(res.error).toMatch(/Pro feature/i);
+    expect(res.error).toMatch(/sponsor the Mainframe/i);
     expect(res.upgradeUrl).toBe("/pricing");
     // No recipe created — gate ran first.
     const rows = await state.db!.select().from(recipes);
@@ -162,7 +162,7 @@ describe("createTextImport — Pro-gated army-list parse (pasted text)", () => {
     const res = await createTextImport({ rawText: SAMPLE_LIST });
     expect(res.ok).toBe(false);
     if (res.ok) return;
-    expect(res.error).toMatch(/Pro feature/i);
+    expect(res.error).toMatch(/sponsor the Mainframe/i);
     expect(res.upgradeUrl).toBe("/pricing");
     // Gate ran before parse + persist — no import row was created (and so
     // the LLM fallback parser was never reached).
@@ -196,7 +196,7 @@ describe("createFileImport — Pro-gated army-list parse (uploaded file)", () =>
     });
     expect(res.ok).toBe(false);
     if (res.ok) return;
-    expect(res.error).toMatch(/Pro feature/i);
+    expect(res.error).toMatch(/sponsor the Mainframe/i);
     expect(res.upgradeUrl).toBe("/pricing");
     const rows = await state.db!.select().from(imports);
     expect(rows).toHaveLength(0);

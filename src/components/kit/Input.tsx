@@ -59,7 +59,10 @@ export function Input({
             // class is needed because it outranks the element-level 16px floor.
             // py-2 lives here now, and min-h-11 makes the input itself the full
             // 44px target rather than a 24px strip inside a 42px box.
-            "min-h-11 w-full bg-transparent py-2 font-body text-[16px] text-fg placeholder:text-fg-muted focus:outline-none sm:min-h-6 sm:text-body",
+            // `roomy:` not `sm:` — gated on width alone, both the 44px height
+            // and the 16px anti-zoom size reverted on every landscape phone,
+            // silently undoing this fix one round after it shipped.
+            "min-h-11 w-full bg-transparent py-2 font-body text-[16px] text-fg placeholder:text-fg-muted focus:outline-none roomy:min-h-6 roomy:text-body",
             className,
           )}
           {...props}

@@ -151,7 +151,7 @@ describe("scanPaintsFromPhoto", () => {
       const res = await scanPaintsFromPhoto({ imageBase64: "AAAA", mediaType: "image/jpeg" });
       expect(res.ok).toBe(false);
       if (res.ok) return;
-      expect(res.error).toMatch(/Pro feature/i);
+      expect(res.error).toMatch(/sponsor the Mainframe/i);
       expect(res.upgradeUrl).toBe("/pricing");
     });
 
@@ -169,7 +169,7 @@ describe("scanPaintsFromPhoto", () => {
       if (res.ok) return;
       // Pro-gate error, NOT the daily-quota error — proves the gate is
       // checked first and the (paid) vision call never fires for free users.
-      expect(res.error).toMatch(/Pro feature/i);
+      expect(res.error).toMatch(/sponsor the Mainframe/i);
       expect(res.error).not.toMatch(/paint-scan limit/i);
     });
   });

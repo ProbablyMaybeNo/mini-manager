@@ -45,7 +45,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       req,
       {
         error:
-          "The browser extension is a Pro feature — upgrade to add items straight from a store page.",
+          "The browser extension unlocks when you sponsor the Mainframe.",
         upgradeUrl: "/pricing",
       },
       402,

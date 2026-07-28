@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { UNLOCKS } from "@/components/public/PricingClient";
 import { useSubscriber } from "@/lib/billing/SubscriberContext";
 
 /**
@@ -45,13 +46,28 @@ export function ToolShell({
         children
       ) : (
         <>
+          {/* The locked page used to end at y=329 with 59% of the screen empty
+              and one way out (paywall audit MUX-P10) — a whole screen spent
+              saying "no". It now says what the $3.99 actually buys, reusing the
+              same UNLOCKS list /pricing sells from so the two can't drift. */}
           <Panel accent="cyan" label="LOCKED" className="max-w-md p-6">
             <p className="font-body text-body text-fg">
               ▸ {title} is part of the tool suite — sponsor to unlock it.
             </p>
-            <Button className="mt-4" onClick={() => setGateOpen(true)}>
-              Sponsor · $3.99/mo →
+            <ul className="mt-4 flex flex-col gap-2 text-left">
+              {UNLOCKS.map((u) => (
+                <li key={u} className="flex gap-2 font-body text-body text-fg-dim">
+                  <span aria-hidden className="shrink-0 text-cyan-lite">▸</span>
+                  <span>{u}</span>
+                </li>
+              ))}
+            </ul>
+            <Button className="mt-4 min-h-12 w-full" onClick={() => setGateOpen(true)}>
+              Sponsor the Mainframe · $3.99/mo →
             </Button>
+            <Link href="/pricing" className="mt-3 inline-flex min-h-11 items-center font-body text-body text-fg-dim underline-offset-4 hover:text-cyan-lite hover:underline">
+              See everything sponsoring unlocks
+            </Link>
           </Panel>
           <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
         </>

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
 import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import { TOOL_THUMBS } from "./ToolThumbnails";
 
@@ -32,6 +34,7 @@ const TOOLS: ToolCard[] = [
 
 export function ToolsHubView() {
   const isSubscriber = useSubscriber();
+  const [gateOpen, setGateOpen] = useState(false);
   return (
     <div className="flex h-full flex-col gap-4 p-3 md:gap-6 md:p-6">
       <PageHeader
@@ -40,8 +43,26 @@ export function ToolsHubView() {
           isSubscriber
             ? "// colour utilities — turn an idea, photo, or colour into named, buyable paints"
             : "// colour utilities — sponsor to unlock the full toolset"
-        }
+        }
       />
+      {/* On a phone the paywall explanation lived ONLY in PageHeader's tagline,
+          which is `roomy:`-gated and therefore zero-size on every phone
+          viewport — so a free user could scroll all 1,645px of this hub and see
+          nothing but a padlock emoji five times, with the price nowhere on the
+          page (paywall audit MUX-P08). This says it once, outside the tagline
+          slot, without touching the settled `roomy:` rule. */}
+      {!isSubscriber && (
+        <Panel accent="cyan" className="p-3">
+          <button
+            type="button"
+            onClick={() => setGateOpen(true)}
+            className="flex min-h-12 w-full items-center justify-between gap-2 text-left font-body text-body text-cyan-lite transition-colors hover:text-glow-cyan"
+          >
+            <span>🔒 These tools unlock when you sponsor the Mainframe · $3.99/mo</span>
+            <span aria-hidden>→</span>
+          </button>
+        </Panel>
+      )}
       <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
         {TOOLS.map((t) => {
           // p9DIDc — bespoke phosphor SVG thumbnail per tool, or a raster image.
@@ -91,6 +112,7 @@ export function ToolsHubView() {
           );
         })}
       </div>
+      <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
     </div>
   );
 }

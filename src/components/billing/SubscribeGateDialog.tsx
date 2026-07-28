@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ModalDialog } from "@/components/kit";
+import { Button, ModalDialog } from "@/components/kit";
 import { startProMonthlyCheckout } from "@/lib/billing/startCheckout";
 
 /**
@@ -18,8 +18,16 @@ import { startProMonthlyCheckout } from "@/lib/billing/startCheckout";
  * unlock; THIS is the monthly sponsorship that unlocks the tools.
  *
  * Copy is locked to Ross's exact wording — do not reword without a product
- * call: the headline itself IS the checkout link ("Sponsor the Mainframe"),
- * not a separate button below a static heading.
+ * call. The phrase stays "Sponsor the Mainframe"; what changed (paywall audit,
+ * 2026-07-28) is its PRESENTATION and the addition of the price:
+ *
+ *  - It was styled as a 21px `font-h1` heading with no border or fill, sitting
+ *    directly under a near-identical cyan "SPONSOR" title. Nothing marked it as
+ *    tappable, and its 22px hit area failed WCAG 2.5.8 — on the single control
+ *    in the entire app that takes money. It's a real Button now.
+ *  - The modal stated no price AND rendered on top of the `$3.99/MO` button
+ *    behind it, so the moment of commitment carried no terms at all. The price
+ *    now rides on the CTA and is repeated in the body.
  */
 export function SubscribeGateDialog({
   open,
@@ -47,17 +55,20 @@ export function SubscribeGateDialog({
   return (
     <ModalDialog open={open} onClose={onClose} title="Sponsor" breadcrumb="MINI MAINFRAME">
       <div className="flex flex-col gap-3">
-        <button
-          type="button"
-          onClick={sponsor}
-          disabled={pending}
-          className="text-left font-h1 text-h1 text-cyan-lite transition-colors hover:text-glow-cyan disabled:cursor-wait disabled:opacity-60"
-        >
-          {pending ? "Redirecting…" : "Sponsor the Mainframe →"}
-        </button>
         <p className="font-body text-body text-fg">
           Unlock a range of tools to help plan, paint, and track your entire
           wargaming collection.
+        </p>
+        <Button
+          size="lg"
+          className="min-h-12 w-full"
+          onClick={sponsor}
+          disabled={pending}
+        >
+          {pending ? "Redirecting…" : "Sponsor the Mainframe · $3.99/mo →"}
+        </Button>
+        <p className="font-body text-body text-fg-dim">
+          $3.99 a month. Cancel any time.
         </p>
         {error && (
           <p className="font-body text-body text-red-text" role="alert">

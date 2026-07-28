@@ -29,7 +29,7 @@ import { validatePaletteColors } from "@/lib/palettes/cascade";
  * opening a free bypass.
  */
 const PRO_FEATURE_ERROR =
-  "Sending palettes to a recipe is a Pro feature. Upgrade to apply your tool results.";
+  "Sending palettes to a recipe unlocks when you sponsor the Mainframe.";
 
 /* ============================================================
    listRecipesForSendTo — lightweight read action surfaced to the

@@ -212,11 +212,17 @@ button {
 
 /* iOS Safari auto-zooms the viewport whenever a focused form control computes
    below 16px — jarring on phones and it doesn't zoom back out. Floor every
-   control at 16px at mobile widths so tapping a field never triggers it; the
-   desktop scale (13px body) is unaffected. We deliberately do NOT lock
+   control at 16px at PHONE-SIZED viewports so tapping a field never triggers
+   it; the desktop scale (13px body) is unaffected. We deliberately do NOT lock
    `maximum-scale` in the viewport meta — that would defeat pinch-zoom and fail
-   WCAG 1.4.4. (F1) */
-@media (max-width: 640px) {
+   WCAG 1.4.4. (F1)
+
+   The `max-height` clause matters as much as the width one: gated on width
+   alone, this protection switched off the moment a phone was rotated, dropping
+   fields back to 13px and re-arming the exact zoom trap it exists to prevent —
+   in the orientation where an unrecoverable zoom costs most. Same width-only
+   flaw as the `roomy:`/`desk:` breakpoints. */
+@media (max-width: 640px), (max-height: 500px) {
   input,
   select,
   textarea {

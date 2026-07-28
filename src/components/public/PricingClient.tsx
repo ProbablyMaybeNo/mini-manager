@@ -13,7 +13,7 @@ const BEACON_HOBBIES_URL = "https://beaconhobbies.com";
 
 /** What sponsoring unlocks — mirrors the gated set in
  *  docs/SUBSCRIPTION_PAYWALL.md exactly. */
-const UNLOCKS = [
+export const UNLOCKS = [
   "All the tools — Colour Wheel, Match, Dropper, Stacking, and the Paint Scanner",
   "AI recipe generation — describe a scheme, get a catalog-grounded recipe back",
   "The recipe creator's full toolset — colour matching, layering/glaze prediction, technique tooling",

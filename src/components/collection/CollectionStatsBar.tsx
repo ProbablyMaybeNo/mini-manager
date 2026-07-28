@@ -118,11 +118,17 @@ export function CollectionStatsBar({
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-10 flex flex-col gap-y-1.5 border-t border-cyan/30",
+        // STATIC on short viewports (MUX5-002). Pinned, its 66px sat over the
+        // table's first row in landscape — the row laid out at y=311 behind a
+        // bar occupying y=309–375, so a hit test at the row's centre returned
+        // the bar's own "PAINT:" label and /collection showed ZERO rows on the
+        // screen whose only job is the list. It pins again from `roomy:` up,
+        // where there's height to spare.
+        "z-10 flex flex-col gap-y-1.5 border-t border-cyan/30 roomy:sticky roomy:bottom-0",
         // Opaque, not bg/90+blur: table rows read through the translucent bar as
         // it overlapped them, which made the totals look like part of the table
         // (MUX-018).
-        "bg-bg px-4 py-2.5",
+        "bg-bg px-4 py-1.5 roomy:py-2.5",
       )}
     >
       {/* Phone bar (Ross, 2026-07-27): exactly two lines. The per-project BUDGET

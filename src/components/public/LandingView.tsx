@@ -112,7 +112,11 @@ export function LandingView() {
       <main id="main" className="flex flex-1 flex-col">
       {/* Hero — the animated CRT logo IS the wordmark (its screen reads
           "Mini-Mainframe"); reduced-motion users get the static poster frame. */}
-      <section className="scanlines flex flex-col items-center gap-6 px-6 py-16 text-center">
+      {/* py-4 on short viewports (MUX5-005): in landscape the first screen was
+          header, 66px of empty background, then the CRT artwork — the headline
+          didn't start until y≈332 of 375, so nothing said what the product was
+          above the fold. The artwork's own max-h-[42vh] already shrinks it. */}
+      <section className="scanlines flex flex-col items-center gap-4 px-6 py-4 text-center roomy:gap-6 roomy:py-16">
         <h1 className="sr-only">
           The Mini Mainframe — paint &amp; project manager for miniatures
         </h1>

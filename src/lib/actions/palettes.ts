@@ -18,7 +18,7 @@ import { validatePaletteColors } from "@/lib/palettes/cascade";
  * true for everyone until Stripe is live).
  */
 const PRO_FEATURE_ERROR =
-  "Saving palettes is a Pro feature. Upgrade to keep your tool results.";
+  "Saving palettes unlocks when you sponsor the Mainframe.";
 
 const paletteIdSchema = z.string().min(1).max(64);
 

@@ -16,8 +16,18 @@ describe("mobile input zoom (F1)", () => {
     // Normalise whitespace so formatting changes don't break the assertion.
     const flat = css.replace(/\s+/g, " ");
     expect(flat).toMatch(
-      /@media \(max-width: 640px\) \{ input, select, textarea \{ font-size: 16px;/,
+      /@media \(max-width: 640px\), \(max-height: 500px\) \{ input, select, textarea \{ font-size: 16px;/,
     );
+  });
+
+  test("the 16px floor also covers landscape phones (short viewports)", () => {
+    // Gated on width alone, the F1 protection switched off the moment a phone
+    // was rotated — fields dropped back to 13px and re-armed the exact Safari
+    // zoom trap this rule exists to prevent, in the orientation where an
+    // unrecoverable zoom costs most. The height clause is the fix; assert it
+    // explicitly so a future tidy-up can't quietly drop it again.
+    const css = readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+    expect(css.replace(/\s+/g, " ")).toMatch(/\(max-height: 500px\)/);
   });
 
   test("viewport does not lock maximum-scale / user-scalable (keeps pinch-zoom)", () => {

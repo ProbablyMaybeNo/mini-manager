@@ -90,7 +90,7 @@ export async function createTextImport(
     return {
       ok: false,
       error:
-        "Army-list import is a Pro feature. Upgrade to parse and import lists.",
+        "Army-list import unlocks when you sponsor the Mainframe.",
       upgradeUrl: "/pricing",
     };
   }
@@ -144,7 +144,7 @@ export async function createFileImport(
     return {
       ok: false,
       error:
-        "Army-list import is a Pro feature. Upgrade to parse and import lists.",
+        "Army-list import unlocks when you sponsor the Mainframe.",
       upgradeUrl: "/pricing",
     };
   }
@@ -253,7 +253,7 @@ export async function applyImport(
     return {
       ok: false,
       error:
-        "Army-list import is a Pro feature. Upgrade to turn parsed lists into projects.",
+        "Army-list import unlocks when you sponsor the Mainframe.",
       upgradeUrl: "/pricing",
     };
   }

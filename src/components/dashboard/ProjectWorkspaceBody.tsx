@@ -1010,7 +1010,7 @@ function SubProjectRow({
         onClick={onOpen}
         className="flex min-w-[8rem] flex-1 items-center gap-2 text-left focus:outline-none focus-visible:underline"
       >
-        <span className="min-w-0 flex-1 truncate font-h2 text-h2 text-cyan-lite hover:text-glow-cyan">
+        <span className="min-w-0 flex-1 break-words font-h2 text-h2 text-cyan-lite hover:text-glow-cyan">
           {child.title}
         </span>
         <TypeChip type={child.type} />

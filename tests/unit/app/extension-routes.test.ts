@@ -176,7 +176,7 @@ describe("POST /api/extension/add", () => {
     const res = await addPOST(req({ url: SUPPORTED, status: "OWNED" }));
     expect(res.status).toBe(402);
     const body = (await res.json()) as { error?: string; upgradeUrl?: string };
-    expect(body.error).toMatch(/Pro feature/i);
+    expect(body.error).toMatch(/sponsor the Mainframe/i);
     expect(body.upgradeUrl).toBe("/pricing");
     expect(scrapeAndInsertWishlistItem).not.toHaveBeenCalled();
   });

@@ -139,13 +139,13 @@ export function SlotRow({
               28×24 with 2px between the most-repeated controls in the editor
               (MUX2-003). The group wraps to its own line when the row is too
               tight rather than shrinking back below 44px. */}
-          {/* Wraps below ~360px (MUX3-002). Making the four controls genuinely
+          {/* Wraps below 390px (MUX3-002; the 360px threshold fired 30px before the content actually fit, MUX5-003). Making the four controls genuinely
               44px grew the cluster ~90px → 152px, which pushed Remove off the
               right edge at 320 — its trash glyph entirely past the viewport and
               its centre returning null from elementFromPoint. The scroller hid
               it silently, so nothing said the control existed. Wrapping costs a
               line at narrow widths; shrinking the buttons back is not an option. */}
-          <div className="flex flex-wrap items-center gap-2 min-[360px]:flex-nowrap">
+          <div className="flex flex-wrap items-center gap-2 min-[390px]:flex-nowrap">
             {techniqueListbox("xs")}
             <span className="ml-auto flex items-center">
               {/* ▲/▼ stack into one 44×44 column — two halves of a single

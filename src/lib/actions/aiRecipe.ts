@@ -52,7 +52,7 @@ export async function saveRecipeFromAi(
 ): Promise<ActionResult<{ id: string }>> {
   const userId = await currentUserId();
   if (!(await isProUser(userId))) {
-    return { ok: false, error: "AI Recipe Creator is a Pro feature.", upgradeUrl: "/pricing" };
+    return { ok: false, error: "The AI Recipe Creator unlocks when you sponsor the Mainframe.", upgradeUrl: "/pricing" };
   }
 
   const parsed = proposalSchema.safeParse(raw);
@@ -116,7 +116,7 @@ export async function wishlistMissingPaints(
 ): Promise<ActionResult<{ added: number }>> {
   const userId = await currentUserId();
   if (!(await isProUser(userId))) {
-    return { ok: false, error: "AI Recipe Creator is a Pro feature.", upgradeUrl: "/pricing" };
+    return { ok: false, error: "The AI Recipe Creator unlocks when you sponsor the Mainframe.", upgradeUrl: "/pricing" };
   }
 
   const parsed = z.array(z.string().min(1)).max(24).safeParse(rawIds);

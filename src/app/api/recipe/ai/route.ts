@@ -43,7 +43,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!(await isProUser(userId))) {
     return NextResponse.json(
       {
-        error: "AI Recipe Creator is a Pro feature — upgrade to generate recipes with AI.",
+        error: "The AI Recipe Creator unlocks when you sponsor the Mainframe.",
         upgradeUrl: "/pricing",
       },
       { status: 402 },

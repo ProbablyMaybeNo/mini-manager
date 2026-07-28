@@ -263,13 +263,20 @@ export function PaintInfoPanelContent({
         // science) is HIDDEN, not greyed out, in favour of one tidy unlock
         // card (docs/SUBSCRIPTION_PAYWALL.md — greying a wall of dead
         // controls reads as broken).
-        <Panel accent="cyan" className="p-4">
+        // The padding lives on the BUTTON, not the Panel (paywall audit
+        // MUX-P02). With `p-4` on the Panel the card looked like a 342×54
+        // tappable surface while only the inner 308×20 text line was live —
+        // hit-testing five points inside the visible card, three landed on the
+        // wrapping div and did nothing. Tapping the obvious edge of an unlock
+        // card and getting silence is the worst first impression of a paid
+        // feature.
+        <Panel accent="cyan">
           <button
             type="button"
             onClick={() => setGateOpen(true)}
-            className="flex w-full items-center justify-between gap-2 text-left font-body text-body text-cyan-lite hover:text-glow-cyan"
+            className="flex min-h-12 w-full items-center justify-between gap-2 p-4 text-left font-body text-body text-cyan-lite transition-colors hover:bg-cyan/10 hover:text-glow-cyan"
           >
-            <span>🔒 Sponsor to unlock a range of tools</span>
+            <span>🔒 Sponsor to unlock a range of tools · $3.99/mo</span>
             <span aria-hidden>→</span>
           </button>
         </Panel>

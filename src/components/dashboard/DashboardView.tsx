@@ -20,6 +20,7 @@ import {
   hasSeenWalkthrough,
   shouldShowProjectCreateWalkthrough,
 } from "./projectCreateWalkthroughData";
+import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import { ProjectPanelStack } from "./ProjectPanelStack";
 import { ProjectsTable } from "./ProjectsTable";
 import { RosterFilterBar, type RosterSort } from "./RosterFilterBar";
@@ -90,6 +91,7 @@ export function DashboardView({
   onRetry,
 }: DashboardViewProps) {
   const router = useRouter();
+  const isSubscriber = useSubscriber();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // PP-1 cleanup flag: the slide-out edit inspector is no longer opened by a
   // dashboard row-click (rows now navigate to /projects/[id]). `inspectorOpen`
@@ -307,9 +309,12 @@ export function DashboardView({
                       + NEW PROJECT
                     </Button>
                   )}
+                  {/* 🔒 for non-subscribers (paywall audit MUX-P05) — army-list
+                      import is gated, and this button gave no warning before
+                      the tap. See the matching note on "Scan paints". */}
                   {onUploadArmyList && (
                     <Button variant="secondary" onClick={onUploadArmyList} className="w-full md:w-auto">
-                      ⬆ Upload Army
+                      {isSubscriber ? "⬆ Upload Army" : "🔒 Upload Army"}
                     </Button>
                   )}
                 </div>

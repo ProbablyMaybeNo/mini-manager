@@ -133,7 +133,13 @@ export function ScanPaintsFlow({
           }}
           disabled={scanning}
         >
-          {scanning ? "Scanning…" : "Scan paints"}
+          {/* 🔒 for non-subscribers (paywall audit MUX-P05). This and
+              "⬆ Upload Army" were the only two gates in the app that looked
+              identical to the working buttons beside them — every other gate
+              announces itself, and that inconsistency is exactly what makes a
+              paywall read as bait-and-switch. The button stays enabled and
+              still opens the gate; it just stops pretending. */}
+          {scanning ? "Scanning…" : isSubscriber ? "Scan paints" : "🔒 Scan paints"}
         </Button>
       </div>
       {scanError && (

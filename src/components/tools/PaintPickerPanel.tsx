@@ -172,18 +172,24 @@ export function PaintPickerPanel({
             const active = t.key === tab;
             const locked = GATED_TABS.has(t.key) && !isSubscriber;
             return (
+              // A locked tab used to signal its state ONLY with an aria-hidden
+              // 🔒, so a screen reader announced a plain "Wheel, tab, 2 of 5"
+              // and the user got a paywall instead of a tool (paywall audit
+              // MUX-P12). The Tools hub already does this properly one component
+              // away. min-h-11 also lifts these off the 30px they measured.
               <button
                 key={t.key}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() => selectTab(t.key)}
+                aria-label={locked ? `${t.label} — sponsor access only` : undefined}
                 className={cn(
-                  "-mb-px border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite",
+                  "-mb-px inline-flex min-h-11 items-center border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite",
                   active
                     ? "border-cyan text-cyan-lite"
                     : "border-transparent text-fg-dim hover:border-fg/30 hover:text-fg",
                 )}
+                onClick={() => selectTab(t.key)}
               >
                 {t.label}
                 {locked && <span aria-hidden> 🔒</span>}
