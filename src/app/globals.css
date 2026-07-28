@@ -10,6 +10,15 @@
    ------------------------------------------------------------------------- */
 @custom-variant roomy (@media (min-width: 600px) and (min-height: 500px));
 
+/* `desk:` — the DESKTOP SHELL threshold, height-aware for the same reason.
+   `min-width: 840px` is cleared by every modern phone in landscape (iPhone
+   12–16 at 844x390, iPhone 11/XR 896x414, Pixel 7/8 915x412, Pro Max 932x430),
+   which handed them the 220px sidebar rail inside a ≤430px-tall window and
+   collapsed /recipes' three-column workbench to a 304px detail pane. Rounds of
+   landscape testing at 812x375 never caught it because 812 sits just BELOW the
+   threshold — the bug only exists on real phone geometry. */
+@custom-variant desk (@media (min-width: 840px) and (min-height: 500px));
+
 /* ----------------------------------------------------------------------------
    Fonts — V2 "HEX.CODE" (REDESIGN_V2_HEXCODE.md)
    TWO-FACE SYSTEM (Ross, 2026-07-09): the single-face era (2026-06-28) is over.

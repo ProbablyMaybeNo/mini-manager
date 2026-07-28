@@ -28,7 +28,7 @@ export function MobileTopBar() {
 
   return (
     <>
-      <header className="flex items-center justify-between border-b border-cyan/40 bg-bg-raised/40 px-4 py-2 min-[840px]:hidden">
+      <header className="flex items-center justify-between border-b border-cyan/40 bg-bg-raised/40 px-4 py-2 desk:hidden">
         <Logo size={44} />
         <button
           type="button"

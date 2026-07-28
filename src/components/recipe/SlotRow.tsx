@@ -124,7 +124,10 @@ export function SlotRow({
             <button
               type="button"
               onClick={onPick}
-              className="min-w-0 flex-1 truncate text-left font-mono text-[13px] text-fg-bright focus:outline-none focus-visible:underline"
+              // break-words, matching the fix /tools/stacking and /tools/match
+              // already got — the step's paint name is its identity, and it was
+              // the one surface that swap skipped (MUX4-008).
+              className="min-w-0 flex-1 break-words text-left font-mono text-[13px] leading-tight text-fg-bright focus:outline-none focus-visible:underline"
             >
               {slot.name}
             </button>

@@ -83,7 +83,7 @@ export function RecipeIndexView({
       {/* Desktop only (Ross, 2026-07-27 mobile pass) — a nice-to-have strapline
           shouldn't sit between a phone user and their recipe list. */}
       <section
-        className="hidden rounded-[10px] px-4 py-2.5 text-white md:block"
+        className="hidden rounded-[10px] px-4 py-2.5 text-white roomy:block"
         style={{ backgroundColor: "#22568F" }}
       >
         <span className="font-mono text-[13px] text-white">

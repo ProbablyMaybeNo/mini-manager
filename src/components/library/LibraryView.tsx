@@ -171,6 +171,18 @@ export function LibraryView(props: LibraryViewProps) {
         </div>
       )}
 
+      {/* Result count (MUX4-009). /library was the only list surface without
+          one — /collection shows "PAINTS 8", /gallery "8 CARDS", /recipes a
+          chip — and in GRID mode the cells carry no text at all, so a filter
+          could do nothing and a 50-viewport-deep pane could give no sense of
+          scale. */}
+      {status !== "error" && !loading && (
+        <p className="label-osd text-fg-dim" aria-live="polite">
+          {paints.length.toLocaleString()} paint{paints.length === 1 ? "" : "s"}
+          {activeFilters || filter.search ? ` of ${totalCount.toLocaleString()}` : ""}
+        </p>
+      )}
+
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">
           <p className="font-body text-body text-red-text">▸ Couldn’t load the library.</p>
@@ -184,7 +196,11 @@ export function LibraryView(props: LibraryViewProps) {
         </Panel>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-          <Panel className="min-h-0 flex-1 overflow-hidden">
+          {/* min-h-[60vh] below lg (MUX4-004). In landscape the catalog pane
+              collapsed to 81px — two rows of swatches, or one clipped table row
+              — while the COLOR MAP rail below kept 102px, so a secondary
+              hue-jump aid outranked the catalog it navigates. */}
+          <Panel className="min-h-[60vh] flex-1 overflow-hidden lg:min-h-0">
             {loading ? (
               <div className="h-full overflow-y-auto p-4">
                 <div
@@ -220,7 +236,11 @@ export function LibraryView(props: LibraryViewProps) {
               />
             )}
           </Panel>
-          <ColorMapRail paints={paints} onJumpHue={onJumpHue} />
+          {/* The rail is a navigation aid, not content — hidden on short
+              viewports where it was competing with the catalog for the fold. */}
+          <div className="hidden roomy:contents">
+            <ColorMapRail paints={paints} onJumpHue={onJumpHue} />
+          </div>
         </div>
       )}
 

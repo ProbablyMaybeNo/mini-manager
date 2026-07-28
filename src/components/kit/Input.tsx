@@ -35,8 +35,12 @@ export function Input({
         </label>
       )}
       <div
+        // The vertical padding moved onto the <input> (see below) so the whole
+        // 42px box is tappable. It used to live here, on a plain div with no
+        // handler, so 43% of every field's height was dead: a click 4px inside
+        // the visible border hit the wrapper and focused nothing (MUX4-005).
         className={cn(
-          "flex items-center gap-2 rounded-[6px] border bg-surface-2 px-2.5 py-2 transition-[border-color,box-shadow] duration-150",
+          "flex items-center gap-2 rounded-[6px] border bg-surface-2 px-2.5 transition-[border-color,box-shadow] duration-150",
           error
             ? "border-red focus-within:shadow-[0_0_0_3px_rgba(255,75,75,0.15)]"
             : "border-border focus-within:border-cyan focus-within:shadow-[0_0_0_3px_rgba(0,245,255,0.15)]",
@@ -53,7 +57,9 @@ export function Input({
             // text-[16px] on mobile stops iOS Safari's focus zoom (F1); the
             // desktop scale (sm:text-body → 13px) is unchanged. The utility
             // class is needed because it outranks the element-level 16px floor.
-            "min-h-6 w-full bg-transparent font-body text-[16px] text-fg placeholder:text-fg-muted focus:outline-none sm:text-body",
+            // py-2 lives here now, and min-h-11 makes the input itself the full
+            // 44px target rather than a 24px strip inside a 42px box.
+            "min-h-11 w-full bg-transparent py-2 font-body text-[16px] text-fg placeholder:text-fg-muted focus:outline-none sm:min-h-6 sm:text-body",
             className,
           )}
           {...props}

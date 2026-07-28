@@ -284,7 +284,7 @@ export function RecipeWorkbench({
               the whole page, and a strapline shouldn't outrank the recipe list
               (Ross, 2026-07-27). */}
           <section
-            className="hidden rounded-[10px] px-3 py-2 text-white md:block"
+            className="hidden rounded-[10px] px-3 py-2 text-white roomy:block"
             style={{ backgroundColor: "#22568F" }}
           >
             <span className="block font-mono text-[12px] leading-snug text-white">

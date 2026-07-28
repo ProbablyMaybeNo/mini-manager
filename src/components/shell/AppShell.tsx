@@ -19,7 +19,10 @@ export function AppShell({
     return <main className="min-h-full">{children}</main>;
   }
   return (
-    <div className="flex h-dvh flex-col md:flex-row">
+    // `desk:` matches the rail's own gate — with `md:flex-row` the shell went
+    // horizontal at 768px while the rail only appeared at 840px, so landscape
+    // phones between the two got a row layout with nothing in the first column.
+    <div className="flex h-dvh flex-col desk:flex-row">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:border focus:border-cyan focus:bg-bg focus:px-3 focus:py-1.5 focus:font-button focus:text-button focus:uppercase focus:tracking-[0.15em] focus:text-cyan-lite"
@@ -39,7 +42,7 @@ export function AppShell({
           // The fixed bottom nav is gone (the hamburger in MobileTopBar owns
           // mobile nav now), so the only reserved space is the home-indicator
           // safe area.
-          className="min-w-0 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)] outline-none min-[840px]:pb-0"
+          className="min-w-0 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)] outline-none desk:pb-0"
         >
           <RouteTransition>{children}</RouteTransition>
         </main>

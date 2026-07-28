@@ -30,7 +30,15 @@ export function SchemePreview({ slots }: { slots: RecipeSlot[] }) {
             }}
             title={`${i + 1}. ${s.name}${s.layer ? " · " + s.layer : ""}`}
           >
-            <span className="truncate label-osd opacity-90">{s.layer || s.name}</span>
+            {/* Labels only where they fit (MUX4-007). Hiding the legend for
+                vertical economy removed the fallback that made ellipsised
+                on-swatch labels acceptable — "UND… BAS… WASH HIG… MET…" with
+                only a `title` behind it, which never fires on touch. On a phone
+                the strip is a pure colour ribbon and the numbered step rows
+                ~100px below name every technique in the same order. */}
+            <span className="hidden truncate label-osd opacity-90 roomy:block">
+              {s.layer || s.name}
+            </span>
           </span>
         ))}
       </div>

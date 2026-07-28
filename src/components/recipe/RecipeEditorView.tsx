@@ -107,8 +107,14 @@ export function RecipeEditorView({
       />
 
       {/* Title + assign + share */}
-      <Panel label="DETAILS" className="flex flex-col gap-3 p-3 md:flex-row md:items-end md:gap-4 md:p-4">
-        <div className="flex-1">
+      {/* `flex-wrap` + a real min-width on the name field (MUX4-001). The
+          single-line desktop row needs ~1050–1270px and never wrapped, so on
+          every landscape phone (which clears `md`) the name input collapsed to
+          28px — showing "Sala" of "Salamanders Green Scheme" — and Attach and
+          Delete rendered up to 425px past the right edge inside a container with
+          no scrollbar or fade to say they were there. */}
+      <Panel label="DETAILS" className="flex flex-col gap-3 p-3 md:flex-row md:flex-wrap md:items-end md:gap-4 md:p-4">
+        <div className="min-w-[12rem] flex-1">
           <Input
             label="Recipe name"
             name="title"

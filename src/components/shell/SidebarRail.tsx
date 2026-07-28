@@ -16,7 +16,7 @@ export function SidebarRail() {
   return (
     <nav
       aria-label="Primary"
-      className="hidden h-full w-[220px] shrink-0 flex-col border-r border-border bg-surface py-8 min-[840px]:flex"
+      className="hidden h-full w-[220px] shrink-0 flex-col border-r border-border bg-surface py-8 desk:flex"
     >
       {/* Logo block — the Mini Mainframe CRT mark, links home. The art is bright
           cyan on black; `lighten` drops its black backdrop into the rail so it

@@ -78,13 +78,13 @@ export function CollectionView({
           the UA rule that hides a closed <details>' children — so the paste bar
           rendered anyway, unstyled and stacked under the PAINTS heading where
           it was invisible to pointers but still in the a11y tree (MUX2-005). */}
-      <div className="flex flex-col gap-4 md:contents">
+      <div className="flex flex-col gap-4 roomy:contents">
         <button
           type="button"
           aria-expanded={addOpen}
           aria-controls="collection-bulk-add"
           onClick={() => setAddOpen((v) => !v)}
-          className="flex min-h-11 items-center gap-2 rounded-[8px] border border-border px-3 font-mono text-[12px] uppercase tracking-wide text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg md:hidden"
+          className="flex min-h-11 items-center gap-2 rounded-[8px] border border-border px-3 font-mono text-[12px] uppercase tracking-wide text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg roomy:hidden"
         >
           <span aria-hidden className={cn("text-cyan-lite transition-transform", addOpen && "rotate-90")}>
             ▸
@@ -93,7 +93,7 @@ export function CollectionView({
         </button>
         <div
           id="collection-bulk-add"
-          className={cn(addOpen ? "flex" : "hidden", "flex-col gap-4 md:contents")}
+          className={cn(addOpen ? "flex" : "hidden", "flex-col gap-4 roomy:contents")}
         >
           <PasteUrlBar onAddUrl={onAddUrl} />
           <ScanPaintsFlow onScan={onScanPhoto} onConfirm={onConfirmScan} />

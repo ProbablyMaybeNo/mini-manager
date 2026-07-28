@@ -29,5 +29,8 @@ export function useMediaQuery(query: string): boolean {
 /** The app-wide desktop split: `md` (768px), consistent with SidebarRail /
  *  AppShell. `true` at ≥768px. */
 export function useIsDesktop(): boolean {
-  return useMediaQuery("(min-width: 768px)");
+  // Height-aware, matching the `desk:`/`roomy:` CSS variants. A width-only test
+  // is true for every phone held in landscape, which is how the desktop
+  // master-detail inspector ended up rendering in a ~390px-tall window.
+  return useMediaQuery("(min-width: 768px) and (min-height: 500px)");
 }
