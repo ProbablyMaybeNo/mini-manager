@@ -141,26 +141,30 @@ export function RecipeEditorView({
             the fold before any content. `order-last` on mobile drops the whole
             row beneath the name field; the desktop row is unchanged via
             `md:contents`. */}
+        {/* Short labels ONLY where the space is tight. Desktop keeps the full
+            wording — it has the room, "Save Recipe" is clearer than "Save", and
+            the label is the button's accessible name (the hidden span is out of
+            the a11y tree, so each viewport exposes exactly one). */}
         <div className="order-last grid grid-cols-2 gap-2 md:contents">
           <Button variant="secondary" onClick={onShare} className="h-11 whitespace-nowrap md:h-auto">
-            ⛓ Share
+            ⛓ Share<span className="hidden md:inline">&nbsp;Link</span>
           </Button>
           <Button
             variant="outlineCyan"
             onClick={() => setShareCardOpen(true)}
             className="h-11 whitespace-nowrap md:h-auto"
           >
-            ⬡ Share Card
+            ⬡ Share<span className="hidden md:inline">&nbsp;as</span>&nbsp;Card
           </Button>
           <Button variant="add" onClick={onSave} className="h-11 whitespace-nowrap md:h-auto">
-            Save
+            Save<span className="hidden md:inline">&nbsp;Recipe</span>
           </Button>
           <Button
             variant="solidCyan"
             className="h-11 whitespace-nowrap border-blue bg-blue hover:bg-blue/85 md:h-auto"
             onClick={onSave}
           >
-            Attach
+            Attach<span className="hidden md:inline">&nbsp;Recipe</span>
           </Button>
           {onDelete && (
             <Button
