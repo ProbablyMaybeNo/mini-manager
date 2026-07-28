@@ -16,7 +16,10 @@ import {
 import type { MatchResult, Paint } from "@/lib/types";
 import { AssignPaintMenu, type AssignedResult } from "@/components/recipe/AssignPaintMenu";
 
-const PAGE_SIZE = 50;
+/** 50 rows is 5098px — about six phone screens of ranked results, when the
+ *  answer a painter wants is in the top handful. Paged at 12 so the page stays
+ *  scannable; Next → still reaches every match (MUX2-001). */
+const PAGE_SIZE = 12;
 
 // In harmony mode the painter gets several target hues at once, so a single
 // "best" paint per hue leaves them no room to choose. Offer the top few ranked
@@ -245,7 +248,12 @@ export function ColourMatchTool({
         ) : (
           <>
             {paged.map((r) => (
-              <div key={r.paint.id} className="flex items-center gap-3 border border-cyan/20 p-2">
+              // flex-wrap so the action lane can drop to its own line on a
+              // phone rather than squeezing the paint name (MUX2-001).
+              <div
+                key={r.paint.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 border border-cyan/20 p-2"
+              >
                 <MatchRow
                   result={r}
                   onUse={onUse}
@@ -326,11 +334,16 @@ function MatchRow({
           <span aria-hidden className={cn("inline-block h-2 w-2 shrink-0 rounded-full", dotColor)} />
           {/* The dot is colour-only; name the confidence level for SR (UX-008). */}
           <span className="sr-only">{conf} confidence match</span>
-          <span className="truncate font-body text-body text-fg" title={result.paint.name}>
+          {/* Wrap, don't truncate (MUX2-001). The paint's name IS this tool's
+              entire output, and it was the only thing being cut — 77px of a
+              309px row went to identity while 150px went to the buttons, so
+              "Smoked Blue" showed 63 of 86px and at 320px the column collapsed
+              to about one character. */}
+          <span className="min-w-0 break-words font-body text-body text-fg" title={result.paint.name}>
             {result.paint.name}
           </span>
         </div>
-        <div className="label-osd truncate text-fg" title={result.paint.brand}>
+        <div className="label-osd break-words text-fg" title={result.paint.brand}>
           {result.paint.brand}
         </div>
         {/* MM-31 — neon-green bar + "NN% color match" label */}
@@ -344,8 +357,10 @@ function MatchRow({
         </div>
       </div>
       {/* ΔE + actions in their own shrink-0 lane so they never collapse onto or
-          overlap the name/brand block in a narrow panel (Pick & Paint). */}
-      <div className="flex shrink-0 items-center gap-2">
+          overlap the name/brand block in a narrow panel (Pick & Paint). On a
+          phone the lane wraps to its own full-width line beneath the paint
+          instead of taking half the row from the name (MUX2-001). */}
+      <div className="flex w-full shrink-0 items-center justify-end gap-2 min-[420px]:w-auto">
         {/* The raw ΔE duplicates the % bar and reads as jargon — annotate it in
             plain language for both sighted (title) and SR (aria-label) users
             without dropping the number (UX-008). */}

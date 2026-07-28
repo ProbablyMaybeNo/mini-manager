@@ -100,7 +100,7 @@ export function LibraryView(props: LibraryViewProps) {
       <PageHeader
         title="LIBRARY"
         tagline={`// every paint on the market — mark what you own or want (${totalCount.toLocaleString()} across all the major brands)`}
-        taglineClassName="hidden font-body text-body md:block"
+        taglineClassName="font-body text-body"
         actions={
           <>
             <div className="w-44">

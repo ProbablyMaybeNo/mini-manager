@@ -26,8 +26,21 @@ export function PageHeader({
           {title}
         </h1>
         <span aria-hidden className="mt-2 block h-1 w-12 rounded-full bg-cyan" />
+        {/* Taglines are hidden on any phone-sized viewport, landscape included
+            (MUX2-009). Routes were each opting out with `hidden md:block`, and
+            `md` is true at 812×375 — so rotating a phone brought back a
+            four-line description that portrait had already judged not worth its
+            height, on a screen with 375px to spend. `roomy:` gates on both axes;
+            callers can still override via taglineClassName. */}
         {tagline && (
-          <p className={cn("mt-3 max-w-2xl font-mono text-body text-fg-dim", taglineClassName)}>{tagline}</p>
+          <p
+            className={cn(
+              "mt-3 hidden max-w-2xl font-mono text-body text-fg-dim roomy:block",
+              taglineClassName,
+            )}
+          >
+            {tagline}
+          </p>
         )}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

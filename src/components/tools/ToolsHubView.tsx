@@ -40,8 +40,7 @@ export function ToolsHubView() {
           isSubscriber
             ? "// colour utilities — turn an idea, photo, or colour into named, buyable paints"
             : "// colour utilities — sponsor to unlock the full toolset"
-        }
-        taglineClassName="hidden md:block"
+        }
       />
       <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
         {TOOLS.map((t) => {

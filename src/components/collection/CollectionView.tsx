@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import { cn } from "@/lib/cn";
 import type { CollectionItem, CollectionKind, Project, ProjectStatus } from "@/lib/types";
 import type { ScanImageMediaType } from "@/lib/paints/scanLimits";
 import { CollectionTable } from "./CollectionTable";
@@ -55,6 +57,8 @@ export function CollectionView({
   /** Resolve a recipe id to its palette swatches for the RECIPE column. */
   recipeSwatches?: (recipeId: string) => string[];
 }) {
+  /** Phone-only disclosure for the paste-URL + scan-photo bulk-add paths. */
+  const [addOpen, setAddOpen] = useState(false);
   return (
     // Tighter gutters + section gaps on phones (Ross, 2026-07-27) — 24px of
     // padding either side of a 375px screen was 13% of the width, and the
@@ -67,17 +71,34 @@ export function CollectionView({
           (MUX-022). Three add-paint entry points competed above the table —
           paste-a-URL, SCAN PAINTS, and "+ PAINT" — with the most niche given
           the most prominent placement. "+ PAINT" on the section header is the
-          primary; these are the power tools, one tap away. */}
-      <details className="group md:contents">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-[8px] border border-border px-3 font-mono text-[12px] uppercase tracking-wide text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg md:hidden">
-          <span aria-hidden className="text-cyan-lite transition-transform group-open:rotate-90">▸</span>
+          primary; these are the power tools, one tap away.
+
+          Explicit state, NOT <details>: the first attempt wrapped these in a
+          <details> whose body carried `flex`, and an explicit display overrides
+          the UA rule that hides a closed <details>' children — so the paste bar
+          rendered anyway, unstyled and stacked under the PAINTS heading where
+          it was invisible to pointers but still in the a11y tree (MUX2-005). */}
+      <div className="flex flex-col gap-4 md:contents">
+        <button
+          type="button"
+          aria-expanded={addOpen}
+          aria-controls="collection-bulk-add"
+          onClick={() => setAddOpen((v) => !v)}
+          className="flex min-h-11 items-center gap-2 rounded-[8px] border border-border px-3 font-mono text-[12px] uppercase tracking-wide text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg md:hidden"
+        >
+          <span aria-hidden className={cn("text-cyan-lite transition-transform", addOpen && "rotate-90")}>
+            ▸
+          </span>
           Add from a link or a photo
-        </summary>
-        <div className="mt-3 flex flex-col gap-4 md:contents">
+        </button>
+        <div
+          id="collection-bulk-add"
+          className={cn(addOpen ? "flex" : "hidden", "flex-col gap-4 md:contents")}
+        >
           <PasteUrlBar onAddUrl={onAddUrl} />
           <ScanPaintsFlow onScan={onScanPhoto} onConfirm={onConfirmScan} />
         </div>
-      </details>
+      </div>
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">

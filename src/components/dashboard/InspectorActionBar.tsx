@@ -47,7 +47,23 @@ export function InspectorActionBar({
   disabled?: boolean;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 mt-2 flex flex-wrap items-center gap-2 border-t border-cyan/40 bg-bg/95 px-4 py-3 backdrop-blur-sm">
+    // SAVE leads and takes the row's spare width; the destructive Delete goes
+    // last, outlined rather than filled. It used to be third — the smallest
+    // button in the bar, 8px from a solid-red Delete that was the loudest thing
+    // in it (MUX2-007). Five ragged widths are now one grid.
+    <div className="sticky bottom-0 z-10 -mx-4 mt-2 grid grid-cols-2 items-center gap-2 border-t border-cyan/40 bg-bg px-4 py-3 sm:flex sm:flex-wrap">
+      {onSave && (
+        <Button
+          variant="primary"
+          size="sm"
+          className="col-span-2 min-h-11 sm:flex-1"
+          disabled={disabled || saveDisabled}
+          onClick={onSave}
+        >
+          {saveLabel}
+        </Button>
+      )}
+
       {onFocus && (
         <Button
           variant="outlinePurple"
@@ -61,34 +77,6 @@ export function InspectorActionBar({
         </Button>
       )}
 
-      {onDelete && (
-        <Button
-          variant="danger"
-          size="sm"
-          className="min-h-11"
-          disabled={disabled}
-          onClick={onDelete}
-        >
-          <Trash2 size={16} aria-hidden />
-          Delete
-        </Button>
-      )}
-
-      {onSave && (
-        <Button
-          variant="primary"
-          size="sm"
-          className="min-h-11"
-          disabled={disabled || saveDisabled}
-          onClick={onSave}
-        >
-          ▾ {saveLabel}
-        </Button>
-      )}
-
-      {/* Archive + Duplicate are direct flex-wrap children (no ml-auto group) so
-          on a narrow panel they wrap to the next line instead of overflowing /
-          clipping off the right edge. */}
       {onArchive && (
         <Button
           variant="secondary"
@@ -109,6 +97,19 @@ export function InspectorActionBar({
           onClick={onDuplicate}
         >
           ⧉ Duplicate
+        </Button>
+      )}
+
+      {onDelete && (
+        <Button
+          variant="outlineRed"
+          size="sm"
+          className="min-h-11 sm:ml-auto"
+          disabled={disabled}
+          onClick={onDelete}
+        >
+          <Trash2 size={16} aria-hidden />
+          Delete
         </Button>
       )}
     </div>

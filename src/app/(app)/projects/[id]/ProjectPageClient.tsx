@@ -397,10 +397,13 @@ export function ProjectPageClient({
                   {childCount}
                 </span>
               </div>
+              {/* Desktop only (MUX2-013): the card's own full-width
+                  "+ Add Sub-Project" footer sits 134px below this and does the
+                  same thing — two controls for one action. */}
               <Button
                 variant="add"
                 size="sm"
-                className="h-10"
+                className="hidden h-10 md:inline-flex"
                 onClick={() => router.push(`/dashboard?open=${project.id}`)}
               >
                 + ADD UNIT
@@ -775,6 +778,7 @@ function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMe
         <label className="flex flex-col gap-1">
           <span className="label-osd text-fg-dim">Type</span>
           <Listbox
+            size="md"
             value={optimisticProject.type}
             ariaLabel="Project type"
             options={TYPE_OPTIONS.map((t) => ({ value: t, label: t.toUpperCase() }))}
@@ -786,6 +790,7 @@ function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMe
         <label className="flex flex-col gap-1">
           <span className="label-osd text-fg-dim">Status</span>
           <Listbox
+            size="md"
             value={optimisticProject.status}
             ariaLabel="Project status"
             accent={statusAccent[optimisticProject.status]}
@@ -798,6 +803,7 @@ function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMe
         <label className="flex flex-col gap-1">
           <span className="label-osd text-fg-dim">Priority</span>
           <Listbox
+            size="md"
             value={optimisticProject.priority}
             ariaLabel="Project priority"
             accent={priorityAccent[optimisticProject.priority]}

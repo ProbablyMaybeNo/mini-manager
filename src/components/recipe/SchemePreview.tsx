@@ -22,7 +22,7 @@ export function SchemePreview({ slots }: { slots: RecipeSlot[] }) {
         {slots.map((s, i) => (
           <span
             key={i}
-            className="flex flex-1 items-center justify-center px-1 text-center leading-tight"
+            className="flex min-w-0 flex-1 items-center justify-center px-1 text-center leading-tight"
             style={{
               backgroundColor: s.swatch,
               color: readableText(s.swatch),
@@ -37,10 +37,12 @@ export function SchemePreview({ slots }: { slots: RecipeSlot[] }) {
       {/* A compact index legend so a tiny strip cell still maps to a paint. */}
       <ol className="flex flex-wrap gap-x-3 gap-y-1">
         {slots.map((s, i) => (
-          <li key={i} className="flex items-center gap-1.5 font-body text-body text-fg">
+          <li key={i} className="flex min-w-0 items-center gap-1.5 font-body text-body text-fg">
             <Swatch hex={s.swatch} size="sm" />
-            <span className="text-fg-faint">{i + 1}.</span>
-            <span className="truncate">{s.layer ? `${s.layer} — ${s.name}` : s.name}</span>
+            <span className="shrink-0 text-fg-faint">{i + 1}.</span>
+            {/* Wraps rather than truncating — at 320px these lines ran to
+                right=339 in a 320 viewport, cutting the paint-name tails. */}
+            <span className="min-w-0 break-words">{s.layer ? `${s.layer} — ${s.name}` : s.name}</span>
           </li>
         ))}
       </ol>
@@ -78,7 +80,7 @@ export function EmptySchemeExample() {
         {example.map((s, i) => (
           <span
             key={i}
-            className="flex flex-1 items-center justify-center px-1 text-center leading-tight"
+            className="flex min-w-0 flex-1 items-center justify-center px-1 text-center leading-tight"
             style={{ backgroundColor: s.hex, color: readableText(s.hex), textShadow: captionScrim(s.hex) }}
           >
             <span className="truncate label-osd opacity-90">{s.layer}</span>

@@ -78,7 +78,7 @@ export function FocusView({
   if (!project) {
     return (
       <div className="flex h-full flex-col gap-4 p-3 md:gap-6 md:p-6">
-        <PageHeader title="FOCUS" tagline={TAGLINE} taglineClassName="hidden md:block" />
+        <PageHeader title="FOCUS" tagline={TAGLINE} />
         <div>{picker}</div>
         <Panel label="NO SESSION" className="max-w-md p-6">
           <p className="font-body text-body text-fg">▸ No project in focus.</p>

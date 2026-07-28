@@ -142,9 +142,17 @@ function CollapsibleSection({
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = `${anchorId}-body`;
   return (
+    // Tighter box when collapsed (MUX2-010): the round-1 clamp shrank the TEXT
+    // to one line but the card stayed 122px — ~76px of content in a 122px box,
+    // with up to 29px of dead space below it. Four collapsed sections were 60%
+    // of the fold. Padding relaxes as soon as it opens.
     <Panel
       label={label}
-      className={cn("p-4 pt-5", fill && "flex flex-col", className)}
+      className={cn(
+        open ? "p-4 pt-5" : "px-4 pb-2 pt-4 md:p-4 md:pt-5",
+        fill && "flex flex-col",
+        className,
+      )}
       data-walkthrough={dataWalkthrough}
     >
       {/* scroll-mt keeps the notched label clear of the sticky header when the
@@ -158,7 +166,12 @@ function CollapsibleSection({
           aria-controls={bodyId}
           aria-label={`${open ? "Collapse" : "Expand"} ${label} section`}
           onClick={() => setOpen((v) => !v)}
-          className="-mt-2 mb-3 flex min-h-11 w-full items-start gap-3 text-left md:hidden"
+          className={cn(
+            // Full-width row, so a 36px height is still an enormous target when
+            // collapsed; it relaxes to 44px + a gap once open.
+            "-mt-2 flex w-full items-start gap-3 text-left md:hidden",
+            open ? "mb-3 min-h-11" : "mb-0 min-h-9",
+          )}
         >
           {/* Ross's call: a collapsed card still describes itself. But six
               sections × 2–3 lines of prose was ~135px per closed section
@@ -398,7 +411,10 @@ export function ProjectWorkspaceBody({
   }
 
   return (
-    <div ref={rootRef} className="flex flex-col gap-4">
+    // min-h-full gives the sticky action bar a containing block taller than
+    // itself. Without it every ancestor sized to content, so `sticky bottom-0`
+    // had nowhere to stick and SAVE sat ~2 screens below the fold (MUX2-007).
+    <div ref={rootRef} className="flex min-h-full flex-col gap-4">
       {/* Mobile quick-jump rail (MOP-005): segmented section anchors. Hidden on
           md+ where every section is already expanded and on-screen. Scrolls (and
           expands if needed) the matching section. Horizontally scrollable so it
@@ -458,10 +474,11 @@ export function ProjectWorkspaceBody({
           overall-progress strip instead (PP-2), so it's suppressed here to avoid
           a duplicate. */}
       {!isPage && (
-        // At phone width the trio wraps to a 2-up grid so no label is clipped
-        // to an ellipsis (MUX-004); the inline dot-separated row returns once
-        // there's room (≥420px). The dots only show in the inline layout.
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border border-cyan/30 bg-bg-raised/30 px-3 py-2 min-[420px]:flex min-[420px]:items-center min-[420px]:gap-2">
+        // Three stats, three columns (MUX2-008). The 2-up grid wrapped 2+1 and
+        // left the bottom-right cell empty, spending 72px on values that fit in
+        // one 30px row. The inline dot-separated row returns at ≥420px; the
+        // dots only show in that layout.
+        <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 border border-cyan/30 bg-bg-raised/30 px-3 py-2 min-[420px]:flex min-[420px]:items-center min-[420px]:gap-2">
           <ProgressStat
             glyph="#"
             label="total"
@@ -874,7 +891,7 @@ export function ProjectWorkspaceBody({
       {/* error + action bar — kept last in the flex column. On the page variant
           they carry order-6 so they sit below the ordered sections (the un-
           ordered default order-0 would otherwise float them above SUB-PROJECTS). */}
-      <div className={cn("flex flex-col gap-4", isPage && "order-6")}>
+      <div className={cn("mt-auto flex flex-col gap-4", isPage && "order-6")}>
         {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
 
         {/* Sticky action bar (RF-1): a visible row of labelled buttons —

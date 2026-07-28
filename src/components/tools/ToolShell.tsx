@@ -40,7 +40,7 @@ export function ToolShell({
       </Link>
       {/* Blurb is desktop-only — the tool's own controls are right below it and
           the title already names the job (Ross, 2026-07-27 mobile pass). */}
-      <PageHeader title={title} tagline={blurb} taglineClassName="hidden md:block" />
+      <PageHeader title={title} tagline={blurb} />
       {isSubscriber ? (
         children
       ) : (

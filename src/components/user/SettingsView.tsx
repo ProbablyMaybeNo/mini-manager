@@ -20,7 +20,7 @@ export function SettingsView({
 }) {
   return (
     <div className="flex flex-col gap-4 p-3 md:gap-6 md:p-6">
-      <PageHeader title="SETTINGS" tagline="Preferences and data." taglineClassName="hidden md:block" />
+      <PageHeader title="SETTINGS" tagline="Preferences and data." />
 
       <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
         <Panel label="PREFERENCES" className="flex flex-col gap-4 p-4 md:p-5">

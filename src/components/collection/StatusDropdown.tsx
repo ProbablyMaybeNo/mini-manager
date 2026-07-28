@@ -52,10 +52,12 @@ export function StatusDropdown({
       // Fixed width at "xs" (the phone table cell) so every box in the STATUS
       // column is identical and the column edge is straight — sizing to the
       // label gave 61px OWNED next to 81px WISHLIST, a ragged edge that came
-      // within 1px of the COST column (MUX-013).
+      // within 1px of the COST column (MUX-013). 90px, not 82px: the label's
+      // own scrollWidth exceeded the box by 2px, so "WISHLIST" rendered as
+      // "WISHLI…" until the webfont swapped in (MUX2-014).
       triggerClassName={cn(
         "uppercase tracking-[0.06em]",
-        size === "xs" && "w-[82px] justify-between",
+        size === "xs" && "w-[90px] justify-between",
       )}
     />
   );

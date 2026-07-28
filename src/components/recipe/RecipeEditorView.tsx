@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Input, Listbox, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import { cn } from "@/lib/cn";
 import type { Project, Recipe, RecipeSlot } from "@/lib/types";
 import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { RecipePaintPicker } from "./RecipePaintPicker";
@@ -40,6 +41,8 @@ export function RecipeEditorView({
 }) {
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
   const [shareCardOpen, setShareCardOpen] = useState(false);
+  /** Phone-only disclosure for the secondary recipe actions (MUX2-004). */
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   const update = (patch: Partial<Recipe>) => onChange({ ...recipe, ...patch });
   const updateSlots = (slots: RecipeSlot[]) => update({ slots });
@@ -101,7 +104,6 @@ export function RecipeEditorView({
       <PageHeader
         title="RECIPE EDITOR"
         tagline="Capture a repeatable scheme, attach it to a project, and share it."
-        taglineClassName="hidden md:block"
       />
 
       {/* Title + assign + share */}
@@ -131,50 +133,71 @@ export function RecipeEditorView({
           />
         </div>
         {/* 28:4 footer actions: SHARE LINK (outline), SAVE RECIPE (green),
-            ATTACH RECIPE (blue). Share stays the green outline link affordance.
-            On phones they wrap into a grid instead of stacking as five
-            full-width bars; `md:contents` dissolves the wrapper so the desktop
-            row is byte-for-byte what it was. */}
-        {/* One height, one baseline, single-line labels (MUX-007). These were
-            77×76 / 88×58 / 122×58 at two different top edges — three sizes in a
-            row — and they held the slot above the recipe steps, spending 48% of
-            the fold before any content. `order-last` on mobile drops the whole
-            row beneath the name field; the desktop row is unchanged via
-            `md:contents`. */}
-        {/* Short labels ONLY where the space is tight. Desktop keeps the full
-            wording — it has the room, "Save Recipe" is clearer than "Save", and
-            the label is the button's accessible name (the hidden span is out of
-            the a11y tree, so each viewport exposes exactly one). */}
-        <div className="order-last grid grid-cols-2 gap-2 md:contents">
-          <Button variant="secondary" onClick={onShare} className="h-11 whitespace-nowrap md:h-auto">
-            ⛓ Share<span className="hidden md:inline">&nbsp;Link</span>
-          </Button>
-          <Button
-            variant="outlineCyan"
-            onClick={() => setShareCardOpen(true)}
-            className="h-11 whitespace-nowrap md:h-auto"
+            ATTACH RECIPE (blue). Desktop keeps all five in one row via
+            `md:contents`, unchanged.
+
+            On phones, only SAVE stays in DETAILS. Round 1 aligned these five
+            (159×44, clean baselines) but the block still pushed step 01 to
+            y=681 — 84% of the fold spent before a single step, on the screen
+            whose entire job is editing steps (MUX2-004). SAVE is the one filled
+            primary; the rest sit behind a disclosure, which also stops SAVE and
+            ATTACH reading as two co-equal primaries.
+
+            Short labels ONLY where space is tight — the extra word is a span
+            that's display:none below md, so it drops out of the accessible name
+            on phones and stays in it on desktop. */}
+        <Button
+          variant="add"
+          onClick={onSave}
+          className="order-last h-11 whitespace-nowrap md:order-none md:h-auto"
+        >
+          Save<span className="hidden md:inline">&nbsp;Recipe</span>
+        </Button>
+
+        <div className="order-last flex flex-col gap-2 md:contents">
+          <button
+            type="button"
+            aria-expanded={actionsOpen}
+            aria-controls="recipe-more-actions"
+            onClick={() => setActionsOpen((v) => !v)}
+            className="flex min-h-11 items-center gap-2 rounded-[6px] border border-border px-3 font-button text-button uppercase tracking-[0.12em] text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg md:hidden"
           >
-            ⬡ Share<span className="hidden md:inline">&nbsp;as</span>&nbsp;Card
-          </Button>
-          <Button variant="add" onClick={onSave} className="h-11 whitespace-nowrap md:h-auto">
-            Save<span className="hidden md:inline">&nbsp;Recipe</span>
-          </Button>
-          <Button
-            variant="solidCyan"
-            className="h-11 whitespace-nowrap border-blue bg-blue hover:bg-blue/85 md:h-auto"
-            onClick={onSave}
+            <span aria-hidden className={cn("text-cyan-lite transition-transform", actionsOpen && "rotate-90")}>
+              ▸
+            </span>
+            Share, attach &amp; delete
+          </button>
+          <div
+            id="recipe-more-actions"
+            className={cn(actionsOpen ? "grid" : "hidden", "grid-cols-2 gap-2 md:contents")}
           >
-            Attach<span className="hidden md:inline">&nbsp;Recipe</span>
-          </Button>
-          {onDelete && (
-            <Button
-              variant="outlineRed"
-              onClick={onDelete}
-              className="col-span-2 h-11 whitespace-nowrap md:col-span-1 md:h-auto"
-            >
-              Delete
+            <Button variant="secondary" onClick={onShare} className="h-11 whitespace-nowrap md:h-auto">
+              ⛓ Share<span className="hidden md:inline">&nbsp;Link</span>
             </Button>
-          )}
+            <Button
+              variant="outlineCyan"
+              onClick={() => setShareCardOpen(true)}
+              className="h-11 whitespace-nowrap md:h-auto"
+            >
+              ⬡ Share<span className="hidden md:inline">&nbsp;as</span>&nbsp;Card
+            </Button>
+            <Button
+              variant="solidCyan"
+              className="h-11 whitespace-nowrap border-blue bg-blue hover:bg-blue/85 md:h-auto"
+              onClick={onSave}
+            >
+              Attach<span className="hidden md:inline">&nbsp;Recipe</span>
+            </Button>
+            {onDelete && (
+              <Button
+                variant="outlineRed"
+                onClick={onDelete}
+                className="h-11 whitespace-nowrap md:h-auto"
+              >
+                Delete
+              </Button>
+            )}
+          </div>
         </div>
       </Panel>
 

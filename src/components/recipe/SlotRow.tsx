@@ -92,7 +92,10 @@ export function SlotRow({
       size={size}
       placeholder={slot.layer ? slot.layer.toUpperCase() : "TECHNIQUE"}
       triggerClassName={cn(
-        size === "xs" ? "min-w-[96px]" : "min-w-[104px]",
+        // Shrinkable at xs so the pill + the four 44px controls stay on ONE
+        // line; a fixed min-width pushed the action group onto a third row and
+        // gave the height back that the mobile pass had just reclaimed.
+        size === "xs" ? "min-w-0 max-w-[104px]" : "min-w-[104px]",
         "rounded-[6px] border-solid",
         pillTint[techniqueAccent(slot.layer)],
       )}
@@ -127,14 +130,19 @@ export function SlotRow({
             </button>
           </div>
 
-          {/* Every control carries a 44px hit area via an invisible centred
-              `after:` zone (glyphs unchanged), and Delete is pushed a further
-              12px clear of the reorder pair — a destructive button sat directly
-              beside a repeated one, which is how you delete a step while trying
-              to nudge it down (MUX-014). */}
-          <div className="flex items-center gap-1">
+          {/* REAL 44px boxes, not invisible `after:` zones. The round-1 attempt
+              used centred pseudo-element hit areas; re-measurement showed 0px of
+              growth in every direction, so the visual box WAS the target —
+              28×24 with 2px between the most-repeated controls in the editor
+              (MUX2-003). The group wraps to its own line when the row is too
+              tight rather than shrinking back below 44px. */}
+          <div className="flex items-center gap-2">
             {techniqueListbox("xs")}
-            <span className="ml-auto flex items-center gap-0.5">
+            <span className="ml-auto flex items-center">
+              {/* ▲/▼ stack into one 44×44 column — two halves of a single
+                  "reorder" control, so they read as a pair rather than as two
+                  buttons crowding each other. */}
+              <span className="flex flex-col md:flex-row md:items-center md:gap-0.5">
               <ReorderBtn
                 label={`Move step ${index + 1} up`}
                 disabled={isFirst}
@@ -149,19 +157,23 @@ export function SlotRow({
               >
                 ▼
               </ReorderBtn>
+              </span>
+              {/* ≥8px clear of the reorder pair so "nudge down" and "change
+                  paint" aren't neighbours at 2px. */}
               <button
                 type="button"
                 onClick={onPick}
                 aria-label={`Change paint for step ${index + 1}`}
-                className="relative inline-flex h-7 w-7 items-center justify-center text-fg-dim transition-colors hover:text-cyan-lite after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+                className="ml-2 inline-flex h-11 w-11 items-center justify-center rounded-[4px] text-fg-dim transition-colors hover:bg-cyan/10 hover:text-cyan-lite"
               >
                 <PenLine size={14} aria-hidden />
               </button>
+              {/* Destructive, so it keeps the widest separation in the row. */}
               <button
                 type="button"
                 onClick={onRemove}
                 aria-label={`Remove step ${index + 1}`}
-                className="relative ml-3 inline-flex h-7 w-7 items-center justify-center text-fg-faint transition-colors hover:text-red after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+                className="ml-3 inline-flex h-11 w-11 items-center justify-center rounded-[4px] text-fg-faint transition-colors hover:bg-red/10 hover:text-red"
               >
                 <Trash2 size={14} aria-hidden />
               </button>
@@ -255,11 +267,11 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        // ≥24px visible box (h-6 w-7) around the small glyph, plus an invisible
-        // centred 44px hit area so the real touch target clears WCAG 2.2 §2.5.8
-        // without inflating the dense desktop row (UX-004 / MUX-014).
-        "relative flex h-6 w-7 items-center justify-center rounded-[4px] font-button text-[8px] leading-none transition-colors",
-        "after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']",
+        // A real 44×22 box on touch (stacked, the pair reads as one control and
+        // together clears 44px), collapsing to the dense 24px desktop row at md.
+        // The previous invisible `after:` hit area measured 0px of growth, so it
+        // was never actually enlarging the target (MUX2-003).
+        "flex h-[22px] w-11 items-center justify-center rounded-[4px] font-button text-[8px] leading-none transition-colors md:h-6 md:w-7",
         disabled
           ? "text-fg-faint/30"
           : "text-cyan-lite hover:bg-cyan/10 hover:text-fg-bright",

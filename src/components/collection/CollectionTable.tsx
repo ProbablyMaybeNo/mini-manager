@@ -278,7 +278,11 @@ export function CollectionTable({
           and the "+ ATTACH" dropdown (paints reach projects through recipes,
           nothing else). All of it still renders in the ≥md table below, and the
           underlying row is identical either way, so a phone edit loses nothing. */}
-      <div className="md:hidden">
+      {/* `roomy:` not `md:` — at 812×375 (landscape phone) `md` is true, so this
+          route was still serving the 900px desktop table inside a 764px
+          container with one row visible. Same defect MUX-001 fixed on the
+          roster; the guard just hadn't been applied here (MUX2-002). */}
+      <div className="roomy:hidden">
         <table className="w-full table-fixed border-collapse">
           <thead>
             <tr className="border-b border-border">
@@ -289,13 +293,13 @@ export function CollectionTable({
                   remainder — at 320px it was truncating to ~9 chars
                   ("Mephiston…") while the fixed columns kept full width
                   (MUX-021). */}
-              <th scope="col" className="w-[84px] px-1 text-left font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+              <th scope="col" className="w-[92px] px-1 text-left font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
                 Status
               </th>
               <th scope="col" className="w-[48px] px-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
                 Cost
               </th>
-              <th scope="col" className="w-[52px] pl-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+              <th scope="col" className="w-[56px] pl-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
                 <span className="sr-only">Actions</span>
               </th>
             </tr>
@@ -325,17 +329,23 @@ export function CollectionTable({
                     <td className="py-1.5 pr-2">
                       <span className="flex min-w-0 items-center gap-1.5">
                         {isPaint && <SwatchDot hex={firstSwatch} />}
+                        {/* Wraps to a second line rather than truncating
+                            (MUX2-011). At 320px the fixed STATUS/COST/actions
+                            columns left ~100px for the name, so "Retributor
+                            Armour" clipped to 84px — the row's whole identity
+                            cut, on the one field you scan for. Two lines cost a
+                            few px of height and lose nothing. */}
                         {item.sourceUrl ? (
                           <a
                             href={item.sourceUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="min-w-0 truncate font-mono text-[12px] text-fg hover:text-cyan-lite hover:underline"
+                            className="line-clamp-2 min-w-0 font-mono text-[12px] leading-tight text-fg hover:text-cyan-lite hover:underline"
                           >
                             {item.name}
                           </a>
                         ) : (
-                          <span className="min-w-0 truncate font-mono text-[12px] text-fg">
+                          <span className="line-clamp-2 min-w-0 font-mono text-[12px] leading-tight text-fg">
                             {item.name}
                           </span>
                         )}
@@ -355,14 +365,17 @@ export function CollectionTable({
                     <td className="px-1 text-right font-mono text-[12px] tabular-nums text-fg-dim">
                       {item.price || "—"}
                     </td>
+                    {/* gap-2 between Edit and Delete (MUX2-012) — they were
+                        flush at 0px, so on every row the boundary between
+                        "rename this" and "destroy this" was a single pixel. */}
                     <td className="pl-1">
-                      <span className="flex items-center justify-end">
+                      <span className="flex items-center justify-end gap-2">
                         {onEdit && (
                           <button
                             type="button"
                             aria-label={`Edit ${item.name}`}
                             onClick={() => onEdit(item)}
-                            className="inline-flex h-11 w-7 items-center justify-center text-fg-dim transition-colors hover:text-cyan-lite"
+                            className="inline-flex h-11 w-6 items-center justify-center text-fg-dim transition-colors hover:text-cyan-lite"
                           >
                             <PenLine size={14} aria-hidden />
                           </button>
@@ -371,7 +384,7 @@ export function CollectionTable({
                           type="button"
                           aria-label={`Delete ${item.name}`}
                           onClick={() => onRemove(item)}
-                          className="inline-flex h-11 w-7 items-center justify-center text-fg-dim transition-colors hover:text-red"
+                          className="inline-flex h-11 w-6 items-center justify-center text-fg-faint transition-colors hover:text-red"
                         >
                           <Trash2 size={14} aria-hidden />
                         </button>
@@ -397,7 +410,7 @@ export function CollectionTable({
       </div>
 
       {/* table (24:83 / 24:306) — desktop only; phones use the card list above. */}
-      <div className="hidden overflow-x-auto md:block">
+      <div className="hidden overflow-x-auto roomy:block">
         <table className="w-full min-w-[900px] border-collapse">
           <thead>
             <tr className="border-b border-border">
