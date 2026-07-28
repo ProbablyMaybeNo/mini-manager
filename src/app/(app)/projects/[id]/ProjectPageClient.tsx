@@ -208,18 +208,22 @@ export function ProjectPageClient({
   return (
     <div className="flex h-full bg-bg">
       {/* Central column — scrolls independently of the right rail. */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-8">
+      {/* 32px of gutter either side of a 375px screen was 17% of the width. */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-3 md:p-8">
         {/* HEADER (13:44): ← breadcrumb, big title + TYPE pill, START PAINTING. */}
         <header className="flex flex-col gap-4">
           <nav
             aria-label="Breadcrumb"
             className="flex flex-wrap items-center gap-2 font-mono text-[12px] uppercase tracking-wide text-fg-dim"
           >
+            {/* 44px on touch (MUX-023) — this is the primary escape from a
+                drill-down and was a 24×24 glyph, while the inspector's
+                equivalent control is a full 44px. */}
             <button
               type="button"
               onClick={() => router.push("/dashboard")}
               aria-label="Back to projects"
-              className="inline-flex h-6 w-6 items-center justify-center text-fg hover:text-cyan-lite"
+              className="-ml-2 inline-flex h-11 w-11 items-center justify-center text-fg hover:text-cyan-lite md:-ml-0 md:h-6 md:w-6"
             >
               ‹
             </button>
@@ -242,8 +246,11 @@ export function ProjectPageClient({
                 </button>
               </span>
             ))}
-            <span aria-hidden className="text-fg-faint">›</span>
-            <span className="text-fg">{project.title}</span>
+            {/* The trailing crumb repeated the project name within 100px of the
+                H1 that states it (MUX-024) — desktop keeps it for orientation
+                inside a deep tree, phones don't need it twice. */}
+            <span aria-hidden className="hidden text-fg-faint md:inline">›</span>
+            <span className="hidden text-fg md:inline">{project.title}</span>
           </nav>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -255,17 +262,23 @@ export function ProjectPageClient({
                 {project.type.toUpperCase()}
               </Chip>
             </div>
-            <Button variant="primary" onClick={() => router.push(`/focus?project=${project.id}`)}>
+            {/* Full-width on phones, matching the dashboard's primary — it was a
+                133px button floating in a full-width row (MUX-024). */}
+            <Button
+              variant="primary"
+              className="w-full md:w-auto"
+              onClick={() => router.push(`/focus?project=${project.id}`)}
+            >
               START PAINTING
             </Button>
           </div>
         </header>
 
-        <div className="mt-6 flex flex-col gap-6">
+        <div className="mt-4 flex flex-col gap-4 md:mt-6 md:gap-6">
           {/* PROJECT PROGRESS card (13:60). */}
           <section
             aria-label="Project progress"
-            className="flex flex-col gap-5 rounded-[12px] border border-border bg-surface p-6"
+            className="flex flex-col gap-4 rounded-[12px] border border-border bg-surface p-4 md:gap-5 md:p-6"
           >
             <h2 className="font-mono text-[12px] font-bold uppercase tracking-wide text-fg-bright">
               PROJECT PROGRESS
@@ -343,10 +356,14 @@ export function ProjectPageClient({
                 </span>
               )}
             </div>
+            {/* All secondaries on this page run one 40px height (MUX-024) — the
+                page mixed 40px and 32px controls with no rule behind which was
+                which. */}
             <div className="flex shrink-0 items-center gap-2">
               <Button
                 variant="attach"
                 size="sm"
+                className="h-10"
                 disabled={attachPending}
                 onClick={() => setAttachOpen(true)}
               >
@@ -355,6 +372,7 @@ export function ProjectPageClient({
               <Button
                 variant="add"
                 size="sm"
+                className="h-10"
                 disabled={attachPending}
                 onClick={createForProject}
               >
@@ -382,6 +400,7 @@ export function ProjectPageClient({
               <Button
                 variant="add"
                 size="sm"
+                className="h-10"
                 onClick={() => router.push(`/dashboard?open=${project.id}`)}
               >
                 + ADD UNIT
@@ -390,38 +409,52 @@ export function ProjectPageClient({
 
             <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
               {childCount > 0 ? (
-                // Horizontal-scroll wrapper (MUX-002): below ~560px the columns
-                // no longer fit; scroll rather than silently clipping the right
-                // half (PRIORITY / actions) off-screen with no cue.
-                <div className="overflow-x-auto">
-                <table className="w-full min-w-[560px] border-collapse">
-                  <thead>
-                    <tr className="border-b border-border">
-                      {["TITLE", "TYPE", "STATUS", "PRIORITY", "COMPLETION", "TIME", ""].map(
-                        (c, i) => (
-                          <th
-                            key={c || `c${i}`}
-                            scope="col"
-                            className="px-4 py-3 text-left font-mono text-[11px] font-normal uppercase tracking-wide text-fg-dim"
-                          >
-                            {c}
-                          </th>
-                        ),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
+                <>
+                  {/* Phone card list (MUX-006). The table below is min-w-[560px]
+                      inside a 375px viewport, so PRIORITY clipped to "PRIOR" and
+                      the actions ran off the right edge with no scroll cue — and
+                      the same sub-projects already reflow to cards on
+                      /dashboard, so the page contradicted the dashboard. */}
+                  <ul className="flex flex-col roomy:hidden">
                     {children.map((c) => (
-                      <SubProjectRow
+                      <SubProjectCard
                         key={c.id}
                         child={c}
                         onOpen={() => router.push(`/projects/${c.id}`)}
                         onFocus={() => router.push(`/focus?project=${c.id}`)}
                       />
                     ))}
-                  </tbody>
-                </table>
-                </div>
+                  </ul>
+                  <div className="hidden overflow-x-auto roomy:block">
+                    <table className="w-full min-w-[560px] border-collapse">
+                      <thead>
+                        <tr className="border-b border-border">
+                          {["TITLE", "TYPE", "STATUS", "PRIORITY", "COMPLETION", "TIME", ""].map(
+                            (c, i) => (
+                              <th
+                                key={c || `c${i}`}
+                                scope="col"
+                                className="px-4 py-3 text-left font-mono text-[11px] font-normal uppercase tracking-wide text-fg-dim"
+                              >
+                                {c}
+                              </th>
+                            ),
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {children.map((c) => (
+                          <SubProjectRow
+                            key={c.id}
+                            child={c}
+                            onOpen={() => router.push(`/projects/${c.id}`)}
+                            onFocus={() => router.push(`/focus?project=${c.id}`)}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               ) : (
                 <div className="px-6 py-10 text-center font-mono text-[13px] text-fg-dim">
                   No sub-projects yet.
@@ -582,6 +615,65 @@ function statusTimelineLabel(status: ProjectStatus): string {
 
 /** One SUB-PROJECTS table row (13:99) — drills on click; crosshair → focus,
  *  chevron → the sub-project's own page. */
+/**
+ * Phone rendering of one sub-project (MUX-006) — the card shape the dashboard
+ * roster already uses, so the two surfaces agree: title + status on the top
+ * line, progress beneath, and a '›' that says the row opens. TYPE, PRIORITY and
+ * TIME are dropped here; they're on the sub-project's own page.
+ */
+function SubProjectCard({
+  child,
+  onOpen,
+  onFocus,
+}: {
+  child: Project;
+  onOpen: () => void;
+  onFocus: () => void;
+}) {
+  return (
+    <li className="border-b border-border last:border-b-0">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${child.title}`}
+        onClick={onOpen}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+        className="flex cursor-pointer flex-col gap-2 p-3 transition-colors hover:bg-cyan/[0.06] focus:outline-none focus-visible:bg-cyan/10"
+      >
+        <div className="flex items-center gap-2">
+          <span className="min-w-0 flex-1 break-words font-mono text-[15px] font-bold leading-tight text-fg-bright">
+            {child.title}
+          </span>
+          <StatusText status={child.status} />
+          <button
+            type="button"
+            aria-label={`Focus ${child.title}`}
+            title="Open in focus"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFocus();
+            }}
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-fg-dim hover:text-purple focus:outline-none focus-visible:text-purple"
+          >
+            <FocusReticleIcon size={16} />
+          </button>
+          <span aria-hidden className="shrink-0 text-fg-faint">›</span>
+        </div>
+        <ProgressBar
+          percent={child.completionPercent}
+          accent={child.completionPercent >= 100 ? "green" : "cyan"}
+          showLabel
+        />
+      </div>
+    </li>
+  );
+}
+
 function SubProjectRow({
   child,
   onOpen,

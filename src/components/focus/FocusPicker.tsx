@@ -44,7 +44,9 @@ export function FocusPicker({
           placeholder={options.length ? "Pick a project…" : "No projects yet"}
           disabled={options.length === 0}
           className="min-w-0 flex-1 md:flex-none"
-          triggerClassName="md:max-w-[220px]"
+          // Matches the clear control's 40px so the two share a height and a
+          // baseline — they were 26px vs 32px at different tops (MUX-019).
+          triggerClassName="h-10 md:h-auto md:max-w-[220px]"
         />
       </label>
       {currentId && (
@@ -53,10 +55,12 @@ export function FocusPicker({
           onClick={onClear}
           aria-label="Remove focus"
           title="Remove focus"
-          className="inline-flex h-8 shrink-0 items-center justify-center border border-red/50 px-2 font-button text-button uppercase tracking-[0.12em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
+          // Neutral, not red. Clearing the bench destroys nothing — red here
+          // over-warned and out-shouted the picker beside it (MUX-019).
+          className="inline-flex h-10 shrink-0 items-center justify-center rounded-[6px] border border-border px-3 font-button text-button uppercase tracking-[0.12em] text-fg-dim transition-colors hover:border-fg/40 hover:text-fg focus:outline-none focus-visible:border-fg/40"
         >
           <span aria-hidden className="md:hidden">✕</span>
-          <span aria-hidden className="hidden md:inline">Remove Focus</span>
+          <span aria-hidden className="hidden md:inline">Clear</span>
         </button>
       )}
     </div>

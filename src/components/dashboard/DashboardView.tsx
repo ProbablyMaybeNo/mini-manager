@@ -241,48 +241,43 @@ export function DashboardView({
                   roster isn't pushed below the fold (UX-010). Hidden below
                   600px — on a phone the tour banner eats a third of the first
                   screen and reads as clutter ahead of the roster. */}
-              <div className="hidden min-[600px]:block">
+              {/* `roomy:` so it stays hidden on a landscape phone too — it was
+                  reappearing there and eating the top of a 375px-tall screen
+                  (MUX-001). */}
+              <div className="hidden roomy:block">
                 <WelcomeCard hasProjects={projects.length > 0} />
               </div>
               <div data-tour="dashboard-projects" className="flex flex-col gap-4">
                 {/* Section header row (4:58): PROJECTS ROSTER label + add-project
                     affordance at the right edge. */}
-                <div className="flex items-center justify-between">
-                  <h2 className="label-osd text-fg">PROJECTS ROSTER</h2>
-                  {/* ≥44px tap target around the 16px glyph (UX-003 / WCAG 2.2
-                      §2.5.8); the box grows, glyph size unchanged. */}
-                  <div className="flex items-center gap-2 text-fg-dim">
+                {/* Header row: heading · SORT · ⊕. Three separate "create a
+                    project" controls used to sit within 190px of each other
+                    (MUX-003) — the ⊕, a full-width button, and the one below the
+                    roster — pushing the first card to 38% of the fold. On phones
+                    only the below-roster button survives; the ⊕ returns at md.
+                    SORT moved up here too (MUX-015): it had a whole 44px row to
+                    itself that was 64% empty, and its value was clipped to
+                    "Comple…". */}
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="shrink-0 label-osd text-fg">PROJECTS ROSTER</h2>
+                  <div className="flex min-w-0 items-center gap-2 text-fg-dim">
+                    {projects.length > 0 && (
+                      <RosterFilterBar sort={rosterSort} onSortChange={setRosterSort} />
+                    )}
+                    {/* ≥44px tap target around the 16px glyph (UX-003 / WCAG 2.2
+                        §2.5.8); the box grows, glyph size unchanged. */}
                     <button
                       type="button"
                       aria-label="New project"
                       title="New project"
                       onClick={startCreate}
                       disabled={creatingProject}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan disabled:opacity-50 md:h-9 md:w-9"
+                      className="hidden h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan disabled:opacity-50 md:inline-flex md:h-9 md:w-9"
                     >
                       <PlusCircleIcon />
                     </button>
                   </div>
                 </div>
-                {/* Mobile-reachable create (MUX-004): a full-width primary button
-                    at the top of the roster so "add project" is in the thumb zone
-                    without hunting the corner ⊕ or scrolling past the whole list.
-                    Desktop keeps the ⊕ + the below-roster button. */}
-                {projects.length > 0 && (
-                  <Button
-                    variant="primary"
-                    onClick={startCreate}
-                    disabled={creatingProject}
-                    className="w-full md:hidden"
-                  >
-                    + New project
-                  </Button>
-                )}
-                {/* SORT control (4:4). Hidden when the painter has no projects
-                    yet — the empty roster CTA carries the moment. */}
-                {projects.length > 0 && (
-                  <RosterFilterBar sort={rosterSort} onSortChange={setRosterSort} />
-                )}
                 {/* Roster table in a bordered 12px container per 4:4. */}
                 <div className="overflow-hidden rounded-[12px] border border-border bg-surface">
                   <ProjectsTable
@@ -298,12 +293,24 @@ export function DashboardView({
                     "+ Create your first project" CTA already carry create, so
                     the cyan + NEW PROJECT button is hidden until there's a
                     roster (Ross). Upload Army stays — import is a valid first move. */}
+                {/* The one create control on phones (MUX-003) — full-width for
+                    thumb reach; auto-width from md where the ⊕ is also present. */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   {projects.length > 0 && (
-                    <Button variant="primary" onClick={startCreate} disabled={creatingProject} data-tour="dashboard-new-project">+ NEW PROJECT</Button>
+                    <Button
+                      variant="primary"
+                      onClick={startCreate}
+                      disabled={creatingProject}
+                      data-tour="dashboard-new-project"
+                      className="w-full md:w-auto"
+                    >
+                      + NEW PROJECT
+                    </Button>
                   )}
                   {onUploadArmyList && (
-                    <Button variant="secondary" onClick={onUploadArmyList}>⬆ Upload Army</Button>
+                    <Button variant="secondary" onClick={onUploadArmyList} className="w-full md:w-auto">
+                      ⬆ Upload Army
+                    </Button>
                   )}
                 </div>
               </div>

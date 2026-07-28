@@ -82,14 +82,17 @@ export function Stopwatch({
         {totalLabel && (
           <span className="label-osd shrink-0 text-fg-muted">{totalLabel}</span>
         )}
+        {/* START is the bench's primary action and was one of its smallest
+            controls at 69×32 (MUX-005). It now takes the row's spare width at a
+            44px height, with LOG demoted to a fixed-width secondary beside it. */}
         <button
           type="button"
           onClick={toggle}
           className={cn(
-            "ml-auto shrink-0 border px-3 py-1.5 font-button text-button uppercase tracking-[0.12em]",
+            "ml-auto h-11 min-w-[96px] flex-1 border font-button text-button uppercase tracking-[0.12em]",
             running
-              ? "border-red text-red hover:bg-red/10"
-              : "border-green text-green hover:bg-green/10",
+              ? "border-red bg-red/10 text-red hover:bg-red/20"
+              : "border-green bg-green/10 text-green hover:bg-green/20",
           )}
         >
           {running ? "Stop" : "Start"}
@@ -98,7 +101,7 @@ export function Stopwatch({
           type="button"
           onClick={logSession}
           disabled={elapsed < 1}
-          className="shrink-0 border border-cyan/60 px-3 py-1.5 font-button text-button uppercase tracking-[0.12em] text-cyan-lite transition-opacity hover:bg-cyan/10 disabled:opacity-30"
+          className="h-11 w-16 shrink-0 border border-cyan/60 font-button text-button uppercase tracking-[0.12em] text-cyan-lite transition-opacity hover:bg-cyan/10 disabled:opacity-30"
         >
           Log
         </button>

@@ -47,7 +47,7 @@ export default async function GalleryPage() {
   const myCards = userId ? await listMyGallerySubmissions(userId) : [];
 
   const content = (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-3 py-5 md:px-6 md:py-10">
       <TrackPageView event={AnalyticsEvent.GalleryView} />
       <JsonLd
         data={breadcrumbJsonLd([
@@ -55,12 +55,16 @@ export default async function GalleryPage() {
           { name: "Recipe Gallery", path: "/gallery" },
         ])}
       />
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      {/* ~480px of intro, CTA, search, sort and count used to run before the
+          first card (MUX-020). The paragraph now shows only from sm, so on a
+          phone the header is the title and the share CTA — the grid of painted
+          models explains itself faster than the sentence describing it. */}
+      <header className="mb-4 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="font-title text-title uppercase text-cyan-lite text-glow-cyan">
             Recipe Gallery
           </h1>
-          <p className="max-w-2xl font-body text-body text-fg">
+          <p className="hidden max-w-2xl font-body text-body text-fg sm:block">
             Painted models and the exact recipes behind them, shared by the
             community. Browse the schemes, see the paints, and clone any card
             into your own library.

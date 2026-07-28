@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 /* ----------------------------------------------------------------------------
+   `roomy:` — a viewport with room on BOTH axes, not just width.
+   A plain `min-width: 600px` breakpoint is true for a phone held in landscape,
+   which is how the roster's dense desktop table ended up rendering on a 375px-
+   tall screen: first row below the fold, table wider than its container, and
+   the tour banner (deliberately hidden on phones) back on screen. Gating on the
+   SHORT edge as well keeps phone layouts on phones in either orientation.
+   ------------------------------------------------------------------------- */
+@custom-variant roomy (@media (min-width: 600px) and (min-height: 500px));
+
+/* ----------------------------------------------------------------------------
    Fonts — V2 "HEX.CODE" (REDESIGN_V2_HEXCODE.md)
    TWO-FACE SYSTEM (Ross, 2026-07-09): the single-face era (2026-06-28) is over.
    Body / buttons / labels / table / values / numbers → JetBrains Mono → --font-mono / --font-body / --font-button

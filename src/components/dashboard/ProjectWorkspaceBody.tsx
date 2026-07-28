@@ -160,7 +160,18 @@ function CollapsibleSection({
           onClick={() => setOpen((v) => !v)}
           className="-mt-2 mb-3 flex min-h-11 w-full items-start gap-3 text-left md:hidden"
         >
-          <span className="min-w-0 flex-1 font-body text-body text-fg-dim">{hint}</span>
+          {/* Ross's call: a collapsed card still describes itself. But six
+              sections × 2–3 lines of prose was ~135px per closed section
+              (MUX-004), so closed clamps to one line and opening reveals the
+              rest — the description survives, the paragraph doesn't. */}
+          <span
+            className={cn(
+              "min-w-0 flex-1 font-body text-body text-fg-dim",
+              !open && "line-clamp-1",
+            )}
+          >
+            {hint}
+          </span>
           <span
             aria-hidden
             className={cn(
@@ -392,16 +403,21 @@ export function ProjectWorkspaceBody({
           md+ where every section is already expanded and on-screen. Scrolls (and
           expands if needed) the matching section. Horizontally scrollable so it
           never forces page-width overflow on narrow phones. */}
+      {/* Wraps to two rows of three rather than scrolling (MUX-002). As a
+          scroller it was 490px of tabs in a 351px box: PROGRESS and REF sat
+          entirely off-screen, and because RECIPES ended flush at the right edge
+          the row read as complete — so the section where completion is actually
+          set looked like it didn't exist. */}
       <nav
         aria-label="Jump to inspector section"
-        className="-mx-1 flex gap-1 overflow-x-auto px-1 md:hidden"
+        className="grid grid-cols-3 gap-1 md:hidden"
       >
         {QUICK_JUMP_SECTIONS.map((s) => (
           <button
             key={s.anchorId}
             type="button"
             onClick={() => quickJump(s.anchorId)}
-            className="shrink-0 border border-cyan/40 px-3 py-1 font-button text-button uppercase tracking-[0.15em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan-lite focus:outline-none focus-visible:border-cyan focus-visible:text-cyan-lite"
+            className="min-h-8 border border-cyan/40 px-2 py-1 font-button text-button uppercase tracking-[0.1em] text-fg-dim transition-colors hover:border-cyan hover:text-cyan-lite focus:outline-none focus-visible:border-cyan focus-visible:text-cyan-lite"
           >
             {s.label}
           </button>
@@ -559,10 +575,13 @@ export function ProjectWorkspaceBody({
         {/* PHOTOS — Recipe-card phase 1: real uploaded photos of the finished
             model (distinct from the pasted-URL "Reference image" in INFO
             below). Cycle with `< >`, click to open the full-screen viewer. */}
+        {/* Collapsed by default (MUX-004): expanded, its ~300px "NO PHOTOS YET"
+            empty state sat above SUB-PROJECTS and pushed the first real control
+            to y=748 — the inspector opened on an empty well. */}
         <CollapsibleSection
           label="PHOTOS"
           anchorId="inspector-photos"
-          defaultOpen
+          defaultOpen={false}
           hint="A photo of your finished model — cycle with the arrows, click to view full-screen."
         >
           <ProjectImagePanel projectId={project.id} />
@@ -792,10 +811,14 @@ export function ProjectWorkspaceBody({
         {/* Roll-up stat strip — 2-up on phones so the 4th cell + its label
             aren't clipped off the right edge (MUX-004). Container-only: a leaf's
             own totals live in its ModelCounterGrid above. */}
+        {/* Desktop only in the panel: the compact strip at the top of the
+            inspector already prints total / complete / time, so on a phone this
+            was the same three numbers a second time (MUX-009). */}
         {children.length > 0 && (
           <div
             className={cn(
-              "mt-3 grid gap-2",
+              "mt-3 gap-2",
+              isPage ? "grid" : "hidden md:grid",
               loggedMinutes != null ? "grid-cols-2 min-[420px]:grid-cols-4" : "grid-cols-3",
             )}
           >

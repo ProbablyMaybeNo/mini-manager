@@ -1,6 +1,7 @@
 "use client";
 
 import { Listbox } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import { STATUS_LABEL, statusAccent } from "@/lib/palette";
 import type { CollectionKind, ProjectStatus } from "@/lib/types";
 
@@ -48,7 +49,14 @@ export function StatusDropdown({
       size={size}
       options={statuses.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
       onChange={(s) => onChange(s)}
-      triggerClassName="uppercase tracking-[0.06em]"
+      // Fixed width at "xs" (the phone table cell) so every box in the STATUS
+      // column is identical and the column edge is straight — sizing to the
+      // label gave 61px OWNED next to 81px WISHLIST, a ragged edge that came
+      // within 1px of the COST column (MUX-013).
+      triggerClassName={cn(
+        "uppercase tracking-[0.06em]",
+        size === "xs" && "w-[82px] justify-between",
+      )}
     />
   );
 }

@@ -43,8 +43,8 @@ export function GalleryBrowser({
   }, [recipes, query, sort]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between md:gap-4">
         <div className="w-full max-w-md">
           <SearchField
             name="gallery-search"
@@ -55,8 +55,11 @@ export function GalleryBrowser({
           />
         </div>
 
+        {/* Equal-width thirds (MUX-020) — POPULAR / NEWEST / OLDEST were three
+            different widths, so a set of mutually-exclusive options didn't read
+            as one control. */}
         <div
-          className="flex flex-wrap items-center gap-2"
+          className="grid grid-cols-3 items-center gap-2 sm:flex sm:flex-wrap"
           role="group"
           aria-label="Sort cards"
         >
@@ -78,7 +81,12 @@ export function GalleryBrowser({
         </div>
       </div>
 
-      <p className="label-osd text-fg-dim" aria-live="polite">
+      {/* Desktop only — on a phone this line pushed the first card further down
+          to restate a number the grid itself shows (MUX-020). */}
+      <p className="hidden label-osd text-fg-dim md:block" aria-live="polite">
+        {visible.length} card{visible.length === 1 ? "" : "s"}
+      </p>
+      <p className="sr-only" aria-live="polite">
         {visible.length} card{visible.length === 1 ? "" : "s"}
       </p>
 
@@ -119,7 +127,9 @@ function SortChip({
       aria-pressed={active}
       className={cn(
         // min-h-11 → 44px comfortable touch target (WCAG 2.2 §2.5.8).
-        "inline-flex min-h-11 items-center border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] transition-colors",
+        // justify-center + w-full so the grid parent gives all three equal
+        // widths and the labels centre inside them (MUX-020).
+        "inline-flex min-h-11 w-full items-center justify-center border px-2 py-0.5 font-button text-button uppercase tracking-[0.15em] transition-colors sm:w-auto",
         active
           ? "border-cyan bg-cyan/15 text-cyan-lite"
           : "border-cyan/40 text-fg hover:border-cyan hover:text-cyan-lite",

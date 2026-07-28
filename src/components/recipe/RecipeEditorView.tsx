@@ -135,25 +135,39 @@ export function RecipeEditorView({
             On phones they wrap into a grid instead of stacking as five
             full-width bars; `md:contents` dissolves the wrapper so the desktop
             row is byte-for-byte what it was. */}
-        <div className="flex flex-wrap gap-2 md:contents">
-          <Button variant="secondary" onClick={onShare}>
-            ⛓ Share Link
+        {/* One height, one baseline, single-line labels (MUX-007). These were
+            77×76 / 88×58 / 122×58 at two different top edges — three sizes in a
+            row — and they held the slot above the recipe steps, spending 48% of
+            the fold before any content. `order-last` on mobile drops the whole
+            row beneath the name field; the desktop row is unchanged via
+            `md:contents`. */}
+        <div className="order-last grid grid-cols-2 gap-2 md:contents">
+          <Button variant="secondary" onClick={onShare} className="h-11 whitespace-nowrap md:h-auto">
+            ⛓ Share
           </Button>
-          <Button variant="outlineCyan" onClick={() => setShareCardOpen(true)}>
-            ⬡ Share as Card
+          <Button
+            variant="outlineCyan"
+            onClick={() => setShareCardOpen(true)}
+            className="h-11 whitespace-nowrap md:h-auto"
+          >
+            ⬡ Share Card
           </Button>
-          <Button variant="add" onClick={onSave}>
-            Save Recipe
+          <Button variant="add" onClick={onSave} className="h-11 whitespace-nowrap md:h-auto">
+            Save
           </Button>
           <Button
             variant="solidCyan"
-            className="border-blue bg-blue hover:bg-blue/85"
+            className="h-11 whitespace-nowrap border-blue bg-blue hover:bg-blue/85 md:h-auto"
             onClick={onSave}
           >
-            Attach Recipe
+            Attach
           </Button>
           {onDelete && (
-            <Button variant="outlineRed" onClick={onDelete}>
+            <Button
+              variant="outlineRed"
+              onClick={onDelete}
+              className="col-span-2 h-11 whitespace-nowrap md:col-span-1 md:h-auto"
+            >
               Delete
             </Button>
           )}

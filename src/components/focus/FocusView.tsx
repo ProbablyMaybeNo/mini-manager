@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Panel, ProgressBar } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { formatMinutes } from "@/lib/palette";
@@ -46,6 +47,7 @@ export function FocusView({
   /** Clear the current focus (MM-23 — Remove Focus). */
   onClearFocus?: () => void;
 }) {
+  const router = useRouter();
   const initialStep = project
     ? (project.modelsComplete ??
       Math.round((project.completionPercent / 100) * modelCount))
@@ -117,13 +119,21 @@ export function FocusView({
         />
       </div>
 
-      {/* Focus picker — pick any project / sub-project, or remove focus. */}
-      <div className="flex flex-wrap items-center justify-between gap-3">{picker}</div>
+      {/* Focus picker — pick any project / sub-project, or clear the bench.
+          The model count rides here on phones because the pinned header below
+          (which carried it) is desktop-only now: it was a full-width band whose
+          only job was reprinting the project name 41px under the picker that
+          already showed it (MUX-005 / MUX-009). */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {picker}
+        <span className="shrink-0 font-num2 text-num2 tabular-nums text-cyan-lite md:hidden">
+          ×{modelCount}
+        </span>
+      </div>
 
-      {/* Pinned project header — bound to the focused project (MM-21). The
-          today/week/streak trio is desktop-only; on a phone the sticky bar
-          already carries the number that matters mid-session. */}
-      <Panel className="flex items-center justify-between gap-3 p-2.5 md:p-4" glow>
+      {/* Pinned project header — bound to the focused project (MM-21).
+          Desktop-only; see above. */}
+      <Panel className="hidden items-center justify-between gap-3 p-2.5 md:flex md:p-4" glow>
         <span className="min-w-0 truncate font-h1 text-h1 uppercase text-green text-glow-green">
           {project.title} <span className="text-cyan-lite">×{modelCount}</span>
         </span>
@@ -170,13 +180,26 @@ export function FocusView({
         )}
       </Panel>
 
-      {/* Notes */}
+      {/* Notes. The empty state used to name the recipe editor without offering
+          a way to reach it (MUX-025) — it's a button now. */}
       <Panel label="NOTES" className="p-2.5 md:p-4">
-        <p className="whitespace-pre-line font-body text-body leading-relaxed text-fg">
-          {recipe?.notes?.trim()
-            ? recipe.notes
-            : "No notes yet — add technique notes in the recipe editor."}
-        </p>
+        {recipe?.notes?.trim() ? (
+          <p className="whitespace-pre-line font-body text-body leading-relaxed text-fg">
+            {recipe.notes}
+          </p>
+        ) : recipe ? (
+          <button
+            type="button"
+            onClick={() => router.push(`/recipes/${recipe.id}`)}
+            className="text-left font-body text-body leading-relaxed text-fg-dim underline-offset-4 transition-colors hover:text-cyan-lite hover:underline focus:outline-none focus-visible:text-cyan-lite focus-visible:underline"
+          >
+            No notes yet — add technique notes in the recipe editor ›
+          </button>
+        ) : (
+          <p className="font-body text-body leading-relaxed text-fg-dim">
+            No recipe attached yet.
+          </p>
+        )}
       </Panel>
 
       {/* Progress — bound to the focused project (MM-21). */}

@@ -169,12 +169,14 @@ export function CollectionTable({
     ? ["ALL", "OWNED", "WISHLIST"]
     : ["ALL", "OWNED", "WISHLIST", "BUILT", "PRIMED"];
 
+  // No "▾ " prefix — the Listbox trigger draws its own caret, so the glyph was
+  // both duplicated and paying for width the filter strip didn't have (MUX-012).
   const projectOptions = [
-    { value: "", label: "▾ PROJECT" },
+    { value: "", label: "PROJECT" },
     ...projects.map((p) => ({ value: p.id, label: p.title })),
   ];
   const facetOptions = [
-    { value: "", label: isPaint ? "▾ BRAND" : "▾ TYPE" },
+    { value: "", label: isPaint ? "BRAND" : "TYPE" },
     ...facetValues.map((v) => ({ value: v, label: v })),
   ];
 
@@ -228,7 +230,14 @@ export function CollectionTable({
           + {isPaint ? "PAINT" : "MODEL"}
         </button>
 
-        <div className="order-2 -mx-3 flex w-[calc(100%+1.5rem)] items-center gap-2 overflow-x-auto px-3 md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0">
+        {/* One row height for every control in the strip (MUX-012): the chips
+            were 44px and the dropdowns 26px, so nothing shared a baseline.
+            size="xs" resolves to 44px on phones and collapses to the dense
+            desktop height at md, matching the chips at both ends. `flex-wrap`
+            rather than a scroller — the overflow was only ~31px, and a hidden
+            31px with no scroll cue reads as a clipped control, not a scrollable
+            row. */}
+        <div className="order-2 flex w-full flex-wrap items-center gap-2 md:w-auto">
           {statusChips.map((s) => (
             <FilterChip
               key={s}
@@ -241,21 +250,23 @@ export function CollectionTable({
             value={projectFilter}
             ariaLabel={`Filter ${label} by project`}
             accent="dim"
-            placeholder="▾ PROJECT"
+            size="xs"
+            placeholder="PROJECT"
             options={projectOptions}
             onChange={setProjectFilter}
             className="shrink-0"
-            triggerClassName="!border-solid !border-border text-[11px] uppercase"
+            triggerClassName="!border-solid !border-border uppercase"
           />
           <Listbox
             value={facetFilter}
             ariaLabel={isPaint ? `Filter paint by brand` : `Filter model by type`}
             accent="dim"
-            placeholder={isPaint ? "▾ BRAND" : "▾ TYPE"}
+            size="xs"
+            placeholder={isPaint ? "BRAND" : "TYPE"}
             options={facetOptions}
             onChange={setFacetFilter}
             className="shrink-0"
-            triggerClassName="!border-solid !border-border text-[11px] uppercase"
+            triggerClassName="!border-solid !border-border uppercase"
           />
         </div>
       </div>
@@ -274,13 +285,17 @@ export function CollectionTable({
               <th scope="col" className="py-2 pr-2 text-left font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
                 Name
               </th>
-              <th scope="col" className="w-[86px] px-1 text-left font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+              {/* Columns trimmed to what each actually needs so NAME keeps the
+                  remainder — at 320px it was truncating to ~9 chars
+                  ("Mephiston…") while the fixed columns kept full width
+                  (MUX-021). */}
+              <th scope="col" className="w-[84px] px-1 text-left font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
                 Status
               </th>
-              <th scope="col" className="w-[52px] px-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+              <th scope="col" className="w-[48px] px-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
                 Cost
               </th>
-              <th scope="col" className="w-[56px] pl-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+              <th scope="col" className="w-[52px] pl-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
                 <span className="sr-only">Actions</span>
               </th>
             </tr>
@@ -326,7 +341,9 @@ export function CollectionTable({
                         )}
                       </span>
                     </td>
-                    <td className="px-1">
+                    {/* py-1 insets the control's outline inside the row so it
+                        no longer crosses the row dividers (MUX-013). */}
+                    <td className="px-1 py-1">
                       <StatusDropdown
                         kind={kind}
                         value={item.status}

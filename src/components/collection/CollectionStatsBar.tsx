@@ -43,13 +43,15 @@ function Stat({ value, label, accent = "cyan" }: { value: string; label: string;
   );
 }
 
-/** Phone variant of {@link Stat}: the colour carries the meaning, so the visible
- *  label is dropped and survives only for screen readers. */
+/** Phone variant of {@link Stat}: compact, but the word is VISIBLE — a bare
+ *  colour-coded "6" next to a bare "2" is only decodable if you already know
+ *  the legend, and colour alone isn't a legend (MUX-018). At ~8 characters the
+ *  pair still fits one 375px line. */
 function BareStat({ value, label, accent }: { value: string; label: string; accent: Accent }) {
   return (
-    <span className={cn("font-num2 text-num2 tabular-nums", accentText[accent])}>
+    <span className={cn("inline-flex items-baseline gap-1 font-num2 text-num2 tabular-nums", accentText[accent])}>
       {value}
-      <span className="sr-only"> {label}</span>
+      <span className="font-mono text-[10px] uppercase tracking-wide opacity-80">{label}</span>
     </span>
   );
 }
@@ -117,28 +119,29 @@ export function CollectionStatsBar({
     <div
       className={cn(
         "sticky bottom-0 z-10 flex flex-col gap-y-1.5 border-t border-cyan/30",
-        "bg-bg/90 px-4 py-2.5 backdrop-blur-sm",
+        // Opaque, not bg/90+blur: table rows read through the translucent bar as
+        // it overlapped them, which made the totals look like part of the table
+        // (MUX-018).
+        "bg-bg px-4 py-2.5",
       )}
     >
-      {/* Phone bar (Ross, 2026-07-27): exactly two lines, no explanatory white
-          text — the colour is the legend (green = owned, yellow = wishlist) and
-          the money is obviously money. The per-project BUDGET chips and the
-          TOTAL REMAINING column are desktop-only; six lines of stats on a phone
-          was eating a third of the screen. */}
+      {/* Phone bar (Ross, 2026-07-27): exactly two lines. The per-project BUDGET
+          chips and the TOTAL REMAINING column stay desktop-only — six lines of
+          stats on a phone was eating a third of the screen. */}
       <div className="flex flex-col gap-1 md:hidden">
-        <div className="flex items-baseline gap-3">
+        <div className="flex items-baseline gap-2.5">
           <span className="label-osd shrink-0 text-cyan-lite">PAINT:</span>
           <BareStat value={String(stats.paintOwned)} label="owned" accent="green" />
-          <BareStat value={String(stats.paintWishlist)} label="wishlist" accent="yellow" />
+          <BareStat value={String(stats.paintWishlist)} label="wish" accent="yellow" />
           <span className="ml-auto font-num2 text-num2 tabular-nums text-fg">
             {money(stats.paintSpend)}
             <span className="sr-only"> total spent</span>
           </span>
         </div>
-        <div className="flex items-baseline gap-3">
+        <div className="flex items-baseline gap-2.5">
           <span className="label-osd shrink-0 text-cyan-lite">MODELS:</span>
           <BareStat value={String(stats.modelOwned)} label="owned" accent="green" />
-          <BareStat value={String(stats.modelWishlist)} label="wishlist" accent="yellow" />
+          <BareStat value={String(stats.modelWishlist)} label="wish" accent="yellow" />
           <span className="ml-auto font-num2 text-num2 tabular-nums text-fg">
             {money(stats.modelSpend)}
             <span className="sr-only"> total spent</span>

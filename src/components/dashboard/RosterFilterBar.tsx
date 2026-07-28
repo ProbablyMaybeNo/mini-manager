@@ -39,21 +39,24 @@ export function RosterFilterBar({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-wrap items-center gap-2 py-1.5", className)}>
-      <div className="ml-auto flex items-center gap-1 min-[600px]:gap-2">
-        <span className="font-mono text-[9px] uppercase tracking-normal text-fg-dim opacity-70 min-[600px]:text-[10px] min-[600px]:tracking-wide min-[600px]:opacity-100">
-          Sort
-        </span>
-        <Listbox<RosterSort>
-          value={sort}
-          options={ROSTER_SORT_OPTIONS}
-          onChange={onSortChange}
-          ariaLabel="Sort roster"
-          accent="cyan"
-          size="xs"
-          triggerClassName="min-w-[64px] max-w-[84px] min-[600px]:min-w-[140px] min-[600px]:max-w-none"
-        />
-      </div>
+    // Inline in the ROSTER header row (MUX-015). It used to own a full 44px
+    // row that was 64% empty, with the control squeezed to max-w-[84px] so
+    // "Completion ↓" clipped to "Comple…". Here it sizes to its content and the
+    // row disappears. The "Sort" caption is desktop-only — next to a value that
+    // reads "Completion ↓" it was labelling the obvious.
+    <div className={cn("flex min-w-0 items-center gap-1 min-[600px]:gap-2", className)}>
+      <span className="hidden font-mono text-[10px] uppercase tracking-wide text-fg-dim min-[600px]:inline">
+        Sort
+      </span>
+      <Listbox<RosterSort>
+        value={sort}
+        options={ROSTER_SORT_OPTIONS}
+        onChange={onSortChange}
+        ariaLabel="Sort roster"
+        accent="cyan"
+        size="xs"
+        className="min-w-0"
+      />
     </div>
   );
 }

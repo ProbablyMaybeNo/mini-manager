@@ -292,7 +292,15 @@ export function RecipeWorkbench({
               paint schemes.
             </span>
           </section>
-          <label className="flex items-center gap-2 rounded-[6px] border border-border bg-surface px-3 py-2">
+          {/* Hidden until there's enough to search (MUX-025) — a search box over
+              a single recipe is a control that can only ever hide the one thing
+              on screen. */}
+          <label
+            className={cn(
+              "items-center gap-2 rounded-[6px] border border-border bg-surface px-3 py-2",
+              recipes.length >= 6 ? "flex" : "hidden",
+            )}
+          >
             <span aria-hidden className="text-fg-dim">⌕</span>
             <input
               value={query}

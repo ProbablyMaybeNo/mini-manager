@@ -26,7 +26,12 @@ export function ToolShell({
   children: React.ReactNode;
 }) {
   const isSubscriber = useSubscriber();
-  const [gateOpen, setGateOpen] = useState(true);
+  // Starts CLOSED (MUX-010). Auto-opening it on arrival covered the LOCKED
+  // card's own "Sponsor" button — verified by hit-testing: the point at the
+  // CTA's centre resolved to the modal header — so the page presented the same
+  // offer twice and blocked the copy the user had just chosen to read. The card
+  // is the offer; the modal opens when they press it.
+  const [gateOpen, setGateOpen] = useState(false);
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-x-hidden overflow-y-auto p-3 md:gap-6 md:p-6">

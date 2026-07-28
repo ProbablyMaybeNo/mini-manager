@@ -56,7 +56,14 @@ async function addProjectMobile(
   page: import("@playwright/test").Page,
   name: string,
 ): Promise<void> {
-  const addBtn = page.getByRole("button", { name: "New project", exact: true });
+  // Phones carry exactly ONE create control at a time (MUX-003): the roster's
+  // empty state owns it until there's a project, then the full-width
+  // "+ NEW PROJECT" below the roster takes over. The ⊕ this used to target is
+  // desktop-only now, and display:none keeps it out of the accessibility tree,
+  // so exactly one of these two resolves at any moment.
+  const addBtn = page.getByRole("button", {
+    name: /new project|create your first project/i,
+  });
   const dialog = page.getByRole("dialog");
   await expect(async () => {
     await addBtn.click();

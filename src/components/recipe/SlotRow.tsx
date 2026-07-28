@@ -127,9 +127,14 @@ export function SlotRow({
             </button>
           </div>
 
+          {/* Every control carries a 44px hit area via an invisible centred
+              `after:` zone (glyphs unchanged), and Delete is pushed a further
+              12px clear of the reorder pair — a destructive button sat directly
+              beside a repeated one, which is how you delete a step while trying
+              to nudge it down (MUX-014). */}
           <div className="flex items-center gap-1">
             {techniqueListbox("xs")}
-            <span className="ml-auto flex items-center">
+            <span className="ml-auto flex items-center gap-0.5">
               <ReorderBtn
                 label={`Move step ${index + 1} up`}
                 disabled={isFirst}
@@ -148,7 +153,7 @@ export function SlotRow({
                 type="button"
                 onClick={onPick}
                 aria-label={`Change paint for step ${index + 1}`}
-                className="inline-flex h-7 w-7 items-center justify-center text-fg-dim transition-colors hover:text-cyan-lite"
+                className="relative inline-flex h-7 w-7 items-center justify-center text-fg-dim transition-colors hover:text-cyan-lite after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
               >
                 <PenLine size={14} aria-hidden />
               </button>
@@ -156,7 +161,7 @@ export function SlotRow({
                 type="button"
                 onClick={onRemove}
                 aria-label={`Remove step ${index + 1}`}
-                className="inline-flex h-7 w-7 items-center justify-center text-red/80 transition-colors hover:text-red"
+                className="relative ml-3 inline-flex h-7 w-7 items-center justify-center text-fg-faint transition-colors hover:text-red after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
               >
                 <Trash2 size={14} aria-hidden />
               </button>
@@ -250,9 +255,11 @@ function ReorderBtn({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        // ≥24px tall tap target (h-6 w-7) around the small glyph (UX-004 /
-        // WCAG 2.2 §2.5.8). Glyph size unchanged; the box grows.
-        "flex h-6 w-7 items-center justify-center rounded-[4px] font-button text-[8px] leading-none transition-colors",
+        // ≥24px visible box (h-6 w-7) around the small glyph, plus an invisible
+        // centred 44px hit area so the real touch target clears WCAG 2.2 §2.5.8
+        // without inflating the dense desktop row (UX-004 / MUX-014).
+        "relative flex h-6 w-7 items-center justify-center rounded-[4px] font-button text-[8px] leading-none transition-colors",
+        "after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']",
         disabled
           ? "text-fg-faint/30"
           : "text-cyan-lite hover:bg-cyan/10 hover:text-fg-bright",

@@ -75,12 +75,17 @@ export function ToolsHubView() {
                     </span>
                   )}
                 </div>
+                {/* The Panel label above already prints the tool name, so this
+                    heading repeated it verbatim on every card — six cards, each
+                    saying its own name twice, over a 1763px scroll for what is a
+                    six-item menu (MUX-011). The name survives for screen readers
+                    via the sr-only heading, which also keeps the h2 outline. */}
                 <div>
-                  <h2 className="label-osd text-cyan-lite">
+                  <h2 className="sr-only">
                     {t.title}
-                    {!isSubscriber && <span className="sr-only"> (sponsor access only)</span>}
+                    {!isSubscriber && <span> (sponsor access only)</span>}
                   </h2>
-                  <p className="mt-1 font-body text-body text-fg">{t.blurb}</p>
+                  <p className="font-body text-body text-fg">{t.blurb}</p>
                 </div>
               </Panel>
             </Link>

@@ -44,7 +44,10 @@ export function SegmentedToggle<T extends string>({
             disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "rounded-[5px] px-3 py-1 font-button text-button uppercase tracking-[0.15em] transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan",
+              // flex-1 + min-w-0 so a full-width toggle splits into equal halves
+              // instead of letting the longer label push the shorter one out of
+              // the container (MUX-017). No effect on inline-width toggles.
+              "min-w-0 flex-1 rounded-[5px] px-3 py-1 font-button text-button uppercase tracking-[0.15em] transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan",
               active
                 ? "bg-cyan text-bg"
                 : "text-fg-dim hover:bg-fg/5 hover:text-fg",

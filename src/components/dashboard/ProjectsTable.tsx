@@ -272,7 +272,7 @@ export function ProjectsTable({
         >
           {/* Title fills the top line; status closes it. */}
           <div className="flex items-center gap-2">
-            {hasChildren && (
+            {hasChildren ? (
               <button
                 type="button"
                 aria-label={`${isExpanded ? "Collapse" : "Expand"} ${p.title}`}
@@ -287,11 +287,21 @@ export function ProjectsTable({
                   ▸
                 </span>
               </button>
+            ) : (
+              // Reserves the caret's width so every title starts at the same
+              // offset inside its card. Without it a childless sub-project's
+              // title began further LEFT than its parent's, so expanding a tree
+              // made the indent read backwards (MUX-016).
+              <span aria-hidden className="-ml-1 h-7 w-7 shrink-0" />
             )}
             <span className="min-w-0 flex-1 break-words font-mono text-[15px] font-bold leading-tight text-fg-bright">
               {p.title}
             </span>
             <StatusText status={p.status} />
+            {/* The card's whole purpose is "tap to open", and nothing said so —
+                meanwhile the red delete glyph was the loudest thing on it
+                (MUX-008). Same '›' the Upcoming-events row on this page uses. */}
+            <span aria-hidden className="shrink-0 text-fg-faint">›</span>
           </div>
 
           <ProgressBar
@@ -308,10 +318,14 @@ export function ProjectsTable({
                 no recipe
               </span>
             )}
+            {/* Neutral until touched (MUX-008): a red-outlined bin sitting at
+                thumb-rest was the highest-contrast element on every card,
+                pointing the eye at the one irreversible action. It still turns
+                red on hover/press, and delete is confirm-guarded regardless. */}
             <IconButton
-              variant="outlineRed"
+              variant="tertiary"
               size="sm"
-              className="relative ml-auto h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+              className="relative ml-auto h-7 w-7 text-fg-faint no-underline transition-colors hover:text-red hover:no-underline focus-visible:text-red after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
               aria-label={`Delete ${p.title}`}
               title="Delete project"
               disabled={pendingDelete}
@@ -335,7 +349,10 @@ export function ProjectsTable({
   return (
     <>
       {/* Desktop table — shown at ≥600px (MUX-002). */}
-      <div className="hidden overflow-x-auto min-[600px]:block">
+      {/* `roomy:` not `min-[600px]:` — a landscape phone is >600px wide but only
+          ~375px tall, and this dense table needs 758px of width and put the
+          first row below the fold there (MUX-001). */}
+      <div className="hidden overflow-x-auto roomy:block">
         <table className="w-full min-w-[680px] border-collapse">
           <thead>
             <tr className="border-b border-border bg-surface">
@@ -355,7 +372,7 @@ export function ProjectsTable({
       </div>
 
       {/* Mobile cards — shown < 600px, no horizontal overflow (MUX-002). */}
-      <div className="flex flex-col gap-2 min-[600px]:hidden">
+      <div className="flex flex-col gap-2 roomy:hidden">
         {renderCards(projects, 0)}
       </div>
 

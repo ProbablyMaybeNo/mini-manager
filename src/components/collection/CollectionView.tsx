@@ -63,8 +63,21 @@ export function CollectionView({
       <div className="flex flex-1 flex-col gap-4 pb-4 md:gap-6">
       <PageHeader title="COLLECTION" />
 
-      <PasteUrlBar onAddUrl={onAddUrl} />
-      <ScanPaintsFlow onScan={onScanPhoto} onConfirm={onConfirmScan} />
+      {/* The two bulk-import paths sit behind one disclosure on phones
+          (MUX-022). Three add-paint entry points competed above the table —
+          paste-a-URL, SCAN PAINTS, and "+ PAINT" — with the most niche given
+          the most prominent placement. "+ PAINT" on the section header is the
+          primary; these are the power tools, one tap away. */}
+      <details className="group md:contents">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-[8px] border border-border px-3 font-mono text-[12px] uppercase tracking-wide text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg md:hidden">
+          <span aria-hidden className="text-cyan-lite transition-transform group-open:rotate-90">▸</span>
+          Add from a link or a photo
+        </summary>
+        <div className="mt-3 flex flex-col gap-4 md:contents">
+          <PasteUrlBar onAddUrl={onAddUrl} />
+          <ScanPaintsFlow onScan={onScanPhoto} onConfirm={onConfirmScan} />
+        </div>
+      </details>
 
       {status === "error" ? (
         <Panel label="ERROR" accent="red" className="max-w-md p-6">
