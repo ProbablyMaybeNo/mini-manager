@@ -1,5 +1,6 @@
 "use client";
 
+import { PenLine, Trash2 } from "lucide-react";
 import { IconButton, Listbox, Swatch } from "@/components/kit";
 import type { Accent } from "@/lib/palette";
 import { cn } from "@/lib/cn";
@@ -49,7 +50,14 @@ function techniqueAccent(layer: string): Accent {
 }
 
 /** One editor step row (28:4): drag-handle + nn + technique pill + paint
- *  dot/name/brand + note + delete, with reorder / pick. */
+ *  dot/name/brand + note + delete, with reorder / pick.
+ *
+ *  Two layouts. Desktop keeps the wide single-line row. Phones get a compact
+ *  two-line block (Ross, 2026-07-27) — the desktop row squeezed a 104px
+ *  technique pill, a paint name, a note input and a delete button into ~330px,
+ *  so the paint name collapsed to one character per line and read as if it were
+ *  stretching vertically. The phone layout is: a colour square, then two lines
+ *  matching its height — the paint name on top, the technique + actions below. */
 export function SlotRow({
   slot,
   index,
@@ -74,8 +82,91 @@ export function SlotRow({
   const currentTechnique = (slot.layer.toUpperCase() as Technique);
   const known = TECHNIQUES.includes(currentTechnique);
 
+  const techniqueListbox = (size: "xs" | "sm") => (
+    <Listbox<Technique>
+      value={known ? currentTechnique : ""}
+      options={TECHNIQUES.map((t) => ({ value: t, label: t }))}
+      onChange={(t) => onLayerChange(t)}
+      ariaLabel={`Technique for step ${index + 1}`}
+      accent={techniqueAccent(slot.layer)}
+      size={size}
+      placeholder={slot.layer ? slot.layer.toUpperCase() : "TECHNIQUE"}
+      triggerClassName={cn(
+        size === "xs" ? "min-w-[96px]" : "min-w-[104px]",
+        "rounded-[6px] border-solid",
+        pillTint[techniqueAccent(slot.layer)],
+      )}
+    />
+  );
+
   return (
-    <div className="flex items-center gap-3 rounded-[6px] border border-border bg-bg/40 p-3">
+    <>
+      {/* ── Phone layout ──────────────────────────────────────────────── */}
+      <div className="flex gap-2.5 rounded-[6px] border border-border bg-bg/40 p-2 md:hidden">
+        {/* The colour square doubles as "change this paint". */}
+        <button
+          type="button"
+          onClick={onPick}
+          aria-label={`Change paint for step ${index + 1}`}
+          className="shrink-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+        >
+          <Swatch hex={slot.swatch} className="h-[54px] w-[54px] rounded-[4px]" />
+        </button>
+
+        <div className="flex min-w-0 flex-1 flex-col justify-between gap-1.5">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 font-mono text-[11px] font-bold tabular-nums text-fg-dim">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <button
+              type="button"
+              onClick={onPick}
+              className="min-w-0 flex-1 truncate text-left font-mono text-[13px] text-fg-bright focus:outline-none focus-visible:underline"
+            >
+              {slot.name}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {techniqueListbox("xs")}
+            <span className="ml-auto flex items-center">
+              <ReorderBtn
+                label={`Move step ${index + 1} up`}
+                disabled={isFirst}
+                onClick={() => onMove(-1)}
+              >
+                ▲
+              </ReorderBtn>
+              <ReorderBtn
+                label={`Move step ${index + 1} down`}
+                disabled={isLast}
+                onClick={() => onMove(1)}
+              >
+                ▼
+              </ReorderBtn>
+              <button
+                type="button"
+                onClick={onPick}
+                aria-label={`Change paint for step ${index + 1}`}
+                className="inline-flex h-7 w-7 items-center justify-center text-fg-dim transition-colors hover:text-cyan-lite"
+              >
+                <PenLine size={14} aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={onRemove}
+                aria-label={`Remove step ${index + 1}`}
+                className="inline-flex h-7 w-7 items-center justify-center text-red/80 transition-colors hover:text-red"
+              >
+                <Trash2 size={14} aria-hidden />
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop layout ────────────────────────────────────────────── */}
+      <div className="hidden items-center gap-3 rounded-[6px] border border-border bg-bg/40 p-3 md:flex">
       {/* Drag-handle column: keyboard reorder up/down with a ⠿ affordance
           between. Each arrow is a ≥24px tap target with vertical spacing so the
           two WCAG 2.5.8 target circles no longer intersect (UX-004). */}
@@ -95,17 +186,7 @@ export function SlotRow({
       </span>
 
       {/* Technique pill — a bordered Listbox styled as the coloured pill. */}
-      <div className="shrink-0">
-        <Listbox<Technique>
-          value={known ? currentTechnique : ""}
-          options={TECHNIQUES.map((t) => ({ value: t, label: t }))}
-          onChange={(t) => onLayerChange(t)}
-          ariaLabel={`Technique for step ${index + 1}`}
-          accent={techniqueAccent(slot.layer)}
-          placeholder={slot.layer ? slot.layer.toUpperCase() : "TECHNIQUE"}
-          triggerClassName={cn("min-w-[104px] rounded-[6px] border-solid", pillTint[techniqueAccent(slot.layer)])}
-        />
-      </div>
+      <div className="shrink-0">{techniqueListbox("sm")}</div>
 
       {/* Paint dot + name + brand — clicking opens the Pick & Paint picker.
           Swatch sized up (44px) and the name/brand wrap instead of truncating
@@ -146,7 +227,8 @@ export function SlotRow({
       >
         ⊗
       </IconButton>
-    </div>
+      </div>
+    </>
   );
 }
 

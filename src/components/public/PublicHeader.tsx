@@ -7,26 +7,31 @@ import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
 
 /**
- * Minimal public top nav: logo + Gallery + Pricing + Sign in + a primary
- * "Get Started" CTA.
+ * Minimal public top nav.
  *
- * The ghost links are the returning-visitor doors; the filled CTA is the
- * first-time-visitor door (→ /sign-up) so acquisition doesn't depend on the
- * hero button, which sits below the fold at 1366×768. Kept visible at every
- * width — it wraps onto a second line with the nav's `flex-wrap` rather than
- * hiding behind a breakpoint.
+ * On phones the nav is exactly two doors: a small ghost "Sign in" and the
+ * filled "Get Started" CTA — the old four-item row wrapped, dropping the CTA
+ * onto a second line underneath the ghost links (Ross, 2026-07-27). Gallery and
+ * Sponsor return at ≥sm where there's room for them on one line; they're still
+ * reachable from the footer on every width.
  */
 export function PublicHeader() {
+  // Smaller + non-wrapping on phones: at the full h1 size "Sign in" broke
+  // across two lines next to the CTA.
   const linkClass =
-    "rounded-[6px] px-1 py-0.5 font-h1 text-h1 uppercase tracking-[0.18em] text-fg transition-colors duration-150 hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite";
+    "whitespace-nowrap rounded-[6px] px-1 py-0.5 font-h1 text-body uppercase tracking-[0.1em] text-fg transition-colors duration-150 hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite sm:text-h1 sm:tracking-[0.18em]";
   return (
-    <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border px-4 py-3 sm:px-6">
-      <Logo href="/" size={44} />
-      <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:gap-5">
-        <Link href="/gallery" className={linkClass}>
+    <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 sm:px-6">
+      {/* Mark-only on phones: the ~155px "MINI MAINFRAME" wordmark plus both
+          nav doors overran 375px, and the hero's animated CRT directly below
+          spells the name out anyway. */}
+      <Logo href="/" size={40} markOnly className="sm:hidden" />
+      <Logo href="/" size={44} className="hidden sm:inline-flex" />
+      <nav className="flex items-center gap-3 sm:gap-5">
+        <Link href="/gallery" className={`hidden sm:inline-block ${linkClass}`}>
           Gallery
         </Link>
-        <Link href="/pricing" className={linkClass}>
+        <Link href="/pricing" className={`hidden sm:inline-block ${linkClass}`}>
           Sponsor
         </Link>
         <Link href="/sign-in" className={linkClass}>
@@ -35,6 +40,9 @@ export function PublicHeader() {
         <Link href="/sign-up" aria-label="Get started">
           <Button
             size="sm"
+            // whitespace-nowrap: at 375px the two-word label broke onto a second
+            // line and pushed the button past the right edge.
+            className="whitespace-nowrap px-2 sm:px-2.5"
             onClick={() =>
               trackClient(AnalyticsEvent.CtaStartForFree, { location: "header" })
             }

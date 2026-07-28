@@ -96,11 +96,11 @@ export function LibraryView(props: LibraryViewProps) {
     (filter.hex ? 1 : 0);
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <div className="flex h-full flex-col gap-4 p-3 md:gap-6 md:p-6">
       <PageHeader
         title="LIBRARY"
         tagline={`// every paint on the market — mark what you own or want (${totalCount.toLocaleString()} across all the major brands)`}
-        taglineClassName="font-body text-body"
+        taglineClassName="hidden font-body text-body md:block"
         actions={
           <>
             <div className="w-44">

@@ -268,6 +268,9 @@ export interface RecipeTableRow {
   slots: RecipeTableSlot[];
   /** Total slot count (one paint + layer per slot). */
   slotCount: number;
+  /** The recipe's own notes. Carried so the Focus bench can render them
+   *  straight from this row instead of showing a permanent "no notes yet". */
+  notesMd: string | null;
   /** ms-timestamps so the table can sort. */
   createdAt: number;
   updatedAt: number;
@@ -377,6 +380,7 @@ function buildRecipeTableRows(
       palette,
       slots: richSlots,
       slotCount: slots.length,
+      notesMd: r.notesMd,
       createdAt: r.createdAt.getTime(),
       updatedAt: r.updatedAt.getTime(),
       publicSlug: r.publicSlug,

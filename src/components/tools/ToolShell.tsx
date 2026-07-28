@@ -29,11 +29,13 @@ export function ToolShell({
   const [gateOpen, setGateOpen] = useState(true);
 
   return (
-    <div className="flex h-full flex-col gap-6 overflow-x-hidden overflow-y-auto p-6">
-      <Link href="/tools">
+    <div className="flex h-full flex-col gap-4 overflow-x-hidden overflow-y-auto p-3 md:gap-6 md:p-6">
+      <Link href="/tools" className="self-start">
         <Button variant="tertiary">← Tools</Button>
       </Link>
-      <PageHeader title={title} tagline={blurb} />
+      {/* Blurb is desktop-only — the tool's own controls are right below it and
+          the title already names the job (Ross, 2026-07-27 mobile pass). */}
+      <PageHeader title={title} tagline={blurb} taglineClassName="hidden md:block" />
       {isSubscriber ? (
         children
       ) : (

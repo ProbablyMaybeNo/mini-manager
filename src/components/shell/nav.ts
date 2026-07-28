@@ -40,34 +40,9 @@ export const FOOTER_NAV: NavItem[] = [
   { key: "settings", label: "SETTINGS", path: "/user", icon: Cog },
 ];
 
+/** Every page, in rail order. Phones list this whole set in the hamburger
+ *  menu (MobileTopBar) — no page is demoted behind a "More" tab. */
 export const ALL_NAV = [...MAIN_NAV, ...FOOTER_NAV];
-
-/**
- * Phone bottom-nav split (MUX-001). The four thumb-zone primaries always show
- * as labelled tabs; everything else folds into a "More" sheet. Keys reference
- * MAIN_NAV / FOOTER_NAV so the labels + tour anchors stay single-sourced.
- */
-const byKey = (key: NavKey): NavItem => {
-  const item = ALL_NAV.find((n) => n.key === key);
-  if (!item) throw new Error(`nav item not found: ${key}`);
-  return item;
-};
-
-/** The four labelled tabs pinned in the phone bottom bar. */
-export const BOTTOM_NAV_PRIMARY: NavItem[] = [
-  byKey("dashboard"),
-  byKey("library"),
-  byKey("collection"),
-  byKey("tools"),
-];
-
-/** Items that live behind the bottom bar's "More" entry on phones. */
-export const BOTTOM_NAV_MORE: NavItem[] = [
-  byKey("focus"),
-  byKey("recipe"),
-  byKey("gallery"),
-  byKey("settings"),
-];
 
 /**
  * Resolve which nav item is active for a pathname: the item whose path is the longest

@@ -33,7 +33,7 @@ const TOOLS: ToolCard[] = [
 export function ToolsHubView() {
   const isSubscriber = useSubscriber();
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <div className="flex h-full flex-col gap-4 p-3 md:gap-6 md:p-6">
       <PageHeader
         title="TOOLS"
         tagline={
@@ -41,8 +41,9 @@ export function ToolsHubView() {
             ? "// colour utilities — turn an idea, photo, or colour into named, buyable paints"
             : "// colour utilities — sponsor to unlock the full toolset"
         }
+        taglineClassName="hidden md:block"
       />
-      <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
         {TOOLS.map((t) => {
           // p9DIDc — bespoke phosphor SVG thumbnail per tool, or a raster image.
           const Thumb = TOOL_THUMBS[t.href];
@@ -51,7 +52,7 @@ export function ToolsHubView() {
               <Panel
                 label={t.title.toUpperCase()}
                 cornerTicks
-                className="flex h-full flex-col gap-4 p-6 transition-colors group-hover:border-cyan group-hover:glow-cyan"
+                className="flex h-full flex-col gap-3 p-3 transition-colors group-hover:border-cyan group-hover:glow-cyan md:gap-4 md:p-6"
               >
                 <div className="relative aspect-[16/9] w-full overflow-hidden border border-cyan/20 bg-black transition-transform duration-500 group-hover:scale-[1.02]">
                   {t.image ? (

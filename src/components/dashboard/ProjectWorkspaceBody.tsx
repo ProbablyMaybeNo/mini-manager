@@ -99,14 +99,19 @@ const QUICK_JUMP_SECTIONS: { anchorId: string; label: string }[] = [
  * notched into the top border and a one-line body hint.
  *
  * Collapsible on mobile (MOP-005): below `md` the body collapses behind a
- * chevron toggle (local state, NOT native <details>), with `defaultOpen`
- * controlling its initial state — SUB-PROJECTS + PROGRESS open by default
- * (Ross's locked M4 call), the rest collapsed for a glanceable mobile view.
- * On `md`+ every section is always expanded (`md:block` forces the body open
- * and `md:hidden` removes the toggle) — collapsing is purely a mobile space
- * affordance. The chevron rotation rides the global `prefers-reduced-motion`
- * reset (globals.css zeroes transition-duration), so reduced-motion users get
- * an instant snap (M7 pattern).
+ * toggle (local state, NOT native <details>), with `defaultOpen` controlling
+ * its initial state — SUB-PROJECTS + PROGRESS open by default (Ross's locked M4
+ * call), the rest collapsed for a glanceable mobile view. On `md`+ every
+ * section is always expanded (`md:block` forces the body open and `md:hidden`
+ * removes the toggle) — collapsing is purely a mobile space affordance. The
+ * chevron rotation rides the global `prefers-reduced-motion` reset (globals.css
+ * zeroes transition-duration), so reduced-motion users get an instant snap (M7).
+ *
+ * The `hint` line sits OUTSIDE the collapsible body (Ross, 2026-07-27) so a
+ * collapsed card still says what it's for — collapsed used to leave a bare
+ * label and a lone chevron. On mobile the hint doubles as the toggle's label,
+ * which also gives the control a full-width ≥44px target instead of a 24px
+ * chevron floating at the right edge.
  *
  * The outer `id={anchorId}` is the scroll target for the mobile quick-jump rail.
  */
@@ -145,22 +150,30 @@ function CollapsibleSection({
       {/* scroll-mt keeps the notched label clear of the sticky header when the
           quick-jump rail scrolls this section into view. */}
       <div id={anchorId} className={cn("scroll-mt-4", fill && "flex flex-1 flex-col")}>
-        {/* Mobile-only collapse toggle. The Panel's notched label is the section
-            identity, so the toggle is chevron-only with an aria-label naming the
-            section; it sits as a full-width row above the body to give a ≥44px
-            hit target without duplicating the visible label text. */}
+        {/* Mobile-only collapse toggle — the hint IS the label, so a collapsed
+            card still describes itself and the target spans the full row. */}
         <button
           type="button"
           aria-expanded={open}
           aria-controls={bodyId}
           aria-label={`${open ? "Collapse" : "Expand"} ${label} section`}
           onClick={() => setOpen((v) => !v)}
-          className="-mt-2 -mr-2 mb-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center justify-end md:hidden"
+          className="-mt-2 mb-3 flex min-h-11 w-full items-start gap-3 text-left md:hidden"
         >
-          <span aria-hidden className={cn("shrink-0 text-cyan-lite transition-transform", open && "rotate-90")}>
+          <span className="min-w-0 flex-1 font-body text-body text-fg-dim">{hint}</span>
+          <span
+            aria-hidden
+            className={cn(
+              "mt-0.5 shrink-0 text-cyan-lite transition-transform",
+              open && "rotate-90",
+            )}
+          >
             ▸
           </span>
         </button>
+
+        {/* Desktop hint — the mobile copy above is inside the toggle button. */}
+        {hint && <p className="mb-3 hidden font-body text-body text-fg-dim md:block">{hint}</p>}
 
         {/* Body: hidden when collapsed on mobile; always shown on md+. When
             `fill`, the md+ body becomes a flex column so a trailing flex-1 child
@@ -173,7 +186,6 @@ function CollapsibleSection({
             fill ? "md:flex md:flex-1 md:flex-col" : "md:block",
           )}
         >
-          {hint && <p className="mb-3 font-body text-body text-fg-dim">{hint}</p>}
           {children}
         </div>
       </div>
@@ -921,10 +933,15 @@ export function ProjectWorkspaceBody({
 }
 
 /**
- * A prominent SUB-PROJECTS list row (PP-2): the sub-project name (clickable →
- * drills into its page), its recipe swatch squares (SwatchStrip), a progress
- * bar, and trailing edit / focus / delete icons. Restyled from the old dense
- * name+chip+% line into the sketch's "centerpiece" row.
+ * A SUB-PROJECTS list row (PP-2): the sub-project name (clickable → drills into
+ * its page), its recipe swatch squares, a progress bar, and trailing actions.
+ *
+ * Action strip reworked 2026-07-27 (Ross: "I don't know what any of those icons
+ * mean and shouldn't they be smaller"). Three 32px glyph buttons — a pencil, a
+ * focus reticle and a bin — dominated the row and only the bin read as anything.
+ * Now: the redundant pencil is gone (tapping the name already opens the
+ * sub-project to edit it), FOCUS is a word rather than a reticle, and the bin
+ * drops to 28px.
  */
 function SubProjectRow({
   child,
@@ -969,40 +986,28 @@ function SubProjectRow({
         />
       </div>
 
-      {/* Trailing edit / focus / delete icons. */}
       <div className="ml-auto flex items-center gap-2">
-        <IconButton
-          variant="outlineCyan"
-          size="sm"
-          className="h-8 w-8"
-          aria-label={`Edit ${child.title}`}
-          title="Edit sub-project"
-          onClick={onOpen}
-        >
-          ✎
-        </IconButton>
         {onFocus && (
-          <IconButton
-            variant="outlinePurple"
-            size="sm"
-            className="h-8 w-8"
-            aria-label={`Open ${child.title} in focus`}
-            title="Open in focus bench"
+          <button
+            type="button"
             onClick={onFocus}
+            title="Open in the focus bench"
+            className="inline-flex h-7 items-center gap-1.5 border border-purple/50 px-2 font-button text-button uppercase tracking-[0.12em] text-purple transition-colors hover:bg-purple/10 focus:outline-none focus-visible:bg-purple/10"
           >
-            <FocusReticleIcon size={22} />
-          </IconButton>
+            <FocusReticleIcon size={13} />
+            Focus
+          </button>
         )}
         <IconButton
           variant="outlineRed"
           size="sm"
-          className="h-8 w-8"
+          className="h-7 w-7"
           aria-label={`Delete ${child.title}`}
           title="Delete sub-project"
           disabled={disabled}
           onClick={onDelete}
         >
-          <Trash2 size={16} aria-hidden />
+          <Trash2 size={14} aria-hidden />
         </IconButton>
       </div>
     </li>

@@ -214,11 +214,13 @@ export function DashboardView({
         {/* When the inspector squeezes this column (twoPane), tighten the
             padding so the roster + welcome card keep a usable content width and
             don't collapse into a cramped, momentarily-broken-looking wrap
-            (UX-014). Full-width dashboard keeps the roomy p-10. */}
+            (UX-014). Full-width dashboard keeps the roomy p-10 — but only from
+            md up: 40px of gutter on a 375px phone is a fifth of the screen
+            (Ross, 2026-07-27). */}
         <div
           className={cn(
-            "flex flex-1 flex-col gap-7 overflow-y-auto",
-            twoPane ? "px-5 py-6" : "p-10",
+            "flex flex-1 flex-col gap-4 overflow-y-auto p-3 md:gap-7",
+            twoPane ? "md:px-5 md:py-6" : "md:p-10",
           )}
         >
           {/* No tagline text bar — the "+ New Project" button + the obvious

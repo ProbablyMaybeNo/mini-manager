@@ -89,7 +89,7 @@ export function RecipeEditorView({
   const editing = pickingSlot != null ? recipe.slots[pickingSlot] : null;
 
   return (
-    <div className="flex h-full flex-col gap-6 overflow-y-auto p-6">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto p-3 md:gap-6 md:p-6">
       <div className="flex items-center gap-3">
         {/* backLabel can be "‹ back to <project title>" — keep the user's
             project name in its real casing rather than shouting it. */}
@@ -101,10 +101,11 @@ export function RecipeEditorView({
       <PageHeader
         title="RECIPE EDITOR"
         tagline="Capture a repeatable scheme, attach it to a project, and share it."
+        taglineClassName="hidden md:block"
       />
 
       {/* Title + assign + share */}
-      <Panel label="DETAILS" className="flex flex-col gap-4 p-4 md:flex-row md:items-end">
+      <Panel label="DETAILS" className="flex flex-col gap-3 p-3 md:flex-row md:items-end md:gap-4 md:p-4">
         <div className="flex-1">
           <Input
             label="Recipe name"
@@ -130,34 +131,39 @@ export function RecipeEditorView({
           />
         </div>
         {/* 28:4 footer actions: SHARE LINK (outline), SAVE RECIPE (green),
-            ATTACH RECIPE (blue). Share stays the green outline link affordance. */}
-        <Button variant="secondary" onClick={onShare}>
-          ⛓ Share Link
-        </Button>
-        <Button variant="outlineCyan" onClick={() => setShareCardOpen(true)}>
-          ⬡ Share as Card
-        </Button>
-        <Button variant="add" onClick={onSave}>
-          Save Recipe
-        </Button>
-        <Button
-          variant="solidCyan"
-          className="border-blue bg-blue hover:bg-blue/85"
-          onClick={onSave}
-        >
-          Attach Recipe
-        </Button>
-        {onDelete && (
-          <Button variant="outlineRed" onClick={onDelete}>
-            Delete
+            ATTACH RECIPE (blue). Share stays the green outline link affordance.
+            On phones they wrap into a grid instead of stacking as five
+            full-width bars; `md:contents` dissolves the wrapper so the desktop
+            row is byte-for-byte what it was. */}
+        <div className="flex flex-wrap gap-2 md:contents">
+          <Button variant="secondary" onClick={onShare}>
+            ⛓ Share Link
           </Button>
-        )}
+          <Button variant="outlineCyan" onClick={() => setShareCardOpen(true)}>
+            ⬡ Share as Card
+          </Button>
+          <Button variant="add" onClick={onSave}>
+            Save Recipe
+          </Button>
+          <Button
+            variant="solidCyan"
+            className="border-blue bg-blue hover:bg-blue/85"
+            onClick={onSave}
+          >
+            Attach Recipe
+          </Button>
+          {onDelete && (
+            <Button variant="outlineRed" onClick={onDelete}>
+              Delete
+            </Button>
+          )}
+        </div>
       </Panel>
 
       {/* ndZ9 — inspiration removed from the creator; the freed space lets the
           slots + notes use the full width (luPYg). zfnUz — borders thinned to
           cyan/20 across the editor sections. */}
-      <Panel label="SLOTS" cornerTicks className="flex flex-col gap-3 p-4">
+      <Panel label="SLOTS" cornerTicks className="flex flex-col gap-2 p-3 md:gap-3 md:p-4">
         {/* DOP-011 — live ordered-scheme preview: the layers render as labelled
             swatches the moment they exist, so the painter sees the build the way
             it'll appear on the recipe list / card. */}
@@ -197,7 +203,7 @@ export function RecipeEditorView({
 
       {/* -bxkX — Notes shortened (rows 3) so the panel sits symmetric with the
           slot rows above rather than towering over them. */}
-      <Panel label="NOTES" className="p-4">
+      <Panel label="NOTES" className="p-3 md:p-4">
         <textarea
           value={recipe.notes ?? ""}
           onChange={(e) => update({ notes: e.target.value })}

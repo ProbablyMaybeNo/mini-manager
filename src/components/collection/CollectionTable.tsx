@@ -48,7 +48,7 @@ function FilterChip({
       onClick={onClick}
       className={cn(
         // ≥44px tap target on touch widths, compact on desktop (UX-011).
-        "inline-flex min-h-[44px] items-center rounded-[6px] px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors md:min-h-0",
+        "inline-flex min-h-[44px] shrink-0 items-center rounded-[6px] px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors md:min-h-0",
         active
           ? "bg-cyan/20 text-cyan-lite"
           : "border border-border text-fg-dim hover:border-cyan/40 hover:text-fg",
@@ -188,7 +188,11 @@ export function CollectionTable({
       {/* section-header (24:63) — accent tick · title · count · filter chips · add.
           Wraps on narrow widths so the chip row + add button never clip off the
           right edge (UX-002). */}
-      <div className="flex flex-wrap items-center justify-between gap-3 md:h-11 md:flex-nowrap">
+      {/* On a phone this header used to spend four stacked rows (title / three
+          status chips / two filter dropdowns / + PAINT) before the first row of
+          data. It's now two: title + add on one line, then the filters as a
+          single horizontally-scrollable strip. */}
+      <div className="flex flex-wrap items-center justify-between gap-2 md:h-11 md:flex-nowrap md:gap-3">
         <div className="flex items-center gap-3">
           <span
             className={cn("h-8 w-1 shrink-0 rounded-[2px]", isPaint ? "bg-cyan" : "bg-fg-muted")}
@@ -213,7 +217,18 @@ export function CollectionTable({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        {/* + PAINT / + MODEL — neutral outline add button. Green is reserved for
+            COMPLETE / success, not add affordances (UX-004). `order` puts it
+            beside the title on phones and back at the row's end on desktop. */}
+        <button
+          type="button"
+          onClick={onAdd}
+          className="order-1 shrink-0 rounded-[6px] border border-border bg-transparent px-4 py-2 font-display text-[12px] font-bold text-fg transition-colors hover:border-fg/25 hover:bg-fg/5 md:order-3"
+        >
+          + {isPaint ? "PAINT" : "MODEL"}
+        </button>
+
+        <div className="order-2 -mx-3 flex w-[calc(100%+1.5rem)] items-center gap-2 overflow-x-auto px-3 md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0">
           {statusChips.map((s) => (
             <FilterChip
               key={s}
@@ -229,6 +244,7 @@ export function CollectionTable({
             placeholder="▾ PROJECT"
             options={projectOptions}
             onChange={setProjectFilter}
+            className="shrink-0"
             triggerClassName="!border-solid !border-border text-[11px] uppercase"
           />
           <Listbox
@@ -238,129 +254,130 @@ export function CollectionTable({
             placeholder={isPaint ? "▾ BRAND" : "▾ TYPE"}
             options={facetOptions}
             onChange={setFacetFilter}
+            className="shrink-0"
             triggerClassName="!border-solid !border-border text-[11px] uppercase"
           />
         </div>
-
-        {/* + PAINT / + MODEL — neutral outline add button. Green is reserved for
-            COMPLETE / success, not add affordances (UX-004). */}
-        <button
-          type="button"
-          onClick={onAdd}
-          className="shrink-0 rounded-[6px] border border-border bg-transparent px-4 py-2 font-display text-[12px] font-bold text-fg transition-colors hover:border-fg/25 hover:bg-fg/5"
-        >
-          + {isPaint ? "PAINT" : "MODEL"}
-        </button>
       </div>
 
-      {/* Phone reflow (UX-002): the dense min-w-[900px] table overflows with no
-          scroll cue < md, hiding STATUS/ACTIONS off-screen. Below md each row
-          reflows to a stacked card showing name, brand, price, status, project,
-          and the row actions; the table returns at ≥md. */}
-      <ul className="flex flex-col gap-3 md:hidden">
-        {visible.length === 0 ? (
-          <li className="rounded-[8px] border border-border px-4 py-8 text-center font-mono text-body text-fg-dim">
-            {items.length === 0
-              ? `No ${label}s yet — paste a store URL above or add one by hand.`
-              : "No matches for these filters."}
-          </li>
-        ) : (
-          visible.map((item) => {
-            const proj = item.projectId ? projectInfo.get(item.projectId) : undefined;
-            const firstSwatch = item.recipeId
-              ? recipeSwatches?.(item.recipeId)?.[0]
-              : undefined;
-            return (
-              <li
-                key={item.id}
-                className="flex flex-col gap-3 rounded-[10px] border border-border bg-surface p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    {isPaint && <SwatchDot hex={firstSwatch} />}
-                    <div className="min-w-0">
-                      {item.sourceUrl ? (
-                        <a
-                          href={item.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block truncate font-mono text-[14px] font-bold text-fg hover:text-cyan-lite hover:underline"
-                        >
-                          {item.name}
-                        </a>
-                      ) : (
-                        <span className="block truncate font-mono text-[14px] font-bold text-fg">
-                          {item.name}
-                        </span>
-                      )}
-                      <span className="block truncate font-mono text-[11px] uppercase text-fg-dim">
-                        {isPaint ? (item.company || "—") : (item.paintType ?? item.army ?? "—")}
-                        {" · "}
-                        QTY {item.quantity ?? 1}
-                        {" · "}
-                        {item.price || "—"}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="inline-flex shrink-0 items-center gap-3">
-                    {onEdit && (
-                      <button
-                        type="button"
-                        aria-label={`Edit ${item.name}`}
-                        onClick={() => onEdit(item)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] text-fg-dim transition-colors hover:bg-fg/5 hover:text-cyan-lite"
-                      >
-                        <PenLine size={16} aria-hidden />
-                      </button>
+      {/* Phone table (Ross, 2026-07-27). Each entry was a four-line card; it's
+          now ONE table row like desktop, carrying only what a painter actually
+          scans for: NAME · STATUS · COST · edit/delete.
+          Dropped on purpose — QTY (own two? add two rows), BRAND/TYPE, PROJECT
+          and the "+ ATTACH" dropdown (paints reach projects through recipes,
+          nothing else). All of it still renders in the ≥md table below, and the
+          underlying row is identical either way, so a phone edit loses nothing. */}
+      <div className="md:hidden">
+        <table className="w-full table-fixed border-collapse">
+          <thead>
+            <tr className="border-b border-border">
+              <th scope="col" className="py-2 pr-2 text-left font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+                Name
+              </th>
+              <th scope="col" className="w-[86px] px-1 text-left font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+                Status
+              </th>
+              <th scope="col" className="w-[52px] px-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+                Cost
+              </th>
+              <th scope="col" className="w-[56px] pl-1 text-right font-mono text-[10px] font-bold uppercase tracking-wide text-fg-dim">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-2 py-8 text-center font-mono text-body text-fg-dim">
+                  {items.length === 0
+                    ? `No ${label}s yet — paste a store URL above or add one by hand.`
+                    : "No matches for these filters."}
+                </td>
+              </tr>
+            ) : (
+              visible.map((item, rowIndex) => {
+                const firstSwatch = item.recipeId
+                  ? recipeSwatches?.(item.recipeId)?.[0]
+                  : undefined;
+                return (
+                  <tr
+                    key={item.id}
+                    className={cn(
+                      "border-b border-border",
+                      rowIndex % 2 === 1 && "bg-fg/[0.015]",
                     )}
-                    <button
-                      type="button"
-                      aria-label={`Delete ${item.name}`}
-                      onClick={() => onRemove(item)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] text-fg-dim transition-colors hover:bg-fg/5 hover:text-red"
-                    >
-                      <Trash2 size={16} aria-hidden />
-                    </button>
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusDropdown
-                    kind={kind}
-                    value={item.status}
-                    ariaLabel={`Status for ${item.name}`}
-                    onChange={(s) => onStatusChange(item, s)}
-                  />
-                  {proj ? (
-                    <ProjectChip name={proj.name} accent={proj.accent} />
-                  ) : (
-                    <Listbox
-                      value={item.projectId ?? ""}
-                      ariaLabel={`Assign ${item.name} to a project`}
-                      accent="neutral"
-                      placeholder="+ ATTACH"
-                      onChange={(v) => onAssignProject(item, v)}
-                      options={[
-                        { value: "", label: "+ ATTACH" },
-                        ...activeProjects.map((p) => ({ value: p.id, label: p.title })),
-                      ]}
-                      triggerClassName="max-w-[160px]"
-                    />
-                  )}
-                </div>
-              </li>
-            );
-          })
-        )}
-        <li>
-          <button
-            type="button"
-            onClick={onAdd}
-            className="flex h-12 w-full items-center justify-center rounded-[8px] border border-dashed border-border px-4 font-mono text-[12px] text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg"
-          >
-            + Add {label} row
-          </button>
-        </li>
-      </ul>
+                  >
+                    <td className="py-1.5 pr-2">
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        {isPaint && <SwatchDot hex={firstSwatch} />}
+                        {item.sourceUrl ? (
+                          <a
+                            href={item.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="min-w-0 truncate font-mono text-[12px] text-fg hover:text-cyan-lite hover:underline"
+                          >
+                            {item.name}
+                          </a>
+                        ) : (
+                          <span className="min-w-0 truncate font-mono text-[12px] text-fg">
+                            {item.name}
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-1">
+                      <StatusDropdown
+                        kind={kind}
+                        value={item.status}
+                        size="xs"
+                        ariaLabel={`Status for ${item.name}`}
+                        onChange={(s) => onStatusChange(item, s)}
+                      />
+                    </td>
+                    <td className="px-1 text-right font-mono text-[12px] tabular-nums text-fg-dim">
+                      {item.price || "—"}
+                    </td>
+                    <td className="pl-1">
+                      <span className="flex items-center justify-end">
+                        {onEdit && (
+                          <button
+                            type="button"
+                            aria-label={`Edit ${item.name}`}
+                            onClick={() => onEdit(item)}
+                            className="inline-flex h-11 w-7 items-center justify-center text-fg-dim transition-colors hover:text-cyan-lite"
+                          >
+                            <PenLine size={14} aria-hidden />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          aria-label={`Delete ${item.name}`}
+                          onClick={() => onRemove(item)}
+                          className="inline-flex h-11 w-7 items-center justify-center text-fg-dim transition-colors hover:text-red"
+                        >
+                          <Trash2 size={14} aria-hidden />
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+            <tr>
+              <td colSpan={4} className="pt-2">
+                <button
+                  type="button"
+                  onClick={onAdd}
+                  className="flex h-11 w-full items-center justify-center rounded-[8px] border border-dashed border-border px-4 font-mono text-[12px] text-fg-dim transition-colors hover:border-cyan/40 hover:text-fg"
+                >
+                  + Add {label} row
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       {/* table (24:83 / 24:306) — desktop only; phones use the card list above. */}
       <div className="hidden overflow-x-auto md:block">

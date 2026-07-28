@@ -9,42 +9,25 @@ import { AnalyticsEvent } from "@/lib/analytics/events";
 import { SUPPORT_EMAIL } from "@/lib/support";
 import { PublicHeader } from "./PublicHeader";
 
-// Feature copy — benefit-led, per Ross's landing pass.
-const FEATURES: { title: string; blurb: string }[] = [
+// Real in-app screens — no mockups. Every feature the landing sells is shown
+// as an actual screenshot (Ross, 2026-07-27): the old text-only feature grid
+// repeated this list without images, so it's been folded into this one section.
+const SHOWCASE: {
+  src: string;
+  label: string;
+  alt: string;
+  caption: string;
+  /** Intrinsic capture height — 900 unless the page needed a taller viewport
+   *  to show its whole point (see tests/e2e/capture_showcase.spec.ts). */
+  height?: number;
+}[] = [
   {
-    title: "Paint Library",
-    blurb:
-      "Browse 7,000+ paints from Citadel, Vallejo, Army Painter and every major brand. Flag what you own, wishlist what you want, and drop any paint straight into a Warhammer or wargame project.",
+    src: "/showcase/projects.png",
+    label: "PROJECTS",
+    alt: "The Mini Mainframe projects roster — armies, units and models with status, priority and completion",
+    caption:
+      "Every army, unit and model in one roster. Set deadlines, track status, and shrink your pile of shame one unit at a time.",
   },
-  {
-    title: "Color Tools",
-    blurb:
-      "Match any colour to real paints, build schemes on the harmony wheel, and predict glaze layers before you commit a drop — the exact paint for the look in your head.",
-  },
-  {
-    title: "Projects",
-    blurb:
-      "A wargame project tracker for every army, unit, and model in one view. Set deadlines, watch your activity feed, and shrink your pile of shame one unit at a time.",
-  },
-  {
-    title: "Focus",
-    blurb:
-      "Your painting companion: recipe, notes, techniques, inspiration, and a session timer on one screen. Sit down, hit start, just paint.",
-  },
-  {
-    title: "Planner",
-    blurb:
-      "Stay ahead of every tournament and deadline with events and a built-in hobby calendar. Never get caught priming the night before.",
-  },
-  {
-    title: "Collection",
-    blurb:
-      "A paint collection manager for your paints and models — track what you've spent and auto-add items from the store as you browse. Know what you own, and what you still need.",
-  },
-];
-
-// Real in-app screens (captured 2026-07-10, 1440×900) — no mockups.
-const SHOWCASE: { src: string; label: string; alt: string; caption: string }[] = [
   {
     src: "/showcase/library.png",
     label: "PAINT LIBRARY",
@@ -53,11 +36,26 @@ const SHOWCASE: { src: string; label: string; alt: string; caption: string }[] =
       "Every paint on the market — 7,000+ across every major brand — mapped by colour. Flag what you own, wishlist the rest.",
   },
   {
-    src: "/showcase/color-wheel.png",
+    src: "/showcase/tools.png",
     label: "COLOUR TOOLS",
-    alt: "The colour wheel tool matching a picked colour to the closest real paints",
+    alt: "The Mini Mainframe colour tools hub listing the wheel, match, dropper, layering and paint scanner tools",
     caption:
-      "Spin the wheel, pick a harmony, and match every colour to a real paint you can buy — then send it straight to a recipe.",
+      "The full toolkit: harmony wheel, colour match, photo dropper, glaze layering, and a scanner that reads your paint rack from a photo.",
+    height: 1420,
+  },
+  {
+    src: "/showcase/collection.png",
+    label: "COLLECTION",
+    alt: "The Mini Mainframe collection tracker listing owned and wishlisted paints and models with prices",
+    caption:
+      "Paste a store link and the row fills itself in — name, brand, price. Know exactly what you own, what you want, and what you've spent.",
+  },
+  {
+    src: "/showcase/recipe.png",
+    label: "RECIPE CREATOR",
+    alt: "The Mini Mainframe recipe editor building a paint scheme layer by layer",
+    caption:
+      "Build a scheme layer by layer, tag the technique on every step, then attach it to a project or share it with a link.",
   },
   {
     src: "/showcase/focus.png",
@@ -175,10 +173,22 @@ export function LandingView() {
           <br />
           Manage your minis.
         </p>
-        <p className="max-w-2xl font-body text-body text-fg">
-          A miniature painting tracker and paint collection manager for wargamers: manage
-          your armies, paint recipes, backlog, colour matches, and hobby sessions in one
-          place — with 7,000+ paints from Warhammer, Citadel, Vallejo and Army Painter.
+        {/* Two cuts of the same pitch (Ross, 2026-07-27): the punchy one on
+            phones where the long paragraph swallowed the fold, the full
+            feature-led version from ≥sm. Both ship in the HTML, so the
+            long-tail keywords ("paint library", "Focus mode", "collection
+            tracker") stay crawlable at every width. */}
+        <p className="max-w-2xl font-body text-body text-fg sm:hidden">
+          Manage your pile of shame and slay the grey with a whole range of awesome tools.
+          Share your progress pics, finished minis, recipes, and techniques with the
+          community. Everything a miniature painter needs, all in one place.
+        </p>
+        <p className="hidden max-w-2xl font-body text-body text-fg sm:block">
+          An all-in-one miniature wargaming project planner, painting pal, and collection
+          tracker. A 7,000+ and growing library of paints, Focus mode for session painting,
+          an auto-populated collection tracker, and so much more. Take control of your pile
+          of shame, slay the grey, and share your painting progress, recipes, and finished
+          minis with an online community.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/sign-up">
@@ -198,10 +208,10 @@ export function LandingView() {
       <section className="mx-auto w-full max-w-5xl px-6 pb-16">
         <div className="mb-8 text-center">
           <h2 className="font-h1 text-h1 text-cyan-lite text-glow-cyan">
-            See inside the terminal
+            Miniature painters, meet your new best painting pal.
           </h2>
           <p className="mt-2 font-body text-body text-fg">
-            Real screens from the app — no mockups.
+            Plan, track and manage your entire collection. No card needed.
           </p>
         </div>
         <div className="flex flex-col gap-10">
@@ -212,7 +222,7 @@ export function LandingView() {
                   src={shot.src}
                   alt={shot.alt}
                   width={1440}
-                  height={900}
+                  height={shot.height ?? 900}
                   sizes="(max-width: 1024px) 100vw, 960px"
                   className="h-auto w-full rounded-[4px] border border-border"
                 />
@@ -225,28 +235,20 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* Feature grid */}
-      <section className="mx-auto w-full max-w-5xl px-6 pb-16">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <Panel key={f.title} label={f.title.toUpperCase()} className="p-5">
-              <p className="font-body text-body text-fg">{f.blurb}</p>
-            </Panel>
-          ))}
-        </div>
-      </section>
-
-      {/* Two ways to play — base app vs. the supported toolkit */}
+      {/* The Mainframe wants something back — base app vs. the sponsored toolkit */}
       <section className="mx-auto w-full max-w-3xl px-6 pb-16">
         <div className="mb-6 text-center">
-          <h2 className="font-h1 text-h1 text-cyan-lite text-glow-cyan">Two ways to play.</h2>
+          <h2 className="font-h1 text-h1 text-cyan-lite text-glow-cyan">
+            The Mainframe demands tribute.
+          </h2>
           <p className="mt-2 font-body text-body text-fg">
-            Make an account and track your whole hobby — no strings. Sponsor the Mainframe
-            to unlock the full colour toolkit and AI recipe generation.
+            Everything you need to run your hobby comes as standard — no strings, no card.
+            But the good stuff? The colour toolkit, the AI, the paint scanner? The
+            Mainframe keeps those behind the glass until you sponsor it.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Panel label="INCLUDED" cornerTicks className="flex flex-col gap-4 p-6">
+          <Panel label="AS STANDARD" cornerTicks className="flex flex-col gap-4 p-6">
             <ul className="flex flex-col gap-2 text-left">
               {INCLUDED_PERKS.map((perk) => (
                 <li key={perk} className="flex gap-2 font-body text-body text-fg">

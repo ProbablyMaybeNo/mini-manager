@@ -28,11 +28,15 @@ export function StatusDropdown({
   onChange,
   ariaLabel,
   kind = "model",
+  size = "sm",
 }: {
   value: ProjectStatus;
   onChange: (status: ProjectStatus) => void;
   ariaLabel: string;
   kind?: CollectionKind;
+  /** "xs" is the phone-table cell: 10px label so NAME · STATUS · COST · actions
+   *  all fit one 375px row, while the trigger stays a 44px touch target. */
+  size?: "sm" | "md" | "xs";
 }) {
   const statuses = kind === "paint" ? PAINT_STATUSES : MODEL_STATUSES;
   const accent = statusAccent[value];
@@ -41,9 +45,10 @@ export function StatusDropdown({
       value={value}
       ariaLabel={ariaLabel}
       accent={accent}
+      size={size}
       options={statuses.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
       onChange={(s) => onChange(s)}
-      triggerClassName="uppercase tracking-[0.12em]"
+      triggerClassName="uppercase tracking-[0.06em]"
     />
   );
 }

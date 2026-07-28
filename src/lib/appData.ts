@@ -277,31 +277,51 @@ function activitySentence(row: {
   }
 }
 
-/** Map a RecipeTableRow onto the kit's Recipe view-model. The index only
- *  renders name + swatch strip + attached project, so slots carry the
- *  palette hex/label (paintId/brand/layer aren't surfaced on the index). */
+/**
+ * Map a RecipeTableRow onto the kit's Recipe view-model.
+ *
+ * Reads `row.slots` (the rich per-slot shape) rather than `row.palette`, so
+ * the technique label and the recipe's notes survive. This list is what the
+ * FOCUS bench renders from, and dropping those two fields is why the bench
+ * showed unlabelled colour cards and a permanent "No notes yet" even on a
+ * recipe that had both (Ross, 2026-07-27). `palette` is the fallback for the
+ * rare slot the rich builder skips (a slot whose paintId isn't in the catalog).
+ */
 function mapRecipe(
   row: {
     id: string;
     name: string;
     attachedProjectId: string | null;
     palette: { hex: string; label: string }[];
+    slots: { hex: string; paintLabel: string | null; layerLabel: string }[];
+    notesMd: string | null;
     publicSlug: string | null;
   },
   inspo: { id: string; url: string; imageUrl: string | null }[],
 ): KitRecipe {
+  const slots =
+    row.slots.length > 0
+      ? row.slots.map((s) => ({
+          paintId: "",
+          swatch: s.hex,
+          brand: "",
+          name: s.paintLabel ?? s.hex,
+          layer: s.layerLabel,
+        }))
+      : row.palette.map((p) => ({
+          paintId: "",
+          swatch: p.hex,
+          brand: "",
+          name: p.label,
+          layer: "",
+        }));
   return {
     id: row.id,
     name: row.name,
-    slots: row.palette.map((p) => ({
-      paintId: "",
-      swatch: p.hex,
-      brand: "",
-      name: p.label,
-      layer: "",
-    })),
+    slots,
     inspo,
     assignedProjectId: row.attachedProjectId ?? undefined,
+    notes: row.notesMd ?? undefined,
     shareUrl: row.publicSlug ? `/r/${row.publicSlug}` : undefined,
   };
 }

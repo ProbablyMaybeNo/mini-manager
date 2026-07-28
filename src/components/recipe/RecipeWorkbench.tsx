@@ -240,7 +240,7 @@ export function RecipeWorkbench({
           mobileDetail ? "hidden w-full" : "flex w-full",
         )}
       >
-        <div className="flex flex-col gap-5 p-6">
+        <div className="flex flex-col gap-4 p-3 md:gap-5 md:p-6">
           <div className="flex items-center justify-between">
             {/* Count badge lives OUTSIDE the <h1> so the heading's accessible
                 name reads "RECIPES", not "RECIPES0" (UX-008); the badge carries
@@ -280,9 +280,11 @@ export function RecipeWorkbench({
           {/* Blue intro banner matching the project page's WelcomeCard slim bar
               (same #22568F navy + white mono "> SYS —" prefix) so the recipes
               page reads as the same family. Wraps (rather than truncates) in
-              the narrow 320px column. */}
+              the narrow 320px column. Desktop only — on a phone this column IS
+              the whole page, and a strapline shouldn't outrank the recipe list
+              (Ross, 2026-07-27). */}
           <section
-            className="rounded-[10px] px-3 py-2 text-white"
+            className="hidden rounded-[10px] px-3 py-2 text-white md:block"
             style={{ backgroundColor: "#22568F" }}
           >
             <span className="block font-mono text-[12px] leading-snug text-white">

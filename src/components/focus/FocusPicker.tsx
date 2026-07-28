@@ -29,11 +29,13 @@ export function FocusPicker({
   const options = flattenFocusOptions(projects);
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <label className="flex items-center gap-2">
-        <span className="label-osd text-cyan-lite">
-          + Focus
-        </span>
+    // The "+ Focus" caption is desktop-only (Ross, 2026-07-27): on a phone the
+    // label plus a full "Remove Focus" button pushed the dropdown itself off
+    // the right edge. The dropdown is self-evident — it's the only control up
+    // there — and clearing focus collapses to a ✕ that still announces itself.
+    <div className={cn("flex min-w-0 items-center gap-2", className)}>
+      <label className="flex min-w-0 flex-1 items-center gap-2 md:flex-none">
+        <span className="label-osd hidden shrink-0 text-cyan-lite md:inline">+ Focus</span>
         <Listbox
           ariaLabel="Focus on project"
           value={currentId ?? ""}
@@ -41,16 +43,20 @@ export function FocusPicker({
           onChange={(v) => onSelect(v)}
           placeholder={options.length ? "Pick a project…" : "No projects yet"}
           disabled={options.length === 0}
-          triggerClassName="max-w-[220px]"
+          className="min-w-0 flex-1 md:flex-none"
+          triggerClassName="md:max-w-[220px]"
         />
       </label>
       {currentId && (
         <button
           type="button"
           onClick={onClear}
-          className="border border-red/50 px-2 py-1 font-button text-button uppercase tracking-[0.15em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
+          aria-label="Remove focus"
+          title="Remove focus"
+          className="inline-flex h-8 shrink-0 items-center justify-center border border-red/50 px-2 font-button text-button uppercase tracking-[0.12em] text-red hover:bg-red/10 focus:outline-none focus-visible:bg-red/10"
         >
-          Remove Focus
+          <span aria-hidden className="md:hidden">✕</span>
+          <span aria-hidden className="hidden md:inline">Remove Focus</span>
         </button>
       )}
     </div>

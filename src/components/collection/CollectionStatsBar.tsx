@@ -43,6 +43,17 @@ function Stat({ value, label, accent = "cyan" }: { value: string; label: string;
   );
 }
 
+/** Phone variant of {@link Stat}: the colour carries the meaning, so the visible
+ *  label is dropped and survives only for screen readers. */
+function BareStat({ value, label, accent }: { value: string; label: string; accent: Accent }) {
+  return (
+    <span className={cn("font-num2 text-num2 tabular-nums", accentText[accent])}>
+      {value}
+      <span className="sr-only"> {label}</span>
+    </span>
+  );
+}
+
 /**
  * d0MWLSNNjDTd — collection overview bar, two labelled lines (no title, no
  * progress tracking; projects/dashboard own progress):
@@ -109,8 +120,34 @@ export function CollectionStatsBar({
         "bg-bg/90 px-4 py-2.5 backdrop-blur-sm",
       )}
     >
+      {/* Phone bar (Ross, 2026-07-27): exactly two lines, no explanatory white
+          text — the colour is the legend (green = owned, yellow = wishlist) and
+          the money is obviously money. The per-project BUDGET chips and the
+          TOTAL REMAINING column are desktop-only; six lines of stats on a phone
+          was eating a third of the screen. */}
+      <div className="flex flex-col gap-1 md:hidden">
+        <div className="flex items-baseline gap-3">
+          <span className="label-osd shrink-0 text-cyan-lite">PAINT:</span>
+          <BareStat value={String(stats.paintOwned)} label="owned" accent="green" />
+          <BareStat value={String(stats.paintWishlist)} label="wishlist" accent="yellow" />
+          <span className="ml-auto font-num2 text-num2 tabular-nums text-fg">
+            {money(stats.paintSpend)}
+            <span className="sr-only"> total spent</span>
+          </span>
+        </div>
+        <div className="flex items-baseline gap-3">
+          <span className="label-osd shrink-0 text-cyan-lite">MODELS:</span>
+          <BareStat value={String(stats.modelOwned)} label="owned" accent="green" />
+          <BareStat value={String(stats.modelWishlist)} label="wishlist" accent="yellow" />
+          <span className="ml-auto font-num2 text-num2 tabular-nums text-fg">
+            {money(stats.modelSpend)}
+            <span className="sr-only"> total spent</span>
+          </span>
+        </div>
+      </div>
+
       {budget.rows.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-border pb-1.5">
+        <div className="hidden flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-border pb-1.5 md:flex">
           <span className="label-osd text-cyan-lite">BUDGET</span>
           {budget.rows.map((r) => (
             <span
@@ -130,14 +167,14 @@ export function CollectionStatsBar({
           </span>
         </div>
       )}
-      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+      <div className="hidden flex-wrap items-baseline gap-x-5 gap-y-1 md:flex">
         <span className="label-osd text-cyan-lite">PAINT:</span>
         <Stat value={String(stats.paintOwned)} label="OWNED" accent="green" />
         <Stat value={String(stats.paintWishlist)} label="WISHLIST" accent="cyan" />
         <Stat value={money(stats.paintSpend)} label="TOTAL SPENT" accent="green" />
         <Stat value={money(stats.paintRemaining)} label="TOTAL REMAINING" accent="yellow" />
       </div>
-      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+      <div className="hidden flex-wrap items-baseline gap-x-5 gap-y-1 md:flex">
         <span className="label-osd text-cyan-lite">MODELS:</span>
         <Stat value={String(stats.modelWishlist)} label="WISHLIST" accent="cyan" />
         <Stat value={String(stats.modelOwned)} label="OWNED" accent="green" />

@@ -5,7 +5,7 @@ import { Panel, ProgressBar } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { formatMinutes } from "@/lib/palette";
 import type { InspoRef, Project, Recipe, SessionStats } from "@/lib/types";
-import { AddPaintCard, PaintCard } from "./PaintCard";
+import { AddPaintCard, AddPaintTile, PaintCard, PaintTile } from "./PaintCard";
 import { FocusPicker } from "./FocusPicker";
 import { InspoBoard } from "./InspoBoard";
 import { Stopwatch } from "./Stopwatch";
@@ -75,8 +75,8 @@ export function FocusView({
 
   if (!project) {
     return (
-      <div className="flex h-full flex-col gap-6 p-6">
-        <PageHeader title="FOCUS" tagline={TAGLINE} />
+      <div className="flex h-full flex-col gap-4 p-3 md:gap-6 md:p-6">
+        <PageHeader title="FOCUS" tagline={TAGLINE} taglineClassName="hidden md:block" />
         <div>{picker}</div>
         <Panel label="NO SESSION" className="max-w-md p-6">
           <p className="font-body text-body text-fg">▸ No project in focus.</p>
@@ -98,18 +98,36 @@ export function FocusView({
   const percent = modelCount ? Math.round((step / modelCount) * 100) : 0;
 
   return (
-    <div className="flex h-full flex-col gap-5 overflow-y-auto p-6">
-      <PageHeader title="FOCUS" tagline={TAGLINE} />
+    <div className="flex h-full flex-col gap-3 overflow-y-auto p-3 md:gap-5 md:p-6">
+      {/* Title is desktop-only on the bench (Ross, 2026-07-27) — the burger bar
+          above already says where you are, and the whole point of Focus on a
+          phone is to see the recipe and the timer without scrolling. */}
+      <div className="hidden md:block">
+        <PageHeader title="FOCUS" tagline={TAGLINE} />
+      </div>
+
+      {/* Stopwatch leads the page and, on phones, STICKS to the top of the
+          scroll container — a painter can stop/start mid-model without
+          scrolling back up, which was the whole complaint. One instance, two
+          renderings (see Stopwatch), so the running timer is never duplicated. */}
+      <div className="sticky top-0 z-30 -mx-3 bg-bg px-3 pb-2 pt-1 md:static md:mx-0 md:bg-transparent md:p-0">
+        <Stopwatch
+          onLogSession={onLogSession}
+          totalLabel={projectMinutes != null ? formatMinutes(projectMinutes) : undefined}
+        />
+      </div>
 
       {/* Focus picker — pick any project / sub-project, or remove focus. */}
       <div className="flex flex-wrap items-center justify-between gap-3">{picker}</div>
 
-      {/* Pinned project header — bound to the focused project (MM-21). */}
-      <Panel className="flex items-center justify-between p-4" glow>
-        <span className="font-h1 text-h1 uppercase text-green text-glow-green">
+      {/* Pinned project header — bound to the focused project (MM-21). The
+          today/week/streak trio is desktop-only; on a phone the sticky bar
+          already carries the number that matters mid-session. */}
+      <Panel className="flex items-center justify-between gap-3 p-2.5 md:p-4" glow>
+        <span className="min-w-0 truncate font-h1 text-h1 uppercase text-green text-glow-green">
           {project.title} <span className="text-cyan-lite">×{modelCount}</span>
         </span>
-        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 label-osd text-fg">
+        <div className="hidden flex-wrap items-center justify-end gap-x-4 gap-y-1 label-osd text-fg md:flex">
           {projectMinutes != null && (
             <span className="text-fg-muted">Time {formatMinutes(projectMinutes)}</span>
           )}
@@ -119,24 +137,41 @@ export function FocusView({
         </div>
       </Panel>
 
-      {/* RECIPE box — responsive grid (MM-22) so the paint cards wrap on narrow
-          benches. The redundant "Recipe Box" sub-heading was dropped: the panel
-          label "RECIPE" already names the section (RuYiw7plQqDV). */}
-      <Panel label="RECIPE" className="flex flex-col gap-3 p-4">
-        <div className="flex flex-wrap gap-3">
-          {recipe && recipe.slots.length > 0 ? (
-            recipe.slots.map((slot, i) => <PaintCard key={i} slot={slot} />)
-          ) : (
-            <p className="py-8 font-body text-body text-fg">
+      {/* RECIPE — small squares on a phone so the whole scheme is on screen at
+          once (PaintTile), the full labelled cards from md up (PaintCard). */}
+      <Panel label="RECIPE" className="flex flex-col gap-3 p-2.5 md:p-4">
+        {recipe && recipe.slots.length > 0 ? (
+          <>
+            <ul className="flex flex-wrap gap-2 md:hidden">
+              {recipe.slots.map((slot, i) => (
+                <PaintTile key={i} slot={slot} />
+              ))}
+              <AddPaintTile onClick={onAddPaint} />
+            </ul>
+            <div className="hidden flex-wrap gap-3 md:flex">
+              {recipe.slots.map((slot, i) => (
+                <PaintCard key={i} slot={slot} />
+              ))}
+              <AddPaintCard onClick={onAddPaint} />
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="font-body text-body text-fg">
               No recipe attached — add paints to build this scheme.
             </p>
-          )}
-          <AddPaintCard onClick={onAddPaint} />
-        </div>
+            <ul className="flex md:hidden">
+              <AddPaintTile onClick={onAddPaint} />
+            </ul>
+            <div className="hidden md:block">
+              <AddPaintCard onClick={onAddPaint} />
+            </div>
+          </div>
+        )}
       </Panel>
 
       {/* Notes */}
-      <Panel label="NOTES" className="p-4">
+      <Panel label="NOTES" className="p-2.5 md:p-4">
         <p className="whitespace-pre-line font-body text-body leading-relaxed text-fg">
           {recipe?.notes?.trim()
             ? recipe.notes
@@ -144,47 +179,42 @@ export function FocusView({
         </p>
       </Panel>
 
-      {/* Stopwatch gets its own dedicated section (D7 / A5qzb); progress sits
-          beside it, bound to the focused project (MM-21). */}
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Stopwatch onLogSession={onLogSession} />
-        <Panel label="PROGRESS" className="flex flex-col justify-center gap-3 p-4">
-          <div className="flex items-center justify-between">
-            <span className="label-osd text-fg">
-              Models
+      {/* Progress — bound to the focused project (MM-21). */}
+      <Panel label="PROGRESS" className="flex flex-col justify-center gap-3 p-2.5 md:p-4">
+        <div className="flex items-center justify-between">
+          <span className="label-osd text-fg">Models</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Decrease models painted"
+              onClick={() => bumpStep(-1)}
+              className="inline-flex min-h-9 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan-lite hover:bg-cyan/10 md:min-h-6 md:min-w-6"
+            >
+              −
+            </button>
+            {/* Dedicated 18px focus-progress token (aANKU9jIO6ih) — same
+                VT323 face as num2, sized only here so it doesn't touch the
+                shared num2 (calendar / Time / %). */}
+            <span className="font-num2 text-focus-progress tabular-nums text-fg">
+              {step}/{modelCount}
             </span>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                aria-label="Decrease models painted"
-                onClick={() => bumpStep(-1)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan-lite hover:bg-cyan/10 md:min-h-6 md:min-w-6"
-              >
-                −
-              </button>
-              {/* Dedicated 18px focus-progress token (aANKU9jIO6ih) — same
-                  VT323 face as num2, sized only here so it doesn't touch the
-                  shared num2 (calendar / Time / %). */}
-              <span className="font-num2 text-focus-progress tabular-nums text-fg">
-                {step}/{modelCount}
-              </span>
-              <button
-                type="button"
-                aria-label="Increase models painted"
-                onClick={() => bumpStep(1)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan-lite hover:bg-cyan/10 md:min-h-6 md:min-w-6"
-              >
-                +
-              </button>
-            </div>
+            <button
+              type="button"
+              aria-label="Increase models painted"
+              onClick={() => bumpStep(1)}
+              className="inline-flex min-h-9 min-w-11 items-center justify-center border border-cyan/60 px-2 font-button text-button text-cyan-lite hover:bg-cyan/10 md:min-h-6 md:min-w-6"
+            >
+              +
+            </button>
           </div>
-          <ProgressBar percent={percent} />
-        </Panel>
-      </div>
+        </div>
+        <ProgressBar percent={percent} />
+      </Panel>
 
       {/* Inspiration board — thumbnails open a popup overlay on double-click
-          (ZsWm). */}
-      <Panel label="INSPIRATION" className="flex flex-col gap-3 p-4">
+          (ZsWm). Last on the page: it's the one section a painter scrolls TO,
+          not one they need mid-brushstroke. */}
+      <Panel label="INSPIRATION" className="flex flex-col gap-3 p-2.5 md:p-4">
         <InspoBoard inspo={inspo} onAddInspo={onAddInspo} onRemoveInspo={onRemoveInspo} />
       </Panel>
     </div>

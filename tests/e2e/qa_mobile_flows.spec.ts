@@ -5,12 +5,13 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * M6 — Mobile flow smokes (current mobile chrome).
  *
  * On a phone viewport (< 840px) the app drops the desktop SidebarRail for a
- * persistent bottom nav (MUX-001): four labelled tabs (Dashboard · Library ·
- * Collection · Tools) plus a "More" entry that opens the rest (Focus · Recipes
- * · Account · Tutorial) in the shared slide-out (a dialog labelled "More").
- * These tests cover the mobile nav round-trip across the current routes and a
- * core project-create flow, both rejecting horizontal scroll — the failure mode
- * this phase's audit guards against.
+ * hamburger in the top bar (Ross, 2026-07-27), which opens a slide-out (a
+ * dialog labelled "Menu") listing EVERY page. It replaced the five-tab bottom
+ * bar, which could only fit four routes and left the rest behind a "More" tab
+ * while permanently occupying ~52px of screen. These tests cover the mobile nav
+ * round-trip across the current routes and a core project-create flow, both
+ * rejecting horizontal scroll — the failure mode this phase's audit guards
+ * against.
  *
  * This file only runs under the chromium-mobile project (iPhone 12).
  */
@@ -27,31 +28,17 @@ async function expectNoHorizontalScroll(
   expect(overflow, "page has horizontal scroll").toBeLessThanOrEqual(2);
 }
 
-/** A primary bottom-nav tab (always visible) — click it directly. */
-async function navigateViaTab(
+/** Open the hamburger menu, then click a route in it. Every page lives here. */
+async function navigateViaMenu(
   page: import("@playwright/test").Page,
   label: string,
   pathRe: RegExp,
 ): Promise<void> {
-  const bar = page.getByRole("navigation", { name: /Primary/i });
-  const tab = bar.getByRole("link", { name: label, exact: true });
-  // Retry until the bottom-nav island has hydrated and the click registers.
+  const burger = page.getByRole("button", { name: /open navigation menu/i });
+  const sheet = page.getByRole("dialog", { name: /^Menu$/i });
+  // Retry until the top-bar island has hydrated and the click registers.
   await expect(async () => {
-    await tab.click();
-    await page.waitForURL(pathRe, { timeout: 2_000 });
-  }).toPass({ timeout: 30_000 });
-}
-
-/** An overflow item — open the "More" sheet, then click its link. */
-async function navigateViaMore(
-  page: import("@playwright/test").Page,
-  label: string,
-  pathRe: RegExp,
-): Promise<void> {
-  const moreBtn = page.getByRole("button", { name: /^more$/i });
-  const sheet = page.getByRole("dialog", { name: /^More$/i });
-  await expect(async () => {
-    await moreBtn.click();
+    await burger.click();
     await expect(sheet).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 30_000 });
   await sheet.getByRole("link", { name: label, exact: true }).click();
@@ -86,7 +73,7 @@ async function addProjectMobile(
 }
 
 test.describe("M6 — Mobile primary flows", () => {
-  test("M6.1 mobile nav sheet opens and navigates the primary routes", async ({
+  test("M6.1 hamburger menu opens and navigates every route", async ({
     page,
   }) => {
     await signInAs(page, freshTestEmail("mobile"));
@@ -97,21 +84,20 @@ test.describe("M6 — Mobile primary flows", () => {
     ).toBeVisible({ timeout: 30_000 });
     await expectNoHorizontalScroll(page);
 
-    // Primary tabs sit in the persistent bottom bar; Recipes lives under "More".
-    const tabs: Array<{ label: string; pathRe: RegExp }> = [
+    // No route is second-class any more — every one is reachable in one menu.
+    const routes: Array<{ label: string; pathRe: RegExp }> = [
       { label: "LIBRARY", pathRe: /\/library/ },
       { label: "TOOLS", pathRe: /\/tools/ },
       { label: "COLLECTION", pathRe: /\/collection/ },
+      { label: "RECIPES", pathRe: /\/recipes/ },
+      { label: "FOCUS", pathRe: /\/focus/ },
+      { label: "GALLERY", pathRe: /\/gallery/ },
       { label: "PROJECTS", pathRe: /\/dashboard/ },
     ];
-    for (const dest of tabs) {
-      await navigateViaTab(page, dest.label, dest.pathRe);
+    for (const dest of routes) {
+      await navigateViaMenu(page, dest.label, dest.pathRe);
       await expectNoHorizontalScroll(page);
     }
-
-    // Overflow route through the "More" sheet.
-    await navigateViaMore(page, "RECIPES", /\/recipes/);
-    await expectNoHorizontalScroll(page);
   });
 
   test("M6.2 create on mobile → inspector model count + stage bump persists", async ({
@@ -135,9 +121,10 @@ test.describe("M6 — Mobile primary flows", () => {
     await addProjectMobile(page, name);
 
     // A row tap opens the full editable INSPECTOR as a bottom-sheet dialog
-    // (ProjectBottomSheet). The mobile card stacks title / meta / progress into
-    // ONE "Manage <title>" region whose geometric center sits on the nested
-    // priority dropdown — aim at the top-left title corner to hit the card body.
+    // (ProjectBottomSheet). The mobile card is one "Manage <title>" region
+    // containing nested controls (progress, swatches, delete) — aim at the
+    // top-left title corner to land on the card body itself. A childless draft
+    // has no expand caret there, so this stays a plain card hit.
     await page
       .getByRole("button", { name: `Manage ${name}` })
       .click({ position: { x: 12, y: 12 } });

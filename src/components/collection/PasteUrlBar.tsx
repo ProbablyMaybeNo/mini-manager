@@ -71,8 +71,13 @@ function AutoFillBox() {
     // 2026-07-10): #22568F navy + white text, same treatment as the project /
     // recipes "> SYS" banner, rather than a separate blue bar stacked above a
     // bordered card. Still collapsible on every viewport.
+    // Desktop only (Ross, 2026-07-27): on a phone this navy block pushed the
+    // actual paste field and the whole table below the fold to explain
+    // something the field's own placeholder already says. Nothing here is
+    // load-bearing — the supported-store list and the extension teaser are
+    // nice-to-have, so phones just get the input.
     <section
-      className="rounded-[10px] px-4 py-3.5 text-white"
+      className="hidden rounded-[10px] px-4 py-3.5 text-white md:block"
       style={{ backgroundColor: "#22568F" }}
     >
       <button
@@ -171,7 +176,7 @@ export function PasteUrlBar({
           <Input
             name="paste-url"
             aria-label="Paste a store URL"
-            placeholder="Paste a URL to autofill…"
+            placeholder="Paste a store URL to fill the table…"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}

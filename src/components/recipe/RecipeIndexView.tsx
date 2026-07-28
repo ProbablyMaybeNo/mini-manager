@@ -50,7 +50,7 @@ export function RecipeIndexView({
   const [view, setView] = useState<"table" | "cards">("table");
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
+    <div className="flex h-full flex-col gap-4 p-3 md:gap-6 md:p-6">
       <PageHeader
         title="RECIPE"
         actions={
@@ -80,8 +80,10 @@ export function RecipeIndexView({
       {/* Blue intro banner matching the project page's WelcomeCard slim bar
           (same #22568F navy + white mono "> SYS —" prefix) so the recipes
           page reads as the same family. */}
+      {/* Desktop only (Ross, 2026-07-27 mobile pass) — a nice-to-have strapline
+          shouldn't sit between a phone user and their recipe list. */}
       <section
-        className="rounded-[10px] px-4 py-2.5 text-white"
+        className="hidden rounded-[10px] px-4 py-2.5 text-white md:block"
         style={{ backgroundColor: "#22568F" }}
       >
         <span className="font-mono text-[13px] text-white">

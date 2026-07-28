@@ -56,8 +56,11 @@ export function CollectionView({
   recipeSwatches?: (recipeId: string) => string[];
 }) {
   return (
-    <div className="flex h-full flex-col p-6">
-      <div className="flex flex-1 flex-col gap-6 pb-4">
+    // Tighter gutters + section gaps on phones (Ross, 2026-07-27) — 24px of
+    // padding either side of a 375px screen was 13% of the width, and the
+    // dense table needs every pixel it can get.
+    <div className="flex h-full flex-col p-3 md:p-6">
+      <div className="flex flex-1 flex-col gap-4 pb-4 md:gap-6">
       <PageHeader title="COLLECTION" />
 
       <PasteUrlBar onAddUrl={onAddUrl} />

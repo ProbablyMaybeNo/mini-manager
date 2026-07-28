@@ -1,7 +1,6 @@
 export { AppShell } from "./AppShell";
 export { SidebarRail } from "./SidebarRail";
 export { MobileTopBar } from "./MobileTopBar";
-export { BottomNav } from "./BottomNav";
 export { NavLinks } from "./NavLinks";
 export { Logo } from "./Logo";
 export { PageHeader } from "./PageHeader";

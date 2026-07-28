@@ -230,17 +230,20 @@ export function ProjectsTable({
   }
 
   // ── Mobile card view (MUX-002 / MOP-003) ────────────────────────────────
-  // Below 600px the dense 8-column table overflows the viewport, so each
-  // project renders as a stacked card carrying the key fields (title + type +
-  // status + completion + progress bar) and the delete action. Reuses the exact
-  // handlers + expand state above — no duplicated logic. The tree is preserved
-  // via the same depth-indent + caret model as the table.
+  // Below 600px the dense 9-column table overflows the viewport, so each
+  // project renders as a card. Deliberately SPARSE (Ross, 2026-07-27): the card
+  // is a door to the project page, not a copy of it. Three fixed bands —
+  //   1. title (fills the line) + status
+  //   2. progress bar + %
+  //   3. recipe swatches + delete
+  // TYPE, PRIORITY, model count, logged time and "+ attach" were all pulled;
+  // they live on the project page where there's room to read them. Reuses the
+  // exact handlers + expand state as the table — no duplicated logic.
   function renderCards(items: Project[], depth: number): ReactNode[] {
     return items.flatMap((p) => {
       const selected = p.id === selectedId;
       const hasChildren = !!p.children && p.children.length > 0;
       const isExpanded = expanded.has(p.id);
-      const minutes = rollupProjectMinutes(p, projectMinutes);
 
       const card = (
         <div
@@ -258,14 +261,18 @@ export function ProjectsTable({
           }}
           style={{ marginLeft: depth * INDENT_PX }}
           className={cn(
-            "cursor-pointer rounded-[6px] border p-3 transition-colors duration-150 focus:outline-none focus-visible:border-cyan focus-visible:ring-1 focus-visible:ring-cyan",
+            // Uniform p-3 on all four sides — the old card indented rows 2-4 by
+            // pl-9 to clear the caret, which read as "padding on the right, none
+            // on the left". Nothing is indented now.
+            "flex cursor-pointer flex-col gap-2 rounded-[6px] border p-3 transition-colors duration-150 focus:outline-none focus-visible:border-cyan focus-visible:ring-1 focus-visible:ring-cyan",
             selected
               ? "border-cyan bg-cyan/10"
               : "border-fg/15 hover:border-cyan/40 hover:bg-cyan/5 active:bg-cyan/10",
           )}
         >
-          <div className="flex items-start gap-2">
-            {hasChildren ? (
+          {/* Title fills the top line; status closes it. */}
+          <div className="flex items-center gap-2">
+            {hasChildren && (
               <button
                 type="button"
                 aria-label={`${isExpanded ? "Collapse" : "Expand"} ${p.title}`}
@@ -274,72 +281,47 @@ export function ProjectsTable({
                   e.stopPropagation();
                   toggle(p.id);
                 }}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan-lite focus:outline-none focus-visible:bg-cyan/15 active:bg-cyan/25"
+                className="-ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-faint transition-colors duration-150 hover:bg-cyan/15 hover:text-cyan-lite focus:outline-none focus-visible:bg-cyan/15 active:bg-cyan/25"
               >
                 <span className={cn("transition-transform duration-150", isExpanded && "rotate-90")}>
                   ▸
                 </span>
               </button>
-            ) : (
-              <span className="h-7 w-7 shrink-0" aria-hidden />
             )}
-            <span className="min-w-0 flex-1 break-words font-mono text-[13px] font-bold text-fg-bright">
+            <span className="min-w-0 flex-1 break-words font-mono text-[15px] font-bold leading-tight text-fg-bright">
               {p.title}
             </span>
             <StatusText status={p.status} />
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 pl-9">
-            <TypeChip type={p.type} />
-            {p.modelCount != null && p.modelCount > 0 && (
-              <span className="font-mono text-[12px] tabular-nums text-fg-dim">
-                ×{p.modelCount}
+          <ProgressBar
+            percent={p.completionPercent}
+            accent={p.completionPercent >= 100 ? "green" : "cyan"}
+            showLabel
+          />
+
+          <div className="flex items-center gap-2">
+            {p.recipeSwatches.length > 0 ? (
+              <SwatchStrip swatches={p.recipeSwatches} />
+            ) : (
+              <span className="font-mono text-[11px] uppercase tracking-wide text-fg-faint">
+                no recipe
               </span>
             )}
-            {/* RF-12: surface priority on the card to match the desktop row. */}
-            <PriorityDropdown projectId={p.id} value={p.priority} />
-            {minutes > 0 && (
-              <span className="font-num2 text-num2 tabular-nums text-cyan-lite">
-                {formatMinutes(minutes)}
-              </span>
-            )}
-          </div>
-
-          {/* RF-12: completion bar, matching the desktop row's Completion cell. */}
-          <div className="mt-2 pl-9">
-            <ProgressBar
-              percent={p.completionPercent}
-              accent={p.completionPercent >= 100 ? "green" : "cyan"}
-            />
-          </div>
-
-          <div className="mt-3 flex items-center gap-2 pl-9">
-            <SwatchStrip
-              swatches={p.recipeSwatches}
-              onAttach={() => onAttachRecipe(p)}
-              ariaLabel={`Attach recipe to ${p.title}`}
-            />
-            <div className="ml-auto flex items-center">
-              {/* Mobile card: delete only (strict-strip vs 4:4). Add-sub + focus
-                  live in the Army/Unit flow panel. Compact visible footprint
-                  (matches the desktop row) with the same invisible centered
-                  44px after: tap zone (MUX-002) so it stays a proportionate
-                  icon button instead of a large square dominating the card. */}
-              <IconButton
-                variant="outlineRed"
-                size="sm"
-                className="relative h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
-                aria-label={`Delete ${p.title}`}
-                title="Delete project"
-                disabled={pendingDelete}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleting(p);
-                }}
-              >
-                <Trash2 size={16} aria-hidden />
-              </IconButton>
-            </div>
+            <IconButton
+              variant="outlineRed"
+              size="sm"
+              className="relative ml-auto h-7 w-7 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+              aria-label={`Delete ${p.title}`}
+              title="Delete project"
+              disabled={pendingDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleting(p);
+              }}
+            >
+              <Trash2 size={16} aria-hidden />
+            </IconButton>
           </div>
         </div>
       );
