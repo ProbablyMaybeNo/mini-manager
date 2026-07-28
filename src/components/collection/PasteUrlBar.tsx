@@ -77,7 +77,11 @@ function AutoFillBox() {
     // load-bearing — the supported-store list and the extension teaser are
     // nice-to-have, so phones just get the input.
     <section
-      className="hidden rounded-[10px] px-4 py-3.5 text-white md:block"
+      // `roomy:` not `md:` — md is true at 812×375, so rotating a phone on the
+      // collection screen put this explainer back and pushed the first paint row
+      // to y=625 in a 375px-tall viewport: zero rows of collection visible
+      // (MUX3-004).
+      className="hidden rounded-[10px] px-4 py-3.5 text-white roomy:block"
       style={{ backgroundColor: "#22568F" }}
     >
       <button

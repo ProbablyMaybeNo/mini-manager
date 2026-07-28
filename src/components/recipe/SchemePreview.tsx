@@ -34,8 +34,13 @@ export function SchemePreview({ slots }: { slots: RecipeSlot[] }) {
           </span>
         ))}
       </div>
-      {/* A compact index legend so a tiny strip cell still maps to a paint. */}
-      <ol className="flex flex-wrap gap-x-3 gap-y-1">
+      {/* A compact index legend so a tiny strip cell still maps to a paint.
+          Desktop only (MUX3-005): on a phone it restated the step rows sitting
+          150px below it — same paint, same layer, same order — and its 153px
+          pushed the first EDITABLE step to y=847, past the fold, on the screen
+          whose job is editing steps. The strip's on-swatch labels plus the
+          numbered rows already carry the mapping. */}
+      <ol className="hidden flex-wrap gap-x-3 gap-y-1 roomy:flex">
         {slots.map((s, i) => (
           <li key={i} className="flex min-w-0 items-center gap-1.5 font-body text-body text-fg">
             <Swatch hex={s.swatch} size="sm" />

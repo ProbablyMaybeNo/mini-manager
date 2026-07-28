@@ -818,9 +818,12 @@ function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMe
         </label>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Stacks on phones so the field spans the column like its three 44px
+          siblings above, instead of sitting as a stub beside its label. */}
+      <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
         <span className="label-osd text-fg-dim">Target date</span>
         <DateField
+          className="w-full md:w-auto"
           value={targetDate}
           ariaLabel="Target date"
           onChange={(v) => {

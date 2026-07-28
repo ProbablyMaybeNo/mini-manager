@@ -492,8 +492,10 @@ export function ProjectWorkspaceBody({
             accent="green"
           />
           <span aria-hidden className="hidden text-fg-faint min-[420px]:inline">·</span>
+          {/* No glyph on the third stat (MUX3-009): three equal 98px columns
+              left the clock emoji 22px, so "0h 00m" wrapped to two lines and
+              "time" clipped to "TI…". The label already says TIME. */}
           <ProgressStat
-            glyph="🕒"
             label="time"
             value={formatMinutes(loggedMinutes ?? 0)}
           />
@@ -891,14 +893,19 @@ export function ProjectWorkspaceBody({
       {/* error + action bar — kept last in the flex column. On the page variant
           they carry order-6 so they sit below the ordered sections (the un-
           ordered default order-0 would otherwise float them above SUB-PROJECTS). */}
-      <div className={cn("mt-auto flex flex-col gap-4", isPage && "order-6")}>
-        {error && <p className="font-body text-body text-red-text">▸ {error}</p>}
+      {error && (
+        <p className={cn("font-body text-body text-red-text", isPage && "order-6")}>▸ {error}</p>
+      )}
 
-        {/* Sticky action bar (RF-1): a visible row of labelled buttons —
-            FOCUS · DELETE · SAVE · Archive · Duplicate. SAVE flushes the locally
-            held INFO edits (notes / target date / reference image). Delete still
-            routes through the ConfirmDialog below. */}
-        <InspectorActionBar
+      {/* Action bar (RF-1): FOCUS · ARCHIVE · DUPLICATE · DELETE in flow, with
+          SAVE pinned. It is a DIRECT child of the min-h-full column (MUX3-003) —
+          a sticky element sticks within its PARENT, and it was nested in a
+          wrapper that sized to its own content (181px against a 173px bar), so
+          it had 8px of travel and tracked scroll 1:1. The previous min-h-full
+          landed on the grandparent, which does nothing for it. SAVE flushes the
+          locally held edits; Delete still routes through the ConfirmDialog. */}
+      <InspectorActionBar
+        className={cn("mt-auto", isPage && "order-6")}
         disabled={pending}
         archived={!!detail?.archived}
         onFocus={onStartSession ? () => onStartSession(project) : undefined}
@@ -925,8 +932,7 @@ export function ProjectWorkspaceBody({
             return res;
           })
         }
-        />
-      </div>
+      />
       <ConfirmDialog
         open={confirmingDelete}
         breadcrumb="PROJECT"
@@ -1062,16 +1068,19 @@ function ProgressStat({
   value,
   accent,
 }: {
-  glyph: string;
+  /** Optional — omitted where the column is too narrow to spend 22px on it. */
+  glyph?: string;
   label: string;
   value: React.ReactNode;
   accent?: "green";
 }) {
   return (
     <span className="flex min-w-0 items-baseline gap-1.5">
-      <span aria-hidden className={cn("shrink-0", accent === "green" ? "text-green" : "text-cyan-lite")}>
-        {glyph}
-      </span>
+      {glyph && (
+        <span aria-hidden className={cn("shrink-0", accent === "green" ? "text-green" : "text-cyan-lite")}>
+          {glyph}
+        </span>
+      )}
       <span
         className={cn(
           "font-num2 text-num2 tabular-nums",

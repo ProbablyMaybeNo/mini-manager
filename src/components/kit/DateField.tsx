@@ -103,7 +103,10 @@ export function DateField({
           }
         }}
         className={cn(
-          "inline-flex w-full items-center justify-between gap-2 border border-cyan/60 bg-bg px-2 py-1 font-button text-button transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+          // 44px on touch (MUX3-010) — it was 28px, the shortest control on the
+          // project form, sitting directly under three 44px siblings. Collapses
+          // to the dense height at md so desktop density is untouched.
+          "inline-flex min-h-11 w-full items-center justify-between gap-2 border border-cyan/60 bg-bg px-2 py-1 font-button text-button transition-[border-color,box-shadow] duration-150 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 md:min-h-0",
           display ? "text-fg" : "text-fg-faint",
         )}
       >

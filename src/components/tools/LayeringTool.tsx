@@ -641,8 +641,12 @@ function LaneField({
       {groundedPaint && (
         <div className="flex flex-col gap-1.5 border-t border-cyan/10 pt-1.5">
           <div className="flex items-center justify-between gap-2">
+            {/* Wraps rather than truncating (MUX3-006) — same defect the Match
+                tool had: the paint's identity is the tool's output, and it was
+                the only thing being cut while the fixed-width ASSIGN never
+                yielded. At 320px the brand disappeared on every row. */}
             <span
-              className="min-w-0 truncate label-osd text-fg-dim"
+              className="min-w-0 break-words label-osd text-fg-dim"
               title={`${groundedPaint.name} · ${groundedPaint.brand}`}
             >
               {groundedPaint.name} · {groundedPaint.brand}
@@ -673,7 +677,7 @@ function LaneField({
                   >
                     <Swatch hex={alt.hex} size="sm" />
                     <span
-                      className="min-w-0 flex-1 truncate font-body text-body text-fg"
+                      className="min-w-0 flex-1 break-words font-body text-body text-fg"
                       title={`${alt.name} · ${alt.brand}`}
                     >
                       {alt.name} <span className="text-fg-faint">· {alt.brand}</span>

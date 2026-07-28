@@ -77,7 +77,12 @@ export function Stopwatch({
   return (
     <>
       {/* ── Phone bar ─────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 border border-cyan/40 bg-bg px-2.5 py-1.5 md:hidden">
+      {/* Wraps below 375px (MUX3-001). The bar didn't reflow — LOG's box stayed
+          pinned at right=363 at every width, so it sat off-screen on any phone
+          narrower than ~363px (3px clipped at 360, a mainstream Android width;
+          43px at 320). The overflow lived inside the page shell, so there was no
+          document scrollbar and nothing indicated a primary control was there. */}
+      <div className="flex flex-wrap items-center gap-2 border border-cyan/40 bg-bg px-2.5 py-1.5 min-[375px]:flex-nowrap md:hidden">
         <span className="text-[22px] leading-none">{clock}</span>
         {totalLabel && (
           <span className="label-osd shrink-0 text-fg-muted">{totalLabel}</span>

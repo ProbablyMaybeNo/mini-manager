@@ -64,7 +64,9 @@ export default async function GalleryPage() {
           <h1 className="font-title text-title uppercase text-cyan-lite text-glow-cyan">
             Recipe Gallery
           </h1>
-          <p className="hidden max-w-2xl font-body text-body text-fg sm:block">
+          {/* `roomy:` — `sm` is true at 812×375, so landscape restored the
+              paragraph and left ~47px of the first card visible (MUX3-008). */}
+          <p className="hidden max-w-2xl font-body text-body text-fg roomy:block">
             Painted models and the exact recipes behind them, shared by the
             community. Browse the schemes, see the paints, and clone any card
             into your own library.
