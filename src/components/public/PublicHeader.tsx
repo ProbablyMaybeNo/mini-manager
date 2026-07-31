@@ -31,10 +31,10 @@ export function PublicHeader() {
       <Logo href="/" size={40} markOnly className="sm:hidden" />
       <Logo href="/" size={44} className="hidden sm:inline-flex" />
       <nav className="flex items-center gap-3 sm:gap-5">
-        <Link href="/gallery" className={`hidden sm:inline-block ${linkClass}`}>
+        <Link href="/gallery" className={`hidden sm:inline-flex ${linkClass}`}>
           Gallery
         </Link>
-        <Link href="/pricing" className={`hidden sm:inline-block ${linkClass}`}>
+        <Link href="/pricing" className={`hidden sm:inline-flex ${linkClass}`}>
           Sponsor
         </Link>
         <Link href="/sign-in" className={linkClass}>
