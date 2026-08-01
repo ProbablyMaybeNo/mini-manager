@@ -25,6 +25,8 @@ export default async function UserPage() {
         username={row?.username ?? ""}
         recoveryEmail={row?.recoveryEmail ?? ""}
         canManageBilling={canManageBilling}
+        email={row?.email ?? ""}
+        emailVerified={!!row?.emailVerified}
       />
     </div>
   );

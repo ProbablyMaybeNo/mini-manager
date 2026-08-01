@@ -6,6 +6,7 @@ import { Button, Input, ModalDialog } from "@/components/kit";
 import { setRecoveryEmail } from "@/lib/auth/recoveryEmail";
 import { requestPasswordReset } from "@/lib/auth/passwordReset";
 import { deleteAccount } from "@/lib/actions/account";
+import { resendSignupVerification } from "@/lib/auth/resendSignupVerification";
 import {
   generateExtensionToken,
   rotateExtensionToken,
@@ -15,12 +16,29 @@ export function AccountClient({
   username,
   recoveryEmail,
   canManageBilling = false,
+  email = "",
+  emailVerified = false,
 }: {
   username: string;
   recoveryEmail: string;
   /** Paid-plan users only — controls whether the billing panel renders. */
   canManageBilling?: boolean;
+  /** The account's sign-up email, for the verification panel. */
+  email?: string;
+  /** Whether `users.emailVerified` is stamped. */
+  emailVerified?: boolean;
 }) {
+  const [resendState, setResendState] = useState<string | null>(null);
+  const [resendPending, setResendPending] = useState(false);
+
+  async function resendVerification() {
+    setResendState(null);
+    setResendPending(true);
+    const res = await resendSignupVerification();
+    setResendPending(false);
+    setResendState(res.ok ? "Verification email sent — the link lasts 1 hour." : res.message);
+  }
+
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -86,6 +104,40 @@ export function AccountClient({
           ▸ {notice}
         </div>
       ) : null}
+
+      {/* Email-verification state was invisible everywhere in the app, and the
+          signup link (1-hour lifetime, sent exactly once) could not be
+          re-issued. Miss it and the account is permanently unverifiable through
+          the UI — which silently 404s anything gated on `emailVerified`, with
+          no way to tell that apart from a missing allowlist entry. */}
+      {email && !emailVerified && (
+        <div className="mx-6 mt-6 rounded-[12px] border border-yellow/40 bg-surface p-4">
+          <p className="font-body text-body text-fg">
+            ▸ <span className="font-bold text-yellow">{email}</span> isn&apos;t verified
+            yet. Some features stay locked until it is.
+          </p>
+          <Button
+            className="mt-3"
+            size="sm"
+            variant="secondary"
+            disabled={resendPending}
+            onClick={resendVerification}
+          >
+            {resendPending ? "Sending…" : "Resend verification email"}
+          </Button>
+          {resendState && (
+            <p className="mt-2 font-body text-body text-fg-dim" role="status">
+              ▸ {resendState}
+            </p>
+          )}
+        </div>
+      )}
+      {email && emailVerified && (
+        <p className="mx-6 mt-6 font-body text-body text-fg-dim">
+          ▸ <span className="text-fg">{email}</span> — verified.
+        </p>
+      )}
+
       <AccountView
         profile={{ username, recoveryEmail }}
         canManageBilling={canManageBilling}

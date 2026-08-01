@@ -18,11 +18,16 @@ import { AnalyticsEvent } from "@/lib/analytics/events";
 export function PublicHeader() {
   // Smaller + non-wrapping on phones: at the full h1 size "Sign in" broke
   // across two lines next to the CTA.
-  // min-h-11 gives these a full-height tap area without changing how they look —
-  // "Sign in" measured 72×24, exactly on the WCAG 2.5.8 floor and 20px under the
-  // platform target, in a header with room to spare (paywall/round-5 MUX5-006).
+  //
+  // NOTE: no display utility here. Each link sets its own, because the two
+  // desktop-only links carry `hidden sm:inline-flex` — putting `inline-flex` in
+  // the shared class too would leave two competing display utilities on the same
+  // element, resolved by Tailwind's stylesheet order rather than by intent, and
+  // could unhide Gallery/Sponsor on phones. `min-h-11` still gives every link a
+  // full-height tap area without changing how it looks ("Sign in" measured
+  // 72×24, exactly on the WCAG 2.5.8 floor).
   const linkClass =
-    "inline-flex min-h-11 items-center whitespace-nowrap rounded-[6px] px-1 font-h1 text-body uppercase tracking-[0.1em] text-fg transition-colors duration-150 hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite sm:text-h1 sm:tracking-[0.18em]";
+    "min-h-11 items-center whitespace-nowrap rounded-[6px] px-1 font-h1 text-body uppercase tracking-[0.1em] text-fg transition-colors duration-150 hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite sm:text-h1 sm:tracking-[0.18em]";
   return (
     <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 sm:px-6">
       {/* Mark-only on phones: the ~155px "MINI MAINFRAME" wordmark plus both
@@ -37,7 +42,7 @@ export function PublicHeader() {
         <Link href="/pricing" className={`hidden sm:inline-flex ${linkClass}`}>
           Sponsor
         </Link>
-        <Link href="/sign-in" className={linkClass}>
+        <Link href="/sign-in" className={`inline-flex ${linkClass}`}>
           Sign in
         </Link>
         <Link href="/sign-up" aria-label="Get started">
