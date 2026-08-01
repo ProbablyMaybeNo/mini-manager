@@ -131,6 +131,21 @@ export const users = sqliteTable("user", {
    * Capture + persist only — no reporting UI reads this yet.
    */
   acquisitionRef: text("acquisition_ref"),
+  /**
+   * Signup timestamp. The users table had no created-at of any kind, so
+   * "who signed up, and when" was unanswerable — there was no way to sort a
+   * user list by newest, count signups over a period, or tell a day-one
+   * account from a day-hundred one.
+   *
+   * NULLABLE on purpose. Every account that existed before this column was
+   * added has no recorded signup date and never will; a NOT NULL default
+   * would stamp them all with the migration's run time and quietly invent
+   * data that looks real. Null means "signed up before we started
+   * recording", which is the truth. New rows get it from `$defaultFn`.
+   */
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(
+    () => new Date(),
+  ),
 });
 
 export const accounts = sqliteTable(

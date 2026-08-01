@@ -281,6 +281,13 @@
       "when": 1784781924380,
       "tag": "0039_sponsorship_session_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1785552472762,
+      "tag": "0040_soft_paibok",
+      "breakpoints": true
     }
   ]
 }

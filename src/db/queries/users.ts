@@ -1,6 +1,6 @@
 import "server-only";
 
-import { desc, eq, isNotNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull, like, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 
@@ -46,4 +46,66 @@ export async function listCompedUsers(): Promise<CompedUser[]> {
     .where(isNotNull(users.freeForeverGrantedAt))
     .orderBy(desc(users.freeForeverGrantedAt));
   return rows.map((r) => ({ ...r, freeForeverGrantedAt: r.freeForeverGrantedAt! }));
+}
+
+export interface AdminUserRow {
+  id: string;
+  username: string | null;
+  email: string | null;
+  emailVerified: Date | null;
+  plan: string | null;
+  freeForeverGrantedAt: Date | null;
+  createdAt: Date | null;
+}
+
+/**
+ * Every account, for the `/admin/users` roster — the owner had no way to see
+ * who had signed up at all. `/admin/comp` only searches by an exact username
+ * and only lists already-comped accounts, so "does <email> have an account,
+ * and what's their username?" was unanswerable without querying the database
+ * by hand.
+ *
+ * `search` matches username OR email, case-insensitively and as a substring,
+ * because the practical question is usually "someone emailed me from roughly
+ * this address" rather than an exact key.
+ *
+ * Deliberately selects no secrets — never passwordHash, never token columns.
+ * Ordered newest-signup first; accounts predating the `created_at` column
+ * have a null date and sort last, then by username.
+ */
+export async function listAllUsers(
+  search?: string,
+  limit = 200,
+): Promise<AdminUserRow[]> {
+  const q = search?.trim().toLowerCase();
+  const filter = q
+    ? or(
+        like(sql`lower(${users.username})`, `%${q}%`),
+        like(sql`lower(${users.email})`, `%${q}%`),
+        like(sql`lower(${users.recoveryEmail})`, `%${q}%`),
+      )
+    : undefined;
+
+  return db
+    .select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      emailVerified: users.emailVerified,
+      plan: users.plan,
+      freeForeverGrantedAt: users.freeForeverGrantedAt,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .where(filter ? and(filter) : undefined)
+    // Newest signups first; the pre-column accounts (null) sort last.
+    .orderBy(desc(users.createdAt), users.username)
+    .limit(limit);
+}
+
+/** Total account count — shown alongside the (capped) roster so a truncated
+ *  list never reads as "this is everyone". */
+export async function countAllUsers(): Promise<number> {
+  const row = await db.select({ n: sql<number>`count(*)` }).from(users);
+  return Number(row[0]?.n ?? 0);
 }
