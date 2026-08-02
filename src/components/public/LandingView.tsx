@@ -83,6 +83,14 @@ const SPONSOR_PERKS = [
   "Unlimited recipes — a recipe for every scheme, variant, and sub-unit",
 ];
 
+/**
+ * O-2 — the hero still, shared by the reduced-motion / small-screen branch and
+ * by the <video>'s `poster`. 540x540 WebP, 57,924 bytes, down from the 1080
+ * JPEG's 254,751: the mark is capped at max-w-lg (512px) and 42vh, so 540 is
+ * already ≥1x everywhere it renders and there is nothing above it to serve.
+ */
+const HERO_STILL = "/brand/mini-mainframe-logo-still.webp";
+
 /** Respect the OS "reduce motion" setting — reduced users get the static poster. */
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -141,11 +149,18 @@ export function LandingView() {
         <div className="flex w-full max-w-[440px] justify-center sm:max-w-lg">
           {stillOnly ? (
             <Image
-              src="/brand/mini-mainframe-logo-poster.jpg"
+              src={HERO_STILL}
               alt="The Mini Mainframe"
-              width={1080}
-              height={1080}
+              width={540}
+              height={540}
               priority
+              // O-2 — `unoptimized` is the point, not an oversight. The mark
+              // never renders above ~512 CSS px, so one 540px WebP covers every
+              // breakpoint, and serving that exact URL is what lets the <video>
+              // below reuse it as its `poster` — a poster attribute can't take a
+              // /_next/image URL, so any optimised variant here would mean the
+              // desktop hero downloading the artwork twice.
+              unoptimized
               className="h-auto max-h-[42vh] w-auto max-w-full"
             />
           ) : (
@@ -155,7 +170,7 @@ export function LandingView() {
               muted
               loop
               playsInline
-              poster="/brand/mini-mainframe-logo-poster.jpg"
+              poster={HERO_STILL}
               aria-label="The Mini Mainframe"
               width={540}
               height={540}

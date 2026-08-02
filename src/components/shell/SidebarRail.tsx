@@ -26,8 +26,14 @@ export function SidebarRail() {
         aria-label="The Mini Mainframe"
         className="mb-8 flex justify-center px-5"
       >
+        {/* O-2 — its own 300x300 source (2x the 150px render) rather than the
+            1080 hero poster. next/image was already resizing the poster down,
+            but the variant it picks is driven by the device pixel ratio, so a
+            3x phone still pulled a 384px render of the artwork (41KB) for a
+            rail that is `hidden` below `desk:`. Capping the source at 300 caps
+            what any of those variants can cost. */}
         <Image
-          src="/brand/mini-mainframe-logo-poster.jpg"
+          src="/brand/mini-mainframe-logo-rail.webp"
           alt="The Mini Mainframe"
           width={150}
           height={150}
