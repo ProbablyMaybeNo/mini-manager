@@ -28,7 +28,15 @@ export function ShareLinkBar({ path }: { path: string }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-[8px] border border-cyan/30 bg-bg/40 px-3 py-2">
+    // R2-6 — `min-w-0` is what stops this bar dragging the layout viewport
+    // wider than the phone. The URL span sets `min-w-0` on ITSELF, but that
+    // only lifts the shrink floor; the span is `truncate` (white-space:
+    // nowrap), so its min-content contribution is still the whole URL, and
+    // this row is a flex item whose automatic minimum size is that
+    // min-content. The row therefore refused to shrink below ~471px inside a
+    // 375px screen. `min-w-0` here lets the row take the width the page gives
+    // it, and the span's existing truncate then does its job.
+    <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-[8px] border border-cyan/30 bg-bg/40 px-3 py-2">
       <span aria-hidden className="shrink-0 text-cyan-lite">
         ⛓
       </span>
