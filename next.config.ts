@@ -2,12 +2,43 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import path from "node:path";
 
-// E4 — Content-Security-Policy shipped REPORT-ONLY first. The app renders
-// inline styles (Tailwind + styled canvas share cards) and Next's inline
-// bootstrap scripts, so enforcing a strict policy now would break the render.
-// Report-only lets the browser log what a strict policy WOULD block (console /
-// any future report endpoint) without affecting users — flip the header key to
-// `Content-Security-Policy` to enforce once the violation reports are clean.
+// E4 / R2-8 — Content-Security-Policy ships REPORT-ONLY, and report-only with
+// NOWHERE TO REPORT. Be blunt about what that means, because the previous
+// version of this comment read like protection: **this header currently blocks
+// nothing and collects nothing.** It is a written-down intention, not a
+// control. The enforced protections on this response are X-Frame-Options,
+// X-Content-Type-Options, Referrer-Policy, Permissions-Policy and HSTS below.
+//
+// Report-only was the right first step — the app renders inline styles
+// (Tailwind + the styled canvas share cards) and Next's inline bootstrap
+// scripts, so enforcing without a soak period would break the render. But the
+// exit criterion this comment used to state ("enforce once the violation
+// reports are clean") could never be evaluated: the response carries no
+// `report-uri`, no `report-to` and no `Reporting-Endpoints`, so no report is
+// ever generated and "clean" is unobservable.
+//
+// The real path, in order, NOT yet taken:
+//   1. COLLECT. Sentry ingests CSP reports and its DSN is already in this repo
+//      (sentry.*.config.ts), so the endpoint is fully determined — append to
+//      the policy below:
+//        report-uri https://o4511742045323264.ingest.us.sentry.io/api/4511742054694912/security/?sentry_key=aa39c7f4ae31d79048da7b151eda63a6
+//      Deliberately left OFF pending Ross, and not as fence-sitting: Sentry
+//      counts CSP reports against the same quota as real errors, and the
+//      `tracesSampleRate: 0` in every sentry config exists specifically to
+//      preserve that quota for real errors at launch. Pointing an unbounded
+//      report firehose at it could blind the error monitoring it shares a
+//      budget with. Set a per-key rate limit in the Sentry UI first, then
+//      switch this on.
+//   2. SOAK, then read what a strict policy would actually have blocked.
+//   3. ONLY THEN rename the header key to `Content-Security-Policy`. Flipping
+//      it without step 1 is a blind enforcement of an unverified policy against
+//      real users' renders — `tests/unit/nextConfigHeaders.test.ts` fails the
+//      build if anyone tries.
+//
+// Honest scale note for whoever picks this up: `script-src` below allows
+// 'unsafe-inline' AND 'unsafe-eval', so even fully enforced this policy is
+// modest hardening, not XSS protection. Tightening script-src is the step that
+// would actually be worth the effort.
 //   img-src allows https:/data:/blob: because painters paste reference-image
 //   URLs from arbitrary hosts and canvas exports are data:/blob: URIs.
 //   connect-src https: covers the Vercel Analytics beacon + blob uploads.
@@ -27,8 +58,9 @@ const contentSecurityPolicyReportOnly = [
   .join("; ");
 
 // Applied to every response. X-Frame-Options is the ENFORCED clickjacking
-// guard (report-only CSP frame-ancestors does not block framing); the rest are
-// safe to enforce immediately.
+// guard (report-only CSP frame-ancestors does not block framing, which is
+// exactly the sort of thing the R2-8 note above is warning you about); the
+// rest are safe to enforce immediately.
 const securityHeaders = [
   {
     key: "Content-Security-Policy-Report-Only",
