@@ -54,6 +54,15 @@ export default defineConfig({
         url: "http://localhost:3000",
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
-        env: { ALLOW_TEST_AUTH: "1" },
+        env: {
+          ALLOW_TEST_AUTH: "1",
+          // E7's signup cap is 10 new accounts per IP per UTC day, counted in
+          // the DB. The credentials missions register real users, so a handful
+          // of full-suite runs in one day exhausts it and M9.3/M9.4 start
+          // failing with "Too many sign-ups from your network today" — which
+          // reads exactly like a load flake but is the limiter working. Raise
+          // it for the test server only; the app's own default is untouched.
+          MM_SIGNUP_DAILY_LIMIT: "500",
+        },
       },
 });
