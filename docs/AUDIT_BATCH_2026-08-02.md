@@ -27,7 +27,7 @@ Eight items from the full-app audit. Evidence and measurements:
   there is no session make the gate's primary CTA "Create a free account"
   (→ `/sign-up`); keep the sponsor CTA for signed-in non-subscribers.
 
-- [ ] **B2 · P1 · Every container project is labelled WISHLIST regardless of progress**
+- [x] **B2 · P1 · Every container project is labelled WISHLIST regardless of progress**
   An Army with 50 models, all units BASED, 43% complete shows status WISHLIST on
   its page header and every roster row. In `src/lib/appData.ts` `mapProject`:
   `completionPercent` uses the aggregated subtree (`agg`) while

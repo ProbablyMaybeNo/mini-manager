@@ -231,4 +231,19 @@ describe("displayStatus — Phase-12 locked status set", () => {
       }),
     ).toBe("COMPLETE");
   });
+
+  /* Audit B2 — a container carries its models in its children, so its own row
+   * is all zeroes and reads WISHLIST. Feeding it the subtree aggregate is what
+   * makes the pill agree with the completion bar beside it. The wiring itself
+   * is covered in tests/integration/lib/projectTreeStatus.test.ts. */
+  test("a container reads WISHLIST off its own row but not off its aggregate", () => {
+    const army = projectStub({ type: "Army", count: 0 });
+    const units = [
+      projectStub({ id: "u1", count: 10, ownedCount: 10, buildCount: 10, paintCount: 10 }),
+      projectStub({ id: "u2", count: 10, ownedCount: 10, buildCount: 10, paintCount: 4 }),
+    ];
+
+    expect(displayStatus(army)).toBe("WISHLIST");
+    expect(displayStatus({ ...army, ...aggregateCounters(army, units) })).toBe("PAINTING");
+  });
 });
