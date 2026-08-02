@@ -234,6 +234,7 @@ function RenameField({
   onSaved?: () => void;
 }) {
   const [value, setValue] = useState(name);
+  const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
   // Re-seed if the project changes underneath us (e.g. switching tabs).
   const lastName = useRef(name);
@@ -246,12 +247,24 @@ function RenameField({
     const next = value.trim();
     if (!next || next === name) {
       setValue(name);
+      setError(null);
       return;
     }
+    setError(null);
     start(async () => {
-      const res = await updateProjectName({ id, name: next });
-      if (res.ok) onSaved?.();
-      else setValue(name);
+      // R2-2 — an awaited server action that REJECTS inside a transition
+      // propagates to the route error boundary, so a phone losing signal for
+      // two seconds replaced the entire app with the "SOMETHING BROKE" fault
+      // screen and took the typed name with it. A failed fetch is not an
+      // unrecoverable render fault. Catch it, keep what was typed (blurring
+      // again retries the save), and leave the rest of the panel usable.
+      try {
+        const res = await updateProjectName({ id, name: next });
+        if (res.ok) onSaved?.();
+        else setError(res.error);
+      } catch {
+        setError("Couldn’t save the name — check your connection, then try again.");
+      }
     });
   }
 
@@ -260,6 +273,7 @@ function RenameField({
       name="project-name"
       label="Name"
       value={value}
+      error={error ?? undefined}
       disabled={disabled}
       onChange={(e) => setValue(e.target.value)}
       onBlur={commit}
@@ -364,9 +378,20 @@ export function ProjectWorkspaceBody({
       // Apply the optimistic patch synchronously before awaiting, so the
       // dropdown shows the new value immediately.
       if (optimistic) applyOptimistic(optimistic);
-      const res = await action();
-      if (!res.ok) {
-        setError(res.error ?? "Something went wrong.");
+      // R2-2 — every mutation in this panel funnels through here, and an
+      // action that REJECTS (offline, dropped connection) rather than
+      // returning `{ ok: false }` escapes the transition into the route error
+      // boundary, replacing the whole app with the fault screen. Report it in
+      // the panel's own error slot instead; the optimistic patch reverts on
+      // the next server render, exactly as it does for a handled failure.
+      try {
+        const res = await action();
+        if (!res.ok) {
+          setError(res.error ?? "Something went wrong.");
+          return;
+        }
+      } catch {
+        setError("Couldn’t save — check your connection, then try again.");
         return;
       }
       // No router.refresh(): both host pages are force-dynamic, so the
