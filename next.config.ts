@@ -37,9 +37,17 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // R2-5 — E4 shipped this as `camera=()`, which is an EMPTY allowlist: the
+  // camera is denied to every origin, this site included. That silently made
+  // the Eyedropper's live sampler (CameraSampler → getUserMedia) impossible:
+  // the button still rendered (getUserMedia exists, so the feature-detect
+  // passed) and the policy rejection arrives as NotAllowedError, so the user
+  // was told "Camera permission denied" for a permission they never denied.
+  // `(self)` grants it to our own origin only; embedded third parties stay
+  // denied, which is what the original header was actually reaching for.
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+    value: "camera=(self), microphone=(), geolocation=(), browsing-topics=()",
   },
   {
     key: "Strict-Transport-Security",

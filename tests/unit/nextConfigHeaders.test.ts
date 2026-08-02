@@ -35,6 +35,20 @@ describe("E4 security headers", () => {
     expect(h["Permissions-Policy"]).toContain("geolocation=()");
   });
 
+  test("R2-5 — the camera is granted to this origin, not denied to everyone", async () => {
+    // `camera=()` is an empty allowlist: it denies the camera to EVERY origin,
+    // ours included, which made the Eyedropper's live sampler impossible while
+    // still showing its USE CAMERA button. `(self)` is the narrowest value that
+    // lets our own getUserMedia call run.
+    const policy = (await globalHeaders())["Permissions-Policy"];
+    expect(policy).toContain("camera=(self)");
+    expect(policy).not.toContain("camera=()");
+    // Everything we don't use stays denied to everyone.
+    expect(policy).toContain("microphone=()");
+    expect(policy).toContain("geolocation=()");
+    expect(policy).toContain("browsing-topics=()");
+  });
+
   test("HSTS carries includeSubDomains", async () => {
     const h = await globalHeaders();
     expect(h["Strict-Transport-Security"]).toContain("max-age=");
