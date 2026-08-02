@@ -118,25 +118,25 @@ test.describe("M11 — Dashboard real-data features", () => {
       timeout: 30_000,
     });
 
-    // An Army can host Unit / Warband / Model / Terrain, so "+ Sub-project"
-    // shows a type picker — pick Unit. Creating it drills the SAME panel
-    // straight into the new sub-project's own tab (a "New Unit").
+    // "+ Sub-project" opens an INLINE form (Ross, 2026-08-01) — name, type,
+    // models, priority, status — rather than a type picker that created a
+    // placeholder and drilled into it. Adding leaves you on the army so a
+    // whole roster can be entered in one place, so there's no tab to flip
+    // back from any more.
     const inspector = page.getByRole("region", { name: "Project inspector" });
     await expect(
       inspector.getByRole("heading", { name: army, level: 2 }),
     ).toBeVisible({ timeout: 30_000 });
     await inspector.getByRole("button", { name: /^\+ Sub-project$/ }).click();
-    await inspector.getByRole("button", { name: /^Unit$/ }).click();
-    await expect(
-      inspector.getByRole("heading", { name: "New Unit", level: 2 }),
-    ).toBeVisible({ timeout: 30_000 });
+    // Type defaults to the first allowed child (Unit for an Army) and models
+    // to 1; leaving the name blank yields the "New Unit" placeholder, which
+    // keeps this test's downstream assertions unchanged.
+    await inspector.getByRole("button", { name: /^\+ Add unit$/i }).click();
 
-    // Flip back to the army's own tab — the new Unit shows in its
-    // SUB-PROJECTS list and PROGRESS table, starting at 0/1 (its fixed
-    // single-model count). ("New Unit" itself renders 3x in this tab — the
-    // SUB-PROJECTS row, the PROGRESS row, and the tab label — so the
+    // The new Unit lands in the army's own SUB-PROJECTS list and PROGRESS
+    // table without navigating, starting at 0/1. ("New Unit" renders more
+    // than once here — the SUB-PROJECTS row and the PROGRESS row — so the
     // deterministic signal is the PROGRESS row's own stepper button.)
-    await inspector.getByRole("tab", { name: army }).click();
     const increaseBtn = inspector.getByRole("button", {
       name: /increase completed for New Unit/i,
     });

@@ -379,18 +379,43 @@ export function ProjectWorkspaceBody({
     run(() => detachRecipe({ recipeId }));
   }
 
-  function addChild(type: ProjectType) {
-    setPickingChild(false);
+  /**
+   * Create one sub-project from the inline form and STAY PUT (Ross,
+   * 2026-08-01).
+   *
+   * This used to mint a "New Unit" and immediately open it, so building an
+   * army of three units cost three context switches and three renames. The
+   * form captures name / type / models / priority / status up front, and
+   * returning here — form still open, fields reset — means the next unit is
+   * one more fill-in rather than a round trip. Recipes and progress still
+   * live on each sub-project's own page; this is only the roster-building
+   * half of the job.
+   *
+   * Status is applied via `bumpProjectStatus` rather than the insert because
+   * it's derived from the model counters, and that action owns the counter
+   * math. Only called when the painter picked something other than the
+   * default, so the common path stays a single round-trip.
+   */
+  function addChild(draft: {
+    name: string;
+    type: ProjectType;
+    count: number;
+    priority: Priority;
+    status: ProjectStatus;
+  }) {
     run(async () => {
       const res = await createProject({
-        name: `New ${type}`,
-        type: TYPE_TO_DB[type],
+        name: draft.name.trim() || `New ${draft.type}`,
+        type: TYPE_TO_DB[draft.type],
         parentId: project.id,
-        count: 1,
+        count: draft.count,
+        priority: PRIORITY_TO_DB[draft.priority],
       });
-      // Open the freshly created sub-project so the painter lands on its
-      // panel (a tier down) ready to rename + fill in — Ross's "new tab" flow.
-      if (res.ok && res.data?.id) onOpenSubProject?.(res.data.id);
+      if (!res.ok) return res;
+      if (draft.status !== "WISHLIST" && res.data?.id) {
+        const bumped = await bumpProjectStatus({ id: res.data.id, status: draft.status });
+        if (!bumped.ok) return bumped;
+      }
       return res;
     });
   }
@@ -636,17 +661,12 @@ export function ProjectWorkspaceBody({
 
         {allowedChildren.length > 0 &&
           (pickingChild ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2" data-walkthrough="sub">
-              <span className="label-osd text-fg-dim">Add:</span>
-              {allowedChildren.map((t) => (
-                <Button key={t} variant="add" size="sm" disabled={pending} onClick={() => addChild(t)}>
-                  {t}
-                </Button>
-              ))}
-              <Button variant="tertiary" size="sm" onClick={() => setPickingChild(false)}>
-                Cancel
-              </Button>
-            </div>
+            <AddSubProjectForm
+              allowedTypes={allowedChildren}
+              busy={pending}
+              onAdd={addChild}
+              onClose={() => setPickingChild(false)}
+            />
           ) : (
             <Button
               variant="add"
@@ -654,9 +674,7 @@ export function ProjectWorkspaceBody({
               className="mt-3 self-start"
               data-walkthrough="sub"
               disabled={pending}
-              onClick={() =>
-                allowedChildren.length === 1 ? addChild(allowedChildren[0]) : setPickingChild(true)
-              }
+              onClick={() => setPickingChild(true)}
             >
               + Sub-project
             </Button>
@@ -974,6 +992,148 @@ export function ProjectWorkspaceBody({
           run(() => deleteProject({ id: target.id }));
         }}
       />
+    </div>
+  );
+}
+
+/**
+ * Inline "add a sub-project" form (Ross, 2026-08-01).
+ *
+ * Replaces a flow that minted a placeholder "New Unit" and immediately opened
+ * it, so adding three units to an army meant three context switches and three
+ * renames. Everything cheap to capture — name, type, model count, priority,
+ * status — is captured here; the form stays open and resets after each add, so
+ * building a roster is a sequence of fill-ins rather than round trips. Recipes,
+ * photos and per-model progress still live on each sub-project's own page,
+ * reachable from its row once it exists.
+ *
+ * Enter submits, so a whole unit can be added without leaving the keyboard.
+ */
+function AddSubProjectForm({
+  allowedTypes,
+  busy,
+  onAdd,
+  onClose,
+}: {
+  allowedTypes: ProjectType[];
+  busy?: boolean;
+  onAdd: (draft: {
+    name: string;
+    type: ProjectType;
+    count: number;
+    priority: Priority;
+    status: ProjectStatus;
+  }) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [type, setType] = useState<ProjectType>(allowedTypes[0]);
+  const [count, setCount] = useState("1");
+  const [priority, setPriority] = useState<Priority>("Med");
+  const [status, setStatus] = useState<ProjectStatus>("WISHLIST");
+  const [added, setAdded] = useState<string[]>([]);
+
+  function submit() {
+    const trimmed = name.trim();
+    onAdd({
+      name: trimmed,
+      type,
+      count: Math.max(0, Number.parseInt(count, 10) || 0),
+      priority,
+      status,
+    });
+    // Keep type/priority/status — adding three Units in a row almost always
+    // means three of the SAME shape, so only the name resets.
+    setAdded((a) => [trimmed || `New ${type}`, ...a].slice(0, 5));
+    // Clearing the value leaves focus on the field, so the next name can be
+    // typed immediately — Input doesn't forward a ref, and none is needed.
+    setName("");
+  }
+
+  return (
+    <div
+      className="mt-3 flex flex-col gap-3 rounded-[8px] border border-cyan/30 bg-bg/40 p-3"
+      data-walkthrough="sub"
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="flex flex-col gap-1 sm:col-span-2 lg:col-span-1">
+          <span className="label-osd text-fg-dim">Name</span>
+          <Input
+            autoFocus
+            name="sub-project-name"
+            value={name}
+            placeholder={`New ${type}`}
+            disabled={busy}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="label-osd text-fg-dim">Type</span>
+          <Listbox
+            value={type}
+            ariaLabel="Sub-project type"
+            options={allowedTypes.map((t) => ({ value: t, label: t.toUpperCase() }))}
+            onChange={(t) => setType(t)}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="label-osd text-fg-dim">Models</span>
+          <Input
+            name="sub-project-count"
+            type="number"
+            min={0}
+            value={count}
+            disabled={busy}
+            onChange={(e) => setCount(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="label-osd text-fg-dim">Priority</span>
+          <Listbox
+            value={priority}
+            ariaLabel="Sub-project priority"
+            accent={priorityAccent[priority]}
+            options={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p.toUpperCase() }))}
+            onChange={(p) => setPriority(p)}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="label-osd text-fg-dim">Status</span>
+          <Listbox
+            value={status}
+            ariaLabel="Sub-project status"
+            accent={statusAccent[status]}
+            options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
+            onChange={(s) => setStatus(s)}
+          />
+        </label>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="add" size="sm" disabled={busy} onClick={submit}>
+          + Add {type.toLowerCase()}
+        </Button>
+        <Button variant="tertiary" size="sm" onClick={onClose}>
+          Done
+        </Button>
+        {added.length > 0 && (
+          <span className="font-body text-body text-fg-dim">
+            Added: {added.join(", ")}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

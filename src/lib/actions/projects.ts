@@ -72,6 +72,12 @@ const createProjectSchema = z.object({
     .max(80, "Faction is too long")
     .nullish()
     .transform((v) => (v ? v : null)),
+  // Set at creation so the inline "add sub-project" form can capture it in
+  // the same round-trip, instead of creating then immediately patching.
+  // Status is NOT here: it's derived from the model counters, so it goes
+  // through `bumpProjectStatus` (which owns that counter math) rather than
+  // being a column this insert can set.
+  priority: z.enum(priorities).nullish(),
   game: z
     .string()
     .trim()
@@ -106,7 +112,7 @@ export async function createProject(
     const first = parsed.error.issues[0];
     return { ok: false, error: first?.message ?? "Invalid project" };
   }
-  const { name, type, count, parentId, faction, game } = parsed.data;
+  const { name, type, count, parentId, faction, game, priority } = parsed.data;
 
   const userId = await currentUserId();
 
@@ -183,6 +189,9 @@ export async function createProject(
       count,
       faction,
       game,
+      // Omitted rather than passed as null when absent, so the column's
+      // "Medium" default still applies for every existing caller.
+      ...(priority ? { priority } : {}),
     })
     .returning({ id: projects.id });
 
