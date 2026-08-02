@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
+import { useIsDesktop } from "@/hooks/useBreakpoint";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
 import { SUPPORT_EMAIL } from "@/lib/support";
@@ -97,6 +98,16 @@ function usePrefersReducedMotion(): boolean {
 
 export function LandingView() {
   const reducedMotion = usePrefersReducedMotion();
+  // O-3 — the hero video was the whole page weight: 2,143KB of a 2,849KB
+  // landing, downloaded in full on first paint (autoPlay), for a mark rendered
+  // at 327px on a phone. Re-encoding took it to 169KB (VP9) / 271KB (h264), and
+  // phones don't fetch it at all now — they get the poster the <video> would
+  // have loaded anyway. `useIsDesktop` is SSR-false, so the still is what
+  // renders on the server and on first paint everywhere; the video only mounts
+  // on a client that is actually wide (and tall — a landscape phone is not a
+  // desktop) and hasn't asked for reduced motion.
+  const isDesktop = useIsDesktop();
+  const stillOnly = reducedMotion || !isDesktop;
 
   // Funnel: top-of-funnel landing impression.
   useEffect(() => {
@@ -128,7 +139,7 @@ export function LandingView() {
             still governs (42vh > the ~342px column), so the brand mark stays
             full-width there. */}
         <div className="flex w-full max-w-[440px] justify-center sm:max-w-lg">
-          {reducedMotion ? (
+          {stillOnly ? (
             <Image
               src="/brand/mini-mainframe-logo-poster.jpg"
               alt="The Mini Mainframe"
@@ -146,9 +157,13 @@ export function LandingView() {
               playsInline
               poster="/brand/mini-mainframe-logo-poster.jpg"
               aria-label="The Mini Mainframe"
-              width={1080}
-              height={1080}
+              width={540}
+              height={540}
             >
+              {/* VP9 first: at the same visual quality it is 169KB against the
+                  mp4's 271KB, so every browser that can take it does. The mp4
+                  stays as the fallback. */}
+              <source src="/brand/mini-mainframe-logo.webm" type="video/webm" />
               <source src="/brand/mini-mainframe-logo.mp4" type="video/mp4" />
             </video>
           )}
