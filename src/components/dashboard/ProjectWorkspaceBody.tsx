@@ -23,7 +23,6 @@ import {
   createProject,
   deleteProject,
   duplicateProject,
-  setProjectComplete,
   updateProjectName,
   updateProjectPriority,
   updateProjectType,
@@ -322,6 +321,10 @@ export function ProjectWorkspaceBody({
 
   const children = project.children ?? [];
   const allowedChildren = CHILD_TYPES[project.type] ?? [];
+  // A leaf owns models directly, so it gets the stage counters. Anything with
+  // sub-projects gets its progress from their rows instead — see PROGRESS below.
+  const isLeaf =
+    children.length === 0 && project.type !== "Army" && project.type !== "Warband";
   // PP-2: on the project PAGE the layout is sub-project-list-first — the
   // SUB-PROJECTS section leads (order-first), the secondary DETAILS / RECIPES /
   // PROGRESS / INFO sections follow, and DETAILS/RECIPES default collapsed. The
@@ -453,7 +456,9 @@ export function ProjectWorkspaceBody({
         aria-label="Jump to inspector section"
         className="grid grid-cols-3 gap-1 md:hidden"
       >
-        {QUICK_JUMP_SECTIONS.map((s) => (
+        {QUICK_JUMP_SECTIONS.filter(
+          (s) => s.anchorId !== "inspector-progress" || isLeaf,
+        ).map((s) => (
           <button
             key={s.anchorId}
             type="button"
@@ -760,114 +765,27 @@ export function ProjectWorkspaceBody({
         )}
       </CollapsibleSection>
 
-      {/* PROGRESS — the working table: per-sub-project stage + completion. */}
-      <CollapsibleSection
-        label="PROGRESS"
-        anchorId="inspector-progress"
-        defaultOpen
-        className={isPage ? "order-4" : undefined}
-        dataWalkthrough="progress"
-        hint={
-          children.length > 0
-            ? "Adjust each sub-project's stage and completion right here — completed rows light up green."
-            : project.type !== "Army" && project.type !== "Warband"
-              ? "Set the model count, then tick off each stage (Built → Completed) as you paint."
-              : "Add sub-projects above to track their stages here."
-        }
-      >
-        {children.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {children.map((c) => {
-              const total = c.modelCount ?? 0;
-              const done = c.modelsComplete ?? 0;
-              const complete = c.status === "COMPLETE";
-              return (
-                <div
-                  key={c.id}
-                  className={cn(
-                    "flex flex-wrap items-center gap-3 border p-2",
-                    complete
-                      ? "border-green bg-green/10 text-glow-green"
-                      : "border-cyan/20",
-                  )}
-                >
-                  <span className="min-w-[7rem] flex-1 truncate font-body text-body text-fg">
-                    {c.title}
-                  </span>
-                  <Listbox
-                    value={c.status}
-                    disabled={pending}
-                    ariaLabel={`Status for ${c.title}`}
-                    accent={statusAccent[c.status]}
-                    options={STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
-                    onChange={(s) => run(() => bumpProjectStatus({ id: c.id, status: s }))}
-                  />
-                  <div className="flex items-center gap-1 tabular-nums">
-                    <button
-                      type="button"
-                      aria-label={`Decrease completed for ${c.title}`}
-                      disabled={pending || done <= 0}
-                      onClick={() =>
-                        run(() => setProjectComplete({ id: c.id, complete: Math.max(0, done - 1) }))
-                      }
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-6 md:min-w-6"
-                    >
-                      −
-                    </button>
-                    <span className="min-w-[2.75rem] text-center font-num2 text-num2 text-fg">
-                      {done}/{total}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={`Increase completed for ${c.title}`}
-                      disabled={pending || (total > 0 && done >= total)}
-                      onClick={() => run(() => setProjectComplete({ id: c.id, complete: done + 1 }))}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center border border-cyan/40 px-1 font-button text-button text-cyan-lite hover:bg-cyan/10 disabled:opacity-30 md:min-h-6 md:min-w-6"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="min-w-[6rem] flex-1">
-                    <ProgressBar percent={c.completionPercent} showLabel />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : project.type !== "Army" && project.type !== "Warband" ? (
-          // A leaf unit *is* a set of models — track its own painting stages +
-          // set its model count right here (the standalone flow panel's grid,
-          // folded into the one inspector).
+      {/* PROGRESS — a leaf's own stage counters, and only a leaf's (Ross,
+          2026-08-01). A container used to repeat every sub-project here as a
+          second table with its own stepper and status pill; but each row in
+          SUB-PROJECTS already carries a progress bar, so this was the same
+          information a section further down the page. Progress gets ticked off
+          on the unit's own page, where the counters actually live. */}
+      {isLeaf && (
+        <CollapsibleSection
+          label="PROGRESS"
+          anchorId="inspector-progress"
+          defaultOpen
+          className={isPage ? "order-4" : undefined}
+          dataWalkthrough="progress"
+          hint="Set the model count, then tick off each stage (Built → Completed) as you paint."
+        >
+          {/* A leaf unit *is* a set of models — track its own painting stages +
+              set its model count right here (the standalone flow panel's grid,
+              folded into the one inspector). */}
           <ModelCounterGrid project={project} />
-        ) : (
-          <p className="font-body text-body text-fg-dim">
-            Add sub-projects above to track their stages here.
-          </p>
-        )}
-
-        {/* Roll-up stat strip — 2-up on phones so the 4th cell + its label
-            aren't clipped off the right edge (MUX-004). Container-only: a leaf's
-            own totals live in its ModelCounterGrid above. */}
-        {/* Desktop only in the panel: the compact strip at the top of the
-            inspector already prints total / complete / time, so on a phone this
-            was the same three numbers a second time (MUX-009). */}
-        {children.length > 0 && (
-          <div
-            className={cn(
-              "mt-3 gap-2",
-              isPage ? "grid" : "hidden md:grid",
-              loggedMinutes != null ? "grid-cols-2 min-[420px]:grid-cols-4" : "grid-cols-3",
-            )}
-          >
-            <StatCell label="Total models" value={project.modelCount ?? 0} />
-            <StatCell label="Completed" value={project.modelsComplete ?? 0} />
-            <StatCell label="Sub-projects" value={children.length} />
-            {loggedMinutes != null && (
-              <StatCell label="Time" value={formatMinutes(loggedMinutes)} />
-            )}
-          </div>
-        )}
-      </CollapsibleSection>
+        </CollapsibleSection>
+      )}
 
       {/* REFERENCE — the pasted-URL inspiration image to paint towards (distinct
           from the uploaded model PHOTOS above). Notes + target date moved up into
@@ -1228,10 +1146,10 @@ function ProgressStat({
   value,
   accent,
 }: {
-  /** Optional — omitted where the column is too narrow to spend 22px on it. */
   glyph?: string;
   label: string;
   value: React.ReactNode;
+  /** Optional — omitted where the column is too narrow to spend 22px on it. */
   accent?: "green";
 }) {
   return (
@@ -1254,11 +1172,3 @@ function ProgressStat({
   );
 }
 
-function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-1 border border-cyan/20 px-2 py-3">
-      <span className="font-num2 text-num2 tabular-nums text-fg">{value}</span>
-      <span className="label-osd text-fg-dim">{label}</span>
-    </div>
-  );
-}

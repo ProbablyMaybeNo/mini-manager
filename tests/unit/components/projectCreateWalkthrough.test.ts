@@ -32,15 +32,12 @@ describe("shouldShowProjectCreateWalkthrough — first-create gate", () => {
 });
 
 describe("PROJECT_CREATE_WALKTHROUGH — step script integrity", () => {
-  const EXPECTED_ANCHORS: WalkthroughAnchor[] = [
-    "name",
-    "meta",
-    "sub",
-    "recipes",
-    "progress",
-  ];
+  // No "progress" step: a brand-new project is a container, and containers
+  // don't get a PROGRESS section any more — progress lives on the sub-project
+  // rows (Ross, 2026-08-01).
+  const EXPECTED_ANCHORS: WalkthroughAnchor[] = ["name", "meta", "sub", "recipes"];
 
-  test("covers exactly the five required controls in order", () => {
+  test("covers exactly the four required controls in order", () => {
     expect(PROJECT_CREATE_WALKTHROUGH.map((s) => s.target)).toEqual(
       EXPECTED_ANCHORS,
     );

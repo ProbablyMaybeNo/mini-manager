@@ -222,7 +222,18 @@ export function Listbox<T extends string>({
                 aria-selected={isSelected}
                 aria-disabled={opt.disabled || undefined}
                 onPointerEnter={() => !opt.disabled && setActiveIndex(i)}
-                onClick={() => choose(i)}
+                // preventDefault matters when the Listbox sits inside a
+                // <label> (several forms wrap it in one for the field caption):
+                // a click anywhere in a label is forwarded as a second,
+                // synthesized click to the label's first labelable descendant —
+                // here the trigger button — which re-opened the popup the
+                // instant an option closed it, leaving it stuck over whatever
+                // sat below. Cancelling the click's default cancels that
+                // forwarding; an <li> has no default action of its own to lose.
+                onClick={(e) => {
+                  e.preventDefault();
+                  choose(i);
+                }}
                 className={cn(
                   "cursor-pointer px-2 py-1 font-body text-body tracking-[0.08em] transition-colors",
                   opt.disabled && "cursor-not-allowed text-fg-faint/60",

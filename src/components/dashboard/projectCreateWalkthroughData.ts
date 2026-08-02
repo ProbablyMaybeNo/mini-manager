@@ -19,7 +19,7 @@
  */
 
 /** Anchor ids — the `data-walkthrough` attribute value on the target element. */
-export type WalkthroughAnchor = "name" | "meta" | "sub" | "recipes" | "progress";
+export type WalkthroughAnchor = "name" | "meta" | "sub" | "recipes";
 
 /** Preferred placement of the tooltip card relative to its target. The overlay
  *  flips/clamps this to stay on-screen, so it's a hint, not a law. */
@@ -58,7 +58,7 @@ export const PROJECT_CREATE_WALKTHROUGH: WalkthroughStep[] = [
     id: "sub",
     target: "sub",
     title: "SUB-PROJECTS",
-    body: "Add units, models, warbands or terrain under it.",
+    body: "Add units under it — each row tracks its own progress.",
     placement: "top",
   },
   {
@@ -66,13 +66,6 @@ export const PROJECT_CREATE_WALKTHROUGH: WalkthroughStep[] = [
     target: "recipes",
     title: "RECIPES",
     body: "Attach a paint scheme.",
-    placement: "top",
-  },
-  {
-    id: "progress",
-    target: "progress",
-    title: "PROGRESS",
-    body: "Tick off built / primed / painted as you go.",
     placement: "top",
   },
 ];

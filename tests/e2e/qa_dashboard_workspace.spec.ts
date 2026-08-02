@@ -10,10 +10,9 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  *   - Project PAGE (PP-2) "+ ADD UNIT" / "+ Add Sub-Project" → hands off to
  *     `/dashboard?open=<id>`, which reopens that project's editable INSPECTOR
  *     panel (same panel the create flow opens) scrolled to SUB-PROJECTS; its
- *     "+ Sub-project" picker adds a Unit, which drills the SAME panel into the
- *     new sub-project's own tab. Flipping back to the parent's tab shows the
- *     PROGRESS table's per-row stepper, which bumps the child's completed
- *     count (army progress rolls up — see MISSIONS.md commit f012be2).
+ *     "+ Sub-project" form adds a Unit inline, and the new row carries its own
+ *     progress bar. A container has no PROGRESS section at all (Ross,
+ *     2026-08-01) — the sub-project rows are the progress readout.
  *
  * "+ New project" creates a draft Army immediately (no name/model-count
  * mini-form) and opens that same INSPECTOR panel to rename it — a deliberate
@@ -95,7 +94,7 @@ test.describe("M11 — Dashboard real-data features", () => {
     await expect(planner.getByText(eventName)).toBeVisible({ timeout: 30_000 });
   });
 
-  test("M11.2 add a sub-project on the project page + bump its completed stepper", async ({
+  test("M11.2 add a sub-project on the project page → its row carries the progress", async ({
     page,
   }) => {
     test.setTimeout(60_000);
@@ -133,18 +132,15 @@ test.describe("M11 — Dashboard real-data features", () => {
     // keeps this test's downstream assertions unchanged.
     await inspector.getByRole("button", { name: /^\+ Add unit$/i }).click();
 
-    // The new Unit lands in the army's own SUB-PROJECTS list and PROGRESS
-    // table without navigating, starting at 0/1. ("New Unit" renders more
-    // than once here — the SUB-PROJECTS row and the PROGRESS row — so the
-    // deterministic signal is the PROGRESS row's own stepper button.)
-    const increaseBtn = inspector.getByRole("button", {
-      name: /increase completed for New Unit/i,
-    });
-    await expect(increaseBtn).toBeVisible({ timeout: 15_000 });
-
-    // Bump the new Unit's completed stepper → 1/1 (army progress rolls up,
-    // commit f012be2 — "watch the army fill in green").
-    await increaseBtn.click();
-    await expect(inspector.getByText("1/1")).toBeVisible({ timeout: 15_000 });
+    // The new Unit lands in the army's own SUB-PROJECTS list without
+    // navigating, carrying its own progress bar. There is no second PROGRESS
+    // table on a container any more (Ross, 2026-08-01) — the row IS the
+    // progress readout, and the counters are edited on the unit's own page.
+    const row = inspector.getByRole("listitem").filter({ hasText: "New Unit" });
+    await expect(row).toBeVisible({ timeout: 15_000 });
+    await expect(row.getByRole("progressbar")).toBeVisible({ timeout: 15_000 });
+    await expect(
+      inspector.getByRole("button", { name: /increase completed for/i }),
+    ).toHaveCount(0);
   });
 });
