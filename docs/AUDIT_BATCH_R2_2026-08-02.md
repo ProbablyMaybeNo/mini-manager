@@ -19,7 +19,7 @@ Findings from the second full-app audit, run against the code deployed in
 
 ---
 
-- [ ] **R2-6 · P1 · The public share page overflows horizontally on a phone**
+- [x] **R2-6 · P1 · The public share page overflows horizontally on a phone**
   `/r/<slug>` at 375px forces `window.innerWidth` and `document.scrollWidth` to
   **487** — the layout viewport is dragged 30% wider than the device, so the
   browser zooms out and the page scrolls sideways. Uncontained offenders:
@@ -31,7 +31,7 @@ Findings from the second full-app audit, run against the code deployed in
   to actually constrain) or wrap the copy button below it under `sm`. Verify with
   `document.body.scrollWidth === 375` at a 375×812 viewport.
 
-- [ ] **R2-5 · P1 · The live camera sampler cannot work — our own header blocks it**
+- [x] **R2-5 · P1 · The live camera sampler cannot work — our own header blocks it**
   Every response sends `Permissions-Policy: camera=(), microphone=(),
   geolocation=(), browsing-topics=()` (verified on production). `camera=()` is an
   **empty allowlist — the camera is denied to every origin including this site**.
@@ -48,7 +48,7 @@ Findings from the second full-app audit, run against the code deployed in
   than shipping a control that cannot work. Verify by loading `/tools/dropper`
   and confirming the camera stream starts.
 
-- [ ] **R2-4 · P1 · Auto-populate fails silently on every retailer it advertises**
+- [x] **R2-4 · P1 · Auto-populate fails silently on every retailer it advertises**
   The scraper itself works: pasting `https://example.com/` creates a row with
   `title="Example Domain"`, `vendor="example.com"`. But every advertised
   retailer produces **no row and no message**, after 5–9 seconds of waiting:
@@ -71,7 +71,7 @@ Findings from the second full-app audit, run against the code deployed in
   ADD **PAINT**). Consider narrowing the advertised retailer list to hosts that
   actually work.
 
-- [ ] **R2-2 · P1 · A failed save destroys the whole app and the user's edit**
+- [x] **R2-2 · P1 · A failed save destroys the whole app and the user's edit**
   Renaming a project while offline replaces the **entire application** with the
   global fault screen ("SOMETHING BROKE"), not an inline message. The typed value
   is lost — after reconnecting and reloading, the rename had not persisted.
@@ -82,7 +82,7 @@ Findings from the second full-app audit, run against the code deployed in
   the typed value and leaves the rest of the app usable. Reserve the whole-app
   error boundary for unrecoverable render faults, not failed fetches.
 
-- [ ] **R2-1 · P2 · Clipboard writes are fire-and-forget: false "copied" toasts**
+- [x] **R2-1 · P2 · Clipboard writes are fire-and-forget: false "copied" toasts**
   Five sites call `void navigator.clipboard?.writeText(...)`. `void` discards the
   promise, so a rejection is never handled — observed live as an uncaught
   `NotAllowedError`, and reproduced independently by the click crawl on both
@@ -99,6 +99,33 @@ Findings from the second full-app audit, run against the code deployed in
   `try/catch`, value visible regardless) — **use it as the template**.
   **Fix:** `.catch()` every clipboard write; only toast success on resolve; on
   failure surface the value so it can be copied by hand.
+
+---
+
+## Status — all five shipped on `fix/audit-batch-r2-2026-08-02`, 2026-08-02
+
+One commit per item, each measured before/after against a running build.
+Branch is NOT merged: Ross reviews first.
+
+**Left for Ross — deliberately not decided here:**
+
+- **R2-4, narrowing the advertised retailer list.** A product call about what
+  the panel promises. The error surfacing shipped; the copy did not.
+- **R2-5, whether a real camera works.** `camera=(self)` is proven to let
+  `getUserMedia` resolve (Chromium fake device, video track acquired) and the
+  `Permissions policy violation` is gone. A genuine phone camera still needs
+  30 seconds of Ross's thumb.
+
+**Two audit readings corrected by measurement, both under R2-4:** the failure
+was already reported (a ~2.4s toast, easy to miss — now also stated
+persistently in the dialog), and the fallback dialog already matched the
+paste-bar mode (Paint→"Add paint", Model→"Add model"). The confirmed loss was
+the pasted URL, which is what got fixed.
+
+**Known bug class NOT fixed (R2-2):** the same unguarded `await` inside a
+transition that crashed the app exists in `/projects/[id]` EditableDetails,
+CollectionClient and the recipe editors. R2-2 fixed the inspector panel, where
+it was reproduced. The rest wants its own pass.
 
 ---
 
