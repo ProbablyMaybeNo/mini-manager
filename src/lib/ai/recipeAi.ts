@@ -115,7 +115,7 @@ function buildPrompt(command: string, candidates: CandidatePaint[], brands: stri
   const list = candidates
     .map(
       (c) =>
-        `- id:${c.id} | ${c.brand}${c.line ? ` ${c.line}` : ""} | ${c.name} | ${c.type} | ${c.hex}`,
+        `- ${c.id} | ${c.brand}${c.line ? ` ${c.line}` : ""} | ${c.name} | ${c.type} | ${c.hex}`,
     )
     .join("\n");
   return [
@@ -128,7 +128,7 @@ function buildPrompt(command: string, candidates: CandidatePaint[], brands: stri
     `CANDIDATE PAINTS (the ONLY paints you may use — pick by id):`,
     list,
     ``,
-    `Call propose_recipe. For every slot, copy a paintId EXACTLY from a candidate above.`,
+    `Call propose_recipe. For every slot, paintId MUST be the bare id — the first field on a candidate line, digits only, with no "id:" prefix and no other text.`,
     `Cover the relevant roles for the subject (base, shadow, highlight, metals, etc.).`,
     `Do NOT invent paint names or ids. If a needed colour isn't in the list, pick the closest candidate.`,
   ].join("\n");
