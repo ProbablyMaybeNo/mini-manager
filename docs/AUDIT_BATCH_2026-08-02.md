@@ -58,7 +58,7 @@ Eight items from the full-app audit. Evidence and measurements:
   grid already uses, or cap the initial render with a "load more". Preserve
   search, filtering, sort and row actions.
 
-- [ ] **B5 · P2 · Library FILTER panel wastes its width and truncates the company list**
+- [x] **B5 · P2 · Library FILTER panel wastes its width and truncates the company list**
   The panel spans ~62% of the screen but each row is a left-aligned label with
   its checkbox pinned to the far right — ~840px of empty space per row — while
   the COMPANY list is cut off mid-entry at "HUMBROL" inside a 2030px-tall panel.
