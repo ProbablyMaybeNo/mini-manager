@@ -5,14 +5,20 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, Panel } from "@/components/kit";
 import { Logo } from "@/components/shell";
+import { guardedMessage } from "@/lib/actionGuard";
 import { applyPasswordReset } from "@/lib/auth/passwordReset";
+
+/** R2-10 — the token is single-use, so the copy must not imply the reset did or
+ *  didn't land; it names the retry and nothing else. */
+const APPLY_FAILED_MESSAGE =
+  "Couldn’t set your password — check your connection, then try again.";
 
 function ResetConfirm() {
   const router = useRouter();
   const token = useSearchParams().get("token") ?? "";
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const valid = password.length >= 8;
 
   return (
@@ -32,13 +38,21 @@ function ResetConfirm() {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!valid) return;
+              // R2-10 — the token is single-use: a second submit while the
+              // first is still in flight spends it, then reports "invalid or
+              // expired" for a reset that actually succeeded.
+              if (!valid || isPending) return;
               setError(null);
               startTransition(async () => {
-                const res = await applyPasswordReset({
-                  token,
-                  password,
-                });
+                // A handled failure (bad/expired token, weak password) already
+                // arrived as ok:false. R2-10: a *rejection* did not — it reached
+                // the root error boundary and replaced the page with the fault
+                // screen, leaving the user locked out, mid-reset, with a
+                // possibly-spent token and no message at all.
+                const res = await guardedMessage(
+                  () => applyPasswordReset({ token, password }),
+                  APPLY_FAILED_MESSAGE,
+                );
                 if (!res.ok) {
                   setError(res.message);
                   return;
@@ -58,9 +72,17 @@ function ResetConfirm() {
               error={password && !valid ? "Min 8 characters" : undefined}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {error ? <p className="font-body text-body text-red-text">▸ {error}</p> : null}
-            <Button type="submit" className="w-full" disabled={!valid}>
-              Set password
+            {error ? (
+              <p className="font-body text-body text-red-text" role="alert">
+                ▸ {error}
+              </p>
+            ) : null}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!valid || isPending}
+            >
+              {isPending ? "Setting…" : "Set password"}
             </Button>
           </form>
         )}

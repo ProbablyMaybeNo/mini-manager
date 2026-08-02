@@ -45,3 +45,31 @@ export async function guarded<T>(
     return { ok: false, error: message };
   }
 }
+
+/** A result from the auth flows, which predate `ActionResult` and report their
+ *  failure under `message` rather than `error`. */
+export type MessageResult = { ok: true } | { ok: false; message: string };
+
+/**
+ * `guarded()` for actions that report failure as `message` instead of `error`
+ * — `requestPasswordReset` / `applyPasswordReset`.
+ *
+ * Same contract: awaits `action`, converts a rejection into that action's own
+ * failure shape, never throws and never rejects. Kept separate from `guarded`
+ * rather than widened into it, because widening the return type would erase
+ * the extra failure fields (`reason`, `upgradeUrl`) that `ActionResult` callers
+ * branch on.
+ *
+ * `R` flows through unchanged on the non-rejecting paths, so a caller reading
+ * a richer success payload keeps it.
+ */
+export async function guardedMessage<R extends MessageResult>(
+  action: () => Promise<R>,
+  message: string = SAVE_FAILED_MESSAGE,
+): Promise<R | { ok: false; message: string }> {
+  try {
+    return await action();
+  } catch {
+    return { ok: false, message };
+  }
+}

@@ -1,5 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
-import { guarded, SAVE_FAILED_MESSAGE } from "@/lib/actionGuard";
+import {
+  guarded,
+  guardedMessage,
+  SAVE_FAILED_MESSAGE,
+  type MessageResult,
+} from "@/lib/actionGuard";
 import type { ActionResult } from "@/lib/actions/projects";
 
 /**
@@ -96,5 +101,70 @@ describe("guarded — a rejection becomes a failed result, never a rejection", (
     const action = vi.fn(async () => ok);
     await guarded(action);
     expect(action).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * R2-10 — the same shape survived on both password-reset pages, which are the
+ * worst place for it: the person hitting them is already locked out. Those
+ * actions predate `ActionResult` and report failure under `message`.
+ */
+describe("guardedMessage — the same contract for message-shaped results", () => {
+  test("passes a successful result straight through, untouched", async () => {
+    const sent: MessageResult = { ok: true };
+    expect(await guardedMessage(async () => sent)).toBe(sent);
+  });
+
+  test("passes a HANDLED failure through with its own message", async () => {
+    // What `applyPasswordReset` returns for a spent link — the caller's
+    // existing copy, not the guard's.
+    const res = await guardedMessage(async () => ({
+      ok: false as const,
+      message: "Reset link is invalid or expired",
+    }));
+    expect(res).toEqual({
+      ok: false,
+      message: "Reset link is invalid or expired",
+    });
+  });
+
+  test("a REJECTED action resolves to a failed result instead of rejecting", async () => {
+    const action = vi.fn(async (): Promise<MessageResult> => {
+      throw new TypeError("Failed to fetch");
+    });
+
+    const res = await guardedMessage(action);
+
+    expect(res).toEqual({ ok: false, message: SAVE_FAILED_MESSAGE });
+    expect(action).toHaveBeenCalledTimes(1);
+  });
+
+  test("never rejects back at the caller — the property the transition relies on", async () => {
+    await expect(
+      guardedMessage(async () => {
+        throw new Error("boom");
+      }),
+    ).resolves.toEqual({ ok: false, message: SAVE_FAILED_MESSAGE });
+  });
+
+  test("a synchronously throwing action is caught too", async () => {
+    await expect(
+      guardedMessage(() => {
+        throw new Error("thrown before the promise exists");
+      }),
+    ).resolves.toEqual({ ok: false, message: SAVE_FAILED_MESSAGE });
+  });
+
+  test("reports the caller's message where 'save' isn't the verb", async () => {
+    const res = await guardedMessage(
+      async (): Promise<MessageResult> => {
+        throw new Error("offline");
+      },
+      "Couldn’t send the reset link — check your connection, then try again.",
+    );
+    expect(res).toEqual({
+      ok: false,
+      message: "Couldn’t send the reset link — check your connection, then try again.",
+    });
   });
 });

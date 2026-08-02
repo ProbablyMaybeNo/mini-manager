@@ -4,13 +4,20 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button, Input } from "@/components/kit";
 import { Logo } from "@/components/shell";
+import { guardedMessage } from "@/lib/actionGuard";
 import { requestPasswordReset } from "@/lib/auth/passwordReset";
 import { SUPPORT_EMAIL } from "@/lib/support";
+
+/** R2-10 — "save" isn't the verb here, and the person reading it is locked out
+ *  of their account, so it has to name the retry rather than the fault. */
+const REQUEST_FAILED_MESSAGE =
+  "Couldn’t send the reset link — check your connection, then try again.";
 
 export default function ResetPage() {
   const [username, setUsername] = useState("");
   const [sent, setSent] = useState(false);
-  const [, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const valid = username.trim().length >= 3;
 
   return (
@@ -34,11 +41,24 @@ export default function ResetPage() {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!valid) return;
+              if (!valid || isPending) return;
+              setError(null);
               startTransition(async () => {
-                // Always resolves ok (no account enumeration); the link, if
-                // any, goes to the account's verified recovery email.
-                await requestPasswordReset({ username: username.trim() });
+                // Resolves ok whether or not the account exists (no
+                // enumeration); the link, if any, goes to the account's
+                // verified recovery email. Only a *transport* failure — offline,
+                // a 5xx — comes back not-ok, and R2-10: unguarded, that
+                // rejection reached the root error boundary and replaced the
+                // page with the fault screen, taking the typed username with it
+                // — on the one page whose visitor is already locked out.
+                const res = await guardedMessage(
+                  () => requestPasswordReset({ username: username.trim() }),
+                  REQUEST_FAILED_MESSAGE,
+                );
+                if (!res.ok) {
+                  setError(res.message);
+                  return;
+                }
                 setSent(true);
               });
             }}
@@ -50,8 +70,17 @@ export default function ResetPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
-            <Button type="submit" className="w-full" disabled={!valid}>
-              Send reset link
+            {error ? (
+              <p className="font-body text-body text-red-text" role="alert">
+                ▸ {error}
+              </p>
+            ) : null}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!valid || isPending}
+            >
+              {isPending ? "Sending…" : "Send reset link"}
             </Button>
           </form>
         )}
