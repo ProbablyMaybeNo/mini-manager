@@ -4,7 +4,6 @@ import { TourProvider } from "@/components/tour";
 import { InstallBanner } from "@/components/pwa";
 import { MockProvider } from "@/mock/MockProvider";
 import { auth } from "@/auth";
-import { loadAppData } from "@/lib/appData";
 import { hasSeenTutorial } from "@/db/queries/users";
 import { isProUser } from "@/lib/billing/enforce";
 import { SubscriberProvider } from "@/lib/billing/SubscriberContext";
@@ -26,14 +25,22 @@ export default async function AppGroupLayout({
 }) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  const [data, seenTutorial, subscriber] = userId
-    ? await Promise.all([loadAppData(userId), hasSeenTutorial(userId), isProUser(userId)])
-    : [undefined, true, false];
+  // The layout deliberately loads NO account data (Ross, 2026-08-02 — "make
+  // it faster"). It used to call loadAppData and hand the whole account to
+  // MockProvider, which meant every route — and every server action's
+  // re-render, since a revalidated route re-renders its layout — serialized
+  // every project, recipe, event and activity row the user owns. On the
+  // dashboard that account was then serialized a SECOND time as props to
+  // DashboardClient. Pages that need data load it themselves and pass props;
+  // the only components that still read the provider want `signedIn`.
+  const [seenTutorial, subscriber] = userId
+    ? await Promise.all([hasSeenTutorial(userId), isProUser(userId)])
+    : [true, false];
   const signedIn = Boolean(userId);
 
   return (
     <SubscriberProvider isSubscriber={subscriber}>
-      <MockProvider variant="populated" signedIn={signedIn} data={data}>
+      <MockProvider variant="populated" signedIn={signedIn}>
         <TourProvider seen={seenTutorial} signedIn={signedIn}>
           <AppShell signedIn={signedIn}>{children}</AppShell>
           {signedIn && <InstallBanner />}

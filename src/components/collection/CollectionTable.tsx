@@ -159,8 +159,17 @@ export function CollectionTable({
   }, [items, status, projectFilter, facetFilter, isPaint]);
 
   // Active projects only — a row can't be assigned to a finished/shelved project.
-  const activeProjects = useMemo(
-    () => projects.filter((p) => p.status !== "COMPLETE" && p.status !== "SHELVED"),
+  // Built once for the whole table, not once per row: the "+ ATTACH" Listbox
+  // used to compose this list inline in each unassigned row's JSX, so a
+  // 120-paint collection against a 70-project roster allocated ~8,600 option
+  // objects on EVERY render — including every keystroke in the search box.
+  const attachOptions = useMemo(
+    () => [
+      { value: "", label: "+ ATTACH" },
+      ...projects
+        .filter((p) => p.status !== "COMPLETE" && p.status !== "SHELVED")
+        .map((p) => ({ value: p.id, label: p.title })),
+    ],
     [projects],
   );
 
@@ -516,10 +525,7 @@ export function CollectionTable({
                           accent="neutral"
                           placeholder="+ ATTACH"
                           onChange={(v) => onAssignProject(item, v)}
-                          options={[
-                            { value: "", label: "+ ATTACH" },
-                            ...activeProjects.map((p) => ({ value: p.id, label: p.title })),
-                          ]}
+                          options={attachOptions}
                           triggerClassName="max-w-[160px]"
                         />
                       )}

@@ -1,5 +1,5 @@
 import { currentUserId } from "@/lib/auth-stub";
-import { loadCollectionData } from "@/lib/appData";
+import { loadAppData, loadCollectionData } from "@/lib/appData";
 import { CollectionClient } from "./CollectionClient";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +13,16 @@ export const dynamic = "force-dynamic";
  */
 export default async function CollectionPage() {
   const userId = await currentUserId();
-  const { collectionPaints, collectionModels } = await loadCollectionData(userId);
+  const [{ collectionPaints, collectionModels }, data] = await Promise.all([
+    loadCollectionData(userId),
+    loadAppData(userId),
+  ]);
   return (
     <CollectionClient
       collectionPaints={collectionPaints}
       collectionModels={collectionModels}
+      projects={data.projects ?? []}
+      recipes={data.recipes ?? []}
     />
   );
 }

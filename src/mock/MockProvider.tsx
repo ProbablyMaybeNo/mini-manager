@@ -72,12 +72,19 @@ export function MockProvider({
   children: ReactNode;
   variant?: "populated" | "empty";
   signedIn?: boolean;
-  /** Real, server-loaded data merged over the fixtures. Any field omitted
-   *  falls back to the mock, so pages light up as their loaders land
-   *  (src/lib/appData.ts). When undefined, pure fixtures render. */
+  /** Real, server-loaded data merged over the base. Any field omitted falls
+   *  back to the base — which for a SIGNED-IN user is the empty set, not the
+   *  populated fixtures (Ross, 2026-08-02). Routes now load only the slice
+   *  they render, so "omitted" is the normal case rather than a page whose
+   *  loader hasn't landed yet; falling back to `populated` there would put
+   *  invented armies and recipes on a real user's screen. Empty is wrong in a
+   *  way you can see; fabricated data is wrong in a way you can't. The
+   *  signed-out preview still gets the full fixtures so the demo reads. */
   data?: Partial<MockData>;
 }) {
-  const [base] = useState(variant === "empty" ? empty : populated);
+  const [base] = useState(
+    variant === "empty" || signedIn ? empty : populated,
+  );
   const value = useMemo(
     () => ({ ...base, ...data, signedIn }),
     [base, data, signedIn],

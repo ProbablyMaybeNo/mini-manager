@@ -10,8 +10,13 @@ import type {
 } from "@/components/collection/ScanPaintsFlow";
 import { PromptDialog, useToast } from "@/components/kit";
 import { RecipePickerDialog } from "@/components/recipe/RecipePickerDialog";
-import { useMockData } from "@/mock/MockProvider";
-import type { CollectionItem, CollectionKind, ProjectStatus } from "@/lib/types";
+import type {
+  CollectionItem,
+  CollectionKind,
+  Project,
+  ProjectStatus,
+  Recipe,
+} from "@/lib/types";
 import type { ScanImageMediaType } from "@/lib/paints/scanLimits";
 import type { BulkOwnershipStatus } from "@/lib/paints/ownership";
 import { toCollectionItem } from "@/lib/collection/mapWishlistItem";
@@ -41,8 +46,9 @@ const TO_DB_STATUS: Record<ProjectStatus, string> = {
 function CollectionRoute({
   collectionPaints,
   collectionModels,
+  projects,
+  recipes,
 }: CollectionData) {
-  const data = useMockData();
   const router = useRouter();
   const { toast, node } = useToast();
   const preview = useSearchParams().get("state");
@@ -68,13 +74,13 @@ function CollectionRoute({
   const [attaching, setAttaching] = useState<CollectionItem | null>(null);
 
   /** Recipe options + swatch resolver, derived from the loaded recipes. */
-  const recipeOptions = data.recipes.map((r) => ({
+  const recipeOptions = recipes.map((r) => ({
     id: r.id,
     name: r.name,
     swatches: r.slots.map((s) => s.swatch),
   }));
   const recipeSwatches = (recipeId: string) =>
-    data.recipes.find((r) => r.id === recipeId)?.slots.map((s) => s.swatch) ?? [];
+    recipes.find((r) => r.id === recipeId)?.slots.map((s) => s.swatch) ?? [];
 
   const patch = (item: CollectionItem, fields: Partial<CollectionItem>) => {
     const apply = (list: CollectionItem[]) =>
@@ -183,7 +189,7 @@ function CollectionRoute({
     if (!item) return;
     patch(item, { recipeId });
     setAttaching(null);
-    const name = data.recipes.find((r) => r.id === recipeId)?.name ?? "recipe";
+    const name = recipes.find((r) => r.id === recipeId)?.name ?? "recipe";
     startTransition(async () => {
       const res = await updateWishlistItem({ id: item.id, recipeId });
       if (res.ok) toast(`Attached ${name}`, "green");
@@ -196,7 +202,7 @@ function CollectionRoute({
     <CollectionView
       paints={paints}
       models={models}
-      projects={data.projects}
+      projects={projects}
       status={status}
       recipeSwatches={recipeSwatches}
       onAddUrl={(url, kind) => addUrl(url, kind)}
@@ -281,6 +287,10 @@ function CollectionRoute({
 export interface CollectionData {
   collectionPaints: CollectionItem[];
   collectionModels: CollectionItem[];
+  /** For the "assign to project" menu on a row. */
+  projects: Project[];
+  /** For the recipe picker a paint row can attach to. */
+  recipes: Recipe[];
 }
 
 export function CollectionClient(props: CollectionData) {
