@@ -23,11 +23,13 @@ import {
   bumpProjectStatus,
   updateProjectPriority,
   updateProjectType,
+  type ActionResult,
 } from "@/lib/actions/projects";
 import {
   setProjectTargetDate,
   updateProjectNotes,
 } from "@/lib/actions/projectMeta";
+import { guarded } from "@/lib/actionGuard";
 import { cn } from "@/lib/cn";
 import {
   accentDot,
@@ -154,7 +156,9 @@ export function ProjectPageClient({
     setAttachOpen(false);
     const name = recipeOptions.find((r) => r.id === recipeId)?.name ?? "recipe";
     startAttach(async () => {
-      const res = await attachRecipeToProject({ recipeId, projectId: project.id });
+      const res = await guarded(() =>
+        attachRecipeToProject({ recipeId, projectId: project.id }),
+      );
       if (res.ok) {
         // No router.refresh(): the force-dynamic page re-renders on the
         // server-action POST, updating the RECIPE swatches in place (P2).
@@ -170,10 +174,12 @@ export function ProjectPageClient({
   function createForProject() {
     setAttachOpen(false);
     startAttach(async () => {
-      const res = await createRecipe({
-        name: `${project.title} recipe`,
-        attachedProjectId: project.id,
-      });
+      const res = await guarded(() =>
+        createRecipe({
+          name: `${project.title} recipe`,
+          attachedProjectId: project.id,
+        }),
+      );
       if (res.ok && res.data?.id) {
         router.push(`/recipes/${res.data.id}?from=${project.id}`);
       } else if (!res.ok) {
@@ -755,14 +761,22 @@ function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMe
   );
   const [notes, setNotes] = useState(meta?.notes ?? "");
   const [targetDate, setTargetDate] = useState(meta?.deadlineIso ?? "");
+  const [error, setError] = useState<string | null>(null);
 
-  function run(
-    action: () => Promise<{ ok: boolean; error?: string }>,
+  function run<T>(
+    action: () => Promise<ActionResult<T>>,
     optimistic?: Partial<Project>,
   ) {
+    setError(null);
     start(async () => {
       if (optimistic) applyOptimistic(optimistic);
-      await action();
+      // R2-9 — this used to `await action()` bare and discard the result, the
+      // same shape R2-2 fixed in the dashboard panel: offline, the rejection
+      // escaped the transition into the route error boundary and replaced the
+      // whole app with the fault screen, taking the typed note with it. Even a
+      // handled failure was silent, so a note that never saved looked saved.
+      const res = await guarded(action);
+      if (!res.ok) setError(res.error);
     });
   }
 
@@ -845,6 +859,16 @@ function EditableDetails({ project, meta }: { project: Project; meta?: ProjectMe
           className="w-full resize-y border border-cyan/40 bg-bg px-3 py-2 font-body text-body text-fg focus:border-cyan focus:outline-none"
         />
       </div>
+
+      {/* R2-9 — the section's own error slot, mirroring the dashboard panel's.
+          Every control above writes through `run`, and until now a failure had
+          nowhere to appear at all. The typed note stays in the textarea, so
+          blurring again retries it. */}
+      {error && (
+        <p className="font-body text-body text-red-text" role="alert">
+          ▸ {error}
+        </p>
+      )}
     </section>
   );
 }

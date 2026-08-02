@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ConfirmDialog, ModalDialog, useToast } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { copyText } from "@/lib/clipboard";
+import { guarded } from "@/lib/actionGuard";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
 import { deleteRecipe } from "@/lib/actions/recipes";
@@ -131,18 +132,24 @@ export function RecipeWorkbench({
   function persist() {
     if (!selected) return;
     startTransition(async () => {
-      const res = await saveRecipe({
-        id: selected.id === "new" ? null : selected.id,
-        name: selected.name,
-        attachedProjectId: selected.assignedProjectId ?? null,
-        slots: selected.slots.map((s) => ({
-          paintId: s.paintId || null,
-          hex: s.swatch,
-          layer: s.layer,
-        })),
-        inspo: selected.inspo.map((r) => r.url),
-        notesMd: selected.notes ?? null,
-      });
+      // R2-9 — the detail pane holds the edited recipe in local state, so a
+      // rejection escaping this transition into the route error boundary
+      // unmounted the workbench and took every unsaved step with it. A failed
+      // save now reports and leaves the pane (and the edit) exactly as it was.
+      const res = await guarded(() =>
+        saveRecipe({
+          id: selected.id === "new" ? null : selected.id,
+          name: selected.name,
+          attachedProjectId: selected.assignedProjectId ?? null,
+          slots: selected.slots.map((s) => ({
+            paintId: s.paintId || null,
+            hex: s.swatch,
+            layer: s.layer,
+          })),
+          inspo: selected.inspo.map((r) => r.url),
+          notesMd: selected.notes ?? null,
+        }),
+      );
       if (res.ok) {
         toast("Recipe saved", "green");
         router.refresh();
@@ -158,7 +165,10 @@ export function RecipeWorkbench({
       return;
     }
     startTransition(async () => {
-      const res = await publishRecipe({ recipeId: selected.id });
+      const res = await guarded(
+        () => publishRecipe({ recipeId: selected.id }),
+        "Couldn’t create the share link — check your connection, then try again.",
+      );
       if (!res.ok) {
         toast(res.error, "red");
         return;
@@ -178,7 +188,10 @@ export function RecipeWorkbench({
   function remove() {
     if (!selected) return;
     startTransition(async () => {
-      const res = await deleteRecipe({ id: selected.id });
+      const res = await guarded(
+        () => deleteRecipe({ id: selected.id }),
+        "Couldn’t delete the recipe — check your connection, then try again.",
+      );
       if (res.ok) {
         setConfirmingDelete(false);
         setRecipes((rs) => rs.filter((r) => r.id !== selected.id));
@@ -198,18 +211,20 @@ export function RecipeWorkbench({
    *  editor uses, then refresh so it appears in the list. */
   async function approveAiRecipe(proposal: GroundedRecipeProposal) {
     const name = proposal.summary?.trim().slice(0, 60) || "AI recipe";
-    const res = await saveRecipe({
-      id: null,
-      name,
-      attachedProjectId: null,
-      slots: proposal.slots.map((s) => ({
-        paintId: s.paintId || null,
-        hex: s.hex,
-        layer: s.layer,
-      })),
-      inspo: [],
-      notesMd: proposal.techniqueNotes || null,
-    });
+    const res = await guarded(() =>
+      saveRecipe({
+        id: null,
+        name,
+        attachedProjectId: null,
+        slots: proposal.slots.map((s) => ({
+          paintId: s.paintId || null,
+          hex: s.hex,
+          layer: s.layer,
+        })),
+        inspo: [],
+        notesMd: proposal.techniqueNotes || null,
+      }),
+    );
     if (res.ok) {
       setAiOpen(false);
       toast("AI recipe saved", "green");
@@ -222,10 +237,20 @@ export function RecipeWorkbench({
   /** AI creator "+ Wishlist missing" → add each not-owned catalog paint to the
    *  collection wishlist (looked up from the loaded catalog for its name). */
   async function addMissingToWishlist(paintIds: string[]) {
+    let failed = 0;
     for (const id of paintIds) {
       const p = paints.find((x) => x.id === id);
       if (!p) continue;
-      await createWishlistItem({ title: p.name, company: p.brand });
+      const res = await guarded(() => createWishlistItem({ title: p.name, company: p.brand }));
+      if (!res.ok) failed += 1;
+    }
+    // R2-9 — the loop used to discard every result, so a mid-loop rejection
+    // both crashed the app and left the count unaccounted for.
+    if (failed > 0) {
+      toast(
+        `Couldn’t add ${failed} paint${failed === 1 ? "" : "s"} — check your connection, then try again.`,
+        "red",
+      );
     }
     router.refresh();
   }

@@ -9,6 +9,7 @@ import { ConfirmDialog, useToast } from "@/components/kit";
 import type { GroundedRecipeProposal } from "@/lib/ai/recipeSchema";
 import type { Paint, Project, Recipe } from "@/lib/types";
 import { copyText } from "@/lib/clipboard";
+import { guarded } from "@/lib/actionGuard";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
 import { deleteRecipe } from "@/lib/actions/recipes";
@@ -94,21 +95,32 @@ export function RecipeEditorClient({
 
   function persist() {
     startTransition(async () => {
-      const res = await saveRecipe({
-        id: recipe.id === "new" ? null : recipe.id,
-        name: recipe.name,
-        attachedProjectId: recipe.assignedProjectId ?? null,
-        slots: recipe.slots.map((s) => ({
-          paintId: s.paintId || null,
-          hex: s.swatch,
-          layer: s.layer,
-        })),
-        inspo: recipe.inspo.map((r) => r.url),
-        notesMd: recipe.notes ?? null,
-      });
+      // R2-9 — SAVE is the one control that must never destroy the thing it is
+      // saving. This `await` used to be bare, so offline the rejection escaped
+      // the transition into the route error boundary: the whole app became the
+      // fault screen and every unsaved slot, layer label and note went with it.
+      // A failed save now says so and leaves the editor exactly as it was, with
+      // the unsaved-changes guard still armed and SAVE still there to press.
+      const res = await guarded(() =>
+        saveRecipe({
+          id: recipe.id === "new" ? null : recipe.id,
+          name: recipe.name,
+          attachedProjectId: recipe.assignedProjectId ?? null,
+          slots: recipe.slots.map((s) => ({
+            paintId: s.paintId || null,
+            hex: s.swatch,
+            layer: s.layer,
+          })),
+          inspo: recipe.inspo.map((r) => r.url),
+          notesMd: recipe.notes ?? null,
+        }),
+      );
       if (res.ok) {
         setSaved(true); // disarm the unsaved-changes guard for the redirect
         router.push(backTo ? `/projects/${backTo.projectId}` : "/recipes");
+      } else {
+        // Previously silent: a handled failure left SAVE looking like a no-op.
+        toast(res.error, "red");
       }
     });
   }
@@ -116,7 +128,10 @@ export function RecipeEditorClient({
   function remove() {
     if (recipe.id === "new") return;
     startTransition(async () => {
-      const res = await deleteRecipe({ id: recipe.id });
+      const res = await guarded(
+        () => deleteRecipe({ id: recipe.id }),
+        "Couldn’t delete the recipe — check your connection, then try again.",
+      );
       if (res.ok) {
         setSaved(true); // disarm the unsaved-changes guard for the redirect
         setConfirmingDelete(false);
@@ -135,18 +150,20 @@ export function RecipeEditorClient({
    *  navigates to the recipe that was just made. `setSaved` disarms the
    *  unsaved-changes guard for that redirect, exactly as `persist` does. */
   async function approveAiRecipe(proposal: GroundedRecipeProposal) {
-    const res = await saveRecipe({
-      id: null,
-      name: proposal.summary?.trim().slice(0, 60) || "AI recipe",
-      attachedProjectId: null,
-      slots: proposal.slots.map((s) => ({
-        paintId: s.paintId || null,
-        hex: s.hex,
-        layer: s.layer,
-      })),
-      inspo: [],
-      notesMd: proposal.techniqueNotes || null,
-    });
+    const res = await guarded(() =>
+      saveRecipe({
+        id: null,
+        name: proposal.summary?.trim().slice(0, 60) || "AI recipe",
+        attachedProjectId: null,
+        slots: proposal.slots.map((s) => ({
+          paintId: s.paintId || null,
+          hex: s.hex,
+          layer: s.layer,
+        })),
+        inspo: [],
+        notesMd: proposal.techniqueNotes || null,
+      }),
+    );
     if (!res.ok) {
       toast(res.error, "red");
       return;
@@ -160,10 +177,20 @@ export function RecipeEditorClient({
   /** AI creator "+ Wishlist missing" → add each not-owned catalog paint to the
    *  collection wishlist, looked up in the already-loaded catalog for its name. */
   async function addMissingToWishlist(paintIds: string[]) {
+    let failed = 0;
     for (const id of paintIds) {
       const p = paints.find((x) => x.id === id);
       if (!p) continue;
-      await createWishlistItem({ title: p.name, company: p.brand });
+      const res = await guarded(() => createWishlistItem({ title: p.name, company: p.brand }));
+      if (!res.ok) failed += 1;
+    }
+    // R2-9 — the loop used to discard every result, so a mid-loop rejection
+    // both crashed the app and left the count unaccounted for.
+    if (failed > 0) {
+      toast(
+        `Couldn’t add ${failed} paint${failed === 1 ? "" : "s"} — check your connection, then try again.`,
+        "red",
+      );
     }
     router.refresh();
   }
@@ -174,7 +201,10 @@ export function RecipeEditorClient({
       return;
     }
     startTransition(async () => {
-      const res = await publishRecipe({ recipeId: recipe.id });
+      const res = await guarded(
+        () => publishRecipe({ recipeId: recipe.id }),
+        "Couldn’t create the share link — check your connection, then try again.",
+      );
       if (!res.ok) {
         toast(res.error, "red");
         return;

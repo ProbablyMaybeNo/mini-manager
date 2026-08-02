@@ -19,6 +19,7 @@ import type {
 } from "@/lib/types";
 import type { ScanImageMediaType } from "@/lib/paints/scanLimits";
 import type { BulkOwnershipStatus } from "@/lib/paints/ownership";
+import { guarded } from "@/lib/actionGuard";
 import { toCollectionItem } from "@/lib/collection/mapWishlistItem";
 import { storeLabelForUrl } from "@/lib/scrape/stores";
 import {
@@ -115,12 +116,14 @@ function CollectionRoute({
       // page, the pasted link rides onto the row. The painter typed the name
       // themselves, but the link (and the store it came from) is still theirs
       // and is what makes the row worth having.
-      const res = await createWishlistItem({
-        title,
-        kind,
-        sourceUrl: pendingUrl,
-        vendor: pendingUrl ? storeLabelForUrl(pendingUrl) : null,
-      });
+      const res = await guarded(() =>
+        createWishlistItem({
+          title,
+          kind,
+          sourceUrl: pendingUrl,
+          vendor: pendingUrl ? storeLabelForUrl(pendingUrl) : null,
+        }),
+      );
       if (!res.ok) {
         setAddError(res.error);
         return;
@@ -136,7 +139,10 @@ function CollectionRoute({
       // MM-36 — pass the selected Paint/Model kind so the scraped row
       // lands in the table the painter chose, not whatever the title
       // heuristic guessed.
-      const res = await scrapeAndCreateWishlistItem({ url, kind });
+      const res = await guarded(
+        () => scrapeAndCreateWishlistItem({ url, kind }),
+        "Couldn’t reach that link — check your connection, then try again.",
+      );
       if (!res.ok) {
         // J1 — an unreadable scrape (e.g. a Games Workshop page blocked
         // behind Cloudflare) is an honest dead-end, not a success. Drop
@@ -173,7 +179,10 @@ function CollectionRoute({
     imageBase64: string,
     mediaType: ScanImageMediaType,
   ): Promise<ScanPhotoOutcome> {
-    const res = await scanPaintsFromPhoto({ imageBase64, mediaType });
+    const res = await guarded(
+      () => scanPaintsFromPhoto({ imageBase64, mediaType }),
+      "Couldn’t reach the scanner — check your connection, then try again.",
+    );
     if (!res.ok) return { ok: false, error: res.error };
     return { ok: true, items: res.data.items };
   }
@@ -193,7 +202,9 @@ function CollectionRoute({
     let total = 0;
     for (const group of groups) {
       if (group.paintIds.length === 0) continue;
-      const res = await bulkAddPaintsToCollection({ paintIds: group.paintIds, status: group.status });
+      const res = await guarded(() =>
+        bulkAddPaintsToCollection({ paintIds: group.paintIds, status: group.status }),
+      );
       if (!res.ok) return { ok: false, error: res.error };
       total += res.data.count;
       for (const item of res.data.items) absorb(toCollectionItem(item));
@@ -209,9 +220,19 @@ function CollectionRoute({
     patch(item, { name: title });
     setEditing(null);
     startTransition(async () => {
-      const res = await updateWishlistItem({ id: item.id, title });
-      if (res.ok) toast(`Renamed to ${title}`, "green");
-      else toast(res.error, "red");
+      const res = await guarded(() => updateWishlistItem({ id: item.id, title }));
+      if (res.ok) {
+        toast(`Renamed to ${title}`, "green");
+        return;
+      }
+      // R2-9 — the row still carries its old name in the database, so put it
+      // back rather than leave the list claiming a rename that never landed,
+      // and reopen the dialog holding what was TYPED so retrying is one press
+      // instead of typing it again. (`paints`/`models` are seeded from props
+      // once and never re-sync, so a stale patch would survive until reload.)
+      patch(item, { name: item.name });
+      setEditing({ ...item, name: title });
+      setEditError(res.error);
     });
   }
 
@@ -222,9 +243,15 @@ function CollectionRoute({
     setAttaching(null);
     const name = recipes.find((r) => r.id === recipeId)?.name ?? "recipe";
     startTransition(async () => {
-      const res = await updateWishlistItem({ id: item.id, recipeId });
-      if (res.ok) toast(`Attached ${name}`, "green");
-      else toast(res.error, "red");
+      const res = await guarded(() => updateWishlistItem({ id: item.id, recipeId }));
+      if (res.ok) {
+        toast(`Attached ${name}`, "green");
+        return;
+      }
+      // Roll the swatches back to what's actually stored — the pick is one
+      // tap to redo, a row that lies about its recipe is not.
+      patch(item, { recipeId: item.recipeId });
+      toast(res.error, "red");
     });
   }
 
@@ -242,13 +269,27 @@ function CollectionRoute({
       onStatusChange={(item, s: ProjectStatus) => {
         patch(item, { status: s });
         startTransition(async () => {
-          await setWishlistStatus({ id: item.id, status: TO_DB_STATUS[s] as never });
+          // R2-9 — this used to `await` bare and discard the result: offline it
+          // rejected out of the transition into the route error boundary and
+          // replaced the whole app, and even a HANDLED failure left the row
+          // showing a status that was never stored.
+          const res = await guarded(() =>
+            setWishlistStatus({ id: item.id, status: TO_DB_STATUS[s] as never }),
+          );
+          if (res.ok) return;
+          patch(item, { status: item.status });
+          toast(res.error, "red");
         });
       }}
       onAssignProject={(item, projectId) => {
         patch(item, { projectId: projectId || undefined });
         startTransition(async () => {
-          await updateWishlistItem({ id: item.id, projectId: projectId || null });
+          const res = await guarded(() =>
+            updateWishlistItem({ id: item.id, projectId: projectId || null }),
+          );
+          if (res.ok) return;
+          patch(item, { projectId: item.projectId });
+          toast(res.error, "red");
         });
       }}
       onAttachRecipe={(item) => setAttaching(item)}
@@ -257,10 +298,25 @@ function CollectionRoute({
         setEditing(item);
       }}
       onRemove={(item) => {
-        if (item.kind === "paint") setPaints((l) => l.filter((x) => x.id !== item.id));
-        else setModels((l) => l.filter((x) => x.id !== item.id));
+        const setList = item.kind === "paint" ? setPaints : setModels;
+        const index = (item.kind === "paint" ? paints : models).findIndex(
+          (x) => x.id === item.id,
+        );
+        setList((l) => l.filter((x) => x.id !== item.id));
         startTransition(async () => {
-          await deleteWishlistItem({ id: item.id });
+          const res = await guarded(
+            () => deleteWishlistItem({ id: item.id }),
+            "Couldn’t remove that — check your connection, then try again.",
+          );
+          if (res.ok) return;
+          // Still in the collection, so put it back where it was rather than
+          // let it disappear from a list that only reloads on a full refresh.
+          setList((l) =>
+            l.some((x) => x.id === item.id)
+              ? l
+              : [...l.slice(0, index < 0 ? l.length : index), item, ...l.slice(index < 0 ? l.length : index)],
+          );
+          toast(res.error, "red");
         });
       }}
       onAddPaint={() => {
