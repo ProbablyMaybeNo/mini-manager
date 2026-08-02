@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Button, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
 import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
+import { PublicHeader } from "@/components/public/PublicHeader";
 import { UNLOCKS } from "@/components/public/PricingClient";
 import { useSubscriber } from "@/lib/billing/SubscriberContext";
+import { useMockData } from "@/mock/MockProvider";
 
 /**
  * Common chrome for a single tool: back-to-hub link + title + blurb — and,
@@ -27,6 +29,7 @@ export function ToolShell({
   children: React.ReactNode;
 }) {
   const isSubscriber = useSubscriber();
+  const { signedIn } = useMockData();
   // Starts CLOSED (MUX-010). Auto-opening it on arrival covered the LOCKED
   // card's own "Sponsor" button — verified by hit-testing: the point at the
   // CTA's centre resolved to the modal header — so the page presented the same
@@ -34,8 +37,16 @@ export function ToolShell({
   // is the offer; the modal opens when they press it.
   const [gateOpen, setGateOpen] = useState(false);
 
-  return (
-    <div className="flex h-full flex-col gap-4 overflow-x-hidden overflow-y-auto p-3 md:gap-6 md:p-6">
+  const page = (
+    <div
+      className={
+        // Signed-out the shell sits under the public header inside a column
+        // flex, so it grows instead of claiming the whole viewport.
+        signedIn
+          ? "flex h-full flex-col gap-4 overflow-x-hidden overflow-y-auto p-3 md:gap-6 md:p-6"
+          : "flex flex-1 flex-col gap-4 overflow-x-hidden p-3 md:gap-6 md:p-6"
+      }
+    >
       <Link href="/tools" className="self-start">
         <Button variant="tertiary">← Tools</Button>
       </Link>
@@ -62,16 +73,46 @@ export function ToolShell({
                 </li>
               ))}
             </ul>
-            <Button className="mt-4 min-h-12 w-full" onClick={() => setGateOpen(true)}>
-              Sponsor the Mainframe · $3.99/mo →
-            </Button>
+            {/* A stranger who follows a shared tool link has no account yet, so
+                asking them for $3.99 is asking for money before they can even
+                have somewhere to spend it (audit B1). With no session the
+                account comes first and sponsoring is the follow-on; a signed-in
+                non-subscriber still gets the sponsor CTA as the primary. */}
+            {signedIn ? (
+              <Button className="mt-4 min-h-12 w-full" onClick={() => setGateOpen(true)}>
+                Sponsor the Mainframe · $3.99/mo →
+              </Button>
+            ) : (
+              <>
+                <Link href="/sign-up" className="mt-4 block">
+                  <Button className="min-h-12 w-full">Get Started</Button>
+                </Link>
+                <p className="mt-2 font-body text-body text-fg-dim">
+                  No card needed to get started — sponsoring is what unlocks the tools.
+                </p>
+              </>
+            )}
             <Link href="/pricing" className="mt-3 inline-flex min-h-11 items-center font-body text-body text-fg-dim underline-offset-4 hover:text-cyan-lite hover:underline">
               See everything sponsoring unlocks
             </Link>
           </Panel>
-          <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
+          {signedIn && (
+            <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
+          )}
         </>
       )}
+    </div>
+  );
+
+  if (signedIn) return page;
+
+  // Signed-out: AppShell renders no chrome at all, so a tool URL shared with a
+  // stranger had zero navigation in the document — no sign-in, no sign-up, no
+  // way home (audit B1). Bring the marketing header, same as /gallery does.
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <PublicHeader />
+      {page}
     </div>
   );
 }

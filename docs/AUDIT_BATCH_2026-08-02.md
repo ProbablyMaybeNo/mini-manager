@@ -16,7 +16,7 @@ Eight items from the full-app audit. Evidence and measurements:
 
 ---
 
-- [ ] **B1 · P0 · Signed-out visitors hit a paywall dead end on all 5 tool pages**
+- [x] **B1 · P0 · Signed-out visitors hit a paywall dead end on all 5 tool pages**
   `/tools/wheel`, `/tools/match`, `/tools/dropper`, `/tools/stacking`,
   `/tools/scan` render the LOCKED gate to signed-out visitors with **no
   `/sign-in`, `/sign-up` or `/` link anywhere in the document** (verified across
