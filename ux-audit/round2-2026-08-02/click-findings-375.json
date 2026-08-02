@@ -1,0 +1,86 @@
+[
+  {
+    "route": "/library",
+    "control": "LIST",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.min-w-[680px] right=709"
+  },
+  {
+    "route": "/tools/match",
+    "control": "USE",
+    "severity": "P0",
+    "category": "exc",
+    "detail": "EXC NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied."
+  },
+  {
+    "route": "/tools/dropper",
+    "control": "USE CAMERA",
+    "severity": "P1",
+    "category": "console",
+    "detail": "CONSOLE Permissions policy violation: camera is not allowed in this document."
+  },
+  {
+    "route": "/gallery",
+    "control": "Stormcast Eternals — Sigmarite Gold",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=487"
+  },
+  {
+    "route": "/gallery",
+    "control": "Khorne Berzerkers — Brass & Blood",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=487"
+  },
+  {
+    "route": "/gallery",
+    "control": "Speedpaint — One-Coat Skeletons",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=424"
+  },
+  {
+    "route": "/gallery",
+    "control": "Nurgle Daemons — Plague Flesh",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=393"
+  },
+  {
+    "route": "/gallery",
+    "control": "Necrons — Living Metal",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=385"
+  },
+  {
+    "route": "/gallery",
+    "control": "Blood Angels — Crimson Host",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=385"
+  },
+  {
+    "route": "/gallery",
+    "control": "Death Guard — Rotting Plate",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=424"
+  },
+  {
+    "route": "/gallery",
+    "control": "Ultramarines — Classic Blue",
+    "severity": "P2",
+    "category": "overflow",
+    "detail": "pushed content past the viewport: div.flex right=385"
+  },
+  {
+    "route": "/user",
+    "control": "MANAGE SUBSCRIPTION",
+    "severity": "P1",
+    "category": "http",
+    "detail": "HTTP 503 /api/billing/portal"
+  }
+]

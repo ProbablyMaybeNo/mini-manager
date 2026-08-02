@@ -1,0 +1,30 @@
+[
+  {
+    "route": "/recipes",
+    "control": "⬡ SHARE LINK",
+    "severity": "P0",
+    "category": "exc",
+    "detail": "EXC NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied."
+  },
+  {
+    "route": "/tools/match",
+    "control": "USE",
+    "severity": "P0",
+    "category": "exc",
+    "detail": "EXC NotAllowedError: Failed to execute 'writeText' on 'Clipboard': Write permission denied."
+  },
+  {
+    "route": "/tools/dropper",
+    "control": "USE CAMERA",
+    "severity": "P1",
+    "category": "console",
+    "detail": "CONSOLE Permissions policy violation: camera is not allowed in this document."
+  },
+  {
+    "route": "/user",
+    "control": "MANAGE SUBSCRIPTION",
+    "severity": "P1",
+    "category": "http",
+    "detail": "HTTP 503 /api/billing/portal"
+  }
+]
