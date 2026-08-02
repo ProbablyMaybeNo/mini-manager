@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog, ModalDialog, useToast } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { copyText } from "@/lib/clipboard";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
 import { deleteRecipe } from "@/lib/actions/recipes";
@@ -163,12 +164,14 @@ export function RecipeWorkbench({
         return;
       }
       const url = `${window.location.origin}/r/${res.data.slug}`;
-      // Convenience clipboard write + toast are kept, but the URL is also
-      // revealed in a persistent, copyable field so it's never clipboard-only
-      // (UX-004).
-      void navigator.clipboard?.writeText(url);
-      toast("Public link copied to clipboard", "green");
+      // The URL is revealed in a persistent, copyable field so it's never
+      // clipboard-only (UX-004) — set it FIRST so it's already on screen when
+      // the write is blocked, then report the write honestly (R2-1).
       setShareUrl(url);
+      void copyText(url, toast, {
+        copied: "Public link copied to clipboard",
+        failed: "Couldn’t copy automatically — the link is below, copy it by hand.",
+      });
     });
   }
 

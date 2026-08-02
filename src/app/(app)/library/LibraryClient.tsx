@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { LibraryView } from "@/components/library/LibraryView";
 import { AssignToRecipeDialog } from "@/components/recipe/AssignToRecipeDialog";
 import { useToast } from "@/components/kit";
+import { copyText } from "@/lib/clipboard";
 import { nearestMatches, similarInOtherBrands } from "@/lib/toolMatch";
 import { COLOR_OPTIONS, colorFamilyForHue, filterPaints } from "@/mock/filterPaints";
 import { EMPTY_LIBRARY_FILTER, type LibraryFilter, type Paint, type PaintType } from "@/lib/types";
@@ -204,7 +205,13 @@ export function LibraryClient({
       onToggleWishlist={toggleWishlist}
       onSetStatus={setStatus}
       onCopyHex={() => {
-        if (selected) void navigator.clipboard?.writeText(selected.hex);
+        if (!selected) return;
+        // R2-1 — was silent either way, so a blocked write was
+        // indistinguishable from a successful one.
+        void copyText(selected.hex, toast, {
+          copied: `Copied ${selected.hex}`,
+          failed: `Couldn’t copy — the hex is ${selected.hex}`,
+        });
       }}
       onAssignPaint={(p) => setAssigning(p)}
       onJumpHue={(hue) =>

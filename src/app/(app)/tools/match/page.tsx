@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ColourMatchTool } from "@/components/tools/ColourMatchTool";
 import { ToolShell } from "@/components/tools/ToolShell";
 import { useToast } from "@/components/kit";
+import { copyText } from "@/lib/clipboard";
 import { rankMatchesMulti } from "@/lib/toolMatch";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
@@ -35,9 +36,13 @@ export default function ColourMatchPage() {
         typeOptions={typeOptions}
         enableLibraryPick
         onUse={(paint) => {
-          void navigator.clipboard?.writeText(paint.hex);
+          // R2-1 — the hex is on screen nowhere else, so a blocked write has
+          // to say so AND repeat the value rather than claim "Copied".
+          void copyText(paint.hex, toast, {
+            copied: `Copied ${paint.name} · ${paint.hex}`,
+            failed: `Couldn’t copy — ${paint.name} is ${paint.hex}`,
+          });
           trackClient(AnalyticsEvent.ToolMatchCompleted, { brand: paint.brand });
-          toast(`Copied ${paint.name} · ${paint.hex}`, "green");
         }}
         // MM-33 — ASSIGN opens the shared 4-option menu (recipe / wishlist /
         // owned) in place, instead of navigating to the recipes page.
