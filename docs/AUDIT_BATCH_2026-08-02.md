@@ -49,7 +49,7 @@ Eight items from the full-app audit. Evidence and measurements:
   ΔE window; the window applies only when there is no search term. Keep the ΔE
   badges for results that have a distance.
 
-- [ ] **B4 · P1 · `/collection` is the heaviest page and scales with the collection**
+- [x] **B4 · P1 · `/collection` is the heaviest page and scales with the collection**
   TTFB 334–365ms vs 31–92ms elsewhere; 784KB payload; **246 rows / 7,370 DOM
   nodes** for a 120-item collection with two dropdowns per row and no
   virtualisation. `/library` renders 1,031 nodes for 7,576 paints because its
