@@ -19,7 +19,7 @@ Evidence: `ux-audit/round2-2026-08-02/REPORT.md`.
 
 ---
 
-- [ ] **R2-9 · P1 · The crash-on-failed-save pattern still exists in four more files**
+- [x] **R2-9 · P1 · The crash-on-failed-save pattern still exists in four more files**
   R2-2 fixed `ProjectWorkspaceBody`, where an `await`ed server action that
   *rejects* (rather than returning `{ok:false}`) escapes the transition and hits
   the route error boundary — replacing the whole app with the fault screen and
@@ -42,8 +42,19 @@ Evidence: `ux-audit/round2-2026-08-02/REPORT.md`.
   **Verify:** for at least `CollectionClient` and one recipe editor, reproduce
   with Playwright `context.setOffline(true)`, and assert the fault screen does
   NOT render, the field stays mounted, and the typed value survives.
+  **Done 2026-08-02 · commit a5c8b45.** One shared helper (`src/lib/actionGuard.ts`
+  — `guarded()`), since all 22 actions return the same `ActionResult` union, so
+  every call site kept its existing error surface and its narrowing. All 22
+  awaits guarded: 9 / 5 / 5 / 3. Three handlers in `CollectionClient` had also
+  been discarding their result entirely, leaving a status, project assignment or
+  deletion on screen that was never stored (those lists never re-sync from
+  props) — they now roll back and say why. Measured with `context.setOffline(true)`,
+  fix stashed for the before column: on both `/collection` add-paint and
+  `/recipes/new` SAVE, fault screen `true → false`, field mounted `false → true`,
+  typed value `lost → survives`, report `none → "Couldn't save — check your
+  connection, then try again."`. 9 unit tests on the helper contract.
 
-- [ ] **R2-7 · P2 · Unknown URLs redirect to sign-in instead of 404ing**
+- [x] **R2-7 · P2 · Unknown URLs redirect to sign-in instead of 404ing**
   On production every unmatched path is treated as a protected route:
   ```
   /does-not-exist   → 307 → /sign-in?from=%2Fdoes-not-exist
@@ -57,8 +68,19 @@ Evidence: `ux-audit/round2-2026-08-02/REPORT.md`.
   let genuinely unknown paths fall through to the existing 404.
   **Verify:** `/does-not-exist` returns 404 and renders the branded ERROR page,
   while `/dashboard` signed-out still redirects to `/sign-in`.
+  **Done 2026-08-02 · commit 3e768aa.** An explicit inventory of the first path
+  segment of every route the app serves (`KNOWN_ROOT_SEGMENTS` in `src/proxy.ts`);
+  anything outside it falls through to the filesystem and the real 404. Verified
+  locally against the dev server, fix stashed for the before column:
+  `/does-not-exist`, `/totally/made/up` and `/Dashboard` all `307 → /sign-in?from=… → 404`
+  with the branded ERROR page, while `/dashboard`, `/collection`, `/projects/abc123`
+  still `307 → /sign-in`, `/r/nope-not-real` still 404, `/planner` still `308 → /focus`,
+  `/pricing` and `/` still 200. First-segment matching only — deeper paths are
+  dynamic and enumerating them would mean re-implementing the router. A test
+  re-derives the inventory from `src/app/` so a new top-level route can't be
+  added without being listed (the drift direction that would 404 a real page).
 
-- [ ] **R2-8 · P2 · The CSP is report-only with nowhere to report**
+- [x] **R2-8 · P2 · The CSP is report-only with nowhere to report**
   Production sends `Content-Security-Policy-Report-Only` and **no `report-uri`,
   `report-to` or `Reporting-Endpoints`** — verified live. So it blocks nothing,
   and the stated exit criterion in `next.config.ts` ("enforce once the violation
@@ -71,6 +93,22 @@ Evidence: `ux-audit/round2-2026-08-02/REPORT.md`.
   (b) leave it report-only but correct the config comment so the next reader does
   not believe the app is protected. Do NOT flip it to enforcing without a
   reporting period — that risks breaking the render.
+  **Done 2026-08-02 · commit 4524e87 — took (b), and NOT (a), deliberately.**
+  The comment now says plainly that the header blocks nothing and collects
+  nothing, names which headers actually are enforced on the response, lays out
+  collect → soak → enforce in order, and keeps the "modest gain" caveat about
+  `script-src 'unsafe-inline' 'unsafe-eval'`. The header itself is unchanged —
+  not flipped to enforcing.
+  **(a) is left for Ross, one paste from done.** Sentry counts CSP reports
+  against the same quota as real errors, and the `tracesSampleRate: 0` in all
+  three `sentry.*.config.ts` files exists specifically to preserve that quota
+  for real errors at launch; pointing an unbounded report firehose at a shared
+  free-tier budget could blind the error monitoring, which is a spend to
+  authorise rather than a silent side effect of an audit fix. The endpoint is
+  fully determined by the DSN already in the repo and is written out in
+  `next.config.ts`, with the precondition (set a per-key rate limit in the
+  Sentry UI first). 3 tests make the warning an invariant — the build now fails
+  if anyone switches the header to enforcing while no report sink exists.
 
 ---
 
