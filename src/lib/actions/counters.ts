@@ -11,6 +11,7 @@ import type { ActionResult } from "@/lib/actions/projects";
 import {
   STAGE_COLUMN,
   counterStages,
+  labelFor,
   validateBump,
   type CounterSnapshot,
 } from "@/lib/counters/cascade";
@@ -32,9 +33,9 @@ const setSchema = z.object({
 export type SetCounterInput = z.infer<typeof setSchema>;
 
 /**
- * Bump a single stage counter on a project by +1 or -1. Validates
- * the cascade pre-write so we can return a friendly error; the DB
- * CHECK constraint guarantees integrity if a race ever slips through.
+ * Bump a single stage counter on a project by +1 or -1. Bounds-checked
+ * pre-write so we can return a friendly error; the DB CHECK constraint
+ * guarantees integrity if a race ever slips through.
  *
  * Returns the updated snapshot on success so the client can sync
  * (the `useTransition` caller still gets a fresh server render via
@@ -82,16 +83,16 @@ export async function bumpCounter(
     // Under concurrent + clicks (the UI no longer disables the button on
     // isPending so users can hold-tap +), two writes both reading the
     // same old snapshot would lose-update if we wrote literal values.
-    // The DB CHECK cascade catches any over-increment that slips past
-    // the pre-validation read.
+    // The DB CHECK bounds catch any over-increment that slips past the
+    // pre-validation read.
     await db
       .update(projects)
       .set({ [col]: sql`${projects[col]} + ${delta}` } as Partial<CounterSnapshot>)
       .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)));
   } catch (err) {
     const message =
-      err instanceof Error && err.message.includes("project_stage_cascade")
-        ? "Stage cascade violated. Refresh and try again."
+      err instanceof Error && err.message.includes("project_stage_bounds")
+        ? "That would put the count outside 0–the model count. Refresh and try again."
         : "Failed to update counter.";
     return { ok: false, error: message };
   }
@@ -107,10 +108,9 @@ export async function bumpCounter(
 
 /**
  * M6 — set a stage counter to an absolute value (the StageCounter's
- * tap-number-to-type for large counts [MOBILE §M6 step 4]). Validates the
- * target against the cascade's immediate upper/lower neighbours so a typed
- * value can't break `count ≥ owned ≥ build ≥ prime ≥ paint ≥ base ≥ done`;
- * the DB CHECK constraint is the second line of defence.
+ * tap-number-to-type for large counts [MOBILE §M6 step 4]). Bounded by 0 and
+ * the model count and nothing else; the DB CHECK is the second line of
+ * defence. See `counterStages` for why stage order isn't enforced.
  */
 export async function setCounter(
   raw: SetCounterInput,
@@ -156,8 +156,8 @@ export async function setCounter(
       .where(and(eq(projects.id, projectId), eq(projects.ownerId, userId)));
   } catch (err) {
     const message =
-      err instanceof Error && err.message.includes("project_stage_cascade")
-        ? "Stage cascade violated. Refresh and try again."
+      err instanceof Error && err.message.includes("project_stage_bounds")
+        ? "That would put the count outside 0–the model count. Refresh and try again."
         : "Failed to update counter.";
     return { ok: false, error: message };
   }
@@ -195,41 +195,17 @@ export async function loadProjectCounters(
   return rows[0] ?? null;
 }
 
-/** Cascade-validate an absolute target for a stage against its immediate
- *  neighbours. Mirrors the bump cascade: each stage is bounded above by
- *  the next-shallower stage's count and below by the next-deeper one. */
+/** Bounds-check an absolute target: 0 ≤ value ≤ model count. Stage order is
+ *  deliberately not enforced — see `counterStages`. */
 function validateSetValue(
   snap: CounterSnapshot,
   stage: z.infer<typeof setSchema>["stage"],
   value: number,
 ): { ok: true } | { ok: false; error: string } {
-  const upper: Record<typeof stage, { label: string; value: number }> = {
-    owned: { label: "Count", value: snap.count },
-    build: { label: "Owned", value: snap.ownedCount },
-    prime: { label: "Build", value: snap.buildCount },
-    paint: { label: "Prime", value: snap.primeCount },
-    base: { label: "Paint", value: snap.paintCount },
-    complete: { label: "Base", value: snap.baseCount },
-  };
-  const lower: Record<typeof stage, { label: string; value: number } | null> = {
-    owned: { label: "Build", value: snap.buildCount },
-    build: { label: "Prime", value: snap.primeCount },
-    prime: { label: "Paint", value: snap.paintCount },
-    paint: { label: "Base", value: snap.baseCount },
-    base: { label: "Complete", value: snap.completeCount },
-    complete: null,
-  };
-  if (value > upper[stage].value) {
+  if (value > snap.count) {
     return {
       ok: false,
-      error: `${stage} can't exceed ${upper[stage].label} (${upper[stage].value}).`,
-    };
-  }
-  const lo = lower[stage];
-  if (lo && value < lo.value) {
-    return {
-      ok: false,
-      error: `${stage} can't drop below ${lo.label} (${lo.value}).`,
+      error: `${labelFor(stage)} can't exceed the model count (${snap.count}).`,
     };
   }
   return { ok: true };

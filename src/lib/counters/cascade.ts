@@ -1,14 +1,20 @@
 import type { Project } from "@/db/schema";
 
 /**
- * Stages that participate in the cascade, ordered from "highest"
- * (must always be ≥ the next) down to "lowest". This mirrors the
- * DB CHECK constraint `project_stage_cascade`:
+ * The painting stages, in workflow order. Each is an INDEPENDENT tally of
+ * "how many of the N models are through this step" — bounded by 0 and the
+ * model count, and by nothing else.
  *
- *   count ≥ owned ≥ build ≥ prime ≥ paint ≥ base ≥ complete ≥ 0
+ * They used to be a strict cascade (count ≥ owned ≥ build ≥ prime ≥ paint ≥
+ * base ≥ complete), which sounded right — you can't prime what you haven't
+ * built — and in practice just built walls. A unit created at PRIMED got
+ * owned = 1, which pinned build at 1, which pinned prime at 1, and there is no
+ * Owned control anywhere to unpin it; every + returned "can't exceed Owned".
+ * Ross, 2026-08-01: "just remove all the requirements so players can just -/+
+ * as they please." The DB CHECK (`project_stage_bounds`) matches.
  *
- * `count` is not bumpable from the workspace (it's set at create
- * time and via Edit project). Everything below is.
+ * `count` is not bumpable from the workspace (it's set at create time and via
+ * Edit project). Everything below is.
  */
 export const counterStages = [
   "owned",
@@ -38,9 +44,8 @@ export const STAGE_COLUMN: Readonly<Record<CounterStage, StageColumn>> = {
 };
 
 /**
- * Snapshot of just the cascade-relevant columns. Keeps the
- * pre-validation logic small and typed without dragging the
- * whole Project row through every helper.
+ * Snapshot of just the counter columns. Keeps the pre-validation logic small
+ * and typed without dragging the whole Project row through every helper.
  */
 export type CounterSnapshot = Pick<
   Project,
@@ -54,40 +59,27 @@ export type CounterSnapshot = Pick<
 >;
 
 /**
- * Validate a proposed bump against the cascade BEFORE we hit the DB.
- * Returns the new value for the bumped column on success, or a
- * human-readable error string on failure. The DB CHECK constraint
- * is the second line of defense.
+ * Validate a proposed bump. The only rules left are the two that describe
+ * physical reality: you can't have fewer than none of a stage done, and you
+ * can't have more done than there are models. Stage order is not enforced —
+ * painters skip and backtrack, and the app has no business arguing.
  */
 export function validateBump(
   snap: CounterSnapshot,
   stage: CounterStage,
   delta: 1 | -1,
 ): { ok: true; nextValue: number } | { ok: false; error: string } {
-  const col = STAGE_COLUMN[stage];
-  const current = snap[col];
-  const next = current + delta;
+  const next = snap[STAGE_COLUMN[stage]] + delta;
 
   if (next < 0) {
     return { ok: false, error: `${labelFor(stage)} can't go below 0.` };
   }
-
-  const upper = upperBoundFor(snap, stage);
-  if (next > upper.value) {
+  if (next > snap.count) {
     return {
       ok: false,
-      error: `${labelFor(stage)} can't exceed ${upper.label} (${upper.value}).`,
+      error: `${labelFor(stage)} can't exceed the model count (${snap.count}).`,
     };
   }
-
-  const lower = lowerBoundFor(snap, stage);
-  if (lower && next < lower.value) {
-    return {
-      ok: false,
-      error: `${labelFor(stage)} can't drop below ${lower.label} (${lower.value}).`,
-    };
-  }
-
   return { ok: true, nextValue: next };
 }
 
@@ -105,45 +97,5 @@ export function labelFor(stage: CounterStage): string {
       return "Base";
     case "complete":
       return "Complete";
-  }
-}
-
-function upperBoundFor(
-  snap: CounterSnapshot,
-  stage: CounterStage,
-): { label: string; value: number } {
-  switch (stage) {
-    case "owned":
-      return { label: "Count", value: snap.count };
-    case "build":
-      return { label: "Owned", value: snap.ownedCount };
-    case "prime":
-      return { label: "Build", value: snap.buildCount };
-    case "paint":
-      return { label: "Prime", value: snap.primeCount };
-    case "base":
-      return { label: "Paint", value: snap.paintCount };
-    case "complete":
-      return { label: "Base", value: snap.baseCount };
-  }
-}
-
-function lowerBoundFor(
-  snap: CounterSnapshot,
-  stage: CounterStage,
-): { label: string; value: number } | null {
-  switch (stage) {
-    case "owned":
-      return { label: "Build", value: snap.buildCount };
-    case "build":
-      return { label: "Prime", value: snap.primeCount };
-    case "prime":
-      return { label: "Paint", value: snap.paintCount };
-    case "paint":
-      return { label: "Base", value: snap.baseCount };
-    case "base":
-      return { label: "Complete", value: snap.completeCount };
-    case "complete":
-      return null;
   }
 }

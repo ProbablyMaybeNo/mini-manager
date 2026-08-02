@@ -218,12 +218,11 @@ export async function createProject(
 /* ============================================================
    updateProjectCount — P12.10 inline ± on the Progress table.
 
-   Validates the new count is non-negative + ≤ 9999, scopes by
-   owner, and respects the stage-cascade CHECK constraint: lowering
-   `count` below any existing stage counter would fail the SQL
-   constraint, so we floor the cascade columns to `count` if the new
-   value would shrink past them. Otherwise the database would reject
-   the UPDATE entirely.
+   Validates the new count is non-negative + ≤ 9999, scopes by owner, and
+   respects the stage-bounds CHECK constraint: lowering `count` below any
+   existing stage counter would fail the SQL constraint, so we clamp every
+   stage column to `count` if the new value would shrink past it. Otherwise
+   the database would reject the UPDATE entirely.
    ============================================================ */
 
 const updateCountSchema = z.object({
@@ -252,15 +251,15 @@ export async function updateProjectCount(
   const project = rows[0];
   if (!project) return { ok: false, error: "Project not found" };
 
-  // Floor each cascade counter to the new `count` so we don't trip the
-  // CHECK constraint when shrinking the total below an existing stage
-  // count. Stages above the new count get clamped on the way down.
+  // Clamp each stage to the new `count` so we don't trip the CHECK bounds
+  // when shrinking the total below an existing stage count. Each stage is
+  // clamped independently — they don't constrain each other.
   const owned = Math.min(project.ownedCount, count);
-  const built = Math.min(project.buildCount, owned);
-  const primed = Math.min(project.primeCount, built);
-  const painted = Math.min(project.paintCount, primed);
-  const based = Math.min(project.baseCount, painted);
-  const complete = Math.min(project.completeCount, based);
+  const built = Math.min(project.buildCount, count);
+  const primed = Math.min(project.primeCount, count);
+  const painted = Math.min(project.paintCount, count);
+  const based = Math.min(project.baseCount, count);
+  const complete = Math.min(project.completeCount, count);
 
   try {
     await db
@@ -291,10 +290,11 @@ export async function updateProjectCount(
 
 /* ============================================================
    setProjectComplete — the focus bench's "models painted" stepper.
-   Sets how many models are fully complete, raising (never lowering)
-   the earlier stage counters so the strict cascade CHECK holds. Marking
-   N complete implies at least N models reached every prior stage; an
-   existing higher stage count is preserved.
+   Sets how many models are fully complete, raising (never lowering) the
+   earlier stage counters: marking N complete means N models got through
+   every prior step, so the overall percentage should say so. This is a
+   convenience, not a constraint — the stage counters are independent and
+   each can still be set to anything on its own.
    ============================================================ */
 
 const setCompleteSchema = z.object({
@@ -323,8 +323,8 @@ export async function setProjectComplete(
   const project = rows[0];
   if (!project) return { ok: false, error: "Project not found" };
 
-  // Raise each prior stage to at least the next so monotonicity holds,
-  // without regressing any stage the painter already advanced further.
+  // Raise each prior stage to at least the next, without regressing any
+  // stage the painter already advanced further.
   const based = Math.max(project.baseCount, complete);
   const painted = Math.max(project.paintCount, based);
   const primed = Math.max(project.primeCount, painted);
@@ -569,10 +569,9 @@ const bumpStatusSchema = z.object({
 /**
  * R7-1 — inline Status cell on the projects dashboard.
  *
- * Status is DERIVED from stage counts, so picking "Bump to PAINTING"
- * cascades counts so that the picked stage is the lead stage. Strategy
- * matches the cascade-CHECK constraint:
- *   count ≥ owned ≥ build ≥ prime ≥ paint ≥ base ≥ complete ≥ 0
+ * Status is DERIVED from stage counts, so picking "Bump to PAINTING" writes
+ * counts such that the picked stage is the lead one — every stage at or below
+ * it non-zero, every stage above it zero.
  *
  * Ross approved option (a): no schema column for manual override. The
  * displayStatus() helper continues to derive the pill straight off the
@@ -656,9 +655,7 @@ export async function bumpProjectStatus(
   //   * preserve count (forced to ≥ 1 since the project just left
   //     WISHLIST),
   //   * raise every stage at or below the lead to ≥ 1,
-  //   * force every stage ABOVE the lead to 0,
-  //   * keep the cascade-CHECK (count ≥ owned ≥ build ≥ prime ≥ paint
-  //     ≥ base ≥ complete ≥ 0) intact.
+  //   * force every stage ABOVE the lead to 0.
   //
   // For COMPLETE the lead is the deepest stage, so every lane fills to
   // the full count.

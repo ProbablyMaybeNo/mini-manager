@@ -274,16 +274,24 @@ export const projects = sqliteTable(
     ownerIdx: index("project_owner_idx").on(t.ownerId),
     parentIdx: index("project_parent_idx").on(t.parentId),
     archivedIdx: index("project_archived_idx").on(t.archivedAt),
-    stageCascade: check(
-      "project_stage_cascade",
+    // Stages are INDEPENDENT (Ross, 2026-08-01). They used to be a strict
+    // cascade — count ≥ owned ≥ build ≥ prime ≥ paint ≥ base ≥ complete — on
+    // the theory that you can't prime what you haven't built. Real painting
+    // doesn't queue that neatly, and the ordering produced dead ends: a unit
+    // created at PRIMED got owned=1, which ceilinged build at 1, which
+    // ceilinged prime at 1, and the grid has no Owned control to unblock it.
+    // Every stage is now just "how many of the N are through this step",
+    // bounded by nothing but 0 and the model count.
+    stageBounds: check(
+      "project_stage_bounds",
       sql`
         ${t.count} >= 0
         AND ${t.ownedCount} >= 0 AND ${t.ownedCount} <= ${t.count}
-        AND ${t.buildCount} >= 0 AND ${t.buildCount} <= ${t.ownedCount}
-        AND ${t.primeCount} >= 0 AND ${t.primeCount} <= ${t.buildCount}
-        AND ${t.paintCount} >= 0 AND ${t.paintCount} <= ${t.primeCount}
-        AND ${t.baseCount} >= 0 AND ${t.baseCount} <= ${t.paintCount}
-        AND ${t.completeCount} >= 0 AND ${t.completeCount} <= ${t.baseCount}
+        AND ${t.buildCount} >= 0 AND ${t.buildCount} <= ${t.count}
+        AND ${t.primeCount} >= 0 AND ${t.primeCount} <= ${t.count}
+        AND ${t.paintCount} >= 0 AND ${t.paintCount} <= ${t.count}
+        AND ${t.baseCount} >= 0 AND ${t.baseCount} <= ${t.count}
+        AND ${t.completeCount} >= 0 AND ${t.completeCount} <= ${t.count}
       `,
     ),
   }),

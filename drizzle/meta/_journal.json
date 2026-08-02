@@ -288,6 +288,13 @@
       "when": 1785552472762,
       "tag": "0040_soft_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1785647210885,
+      "tag": "0041_lethal_tag",
+      "breakpoints": true
     }
   ]
 }

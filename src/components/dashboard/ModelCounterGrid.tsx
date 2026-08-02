@@ -13,10 +13,14 @@ import type { Project } from "@/lib/types";
 /**
  * Per-model painting tracker for a LEAF project (a unit that *is* a set of
  * models, not a container of sub-projects). Set the total model count (N), then
- * step each cumulative stage (Built → Primed → Painted → Completed) against the
- * real `setCounter` backend (cascade-clamped completed ≤ painted ≤ primed ≤
- * built ≤ N); the OVERALL bar is the canonical `progressPercent`, so it rolls up
- * to the parent army's bar.
+ * step each stage against the real `setCounter` backend. Every stage is
+ * independent — 0..N, in any order (Ross, 2026-08-01) — so you can tick Primed
+ * on models you never marked Built without the app arguing. The OVERALL bar is
+ * the canonical `progressPercent`, so it rolls up to the parent army's bar.
+ *
+ * All five scoring stages get a row. Basing used to be labelled "Completed"
+ * and `complete` had no control at all, which meant a unit you had genuinely
+ * finished topped out at 80% and could never derive the COMPLETE status.
  *
  * Ported into ProjectWorkspaceBody when the standalone Army/Unit flow panel was
  * folded into the one inspector — this is the grid that used to live in the
@@ -32,7 +36,8 @@ const STAGE_ROWS: {
   { label: "Built", stage: "build", column: "buildCount", accent: "green" },
   { label: "Primed", stage: "prime", column: "primeCount", accent: "green" },
   { label: "Painted", stage: "paint", column: "paintCount", accent: "cyan" },
-  { label: "Completed", stage: "base", column: "baseCount", accent: "green" },
+  { label: "Based", stage: "base", column: "baseCount", accent: "cyan" },
+  { label: "Completed", stage: "complete", column: "completeCount", accent: "green" },
 ];
 
 export function ModelCounterGrid({ project }: { project: Project }) {
@@ -83,10 +88,10 @@ export function ModelCounterGrid({ project }: { project: Project }) {
         setError(res.error);
         return;
       }
-      // This grid has no separate "owned" control — the stages start at Built —
-      // so a project's models count as owned the moment you count them. Sync
-      // `owned` to the new total; without it `owned` stays 0 and the cascade
-      // (count ≥ owned ≥ build ≥ …) clamps every stage stepper to 0.
+      // No separate "owned" row here — the stages start at Built — so a
+      // project's models count as owned the moment you count them. Keeping
+      // `owned` in step with the total is what lets a counted-but-untouched
+      // unit derive the OWNED status instead of reading as WISHLIST.
       const ownedRes = await setCounter({ projectId: project.id, stage: "owned", value: next });
       const fresh =
         ownedRes.ok && ownedRes.data ? ownedRes.data : await loadProjectCounters(project.id);

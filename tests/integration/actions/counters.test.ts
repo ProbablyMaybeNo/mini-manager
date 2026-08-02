@@ -77,12 +77,33 @@ describe("bumpCounter", () => {
     expect(row?.paintCount).toBe(5);
   });
 
-  test("rejects a bump that would violate the cascade", async () => {
-    // paint === prime → cannot increment paint
+  test("allows a bump that passes the stage before it", async () => {
+    // paint === prime. The old cascade refused this ("can't exceed Prime");
+    // stages are independent now, and so is the DB CHECK (Ross, 2026-08-01).
     const projectId = await seedProject({ paintCount: 6, primeCount: 6 });
     const res = await bumpCounter({ projectId, stage: "paint", delta: 1 });
+    expect(res.ok).toBe(true);
+
+    const [row] = await state
+      .db!.select({ paintCount: projects.paintCount })
+      .from(projects)
+      .where(eq(projects.id, projectId));
+    expect(row?.paintCount).toBe(7);
+  });
+
+  test("rejects a bump past the model count", async () => {
+    const projectId = await seedProject({
+      count: 4,
+      ownedCount: 4,
+      buildCount: 4,
+      primeCount: 4,
+      paintCount: 4,
+      baseCount: 4,
+      completeCount: 4,
+    });
+    const res = await bumpCounter({ projectId, stage: "prime", delta: 1 });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toMatch(/can't exceed Prime/);
+    if (!res.ok) expect(res.error).toMatch(/can't exceed the model count \(4\)/);
   });
 
   test("rejects a bump below 0", async () => {
