@@ -39,6 +39,71 @@ export function isPublicPath(pathname: string): boolean {
 }
 
 /**
+ * R2-7 — the first path segment of every route this app actually serves.
+ *
+ * The matcher below is a DENY-list: anything it doesn't explicitly exclude
+ * funnels through `auth(...)`, which treated every unmatched path as a
+ * protected route. So `/does-not-exist` 307'd to `/sign-in?from=…`, and so did
+ * `/totally/made/up` and `/Dashboard` (a case slip on a real route — App
+ * Router paths are case-sensitive). The branded 404 existed and worked for
+ * `/r/nope-not-real`, but no unmatched TOP-LEVEL path could ever reach it.
+ * A visitor was told the content needs an account when it simply isn't there,
+ * and a crawler got a soft-404 into the sign-in page.
+ *
+ * Matching is on the first segment only, and deliberately so: deeper paths are
+ * dynamic (`/projects/[id]`, `/recipes/[id]`, `/r/[slug]`) and enumerating them
+ * here would mean re-implementing the router. A nonexistent path UNDER a real
+ * route still redirects when signed out; every case the audit found is a
+ * top-level one, and this is the version that can't rot into gating a real
+ * route by accident.
+ *
+ * `tests/unit/proxy.test.ts` re-derives this list from `src/app/` and fails if
+ * a new top-level route is added without being listed — the drift that would
+ * otherwise 404 a real page for signed-out visitors.
+ */
+const KNOWN_ROOT_SEGMENTS = new Set([
+  // (app) — session-gated surfaces.
+  "collection",
+  "dashboard",
+  "focus",
+  "gallery",
+  "library",
+  "projects",
+  "recipes",
+  "tools",
+  "user",
+  // Standalone trees.
+  "admin",
+  "api",
+  "auth",
+  "dev",
+  "r",
+  // (public) — these return early via isPublicPath / the matcher, listed so
+  // the set stays a truthful inventory of what the app serves.
+  "pricing",
+  "privacy",
+  "reset",
+  "sign-in",
+  "sign-up",
+  "terms",
+  "verify-email",
+  // Legacy aliases redirected in next.config.ts. Listed so this check can
+  // never depend on whether config redirects run before or after the proxy.
+  "collections",
+  "planner",
+  "wishlist",
+]);
+
+/**
+ * Does `pathname` belong to a route this app serves? Case-sensitive, matching
+ * the App Router — `/Dashboard` is not `/dashboard` and must 404, not gate.
+ */
+export function isKnownRoute(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return KNOWN_ROOT_SEGMENTS.has(pathname.split("/")[1] ?? "");
+}
+
+/**
  * First-touch acquisition capture (?ref= / utm_*). Only writes the cookie
  * when it isn't already set, so the ORIGINAL source wins over later
  * visits — a bookmark revisit or an internal link click never overwrites
@@ -68,6 +133,12 @@ export default auth((req) => {
   if (req.auth?.user)
     return withAcquisitionCookie(NextResponse.next(), hasAcquisitionCookie, req.nextUrl);
   if (isPublicPath(req.nextUrl.pathname))
+    return withAcquisitionCookie(NextResponse.next(), hasAcquisitionCookie, req.nextUrl);
+
+  // R2-7 — a path that matches no route we serve is GONE, not gated. Let it
+  // through to the filesystem, where it finds nothing and Next renders the
+  // branded 404 with a real 404 status.
+  if (!isKnownRoute(req.nextUrl.pathname))
     return withAcquisitionCookie(NextResponse.next(), hasAcquisitionCookie, req.nextUrl);
 
   const url = req.nextUrl.clone();
