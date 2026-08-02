@@ -71,7 +71,7 @@ Eight items from the full-app audit. Evidence and measurements:
   Same cramped-results/roomy-filters shape as B5. Fix in the same pass so the
   two panels end up consistent.
 
-- [ ] **B7 · P2 · Dead space on two tool pages**
+- [x] **B7 · P2 · Dead space on two tool pages**
   `/tools/scan`: 541px empty below content at 1440×900 and 461px at 375×812 —
   ~60% empty at both. `/tools/dropper`: 358px at 1440×900.
   **Fix:** let the content fill the available height, or reduce the reserved

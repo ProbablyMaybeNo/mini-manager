@@ -134,7 +134,12 @@ export function EyedropperTool({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+    // Audit B7 — `/tools/dropper` left 358px (40%) empty below the two panels
+    // at 1440×900 because the grid sized to its content inside a full-height
+    // shell. `min-h-0 flex-1` lets it claim that space when the shell is a
+    // column flex (the tool route); it is inert wherever the picker embeds
+    // this tool in a non-flex parent.
+    <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-[1fr_1fr]">
       <Panel label="IMAGE" className="flex flex-col gap-4 p-5">
         {previewUrl && sampled ? (
           <>
@@ -178,7 +183,10 @@ export function EyedropperTool({
                 }
               }}
               className={cn(
-                "flex h-48 cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-cyan/50 text-center hover:border-cyan",
+                // Grows into whatever height the panel has, with the old 12rem
+                // as the floor — a drop target has no reason to be the one
+                // fixed-height thing on a page with 358px going spare (B7).
+                "flex min-h-48 flex-1 cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-cyan/50 text-center hover:border-cyan",
                 busy && "cursor-progress opacity-60",
               )}
             >
