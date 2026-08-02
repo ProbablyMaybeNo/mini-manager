@@ -86,6 +86,68 @@ unrecoverable render faults, not a failed fetch.
 
 Evidence: `r2-offline-save.png`
 
+### R2-8 · P2 · The CSP is permanently decorative — report-only with nowhere to report
+Production sends `Content-Security-Policy-Report-Only`, never the enforcing
+header. `next.config.ts` documents that as deliberate: ship report-only first,
+*"flip the header key to `Content-Security-Policy` to enforce once the violation
+reports are clean."*
+
+**But no reports are being collected.** The header carries no `report-uri`, no
+`report-to`, and there is no `Reporting-Endpoints` header — verified on
+production. Violations surface only in individual visitors' consoles, where
+nobody sees them.
+
+So the policy is in a stable no-op state:
+- report-only **blocks nothing**, so it provides no protection today, and
+- with no report sink, the stated exit criterion ("once the reports are clean")
+  **can never be evaluated**, so it will stay report-only indefinitely.
+
+Honest caveat on the value of enforcing it as written: the policy allows
+`script-src 'self' 'unsafe-inline' 'unsafe-eval'`, which defeats most of what a
+CSP is for. The config explains why (Next's inline bootstrap, Tailwind inline
+styles). Enforcing this exact policy would be a modest gain, not a large one.
+
+**Fix — pick one and close it out:**
+- Point reports at Sentry (already in the stack and it ingests CSP reports),
+  watch for a week, then enforce; or
+- Accept that it is decorative and say so in the config comment, so the next
+  reader does not assume the app is protected.
+
+Everything else in the header set is correct and worth noting: HSTS 2 years with
+`includeSubDomains`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin`.
+
+### R2-7 · P2 · Unknown URLs redirect to sign-in instead of 404ing
+On production, any unmatched path is treated as a protected route:
+
+```
+/does-not-exist   → 307 → /sign-in?from=%2Fdoes-not-exist
+/totally/made/up  → 307 → /sign-in?from=%2Ftotally%2Fmade%2Fup
+/Dashboard        → 307 → /sign-in?from=%2FDashboard   (case-typo of a real route)
+```
+
+`/r/nope-not-real` **does** return a proper 404 with the branded ERROR page, so
+the 404 exists — unmatched *top-level* paths just never reach it.
+
+Two consequences:
+
+1. **Users get the wrong message.** A typo'd or stale link lands on a sign-in
+   page, so the visitor concludes the content needs an account rather than that
+   it does not exist. `/Dashboard` — a plausible capitalisation slip — is the
+   clearest case.
+2. **It is a soft-404 for search engines.** A crawler following a dead link gets
+   a 307 into sign-in rather than a clean 404, which is the pattern search
+   engines specifically handle badly. The sitemap is otherwise well built —
+   13 URLs including all 8 share pages — so this is the one weak spot in an
+   otherwise tidy SEO surface.
+
+**Fix:** only redirect to sign-in for paths that actually match a protected
+route; let genuinely unknown paths fall through to the existing 404.
+
+**Verified fine alongside it:** `robots.txt` correctly allows the public pages
+and disallows `/api/`, `/dashboard`, `/library`; `sitemap.xml` includes every
+public page and every gallery share page.
+
 ### R2-6 · P1 · The public share page overflows horizontally on a phone
 `/r/<slug>` — the page a stranger lands on from a shared recipe link — is wider
 than the device at 375px:
@@ -105,6 +167,29 @@ Consequence: on a real phone the browser zooms out to fit, so every recipe row
 renders smaller than intended and the page scrolls sideways. This is the
 **growth surface** — the first thing a prospective user sees when someone shares
 a recipe.
+
+**Confirmed on PRODUCTION, and worse there:**
+
+```
+prod /gallery                              @375 → body 375  (fine)
+prod /r/stormcast-eternals-sigmarite-gold  @375 → body 557  (48% wider than the phone)
+local same page                            @375 → body 487
+```
+
+The production gallery is seeded with real share cards, so these are live,
+shareable URLs that do not fit on a phone today.
+
+**Isolated to exactly one surface.** Full production public sweep at 375×812:
+
+| route | body width | |
+|---|---|---|
+| `/` `/pricing` `/gallery` `/sign-in` `/sign-up` `/privacy` `/terms` | 375 | fits |
+| `/r/stormcast-eternals-sigmarite-gold` | **557** | overflows |
+| `/r/khorne-berzerkers-brass-and-blood` | **557** | overflows |
+
+Seven of eight public routes are fine. The one that is not is the one people
+share — and both slugs give the identical 557, so it is the page template, not
+one bad recipe.
 
 Found by the mobile click crawl (8 gallery cards all led here). Verified by
 navigating straight to the share URL, so it is not a click artefact.
@@ -248,6 +333,105 @@ Escape closes, and focus restored to the opening control:
 control reported no `role="dialog"`. It opens the OS file chooser, not an
 in-page modal — there is no dialog to mark up. My probe measured a native
 dialog it cannot see.
+
+## Share / SEO metadata on production · VERIFIED OK
+
+Checked because a blank OG image was a launch blocker previously, and because
+the share page is the growth surface:
+
+| surface | og:title | og:description | og:image |
+|---|---|---|---|
+| `/` | ✅ | ✅ | ✅ 1200×630, **247KB real PNG** |
+| `/r/<slug>` | ✅ per-recipe | ✅ "…7 slots" | ✅ **per-recipe dynamic image, 91KB real PNG** |
+| `/gallery` | ✅ | ✅ | + `twitter:card=summary_large_image` |
+
+`robots.txt` and `sitemap.xml` both 200. Per-recipe dynamic OG images are a nice
+piece of work — a shared recipe link previews with its own artwork.
+
+Worth stating the contrast plainly: the share page's **metadata layer is
+healthy while its layout is not** (R2-6). A shared link previews beautifully and
+then lands the visitor on a page 48% wider than their phone.
+
+## All 8 production share pages · VERIFIED OK — nothing found
+
+Every recipe in the live gallery renders correctly: HTTP 200, 5–7 slots each,
+technique labels present, and the CLONE TO MY LIBRARY action available. No error
+boundary on any of them.
+
+| slug | slots | clone action |
+|---|---|---|
+| blood-angels-crimson | 7 | ✅ |
+| death-guard-rotting-plate | 7 | ✅ |
+| khorne-berzerkers-brass-and-blood | 7 | ✅ |
+| necrons-living-metal | 6 | ✅ |
+| nurgle-daemons-plague | 6 | ✅ |
+| speedpaint-one-coat-bones | 5 | ✅ |
+| stormcast-eternals-sigmarite-gold | 7 | ✅ |
+| ultramarines-classic | 7 | ✅ |
+
+So the gallery content itself is healthy — R2-6 is purely the page's width on a
+phone, not its data.
+
+## Accessibility of production public pages · VERIFIED OK — nothing found
+
+| page | h1 count | img missing alt | unlabelled inputs | heading-level jumps | empty links |
+|---|---|---|---|---|---|
+| `/` | 1 | 0 | 0 | 0 | 0 |
+| `/sign-up` | 1 | 0 | 0 | 0 | 0 |
+| `/r/<slug>` | 1 | 0 | 0 | 0 | 0 |
+| `/pricing` | 1 | 0 | 0 | 0 | 0 |
+
+Exactly one `h1` per page, every image carries `alt`, every form control is
+labelled, no heading levels skipped, no link without an accessible name. Combined
+with the earlier dialog result (role, aria-modal, focus trap, Escape, focus
+restore all correct), the accessibility layer of this app is in good shape — the
+first pass in either round to come back completely empty.
+
+## Production response times · VERIFIED OK — nothing found
+
+Ross listed "slow response times" as a target. Measured against production:
+
+| route | TTFB | total | transferred |
+|---|---|---|---|
+| `/` | 118ms | 129ms | 45KB |
+| `/pricing` | 127ms | 127ms | 27KB |
+| `/gallery` | 282ms | 295ms | 51KB |
+| `/sign-in` | 118ms | 118ms | 19KB |
+| `/r/<slug>` | 222ms | 238ms | 36KB |
+
+Nothing here is slow. The two DB-backed pages (gallery, share) are the slowest
+as expected and still well inside a good budget. The region pin to `pdx1`
+alongside the Turso instance is clearly doing its job.
+
+Note this is the WARM path. Cold starts on low-traffic functions remain a known
+open item from the 2026-07-07 perf pass (~1.7s first hit) and are not something
+a request-timing sweep can surface.
+
+## Support address + placeholder copy on production · VERIFIED OK — nothing found
+
+Chased because the LOCAL sign-in page renders
+`CHANGE_ME@mini-mainframe.com`, and `src/lib/support.ts` carries a
+"NEEDS-ROSS: set SUPPORT_EMAIL **and** NEXT_PUBLIC_SUPPORT_EMAIL in Vercel"
+note — with an explicit warning that a bare `SUPPORT_EMAIL` is stripped from
+client bundles. `AuthView` is a client component, so the placeholder leaking to
+production looked plausible.
+
+It does not. Measured in a real browser on production:
+
+| page | mailto | rendered text |
+|---|---|---|
+| `/sign-in` (client-rendered) | `support@mini-mainframe.com` | same |
+| `/` | `support@mini-mainframe.com` | — |
+| `/privacy` | `support@mini-mainframe.com` | same |
+
+Both env vars are set. No `CHANGE_ME`, `TODO`, `lorem ipsum` or `example.com`
+anywhere in the public surface. The local placeholder is purely a missing local
+env var.
+
+**Method note (sixth false lead):** my first pass used `curl | grep` and found
+"no email" on `/sign-in`, which looked like a real gap. These pages are
+client-rendered, so the text is not in the raw HTML — curl-grep gives false
+NEGATIVES on them. Browser-verified before reporting.
 
 ## Round-1 fixes re-verified in the deployed code
 
