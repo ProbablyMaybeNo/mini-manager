@@ -155,6 +155,12 @@ export function closerMatchesDeltaE(
 export const MATCH_DEFAULT_DELTAE = 10;
 export const MATCH_EXPANDED_DELTAE = 30;
 
+/** Ceiling on rows the picker's library list will render, whichever way the
+ *  list was built. Already the effective ceiling of the ΔE window (its inner
+ *  perceptual sort caps at this), so a text search rendering the same maximum
+ *  keeps the panel's weight where it was. */
+export const LIBRARY_ROW_CAP = 200;
+
 /**
  * UX-908 — Return paints sorted ascending by ΔE2000, capped at the given
  * perceptual threshold. Reuses `findClosestPaints` (single source of
@@ -171,6 +177,82 @@ export function matchesWithinDeltaE(
   // Pull a generous top-N from the perceptual sort, then prune by ΔE.
   // The hard cap on the inner call exists to bound the worst-case
   // sort+slice work; it's never the user-facing limit.
-  const ranked = findClosestPaints(hex, paints, { limit: 200 });
+  const ranked = findClosestPaints(hex, paints, { limit: LIBRARY_ROW_CAP });
   return ranked.filter((m) => m.deltaE <= maxDeltaE);
+}
+
+/** One row of the ColorPicker's library sub-panel. */
+export interface LibraryRow {
+  paint: Paint;
+  /** ΔE2000 from the picked colour. `null` only when the paint's own hex can't
+   *  be measured — reachable from a text search, which does not go through the
+   *  perceptual sort's "skip unparseable" path. The row renders without a
+   *  match badge rather than being dropped. */
+  deltaE: number | null;
+}
+
+export interface LibraryMatchOptions {
+  /** Free-text query over name / brand / line. When present it searches the
+   *  WHOLE catalog and the ΔE window does not apply. */
+  query?: string;
+  /** Company facet — AND-composed with everything else. */
+  brands?: ReadonlyArray<string>;
+  /** ΔE ceiling for the no-query case. */
+  maxDeltaE?: number;
+}
+
+/**
+ * Rows for the ColorPicker's library sub-panel.
+ *
+ * Audit B3 — the search box used to filter INSIDE the ΔE window, so a paint
+ * that exists but isn't near the slot's current colour was unfindable by name.
+ * Measured on a new recipe's first slot: no search → 200 rows, "Abaddon" → 0,
+ * "Mephiston" → 0, both of which are real catalog paints. The placeholder
+ * promises "Search by paint name, brand, or line…", so the search has to mean
+ * the catalog.
+ *
+ * Two modes, deliberately not blended:
+ *   - no query  → the ΔE window, unchanged. "What's near this colour?"
+ *   - a query   → the whole catalog, still SORTED by ΔE so the nearest match
+ *                 to the current colour leads. "Where is this paint?"
+ *
+ * Results keep their distance either way, so the match badges still read.
+ */
+export function libraryMatches(
+  hex: string,
+  paints: ReadonlyArray<Paint>,
+  opts: LibraryMatchOptions = {},
+): LibraryRow[] {
+  const brandSet = opts.brands?.length ? new Set(opts.brands) : null;
+  const pool = brandSet ? paints.filter((p) => brandSet.has(p.brand)) : paints;
+
+  const q = opts.query?.trim().toLowerCase() ?? "";
+  if (!q) {
+    return matchesWithinDeltaE(hex, pool, opts.maxDeltaE).map((m) => ({
+      paint: m.paint,
+      deltaE: m.deltaE,
+    }));
+  }
+
+  const hits = pool.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.brand.toLowerCase().includes(q) ||
+      (p.line ?? "").toLowerCase().includes(q),
+  );
+
+  const ranked = findClosestPaints(hex, hits, { limit: LIBRARY_ROW_CAP });
+  const rows: LibraryRow[] = ranked.map((m) => ({ paint: m.paint, deltaE: m.deltaE }));
+
+  // findClosestPaints drops anything it can't measure. For a colour query that
+  // is correct; for a NAME query it would hide a paint the painter searched for
+  // by name, so those come back on the end without a distance.
+  if (rows.length < LIBRARY_ROW_CAP) {
+    const rankedIds = new Set(ranked.map((m) => m.paint.id));
+    for (const p of hits) {
+      if (rows.length >= LIBRARY_ROW_CAP) break;
+      if (!rankedIds.has(p.id)) rows.push({ paint: p, deltaE: null });
+    }
+  }
+  return rows;
 }

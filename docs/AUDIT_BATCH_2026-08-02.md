@@ -39,7 +39,7 @@ Eight items from the full-app audit. Evidence and measurements:
   `displayStatus({ ...p, ...agg })`. Add a unit test asserting a container whose
   children are part-painted never reports WISHLIST.
 
-- [ ] **B3 · P1 · Recipe slot picker: searching the LIBRARY by name finds nothing**
+- [x] **B3 · P1 · Recipe slot picker: searching the LIBRARY by name finds nothing**
   The picker lists paints within ΔE ≤ 10 of the slot's colour and the search box
   filters *inside that window* instead of searching the library. Measured on a
   new recipe's first slot: no search → 200 matches; `Abaddon` → 0; `Mephiston`
