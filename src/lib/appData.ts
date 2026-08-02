@@ -171,7 +171,14 @@ function mapProject(p: DbProject, swatches: string[], agg: AggregateCounters): K
     title: p.name,
     type: TYPE_MAP[p.type] ?? "Unit",
     recipeSwatches: swatches,
-    status: displayStatus(p),
+    // Status reads the SAME aggregate the bar does. It used to read `p` alone,
+    // and a container's own `count` is 0 (its models live in its children), so
+    // displayStatus' `count === 0 → WISHLIST` branch labelled every Army and
+    // Warband WISHLIST no matter how painted it was — an Army of 50 based
+    // models with a 43% bar said "I don't own this yet", and that status drives
+    // the roster filter and sort (audit B2). `isShelved` still comes from the
+    // container's own row, which is what SHELVED means.
+    status: displayStatus({ ...p, ...agg }),
     priority: PRIORITY_MAP[p.priority ?? "Medium"] ?? "Med",
     // Roll-up: a container's completion + model totals aggregate its own AND
     // all descendant counters, so painting a unit's models fills the army's

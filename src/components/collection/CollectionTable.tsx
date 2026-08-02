@@ -18,6 +18,29 @@ import { StatusDropdown } from "./StatusDropdown";
  * ▾ TYPE chips are dropdown filters bound to the live data.
  * ------------------------------------------------------------------------- */
 
+/**
+ * Rows rendered before the "show more" foot appears (audit B4).
+ *
+ * /collection was the app's heaviest page and got heavier with every paint
+ * added: 7,370 DOM nodes and 250 rows for a 120-item collection, against
+ * /library's 1,031 nodes for 7,576 paints. Two things multiply here — each
+ * item renders TWICE (the phone table and the ≥roomy desktop table are both in
+ * the document, one hidden by CSS), and each desktop row carries two dropdown
+ * triggers and eight cells.
+ *
+ * A row cap rather than react-virtual: the library's virtualised lists are
+ * `role="table"` divs inside their own fixed-height scroll container, which is
+ * what lets rows be absolutely positioned. These are real `<table>`s in the
+ * page's own scroll, in two different responsive layouts — virtualising them
+ * means rewriting both as ARIA grids, far past this item. The cap is the
+ * plan's sanctioned alternative and costs nothing in behaviour: filters, sort,
+ * counts and every row action are untouched, and the footer already reported
+ * "SHOWING n OF m", so the number it prints is simply now true.
+ *
+ * 50 is ~2,600px of desktop rows — roughly three screens before the button.
+ */
+const PAGE_SIZE = 50;
+
 /** Coarse status buckets the chip row exposes. */
 type StatusFilter = "ALL" | "OWNED" | "WISHLIST" | "BUILT" | "PRIMED";
 
@@ -125,6 +148,15 @@ export function CollectionTable({
   const [projectFilter, setProjectFilter] = useState("");
   /** Paint = BRAND (company) filter; Model = TYPE (paintType/army-class) filter. */
   const [facetFilter, setFacetFilter] = useState("");
+  const [rowLimit, setRowLimit] = useState(PAGE_SIZE);
+
+  /** Every filter change re-pages from the top — a narrowed list keeping an
+   *  unrelated "show more" depth would render rows the painter never asked
+   *  for, and hide the fact that the filter changed anything. */
+  function changeFilter(apply: () => void) {
+    apply();
+    setRowLimit(PAGE_SIZE);
+  }
 
   // Resolve a project id → { name, accent } for the PROJECT chip. Project type
   // no longer carries a hue (colour contract §6) → every chip renders neutral.
@@ -157,6 +189,11 @@ export function CollectionTable({
       return true;
     });
   }, [items, status, projectFilter, facetFilter, isPaint]);
+
+  // What actually reaches the DOM. Both tables read this, so a capped page is
+  // capped once rather than once per breakpoint.
+  const shown = useMemo(() => visible.slice(0, rowLimit), [visible, rowLimit]);
+  const hiddenCount = visible.length - shown.length;
 
   // Active projects only — a row can't be assigned to a finished/shelved project.
   // Built once for the whole table, not once per row: the "+ ATTACH" Listbox
@@ -252,7 +289,7 @@ export function CollectionTable({
               key={s}
               label={s}
               active={status === s}
-              onClick={() => setStatus(s)}
+              onClick={() => changeFilter(() => setStatus(s))}
             />
           ))}
           <Listbox
@@ -262,7 +299,7 @@ export function CollectionTable({
             size="xs"
             placeholder="PROJECT"
             options={projectOptions}
-            onChange={setProjectFilter}
+            onChange={(v) => changeFilter(() => setProjectFilter(v))}
             className="shrink-0"
             triggerClassName="!border-solid !border-border uppercase"
           />
@@ -273,7 +310,7 @@ export function CollectionTable({
             size="xs"
             placeholder={isPaint ? "BRAND" : "TYPE"}
             options={facetOptions}
-            onChange={setFacetFilter}
+            onChange={(v) => changeFilter(() => setFacetFilter(v))}
             className="shrink-0"
             triggerClassName="!border-solid !border-border uppercase"
           />
@@ -323,7 +360,7 @@ export function CollectionTable({
                 </td>
               </tr>
             ) : (
-              visible.map((item, rowIndex) => {
+              shown.map((item, rowIndex) => {
                 const firstSwatch = item.recipeId
                   ? recipeSwatches?.(item.recipeId)?.[0]
                   : undefined;
@@ -403,6 +440,17 @@ export function CollectionTable({
                 );
               })
             )}
+            {hiddenCount > 0 && (
+              <tr>
+                <td colSpan={4} className="pt-2">
+                  <ShowMoreRow
+                    hiddenCount={hiddenCount}
+                    label={label}
+                    onClick={() => setRowLimit((n) => n + PAGE_SIZE)}
+                  />
+                </td>
+              </tr>
+            )}
             <tr>
               <td colSpan={4} className="pt-2">
                 <button
@@ -462,7 +510,7 @@ export function CollectionTable({
                 </td>
               </tr>
             ) : (
-              visible.map((item, rowIndex) => {
+              shown.map((item, rowIndex) => {
                 const proj = item.projectId ? projectInfo.get(item.projectId) : undefined;
                 const firstSwatch = item.recipeId
                   ? recipeSwatches?.(item.recipeId)?.[0]
@@ -569,6 +617,17 @@ export function CollectionTable({
                 );
               })
             )}
+            {hiddenCount > 0 && (
+              <tr>
+                <td colSpan={headers.length} className="pt-2">
+                  <ShowMoreRow
+                    hiddenCount={hiddenCount}
+                    label={label}
+                    onClick={() => setRowLimit((n) => n + PAGE_SIZE)}
+                  />
+                </td>
+              </tr>
+            )}
             {/* ghost-row (24:276) — dashed + Add <kind> row */}
             <tr>
               <td colSpan={headers.length} className="pt-2">
@@ -585,10 +644,36 @@ export function CollectionTable({
         </table>
       </div>
 
-      {/* showing/sort footer (24:278) */}
+      {/* showing/sort footer (24:278) — SHOWING is now the RENDERED count, not
+          the filtered one, so it stays the honest answer to "where are the rest
+          of my paints?" when the row cap is holding some back (B4). */}
       <div className="flex justify-end font-mono text-[11px] text-fg-dim">
-        SHOWING {visible.length} OF {items.length} · SORT BY: {isPaint ? "NAME" : "STATUS"} ▾
+        SHOWING {shown.length} OF {items.length} · SORT BY: {isPaint ? "NAME" : "STATUS"} ▾
       </div>
     </div>
+  );
+}
+
+/** "+ Show the next N" foot. Rendered inside both tables, so the two stay in
+ *  step — pressing it on a phone and rotating to desktop keeps your depth. */
+function ShowMoreRow({
+  hiddenCount,
+  label,
+  onClick,
+}: {
+  hiddenCount: number;
+  label: string;
+  onClick: () => void;
+}) {
+  const next = Math.min(hiddenCount, PAGE_SIZE);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-11 w-full items-center justify-center rounded-[8px] border border-cyan/30 px-4 font-mono text-[12px] uppercase tracking-wide text-cyan-lite transition-colors hover:border-cyan hover:bg-cyan/5"
+    >
+      Show {next} more {label}
+      {next === 1 ? "" : "s"} · {hiddenCount} left
+    </button>
   );
 }

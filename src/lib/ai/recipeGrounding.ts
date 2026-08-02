@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Paint } from "@/lib/paints/types";
+import { hexToHsl } from "@/lib/paints/hue";
 import {
   ROLE_TO_TECHNIQUE,
   normaliseRole,
@@ -84,6 +85,66 @@ export function parseBrands(command: string, paints: ReadonlyArray<Paint>): stri
  * acrylics. Deterministic ordering keeps the prompt cacheable and tests
  * stable.
  */
+/**
+ * Hue windows per colour family, matching the library filter's own buckets so
+ * "blue" means the same thing to the AI as it does to the filter checkboxes.
+ */
+const COLOUR_HUES: Record<string, [number, number]> = {
+  red: [345, 15],
+  orange: [15, 45],
+  yellow: [45, 70],
+  green: [70, 165],
+  cyan: [165, 200],
+  blue: [200, 260],
+  purple: [260, 300],
+  magenta: [300, 345],
+};
+
+/**
+ * Colour words a painter actually types, mapped onto those families. Faction
+ * names carry colour intent as reliably as the colour word itself — someone
+ * asking for Ultramarines means blue whether or not they say "blue".
+ */
+const COLOUR_WORDS: Array<[RegExp, string[]]> = [
+  [/blue|azure|cobalt|navy|ultramarine|alaitoc|nurgle.?rot/, ["blue"]],
+  [/red|crimson|scarlet|blood|khorne|mephiston|word bearer/, ["red"]],
+  [/green|jade|emerald|caliban|goblin|orky?|waaagh|salamander/, ["green"]],
+  [/yellow|gold(en)?|imperial fist|ochre/, ["yellow"]],
+  [/orange|rust|amber|magma/, ["orange"]],
+  [/purple|violet|magenta|slaanesh|emperor.?s children/, ["purple", "magenta"]],
+  [/cyan|teal|turquoise|aqua/, ["cyan"]],
+  [/bone|ivory|cream|white|pale/, ["yellow"]],
+  [/black|dark|grim(dark)?|shadow|night lord/, []],
+  [/brown|leather|earth|wood|tan/, ["orange"]],
+];
+
+/** Colour families the command implies, in the order they were mentioned. */
+export function parseColourIntent(command: string): string[] {
+  const haystack = command.toLowerCase();
+  const out: string[] = [];
+  for (const [re, families] of COLOUR_WORDS) {
+    if (!re.test(haystack)) continue;
+    for (const f of families) if (!out.includes(f)) out.push(f);
+  }
+  return out;
+}
+
+function inHueRange(hue: number, [min, max]: [number, number]): boolean {
+  const h = ((hue % 360) + 360) % 360;
+  return min > max ? h >= min || h < max : h >= min && h < max;
+}
+
+/** True when the paint sits in any of the requested colour families. */
+function matchesColourIntent(paint: Paint, families: readonly string[]): boolean {
+  if (!families.length) return false;
+  const hsl = hexToHsl(paint.hex);
+  if (!hsl) return false;
+  return families.some((f) => {
+    const range = COLOUR_HUES[f];
+    return range ? inHueRange(hsl.h, range) : false;
+  });
+}
+
 export function buildCandidates(
   command: string,
   paints: ReadonlyArray<Paint>,
@@ -98,6 +159,21 @@ export function buildCandidates(
     return true;
   });
 
+  // Colour-first ordering (2026-08-02). The round-robin below spreads picks
+  // across paint TYPES so every role has something to use, but it was ordered
+  // by id — i.e. blind to what was actually asked for. Asking for
+  // "Ultramarines, Citadel paints" sent the model 120 candidates containing
+  // exactly ONE blue out of the 68 blues Citadel has in the catalog, so it
+  // either rationalised a red into the scheme ("Khorne Red serves as deep blue
+  // substitute") or invented ids that grounding then dropped, surfacing as
+  // "The AI couldn't ground its picks to real paints".
+  //
+  // Sorting each type's bucket so requested colours come first keeps the type
+  // spread intact while guaranteeing the asked-for hues survive the cut.
+  const families = parseColourIntent(command);
+  const rank = new Map<string, number>();
+  for (const p of pool) rank.set(p.id, matchesColourIntent(p, families) ? 0 : 1);
+
   // Group by type, then round-robin so every type gets representation.
   const byType = new Map<string, Paint[]>();
   for (const p of pool) {
@@ -105,8 +181,11 @@ export function buildCandidates(
     arr.push(p);
     byType.set(p.type, arr);
   }
-  // Stable sort within each type by id so output is deterministic.
-  for (const arr of byType.values()) arr.sort((a, b) => a.id.localeCompare(b.id));
+  // Requested colours first, then id — deterministic either way.
+  for (const arr of byType.values())
+    arr.sort(
+      (a, b) => (rank.get(a.id)! - rank.get(b.id)!) || a.id.localeCompare(b.id),
+    );
 
   const typeKeys = [...byType.keys()].sort();
   const picked: Paint[] = [];
@@ -160,7 +239,21 @@ export function groundProposal(
 
   for (const rawSlot of raw.slots ?? []) {
     if (slots.length >= MAX_SLOTS) break;
-    const paintId = typeof rawSlot?.paintId === "string" ? rawSlot.paintId.trim() : "";
+    // Coerce before matching. The model is untrusted input: it has been seen
+    // returning `"id:16162"` — the literal token from the candidate list's own
+    // formatting — which failed the exact-match lookup and dropped every slot,
+    // surfacing to the user as "couldn't ground its picks to real paints"
+    // (2026-08-02). A number is equally plausible from a JSON tool call.
+    // Normalising here is defence in depth, not a substitute for the prompt
+    // fix in recipeAi.ts: an id that still doesn't resolve is dropped exactly
+    // as before, so the anti-hallucination guarantee is unchanged.
+    const rawId = rawSlot?.paintId;
+    const paintId =
+      typeof rawId === "string"
+        ? rawId.trim().replace(/^id[:=]\s*/i, "")
+        : typeof rawId === "number"
+          ? String(rawId)
+          : "";
     const paint = paintId ? byId.get(paintId) : undefined;
     if (!paint) {
       // Hallucinated or empty id → drop it. NEVER fabricate a paint.

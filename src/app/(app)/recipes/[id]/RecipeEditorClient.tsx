@@ -2,14 +2,17 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AiRecipeDialog } from "@/components/recipe/AiRecipeDialog";
 import { RecipeEditorView } from "@/components/recipe/RecipeEditorView";
 import { ShareLinkDialog } from "@/components/recipe/ShareLinkDialog";
 import { ConfirmDialog, useToast } from "@/components/kit";
+import type { GroundedRecipeProposal } from "@/lib/ai/recipeSchema";
 import type { Paint, Project, Recipe } from "@/lib/types";
 import { loadKitCatalog } from "@/lib/catalogClient";
 import { saveRecipe } from "@/lib/actions/saveRecipe";
 import { deleteRecipe } from "@/lib/actions/recipes";
 import { publishRecipe } from "@/lib/actions/recipeSharing";
+import { createWishlistItem } from "@/lib/actions/wishlist";
 import {
   UNSAVED_CHANGES_MESSAGE,
   useUnsavedChangesGuard,
@@ -57,6 +60,7 @@ export function RecipeEditorClient({
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   // An unsaved "new" draft is dirty as soon as it has a name or any slots
   // (leaving would discard it); an existing recipe is dirty once edited.
@@ -123,6 +127,46 @@ export function RecipeEditorClient({
     });
   }
 
+  /** AI creator "Approve" — identical to the /recipes workbench's handler
+   *  (audit B8 asked for the two surfaces to behave the same): build a real
+   *  recipe from the grounded proposal and persist it through the same action
+   *  the editor saves with. The editor has no list to refresh into, so it
+   *  navigates to the recipe that was just made. `setSaved` disarms the
+   *  unsaved-changes guard for that redirect, exactly as `persist` does. */
+  async function approveAiRecipe(proposal: GroundedRecipeProposal) {
+    const res = await saveRecipe({
+      id: null,
+      name: proposal.summary?.trim().slice(0, 60) || "AI recipe",
+      attachedProjectId: null,
+      slots: proposal.slots.map((s) => ({
+        paintId: s.paintId || null,
+        hex: s.hex,
+        layer: s.layer,
+      })),
+      inspo: [],
+      notesMd: proposal.techniqueNotes || null,
+    });
+    if (!res.ok) {
+      toast(res.error, "red");
+      return;
+    }
+    setAiOpen(false);
+    setSaved(true);
+    toast("AI recipe saved", "green");
+    router.push(`/recipes/${res.data.id}`);
+  }
+
+  /** AI creator "+ Wishlist missing" → add each not-owned catalog paint to the
+   *  collection wishlist, looked up in the already-loaded catalog for its name. */
+  async function addMissingToWishlist(paintIds: string[]) {
+    for (const id of paintIds) {
+      const p = paints.find((x) => x.id === id);
+      if (!p) continue;
+      await createWishlistItem({ title: p.name, company: p.brand });
+    }
+    router.refresh();
+  }
+
   function share() {
     if (recipe.id === "new") {
       toast("Save the recipe before sharing.", "red");
@@ -153,6 +197,7 @@ export function RecipeEditorClient({
         onChange={setRecipe}
         onShare={share}
         onSave={persist}
+        onAiGenerate={() => setAiOpen(true)}
         onDelete={isNew ? undefined : () => setConfirmingDelete(true)}
         backLabel={backTo ? `‹ back to ${backTo.title}` : "← Recipes"}
         onBack={() => {
@@ -190,6 +235,12 @@ export function RecipeEditorClient({
         onConfirm={remove}
       />
       <ShareLinkDialog url={shareUrl} open={shareUrl != null} onClose={() => setShareUrl(null)} />
+      <AiRecipeDialog
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        onApprove={approveAiRecipe}
+        onAddMissing={addMissingToWishlist}
+      />
       {node}
     </>
   );

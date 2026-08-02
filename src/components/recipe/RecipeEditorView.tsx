@@ -19,6 +19,7 @@ export function RecipeEditorView({
   onBack,
   onSave,
   onDelete,
+  onAiGenerate,
   resolvePaintMeta,
   backLabel = "← Recipes",
 }: {
@@ -28,6 +29,10 @@ export function RecipeEditorView({
   onShare: () => void;
   onBack: () => void;
   onSave: () => void;
+  /** Open the AI Recipe Creator. REQUIRED, not optional: the sibling
+   *  RecipeIndexView made this prop optional and then no caller ever passed
+   *  it, so its AI button silently never rendered. */
+  onAiGenerate: () => void;
   /** Delete this recipe. Omitted (or hidden) for unsaved "new" drafts, which
    *  have nothing to delete yet. */
   onDelete?: () => void;
@@ -177,6 +182,23 @@ export function RecipeEditorView({
             id="recipe-more-actions"
             className={cn(actionsOpen ? "grid" : "hidden", "grid-cols-2 gap-2 md:contents")}
           >
+            {/* Audit B8 — the editor had NO AI affordance at all while the
+                /recipes detail panel showed one to everyone, badged PRO, that
+                opens the paywall on click. A non-subscriber could discover the
+                feature from the list and not from the creator, which is the
+                surface the feature is for. Same markup as RecipeWorkbench's
+                button so the two read identically; AiRecipeDialog does the
+                gating itself, so this stays visible for everyone. */}
+            <button
+              type="button"
+              onClick={onAiGenerate}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-[6px] border border-orange bg-surface px-4 font-mono text-[12px] font-bold text-fg-bright transition-colors hover:bg-orange/10 md:h-auto md:py-2.5"
+            >
+              ⚡ AI GENERATE
+              <span className="rounded-[2px] bg-orange px-1 py-px font-mono text-[8px] font-extrabold text-bg">
+                PRO
+              </span>
+            </button>
             <Button variant="secondary" onClick={onShare} className="h-11 whitespace-nowrap md:h-auto">
               ⛓ Share<span className="hidden md:inline">&nbsp;Link</span>
             </Button>

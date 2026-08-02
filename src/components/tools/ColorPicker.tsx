@@ -4,7 +4,6 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Button, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { Paint } from "@/lib/paints/types";
-import type { MatchResult } from "@/lib/tools/match/find";
 import { hexToHsl } from "@/lib/tools/wheel/harmonies";
 import { extractDominantColors } from "@/lib/tools/eyedropper/kmeans";
 import { imageToPixels, validateImageBlob } from "@/lib/tools/eyedropper/sample";
@@ -15,9 +14,11 @@ import {
 } from "@/lib/colorPicker/harmonies";
 import {
   bandForHex,
+  libraryMatches,
+  LIBRARY_ROW_CAP,
   MATCH_DEFAULT_DELTAE,
   MATCH_EXPANDED_DELTAE,
-  matchesWithinDeltaE,
+  type LibraryRow,
 } from "@/lib/colorPicker/matchPaints";
 import type {
   ColorPickerHarmony,
@@ -131,23 +132,19 @@ export function ColorPicker({
       prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b],
     );
 
-  const libraryRows = useMemo<MatchResult[]>(() => {
-    let pool: ReadonlyArray<Paint> = paints;
-    if (selectedBrands.length) {
-      pool = pool.filter((p) => selectedBrands.includes(p.brand));
-    }
-    if (textQuery.trim()) {
-      const q = textQuery.trim().toLowerCase();
-      pool = pool.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          (p.line ?? "").toLowerCase().includes(q),
-      );
-    }
-    const cap = showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE;
-    return matchesWithinDeltaE(pickedHex, pool, cap);
-  }, [paints, selectedBrands, textQuery, pickedHex, showFurther]);
+  // A typed query searches the WHOLE catalog; the ΔE window only applies when
+  // the box is empty (audit B3). See libraryMatches for why.
+  const searching = textQuery.trim().length > 0;
+  const deltaCap = showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE;
+  const libraryRows = useMemo<LibraryRow[]>(
+    () =>
+      libraryMatches(pickedHex, paints, {
+        query: textQuery,
+        brands: selectedBrands,
+        maxDeltaE: deltaCap,
+      }),
+    [paints, selectedBrands, textQuery, pickedHex, deltaCap],
+  );
 
   /* ---------- eyedropper sub-panel ---------- */
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -277,15 +274,28 @@ export function ColorPicker({
           <span className="font-body text-body text-fg">
             {catalogLoading
               ? "Loading catalog…"
-              : `${libraryRows.length} match${libraryRows.length === 1 ? "" : "es"} · ΔE ≤ ${
-                  showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE
-                }`}
+              : searching
+                ? `${libraryRows.length}${
+                    libraryRows.length === LIBRARY_ROW_CAP ? "+" : ""
+                  } result${libraryRows.length === 1 ? "" : "s"} in the library · nearest first`
+                : `${libraryRows.length} match${
+                    libraryRows.length === 1 ? "" : "es"
+                  } · ΔE ≤ ${deltaCap}`}
           </span>
-          <Button variant="tertiary" size="sm" onClick={() => setShowFurther((v) => !v)} aria-pressed={showFurther}>
-            {showFurther ? "Tight match" : "Show more matches"}
-          </Button>
+          {/* The ΔE toggle only means something when the window is what's
+              driving the list — a search has already left it behind. */}
+          {!searching && (
+            <Button variant="tertiary" size="sm" onClick={() => setShowFurther((v) => !v)} aria-pressed={showFurther}>
+              {showFurther ? "Tight match" : "Show more matches"}
+            </Button>
+          )}
         </div>
-        <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto" aria-label="Matching library paints">
+        {/* Audit B6 — this list is the panel's actual content and it had
+            max-h-72: 288px, five rows of two hundred, inside an 896px-wide
+            slide-out whose remaining ~500px went to the filter controls below.
+            A viewport-relative cap lets the results take the room they earn
+            and still leaves the search + facet reachable by scrolling. */}
+        <ul className="flex max-h-[52vh] flex-col gap-1 overflow-y-auto" aria-label="Matching library paints">
           {libraryRows.map((m) => (
             <li key={m.paint.id}>
               <button
@@ -305,31 +315,39 @@ export function ColorPicker({
                     {m.paint.line ? ` · ${m.paint.line}` : ""}
                   </span>
                 </span>
-                <span className="flex shrink-0 items-center gap-2">
-                  {(() => {
-                    const q = matchQuality(m.deltaE);
-                    return (
-                      <span
-                        className={cn(
-                          "rounded-[4px] border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide",
-                          q.cls,
-                        )}
-                      >
-                        {q.label}
-                      </span>
-                    );
-                  })()}
-                  <span className="font-body text-body tabular-nums text-fg-dim">
-                    ΔE {m.deltaE.toFixed(1)}
+                {/* A row found by name can carry no measurable distance (the
+                    paint's own hex is unparseable), so the badges are per-row
+                    rather than assumed. */}
+                {m.deltaE != null && (
+                  <span className="flex shrink-0 items-center gap-2">
+                    {(() => {
+                      const q = matchQuality(m.deltaE);
+                      return (
+                        <span
+                          className={cn(
+                            "rounded-[4px] border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide",
+                            q.cls,
+                          )}
+                        >
+                          {q.label}
+                        </span>
+                      );
+                    })()}
+                    <span className="font-body text-body tabular-nums text-fg-dim">
+                      ΔE {m.deltaE.toFixed(1)}
+                    </span>
                   </span>
-                </span>
+                )}
               </button>
             </li>
           ))}
           {!catalogLoading && libraryRows.length === 0 && (
             <li className="px-2 py-3 text-center font-body text-body text-fg">
-              No paints within ΔE {showFurther ? MATCH_EXPANDED_DELTAE : MATCH_DEFAULT_DELTAE}.
-              {!showFurther ? ' Try "Show more matches".' : ""}
+              {searching
+                ? `No paint in the library matches “${textQuery.trim()}”.`
+                : `No paints within ΔE ${deltaCap}.${
+                    !showFurther ? ' Try "Show more matches".' : ""
+                  }`}
             </li>
           )}
         </ul>
@@ -345,23 +363,29 @@ export function ColorPicker({
           className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
         />
 
-        {/* Filter facet — scrollable checkbox list, one per brand (mirrors
-            the Library page's filter). Generic "Filter" label so more filter
-            types can be added here later. */}
+        {/* Filter facet — one checkbox per brand (mirrors the Library page's
+            filter). Generic "Filter" label so more filter types can be added
+            here later.
+
+            Audit B5/B6 — laid out in columns, checkbox beside its label, and
+            without the inner max-h-40 scroller. One brand per full-panel row
+            put ~720px of measured nothing between each label and its box, and
+            the nested scroll area hid most of the 38 companies behind a second
+            unlabelled overflow inside a panel that already scrolls. The
+            library page's own FILTER panel now reads the same way. */}
         {brandOptions.length > 0 && (
           <div className="flex flex-col gap-1">
             <span className="inline-block w-fit bg-green/20 px-2 py-0.5 label-osd text-green">
               Filter{selectedBrands.length ? ` · ${selectedBrands.length}` : ""}
             </span>
-            <div className="flex max-h-40 flex-col overflow-y-auto">
+            <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
               {brandOptions.map((b) => {
                 const checked = selectedBrands.includes(b);
                 return (
                   <label
                     key={b}
-                    className="flex cursor-pointer items-center justify-between py-1 font-body text-body text-fg"
+                    className="flex cursor-pointer items-center gap-2 py-1 font-body text-body text-fg"
                   >
-                    <span className="uppercase tracking-[0.1em]">{b}</span>
                     <button
                       type="button"
                       role="checkbox"
@@ -369,12 +393,13 @@ export function ColorPicker({
                       aria-label={b}
                       onClick={() => toggleBrand(b)}
                       className={cn(
-                        "flex h-4 w-4 items-center justify-center border",
+                        "flex h-4 w-4 shrink-0 items-center justify-center border",
                         checked ? "border-cyan bg-cyan/20 text-cyan-lite" : "border-fg-faint",
                       )}
                     >
                       {checked && "✓"}
                     </button>
+                    <span className="min-w-0 uppercase tracking-[0.1em]">{b}</span>
                   </label>
                 );
               })}
