@@ -41,7 +41,7 @@ This runbook is the canonical deploy guide. Update it when the production setup 
 
 ## 3. Environment variables (Vercel dashboard)
 
-Set all seven in **Settings → Environment Variables**. See `.env.production.example` for the canonical list with comments.
+Set all eight in **Settings → Environment Variables**. See `.env.production.example` for the canonical list with comments.
 
 | Variable | Source | Notes |
 |---|---|---|
@@ -52,6 +52,7 @@ Set all seven in **Settings → Environment Variables**. See `.env.production.ex
 | `AUTH_RESEND_KEY` | Resend dashboard | API key |
 | `AUTH_EMAIL_FROM` | Manually set | Default: `Mini Manager <onboarding@resend.dev>` (Resend dev domain, only delivers to account email). Replace once custom domain is verified. |
 | `GROQ_API_KEY` | Groq console | Required for P7.5 messy-list LLM fallback. Without it the fallback errors but clean text/PDF/.ros/.rosz imports still work. Free tier (no billing), get it at https://console.groq.com/keys |
+| `ANTHROPIC_API_KEY` | https://console.anthropic.com/settings/keys | Powers AI recipes, paint scan and gallery moderation — all three call `claude-haiku-4-5`. The first two return a handled "not configured" error when unset; **gallery moderation fails OPEN**, so submissions skip the automated check and queue for human review. Prefer a key dedicated to this app over a shared personal one. |
 
 **Do NOT set** `ALLOW_TEST_AUTH` in production — the test-only sign-in route returns 404 unless this is `1`. Keep it unset.
 
