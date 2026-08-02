@@ -290,7 +290,12 @@ export function ColorPicker({
             </Button>
           )}
         </div>
-        <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto" aria-label="Matching library paints">
+        {/* Audit B6 — this list is the panel's actual content and it had
+            max-h-72: 288px, five rows of two hundred, inside an 896px-wide
+            slide-out whose remaining ~500px went to the filter controls below.
+            A viewport-relative cap lets the results take the room they earn
+            and still leaves the search + facet reachable by scrolling. */}
+        <ul className="flex max-h-[52vh] flex-col gap-1 overflow-y-auto" aria-label="Matching library paints">
           {libraryRows.map((m) => (
             <li key={m.paint.id}>
               <button
@@ -358,23 +363,29 @@ export function ColorPicker({
           className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
         />
 
-        {/* Filter facet — scrollable checkbox list, one per brand (mirrors
-            the Library page's filter). Generic "Filter" label so more filter
-            types can be added here later. */}
+        {/* Filter facet — one checkbox per brand (mirrors the Library page's
+            filter). Generic "Filter" label so more filter types can be added
+            here later.
+
+            Audit B5/B6 — laid out in columns, checkbox beside its label, and
+            without the inner max-h-40 scroller. One brand per full-panel row
+            put ~720px of measured nothing between each label and its box, and
+            the nested scroll area hid most of the 38 companies behind a second
+            unlabelled overflow inside a panel that already scrolls. The
+            library page's own FILTER panel now reads the same way. */}
         {brandOptions.length > 0 && (
           <div className="flex flex-col gap-1">
             <span className="inline-block w-fit bg-green/20 px-2 py-0.5 label-osd text-green">
               Filter{selectedBrands.length ? ` · ${selectedBrands.length}` : ""}
             </span>
-            <div className="flex max-h-40 flex-col overflow-y-auto">
+            <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
               {brandOptions.map((b) => {
                 const checked = selectedBrands.includes(b);
                 return (
                   <label
                     key={b}
-                    className="flex cursor-pointer items-center justify-between py-1 font-body text-body text-fg"
+                    className="flex cursor-pointer items-center gap-2 py-1 font-body text-body text-fg"
                   >
-                    <span className="uppercase tracking-[0.1em]">{b}</span>
                     <button
                       type="button"
                       role="checkbox"
@@ -382,12 +393,13 @@ export function ColorPicker({
                       aria-label={b}
                       onClick={() => toggleBrand(b)}
                       className={cn(
-                        "flex h-4 w-4 items-center justify-center border",
+                        "flex h-4 w-4 shrink-0 items-center justify-center border",
                         checked ? "border-cyan bg-cyan/20 text-cyan-lite" : "border-fg-faint",
                       )}
                     >
                       {checked && "✓"}
                     </button>
+                    <span className="min-w-0 uppercase tracking-[0.1em]">{b}</span>
                   </label>
                 );
               })}

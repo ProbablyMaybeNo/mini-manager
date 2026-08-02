@@ -67,7 +67,7 @@ Eight items from the full-app audit. Evidence and measurements:
   **Fix:** lay the colour and company checkboxes out in 2–3 columns so every
   option is visible without scrolling, checkbox adjacent to its label.
 
-- [ ] **B6 · P2 · Slot picker shows 5 of 200 results, then hands the panel to filters**
+- [x] **B6 · P2 · Slot picker shows 5 of 200 results, then hands the panel to filters**
   Same cramped-results/roomy-filters shape as B5. Fix in the same pass so the
   two panels end up consistent.
 
