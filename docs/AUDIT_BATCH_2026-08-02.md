@@ -77,7 +77,7 @@ Eight items from the full-app audit. Evidence and measurements:
   **Fix:** let the content fill the available height, or reduce the reserved
   space, without introducing horizontal overflow at 375px.
 
-- [ ] **B8 · P2 · AI affordance inconsistent between the two recipe surfaces**
+- [x] **B8 · P2 · AI affordance inconsistent between the two recipe surfaces**
   `/recipes/new` hides the AI button entirely for non-subscribers; the
   `/recipes` detail panel shows it to everyone badged `PRO` and opens the
   paywall on click.
