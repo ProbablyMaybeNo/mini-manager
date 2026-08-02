@@ -388,8 +388,6 @@ export const loadAppData = cache(async (userId: string): Promise<Partial<MockDat
   const [
     projects,
     recipeBundle,
-    collectionPaints,
-    collectionModels,
     activityRows,
     events,
     rollups,
@@ -401,8 +399,6 @@ export const loadAppData = cache(async (userId: string): Promise<Partial<MockDat
     // One combined read of recipe/recipe_slot/recipe_inspo (P5) — replaces the
     // three separate calls that each re-read the recipe table.
     loadDashboardRecipeBundle(userId),
-    listPaintCollection(userId),
-    listModelCollection(userId),
     getRecentActivity(userId, 20),
     // From the first of the current month (not today) so a deadline added
     // earlier this month still renders on the calendar grid (d9cfJYAVIx0C);
@@ -446,11 +442,34 @@ export const loadAppData = cache(async (userId: string): Promise<Partial<MockDat
     signedIn: true,
     projects: buildProjectTree(projects, palettes),
     recipes: recipeRows.map((r) => mapRecipe(r, inspoMap.get(r.id) ?? [])),
-    collectionPaints: collectionPaints.map(mapCollectionItem),
-    collectionModels: collectionModels.map(mapCollectionItem),
     events: mappedEvents,
     activity: mappedActivity,
     sessionStats,
     projectMinutes,
   };
 });
+
+/**
+ * The COLLECTION page's own data (Ross, 2026-08-02 — "speed up the website").
+ *
+ * These two lists used to ride in `loadAppData`, which the signed-in layout
+ * calls on EVERY route and injects into MockProvider. One paint row is small;
+ * a real collection is hundreds of them, and they were serialized into the RSC
+ * payload of every page and of every server action's re-render — including the
+ * project page, where nothing renders a collection. Loading them here means
+ * only the one route that shows them pays for them.
+ */
+export const loadCollectionData = cache(
+  async (
+    userId: string,
+  ): Promise<{ collectionPaints: CollectionItem[]; collectionModels: CollectionItem[] }> => {
+    const [paints, models] = await Promise.all([
+      listPaintCollection(userId),
+      listModelCollection(userId),
+    ]);
+    return {
+      collectionPaints: paints.map(mapCollectionItem),
+      collectionModels: models.map(mapCollectionItem),
+    };
+  },
+);

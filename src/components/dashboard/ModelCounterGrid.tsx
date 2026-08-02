@@ -75,7 +75,13 @@ export function ModelCounterGrid({ project }: { project: Project }) {
         return;
       }
       if (res.data) setSnap(res.data);
-      router.refresh();
+      // No router.refresh(): every host page is force-dynamic and setCounter
+      // revalidates it, so the server-action response ALREADY carries the
+      // re-rendered tree. Calling refresh() fetched that same tree a second
+      // time — and the tree is the whole account (the app layout injects
+      // loadAppData into MockProvider), so one press cost ~2×200KB on a real
+      // roster. `snap` is updated optimistically and confirmed from the
+      // action's own return value, so the numbers here never waited on it.
     });
   }
 
@@ -96,6 +102,9 @@ export function ModelCounterGrid({ project }: { project: Project }) {
       const fresh =
         ownedRes.ok && ownedRes.data ? ownedRes.data : await loadProjectCounters(project.id);
       setSnap(fresh);
+      // Count changes DO need the server tree: the roster row's progress bar
+      // and the parent's roll-up both derive from it, and neither is part of
+      // this component's optimistic state.
       router.refresh();
     });
   }
