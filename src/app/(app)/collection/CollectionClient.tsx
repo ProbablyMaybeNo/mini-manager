@@ -20,6 +20,7 @@ import type {
 import type { ScanImageMediaType } from "@/lib/paints/scanLimits";
 import type { BulkOwnershipStatus } from "@/lib/paints/ownership";
 import { toCollectionItem } from "@/lib/collection/mapWishlistItem";
+import { storeLabelForUrl } from "@/lib/scrape/stores";
 import {
   setWishlistStatus,
   updateWishlistItem,
@@ -67,6 +68,9 @@ function CollectionRoute({
   /** Which manual-add dialog is open ("paint"/"model") — null when closed. */
   const [adding, setAdding] = useState<CollectionKind | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  /** R2-4 — the URL whose scrape failed, held so the row the painter types
+   *  next carries the link they pasted instead of it being thrown away. */
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   /** The row whose rename (ACTIONS pen) dialog is open — null when closed. */
   const [editing, setEditing] = useState<CollectionItem | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -95,18 +99,34 @@ function CollectionRoute({
     else setModels((l) => [item, ...l]);
   };
 
+  /** Close the manual-add dialog and drop any carried-over paste state. */
+  function closeAdd() {
+    setAdding(null);
+    setAddError(null);
+    setPendingUrl(null);
+  }
+
   function addManual(title: string) {
     const kind = adding;
     if (!kind) return;
     setAddError(null);
     startTransition(async () => {
-      const res = await createWishlistItem({ title, kind });
+      // R2-4 — when this dialog was opened by a scrape that couldn't read the
+      // page, the pasted link rides onto the row. The painter typed the name
+      // themselves, but the link (and the store it came from) is still theirs
+      // and is what makes the row worth having.
+      const res = await createWishlistItem({
+        title,
+        kind,
+        sourceUrl: pendingUrl,
+        vendor: pendingUrl ? storeLabelForUrl(pendingUrl) : null,
+      });
       if (!res.ok) {
         setAddError(res.error);
         return;
       }
       absorb(toCollectionItem(res.data));
-      setAdding(null);
+      closeAdd();
       toast(`Added ${title}`, "green");
     });
   }
@@ -123,9 +143,20 @@ function CollectionRoute({
         // the painter into manual entry instead of creating a hostname-
         // named row and firing a green "Added" toast.
         if (res.reason === "unreadable") {
+          // R2-4 — J1's toast was the ONLY account of what happened, and it
+          // self-dismisses after ~2.4s having arrived seconds after the paste,
+          // so it was easy to miss entirely: the dialog then just read "Add
+          // paint" with no hint a link had been involved. Say it in the dialog
+          // too, name the host, and show the URL so it survives even a cancel.
+          const label = storeLabelForUrl(url);
+          setPendingUrl(url);
+          setAddError(
+            `We couldn’t read that ${label ?? "page"} link, so there was nothing to fill in. Type the name and we’ll keep the link on the row: ${url}`,
+          );
           setAdding(kind);
           toast("Couldn’t auto-read that link — add the details below.", "cyan");
         } else {
+          setPendingUrl(null);
           toast(res.error, "red");
         }
         return;
@@ -232,8 +263,14 @@ function CollectionRoute({
           await deleteWishlistItem({ id: item.id });
         });
       }}
-      onAddPaint={() => setAdding("paint")}
-      onAddModel={() => setAdding("model")}
+      onAddPaint={() => {
+        closeAdd();
+        setAdding("paint");
+      }}
+      onAddModel={() => {
+        closeAdd();
+        setAdding("model");
+      }}
       onRetry={() => router.refresh()}
     />
     <PromptDialog
@@ -245,10 +282,7 @@ function CollectionRoute({
       submitLabel="Add"
       error={addError}
       onSubmit={addManual}
-      onClose={() => {
-        setAdding(null);
-        setAddError(null);
-      }}
+      onClose={closeAdd}
     />
     <PromptDialog
       open={editing !== null}

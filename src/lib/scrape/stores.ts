@@ -94,3 +94,20 @@ export function matchSupportedStore(input: string): SupportedStore | null {
 export function isSupportedStoreUrl(input: string): boolean {
   return matchSupportedStore(input) !== null;
 }
+
+/**
+ * Human label for a pasted URL — the supported store's display name when we
+ * recognise it, else the bare hostname, else `null` for an unparseable
+ * string. Used by the couldn't-auto-read path (R2-4) to name the host in the
+ * message and to seed the vendor column of the row the painter fills in by
+ * hand, so a failed scrape still leaves them better off than a blank form.
+ */
+export function storeLabelForUrl(input: string): string | null {
+  const store = matchSupportedStore(input);
+  if (store) return store.name;
+  try {
+    return normalizeHost(new URL(input).hostname) || null;
+  } catch {
+    return null;
+  }
+}

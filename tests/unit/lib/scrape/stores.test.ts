@@ -4,6 +4,7 @@ import {
   SUPPORTED_STORE_NAMES,
   isSupportedStoreUrl,
   matchSupportedStore,
+  storeLabelForUrl,
 } from "@/lib/scrape/stores";
 
 describe("supported store registry (MM-40)", () => {
@@ -38,5 +39,28 @@ describe("supported store registry (MM-40)", () => {
     for (const store of SUPPORTED_STORES) {
       expect(store.hostnames.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("storeLabelForUrl — naming the host a failed scrape came from (R2-4)", () => {
+  test("prefers the registered store's display name", () => {
+    expect(storeLabelForUrl("https://www.games-workshop.com/en-GB/thing")).toBe(
+      "Games Workshop",
+    );
+    expect(storeLabelForUrl("https://us.games-workshop.com/x")).toBe(
+      "Games Workshop",
+    );
+  });
+
+  test("falls back to the bare hostname for an unknown store", () => {
+    // The couldn't-auto-read row still gets a useful vendor this way.
+    expect(storeLabelForUrl("https://www.some-shop.example/p/1")).toBe(
+      "some-shop.example",
+    );
+  });
+
+  test("returns null rather than throwing on unusable input", () => {
+    expect(storeLabelForUrl("not a url")).toBeNull();
+    expect(storeLabelForUrl("")).toBeNull();
   });
 });
