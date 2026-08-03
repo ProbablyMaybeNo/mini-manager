@@ -87,11 +87,17 @@ export function ModalDialog({
         aria-label={title}
         tabIndex={-1}
         className={cn(
-          "relative w-full border border-cyan bg-bg shadow-[0_0_36px_rgba(0,210,255,0.14),0_24px_60px_-24px_rgba(0,0,0,0.9)] outline-none motion-safe:animate-sheet-in",
+          // Bounded to the viewport (minus the overlay's p-4 on each side) and
+          // laid out as a column so the header/footer stay pinned and only the
+          // BODY scrolls. Without the cap the panel grew past the viewport in
+          // both directions, and because the overlay is `fixed inset-0` +
+          // `items-center` the overflow was unreachable — the page itself can't
+          // scroll to it. A long AI recipe was simply cut off.
+          "relative flex max-h-[calc(100dvh-2rem)] w-full flex-col border border-cyan bg-bg shadow-[0_0_36px_rgba(0,210,255,0.14),0_24px_60px_-24px_rgba(0,0,0,0.9)] outline-none motion-safe:animate-sheet-in",
           width,
         )}
       >
-        <header className="flex items-start justify-between border-b border-cyan/40 px-4 py-3">
+        <header className="flex shrink-0 items-start justify-between border-b border-cyan/40 px-4 py-3">
           <div>
             {breadcrumb && (
               <div className="label-osd tracking-[0.2em] text-fg">
@@ -110,11 +116,17 @@ export function ModalDialog({
             className="min-h-11 min-w-11"
           />
         </header>
-        <div className="px-4 py-4">{children}</div>
+        {/* `min-h-0` is load-bearing: a flex child defaults to min-height:auto,
+            which refuses to shrink below its content and would defeat the cap
+            above. `overscroll-contain` keeps a scroll gesture that reaches the
+            end from chaining to the page behind the scrim. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+          {children}
+        </div>
         {footer && (
           // Footer buttons lift to a 44px min-height on touch widths (MUX-008),
           // staying compact on desktop — lifts every dialog, not just one.
-          <footer className="border-t border-cyan/40 px-4 py-3 [&_button]:min-h-[44px] md:[&_button]:min-h-0">
+          <footer className="shrink-0 border-t border-cyan/40 px-4 py-3 [&_button]:min-h-[44px] md:[&_button]:min-h-0">
             {footer}
           </footer>
         )}
