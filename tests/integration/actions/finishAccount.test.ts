@@ -24,6 +24,9 @@ vi.mock("next/headers", () => ({
     set: () => {},
     delete: () => {},
   }),
+  // signInWithCredentials reads the client IP for its R2-18 attempt limiter.
+  // No forwarding header ⇒ the limiter falls back to the username-only key.
+  headers: async () => new Headers(),
 }));
 
 const { finishAccount } = await import("@/lib/auth/finishAccount");

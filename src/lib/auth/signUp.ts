@@ -7,8 +7,14 @@ import { db } from "@/db/client";
 import { users, verificationTokens } from "@/db/schema";
 import { ACQUISITION_COOKIE, parseAcquisitionSource } from "@/lib/acquisition";
 import {
+  clearLimit,
   enforceDailyLimit,
+  enforceWindowedLimit,
   RateLimitBucket,
+  SIGN_IN_BURST_WINDOW_MS,
+  SIGN_IN_SUSTAINED_WINDOW_MS,
+  signInBurstLimit,
+  signInSustainedLimit,
   signupDailyLimitPerIp,
 } from "@/lib/rateLimit/quota";
 import { trackServer } from "@/lib/analytics/track.server";
@@ -225,6 +231,19 @@ async function issueSignupEmailToken(userId: string, email: string): Promise<voi
  * server action. Returns ok/false rather than throwing so the caller
  * can render a generic "wrong username or password" pill without
  * leaking which field was wrong.
+ *
+ * **R2-18 — attempt limiting.** bcryptjs at cost 10 (~50ms) is a real
+ * natural throttle, so this is not an offline-speed guessing surface. What
+ * it does not touch is credential stuffing, where each known pair is a
+ * single request and the hash cost buys nothing; and every attempt is a
+ * billed serverless invocation, so a sustained run is a cost event too.
+ *
+ * The limiter is keyed on username + IP and metered before the lookup and
+ * the hash, so a refused attempt is also the CHEAPEST one — which matters,
+ * because billed duration is part of what is being defended. That is also
+ * why the backoff is a decaying rate rather than a sleep: delaying the
+ * response would hold a billed invocation open and pay the attacker's costs
+ * for them.
  */
 export async function signInWithCredentials(input: {
   username: string;
@@ -240,6 +259,21 @@ export async function signInWithCredentials(input: {
     return { ok: false, message: "Wrong username or password" };
   }
   if (!input.password) {
+    return { ok: false, message: "Wrong username or password" };
+  }
+
+  // Composite subject on purpose. A username-only key would let an attacker
+  // lock the real owner out of their own account by failing on their behalf
+  // — the same denial-of-service R2-19 is about, pointed at the front door.
+  // An IP-only key would punish everyone behind an office/CGNAT address.
+  // Together, hammering one account from one host bounds only that pair.
+  const ip = await clientIp();
+  const attemptKey = `${u.normalized}|${ip ?? "-"}`;
+  if (!(await withinSignInBudget(attemptKey))) {
+    // Same generic string as every other failure. Sign-in has no
+    // enumeration oracle today and a distinct "too many attempts" reply
+    // would be one: it tells a prober that this username+IP pair is worth
+    // the wait, and tells a stuffing run exactly when to rotate hosts.
     return { ok: false, message: "Wrong username or password" };
   }
 
@@ -263,6 +297,38 @@ export async function signInWithCredentials(input: {
     return { ok: false, message: "Wrong username or password" };
   }
 
+  // Success clears the tally, so the counter means "attempts since the last
+  // good sign-in" rather than "attempts". A user who signs in repeatedly and
+  // correctly can never throttle themselves.
+  await clearLimit(RateLimitBucket.SignIn, attemptKey);
+
   await createSession(user.id);
   return { ok: true, userId: user.id, username: user.username ?? u.normalized };
+}
+
+/**
+ * Two-tier sign-in budget for one username+IP pair. The tiers ARE the
+ * backoff: the burst tier caps a flurry, and once it has been refilled a few
+ * times the sustained tier takes over and the permitted rate decays. Short
+ * windows throughout — the daily counter used by the signup bucket would
+ * turn a bad afternoon into a lockout lasting until midnight UTC.
+ */
+async function withinSignInBudget(subject: string): Promise<boolean> {
+  const burst = await enforceWindowedLimit(
+    RateLimitBucket.SignIn,
+    subject,
+    signInBurstLimit(),
+    SIGN_IN_BURST_WINDOW_MS,
+  );
+  // Short-circuit: a refused attempt should cost one write, not two, and
+  // the sustained tier should count attempts that got as far as being tried.
+  if (!burst.allowed) return false;
+
+  const sustained = await enforceWindowedLimit(
+    RateLimitBucket.SignIn,
+    subject,
+    signInSustainedLimit(),
+    SIGN_IN_SUSTAINED_WINDOW_MS,
+  );
+  return sustained.allowed;
 }

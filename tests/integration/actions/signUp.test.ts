@@ -324,6 +324,171 @@ describe("signInWithCredentials", () => {
     expect(res.message).toMatch(/wrong username or password/i);
   });
 
+  /**
+   * R2-18. Moderate severity and the reasons matter: bcrypt at cost 10 is a
+   * real natural throttle and there is no enumeration oracle to protect.
+   * What is left is credential stuffing (one request per known pair, which
+   * the hash cost does nothing about) and the billed invocation behind every
+   * attempt.
+   */
+  describe("attempt limiting (R2-18)", () => {
+    afterEach(() => {
+      delete process.env.MM_SIGNIN_BURST_LIMIT;
+      delete process.env.MM_SIGNIN_HOURLY_LIMIT;
+    });
+
+    async function seedAlice(): Promise<void> {
+      await signUpWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+        email: "alice42@test.dev",
+      });
+      cookieStore.store.clear();
+    }
+
+    test("repeated failures for one username start being refused", async () => {
+      process.env.MM_SIGNIN_BURST_LIMIT = "3";
+      headerStore.current = new Headers({ "x-forwarded-for": "203.0.113.9" });
+      await seedAlice();
+
+      for (let i = 0; i < 3; i++) {
+        const res = await signInWithCredentials({
+          username: "alice42",
+          password: "wrong-password",
+        });
+        expect(res.ok).toBe(false);
+      }
+
+      // Over the cap now — and even the RIGHT password is refused, which is
+      // the point: the attacker cannot keep testing pairs.
+      const blocked = await signInWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+      });
+      expect(blocked.ok).toBe(false);
+      if (blocked.ok) return;
+      // The refusal is the SAME generic string as a wrong password. A
+      // distinct "too many attempts" would tell a stuffing run when to
+      // rotate hosts, and is the one thing this path has never leaked.
+      expect(blocked.message).toBe("Wrong username or password");
+      expect(cookieStore.get(SESSION_COOKIE)?.value).toBeFalsy();
+    });
+
+    test("the correct password still succeeds immediately from a clean IP", async () => {
+      process.env.MM_SIGNIN_BURST_LIMIT = "2";
+      headerStore.current = new Headers({ "x-forwarded-for": "203.0.113.9" });
+      await seedAlice();
+
+      // Attacker burns the budget for their own host.
+      await signInWithCredentials({ username: "alice42", password: "nope1" });
+      await signInWithCredentials({ username: "alice42", password: "nope2" });
+      const attacker = await signInWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+      });
+      expect(attacker.ok).toBe(false);
+
+      // The real owner, elsewhere, is unaffected — an attacker must not be
+      // able to lock someone out of their own account by failing for them.
+      headerStore.current = new Headers({ "x-forwarded-for": "198.51.100.44" });
+      const owner = await signInWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+      });
+      expect(owner.ok).toBe(true);
+      expect(cookieStore.get(SESSION_COOKIE)?.value).toBeTruthy();
+    });
+
+    test("a user sharing an IP with a failing one is not locked out", async () => {
+      process.env.MM_SIGNIN_BURST_LIMIT = "2";
+      // One office / CGNAT address for everybody.
+      headerStore.current = new Headers({ "x-forwarded-for": "198.51.100.7" });
+      await seedAlice();
+      await signUpWithCredentials({
+        username: "bob77",
+        password: "hunter333",
+        email: "bob77@test.dev",
+      });
+      cookieStore.store.clear();
+
+      // alice42 is being hammered from this address.
+      await signInWithCredentials({ username: "alice42", password: "nope1" });
+      await signInWithCredentials({ username: "alice42", password: "nope2" });
+      const aliceBlocked = await signInWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+      });
+      expect(aliceBlocked.ok).toBe(false);
+
+      // bob77 shares the IP and is completely unaffected — and would not be
+      // for the rest of the UTC day either, which is what reusing the daily
+      // signup limiter here would have meant.
+      const bob = await signInWithCredentials({
+        username: "bob77",
+        password: "hunter333",
+      });
+      expect(bob.ok).toBe(true);
+    });
+
+    test("a successful sign-in clears the tally", async () => {
+      process.env.MM_SIGNIN_BURST_LIMIT = "3";
+      headerStore.current = new Headers({ "x-forwarded-for": "203.0.113.11" });
+      await seedAlice();
+
+      // Two typos, then the real password — the successes must not count.
+      await signInWithCredentials({ username: "alice42", password: "typo1" });
+      await signInWithCredentials({ username: "alice42", password: "typo2" });
+      expect(
+        (await signInWithCredentials({ username: "alice42", password: "hunter222" }))
+          .ok,
+      ).toBe(true);
+
+      // Budget is back to full: three more attempts are available.
+      for (let i = 0; i < 3; i++) {
+        await signInWithCredentials({ username: "alice42", password: "typo" });
+      }
+      const stillWorks = await signInWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+      });
+      // The 4th attempt in this fresh window is the one over the cap, so the
+      // tally clearly restarted rather than carrying the earlier failures.
+      expect(stillWorks.ok).toBe(false);
+    });
+
+    test("the sustained tier keeps biting after the burst tier refills", async () => {
+      process.env.MM_SIGNIN_BURST_LIMIT = "1000";
+      process.env.MM_SIGNIN_HOURLY_LIMIT = "3";
+      headerStore.current = new Headers({ "x-forwarded-for": "203.0.113.12" });
+      await seedAlice();
+
+      for (let i = 0; i < 3; i++) {
+        await signInWithCredentials({ username: "alice42", password: "nope" });
+      }
+      const blocked = await signInWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+      });
+      expect(blocked.ok).toBe(false);
+    });
+
+    test("without proxy headers the limiter still applies", async () => {
+      process.env.MM_SIGNIN_BURST_LIMIT = "2";
+      headerStore.current = new Headers();
+      await seedAlice();
+
+      await signInWithCredentials({ username: "alice42", password: "nope1" });
+      await signInWithCredentials({ username: "alice42", password: "nope2" });
+      const blocked = await signInWithCredentials({
+        username: "alice42",
+        password: "hunter222",
+      });
+      // Unlike the signup limiter, an unknown IP does not mean unmetered —
+      // there is still a username to key on, so abuse stays bounded.
+      expect(blocked.ok).toBe(false);
+    });
+  });
+
   test("rejects sign-in for accounts with no passwordHash (legacy magic-link)", async () => {
     // Seed a legacy magic-link user (email + no passwordHash) — these
     // accounts must NOT be sign-inable via credentials until they

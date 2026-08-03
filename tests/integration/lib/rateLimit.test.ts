@@ -16,6 +16,7 @@ vi.mock("@/db/client", () => ({
 }));
 
 const {
+  clearLimit,
   enforceDailyLimit,
   enforceWindowedLimit,
   bumpAndCount,
@@ -193,6 +194,47 @@ describe("enforceWindowedLimit", () => {
     expect(burst.allowed).toBe(false);
     expect(hourly.allowed).toBe(true);
     expect(hourly.count).toBe(1);
+  });
+
+  test("clearLimit wipes every tier for one subject and nobody else's", async () => {
+    const at = new Date("2026-08-02T10:00:00Z");
+    await enforceWindowedLimit(RateLimitBucket.SignIn, "alice|1.1.1.1", 1, 60_000, at);
+    await enforceWindowedLimit(
+      RateLimitBucket.SignIn,
+      "alice|1.1.1.1",
+      1,
+      60 * 60_000,
+      at,
+    );
+    await enforceWindowedLimit(RateLimitBucket.SignIn, "bob|1.1.1.1", 1, 60_000, at);
+
+    await clearLimit(RateLimitBucket.SignIn, "alice|1.1.1.1");
+
+    // Both of alice's tiers are back to a full allowance...
+    const burst = await enforceWindowedLimit(
+      RateLimitBucket.SignIn,
+      "alice|1.1.1.1",
+      1,
+      60_000,
+      at,
+    );
+    const sustained = await enforceWindowedLimit(
+      RateLimitBucket.SignIn,
+      "alice|1.1.1.1",
+      1,
+      60 * 60_000,
+      at,
+    );
+    // ...and bob's tally is untouched.
+    const bob = await enforceWindowedLimit(
+      RateLimitBucket.SignIn,
+      "bob|1.1.1.1",
+      1,
+      60_000,
+      at,
+    );
+    expect([burst.allowed, sustained.allowed]).toEqual([true, true]);
+    expect(bob.allowed).toBe(false);
   });
 
   test("fixedWindow encodes the window length so tiers cannot collide", () => {

@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { rateLimitCounters } from "@/db/schema";
 
@@ -31,6 +31,7 @@ export const RateLimitBucket = {
   PaintScan: "paint_scan",
   PasswordReset: "password_reset",
   OutboundEmail: "outbound_email",
+  SignIn: "sign_in",
 } as const;
 export type RateLimitBucket = (typeof RateLimitBucket)[keyof typeof RateLimitBucket];
 
@@ -98,6 +99,22 @@ export function outboundEmailWindowLimit(): number {
 }
 
 /**
+ * R2-18 — sign-in attempts, in two tiers, which together are the backoff:
+ * the burst tier caps a flurry, and the sustained tier makes the permitted
+ * rate DECAY the longer an attack runs (120/hr for the first quarter hour,
+ * then ~30/hr). Both are counted since the last SUCCESSFUL sign-in for that
+ * subject, so a real user's successes never accumulate toward the cap.
+ */
+export const SIGN_IN_BURST_WINDOW_MS = 5 * 60_000;
+export const SIGN_IN_SUSTAINED_WINDOW_MS = 60 * 60_000;
+export function signInBurstLimit(): number {
+  return envLimit("MM_SIGNIN_BURST_LIMIT", 10);
+}
+export function signInSustainedLimit(): number {
+  return envLimit("MM_SIGNIN_HOURLY_LIMIT", 30);
+}
+
+/**
  * Atomically increment the (bucket, subject, window) counter and return the
  * NEW count. INSERT ... ON CONFLICT means two concurrent requests can't both
  * read the same pre-increment value and slip past the cap.
@@ -158,4 +175,24 @@ export async function enforceWindowedLimit(
 ): Promise<LimitResult> {
   const count = await bumpAndCount(bucket, subject, fixedWindow(windowMs, now));
   return { allowed: count <= limit, count, limit };
+}
+
+/**
+ * Drop every counter for one (bucket, subject), across all windows and both
+ * modes. Lets a caller meter ATTEMPTS while charging only for the ones that
+ * failed: bump on the way in, clear on success (R2-18). Without it, ten
+ * legitimate consecutive sign-ins would trip a limiter aimed at ten failures.
+ */
+export async function clearLimit(
+  bucket: RateLimitBucket,
+  subject: string,
+): Promise<void> {
+  await db
+    .delete(rateLimitCounters)
+    .where(
+      and(
+        eq(rateLimitCounters.bucket, bucket),
+        eq(rateLimitCounters.subject, subject),
+      ),
+    );
 }
