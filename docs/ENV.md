@@ -56,7 +56,7 @@ Preview/Development.
 
 | Var | Why |
 |---|---|
-| `ALLOW_TEST_AUTH` | Enables `/api/test/sign-in`, which mints a session for **any email with no password** and grants comp access. Unset ⇒ the route 404s. **Setting this in production is a full authentication bypass.** |
+| `ALLOW_TEST_AUTH` | Enables `/api/test/sign-in`, which mints a session for **any email with no password** and grants comp access. Unset ⇒ the route 404s. Still keep it unset in production — but since R2-20 it is no longer the *only* thing standing there: the route also refuses whenever `NODE_ENV=production`, so setting this by accident on a production (or preview) deployment no longer opens it. |
 
 ---
 

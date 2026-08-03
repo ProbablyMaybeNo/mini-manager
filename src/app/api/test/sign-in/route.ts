@@ -5,12 +5,14 @@ import { db } from "@/db/client";
 import { sessions, users } from "@/db/schema";
 import { hashPassword } from "@/lib/auth/password";
 import { SESSION_COOKIE } from "@/lib/auth/session";
+import { testAuthEnabled } from "@/lib/auth/testAuthGate";
 
 /**
  * Test-only sign-in shortcut. Bypasses the magic-link flow so Playwright
  * E2E tests can mint a session in one POST. The route only responds when
- * `ALLOW_TEST_AUTH=1` is set in the environment — production builds with
- * the env unset return 404, so this isn't a back-door.
+ * `ALLOW_TEST_AUTH=1` is set AND the runtime is not production — see
+ * `@/lib/auth/testAuthGate` for why both conditions are required and which
+ * is load-bearing.
  *
  * Body: { email: string }
  * Response: { ok: true, userId } + Set-Cookie: authjs.session-token=...
@@ -25,7 +27,7 @@ import { SESSION_COOKIE } from "@/lib/auth/session";
  * Used by tests/e2e/_helpers/auth.ts. See app/docs/TESTING.md §3.
  */
 export async function POST(req: Request) {
-  if (process.env.ALLOW_TEST_AUTH !== "1") {
+  if (!testAuthEnabled()) {
     return new NextResponse("Not found", { status: 404 });
   }
 

@@ -105,7 +105,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:3001 npm run test:e2e
 
 **The Playwright E2E suite does NOT run against production by default — and shouldn't.** Here's why:
 
-The E2E suite uses `tests/e2e/_helpers/auth.ts → signInAs()` which calls `POST /api/test/sign-in`. That route returns **404 in production** because `ALLOW_TEST_AUTH=1` is intentionally unset on Vercel. This is a security feature — no test back-door exists in prod, so a leaked URL can't sign anyone in.
+The E2E suite uses `tests/e2e/_helpers/auth.ts → signInAs()` which calls `POST /api/test/sign-in`. That route returns **404 in production** for two independent reasons (R2-20): `ALLOW_TEST_AUTH=1` is intentionally unset on Vercel, *and* the gate refuses outright whenever `NODE_ENV=production`. This is a security feature — no test back-door exists in prod, so a leaked URL can't sign anyone in, and setting the flag by mistake doesn't change that. It also means the route is unavailable on **preview** deployments, which are production builds; run the suite against `npm run dev`.
 
 What this means for the test agent:
 
