@@ -39,10 +39,23 @@ export async function generateMetadata({
   // real image per-slug: the admin-approved gallery card PNG when one
   // exists, else a generated name+swatches fallback. Next wires that file
   // into both `og:image` and `twitter:image` automatically.
+  //
+  // R2-13 — the `twitter` block has to be spelled out even though it just
+  // mirrors `openGraph`. The root layout declares a global `twitter:` block,
+  // and per the X cards spec `twitter:*` beats `og:*` wherever both are
+  // present — so overriding only `openGraph` left every shared recipe
+  // unfurling on X as the generic product page instead of the recipe someone
+  // wanted to show off. The picture was already right; the title undid it.
+  //
+  // `card` is repeated rather than inherited: Next replaces a declared
+  // metadata field wholesale rather than merging into the parent's, so a
+  // `twitter` block without it drops `summary_large_image` back to the small
+  // card — which would trade a wrong title for a shrunken picture.
   return {
     title,
     description,
     openGraph: { title, description, type: "website" },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 

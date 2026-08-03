@@ -18,16 +18,28 @@ import { GalleryBrowser } from "./GalleryBrowser";
 // a freshly shared recipe shows up without a rebuild.
 export const dynamic = "force-dynamic";
 
+const OG_TITLE = "Recipe Gallery — The Mini Mainframe";
+const OG_DESCRIPTION =
+  "Browse paint recipes shared by the community — colour schemes, swatches, and brands for your next miniature.";
+
 export const metadata: Metadata = {
-  title: "Recipe Gallery — The Mini Mainframe",
+  title: OG_TITLE,
   description:
     "Browse paint recipes shared by the community — colour schemes, swatches, and brands for your next miniature, open to everyone on The Mini Mainframe.",
   alternates: { canonical: "/gallery" },
   openGraph: {
-    title: "Recipe Gallery — The Mini Mainframe",
-    description:
-      "Browse paint recipes shared by the community — colour schemes, swatches, and brands for your next miniature.",
+    title: OG_TITLE,
+    description: OG_DESCRIPTION,
     type: "website",
+  },
+  // R2-13 — overriding only `openGraph` left `twitter:*` falling through to the
+  // root layout's generic block, and `twitter:*` wins over `og:*` on X. `card`
+  // is restated because Next replaces a declared field wholesale instead of
+  // merging into the parent's.
+  twitter: {
+    card: "summary_large_image",
+    title: OG_TITLE,
+    description: OG_DESCRIPTION,
   },
 };
 
