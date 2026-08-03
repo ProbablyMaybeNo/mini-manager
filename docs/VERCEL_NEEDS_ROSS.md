@@ -1,28 +1,36 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-08-02 (cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
-**5 unresolved threads awaiting your call · 2 blocked on infra · 3 need a design/sizing call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-08-03 (cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** miniaturemanager.vercel.app (live alias: mini-mainframe.com)
+**6 unresolved threads · 2 blocked on infra · 3 paint-picker layout (1 now answered → held for hands-on build) · 1 new duplicate awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-08-02, cron pass): 0 safe auto-fixes shipped.** All 5 open threads are either infra (a missing prod env var, which no repo change fixes) or vague/iterative paint-picker layout tuning where guessing the sizing would risk a wrong change to a core component. Each got a specific reply and was left open — none resolved.
+> **This run (2026-08-03, cron pass): 0 safe auto-fixes shipped.** No un-handled thread qualified as a clear/bounded safe edit. The open work is infra (a missing prod env var, no repo change fixes it) or shared-component (`ColorPicker`) flex-height layout tuning that must not be shipped blind from an unattended pass. One new stray thread got a clarifying reply.
 > - **🔑 Two AI-recipe reports are one root cause:** the `ANTHROPIC_API_KEY` env var is missing from the **Production** environment. The code path (`src/lib/ai/recipeAi.ts` → `/api/recipe/ai`) is correct; it only needs the key set in Vercel Project Settings → Environment Variables (Production), then a redeploy.
-> - **🎨 Three paint-picker threads are the same UI area** (Pick & Paint modal + Stacking picker) mid-iteration — asked one focused sizing/behaviour question on each.
+> - **🎨 Three paint-picker threads are the same UI area** (Pick & Paint modal + Stacking picker). `YtOKfPcOmKxq` is now **answered "option A"** but is a flex-height refactor of the *shared* `ColorPicker` (LIBRARY tab + Wheel tab + Stacking picker) — queued for a hands-on build + visual check, not a blind automated edit. The other two still need your call.
+> - **🌀 New duplicate:** `rcyKkEzZDs-k` (/recipes/new) mirrors the `YtOKfPcOmKxq` LIBRARY-tab question — replied asking whether to track them together; left open.
 
 ---
 
-## 🔴 NEEDS YOUR CALL (5)
+## 🔴 NEEDS YOUR CALL (6)
 
 ### Blocked on infra — you (2)
 
 - **`m65-f4O-Xi9p`** (/recipes) — "Anthropic API key not configured" when generating an AI paint scheme. **Not a bug.** Add `ANTHROPIC_API_KEY` to the **Production** env in Vercel and redeploy. Verified: `generateRecipe()` returns this exact string only when `process.env.ANTHROPIC_API_KEY` is unset.
 - **`7RDcAE7fuDhY`** (/recipes) — duplicate of the above (same missing-key error). Clears the moment the key is set.
 
-### Need a design / sizing call — you (3)
+### Answered → ready to build, held for a hands-on visual check (1)
 
-_All three are the paint-picker panels; each has a specific question posted on its thread._
+- **`YtOKfPcOmKxq`** (/recipes · Pick & Paint · LIBRARY tab) — empty space below the FILTER list. **Answered: option A** — matches list + company FILTER share the full panel height (~60/40, each scrolls internally). Not shipped from the automated pass: it's a flex-height refactor of the *shared* `ColorPicker` (LIBRARY tab + Wheel tab + Stacking picker), where a wrong flex/min-height contract can collapse or clip the list on some viewports. Needs a hands-on build + browser eyeball, then the gated PR → CI → merge → prod-verify loop.
 
-- **`YtOKfPcOmKxq`** (/recipes · Pick & Paint · LIBRARY tab) — empty space below the FILTER list. **Q:** flex matches + company-filter lists to share full panel height (e.g. 60/40, each scrolls), or fully-expand the company filter (no inner scroll) with matches taking the rest?
+### Need a design / sizing call — you (2)
+
+_Both are the paint-picker panels; each has a specific question posted on its thread._
+
 - **`C3QMQBdYltw7`** (/recipes · Pick & Paint · WHEEL tab) — no matching-paints list on the WHEEL tab (it only exists on LIBRARY tab + Stacking picker). **Q:** add a live "paints matching this colour" list + company filter under the wheel, mirroring the Stacking picker?
 - **`_aI8GvJu7Tc0`** (/recipes · Stacking paint picker) — FILTER section squashed at the bottom. **Q:** shrink the colour-wheel section to give the filter more height in place, or keep the wheel and let the panel scroll further to reach the full filter list?
+
+### New duplicate — awaiting your call (1)
+
+- **`rcyKkEzZDs-k`** (/recipes/new) — a single message echoing the `YtOKfPcOmKxq` LIBRARY-tab layout question, on the `/recipes/new` route. Replied asking whether anything about `/recipes/new` differs or if it can be tracked together with `YtOKfPcOmKxq`. Left open.
 
 ---
 
