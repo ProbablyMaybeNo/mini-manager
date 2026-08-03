@@ -1,7 +1,34 @@
 "use client";
 
-/** Themed route-level error boundary (keeps the terminal aesthetic on a crash). */
-export default function Error({ reset }: { error: Error; reset: () => void }) {
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
+/** Themed route-level error boundary (keeps the terminal aesthetic on a crash).
+ *
+ *  R2-23 — this capture is not redundant with anything the SDK does. Nothing
+ *  auto-reports here: @sentry/nextjs only build-time wraps
+ *  page|layout|loading|head|not-found, `captureUnderscoreErrorException` is
+ *  Pages Router, and `reactErrorHandler` is opt-in with no root render call to
+ *  attach it to in the App Router.
+ *
+ *  Worse, defining this file SUPPRESSES the one path that did report. Next.js
+ *  routes errors hitting its BUILT-IN boundary to `onUncaughtError` ->
+ *  `reportError()`, which Sentry's default globalHandlers integration catches.
+ *  An explicit boundary like this one takes the `onCaughtError` path instead,
+ *  which in production is a bare `console.error` — and captureConsole is not a
+ *  default integration. So without the line below, every route-level crash is
+ *  silent. */
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-6 text-center">
       <p className="label-osd tracking-[0.18em] text-red-text">FAULT</p>
