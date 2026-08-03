@@ -216,6 +216,34 @@ export function buildCandidates(
 }
 
 /**
+ * Remove our internal catalog ids from human-facing prose.
+ *
+ * The prompt hands the model lines like `- 15157 | AK Interactive | …`, and it
+ * helpfully echoes those ids back into `techniqueNotes` — "prime with
+ * Grey-green (15157)". A painter reads that as a product code they can search
+ * for. It is meaningless outside this database, and it looks authoritative
+ * precisely because it is shaped like a real manufacturer code.
+ *
+ * Deliberately NOT a blind `\(\d+\)` strip: paint names and notes legitimately
+ * carry numbers — kit years like "Infernus Squad (2023)", ratios, "(2 thin
+ * coats)". We only remove a parenthesised number when it is **actually an id in
+ * the catalog we just fed the model**, which makes a false positive impossible.
+ */
+function stripCatalogIds(text: string, byId: ReadonlyMap<string, unknown>): string {
+  if (!text) return text;
+  return text
+    .replace(/\s*\((\d{2,8})\)/g, (whole, digits: string) =>
+      byId.has(digits) ? "" : whole,
+    )
+    .replace(/\bid[:=]\s*(\d{2,8})\b/gi, (whole, digits: string) =>
+      byId.has(digits) ? "" : whole,
+    )
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/ +([.,;:])/g, "$1")
+    .trim();
+}
+
+/**
  * Validate a raw model proposal against the catalog. EVERY returned paintId
  * must resolve to a real catalog row; ones that don't are dropped and
  * recorded in `droppedPaintIds`. Roles are normalised and mapped to DB
@@ -276,15 +304,23 @@ export function groundProposal(
       brand: paint.brand,
       name: paint.name,
       hex: paint.hex,
-      note: typeof rawSlot?.note === "string" ? rawSlot.note.slice(0, 500) : "",
+      note: stripCatalogIds(
+        typeof rawSlot?.note === "string" ? rawSlot.note.slice(0, 500) : "",
+        byId,
+      ),
       owned,
     });
   }
 
   return {
-    summary: typeof raw?.summary === "string" ? raw.summary.slice(0, 600) : "",
-    techniqueNotes:
+    summary: stripCatalogIds(
+      typeof raw?.summary === "string" ? raw.summary.slice(0, 600) : "",
+      byId,
+    ),
+    techniqueNotes: stripCatalogIds(
       typeof raw?.techniqueNotes === "string" ? raw.techniqueNotes.slice(0, 4000) : "",
+      byId,
+    ),
     slots,
     droppedPaintIds,
     missingPaintIds,

@@ -131,6 +131,13 @@ function buildPrompt(command: string, candidates: CandidatePaint[], brands: stri
     `Call propose_recipe. For every slot, paintId MUST be the bare id — the first field on a candidate line, digits only, with no "id:" prefix and no other text.`,
     `Cover the relevant roles for the subject (base, shadow, highlight, metals, etc.).`,
     `Do NOT invent paint names or ids. If a needed colour isn't in the list, pick the closest candidate.`,
+    // The ids above are OUR internal database keys. A painter reading
+    // "prime with Grey-green (15157)" reasonably reads 15157 as a product code
+    // they can search for — it is meaningless outside this database, and looks
+    // authoritative because it is formatted like a real manufacturer code.
+    // `groundProposal` also strips any that slip through; this is the request,
+    // that is the guarantee.
+    `NEVER write a paint id in summary, techniqueNotes, or any slot note — those are read by a human. Refer to paints by NAME only (e.g. "Olive Drab Surface Primer", not "Olive Drab Surface Primer (14833)").`,
   ].join("\n");
 }
 
