@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, SlideOutPanel } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import {
   createTextImport,
   fetchImportForPreview,
@@ -52,22 +53,33 @@ export function ArmyImportPanel({
   function parse() {
     setError(null);
     start(async () => {
-      const res = await createTextImport({ rawText: raw.trim() });
-      if (!res.ok) {
-        setError(res.error);
-        return;
+      // R2-14 (beyond the audit's table — this file's transition is called
+      // `start`). A pasted army list is minutes of typing that exists nowhere
+      // else yet; unguarded, a rejection from either call escaped into the
+      // route error boundary and threw the whole panel — and the list — away.
+      // A local try/catch rather than `guarded()` because
+      // `fetchImportForPreview` resolves to its own `{ ok, tree }` shape, not
+      // the `ActionResult` the helper is typed for.
+      try {
+        const res = await createTextImport({ rawText: raw.trim() });
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        const preview = await fetchImportForPreview(res.data.importId);
+        if (!preview.ok) {
+          setError(preview.error);
+          return;
+        }
+        if (preview.tree.units.length === 0) {
+          setError("No units detected — check the list format and try again.");
+          return;
+        }
+        setImportId(res.data.importId);
+        setTree(preview.tree);
+      } catch {
+        setError("Couldn’t reach the server — check your connection, then try again.");
       }
-      const preview = await fetchImportForPreview(res.data.importId);
-      if (!preview.ok) {
-        setError(preview.error);
-        return;
-      }
-      if (preview.tree.units.length === 0) {
-        setError("No units detected — check the list format and try again.");
-        return;
-      }
-      setImportId(res.data.importId);
-      setTree(preview.tree);
     });
   }
 
@@ -75,7 +87,10 @@ export function ArmyImportPanel({
     if (!importId || !tree) return;
     setError(null);
     start(async () => {
-      const res = await applyImport({ importId, editedTree: tree });
+      const res = await guarded(
+        () => applyImport({ importId, editedTree: tree }),
+        "Couldn’t apply the import — check your connection, then try again.",
+      );
       if (!res.ok) {
         setError(res.error);
         return;

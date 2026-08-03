@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { PromptDialog } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { createPalette } from "@/lib/actions/palettes";
 import { useMockData } from "@/mock/MockProvider";
 import type { PaletteSource } from "@/db/schema";
@@ -33,7 +34,12 @@ export function usePaletteSaver(source: PaletteSource): {
     if (!colorHexes || colorHexes.length === 0) return;
     setError(null);
     startTransition(async () => {
-      const res = await createPalette({ name, source, colorHexes });
+      // R2-14 — same stakes as the assign dialog: the palette lives only on
+      // the tool, so a rejection that unmounted the page took it with it.
+      const res = await guarded(
+        () => createPalette({ name, source, colorHexes }),
+        "Couldn’t save the palette — check your connection, then try again.",
+      );
       if (res.ok) close();
       else setError(res.error);
     });

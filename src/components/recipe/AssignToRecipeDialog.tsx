@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { Button, Input, ModalDialog } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { guarded } from "@/lib/actionGuard";
 import {
   listRecipesForSendTo,
   sendPaletteToRecipe,
@@ -109,15 +110,23 @@ export function AssignToRecipeDialog({
     setError(null);
     const created = "newRecipeName" in target;
     startTransition(async () => {
-      const res = await sendPaletteToRecipe({
-        swatches: swatches.map((s) => ({
-          hex: s.hex,
-          paintId: s.paintId ?? undefined,
-          name: s.name,
-        })),
-        surface,
-        ...target,
-      });
+      // R2-14 — the colours only exist on the tool that built them, so a
+      // rejection escaping into the route error boundary destroyed the very
+      // palette this dialog was trying to save. Report it in the dialog's own
+      // error slot; the swatches stay put and the button retries.
+      const res = await guarded(
+        () =>
+          sendPaletteToRecipe({
+            swatches: swatches.map((s) => ({
+              hex: s.hex,
+              paintId: s.paintId ?? undefined,
+              name: s.name,
+            })),
+            surface,
+            ...target,
+          }),
+        "Couldn’t send those colours — check your connection, then try again.",
+      );
       if (!res.ok) {
         setError(res.error);
         return;

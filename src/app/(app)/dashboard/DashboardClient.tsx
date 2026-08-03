@@ -6,6 +6,7 @@ import { DashboardView } from "@/components/dashboard/DashboardView";
 import { RecipePickerDialog } from "@/components/recipe/RecipePickerDialog";
 import { ArmyImportPanel } from "./ArmyImportPanel";
 import { useToast } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { createProject } from "@/lib/actions/projects";
 import { createSingleFlightGuard } from "@/lib/guards/singleFlight";
 import { attachRecipeToProject, createRecipe } from "@/lib/actions/recipes";
@@ -84,7 +85,15 @@ export function DashboardClient({
   function handleAddProject() {
     creatingProject(async () => {
       await createGuard.current(async () => {
-        const res = await createProject({ name: "New Project", type: "Army", count: 0 });
+        // R2-14 (beyond the audit's table — this file's transitions are called
+        // `creatingProject` / `startAttach`, which the sweep's
+        // `startTransition` regex never saw). "+ New Project" is the first
+        // button a new painter presses; unguarded, a dropped connection
+        // answered it with the whole-app fault screen.
+        const res = await guarded(
+          () => createProject({ name: "New Project", type: "Army", count: 0 }),
+          "Couldn’t create the project — check your connection, then try again.",
+        );
         if (res.ok && res.data?.id) {
           setOpenId(res.data.id);
           router.refresh();
@@ -104,7 +113,10 @@ export function DashboardClient({
     setAttaching(null);
     const name = recipes.find((r) => r.id === recipeId)?.name ?? "recipe";
     startAttach(async () => {
-      const res = await attachRecipeToProject({ recipeId, projectId: target.id });
+      const res = await guarded(
+        () => attachRecipeToProject({ recipeId, projectId: target.id }),
+        "Couldn’t attach that recipe — check your connection, then try again.",
+      );
       if (res.ok) {
         toast(`Attached ${name} to ${target.title}`, "green");
         router.refresh();
@@ -122,10 +134,14 @@ export function DashboardClient({
     if (!target) return;
     setAttaching(null);
     startAttach(async () => {
-      const res = await createRecipe({
-        name: `${target.title} recipe`,
-        attachedProjectId: target.id,
-      });
+      const res = await guarded(
+        () =>
+          createRecipe({
+            name: `${target.title} recipe`,
+            attachedProjectId: target.id,
+          }),
+        "Couldn’t create the recipe — check your connection, then try again.",
+      );
       if (res.ok && res.data?.id) {
         router.push(`/recipes/${res.data.id}?from=${target.id}`);
       } else if (!res.ok) {

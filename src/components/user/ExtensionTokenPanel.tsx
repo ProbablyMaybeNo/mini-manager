@@ -29,9 +29,19 @@ export function ExtensionTokenPanel({
     setError(null);
     setCopied(false);
     startTransition(async () => {
-      const res = await action();
-      if (res.ok) setToken(res.token);
-      else setError(res.error);
+      // R2-14 — a local try/catch rather than `guarded()`: these are props
+      // resolving to `{ ok, token }`, not the `ActionResult` the helper is
+      // typed for. Same contract though — a rejection becomes this panel's own
+      // failure shape instead of escaping into the route error boundary, which
+      // used to replace the account page with the fault screen. Matches the
+      // `copy()` handler directly below, which was already written this way.
+      try {
+        const res = await action();
+        if (res.ok) setToken(res.token);
+        else setError(res.error);
+      } catch {
+        setError("Couldn’t reach the server — check your connection, then try again.");
+      }
     });
   }
 

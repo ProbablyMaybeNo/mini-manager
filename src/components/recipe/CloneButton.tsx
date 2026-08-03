@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Copy } from "lucide-react";
 import { Button, type ButtonProps } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { cloneRecipeFromSlug } from "@/lib/actions/recipeSharing";
 
 /**
@@ -49,7 +50,15 @@ export function CloneButton({
   function handleClick() {
     setError(null);
     startTransition(async () => {
-      const res = await cloneRecipeFromSlug({ slug });
+      // R2-14 — this button sits on every `/r/<slug>` and every `/gallery`
+      // card, so it is the highest-value click in the funnel: a stranger
+      // arriving from a shared link. Unguarded, a flaky connection answered
+      // that click with the whole-app fault screen. Now it says "try again"
+      // and the recipe they came to see is still on screen behind it.
+      const res = await guarded(
+        () => cloneRecipeFromSlug({ slug }),
+        "Couldn’t clone that recipe — check your connection, then try again.",
+      );
       if (!res.ok) {
         setError(res.error);
         return;

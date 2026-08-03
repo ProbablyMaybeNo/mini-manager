@@ -3,6 +3,7 @@
 import { useOptimistic, useTransition } from "react";
 import { Listbox } from "@/components/kit";
 import { useToast } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { updateProjectPriority } from "@/lib/actions/projects";
 import { priorityAccent } from "@/lib/palette";
 import type { Priority } from "@/lib/types";
@@ -42,10 +43,18 @@ export function PriorityDropdown({
     if (next === optimisticValue) return;
     startTransition(async () => {
       setOptimisticValue(next);
-      const res = await updateProjectPriority({
-        id: projectId,
-        priority: TO_DB_PRIORITY[next],
-      });
+      // R2-14 — one dropdown pick on the projects table used to be enough to
+      // replace the whole dashboard with the fault screen when the connection
+      // dropped. Now it's a toast and the optimistic pick reverts on the next
+      // server render, exactly as it does for a handled failure.
+      const res = await guarded(
+        () =>
+          updateProjectPriority({
+            id: projectId,
+            priority: TO_DB_PRIORITY[next],
+          }),
+        "Couldn’t set the priority — check your connection, then try again.",
+      );
       if (!res.ok) toast(res.error, "red");
     });
   }

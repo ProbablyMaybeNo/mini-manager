@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Check, X } from "lucide-react";
 import { Button, EmptyState, Panel, useToast } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import {
   approveGallerySubmission,
   rejectGallerySubmission,
@@ -31,10 +32,16 @@ export function AdminGalleryReview({
     const removed = submissions.find((s) => s.recipeId === recipeId) ?? null;
     setSubmissions((prev) => prev.filter((s) => s.recipeId !== recipeId));
     startTransition(async () => {
-      const res =
-        kind === "approve"
-          ? await approveGallerySubmission({ recipeId })
-          : await rejectGallerySubmission({ recipeId });
+      // R2-14 — the row is dropped optimistically before the await, so an
+      // unguarded rejection replaced the queue with the fault screen AND lost
+      // the row it was about to restore.
+      const res = await guarded(
+        () =>
+          kind === "approve"
+            ? approveGallerySubmission({ recipeId })
+            : rejectGallerySubmission({ recipeId }),
+        `Couldn’t ${kind} that submission — check your connection, then try again.`,
+      );
       setPendingId(null);
       if (!res.ok) {
         toast(res.error, "red");

@@ -13,6 +13,7 @@ import {
   TypeChip,
   useToast,
 } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { deleteProject } from "@/lib/actions/projects";
 import { formatMinutes } from "@/lib/palette";
 import { rollupProjectMinutes } from "@/lib/projectTime";
@@ -57,7 +58,14 @@ export function ProjectsTable({
     startDelete(async () => {
       // No router.refresh(): the force-dynamic dashboard re-renders on the
       // server-action POST, dropping the deleted row (P2).
-      const res = await deleteProject({ id: target.id });
+      //
+      // R2-14 (beyond the audit's table — transition named `startDelete`). A
+      // crash on a delete is the shape that leaves a painter genuinely unsure
+      // whether the project is gone; a toast says plainly that it isn't.
+      const res = await guarded(
+        () => deleteProject({ id: target.id }),
+        "Couldn’t delete that project — check your connection, then try again.",
+      );
       if (!res.ok) toast(res.error, "red");
     });
   }

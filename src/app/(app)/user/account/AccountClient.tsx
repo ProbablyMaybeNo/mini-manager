@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { AccountView } from "@/components/user/AccountView";
 import { Button, Input, ModalDialog } from "@/components/kit";
+import { guarded, guardedMessage } from "@/lib/actionGuard";
 import { setRecoveryEmail } from "@/lib/auth/recoveryEmail";
 import { requestPasswordReset } from "@/lib/auth/passwordReset";
 import { deleteAccount } from "@/lib/actions/account";
@@ -83,7 +84,14 @@ export function AccountClient({
     if (!confirmed || pending) return;
     setDeleteError(null);
     startTransition(async () => {
-      const res = await deleteAccount();
+      // R2-14 — the worst place in the app to crash: unguarded, a rejection
+      // replaced the dialog with the fault screen and left the painter with no
+      // way to tell whether their account had just been deleted. Guarded, the
+      // dialog stays open with an explicit "nothing was deleted, try again".
+      const res = await guarded(
+        deleteAccount,
+        "Couldn’t reach the server — your account was NOT deleted. Check your connection, then try again.",
+      );
       if (!res.ok) {
         setDeleteError(res.error);
         return;
@@ -149,7 +157,14 @@ export function AccountClient({
           // identity); persist the recovery email, which IS editable.
           setNotice(null);
           startSave(async () => {
-            const res = await setRecoveryEmail({ email: next.recoveryEmail });
+            // R2-14 (beyond the audit's table — `startSave` is a second
+            // transition in this file and the sweep only looked for
+            // `startTransition`). The recovery email IS the account-recovery
+            // path; crashing the page mid-save is the worst outcome here.
+            const res = await guardedMessage(
+              () => setRecoveryEmail({ email: next.recoveryEmail }),
+              "Couldn’t save the recovery email — check your connection, then try again.",
+            );
             setNotice(
               res.ok
                 ? "Recovery email saved — check it for a verification link."
@@ -162,9 +177,17 @@ export function AccountClient({
           // verified recovery email.
           setNotice(null);
           startSave(async () => {
-            await requestPasswordReset({ username });
+            // The result was discarded, so the reassuring notice below was
+            // shown even when nothing had been sent. Guarded, a transport
+            // failure says so instead of promising an email that isn't coming.
+            const res = await guardedMessage(
+              () => requestPasswordReset({ username }),
+              "Couldn’t request the change link — check your connection, then try again.",
+            );
             setNotice(
-              "If your account has a verified recovery email, a password-change link is on its way.",
+              res.ok
+                ? "If your account has a verified recovery email, a password-change link is on its way."
+                : res.message,
             );
           });
         }}

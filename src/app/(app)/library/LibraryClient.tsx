@@ -5,6 +5,7 @@ import { LibraryView } from "@/components/library/LibraryView";
 import { AssignToRecipeDialog } from "@/components/recipe/AssignToRecipeDialog";
 import { useToast } from "@/components/kit";
 import { copyText } from "@/lib/clipboard";
+import { guarded } from "@/lib/actionGuard";
 import { nearestMatches, similarInOtherBrands } from "@/lib/toolMatch";
 import { COLOR_OPTIONS, colorFamilyForHue, filterPaints } from "@/mock/filterPaints";
 import { EMPTY_LIBRARY_FILTER, type LibraryFilter, type Paint, type PaintType } from "@/lib/types";
@@ -141,9 +142,20 @@ export function LibraryClient({
    *  linked Collection row's single `status` column — and each write
    *  creates/updates/removes that linked row too. */
   function applyStatus(paintId: string, status: OwnershipStatus) {
+    const before = paints.find((p) => p.id === paintId);
     patchPaint(paintId, { owned: status === "OWNED", wishlisted: status === "WISHLIST" });
     startTransition(async () => {
-      await setPaintOwnershipStatus({ paintId, status });
+      // R2-14 — this used to `await` bare and discard the result: offline the
+      // rejection escaped the transition into the route error boundary and
+      // replaced the whole app while browsing 7,000 paints (losing the filter
+      // and the scroll position), and even a HANDLED failure left the chip
+      // showing an ownership state that was never stored.
+      const res = await guarded(() => setPaintOwnershipStatus({ paintId, status }));
+      if (res.ok) return;
+      if (before) {
+        patchPaint(paintId, { owned: before.owned, wishlisted: before.wishlisted });
+      }
+      toast(res.error, "red");
     });
   }
 
@@ -170,7 +182,9 @@ export function LibraryClient({
     if (ids.length === 0) return;
     for (const id of ids) patchPaint(id, { owned: status === "OWNED", wishlisted: status === "WISHLIST" });
     startBulkTransition(async () => {
-      const res = await bulkAddPaintsToCollection({ paintIds: ids, status });
+      const res = await guarded(() =>
+        bulkAddPaintsToCollection({ paintIds: ids, status }),
+      );
       if (res.ok) {
         toast(
           `Added ${res.data.count} paint${res.data.count === 1 ? "" : "s"} to Collection as ${status}`,

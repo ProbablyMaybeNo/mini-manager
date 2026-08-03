@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Input, Listbox, Panel } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { createProject } from "@/lib/actions/projects";
 import type { ProjectType } from "@/lib/types";
 import { InspectorActionBar } from "./InspectorActionBar";
@@ -46,11 +47,18 @@ export function CreateProjectView({ onCreated }: { onCreated: (id: string) => vo
     }
     setError(null);
     start(async () => {
-      const res = await createProject({
-        name: name.trim(),
-        type: TYPE_TO_DB[type],
-        count: Number(count) || 0,
-      });
+      // R2-14 (beyond the audit's table — transition named `start`). Nothing
+      // is saved until CREATE, so an unguarded rejection here discarded the
+      // whole form the painter had just filled in.
+      const res = await guarded(
+        () =>
+          createProject({
+            name: name.trim(),
+            type: TYPE_TO_DB[type],
+            count: Number(count) || 0,
+          }),
+        "Couldn’t create the project — check your connection, then try again.",
+      );
       if (!res.ok) {
         setError(res.error);
         return;

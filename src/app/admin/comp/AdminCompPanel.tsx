@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button, EmptyState, Input, Panel, useToast } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { grantCompAccess, revokeCompAccess } from "@/lib/actions/adminComp";
 import type { CompedUser } from "@/db/queries/users";
 
@@ -25,7 +26,13 @@ export function AdminCompPanel({
     const name = username.trim();
     if (!name || pending) return;
     startTransition(async () => {
-      const res = await grantCompAccess({ username: name });
+      // R2-14 — bare `await`: a rejection escaped into the route error
+      // boundary and replaced the admin panel with the fault screen, taking
+      // the typed username with it. Guarded, it's a red toast.
+      const res = await guarded(
+        () => grantCompAccess({ username: name }),
+        "Couldn’t grant comp access — check your connection, then try again.",
+      );
       if (!res.ok) {
         toast(res.error, "red");
         return;
@@ -47,7 +54,10 @@ export function AdminCompPanel({
   function revoke(target: CompedUser) {
     if (pending) return;
     startTransition(async () => {
-      const res = await revokeCompAccess({ username: target.username ?? "" });
+      const res = await guarded(
+        () => revokeCompAccess({ username: target.username ?? "" }),
+        "Couldn’t revoke comp access — check your connection, then try again.",
+      );
       if (!res.ok) {
         toast(res.error, "red");
         return;

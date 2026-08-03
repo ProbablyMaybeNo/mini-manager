@@ -4,6 +4,7 @@ import { useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, ModalDialog, Swatch, useToast } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { guarded } from "@/lib/actionGuard";
 import { generateRecipeFromColors } from "@/lib/actions/generateRecipeFromColors";
 import {
   buildLayerRamp,
@@ -69,7 +70,14 @@ export function GenerateRecipeDialog({
 
   function save() {
     start(async () => {
-      const res = await generateRecipeFromColors({ hexes });
+      // R2-14 (beyond the audit's table — transition named `start`). This is
+      // the slowest action in the app (a model call), so it is the one most
+      // likely to be interrupted — and the colours it is saving only exist on
+      // the wheel behind the dialog.
+      const res = await guarded(
+        () => generateRecipeFromColors({ hexes }),
+        "Couldn’t generate the recipe — check your connection, then try again.",
+      );
       if (res.ok) {
         router.push(`/recipes/${res.data.id}`);
       } else {

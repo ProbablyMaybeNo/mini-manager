@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ProgressBar } from "@/components/kit";
+import { guarded } from "@/lib/actionGuard";
 import { loadProjectCounters, setCounter } from "@/lib/actions/counters";
 import { updateProjectCount } from "@/lib/actions/projects";
 import { progressPercent } from "@/lib/progress";
@@ -68,7 +69,14 @@ export function ModelCounterGrid({ project }: { project: Project }) {
     const optimistic = { ...snap, [column]: next };
     setSnap(optimistic);
     start(async () => {
-      const res = await setCounter({ projectId: project.id, stage, value: next });
+      // R2-14 (beyond the audit's table — transition named `start`). Counter
+      // presses come in bursts while a painter works through a squad, so this
+      // is one of the most-pressed controls in the app; unguarded, any one of
+      // those presses could replace the project page with the fault screen.
+      const res = await guarded(
+        () => setCounter({ projectId: project.id, stage, value: next }),
+        "Couldn’t save that count — check your connection, then try again.",
+      );
       if (!res.ok) {
         setError(res.error);
         setSnap(snap); // revert
@@ -89,7 +97,10 @@ export function ModelCounterGrid({ project }: { project: Project }) {
     if (next < 0 || next > 9999 || next === total) return;
     setError(null);
     start(async () => {
-      const res = await updateProjectCount({ id: project.id, count: next });
+      const res = await guarded(
+        () => updateProjectCount({ id: project.id, count: next }),
+        "Couldn’t save the model count — check your connection, then try again.",
+      );
       if (!res.ok) {
         setError(res.error);
         return;
@@ -98,10 +109,17 @@ export function ModelCounterGrid({ project }: { project: Project }) {
       // project's models count as owned the moment you count them. Keeping
       // `owned` in step with the total is what lets a counted-but-untouched
       // unit derive the OWNED status instead of reading as WISHLIST.
-      const ownedRes = await setCounter({ projectId: project.id, stage: "owned", value: next });
-      const fresh =
-        ownedRes.ok && ownedRes.data ? ownedRes.data : await loadProjectCounters(project.id);
-      setSnap(fresh);
+      const ownedRes = await guarded(() =>
+        setCounter({ projectId: project.id, stage: "owned", value: next }),
+      );
+      if (ownedRes.ok && ownedRes.data) {
+        setSnap(ownedRes.data);
+      } else {
+        // The total IS stored by this point; only the confirming re-read is in
+        // doubt, so leave the numbers on screen rather than blanking the grid.
+        const fresh = await loadProjectCounters(project.id).catch(() => null);
+        if (fresh) setSnap(fresh);
+      }
       // Count changes DO need the server tree: the roster row's progress bar
       // and the parent's roll-up both derive from it, and neither is part of
       // this component's optimistic state.
