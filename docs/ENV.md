@@ -49,6 +49,7 @@ Preview/Development.
 | `NOTION_TOKEN`, `NOTION_FEEDBACK_DATABASE_ID` | In-app feedback isn't recorded to Notion. |
 | `STRIPE_PRICE_PRO_LIFETIME`, `STRIPE_PRICE_FOUNDER` | **Dormant tiers.** Code reads them; nothing sells them. Safe to leave unset. |
 | `MM_AI_DAILY_LIMIT`, `MM_GALLERY_DAILY_LIMIT`, `MM_SIGNUP_DAILY_LIMIT`, `MM_SCAN_DAILY_LIMIT` | Sensible defaults (50 / 20 / 10 / 20 per day). |
+| `MM_RESET_WINDOW_LIMIT`, `MM_MAIL_WINDOW_LIMIT` | Defaults 3 forgot-password requests per username and 5 outbound emails per recipient, each **per 15 minutes** (R2-19). Short windows on purpose — the subject is attacker-chosen, so a long one would let an attacker hold a real user off their own reset. |
 
 ## Must NOT be set in production
 

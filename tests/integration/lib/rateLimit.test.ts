@@ -15,9 +15,14 @@ vi.mock("@/db/client", () => ({
   },
 }));
 
-const { enforceDailyLimit, bumpAndCount, RateLimitBucket, utcDay } = await import(
-  "@/lib/rateLimit/quota"
-);
+const {
+  enforceDailyLimit,
+  enforceWindowedLimit,
+  bumpAndCount,
+  fixedWindow,
+  RateLimitBucket,
+  utcDay,
+} = await import("@/lib/rateLimit/quota");
 
 beforeEach(async () => {
   const { db } = await makeTestDb();
@@ -82,5 +87,123 @@ describe("enforceDailyLimit", () => {
   test("bumpAndCount increments atomically and returns the new count", async () => {
     expect(await bumpAndCount(RateLimitBucket.Signup, "1.2.3.4")).toBe(1);
     expect(await bumpAndCount(RateLimitBucket.Signup, "1.2.3.4")).toBe(2);
+  });
+});
+
+/**
+ * R2-19 — the short-window mode the auth paths use. The daily mode is wrong
+ * for them: its subject is an IP or an attacker-chosen username, so a
+ * day-long refusal is a day-long lockout of an innocent third party.
+ */
+describe("enforceWindowedLimit", () => {
+  const WINDOW = 15 * 60_000;
+
+  test("allows up to the limit, refuses the N+1th call in the window", async () => {
+    const at = new Date("2026-08-02T10:00:00Z");
+    const results = [];
+    for (let i = 0; i < 4; i++) {
+      results.push(
+        await enforceWindowedLimit(
+          RateLimitBucket.PasswordReset,
+          "alice",
+          3,
+          WINDOW,
+          at,
+        ),
+      );
+    }
+    expect(results.map((r) => r.allowed)).toEqual([true, true, true, false]);
+    expect(results.map((r) => r.count)).toEqual([1, 2, 3, 4]);
+  });
+
+  test("the next window resets the count — minutes, not a day", async () => {
+    const at = new Date("2026-08-02T10:00:00Z");
+    const nextWindow = new Date("2026-08-02T10:16:00Z");
+    // Same UTC day, so the daily mode would still be refusing here.
+    expect(utcDay(at)).toBe(utcDay(nextWindow));
+
+    const first = await enforceWindowedLimit(
+      RateLimitBucket.PasswordReset,
+      "alice",
+      1,
+      WINDOW,
+      at,
+    );
+    const second = await enforceWindowedLimit(
+      RateLimitBucket.PasswordReset,
+      "alice",
+      1,
+      WINDOW,
+      at,
+    );
+    const later = await enforceWindowedLimit(
+      RateLimitBucket.PasswordReset,
+      "alice",
+      1,
+      WINDOW,
+      nextWindow,
+    );
+    expect([first.allowed, second.allowed, later.allowed]).toEqual([
+      true,
+      false,
+      true,
+    ]);
+  });
+
+  test("meters each subject independently", async () => {
+    const at = new Date("2026-08-02T10:00:00Z");
+    await enforceWindowedLimit(RateLimitBucket.PasswordReset, "alice", 1, WINDOW, at);
+    const aliceAgain = await enforceWindowedLimit(
+      RateLimitBucket.PasswordReset,
+      "alice",
+      1,
+      WINDOW,
+      at,
+    );
+    const bob = await enforceWindowedLimit(
+      RateLimitBucket.PasswordReset,
+      "bob",
+      1,
+      WINDOW,
+      at,
+    );
+    expect(aliceAgain.allowed).toBe(false);
+    expect(bob.allowed).toBe(true);
+  });
+
+  test("two window sizes for one subject get separate counters", async () => {
+    const at = new Date("2026-08-02T10:00:00Z");
+    // The burst tier is exhausted...
+    await enforceWindowedLimit(RateLimitBucket.PasswordReset, "alice", 1, 60_000, at);
+    const burst = await enforceWindowedLimit(
+      RateLimitBucket.PasswordReset,
+      "alice",
+      1,
+      60_000,
+      at,
+    );
+    // ...while the longer tier, same bucket + same subject, is untouched.
+    const hourly = await enforceWindowedLimit(
+      RateLimitBucket.PasswordReset,
+      "alice",
+      5,
+      60 * 60_000,
+      at,
+    );
+    expect(burst.allowed).toBe(false);
+    expect(hourly.allowed).toBe(true);
+    expect(hourly.count).toBe(1);
+  });
+
+  test("fixedWindow encodes the window length so tiers cannot collide", () => {
+    const at = new Date("2026-08-02T10:07:30Z");
+    expect(fixedWindow(60_000, at)).not.toBe(fixedWindow(60 * 60_000, at));
+    // Stable within the window, advances across it.
+    expect(fixedWindow(15 * 60_000, new Date("2026-08-02T10:00:00Z"))).toBe(
+      fixedWindow(15 * 60_000, new Date("2026-08-02T10:14:59Z")),
+    );
+    expect(fixedWindow(15 * 60_000, new Date("2026-08-02T10:00:00Z"))).not.toBe(
+      fixedWindow(15 * 60_000, new Date("2026-08-02T10:15:00Z")),
+    );
   });
 });

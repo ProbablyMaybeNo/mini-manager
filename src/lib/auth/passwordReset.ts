@@ -13,6 +13,12 @@ import {
 } from "./tokens";
 import { sendVerificationEmail } from "./sendVerificationEmail";
 import {
+  enforceWindowedLimit,
+  PASSWORD_RESET_WINDOW_MS,
+  passwordResetWindowLimit,
+  RateLimitBucket,
+} from "@/lib/rateLimit/quota";
+import {
   PASSWORD_ERROR_COPY,
   validatePassword,
   validateUsername,
@@ -45,8 +51,20 @@ function buildResetUrl(token: string): string {
  * credentials signup fills it) and is NOT gated on `emailVerified` — the
  * majority never click the verify link and would otherwise be locked out.
  *
- * The form is rate-limit-amenable; v1 ships without RL on the request
- * route and assumes Vercel's per-IP function-invocation backstop.
+ * **R2-19 — throttled, silently.** This is unauthenticated and sends mail,
+ * and because each successful call DELETES the previous token (see below),
+ * an attacker hammering a victim's username otherwise destroys the reset
+ * link the victim is trying to click, over and over: denial of account
+ * recovery. The throttle is metered on the username, before the lookup, so
+ * a suppressed call issues nothing, deletes nothing and sends nothing — a
+ * reset already in flight survives the attacker's follow-up requests.
+ *
+ * The throttled branch returns the SAME silent ok:true. Surfacing a "too
+ * many requests" error here would hand back precisely the username
+ * enumeration oracle the silent-ok design exists to deny.
+ *
+ * A second, independent cap sits at the mail chokepoint itself
+ * (`sendVerificationEmail`), covering every caller rather than this one.
  */
 export async function requestPasswordReset(input: {
   username: string;
@@ -55,6 +73,19 @@ export async function requestPasswordReset(input: {
 
   // Malformed input — silent ok:true.
   if (!v.ok) return { ok: true };
+
+  // Keyed on the NORMALISED username: `validateUsername` has already
+  // trimmed, lowercased and constrained it to [a-z0-9_-]{3,20}, so casing
+  // and stray whitespace can't be used to mint fresh counter rows for the
+  // same target.
+  const throttle = await enforceWindowedLimit(
+    RateLimitBucket.PasswordReset,
+    v.normalized,
+    passwordResetWindowLimit(),
+    PASSWORD_RESET_WINDOW_MS,
+  );
+  // Throttled — silent ok:true, identical to every other refusal branch.
+  if (!throttle.allowed) return { ok: true };
 
   const hit = await db
     .select({

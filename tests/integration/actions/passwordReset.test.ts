@@ -151,6 +151,122 @@ describe("requestPasswordReset", () => {
   });
 });
 
+/**
+ * R2-19 — the request path is unauthenticated and sends mail, and every
+ * successful call deletes the previous token. Unthrottled that is denial of
+ * account recovery: hammer a victim's username and the link they are trying
+ * to click is destroyed under them, indefinitely.
+ */
+describe("requestPasswordReset — R2-19 throttle", () => {
+  afterEach(() => {
+    delete process.env.MM_RESET_WINDOW_LIMIT;
+  });
+
+  test("suppresses the N+1th request for one username — still silent ok:true", async () => {
+    process.env.MM_RESET_WINDOW_LIMIT = "2";
+    await seedUser({
+      username: "alice",
+      password: "oldpassword123",
+      email: "alice@example.com",
+    });
+
+    const first = await requestPasswordReset({ username: "alice" });
+    const second = await requestPasswordReset({ username: "alice" });
+    const third = await requestPasswordReset({ username: "alice" });
+
+    // The throttled call is INDISTINGUISHABLE from the allowed ones: same
+    // shape, same ok:true, no "too many requests" copy. Anything else here
+    // is the username-enumeration oracle the silent-ok design exists to
+    // deny — a probe would learn which usernames are worth throttling.
+    expect(first).toEqual({ ok: true });
+    expect(second).toEqual({ ok: true });
+    expect(third).toEqual({ ok: true });
+    expect(state.mailLog).toHaveLength(2);
+  });
+
+  test("a suppressed request does NOT destroy the reset already in flight", async () => {
+    process.env.MM_RESET_WINDOW_LIMIT = "1";
+    await seedUser({
+      username: "alice",
+      password: "oldpassword123",
+      email: "alice@example.com",
+    });
+
+    // The victim's own request lands and they are holding this link.
+    await requestPasswordReset({ username: "alice" });
+    const issued = (await state.db!.select().from(verificationTokens))[0]!;
+
+    // The attacker keeps hammering the same username.
+    await requestPasswordReset({ username: "alice" });
+    await requestPasswordReset({ username: "alice" });
+    await requestPasswordReset({ username: "alice" });
+
+    const after = await state.db!.select().from(verificationTokens);
+    expect(after).toHaveLength(1);
+    // Same token — the victim's link still works.
+    expect(after[0]!.token).toBe(issued.token);
+    expect(state.mailLog).toHaveLength(1);
+
+    // And it is genuinely still usable, not merely still present.
+    const applied = await applyPasswordReset({
+      token: issued.token,
+      password: "freshpassword456",
+    });
+    expect(applied.ok).toBe(true);
+  });
+
+  test("throttling one username does not touch another user's reset", async () => {
+    process.env.MM_RESET_WINDOW_LIMIT = "1";
+    await seedUser({
+      username: "alice",
+      password: "oldpassword123",
+      email: "alice@example.com",
+    });
+    await seedUser({
+      username: "bob",
+      password: "oldpassword123",
+      email: "bob@example.com",
+    });
+
+    await requestPasswordReset({ username: "alice" });
+    await requestPasswordReset({ username: "alice" });
+    const bob = await requestPasswordReset({ username: "bob" });
+
+    expect(bob).toEqual({ ok: true });
+    expect(state.mailLog.map((m) => m.to)).toEqual([
+      "alice@example.com",
+      "bob@example.com",
+    ]);
+  });
+
+  test("casing and padding cannot mint a fresh allowance for the same target", async () => {
+    process.env.MM_RESET_WINDOW_LIMIT = "1";
+    await seedUser({
+      username: "alice",
+      password: "oldpassword123",
+      email: "alice@example.com",
+    });
+
+    await requestPasswordReset({ username: "alice" });
+    await requestPasswordReset({ username: "  ALICE  " });
+    await requestPasswordReset({ username: "Alice" });
+
+    expect(state.mailLog).toHaveLength(1);
+  });
+
+  test("throttling an unknown username stays silent too", async () => {
+    process.env.MM_RESET_WINDOW_LIMIT = "1";
+    const first = await requestPasswordReset({ username: "ghostuser" });
+    const second = await requestPasswordReset({ username: "ghostuser" });
+
+    // A real account and a nonexistent one answer identically whether or
+    // not the throttle has engaged.
+    expect(first).toEqual({ ok: true });
+    expect(second).toEqual({ ok: true });
+    expect(state.mailLog).toHaveLength(0);
+  });
+});
+
 describe("applyPasswordReset", () => {
   async function setupTokenFor(username: string): Promise<string> {
     await seedUser({
