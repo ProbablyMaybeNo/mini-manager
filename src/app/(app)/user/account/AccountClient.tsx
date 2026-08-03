@@ -35,9 +35,22 @@ export function AccountClient({
   async function resendVerification() {
     setResendState(null);
     setResendPending(true);
-    const res = await resendSignupVerification();
-    setResendPending(false);
-    setResendState(res.ok ? "Verification email sent — the link lasts 1 hour." : res.message);
+    // R2-15 — `setResendPending(false)` used to sit on the line after a bare
+    // `await`, so a rejected send never reached it: the button stuck on
+    // "Sending…", disabled forever, with no message. This is an
+    // account-recovery path — the signup link lasts an hour and is sent once,
+    // so a painter who misses it and then meets a flaky connection here is
+    // locked out of every `emailVerified` feature until they think to reload.
+    try {
+      const res = await resendSignupVerification();
+      setResendState(res.ok ? "Verification email sent — the link lasts 1 hour." : res.message);
+    } catch {
+      setResendState(
+        "Couldn’t send the verification email — check your connection, then try again.",
+      );
+    } finally {
+      setResendPending(false);
+    }
   }
 
   const [notice, setNotice] = useState<string | null>(null);

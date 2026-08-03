@@ -94,20 +94,29 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
     }
     setBusy(true);
     setError(null);
-    const res = await createEvent({
-      name: name.trim(),
-      date,
-      kind,
-      notes: notes.trim() || null,
-    });
-    setBusy(false);
-    if (!res.ok) {
-      setError(res.error);
-      return;
+    // R2-15 — `setBusy(false)` used to sit on the line after a bare `await`,
+    // so a rejected create never reached it. `busy` disables the submit, so a
+    // dropped connection left the form permanently un-submittable with the
+    // event details still typed into it and nothing on screen explaining why.
+    try {
+      const res = await createEvent({
+        name: name.trim(),
+        date,
+        kind,
+        notes: notes.trim() || null,
+      });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      resetForm();
+      setAdding(false);
+      router.refresh();
+    } catch {
+      setError("Couldn’t save the event — check your connection, then try again.");
+    } finally {
+      setBusy(false);
     }
-    resetForm();
-    setAdding(false);
-    router.refresh();
   }
 
   return (

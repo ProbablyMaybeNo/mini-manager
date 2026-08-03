@@ -13,6 +13,11 @@ import {
 
 export type { AssignedResult };
 
+/** Reported when the inventory write never reaches the server. Phrased as the
+ *  transient it is — the paint is not on the list either way. */
+const ADD_FAILED_MESSAGE =
+  "Couldn’t reach the server — check your connection, then try again.";
+
 /**
  * The shared ASSIGN control for a single paint swatch — every colour tool's
  * per-paint "Assign" button funnels through this one primitive. A click opens
@@ -77,30 +82,48 @@ export function AssignPaintMenu({
     setDialogMode(mode);
   }
 
+  /**
+   * R2-15 — `setPending(null)` used to sit on the line after a bare `await`,
+   * so a rejected write never reached it. `pending` gates BOTH entries here
+   * and disables the ASSIGN button itself, so one dropped connection killed
+   * the whole menu — silently, and until a full page reload. `finally`
+   * guarantees the clear; the `catch` makes the failure visible instead of
+   * leaving a press that did nothing and said nothing.
+   */
   async function handleAddToOwned() {
     if (!swatch.paintId || pending) return;
     setOpen(false);
     setPending("owned");
-    const res = await addPaintToOwned({ paintId: swatch.paintId });
-    setPending(null);
-    if (!res.ok) {
-      toast(res.error, "red");
-      return;
+    try {
+      const res = await addPaintToOwned({ paintId: swatch.paintId });
+      if (!res.ok) {
+        toast(res.error, "red");
+        return;
+      }
+      toast(res.data.already ? "Already owned" : "Marked as owned", "green");
+    } catch {
+      toast(ADD_FAILED_MESSAGE, "red");
+    } finally {
+      setPending(null);
     }
-    toast(res.data.already ? "Already owned" : "Marked as owned", "green");
   }
 
   async function handleAddToWishlist() {
     if (!swatch.paintId || pending) return;
     setOpen(false);
     setPending("wishlist");
-    const res = await addPaintToWishlist({ paintId: swatch.paintId });
-    setPending(null);
-    if (!res.ok) {
-      toast(res.error, "red");
-      return;
+    try {
+      const res = await addPaintToWishlist({ paintId: swatch.paintId });
+      if (!res.ok) {
+        toast(res.error, "red");
+        return;
+      }
+      toast(res.data.already ? "Already on your wishlist" : "Added to wishlist", "green");
+    } catch {
+      toast(ADD_FAILED_MESSAGE, "red");
+    } finally {
+      setPending(null);
     }
-    toast(res.data.already ? "Already on your wishlist" : "Added to wishlist", "green");
   }
 
   return (
