@@ -133,7 +133,14 @@ describe("R2-13 — share surfaces carry their own twitter: block", () => {
     // the page's OWN segment survives the replacement; an inherited one does
     // not, and there is no path to point `openGraph.images` at, because Next
     // only serves the content-hashed URL.
-    for (const segment of ["src/app/r/[slug]", "src/app/(public)/pricing"]) {
+    for (const segment of [
+      "src/app/r/[slug]",
+      "src/app/(public)/pricing",
+      // R2-12 — /gallery emitted zero og:image / twitter:image tags while
+      // still declaring `summary_large_image`: it sits in `(app)`, so it never
+      // inherited the `(public)` group's card in the first place.
+      "src/app/(app)/gallery",
+    ]) {
       const dir = path.join(process.cwd(), segment);
       expect(
         existsSync(path.join(dir, "opengraph-image.tsx")),
