@@ -77,18 +77,32 @@ export default function OpengraphImage() {
           THE MINI MAINFRAME
         </div>
 
+        {/* O-4 — the tagline used to be one string that wrapped on its own and
+            left "minis." alone on a second line, on the card for every
+            homepage link. Broken explicitly instead of retuned: this renders
+            through Satori against a SYSTEM font stack, so the glyph metrics
+            differ between this machine and the edge runtime that actually
+            serves it. Any fix that depends on measuring — a wider container, a
+            smaller size — is only correct for the font it was measured
+            against, and would re-orphan silently somewhere else. A hard break
+            is the same on every box, and reads better anyway: one line per
+            pair of promises rather than a ragged 5-word overhang. */}
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
             marginTop: 38,
             fontSize: 38,
             letterSpacing: 1,
+            lineHeight: 1.34,
             color: FG_DIM,
             textAlign: "center",
             padding: "0 80px",
           }}
         >
-          Plan your projects. Track your paints. Manage your minis.
+          <div style={{ display: "flex" }}>Plan your projects. Track your paints.</div>
+          <div style={{ display: "flex" }}>Manage your minis.</div>
         </div>
 
         {/* Bottom accent rule */}
