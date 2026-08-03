@@ -17,11 +17,20 @@ Sentry.init({
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
+  // R2-21 — this block must stay populated. The SDK branches on whether the
+  // `dataCollection` key is PRESENT: present-but-empty resolves every unset
+  // field to the permissive DEFAULTS (userInfo on, httpBodies = all four
+  // targets, genAI in/out on), not the conservative sendDefaultPii=false set.
+  // The scaffold's fully-commented-out block was therefore opting us in.
   dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
+    userInfo: false,
+    // Never attach request/response bodies: sign-in and sign-up POST plaintext
+    // credentials, and the SDK's "keys and tokens are always filtered"
+    // guarantee is scoped to key-value surfaces, not to bodies.
+    httpBodies: [],
+    // Prompts are user content with no diagnostic value; model outputs stay on
+    // because a malformed response is a real failure mode.
+    genAI: { inputs: false },
   },
 });
 
