@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Panel } from "@/components/kit";
 import { cn } from "@/lib/cn";
+import { elapsedSeconds } from "@/lib/focusSession";
+import {
+  clearFocusSession,
+  pauseFocusSession,
+  startFocusSession,
+  useFocusSession,
+} from "@/hooks/useFocusSession";
 
 function fmt(totalSeconds: number): string {
   const s = Math.floor(totalSeconds % 60);
@@ -19,6 +26,12 @@ function fmt(totalSeconds: number): string {
  * stop and start without scrolling mid-brushstroke — and the original labelled
  * panel from `md` up. Both markups mount, so the timer keeps running across a
  * viewport change; only one is ever visible.
+ *
+ * R4-7 — the session itself is NOT component state. It lives in
+ * `useFocusSession`, so leaving the bench (to look a paint up in the Library,
+ * say) no longer throws the elapsed time away. This component owns only the
+ * repaint: `now` ticks while the clock runs, and elapsed is derived from the
+ * session's `startedAt` against it.
  */
 export function Stopwatch({
   onLogSession,
@@ -29,38 +42,40 @@ export function Stopwatch({
   onLogSession: (seconds: number) => void;
   totalLabel?: string;
 }) {
-  const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
+  const session = useFocusSession();
+  const running = session.startedAt !== null;
+  // Only read while `running` — a paused session ignores it — so the lazy
+  // initializer cannot desync SSR from hydration: on the hydrating render the
+  // store still reports "no session" and both sides print 00:00:00.
+  const [now, setNow] = useState(() => Date.now());
   const [log, setLog] = useState<number[]>([]);
-  const startRef = useRef(0);
-  const baseRef = useRef(0);
 
   useEffect(() => {
     if (!running) return;
-    startRef.current = performance.now();
-    const id = setInterval(() => {
-      setElapsed(baseRef.current + (performance.now() - startRef.current) / 1000);
-    }, 250);
+    const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
   }, [running]);
 
+  const elapsed = elapsedSeconds(session, now);
+
   function toggle() {
     if (running) {
-      baseRef.current = elapsed;
-      setRunning(false);
+      pauseFocusSession();
     } else {
-      setRunning(true);
+      // Re-seed the tick clock so the first quarter-second after a resume
+      // isn't drawn against a `now` from before the pause.
+      setNow(Date.now());
+      startFocusSession();
     }
   }
 
   function logSession() {
-    if (elapsed < 1) return;
-    const secs = Math.round(elapsed);
+    const at = Date.now();
+    const secs = Math.round(elapsedSeconds(session, at));
+    if (secs < 1) return;
     setLog((l) => [secs, ...l].slice(0, 6));
     onLogSession(secs);
-    setRunning(false);
-    baseRef.current = 0;
-    setElapsed(0);
+    clearFocusSession();
   }
 
   const clock = (
