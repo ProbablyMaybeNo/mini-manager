@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useOverlayLayer } from "@/hooks/useOverlayLayer";
 import { completeTutorialAction } from "@/lib/actions/tutorial";
 import { TOUR_STEPS } from "./steps";
 import { TourOverlay } from "./TourOverlay";
@@ -135,6 +136,12 @@ export function TourProvider({
     return () => window.cancelAnimationFrame(id);
   }, [seen, signedIn]);
 
+  // Claim the shared overlay layer while running (R3-1). The tour outranks the
+  // first-create walkthrough, so this is what makes the walkthrough wait its
+  // turn instead of the two stacking with an `aria-modal` each — and what
+  // makes the PWA install banner stand down while either is up.
+  const isTopLayer = useOverlayLayer("tour", active);
+
   const value = useMemo<TourContextValue>(
     () => ({ active, index, start, next, back, finish }),
     [active, index, start, next, back, finish],
@@ -143,7 +150,7 @@ export function TourProvider({
   return (
     <TourContext.Provider value={value}>
       {children}
-      {active && (
+      {active && isTopLayer && (
         <TourOverlay
           step={TOUR_STEPS[index]}
           index={index}

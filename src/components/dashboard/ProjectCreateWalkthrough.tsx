@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/kit";
+import { useCoachMarkFocus } from "@/hooks/useCoachMarkFocus";
+import { useOverlayLayer } from "@/hooks/useOverlayLayer";
 import { cn } from "@/lib/cn";
 import {
   PROJECT_CREATE_WALKTHROUGH,
@@ -136,15 +138,38 @@ function place(
   return { target, card: { top, left }, side };
 }
 
-export function ProjectCreateWalkthrough({
+export interface ProjectCreateWalkthroughProps {
   /** The panel whose controls are annotated — anchor lookup is scoped here. */
-  containerRef,
-  onDismiss,
-}: {
   containerRef: React.RefObject<HTMLElement | null>;
   /** Fired once when the walkthrough ends (Skip / Got it / Esc / overlay). */
   onDismiss: () => void;
-}) {
+}
+
+/**
+ * Layer gate (R3-1). The walkthrough arms the moment a freshly-created
+ * project panel opens — which, for a brand-new account, is while the 8-step
+ * dashboard tour is still running. Both declared `aria-modal="true"` and both
+ * rendered, so assistive technology was told twice over that the rest of the
+ * page was inert, by two elements at the same z-index with no way to tell
+ * which was on top.
+ *
+ * Only the top layer renders. Losing means rendering NOTHING rather than
+ * hiding: a hidden copy would keep its document-level Esc / arrow / Enter
+ * handlers and its scroll listeners live underneath the tour, so the two
+ * would have fought over the same keypresses. The walkthrough resumes the
+ * instant the tour is skipped or finished — which is also the moment the
+ * tour's own final step hands off to project creation.
+ */
+export function ProjectCreateWalkthrough(props: ProjectCreateWalkthroughProps) {
+  const isTopLayer = useOverlayLayer("project-walkthrough", true);
+  if (!isTopLayer) return null;
+  return <ProjectCreateWalkthroughOverlay {...props} />;
+}
+
+function ProjectCreateWalkthroughOverlay({
+  containerRef,
+  onDismiss,
+}: ProjectCreateWalkthroughProps) {
   const steps = PROJECT_CREATE_WALKTHROUGH;
   const total = steps.length;
   const [index, setIndex] = useState(0);
@@ -207,6 +232,12 @@ export function ProjectCreateWalkthrough({
           break;
         case "ArrowRight":
         case "Enter":
+          // Let a focused control keep its own Enter. Now that focus really
+          // lands inside the card (R3-1), Enter on Skip/Back/Next would
+          // otherwise fire twice — once here and once as the button's click.
+          if (e.key === "Enter" && (e.target as HTMLElement | null)?.closest("button")) {
+            return;
+          }
           e.preventDefault();
           next();
           break;
@@ -220,42 +251,23 @@ export function ProjectCreateWalkthrough({
     return () => document.removeEventListener("keydown", onKey);
   }, [next, back, finish]);
 
-  // Move focus into the card on each step for screen-reader / keyboard users.
-  useEffect(() => {
-    cardRef.current?.focus();
-  }, [index]);
+  // Modality, for real (R3-1) — focus onto the card per step, Tab kept inside
+  // it, focus restored on close. See useCoachMarkFocus.
+  useCoachMarkFocus(cardRef, index, placed !== null);
 
   const isFirst = index === 0;
   const isLast = index === total - 1;
+  const target = placed?.target ?? null;
 
-  if (!placed) {
-    // First render before measurement — invisible card so the ref measures.
-    return (
-      <div className="fixed inset-0 z-[100]" aria-hidden="true">
-        <WalkthroughCard
-          ref={cardRef}
-          step={step}
-          index={index}
-          total={total}
-          side="center"
-          isFirst={isFirst}
-          isLast={isLast}
-          style={{ top: -9999, left: -9999, opacity: 0 }}
-          onNext={next}
-          onBack={back}
-          onSkip={finish}
-        />
-      </div>
-    );
-  }
-
-  const { target, card, side } = placed;
-
+  // One tree, measured or not — the `null` slots hold their positions so the
+  // card is the same DOM node before and after placement. It used to render a
+  // different tree pre-measure, which remounted the card and left the focus
+  // call pointing at a discarded node (focus stayed on <body>).
   return (
     <div className="fixed inset-0 z-[100]">
       {/* Dimmer with a spotlight cutout (hollow box-shadow ring) over the
           target, or a plain dim when there's no anchor. */}
-      {target ? (
+      {!placed ? null : target ? (
         <div
           className="pointer-events-none absolute motion-safe:transition-all motion-safe:duration-200"
           style={{
@@ -273,23 +285,29 @@ export function ProjectCreateWalkthrough({
       )}
 
       {/* Click-catcher: clicking the dimmed scrim dismisses the walkthrough. */}
-      <button
-        type="button"
-        aria-label="Dismiss walkthrough"
-        onClick={finish}
-        className="absolute inset-0 cursor-default"
-      />
+      {placed ? (
+        <button
+          type="button"
+          aria-label="Dismiss walkthrough"
+          onClick={finish}
+          className="absolute inset-0 cursor-default"
+        />
+      ) : null}
 
       <WalkthroughCard
         ref={cardRef}
         step={step}
         index={index}
         total={total}
-        side={side}
-        showArrow={Boolean(target)}
+        side={placed?.side ?? "center"}
+        showArrow={Boolean(placed && target)}
         isFirst={isFirst}
         isLast={isLast}
-        style={{ top: card.top, left: card.left }}
+        style={
+          placed
+            ? { top: placed.card.top, left: placed.card.left }
+            : { top: -9999, left: -9999, opacity: 0 }
+        }
         onNext={next}
         onBack={back}
         onSkip={finish}

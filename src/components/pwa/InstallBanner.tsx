@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CloseButton } from "@/components/kit";
+import { useActiveOverlayLayer } from "@/hooks/useOverlayLayer";
 import { useInstallPrompt } from "./useInstallPrompt";
 
 /** localStorage flag so a dismissed banner stays dismissed across sessions. */
@@ -31,12 +32,19 @@ export function InstallBanner() {
   // Start hidden and only reveal after reading localStorage on the client, so
   // SSR and the first client render agree (no hydration mismatch).
   const [dismissed, setDismissed] = useState(true);
+  // Stand down while a coach mark owns the screen (R3-1). This was the third
+  // of the three overlays a new account met on its first action: a
+  // `role="dialog"` sitting UNDER a modal scrim, so it was announced as a
+  // dialog on a page the tour had just declared inert, and its buttons could
+  // not be reached. Suppressed, not dismissed — nothing is written to the
+  // "don't show again" flag, so the offer returns the moment the overlay ends.
+  const overlay = useActiveOverlayLayer();
 
   useEffect(() => {
     setDismissed(wasDismissed());
   }, []);
 
-  if (dismissed || !canInstall) return null;
+  if (overlay || dismissed || !canInstall) return null;
 
   function dismiss() {
     try {

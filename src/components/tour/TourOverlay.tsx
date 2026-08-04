@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/kit";
+import { useCoachMarkFocus } from "@/hooks/useCoachMarkFocus";
 import { cn } from "@/lib/cn";
 import type { TourPlacement, TourStep } from "./steps";
 
@@ -171,6 +172,13 @@ export function TourOverlay({
           break;
         case "ArrowRight":
         case "Enter":
+          // Let a focused control keep its own Enter. Now that focus really
+          // lands inside the card (R3-1), Enter on Skip/Back/Next would
+          // otherwise fire twice — once here and once as the button's click,
+          // stepping the tour twice per press.
+          if (e.key === "Enter" && (e.target as HTMLElement | null)?.closest("button")) {
+            return;
+          }
           e.preventDefault();
           onNext();
           break;
@@ -184,42 +192,30 @@ export function TourOverlay({
     return () => document.removeEventListener("keydown", onKey);
   }, [onNext, onBack, onSkip]);
 
-  // Move keyboard focus into the card when the step changes so screen-reader
-  // and keyboard users land on the live content.
-  useEffect(() => {
-    cardRef.current?.focus();
-  }, [index]);
+  // Modality, for real (R3-1): focus onto the card each step, Tab kept inside
+  // it, focus handed back to whatever opened the tour when it closes. The card
+  // claimed `aria-modal` from day one and did none of this — a real Tab
+  // keypress walked out into the page it had declared inert.
+  useCoachMarkFocus(cardRef, index, placed !== null);
 
-  if (!placed) {
-    // First render before measurement — render an invisible card so the ref
-    // measures real dimensions, behind the dimmer.
-    return (
-      <div className="fixed inset-0 z-[100]" aria-hidden="true">
-        <TooltipCard
-          ref={cardRef}
-          step={step}
-          index={index}
-          total={total}
-          side="center"
-          style={{ top: -9999, left: -9999, opacity: 0 }}
-          onNext={onNext}
-          onBack={onBack}
-          onSkip={onSkip}
-        />
-      </div>
-    );
-  }
-
-  const { target, card, side } = placed;
+  const target = placed?.target ?? null;
   const isFirst = index === 0;
 
+  // One tree, whether or not the card has been measured yet: the pre-measure
+  // pass used to render a DIFFERENT tree (a lone card inside an aria-hidden
+  // wrapper), which meant React unmounted that card and mounted a fresh node
+  // the moment placement landed — so the "focus the card" effect had focused a
+  // node that no longer existed and focus was left on <body>. The `null` slots
+  // below hold their positions, so the card element is the same node
+  // throughout. Off-screen + transparent until placed, so it can be measured
+  // without flashing.
   return (
     <div className="fixed inset-0 z-[100]">
       {/* Dimmer with a spotlight cutout. Two strategies:
           - With a target: a hollow box-shadow ring punches a clear hole over
             the element while dimming everything else, all in one element.
           - Without a target: a plain full-screen dim. */}
-      {target ? (
+      {!placed ? null : target ? (
         <div
           className="pointer-events-none absolute motion-safe:transition-all motion-safe:duration-200"
           style={{
@@ -238,17 +234,21 @@ export function TourOverlay({
 
       {/* Click-catcher: clicking the dimmed area is a no-op (keeps the painter
           inside the tour); explicit Skip/Next/Back drive navigation. */}
-      <div className="absolute inset-0" aria-hidden="true" />
+      {placed ? <div className="absolute inset-0" aria-hidden="true" /> : null}
 
       <TooltipCard
         ref={cardRef}
         step={step}
         index={index}
         total={total}
-        side={side}
-        showArrow={Boolean(target)}
+        side={placed?.side ?? "center"}
+        showArrow={Boolean(placed && target)}
         isFirst={isFirst}
-        style={{ top: card.top, left: card.left }}
+        style={
+          placed
+            ? { top: placed.card.top, left: placed.card.left }
+            : { top: -9999, left: -9999, opacity: 0 }
+        }
         onNext={onNext}
         onBack={onBack}
         onSkip={onSkip}
