@@ -57,6 +57,17 @@ const DIALOG_HTML = `
   <button id="outside-after">after</button>
 `;
 
+/** The same shell, but asking for its field to hold focus on open (R4-3). */
+const AUTOFOCUS_HTML = `
+  <button id="outside-before">before</button>
+  <div id="dialog" tabindex="-1">
+    <button id="close">✕</button>
+    <input id="field" data-autofocus />
+    <button id="apply">Apply</button>
+  </div>
+  <button id="outside-after">after</button>
+`;
+
 function el(id: string): HTMLElement {
   const node = document.getElementById(id);
   if (!node) throw new Error(`no #${id} in the test DOM`);
@@ -73,6 +84,22 @@ function arm(html: string, onClose: () => void = () => {}): HTMLElement {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useFocusTrap({ current: container }, true, onClose);
   return container;
+}
+
+/** Arm the trap the way a real open does — a trigger outside is focused first. */
+function armFrom(html: string, triggerId: string): HTMLElement {
+  document.body.innerHTML = html;
+  el(triggerId).focus();
+  const container = el("dialog");
+  cursor = 0;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useFocusTrap({ current: container }, true, () => {});
+  return container;
+}
+
+/** Run every pending teardown, the way unmounting the shell does. */
+function teardown() {
+  for (const cleanup of cleanups.splice(0)) cleanup();
 }
 
 /** A real keydown, the way a keyboard delivers it. */
@@ -174,6 +201,68 @@ describe("useFocusTrap", () => {
     expect(document.activeElement).toBe(el("outside-before"));
     press("Escape");
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * R4-2 / R4-3 — the case the R3-5 tests above never covered: a shell that
+   * wants one of its own fields focused on open. Every dialog those tests use
+   * has no autofocus field, which is exactly why focus restore looked correct
+   * for a whole round while the add-paint dialog was dropping focus on <body>.
+   */
+  test("opens on the [data-autofocus] field, not the container (R4-3)", () => {
+    const container = armFrom(AUTOFOCUS_HTML, "outside-before");
+    expect(document.activeElement).toBe(el("field"));
+    expect(document.activeElement).not.toBe(container);
+  });
+
+  test("a shell WITH an autofocus field still restores focus to its trigger (R4-2)", () => {
+    armFrom(AUTOFOCUS_HTML, "outside-before");
+    teardown();
+    expect(document.activeElement).toBe(el("outside-before"));
+  });
+
+  test("never captures a node inside the container as the restore target (R4-2)", () => {
+    document.body.innerHTML = DIALOG_HTML;
+    el("outside-before").focus();
+    // What React's `autoFocus` does: focus lands inside the shell during
+    // commit, BEFORE this effect runs. Capturing it means teardown calls
+    // .focus() on a detached node and the browser falls back to <body>.
+    el("field").focus();
+    const container = el("dialog");
+    cursor = 0;
+    useFocusTrap({ current: container }, true, () => {});
+    expect(document.activeElement).toBe(container);
+
+    teardown();
+    expect(document.activeElement).not.toBe(el("field"));
+    expect(document.activeElement).toBe(container);
+  });
+
+  test("a disabled autofocus target falls back to the container", () => {
+    const container = armFrom(
+      `<button id="outside-before">before</button>
+       <div id="dialog" tabindex="-1">
+         <button id="close">✕</button>
+         <input id="field" data-autofocus disabled />
+       </div>`,
+      "outside-before",
+    );
+    expect(document.activeElement).toBe(container);
+  });
+
+  test("R3-5 still holds on an autofocus shell: Tab from the field is the browser's, and the container branch survives", () => {
+    const container = armFrom(AUTOFOCUS_HTML, "outside-before");
+    // The field sits mid-run, so neither end fires — same as DIALOG_HTML.
+    expect(press("Tab").defaultPrevented).toBe(false);
+    expect(press("Tab", true).defaultPrevented).toBe(false);
+
+    // And if focus is back on the container, both directions still turn in.
+    container.focus();
+    expect(press("Tab", true).defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(el("apply"));
+    container.focus();
+    expect(press("Tab").defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(el("close"));
   });
 
   test("does nothing while disabled", () => {

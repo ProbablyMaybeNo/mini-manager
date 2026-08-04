@@ -167,3 +167,63 @@ test.describe("Dialog focus trap — both directions (R3-5)", () => {
     await expect(dialog).toBeHidden({ timeout: 15_000 });
   });
 });
+
+/**
+ * R4-1 / R4-2 / R4-3 — the shell the R3-5 pass above cannot reach, because
+ * every dialog it drives has NO autofocus field. `PromptDialog` has one, and
+ * that single difference was enough to break focus restore: React applies
+ * `autoFocus` during commit, before effects, so `useFocusTrap` captured the
+ * dialog's own input as "the element that was focused before" and teardown
+ * .focus()'d a node that had just unmounted. Focus landed on <body>.
+ *
+ * The same dialog also shipped a bare <label> with no `htmlFor`, so its only
+ * field had no accessible name at all.
+ */
+test.describe("PromptDialog — named field, honoured autofocus, real restore", () => {
+  test("labels its field, opens on it, and returns focus to the trigger", async ({
+    page,
+  }) => {
+    await signInAs(page, freshTestEmail());
+    await page.goto("/collection", { waitUntil: "domcontentloaded" });
+
+    const trigger = page.getByRole("button", { name: "+ PAINT", exact: true });
+    await expect(trigger).toBeVisible({ timeout: 30_000 });
+    const dialog = page.getByRole("dialog", { name: /Add paint/i });
+    await openDialog(page, trigger, dialog);
+
+    // R4-1 — the visible "Paint name" is the field's accessible name, not
+    // decoration. `getByLabel` resolves through the accessibility tree, which
+    // is precisely what a bare <label> failed to reach.
+    const field = dialog.getByLabel("Paint name");
+    await expect(field).toBeVisible();
+    expect(
+      await field.evaluate((node: HTMLInputElement) => ({
+        labels: node.labels?.length ?? 0,
+        ariaLabel: node.getAttribute("aria-label"),
+        ariaLabelledBy: node.getAttribute("aria-labelledby"),
+      })),
+    ).toEqual({ labels: 1, ariaLabel: null, ariaLabelledBy: null });
+
+    // R4-3 — the field asked for focus on open and now actually has it, so a
+    // one-field "type the name" dialog can be typed into without a Tab first.
+    await expect(field).toBeFocused();
+    await page.keyboard.type("Macragge Blue");
+    await expect(field).toHaveValue("Macragge Blue");
+
+    // R4-2 — Escape returns focus to the control that opened the dialog, not
+    // to <body>. Measured before the fix: `document.body`.
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden({ timeout: 15_000 });
+    await expect(trigger).toBeFocused();
+    expect(
+      await page.evaluate(() => document.activeElement?.tagName ?? ""),
+    ).not.toBe("BODY");
+
+    // Cancel takes the same path as Escape — the button a mouse user reaches
+    // for, and the one the audit walked.
+    await openDialog(page, trigger, dialog);
+    await dialog.getByRole("button", { name: /^Cancel$/ }).click();
+    await expect(dialog).toBeHidden({ timeout: 15_000 });
+    await expect(trigger).toBeFocused();
+  });
+});

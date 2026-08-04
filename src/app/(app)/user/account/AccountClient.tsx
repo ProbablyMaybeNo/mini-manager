@@ -258,7 +258,9 @@ export function AccountClient({
         </p>
         <Input
           name="confirm-username"
-          autoFocus
+          // Same shell, same defect as PromptDialog (R4-2): React's `autoFocus`
+          // ran before the trap's effect, so Cancel dropped focus on <body>.
+          data-autofocus
           placeholder={username}
           value={confirmText}
           disabled={pending}
