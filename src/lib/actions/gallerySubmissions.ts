@@ -9,6 +9,10 @@ import { recipes, users, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
 import { isAdminUser } from "@/lib/admin/allowlist";
 import { blobReadWriteToken, isBlobConfigured } from "@/lib/blob/env";
+import {
+  isNamedRecipe,
+  UNNAMED_RECIPE_GALLERY_ERROR,
+} from "@/lib/recipes/name";
 import { generatePublicSlug } from "@/lib/recipes/slug";
 import { moderateGalleryImage } from "@/lib/ai/imageModeration";
 import { isProxiableBlobUrl } from "@/lib/shareCard/imageSrc";
@@ -132,6 +136,18 @@ export async function submitRecipeToGallery(
 
   const existing = await getOwnedRecipe(userId, recipeId);
   if (!existing) return { ok: false, error: "Recipe not found" };
+
+  // R4-5 — the gallery is the curated public surface and the recipe's name is
+  // the card's headline, so a still-auto-named recipe cannot publish. The
+  // composer says the same thing before the click; this is the guard that
+  // makes it true, since the submit is a server action a client can call
+  // directly. Checked before the quota so a refusal costs neither a
+  // submission slot nor the paid vision moderation call, and the just-
+  // uploaded blob is dropped the same way a moderation `fail` drops it.
+  if (!isNamedRecipe(existing.name)) {
+    await deleteBlobBestEffort(imagePathname);
+    return { ok: false, error: UNNAMED_RECIPE_GALLERY_ERROR };
+  }
 
   // Per-user daily quota (E7) — cap gallery submissions per account per day,
   // independent of the billing flag. Metered before the paid Haiku vision

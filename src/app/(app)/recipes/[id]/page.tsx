@@ -1,11 +1,12 @@
 import { auth } from "@/auth";
 import { loadEditorRecipe, loadProjectsForPicker } from "@/lib/appData";
+import { PLACEHOLDER_RECIPE_NAME } from "@/lib/recipes/name";
 import type { Recipe } from "@/lib/types";
 import { RecipeEditorClient } from "./RecipeEditorClient";
 import { RecipeNotFound } from "./RecipeNotFound";
 
 function blankRecipe(name: string): Recipe {
-  return { id: "new", name: name || "Untitled recipe", slots: [], inspo: [], notes: "" };
+  return { id: "new", name: name || PLACEHOLDER_RECIPE_NAME, slots: [], inspo: [], notes: "" };
 }
 
 /**

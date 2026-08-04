@@ -25,6 +25,8 @@ const delMock = vi.hoisted(() => vi.fn(async () => undefined));
 const moderation = vi.hoisted(() => ({
   verdict: "flag" as "pass" | "flag" | "fail" | "error",
   reason: null as string | null,
+  /** How many times the (paid, in production) vision call was reached. */
+  calls: 0,
 }));
 
 vi.mock("@/db/client", () => ({
@@ -39,7 +41,10 @@ vi.mock("@/lib/auth-stub", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@vercel/blob", () => ({ del: delMock }));
 vi.mock("@/lib/ai/imageModeration", () => ({
-  moderateGalleryImage: async () => ({ verdict: moderation.verdict, reason: moderation.reason }),
+  moderateGalleryImage: async () => {
+    moderation.calls += 1;
+    return { verdict: moderation.verdict, reason: moderation.reason };
+  },
 }));
 
 const { submitRecipeToGallery, approveGallerySubmission, rejectGallerySubmission } =
@@ -96,6 +101,7 @@ beforeEach(async () => {
   delMock.mockClear();
   moderation.verdict = "flag";
   moderation.reason = null;
+  moderation.calls = 0;
   process.env.MM_ADMIN_EMAILS = ADMIN_EMAIL;
 });
 
@@ -151,6 +157,64 @@ describe("submitRecipeToGallery", () => {
     expect(res.ok).toBe(false);
     if (res.ok) return;
     expect(res.error).toMatch(/does not match/i);
+  });
+
+  /**
+   * R4-5 — an unnamed recipe cannot reach the public gallery. The composer
+   * says so before the click, but SUBMIT is a server action a client can call
+   * directly, so this is the guard that actually holds.
+   */
+  test("refuses a recipe still carrying the auto-name, and drops the uploaded card", async () => {
+    moderation.verdict = "pass";
+    process.env.BLOB_READ_WRITE_TOKEN = "test-token";
+    const recipeId = await seedRecipe({ name: "Untitled recipe" });
+
+    const res = await submitFixture(recipeId);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    // Not a bare refusal — the message names the fix.
+    expect(res.error).toMatch(/name/i);
+    expect(res.error).toMatch(/gallery/i);
+
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.galleryStatus).toBe("none");
+    expect(row?.galleryImageUrl).toBeNull();
+    expect(row?.isListed).toBe(false);
+
+    // Refused BEFORE the paid vision call, and the just-uploaded blob is
+    // dropped rather than orphaned — same handling as a moderation `fail`.
+    expect(moderation.calls).toBe(0);
+    expect(delMock).toHaveBeenCalledWith("gallery-cards/x/1.png", expect.anything());
+  });
+
+  test("refuses a blank-named recipe too", async () => {
+    moderation.verdict = "pass";
+    const recipeId = await seedRecipe({ name: "   " });
+    const res = await submitFixture(recipeId);
+    expect(res.ok).toBe(false);
+    expect(moderation.calls).toBe(0);
+
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.isListed).toBe(false);
+  });
+
+  test("the same recipe publishes once it has a real name", async () => {
+    moderation.verdict = "pass";
+    const recipeId = await seedRecipe({ name: "Untitled recipe" });
+    expect((await submitFixture(recipeId)).ok).toBe(false);
+
+    await state.db!
+      .update(recipes)
+      .set({ name: "Dark Prussian Blue scheme" })
+      .where(eq(recipes.id, recipeId));
+
+    const res = await submitFixture(recipeId);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.status).toBe("approved");
+
+    const [row] = await state.db!.select().from(recipes).where(eq(recipes.id, recipeId));
+    expect(row?.isListed).toBe(true);
   });
 
   test("accepts an on-host blob URL whose pathname matches", async () => {
