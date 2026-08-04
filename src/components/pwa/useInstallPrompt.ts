@@ -66,13 +66,43 @@ export function useInstallPrompt(): InstallPromptState {
     };
   }, []);
 
+  /**
+   * R3-4 — the fifth of R2-15's unguarded awaits, and the only one wrapping a
+   * browser API rather than a server action, which is why it needed a product
+   * call rather than a mechanical `try`.
+   *
+   * The call: on a failed or rejected prompt, HIDE the control. `prompt()` and
+   * `userChoice` reject for reasons the painter cannot act on — the event was
+   * already spent (it is single-use), the call lost its user-gesture context,
+   * the browser withdrew the offer, or the app is in fact already installed.
+   * An "install failed" message would be a dead end for something they did not
+   * ask to fail, so we retire the affordance instead of explaining it. If the
+   * app really is still installable, Chromium fires `beforeinstallprompt`
+   * again on the next visit and the button comes back on its own — the failure
+   * is hidden for this session, not remembered.
+   *
+   * Rejection is reported as "unavailable", which callers already handle:
+   * InstallBanner treats it as "don't write the permanent dismissal flag", so
+   * a transient failure never costs the painter a future prompt.
+   *
+   * The `finally` is the actual defect fix. `deferred` doubles as the in-flight
+   * flag (`canInstall` reads it), and it was only cleared on the success line —
+   * so a rejection left it set, and the button stayed on screen wired to a
+   * spent event, dead until reload.
+   */
   const promptInstall = useCallback(async () => {
     if (!deferred) return "unavailable" as const;
-    await deferred.prompt();
-    const { outcome } = await deferred.userChoice;
-    // The event can only be used once — clear it so the button disappears.
-    setDeferred(null);
-    return outcome;
+    try {
+      await deferred.prompt();
+      const { outcome } = await deferred.userChoice;
+      return outcome;
+    } catch {
+      return "unavailable" as const;
+    } finally {
+      // The event can only be used once — spent or rejected, it is no longer
+      // usable, so clear it either way and let the button disappear.
+      setDeferred(null);
+    }
   }, [deferred]);
 
   return { canInstall: deferred !== null, promptInstall };
