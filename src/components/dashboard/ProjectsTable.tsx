@@ -330,10 +330,17 @@ export function ProjectsTable({
                 thumb-rest was the highest-contrast element on every card,
                 pointing the eye at the one irreversible action. It still turns
                 red on hover/press, and delete is confirm-guarded regardless. */}
+            {/* h-10 (R3-2): the visible box was 28px — the smallest interactive
+                thing in the app, on the card you tap to open the project. The
+                `after:` block below already put a 44px hit area here (MUX-004),
+                so the tap geometry is unchanged; this only stops the drawn
+                control from being half the size of the target it sits in, and
+                brings it past the 39px every ordinary button gets. The glyph
+                stays 16px, so it reads no louder than before. */}
             <IconButton
               variant="tertiary"
               size="sm"
-              className="relative ml-auto h-7 w-7 text-fg-faint no-underline transition-colors hover:text-red hover:no-underline focus-visible:text-red after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+              className="relative ml-auto h-10 w-10 text-fg-faint no-underline transition-colors hover:text-red hover:no-underline focus-visible:text-red after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
               aria-label={`Delete ${p.title}`}
               title="Delete project"
               disabled={pendingDelete}
