@@ -124,4 +124,51 @@ test.describe("M3 — Project workspace lifecycle", () => {
       page.getByRole("button", { name: new RegExp(`(Expand|Collapse) ${name}`) }),
     ).toHaveCount(0);
   });
+
+  /**
+   * R4-9 — the open inspector put TWO controls on screen both named exactly
+   * "Save": the action bar's primary (which flushes notes, target date and
+   * the reference link) and REFERENCE's own small one (which saves only the
+   * link). A screen-reader user tabbing the panel heard "Save button … Save
+   * button" with no way to tell which saved what.
+   */
+  test("M3.3 the inspector's two Save controls are distinguishable", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail("saves"));
+    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const name = `QA Saves ${Date.now()}`;
+    await addProject(page, name);
+    await page.getByRole("button", { name: `Open ${name}` }).click();
+
+    const inspector = page.getByRole("region", { name: "Project inspector" });
+    await expect(inspector).toBeVisible({ timeout: 15_000 });
+
+    // Both are reachable at once on desktop, which is the condition that made
+    // this ambiguous — and neither is called just "Save" any more.
+    await expect(
+      inspector.getByRole("button", { name: "Save project details" }),
+    ).toHaveCount(1);
+    await expect(inspector.getByRole("button", { name: "Save link" })).toHaveCount(1);
+    await expect(
+      inspector.getByRole("button", { name: "Save", exact: true }),
+    ).toHaveCount(0);
+
+    // Renaming it did not break it: the control still runs its action and
+    // reports no error. The persistence round-trip itself is pinned server-side
+    // in tests/integration/actions/projectMeta.test.ts, which is both cheaper
+    // and not a race against a reload.
+    const saveLink = inspector.getByRole("button", { name: "Save link" });
+    await inspector
+      .getByRole("textbox", { name: "Reference image URL" })
+      .fill("https://example.com/reference.jpg");
+    await saveLink.click();
+    await expect(saveLink).toBeEnabled({ timeout: 15_000 });
+    await expect(inspector.getByText(/^▸ /)).toHaveCount(0);
+  });
 });

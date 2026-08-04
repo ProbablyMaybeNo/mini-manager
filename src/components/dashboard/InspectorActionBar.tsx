@@ -27,6 +27,7 @@ export function InspectorActionBar({
   onDuplicate,
   archived = false,
   saveLabel = "Save",
+  saveDescription,
   saveDisabled = false,
   disabled = false,
   className,
@@ -47,6 +48,14 @@ export function InspectorActionBar({
   archived?: boolean;
   /** SAVE button label — "Save" normally, "Create" in RF-8 create mode. */
   saveLabel?: string;
+  /**
+   * What SAVE persists, e.g. "project details" (R4-9). Appended to the visible
+   * label to form the accessible name, so a screen-reader user hearing more
+   * than one Save on screen can tell them apart. Appended rather than
+   * replacing, so the accessible name always contains the visible label
+   * whatever `saveLabel` is (WCAG 2.5.3) — including "Create".
+   */
+  saveDescription?: string;
   /** Disable just SAVE (e.g. create mode with an empty name). */
   saveDisabled?: boolean;
   disabled?: boolean;
@@ -73,6 +82,7 @@ export function InspectorActionBar({
           size="sm"
           className="col-span-3 min-h-11 sm:flex-1"
           disabled={disabled || saveDisabled}
+          aria-label={saveDescription ? `${saveLabel} ${saveDescription}` : undefined}
           onClick={onSave}
         >
           {saveLabel}
