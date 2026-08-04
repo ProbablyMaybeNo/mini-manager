@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Panel } from "@/components/kit";
+import { Button, buttonVariants, Panel } from "@/components/kit";
 import { PageHeader } from "@/components/shell";
+import { cn } from "@/lib/cn";
 import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { UNLOCKS } from "@/components/public/PricingClient";
@@ -47,8 +48,18 @@ export function ToolShell({
           : "flex flex-1 flex-col gap-4 overflow-x-hidden p-3 md:gap-6 md:p-6"
       }
     >
-      <Link href="/tools" className="self-start">
-        <Button variant="tertiary">← Tools</Button>
+      {/* ONE control, not two (R3-4). This was a <Link> wrapping a <Button>,
+          so every tool page — all five gates included — put an <a> AND a
+          <button> in the accessibility tree, both with the accessible name
+          "← Tools": the same destination announced twice and a redundant tab
+          stop before the page even starts. Going somewhere is a link's job,
+          so the button's classes move onto the anchor and the <button> goes
+          (which also stops nesting interactive content inside an <a>). */}
+      <Link
+        href="/tools"
+        className={cn(buttonVariants({ variant: "tertiary" }), "self-start")}
+      >
+        ← Tools
       </Link>
       {/* Blurb is desktop-only — the tool's own controls are right below it and
           the title already names the job (Ross, 2026-07-27 mobile pass). */}
