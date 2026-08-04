@@ -151,6 +151,9 @@ export function ProjectPanelStack({
     >
       {tabs.map((t, i) => {
         const selected = t.id === activeId;
+        // Tier index in the URL stack, which is what close acts on — not the
+        // index in `tabs`, which skips any id that hasn't resolved yet.
+        const tier = stack.indexOf(t.id);
         return (
           <span
             key={t.id}
@@ -184,11 +187,11 @@ export function ProjectPanelStack({
               </span>
               <span className="truncate">{t.title}</span>
             </button>
-            {i > 0 && (
+            {tier > 0 && (
               <button
                 type="button"
                 aria-label={`Close ${t.title} tab`}
-                onClick={() => onCloseTier(i)}
+                onClick={() => onCloseTier(tier)}
                 // ≥24px hit area, 8px (gap-2) from the label tap area.
                 className="flex h-6 w-6 shrink-0 items-center justify-center text-fg-dim hover:text-red focus:outline-none focus-visible:text-red"
               >
