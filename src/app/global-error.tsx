@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import { scopeForDigest } from "@/lib/monitoring";
 
 /** Last-resort boundary — replaces the ROOT layout on a render crash, so it
  *  must ship its own <html>/<body>. Inline styles (globals.css isn't applied
@@ -15,7 +16,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    Sentry.captureException(error, scopeForDigest(error.digest));
   }, [error]);
 
   return (

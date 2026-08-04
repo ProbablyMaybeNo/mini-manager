@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import { scopeForDigest } from "@/lib/monitoring";
 
 /** Themed route-level error boundary (keeps the terminal aesthetic on a crash).
  *
@@ -26,7 +27,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    Sentry.captureException(error, scopeForDigest(error.digest));
   }, [error]);
 
   return (

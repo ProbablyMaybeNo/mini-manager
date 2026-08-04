@@ -72,6 +72,49 @@ describe("R2-23 error boundaries report to Sentry", () => {
     // bound. Asserting on the identity of the argument catches a regression to
     // either shape.
     expect(captureException).toHaveBeenCalledTimes(1);
-    expect(captureException).toHaveBeenCalledWith(error);
+    expect(captureException.mock.calls[0]?.[0]).toBe(error);
   });
+});
+
+/**
+ * R3-1 — the same server crash also fires `onRequestError` ->
+ * `Sentry.captureRequestError`, so it lands in Sentry twice: a full server
+ * event and this client one, which production redacts to a fixed placeholder
+ * message. `error.digest` is the only surviving link between them (Next.js
+ * stamps it on the error before calling `onRequestError`), so it goes on as a
+ * tag — searchable as `digest:<value>` — and into the fingerprint, without
+ * which every server crash collapses into ONE client issue, since they all
+ * carry the identical redacted message.
+ *
+ * Tag only. R2-21's `dataCollection` lockdown stays exactly as it is: nothing
+ * here enriches the payload, and a digest is a hash of message + stack.
+ */
+describe("R3-1 boundaries tag the digest so the pair correlates", () => {
+  test.each(BOUNDARIES)("%s attaches the digest when present", (_name, Boundary) => {
+    const error = Object.assign(new Error("boom"), { digest: "1573929571" });
+
+    Boundary({ error, reset: () => {} });
+
+    expect(captureException).toHaveBeenCalledTimes(1);
+    expect(captureException.mock.calls[0]?.[1]).toEqual({
+      tags: { digest: "1573929571" },
+      fingerprint: ["{{ default }}", "1573929571"],
+    });
+  });
+
+  test.each(BOUNDARIES)(
+    "%s still reports, and does not throw, without a digest",
+    (_name, Boundary) => {
+      // A crash originating in a client component never gets a digest. It has
+      // no server half to correlate with, so it must keep Sentry's default
+      // grouping rather than being fingerprinted on `undefined`.
+      const error = new Error("client-side boom");
+
+      expect(() => Boundary({ error, reset: () => {} })).not.toThrow();
+
+      expect(captureException).toHaveBeenCalledTimes(1);
+      expect(captureException.mock.calls[0]?.[0]).toBe(error);
+      expect(captureException.mock.calls[0]?.[1]).toBeUndefined();
+    },
+  );
 });
