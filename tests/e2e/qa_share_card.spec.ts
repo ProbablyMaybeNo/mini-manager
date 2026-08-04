@@ -19,9 +19,13 @@ import { freshTestEmail, signInAs } from "./_helpers/auth";
  * whole flow is exercised from an unsaved `/recipes/new` draft.
  */
 
+// R3-3 — this file used to be the landing video's `<video poster>` under
+// public/brand/. The WebP still/rail pair (O-2) superseded it there, leaving
+// this upload fixture as its only consumer, so it moved to tests/fixtures/
+// rather than being deleted: same bytes, same test, 250KB off the deploy.
 const SAMPLE_PHOTO = path.resolve(
   __dirname,
-  "../../public/brand/mini-mainframe-logo-poster.jpg",
+  "../fixtures/mini-mainframe-logo-poster.jpg",
 );
 const OUT_DIR = path.resolve(__dirname, "../../_card-review");
 

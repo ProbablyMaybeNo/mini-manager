@@ -1,8 +1,12 @@
 // Generate favicon + apple-icon + PWA manifest PNGs from the brand logo.
-// Run once whenever public/brand/logo.png changes — the outputs are
+// Run once whenever scripts/assets/logo.png changes — the outputs are
 // committed to source. The Next 16 app router conventions pick up
 // src/app/icon.{png,svg} and src/app/apple-icon.png automatically; the
 // PWA manifest (public/manifest.json) references the public/icons/* set.
+//
+// R3-3 — the source lives HERE, not in public/. Nothing ever requested
+// /brand/logo.png, so serving a 1.5MB original was pure deploy weight; it is
+// build-time input to this script and nothing else.
 //
 //   node scripts/gen-icons.mjs
 //
@@ -15,7 +19,7 @@ import sharp from "sharp";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "..");
-const src = resolve(root, "public/brand/logo.png");
+const src = resolve(root, "scripts/assets/logo.png");
 const iconOut = resolve(root, "src/app/icon.png");
 const appleOut = resolve(root, "src/app/apple-icon.png");
 const pwaDir = resolve(root, "public/icons");
