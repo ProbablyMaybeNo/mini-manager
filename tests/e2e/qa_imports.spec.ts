@@ -66,7 +66,7 @@ test.describe("M7 — Imports", () => {
 
     // Expanding reveals the imported units inline.
     await expect(
-      page.getByRole("button", { name: /Manage .*Intercessors/i }),
+      page.getByRole("button", { name: /Open .*Intercessors/i }),
     ).toBeVisible({ timeout: 15_000 });
   });
 });

@@ -36,7 +36,7 @@ async function addProject(page: Page, name: string): Promise<void> {
   await nameField.fill(name);
   await nameField.blur();
   await expect(
-    page.getByRole("button", { name: `Manage ${name}` }),
+    page.getByRole("button", { name: `Open ${name}` }),
   ).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Close project inspector" }).click();
 }
@@ -45,7 +45,7 @@ async function addProject(page: Page, name: string): Promise<void> {
  *  editable INSPECTOR (a "Project inspector" region), whose "⤢ Open full page"
  *  affordance routes to the roomy /projects/<id> page. */
 async function openProjectPage(page: Page, name: string): Promise<string> {
-  await page.getByRole("button", { name: `Manage ${name}` }).click();
+  await page.getByRole("button", { name: `Open ${name}` }).click();
   const inspector = page.getByRole("region", { name: "Project inspector" });
   await expect(inspector).toBeVisible({ timeout: 15_000 });
   await inspector.getByRole("button", { name: /open full page/i }).click();
@@ -55,6 +55,53 @@ async function openProjectPage(page: Page, name: string): Promise<string> {
   ).toBeVisible({ timeout: 30_000 });
   return page.url();
 }
+
+test.describe("R4-8 — the roster's data rows are rows", () => {
+  test("data rows expose row → cell, and the title opens the project by keyboard", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail("roster"));
+    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const name = `QA Roster ${Date.now()}`;
+    await addProject(page, name);
+
+    // The row used to be `<tr role="button">`, which took it OUT of the table's
+    // structure: only the header row was a `row` at all, and every data value
+    // was a `cell` orphaned from its `columnheader`. Header + one data row = 2.
+    const table = page.getByRole("table").first();
+    await expect(table.getByRole("row")).toHaveCount(2, { timeout: 15_000 });
+
+    // One cell per columnheader, which is what lets a screen reader in table
+    // mode announce "Status: …" instead of a bare value.
+    const headerRow = table.getByRole("row").first();
+    const dataRow = table.getByRole("row").nth(1);
+    const columns = await headerRow.getByRole("columnheader").count();
+    expect(columns).toBeGreaterThan(1);
+    await expect(dataRow.getByRole("cell")).toHaveCount(columns);
+
+    // The three controls that were focusable descendants of a `button` are now
+    // in cells of a row, where they are legal.
+    await expect(dataRow.getByRole("button", { name: `Delete ${name}` })).toHaveCount(1);
+    await expect(
+      dataRow.getByRole("button", { name: `Attach recipe to ${name}` }),
+    ).toHaveCount(1);
+
+    // Keyboard activation still opens the project — natively, on a real
+    // button, rather than through the row's hand-rolled keydown.
+    const openTitle = dataRow.getByRole("button", { name: `Open ${name}` });
+    await openTitle.focus();
+    await expect(openTitle).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("region", { name: "Project inspector" }),
+    ).toBeVisible({ timeout: 15_000 });
+  });
+});
 
 test.describe("M11 — Dashboard real-data features", () => {
   test("M11.1 add a calendar event via a day cell → shows in the rail's UPCOMING list", async ({

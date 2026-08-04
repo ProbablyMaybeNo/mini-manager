@@ -37,7 +37,7 @@ async function addProject(page: Page, name: string): Promise<void> {
   // The rename commits via updateProjectName on blur; the roster row + the
   // inspector's own header pick up the new title once it round-trips.
   await expect(
-    page.getByRole("button", { name: `Manage ${name}` }),
+    page.getByRole("button", { name: `Open ${name}` }),
   ).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Close project inspector" }).click();
 }
@@ -60,12 +60,15 @@ test.describe("M3 — Project workspace lifecycle", () => {
     const name = `QA Squad ${Date.now()}`;
     await addProject(page, name);
 
-    const row = page.getByRole("button", { name: `Manage ${name}` });
-    await expect(row).toBeVisible({ timeout: 15_000 });
+    // R4-8 — the roster row is a `row` again, and the project title inside its
+    // Title cell is the control that opens it. The row still opens on a body
+    // click for a mouse; this is the keyboard/AT path.
+    const openTitle = page.getByRole("button", { name: `Open ${name}` });
+    await expect(openTitle).toBeVisible({ timeout: 15_000 });
 
-    // A row-body click opens the full editable INSPECTOR (not the old flow
-    // overlay): name, type, status, priority all editable in one panel.
-    await row.click();
+    // Opens the full editable INSPECTOR (not the old flow overlay): name,
+    // type, status, priority all editable in one panel.
+    await openTitle.click();
     const inspector = page.locator('section[aria-label="Project inspector"]');
     await expect(inspector).toBeVisible({ timeout: 15_000 });
     await expect(page.getByLabel("Name", { exact: true })).toHaveValue(name, {
@@ -92,7 +95,7 @@ test.describe("M3 — Project workspace lifecycle", () => {
     // the reload is more robust than waitForResponse under dev-server load.
     await expect(async () => {
       await page.reload({ waitUntil: "domcontentloaded" });
-      await page.getByRole("button", { name: `Manage ${name}` }).click();
+      await page.getByRole("button", { name: `Open ${name}` }).click();
       await expect(page.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 5_000 });
     }).toPass({ timeout: 45_000 });
   });
@@ -115,7 +118,7 @@ test.describe("M3 — Project workspace lifecycle", () => {
     await addProject(page, name);
 
     await expect(
-      page.getByRole("button", { name: `Manage ${name}` }),
+      page.getByRole("button", { name: `Open ${name}` }),
     ).toBeVisible({ timeout: 15_000 });
     await expect(
       page.getByRole("button", { name: new RegExp(`(Expand|Collapse) ${name}`) }),

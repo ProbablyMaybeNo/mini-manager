@@ -110,25 +110,30 @@ export function ProjectsTable({
       // to match dashboard 4:4).
       const showCaret = hasChildren;
 
+      // R4-8 — this WAS `<tr role="button" tabindex="0" aria-label="Manage …">`.
+      // Two things wrong with that, and they compound. `cell` requires a `row`
+      // parent, so with a `button` in between every value in the row was
+      // orphaned from its `columnheader`: a screen-reader user in table mode
+      // got "New Project, Army, —" with no Status:/Priority: to hang it on, on
+      // the first surface a signed-in user sees. And ARIA gives `button`
+      // presentational children, so the three real controls inside it (attach,
+      // priority, delete) were focusable descendants of a button — invalid.
+      //
+      // The `<tr>` is a row again, and activation moved to a real control in
+      // the Title cell, which is how /collection's tables already do it. The
+      // row keeps its click handler, so for a mouse it is still one target
+      // ("cards are doors"); Enter/Space still open the project, now natively
+      // on a button rather than through a hand-rolled keydown.
       const row = (
         <tr
           key={p.id}
-          tabIndex={0}
-          role="button"
-          aria-label={`Manage ${p.title}`}
           aria-current={selected ? "true" : undefined}
           onClick={() => onOpenProject(p)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onOpenProject(p);
-            }
-          }}
           className={cn(
-            "group/row cursor-pointer border-b border-border transition-colors duration-150 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-cyan",
+            "group/row cursor-pointer border-b border-border transition-colors duration-150",
             selected
               ? "bg-cyan/10"
-              : cn("bg-surface hover:bg-cyan/[0.06] focus-visible:bg-cyan/10", banded && "bg-bg"),
+              : cn("bg-surface hover:bg-cyan/[0.06] focus-within:bg-cyan/10", banded && "bg-bg"),
           )}
         >
           <td className="px-3 py-2.5 font-body text-body text-fg">
@@ -156,8 +161,24 @@ export function ProjectsTable({
                 <span className="h-6 w-6 shrink-0" aria-hidden />
               )}
               {/* Title — JetBrains Mono Bold 13px (4:4), bright white so it
-                  reads distinct from the coloured TYPE chip. */}
-              <span className="font-mono text-[13px] font-bold text-fg-bright">{p.title}</span>
+                  reads distinct from the coloured TYPE chip. It is also the
+                  row's activator (R4-8): the accessible name is "Open <title>"
+                  rather than the old "Manage <title>" on the whole row, and it
+                  contains the visible label so WCAG 2.5.3 holds. Same
+                  typography as before — this changes the a11y tree, not the
+                  render. `stopPropagation` so the row's own click doesn't fire
+                  a second time behind it. */}
+              <button
+                type="button"
+                aria-label={`Open ${p.title}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenProject(p);
+                }}
+                className="min-w-0 truncate rounded-sm text-left font-mono text-[13px] font-bold text-fg-bright focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+              >
+                {p.title}
+              </button>
             </div>
           </td>
           <td className="px-3 py-2.5">

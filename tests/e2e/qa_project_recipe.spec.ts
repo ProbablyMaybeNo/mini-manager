@@ -40,7 +40,7 @@ async function addProject(page: Page, name: string): Promise<void> {
   await nameField.fill(name);
   await nameField.blur();
   await expect(
-    page.getByRole("button", { name: `Manage ${name}` }),
+    page.getByRole("button", { name: `Open ${name}` }),
   ).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Close project inspector" }).click();
 }
@@ -63,7 +63,7 @@ async function openProjectPage(page: Page, name: string): Promise<string> {
   const inspector = page.getByRole("region", { name: "Project inspector" });
 
   if (!(await heading.isVisible())) {
-    await page.getByRole("button", { name: `Manage ${name}` }).click();
+    await page.getByRole("button", { name: `Open ${name}` }).click();
     await expect(inspector).toBeVisible({ timeout: 15_000 });
     await inspector.getByRole("button", { name: /open full page/i }).click();
     await page.waitForURL(/\/projects\//, { timeout: 30_000 });
