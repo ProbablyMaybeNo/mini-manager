@@ -2,10 +2,14 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 
+/** The focusable set every modal shell in the app traps within. */
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
 /**
  * Modal focus trap, extracted from SlideOutPanel so every modal shell (the
- * slide-out + the mobile ProjectBottomSheet) shares one implementation
- * (a11y plan §4). While `enabled`:
+ * slide-out, the mobile ProjectBottomSheet, ModalDialog) shares one
+ * implementation (a11y plan §4). While `enabled`:
  *   - focus moves into the container on activation, and returns to the
  *     previously-focused element on teardown,
  *   - Tab / Shift-Tab cycle within the container,
@@ -36,16 +40,42 @@ export function useFocusTrap(
         return;
       }
       if (e.key !== "Tab" || !container) return;
-      const focusables = container.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusables.length === 0) return;
+      const focusables = [...container.querySelectorAll<HTMLElement>(FOCUSABLE)];
+
+      // A shell with no reachable control (every one of ours has at least a
+      // ✕) still must not let Tab walk off into the page behind.
+      if (focusables.length === 0) {
+        e.preventDefault();
+        container.focus();
+        return;
+      }
+
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
+      const activeEl = document.activeElement;
+
+      // Focus is on the container itself — where opening puts it — or has
+      // drifted outside. `querySelectorAll` returns DESCENDANTS, so the
+      // container is never in `focusables`: without this branch (R3-5) the
+      // freshly-opened state matched neither end and fell through to the
+      // browser's own order. Forward landed on `first` by luck, since the
+      // container precedes its children; BACKWARD walked out of the dialog
+      // into the page it had just declared inert via `aria-modal="true"` —
+      // verified escaping to the Primary nav behind a ModalDialog and to the
+      // paint grid behind the Library filter panel. Send it to the near end
+      // instead. Same reasoning, same shape as useCoachMarkFocus.
+      if (!activeEl || activeEl === container || !container.contains(activeEl)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+
+      // Inside: wrap at the ends. Anything in between is the browser's own
+      // order, which is already correct.
+      if (e.shiftKey && activeEl === first) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
+      } else if (!e.shiftKey && activeEl === last) {
         e.preventDefault();
         first.focus();
       }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { CloseButton } from "./CloseButton";
 
 /**
@@ -29,47 +30,12 @@ export function ModalDialog({
   footer?: ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const lastFocused = useRef<HTMLElement | null>(null);
-  // MM-24 — keep `onClose` out of the focus-trap effect deps (see
-  // SlideOutPanel): a fresh inline `onClose` each render would otherwise
-  // re-run this effect and steal focus from a field inside the dialog after
-  // every keystroke.
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    if (!open) return;
-    lastFocused.current = document.activeElement as HTMLElement | null;
-    const panel = panelRef.current;
-    panel?.focus();
-
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onCloseRef.current();
-        return;
-      }
-      if (e.key !== "Tab" || !panel) return;
-      const focusables = panel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      lastFocused.current?.focus();
-    };
-  }, [open]);
+  // The dialog used to carry its own copy of the SlideOutPanel trap, and the
+  // copy drifted: it wrapped only at the two ends of the focusable list, so
+  // the freshly-opened state — focus on the panel itself, which is NOT in
+  // that list — matched neither, and a real Shift+Tab left the dialog for the
+  // page behind it (R3-5). One trap for every modal shell now, fixed once.
+  useFocusTrap(panelRef, open, onClose);
 
   if (!open) return null;
 
