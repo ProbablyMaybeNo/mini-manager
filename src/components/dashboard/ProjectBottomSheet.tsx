@@ -9,9 +9,9 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
  * Replaces the keystone's detent/drag bottom sheet — Ross's explicit
  * preference. Opening a project covers the viewport; a back chevron in the
  * top-left corner closes it. The close wiring is unchanged: it calls `onClose`,
- * which ProjectPanelStack turns into a clean `history.back()` so the Phase-4
- * history model still pops one sub-project tier before closing, and OS Back
- * works the same way.
+ * which unwinds the drill stack's history entries (useInspectorStack) so the
+ * session history ends up exactly where it was before the panel opened. OS Back
+ * pops one tier at a time through those same entries.
  *
  * Modal semantics: `role=dialog aria-modal aria-label={title}`, shared focus
  * trap (D.2 — the labelled back button is the real, non-gesture-only control).
@@ -52,8 +52,8 @@ export function ProjectBottomSheet({
     >
       <header className="flex shrink-0 items-center gap-2 border-b border-cyan/40 px-2 py-2">
         {/* Top-left back chevron — the full-screen view's only close control
-            (RF-10). Routes through onClose → ProjectPanelStack history so it
-            pops one sub-project tier before closing, matching OS Back. */}
+            (RF-10). Routes through onClose, which unwinds the panel's own
+            history entries so nothing is left behind for OS Back to find. */}
         <button
           type="button"
           onClick={onClose}

@@ -511,9 +511,8 @@ export function ProjectWorkspaceBody({
           </div>
           <button
             type="button"
-            // Navigate forward (no onClose) — the inspector's history-unwind on
-            // close would fight the push. ProjectPanelStack's unmount cleanup
-            // skips its unwind when we've navigated past the inspector entry.
+            // Navigate forward (no onClose): the inspector's entry stays behind
+            // the page, so Back returns to the dashboard with the panel open.
             onClick={() => router.push(`/projects/${project.id}`)}
             className="mt-6 inline-flex min-h-11 shrink-0 items-center gap-1.5 font-mono text-[11px] text-fg-faint transition-colors hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite md:min-h-6"
           >

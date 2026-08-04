@@ -161,16 +161,9 @@ export function DashboardClient({
   }, [searchParams, router]);
 
   // The project PAGE's "+ ADD UNIT" / "+ Add Sub-Project" affordances hand off
-  // here as `/dashboard?open=<id>` (no sub-project type picker on the page
-  // itself — that lives in the dashboard's editable panel). Reopen that
-  // project's panel the same way a fresh create does, then strip the param.
-  useEffect(() => {
-    const openParam = searchParams.get("open");
-    if (openParam) {
-      setOpenId(openParam);
-      router.replace("/dashboard");
-    }
-  }, [searchParams, router]);
+  // here as `/dashboard?open=<id>`. That param IS the open-inspector state now
+  // (R2-17 — see useInspectorStack), so the hand-off just lands with the panel
+  // open; nothing to copy into React state and nothing to strip.
 
   const summary = deriveDashboardSummary(projects, sessionStats);
 
