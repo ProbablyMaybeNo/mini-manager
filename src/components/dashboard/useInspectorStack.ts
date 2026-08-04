@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { inspectorHref, readInspectorStack } from "@/lib/inspectorStack";
 
@@ -69,6 +69,11 @@ export function useInspectorStack(): InspectorStack {
 
   const pushedRef = useRef(0);
   const pendingRef = useRef<PendingTraversal | null>(null);
+  // Closing traverses history, and a traversal only commits a frame or two
+  // later. Waiting for that would leave the panel on screen after the painter
+  // pressed ×, which is both wrong and a hazard for whatever they click next,
+  // so the close is optimistic: hide it now, let the URL catch up.
+  const [closing, setClosing] = useState(false);
 
   // Reads the LIVE url, not the render's snapshot: writes can be applied from a
   // popstate handler, where the React values are a frame behind.
@@ -122,21 +127,28 @@ export function useInspectorStack(): InspectorStack {
     window.history.go(delta);
   }, []);
 
-  // Every Back/Forward consumes one of the entries we pushed, and lands any
-  // traversal of ours that was outstanding. Nothing here touches the UI — the
-  // URL already did that.
+  // Every Back/Forward consumes one of the entries we pushed. Nothing here
+  // touches the UI — the URL already did that.
   useEffect(() => {
     const onPop = () => {
       pushedRef.current = Math.max(0, pushedRef.current - 1);
-      const pending = pendingRef.current;
-      if (!pending) return;
-      pendingRef.current = null;
-      const queued = pending.queued;
-      if (queued) applyWrite(queued.next, queued.mode, pending.settlesTo, true);
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, [applyWrite]);
+  }, []);
+
+  // Release a queued write once the traversal has actually COMMITTED — that is,
+  // once the router's own view of the URL (this `stack`) has caught up, not
+  // merely when popstate fired. Next commits the traversal a beat after the
+  // event, writing the pre-traversal URL back as it does; a write released at
+  // popstate lands before that and the panel visibly closes and reopens.
+  useEffect(() => {
+    const pending = pendingRef.current;
+    if (!pending || stack.length !== pending.settlesTo) return;
+    pendingRef.current = null;
+    const queued = pending.queued;
+    if (queued) applyWrite(queued.next, queued.mode, pending.settlesTo, true);
+  }, [stack, applyWrite]);
 
   const open = useCallback((id: string) => write([id], "open"), [write]);
 
@@ -153,6 +165,7 @@ export function useInspectorStack(): InspectorStack {
     if (pendingRef.current) return; // already unwinding
     const depth = pushedRef.current;
     if (depth > 0) {
+      setClosing(true);
       // Unwind our own entries so the session history is exactly where it was
       // before the inspector opened.
       pushedRef.current = 0;
@@ -183,5 +196,13 @@ export function useInspectorStack(): InspectorStack {
     [traverse, write],
   );
 
-  return { stack, open, drill, closeTier, close };
+  // Drop the optimistic close once the URL agrees (or something else reopened
+  // the panel in the meantime — then the URL wins again).
+  useEffect(() => {
+    if (closing && pendingRef.current === null) setClosing(false);
+  }, [closing, stack]);
+
+  return { stack: closing ? EMPTY_STACK : stack, open, drill, closeTier, close };
 }
+
+const EMPTY_STACK: string[] = [];
