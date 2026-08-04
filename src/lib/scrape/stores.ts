@@ -16,14 +16,31 @@ export interface SupportedStore {
   hostnames: string[];
 }
 
+/**
+ * R3-2 — this list is a PROMISE, so it only carries hosts that answer a
+ * plain server-side fetch from our datacentre IP. Three were removed after
+ * live checks:
+ *
+ *   games-workshop.com  403, then a 202 AWS WAF JavaScript challenge
+ *                       (`awsWafCookieDomainList`, `gokuProps`) once a
+ *                       browser UA is sent. `fetch` can never satisfy it, and
+ *                       passing it would mean driving a headless browser
+ *                       purely to defeat an access control GW deployed on
+ *                       purpose. Not something we do.
+ *   goblingaming.co.uk  429 immediately.
+ *   gamekastle.com      429 immediately.
+ *
+ * Delisting them is not a capability loss — the fetch already failed, so the
+ * only thing that changes is that we stop advertising a store we cannot read.
+ * A pasted URL from any of them still adds a row via the couldn't-auto-read
+ * path (R2-4), which is what actually happened before, minus the false
+ * promise. Their parsers are also unregistered in `./index`.
+ */
 export const SUPPORTED_STORES: ReadonlyArray<SupportedStore> = [
-  { name: "Games Workshop", hostnames: ["games-workshop.com"] },
   { name: "Element Games", hostnames: ["elementgames.co.uk"] },
   { name: "Wayland Games", hostnames: ["waylandgames.co.uk"] },
-  { name: "Goblin Gaming", hostnames: ["goblingaming.co.uk"] },
   { name: "Noble Knight Games", hostnames: ["nobleknight.com"] },
   { name: "Miniature Market", hostnames: ["miniaturemarket.com"] },
-  { name: "Game Kastle", hostnames: ["gamekastle.com"] },
   { name: "Gamers Roll", hostnames: ["gamersroll.com"] },
   {
     name: "Amazon",
@@ -74,7 +91,7 @@ function normalizeHost(host: string): string {
 /**
  * Resolve a pasted URL to its supported store, or `null` when no parser
  * covers it. Matches by exact host or registrable-suffix so subdomains
- * (e.g. `us.games-workshop.com`) resolve to the same store. Never throws.
+ * (e.g. `shop.elementgames.co.uk`) resolve to the same store. Never throws.
  */
 export function matchSupportedStore(input: string): SupportedStore | null {
   let host: string;

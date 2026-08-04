@@ -4,25 +4,26 @@ import type { ScrapedProduct, VendorParser } from "./types";
 import { parseOpenGraph } from "./og";
 import { elementgames } from "./parsers/elementgames";
 import { wayland } from "./parsers/wayland";
-import { goblin } from "./parsers/goblin";
-import { gw } from "./parsers/gw";
 import { amazon } from "./parsers/amazon";
 import { ebay } from "./parsers/ebay";
 import { nobleknight } from "./parsers/nobleknight";
 import { miniaturemarket } from "./parsers/miniaturemarket";
-import { gamekastle } from "./parsers/gamekastle";
 import { gamersroll } from "./parsers/gamersroll";
 
+/**
+ * R3-2 — mirrors `./stores`. The `gw`, `goblin` and `gamekastle` parsers are
+ * deliberately NOT registered: those hosts refuse a datacentre-IP fetch (AWS
+ * WAF challenge / 429), so `safeFetchHtml` returns null and the parser can
+ * never run. Their modules are kept for the day the block lifts; re-adding
+ * one here and to `SUPPORTED_STORES` is all it takes.
+ */
 const PARSERS: ReadonlyArray<VendorParser> = [
   elementgames,
   wayland,
-  goblin,
-  gw,
   amazon,
   ebay,
   nobleknight,
   miniaturemarket,
-  gamekastle,
   gamersroll,
 ];
 

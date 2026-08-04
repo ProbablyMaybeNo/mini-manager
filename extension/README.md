@@ -10,9 +10,9 @@ folder directly.
 
 ## Supported stores
 
-Games Workshop · Element Games · Wayland Games · Goblin Gaming · Noble
-Knight Games · Miniature Market · Game Kastle · Gamers Roll · Amazon ·
-eBay. (The server is the source of truth — `src/lib/scrape/stores.ts`.)
+Element Games · Wayland Games · Noble Knight Games · Miniature Market ·
+Gamers Roll · Amazon · eBay. (The server is the source of truth —
+`src/lib/scrape/stores.ts`.)
 
 ## Install (load unpacked)
 

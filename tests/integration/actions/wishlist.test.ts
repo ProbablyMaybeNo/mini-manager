@@ -170,7 +170,8 @@ describe("scrapeAndCreateWishlistItem — unreadable scrape (J1)", () => {
   });
 
   test("a no-result scrape returns the honest unreadable state, not a success", async () => {
-    // Games Workshop 405s behind Cloudflare → scrapeUrl resolves null.
+    // Games Workshop answers 403 + an AWS WAF challenge (R3-2, which is why
+    // it is no longer an advertised store) → scrapeUrl resolves null.
     scrapeMock.scrapeUrl.mockResolvedValue(null);
     const res = await scrapeAndCreateWishlistItem({
       url: "https://www.games-workshop.com/en-GB/some-kit",

@@ -40,9 +40,9 @@ copy-pasting URLs.
    Alt+Shift+M), choose Owned or Wishlist, and hit **Add to collection**.
 
 **Supported stores**
-Games Workshop, Element Games, Wayland Games, Goblin Gaming, Noble Knight Games,
-Miniature Market, Game Kastle, Gamers Roll, Amazon, and eBay. Other links still
-work in the app itself — you just add the details yourself.
+Element Games, Wayland Games, Noble Knight Games, Miniature Market, Gamers Roll,
+Amazon, and eBay. Other links still work in the app itself — you just add the
+details yourself.
 
 **You'll need a free Mini Mainframe account** — sign up at
 https://mini-mainframe.com.
@@ -93,7 +93,7 @@ collection as Owned or Wishlist.
 
 - **Store icon:** `extension/icons/icon128.png` (128×128) — already in the package.
 - **Screenshots (required, at least 1; 1280×800 or 640×400 PNG/JPEG):**
-  1. The extension popup open on a Games Workshop product page (Owned/Wishlist
+  1. The extension popup open on an Element Games product page (Owned/Wishlist
      toggle + Add button visible).
   2. The Mini Mainframe **Collection** page showing added items.
   3. The **Account → Browser extension** token screen (where users get set up).

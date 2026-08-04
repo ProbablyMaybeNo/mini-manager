@@ -14,14 +14,14 @@ describe("supported store registry (MM-40)", () => {
   });
 
   test("matches a known store by exact host", () => {
-    expect(matchSupportedStore("https://www.games-workshop.com/foo")?.name).toBe(
-      "Games Workshop",
+    expect(matchSupportedStore("https://www.elementgames.co.uk/foo")?.name).toBe(
+      "Element Games",
     );
   });
 
   test("matches a supported store on a subdomain", () => {
-    expect(matchSupportedStore("https://us.games-workshop.com/x")?.name).toBe(
-      "Games Workshop",
+    expect(matchSupportedStore("https://shop.elementgames.co.uk/x")?.name).toBe(
+      "Element Games",
     );
   });
 
@@ -42,13 +42,60 @@ describe("supported store registry (MM-40)", () => {
   });
 });
 
+/**
+ * R3-2 — the list is a promise to the painter, so a host that cannot be read
+ * must not appear on it. Live server-side fetches from a datacentre IP: GW
+ * answers 403 then a 202 AWS WAF JavaScript challenge, Goblin Gaming and Game
+ * Kastle both 429 immediately. Nothing about the parsers changed; the network
+ * did. Guarding it here so nobody re-advertises them without re-testing.
+ */
+describe("R3-2 delisted hosts are not advertised as auto-fill stores", () => {
+  test.each([
+    "https://www.games-workshop.com/en-GB/some-kit",
+    "https://goblingaming.co.uk/products/foo",
+    "https://gamekastle.com/products/foo",
+  ])("%s is not a supported store", (url) => {
+    expect(matchSupportedStore(url)).toBeNull();
+    expect(isSupportedStoreUrl(url)).toBe(false);
+  });
+
+  test.each(["Games Workshop", "Goblin Gaming", "Game Kastle"])(
+    "%s is absent from the advertised names",
+    (name) => {
+      expect(SUPPORTED_STORE_NAMES).not.toContain(name);
+    },
+  );
+
+  test("the four stores Ross ruled in, plus Gamers Roll, still resolve", () => {
+    const kept: ReadonlyArray<readonly [string, string]> = [
+      ["https://www.elementgames.co.uk/p/1", "Element Games"],
+      ["https://www.waylandgames.co.uk/p/1", "Wayland Games"],
+      ["https://www.nobleknight.com/P/1/x", "Noble Knight Games"],
+      ["https://www.miniaturemarket.com/x.html", "Miniature Market"],
+      ["https://www.gamersroll.com/x.html", "Gamers Roll"],
+    ];
+    for (const [url, name] of kept) {
+      expect(matchSupportedStore(url)?.name).toBe(name);
+    }
+  });
+});
+
 describe("storeLabelForUrl — naming the host a failed scrape came from (R2-4)", () => {
   test("prefers the registered store's display name", () => {
-    expect(storeLabelForUrl("https://www.games-workshop.com/en-GB/thing")).toBe(
-      "Games Workshop",
+    expect(storeLabelForUrl("https://www.elementgames.co.uk/en-GB/thing")).toBe(
+      "Element Games",
     );
-    expect(storeLabelForUrl("https://us.games-workshop.com/x")).toBe(
-      "Games Workshop",
+    expect(storeLabelForUrl("https://shop.elementgames.co.uk/x")).toBe(
+      "Element Games",
+    );
+  });
+
+  test("a delisted host falls back to its bare hostname, so the row is still named", () => {
+    // The whole point of R3-2 is that this URL now takes the couldn't-auto-read
+    // path instead of being advertised as supported — the painter still gets a
+    // row seeded with a usable vendor, just not a promise we can't keep.
+    expect(storeLabelForUrl("https://www.games-workshop.com/en-GB/thing")).toBe(
+      "games-workshop.com",
     );
   });
 

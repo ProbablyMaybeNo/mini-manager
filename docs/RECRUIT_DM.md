@@ -25,7 +25,7 @@ For the **10 r/minipainting recruits** step in the launch path. Goal: 7 of 10 sa
 > - Recipe builder — define zones (Carapace, Pauldron trim, etc.) and the paint sequence for each. Reuse the same recipe across a whole army.
 > - Project tracker — armies → units → individual models, each with a Built / Primed / Painting / Done counter that bubbles up
 > - Cross-brand colour matching — point at a Citadel paint, find the closest match in Vallejo / AK / The Army Painter / Scale75 / etc.
-> - Wishlist with auto-stock tracking from Element Games / Wayland / Goblin Gaming
+> - Wishlist with auto-stock tracking from Element Games / Wayland / Noble Knight
 >
 > **What I want from you**
 > - Spend ~30 mins poking around with a real project of yours

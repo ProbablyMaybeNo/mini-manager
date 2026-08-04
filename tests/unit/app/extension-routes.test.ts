@@ -28,7 +28,7 @@ const { POST: previewPOST } = await import(
 );
 const { POST: addPOST } = await import("@/app/api/extension/add/route");
 
-const SUPPORTED = "https://www.games-workshop.com/en-GB/some-kit";
+const SUPPORTED = "https://www.elementgames.co.uk/some/product";
 const UNSUPPORTED = "https://example.com/random-thing";
 
 function req(body: unknown, token = "good-token"): Request {
@@ -79,7 +79,7 @@ describe("POST /api/extension/preview", () => {
       title: "Space Marines",
       price: 42.5,
       currency: "GBP",
-      vendor: "Games Workshop",
+      vendor: "Element Games",
       imageUrl: "https://img/x.jpg",
       category: "Box",
       raw: {},
@@ -136,7 +136,7 @@ describe("POST /api/extension/add", () => {
         title: "Space Marines",
         status: "OWNED",
         kind: "model",
-        vendor: "Games Workshop",
+        vendor: "Element Games",
         price: 4250,
         currency: "GBP",
         imageUrl: null,

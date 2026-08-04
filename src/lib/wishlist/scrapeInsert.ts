@@ -17,8 +17,9 @@ import type { ActionResult } from "@/lib/actions/projects";
 
 /**
  * J1 — did the scrape actually read a product, or just fall back to the
- * page hostname? A parser that can't reach the page (Games Workshop 405s
- * behind Cloudflare) yields `null`; one that reaches an unreadable page
+ * page hostname? A fetch that can't reach the page (Games Workshop answers
+ * 403, then an AWS WAF JavaScript challenge — R3-2) yields `null`; one that
+ * reaches an unreadable page
  * yields a bare hostname title with no other signal. Either way there's
  * nothing worth persisting, so we surface an honest "couldn't auto-read"
  * state instead of a `games-workshop.com` row + a green success toast.

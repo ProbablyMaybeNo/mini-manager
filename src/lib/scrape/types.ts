@@ -27,8 +27,8 @@ export type ScrapedCategory =
 /**
  * Vendor-parser contract. Each parser exports an object with the
  * hostnames it handles + a `parse(html, url)` function. The dispatcher
- * matches by hostname suffix so subdomains (e.g. `us.games-workshop.com`)
- * route to the same parser as `games-workshop.com`.
+ * matches by hostname suffix so subdomains (e.g. `shop.elementgames.co.uk`)
+ * route to the same parser as `elementgames.co.uk`.
  */
 export interface VendorParser {
   name: string;

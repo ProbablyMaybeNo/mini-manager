@@ -37,19 +37,36 @@ describe("scrapeUrl dispatcher", () => {
     ["https://www.elementgames.co.uk/some/product", "Element Games"],
     ["https://elementgames.co.uk/some/product", "Element Games"],
     ["https://waylandgames.co.uk/some/product", "Wayland Games"],
-    ["https://goblingaming.co.uk/some/product", "Goblin Gaming"],
-    ["https://www.games-workshop.com/some/product", "Games Workshop"],
     ["https://www.amazon.com/dp/B000FOO", "Amazon"],
     ["https://www.amazon.co.uk/dp/B000FOO", "Amazon"],
     ["https://www.ebay.com/itm/123", "eBay"],
     ["https://www.nobleknight.com/P/123/foo", "Noble Knight Games"],
     ["https://www.miniaturemarket.com/abc.html", "Miniature Market"],
-    ["https://gamekastle.com/products/foo", "Game Kastle"],
     ["https://www.gamersroll.com/foo.html", "Gamers Roll"],
   ])("routes %s to the right vendor", async (url, expectedVendor) => {
     const result = await scrapeUrl(new URL(url));
     expect(result).not.toBeNull();
     expect(result!.vendor).toBe(expectedVendor);
+  });
+
+  /**
+   * R3-2 — these three hosts refuse a datacentre-IP fetch (GW: 403 then a 202
+   * AWS WAF JavaScript challenge; Goblin Gaming and Game Kastle: 429), so
+   * their parsers were unregistered rather than left advertising a route that
+   * dies at `safeFetchHtml`. Against a live host `scrapeUrl` returns null;
+   * here fetch is stubbed to succeed, which is what proves the DISPATCH is
+   * gone — an unregistered host falls through to the OG fallback and is named
+   * by its hostname, exactly like any other unknown store.
+   */
+  test.each([
+    "https://www.games-workshop.com/some/product",
+    "https://goblingaming.co.uk/some/product",
+    "https://gamekastle.com/products/foo",
+  ])("%s is no longer dispatched to a vendor parser", async (url) => {
+    const result = await scrapeUrl(new URL(url));
+    expect(result).not.toBeNull();
+    expect(result!.vendor).toBe(new URL(url).hostname.replace(/^www\./, ""));
+    expect(result!.raw).toMatchObject({ parser: "og-fallback" });
   });
 
   test("unknown vendor falls back to OG parser using hostname as vendor", async () => {
