@@ -8,12 +8,21 @@ export function PageHeader({
   actions,
   className,
   taglineClassName,
+  as: Heading = "h1",
 }: {
   title: string;
   tagline?: string;
   actions?: ReactNode;
   className?: string;
   taglineClassName?: string;
+  /**
+   * Heading level for the title. Defaults to `h1` — one page, one h1. Pass
+   * `h2` when the header opens a SECTION of a page that already has its own
+   * h1 (R3-3: `/user` stacks Settings + Account and was rendering two h1s,
+   * giving screen-reader users two competing page titles). Purely semantic —
+   * the visual size is the same either way.
+   */
+  as?: "h1" | "h2";
 }) {
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
@@ -22,9 +31,9 @@ export function PageHeader({
             uppercase, wide letter-spacing, with a short cyan underline bar
             beneath it. Nouveau IBM reads small, so the point size is pushed
             well above a normal display face. */}
-        <h1 className="font-title text-[clamp(1.125rem,2.8vw,1.78rem)] font-extrabold uppercase leading-none tracking-[0.15em] text-fg-bright">
+        <Heading className="font-title text-[clamp(1.125rem,2.8vw,1.78rem)] font-extrabold uppercase leading-none tracking-[0.15em] text-fg-bright">
           {title}
-        </h1>
+        </Heading>
         <span aria-hidden className="mt-2 block h-1 w-12 rounded-full bg-cyan" />
         {/* Taglines are hidden on any phone-sized viewport, landscape included
             (MUX2-009). Routes were each opting out with `hidden md:block`, and

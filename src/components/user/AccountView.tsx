@@ -46,7 +46,14 @@ export function AccountView({
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <PageHeader title="ACCOUNT" tagline="Profile, password, and recovery." />
+      {/* h2, not h1 (R3-3): Account is a SECTION of `/user`, which opens with
+          the "SETTINGS" h1. Two h1s gave screen-reader users two competing page
+          titles. Visual size is unchanged. */}
+      <PageHeader
+        as="h2"
+        title="ACCOUNT"
+        tagline="Profile, password, and recovery."
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel label="PROFILE" className="flex flex-col gap-4 p-5">
