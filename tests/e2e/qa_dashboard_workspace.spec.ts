@@ -103,6 +103,40 @@ test.describe("R4-8 — the roster's data rows are rows", () => {
   });
 });
 
+/**
+ * R4-4 — the roster's "New project" icon asks for 36x36 and was measured at
+ * 20x36 with the inspector open. It is a flex item beside RosterFilterBar and
+ * was shrinking with the column; the declared size was never the problem.
+ */
+test.describe("R4-4 — the roster's add control keeps its width", () => {
+  test("New project stays 36px wide with the inspector open", async ({ page }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail("addsize"));
+    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const addBtn = page.getByRole("button", { name: "New project", exact: true });
+    const name = `QA AddSize ${Date.now()}`;
+    await addProject(page, name);
+
+    // Squeeze the roster column: opening the inspector is what the audit did.
+    await page.getByRole("button", { name: `Open ${name}` }).click();
+    await expect(
+      page.getByRole("region", { name: "Project inspector" }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    const box = await addBtn.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeGreaterThanOrEqual(36);
+    // Was 20 — the button shrank with its flex row while the panel took the
+    // width. Squarer than the 24px floor either way, but not the size it asks
+    // for, and not the size its unsqueezed twin renders at.
+    expect(box!.width).toBeGreaterThanOrEqual(36);
+  });
+});
+
 test.describe("M11 — Dashboard real-data features", () => {
   test("M11.1 add a calendar event via a day cell → shows in the rail's UPCOMING list", async ({
     page,

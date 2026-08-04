@@ -272,14 +272,19 @@ export function DashboardView({
                       <RosterFilterBar sort={rosterSort} onSortChange={setRosterSort} />
                     )}
                     {/* ≥44px tap target around the 16px glyph (UX-003 / WCAG 2.2
-                        §2.5.8); the box grows, glyph size unchanged. */}
+                        §2.5.8); the box grows, glyph size unchanged.
+                        R4-4 — `shrink-0`, because `md:w-9` was not holding. It
+                        is a flex item next to RosterFilterBar, so it shrank
+                        with the column: measured 20x36 with the inspector open,
+                        against the 36x36 it asks for. The declared size was
+                        never the problem, the flex default was. */}
                     <button
                       type="button"
                       aria-label="New project"
                       title="New project"
                       onClick={startCreate}
                       disabled={creatingProject}
-                      className="hidden h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan disabled:opacity-50 md:inline-flex md:h-9 md:w-9"
+                      className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan disabled:opacity-50 md:inline-flex md:h-9 md:w-9"
                     >
                       <PlusCircleIcon />
                     </button>
