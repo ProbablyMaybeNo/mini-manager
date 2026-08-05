@@ -205,6 +205,16 @@ export function AssignToRecipeDialog({
         <div className={cn("flex gap-2 pt-3", showList && "border-t border-cyan/20")}>
           <Input
             name="new-recipe-name"
+            // R5-3: this had no accessible name. `placeholder` alone does not
+            // count — Chrome falls back to it, so the a11y tree read
+            // "New recipe name" while `input.labels` was empty and the name
+            // disappeared on the first keystroke.
+            //
+            // `aria-label`, not a visible label, and only here: this field
+            // shares a `flex gap-2` row with the Create button, so a label
+            // would grow the field's container and stretch that button to
+            // match it. The dialog's own heading already carries the context.
+            aria-label="New recipe name"
             placeholder="New recipe name"
             value={newName}
             disabled={pending}
