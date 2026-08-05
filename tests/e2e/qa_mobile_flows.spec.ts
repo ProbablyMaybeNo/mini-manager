@@ -73,11 +73,80 @@ async function addProjectMobile(
   await expect(nameField).toBeVisible({ timeout: 15_000 });
   await nameField.fill(name);
   await nameField.blur();
+  // R5-2 — the roster card is no longer one `role="button"` named
+  // "Manage <title>"; its title is a real button named "Open <title>", the
+  // same name and shape R4-8 gave the desktop row.
   await expect(
-    page.getByRole("button", { name: `Manage ${name}` }),
+    page.getByRole("button", { name: `Open ${name}` }),
   ).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Back" }).click();
 }
+
+test.describe("R5-2 — the mobile roster card is a card, not a button", () => {
+  test("nothing focusable nests in a role=button, and the card still opens by body tap and by keyboard", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail("mobile-card"));
+    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const name = `QA Card ${Date.now()}`;
+    await addProjectMobile(page, name);
+
+    // 1. The defect. The card WAS `<div role="button" aria-label="Manage …">`
+    //    with the delete bin focusable inside it (and the expand caret too,
+    //    once the project has children). ARIA gives `button` presentational
+    //    children, so those were invalid. This sweeps the whole page rather
+    //    than the card alone — the rule has no reason to be card-specific, and
+    //    it is what makes this a guard instead of a spot check.
+    const nested = await page.evaluate(() => {
+      const FOCUSABLE =
+        'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      return Array.from(document.querySelectorAll('[role="button"]')).flatMap(
+        (host) =>
+          Array.from(host.querySelectorAll(FOCUSABLE)).map(
+            (el) =>
+              `<${el.tagName.toLowerCase()} ${
+                el.getAttribute("aria-label") ??
+                el.textContent?.trim().slice(0, 30) ??
+                ""
+              }> inside role=button "${host.getAttribute("aria-label") ?? ""}"`,
+          ),
+      );
+    });
+    expect(nested, "focusable descendants of a role=button").toEqual([]);
+
+    // The card itself is no longer announced as a button.
+    await expect(
+      page.getByRole("button", { name: `Manage ${name}` }),
+    ).toHaveCount(0);
+
+    // 2. "Cards are doors" is a locked density rule (Ross, 2026-07-27) and the
+    //    whole card must stay tappable. The title button's grandparent is the
+    //    card (button → title row → card); tapping the card's PROGRESS BAR —
+    //    inert, nowhere near the title or the bin — must still open the
+    //    project. This is the assertion that fails if the container ever loses
+    //    its click handler.
+    const card = page.getByRole("button", { name: `Open ${name}` }).locator("../..");
+    await card.getByRole("progressbar").click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: /^Close|^Back$/ }).first().click();
+    await expect(page.getByRole("dialog")).toBeHidden({ timeout: 15_000 });
+
+    // 3. Keyboard opening still works, natively on a real button rather than
+    //    through the card's old hand-rolled keydown.
+    const open = page.getByRole("button", { name: `Open ${name}` });
+    await open.focus();
+    await expect(open).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 15_000 });
+
+    await expectNoHorizontalScroll(page);
+  });
+});
 
 test.describe("M6 — Mobile primary flows", () => {
   test("M6.1 hamburger menu opens and navigates every route", async ({
@@ -127,14 +196,13 @@ test.describe("M6 — Mobile primary flows", () => {
     const name = `QA Mobile Squad ${Date.now()}`;
     await addProjectMobile(page, name);
 
-    // A row tap opens the full editable INSPECTOR as a bottom-sheet dialog
-    // (ProjectBottomSheet). The mobile card is one "Manage <title>" region
-    // containing nested controls (progress, swatches, delete) — aim at the
-    // top-left title corner to land on the card body itself. A childless draft
-    // has no expand caret there, so this stays a plain card hit.
-    await page
-      .getByRole("button", { name: `Manage ${name}` })
-      .click({ position: { x: 12, y: 12 } });
+    // A tap opens the full editable INSPECTOR as a bottom-sheet dialog
+    // (ProjectBottomSheet). This used to target the whole card — one
+    // "Manage <title>" role="button" with real controls nested inside it — and
+    // aim at its top-left corner with `position` to avoid landing on one of
+    // them. R5-2 gave the title its own button, so there is a control to hit
+    // directly and the corner-aiming is gone with the construct that needed it.
+    await page.getByRole("button", { name: `Open ${name}` }).click();
     const sheet = page.getByRole("dialog");
     await expect(sheet).toBeVisible({ timeout: 15_000 });
 
