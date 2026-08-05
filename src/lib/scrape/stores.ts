@@ -30,6 +30,13 @@ export interface SupportedStore {
  *   goblingaming.co.uk  429 immediately.
  *   gamekastle.com      429 immediately.
  *
+ * Amazon and eBay were then dropped too (Ross, 2026-08-05 — "we don't need
+ * them"). Both are marketplaces rather than hobby retailers, Amazon sits
+ * behind the same class of anti-bot wall as GW, and neither produced a usable
+ * row in round-2 testing. Same reasoning as above: a pasted link from either
+ * still adds a row through the couldn't-auto-read path, we just stop promising
+ * a fill we cannot reliably deliver.
+ *
  * Delisting them is not a capability loss — the fetch already failed, so the
  * only thing that changes is that we stop advertising a store we cannot read.
  * A pasted URL from any of them still adds a row via the couldn't-auto-read
@@ -42,32 +49,6 @@ export const SUPPORTED_STORES: ReadonlyArray<SupportedStore> = [
   { name: "Noble Knight Games", hostnames: ["nobleknight.com"] },
   { name: "Miniature Market", hostnames: ["miniaturemarket.com"] },
   { name: "Gamers Roll", hostnames: ["gamersroll.com"] },
-  {
-    name: "Amazon",
-    hostnames: [
-      "amazon.com",
-      "amazon.co.uk",
-      "amazon.de",
-      "amazon.fr",
-      "amazon.it",
-      "amazon.es",
-      "amazon.ca",
-      "amazon.com.au",
-      "amazon.co.jp",
-    ],
-  },
-  {
-    name: "eBay",
-    hostnames: [
-      "ebay.com",
-      "ebay.co.uk",
-      "ebay.de",
-      "ebay.fr",
-      "ebay.it",
-      "ebay.es",
-      "ebay.ca",
-    ],
-  },
 ];
 
 /** Display names of every supported store, in helper-text order. */

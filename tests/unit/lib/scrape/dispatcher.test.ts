@@ -37,9 +37,6 @@ describe("scrapeUrl dispatcher", () => {
     ["https://www.elementgames.co.uk/some/product", "Element Games"],
     ["https://elementgames.co.uk/some/product", "Element Games"],
     ["https://waylandgames.co.uk/some/product", "Wayland Games"],
-    ["https://www.amazon.com/dp/B000FOO", "Amazon"],
-    ["https://www.amazon.co.uk/dp/B000FOO", "Amazon"],
-    ["https://www.ebay.com/itm/123", "eBay"],
     ["https://www.nobleknight.com/P/123/foo", "Noble Knight Games"],
     ["https://www.miniaturemarket.com/abc.html", "Miniature Market"],
     ["https://www.gamersroll.com/foo.html", "Gamers Roll"],
@@ -50,18 +47,25 @@ describe("scrapeUrl dispatcher", () => {
   });
 
   /**
-   * R3-2 — these three hosts refuse a datacentre-IP fetch (GW: 403 then a 202
-   * AWS WAF JavaScript challenge; Goblin Gaming and Game Kastle: 429), so
+   * R3-2 — the first three hosts refuse a datacentre-IP fetch (GW: 403 then a
+   * 202 AWS WAF JavaScript challenge; Goblin Gaming and Game Kastle: 429), so
    * their parsers were unregistered rather than left advertising a route that
-   * dies at `safeFetchHtml`. Against a live host `scrapeUrl` returns null;
-   * here fetch is stubbed to succeed, which is what proves the DISPATCH is
-   * gone — an unregistered host falls through to the OG fallback and is named
-   * by its hostname, exactly like any other unknown store.
+   * dies at `safeFetchHtml`. Amazon and eBay were dropped afterwards on Ross's
+   * call (2026-08-05) — marketplaces rather than hobby retailers, and Amazon
+   * sits behind the same class of wall as GW.
+   *
+   * Against a live host `scrapeUrl` returns null; here fetch is stubbed to
+   * succeed, which is what proves the DISPATCH is gone — an unregistered host
+   * falls through to the OG fallback and is named by its hostname, exactly
+   * like any other unknown store.
    */
   test.each([
     "https://www.games-workshop.com/some/product",
     "https://goblingaming.co.uk/some/product",
     "https://gamekastle.com/products/foo",
+    "https://www.amazon.com/dp/B000FOO",
+    "https://www.amazon.co.uk/dp/B000FOO",
+    "https://www.ebay.com/itm/123",
   ])("%s is no longer dispatched to a vendor parser", async (url) => {
     const result = await scrapeUrl(new URL(url));
     expect(result).not.toBeNull();
