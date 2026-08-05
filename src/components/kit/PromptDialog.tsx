@@ -66,14 +66,23 @@ export function PromptDialog({
         </div>
       }
     >
-      {label && (
-        <label className="mb-2 block label-osd tracking-[0.18em] text-fg">
-          {label}
-        </label>
-      )}
       <Input
         name="prompt-value"
-        autoFocus
+        // R4-1: the label is the kit's, wired to the input with `htmlFor`. The
+        // dialog used to hand-roll a bare <label> next to the field, so the
+        // input had no accessible name at all — `input.labels` empty, no
+        // aria-label, no aria-labelledby — and a screen reader announced an
+        // unnamed edit box under a decorative "Paint name".
+        // `gap-2` reproduces the 8px the old `mb-2` gave it so nothing moves;
+        // the bespoke `tracking-[0.18em]` goes, since that is the app's
+        // section/meta label treatment and every other FIELD label in the kit
+        // (Name, Username, Recipe name, Event…) is plain `label-osd`.
+        label={label}
+        containerClassName="gap-2"
+        // Not React's `autoFocus` — see useFocusTrap (R4-2/R4-3). React applies
+        // that during commit, so the trap captured this input as the element to
+        // restore to and then took the focus off it anyway.
+        data-autofocus
         placeholder={placeholder}
         value={value}
         disabled={busy}

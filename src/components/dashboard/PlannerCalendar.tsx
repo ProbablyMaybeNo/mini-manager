@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Listbox, MiniCalendar } from "@/components/kit";
 import { createEvent } from "@/lib/actions/events";
+import { todayIso } from "@/lib/calendarDay";
 import { accentText, eventKindAccent } from "@/lib/palette";
 import { cn } from "@/lib/cn";
 import type { CalendarEvent, CalendarEventKind } from "@/lib/types";
@@ -29,6 +30,13 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
     const d = new Date();
     return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
   });
+  // R4-6 — the grid had no "today" affordance at all, so a painter opening the
+  // planner to book a session had to count from the weekday header. Captured
+  // once, alongside `view`, which this component already derives from
+  // `new Date()` on both the server render and hydration; it does not move
+  // when the painter navigates months, so today stays marked in its own month
+  // and nowhere else.
+  const [today] = useState(() => todayIso());
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
@@ -155,6 +163,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
         events={events}
         onDayClick={openAddForDay}
         showMonthLabel={false}
+        today={today}
         className="w-full"
       />
 
@@ -223,6 +232,7 @@ export function PlannerCalendar({ events }: { events: CalendarEvent[] }) {
                   year={pickerView.year}
                   month={pickerView.month}
                   events={events}
+                  today={today}
                   onDayClick={(iso) => {
                     setDate(iso);
                     setPickerOpen(false);

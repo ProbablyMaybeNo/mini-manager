@@ -511,9 +511,8 @@ export function ProjectWorkspaceBody({
           </div>
           <button
             type="button"
-            // Navigate forward (no onClose) — the inspector's history-unwind on
-            // close would fight the push. ProjectPanelStack's unmount cleanup
-            // skips its unwind when we've navigated past the inspector entry.
+            // Navigate forward (no onClose): the inspector's entry stays behind
+            // the page, so Back returns to the dashboard with the panel open.
             onClick={() => router.push(`/projects/${project.id}`)}
             className="mt-6 inline-flex min-h-11 shrink-0 items-center gap-1.5 font-mono text-[11px] text-fg-faint transition-colors hover:text-cyan-lite focus:outline-none focus-visible:text-cyan-lite md:min-h-6"
           >
@@ -839,13 +838,19 @@ export function ProjectWorkspaceBody({
               onChange={(e) => setRefUrl(e.target.value)}
               placeholder="https://…/reference.jpg"
             />
+            {/* R4-9 — this read "Save", and so does the action bar's own
+                primary further down the same open panel: two controls on
+                screen at once, both announced "Save button", with nothing to
+                say which saves what. This one saves only the reference link,
+                so it says so — a visible change, not an aria-only one, because
+                the ambiguity was there for sighted users too. */}
             <Button
               variant="secondary"
               size="sm"
               disabled={pending}
               onClick={() => run(() => setProjectReferenceImage({ id: project.id, url: refUrl || null }))}
             >
-              Save
+              Save link
             </Button>
           </div>
         </div>
@@ -868,6 +873,9 @@ export function ProjectWorkspaceBody({
       <InspectorActionBar
         className={cn("mt-auto", isPage && "order-6")}
         disabled={pending}
+        // R4-9 — "Save project details": this one flushes notes, target date
+        // and the reference link together, as against REFERENCE's "Save link".
+        saveDescription="project details"
         archived={!!detail?.archived}
         onFocus={onStartSession ? () => onStartSession(project) : undefined}
         onDelete={() => setConfirmingDelete(true)}

@@ -154,14 +154,19 @@ test.describe("M6 — Mobile primary flows", () => {
     await expect(sheet.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 15_000 });
 
     // Persistence across a reload (setCounter + updateProjectCount committed).
-    // PROGRESS is open by default, so the reopened sheet shows the grid directly.
-    await expect(async () => {
-      await page.reload({ waitUntil: "domcontentloaded" });
-      await page
-        .getByRole("button", { name: `Manage ${name}` })
-        .click({ position: { x: 12, y: 12 } });
-      await expect(page.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 5_000 });
-    }).toPass({ timeout: 45_000 });
+    //
+    // R2-17 made the drill stack URL state (`?open=<id>`), and the panel is
+    // DERIVED from it — `useInspectorStack` reads `useSearchParams`, so a
+    // reload now RESTORES the sheet instead of coming back to a closed
+    // dashboard. This block used to reload and re-tap the card; that tap is
+    // now aimed at a card sitting behind the restored sheet and can never
+    // land. The persistence being asserted is unchanged and still real — the
+    // count reads 1/1 on the restored sheet — so assert it there, and pin the
+    // restore itself while we are here.
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const restored = page.getByRole("dialog");
+    await expect(restored).toBeVisible({ timeout: 15_000 });
+    await expect(restored.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 15_000 });
     await expectNoHorizontalScroll(page);
   });
 

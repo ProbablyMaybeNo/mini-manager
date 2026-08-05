@@ -22,6 +22,7 @@ import {
 } from "./projectCreateWalkthroughData";
 import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import { ProjectPanelStack } from "./ProjectPanelStack";
+import { useInspectorStack } from "./useInspectorStack";
 import { ProjectsTable } from "./ProjectsTable";
 import { RosterFilterBar, type RosterSort } from "./RosterFilterBar";
 import { RightRail } from "./RightRail";
@@ -92,13 +93,16 @@ export function DashboardView({
 }: DashboardViewProps) {
   const router = useRouter();
   const isSubscriber = useSubscriber();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  // PP-1 cleanup flag: the slide-out edit inspector is no longer opened by a
-  // dashboard row-click (rows now navigate to /projects/[id]). `inspectorOpen`
-  // is kept only for the open-on-create transition below; the row-click path
-  // that previously set it is gone. Safe to remove the inspector entirely once
-  // the create flow stops routing through InspectorShell (follow-up).
-  const [inspectorOpen, setInspectorOpen] = useState(false);
+  // The open inspector + its drill stack are URL state (`?open=…&sub=…`), so
+  // each tier is one history entry and browser Back pops exactly one of them
+  // (MOP-004 / R2-17). Nothing here mirrors it into React state.
+  const {
+    stack: inspectorStack,
+    open: openInspector,
+    drill: drillInspector,
+    closeTier: closeInspectorTier,
+    close: closeInspector,
+  } = useInspectorStack();
   // RF-11: the mobile full-screen PLANNER, opened from the Upcoming-Events bar.
   const [plannerOpen, setPlannerOpen] = useState(false);
   // Roster SORT (4:4) — reorders the visible top-level rows. View-only; never
@@ -115,8 +119,11 @@ export function DashboardView({
   const isDesktop = useIsDesktop();
 
   // Derive the selected project from the live tree (not a snapshot) so an
-  // inline edit + router.refresh() shows fresh data in the open panel.
-  const selected = selectedId ? findProject(projects, selectedId) : null;
+  // inline edit + router.refresh() shows fresh data in the open panel. Used for
+  // the roster's selected-row highlight only — whether the PANEL shows is keyed
+  // on the URL stack, so a refresh that momentarily lacks the project doesn't
+  // tear it down mid-edit.
+  const selected = inspectorStack[0] ? findProject(projects, inspectorStack[0]) : null;
 
   // The calendar grid receives the whole current month (so a deadline added
   // earlier this month still draws its dot — d9cfJYAVIx0C). The bottom ticker
@@ -137,23 +144,20 @@ export function DashboardView({
   // remain wired through ProjectsTable.
   function openProject(p: Project) {
     onOpenProject?.(p);
-    setSelectedId(p.id);
-    setInspectorOpen(true);
+    openInspector(p.id);
   }
 
   // "+ New Project" creates a draft project immediately; the open-on-create
   // effect below opens its editable panel. No separate create form (Ross).
+  // An already-open panel is left alone: the new draft's `open` swaps it in
+  // place a beat later. Unwinding here would race the create's own push.
   function startCreate() {
-    setInspectorOpen(false);
-    setSelectedId(null);
     onAddProject?.();
   }
 
   // The tour deep-link's one-shot create signal — kicks the same draft-create.
   useEffect(() => {
     if (!autoCreate) return;
-    setInspectorOpen(false);
-    setSelectedId(null);
     onAddProject?.();
     onAutoCreateConsumed?.();
   }, [autoCreate, onAddProject, onAutoCreateConsumed]);
@@ -164,8 +168,7 @@ export function DashboardView({
     if (!openProjectId) return;
     if (findProject(projects, openProjectId)) {
       // The freshly created draft resolved in the tree — open its editable panel.
-      setSelectedId(openProjectId);
-      setInspectorOpen(true);
+      openInspector(openProjectId);
       onOpenConsumed?.();
       // Arm the first-create walkthrough the first time a draft panel opens.
       // Gated on the localStorage "seen" flag + a webdriver guard so it never
@@ -181,26 +184,28 @@ export function DashboardView({
         window.requestAnimationFrame(() => setWalkthroughOpen(true));
       }
     }
-  }, [openProjectId, projects, onOpenConsumed]);
+  }, [openProjectId, projects, onOpenConsumed, openInspector]);
 
   // Desktop master-detail (DOP-002): when the inspector is open on md+, the
   // pane becomes a persistent in-flow right column (no scrim, table stays
   // visible) and the RightRail steps aside to make room for it. Below md the
   // inspector is an overlay (SlideOutPanel / the bottom sheet) so the RightRail
   // is irrelevant — keep it rendered there.
-  const twoPane = isDesktop && inspectorOpen;
+  const twoPane = isDesktop && inspectorStack.length > 0;
 
   const inspector = (
     <ProjectPanelStack
       projects={projects}
-      rootId={selected?.id ?? null}
+      stack={inspectorStack}
       projectMinutes={projectMinutes}
-      open={inspectorOpen}
-      onClose={() => setInspectorOpen(false)}
-      onStartSession={(p) => {
-        setInspectorOpen(false);
-        onStartSession?.(p);
-      }}
+      onClose={closeInspector}
+      onDrill={drillInspector}
+      onCloseTier={closeInspectorTier}
+      // No close first: unwinding history in the same tick as a router push is
+      // what R2-17 was — the traversal cancelled the navigation and the painter
+      // never reached the focus bench. The inspector's entry simply sits behind
+      // /focus, so Back from there returns to the dashboard with it open.
+      onStartSession={(p) => onStartSession?.(p)}
       onAttachRecipe={(p) => onAttachRecipe?.(p)}
     />
   );
@@ -267,14 +272,19 @@ export function DashboardView({
                       <RosterFilterBar sort={rosterSort} onSortChange={setRosterSort} />
                     )}
                     {/* ≥44px tap target around the 16px glyph (UX-003 / WCAG 2.2
-                        §2.5.8); the box grows, glyph size unchanged. */}
+                        §2.5.8); the box grows, glyph size unchanged.
+                        R4-4 — `shrink-0`, because `md:w-9` was not holding. It
+                        is a flex item next to RosterFilterBar, so it shrank
+                        with the column: measured 20x36 with the inspector open,
+                        against the 36x36 it asks for. The declared size was
+                        never the problem, the flex default was. */}
                     <button
                       type="button"
                       aria-label="New project"
                       title="New project"
                       onClick={startCreate}
                       disabled={creatingProject}
-                      className="hidden h-11 w-11 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan disabled:opacity-50 md:inline-flex md:h-9 md:w-9"
+                      className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-[6px] transition-colors hover:bg-fg/5 hover:text-cyan-lite focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan disabled:opacity-50 md:inline-flex md:h-9 md:w-9"
                     >
                       <PlusCircleIcon />
                     </button>
@@ -363,7 +373,7 @@ export function DashboardView({
         activity={activity}
       />
       {/* First-create walkthrough — only while the draft panel is open. */}
-      {walkthroughOpen && inspectorOpen && (
+      {walkthroughOpen && inspectorStack.length > 0 && (
         <ProjectCreateWalkthrough
           containerRef={dashboardRef}
           onDismiss={() => setWalkthroughOpen(false)}

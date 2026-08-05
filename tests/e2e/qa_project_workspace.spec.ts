@@ -37,7 +37,7 @@ async function addProject(page: Page, name: string): Promise<void> {
   // The rename commits via updateProjectName on blur; the roster row + the
   // inspector's own header pick up the new title once it round-trips.
   await expect(
-    page.getByRole("button", { name: `Manage ${name}` }),
+    page.getByRole("button", { name: `Open ${name}` }),
   ).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Close project inspector" }).click();
 }
@@ -60,12 +60,15 @@ test.describe("M3 — Project workspace lifecycle", () => {
     const name = `QA Squad ${Date.now()}`;
     await addProject(page, name);
 
-    const row = page.getByRole("button", { name: `Manage ${name}` });
-    await expect(row).toBeVisible({ timeout: 15_000 });
+    // R4-8 — the roster row is a `row` again, and the project title inside its
+    // Title cell is the control that opens it. The row still opens on a body
+    // click for a mouse; this is the keyboard/AT path.
+    const openTitle = page.getByRole("button", { name: `Open ${name}` });
+    await expect(openTitle).toBeVisible({ timeout: 15_000 });
 
-    // A row-body click opens the full editable INSPECTOR (not the old flow
-    // overlay): name, type, status, priority all editable in one panel.
-    await row.click();
+    // Opens the full editable INSPECTOR (not the old flow overlay): name,
+    // type, status, priority all editable in one panel.
+    await openTitle.click();
     const inspector = page.locator('section[aria-label="Project inspector"]');
     await expect(inspector).toBeVisible({ timeout: 15_000 });
     await expect(page.getByLabel("Name", { exact: true })).toHaveValue(name, {
@@ -92,7 +95,7 @@ test.describe("M3 — Project workspace lifecycle", () => {
     // the reload is more robust than waitForResponse under dev-server load.
     await expect(async () => {
       await page.reload({ waitUntil: "domcontentloaded" });
-      await page.getByRole("button", { name: `Manage ${name}` }).click();
+      await page.getByRole("button", { name: `Open ${name}` }).click();
       await expect(page.getByText(/^1\s*\/\s*1$/)).toBeVisible({ timeout: 5_000 });
     }).toPass({ timeout: 45_000 });
   });
@@ -115,10 +118,57 @@ test.describe("M3 — Project workspace lifecycle", () => {
     await addProject(page, name);
 
     await expect(
-      page.getByRole("button", { name: `Manage ${name}` }),
+      page.getByRole("button", { name: `Open ${name}` }),
     ).toBeVisible({ timeout: 15_000 });
     await expect(
       page.getByRole("button", { name: new RegExp(`(Expand|Collapse) ${name}`) }),
     ).toHaveCount(0);
+  });
+
+  /**
+   * R4-9 — the open inspector put TWO controls on screen both named exactly
+   * "Save": the action bar's primary (which flushes notes, target date and
+   * the reference link) and REFERENCE's own small one (which saves only the
+   * link). A screen-reader user tabbing the panel heard "Save button … Save
+   * button" with no way to tell which saved what.
+   */
+  test("M3.3 the inspector's two Save controls are distinguishable", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail("saves"));
+    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^PROJECTS$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const name = `QA Saves ${Date.now()}`;
+    await addProject(page, name);
+    await page.getByRole("button", { name: `Open ${name}` }).click();
+
+    const inspector = page.getByRole("region", { name: "Project inspector" });
+    await expect(inspector).toBeVisible({ timeout: 15_000 });
+
+    // Both are reachable at once on desktop, which is the condition that made
+    // this ambiguous — and neither is called just "Save" any more.
+    await expect(
+      inspector.getByRole("button", { name: "Save project details" }),
+    ).toHaveCount(1);
+    await expect(inspector.getByRole("button", { name: "Save link" })).toHaveCount(1);
+    await expect(
+      inspector.getByRole("button", { name: "Save", exact: true }),
+    ).toHaveCount(0);
+
+    // Renaming it did not break it: the control still runs its action and
+    // reports no error. The persistence round-trip itself is pinned server-side
+    // in tests/integration/actions/projectMeta.test.ts, which is both cheaper
+    // and not a race against a reload.
+    const saveLink = inspector.getByRole("button", { name: "Save link" });
+    await inspector
+      .getByRole("textbox", { name: "Reference image URL" })
+      .fill("https://example.com/reference.jpg");
+    await saveLink.click();
+    await expect(saveLink).toBeEnabled({ timeout: 15_000 });
+    await expect(inspector.getByText(/^▸ /)).toHaveCount(0);
   });
 });

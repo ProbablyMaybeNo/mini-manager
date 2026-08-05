@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
 import { rollupProjectMinutes } from "@/lib/projectTime";
@@ -27,174 +27,51 @@ function findProject(list: Project[], id: string): Project | null {
  * pushes a new tab a tier down; the strip lets the painter click back and
  * forth between related projects without losing their place. The rich body
  * is shared with the full-page `/projects/[id]` view.
+ *
+ * The stack itself is URL state owned by {@link useInspectorStack} (one history
+ * entry per tier, so browser Back pops one tier — MOP-004). This component
+ * renders that stack and reports intent; it never touches history itself.
  */
 export function ProjectPanelStack({
   projects,
-  rootId,
+  stack,
   projectMinutes = {},
-  open,
   onClose,
+  onDrill,
+  onCloseTier,
   onStartSession,
   onAttachRecipe,
 }: {
   projects: Project[];
-  /** The project that opened the panel — the bottom (un-closable) tab. */
-  rootId: string | null;
+  /** Open project ids, root first — the root is the un-closable bottom tab. */
+  stack: string[];
   projectMinutes?: Record<string, number>;
-  open: boolean;
   onClose: () => void;
+  onDrill: (id: string) => void;
+  onCloseTier: (index: number) => void;
   onStartSession: (project: Project) => void;
   onAttachRecipe: (project: Project) => void;
 }) {
-  const [tabIds, setTabIds] = useState<string[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  // Which tab is showing. Purely view state: switching tabs doesn't change the
+  // drill, so it is not in the URL. Clamped to the live stack below, which is
+  // what makes Back "just work" — pop a tier and the selection falls to the new
+  // top without a popstate handler.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   // Roving tabindex: only the active tab is in the Tab order; ArrowLeft/Right
   // move focus (and selection) between tabs. Refs let us move DOM focus to the
   // newly-selected tab on arrow nav (WAI-ARIA tabs pattern).
   const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
-  // ---- History/back integration (MOP-004) ----------------------------------
-  // We mirror the drill stack into the browser history so OS/browser Back pops
-  // one tier (sub-project → parent → closed) and never exits the app. The model:
-  //   open       → pushState({ mmInspector: true })
-  //   openSub    → pushState({ mmInspector: true, mmSubProject: true })
-  //   user close → history.back() per pushed entry (unwinds cleanly)
-  //   popstate   → if event.state has no mmInspector, it's a Next router nav —
-  //                pass through untouched; otherwise reconcile the UI to the new
-  //                depth (pop a tab or close).
-  // `pushedDepthRef` tracks how many of OUR entries are live so a full close can
-  // unwind them, and `unwindingRef` flags programmatic history.back() calls so
-  // the resulting popstate doesn't double-handle.
-  const pushedDepthRef = useRef(0);
-  // Number of upcoming programmatic popstate events to swallow (a history.go(-n)
-  // fires n popstate events). Boolean wouldn't cover multi-level unwind.
-  const unwindingRef = useRef(0);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  // A fresh root resets the stack to a single tab.
-  useEffect(() => {
-    if (rootId) {
-      setTabIds([rootId]);
-      setActiveId(rootId);
-    }
-  }, [rootId]);
-
-  // Push our base entry when the panel becomes visible; unwind every pushed
-  // entry when it closes. Keyed on `visibleForHistory` (open + has a root) so a
-  // programmatic unwind doesn't re-trigger it.
-  const visibleForHistory = open && rootId != null;
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (visibleForHistory) {
-      window.history.pushState({ ...window.history.state, mmInspector: true }, "");
-      pushedDepthRef.current = 1;
-      return () => {
-        // Panel unmounted/closed externally — unwind our entries so the history
-        // stack returns to where it was before we opened (clean back behaviour).
-        // BUT: if the current entry is no longer ours (mmInspector), the user
-        // navigated FORWARD past the inspector (e.g. "⤢ Open full page" →
-        // /projects/[id]); unwinding here would bounce them straight back, so
-        // skip it and leave the stale entry behind the new page.
-        const depth = pushedDepthRef.current;
-        pushedDepthRef.current = 0;
-        if (depth > 0 && window.history.state?.mmInspector) {
-          unwindingRef.current += depth;
-          window.history.go(-depth);
-        }
-      };
-    }
-  }, [visibleForHistory]);
-
-  // popstate: OS/browser/predictive Back. Reconcile UI to the popped state.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    function onPop(event: PopStateEvent) {
-      // A programmatic unwind (clean close) — swallow; UI already updated.
-      if (unwindingRef.current > 0) {
-        unwindingRef.current -= 1;
-        return;
-      }
-      // CRITICAL: not our state → a Next.js router navigation. Pass through.
-      if (!event.state?.mmInspector) {
-        // If our panel is still open, the user backed out past it entirely —
-        // close it without touching history (the nav already moved us).
-        if (pushedDepthRef.current > 0) {
-          pushedDepthRef.current = 0;
-          onCloseRef.current();
-        }
-        return;
-      }
-      // Our state, with a depth shallower than the stack → Back popped a tier.
-      if (!event.state.mmSubProject) {
-        // Back to the root inspector entry: drop every pushed sub-tab.
-        pushedDepthRef.current = 1;
-        setTabIds((prev) => {
-          const root = prev[0];
-          setActiveId(root ?? null);
-          return root ? [root] : prev;
-        });
-      } else {
-        // Still within the sub-stack — pop the top sub-tab.
-        pushedDepthRef.current = Math.max(1, pushedDepthRef.current - 1);
-        setTabIds((prev) => {
-          if (prev.length <= 1) return prev;
-          const next = prev.slice(0, -1);
-          setActiveId(next[next.length - 1] ?? prev[0]);
-          return next;
-        });
-      }
-    }
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
+  const activeId =
+    selectedId && stack.includes(selectedId) ? selectedId : (stack[stack.length - 1] ?? null);
 
   function openSub(id: string) {
-    setTabIds((prev) => {
-      if (prev.includes(id)) return prev;
-      // Push a sub-tier history entry so Back pops just this tab (MOP-004).
-      if (typeof window !== "undefined") {
-        window.history.pushState(
-          { ...window.history.state, mmInspector: true, mmSubProject: true },
-          "",
-        );
-        pushedDepthRef.current += 1;
-      }
-      return [...prev, id];
-    });
-    setActiveId(id);
-  }
-
-  function closeTab(id: string) {
-    if (id === tabIds[0]) {
-      // Closing the root closes the whole panel — let the close effect unwind
-      // history. onClose flips `open`, unmounting via the cleanup above.
-      onClose();
-      return;
-    }
-    const isTop = id === tabIds[tabIds.length - 1];
-    if (isTop && typeof window !== "undefined" && pushedDepthRef.current > 1) {
-      // Closing the top sub-tab is exactly an OS-Back: pop one tier and let
-      // popstate update the stack (single source of truth, MOP-004).
-      window.history.back();
-      return;
-    }
-    // Closing a non-top middle tab (rare): mutate that specific tab directly and
-    // consume one history entry via a guarded back so depth stays balanced.
-    setTabIds((prev) => {
-      const next = prev.filter((t) => t !== id);
-      if (id === activeId) setActiveId(next[next.length - 1] ?? prev[0]);
-      return next;
-    });
-    if (typeof window !== "undefined" && pushedDepthRef.current > 1) {
-      pushedDepthRef.current -= 1;
-      unwindingRef.current += 1;
-      window.history.back();
-    }
+    setSelectedId(id);
+    onDrill(id);
   }
 
   const active = activeId ? findProject(projects, activeId) : null;
-  const tabs = tabIds
+  const tabs = stack
     .map((id) => findProject(projects, id))
     .filter((p): p is Project => p != null);
 
@@ -210,16 +87,20 @@ export function ProjectPanelStack({
     e.preventDefault();
     const target = tabs[next];
     if (!target) return;
-    setActiveId(target.id);
+    setSelectedId(target.id);
     tabRefs.current.get(target.id)?.focus();
   }
 
   const isDesktop = useIsDesktop();
-  const visible = open && tabIds.length > 0;
+  // Keyed on the URL stack, NOT on whether the projects resolved: a refresh can
+  // land a tree that momentarily lacks the open project, and unmounting the
+  // panel for that frame throws the painter out of it mid-edit. An unresolved
+  // root shows the loading body instead, which is what it did before R2-17.
+  const visible = stack.length > 0;
 
   // Breadcrumb depth (MOP-004): one ▸ PROJECT for the root, then ▸ SUB per tier
   // down to the active tab so the painter can see how deep the drill is.
-  const activeIndex = activeId ? Math.max(0, tabIds.indexOf(activeId)) : 0;
+  const activeIndex = activeId ? Math.max(0, stack.indexOf(activeId)) : 0;
   const breadcrumb =
     "PROJECTS ▸ PROJECT" + " ▸ SUB".repeat(activeIndex);
 
@@ -270,6 +151,9 @@ export function ProjectPanelStack({
     >
       {tabs.map((t, i) => {
         const selected = t.id === activeId;
+        // Tier index in the URL stack, which is what close acts on — not the
+        // index in `tabs`, which skips any id that hasn't resolved yet.
+        const tier = stack.indexOf(t.id);
         return (
           <span
             key={t.id}
@@ -294,7 +178,7 @@ export function ProjectPanelStack({
                 if (el) tabRefs.current.set(t.id, el);
                 else tabRefs.current.delete(t.id);
               }}
-              onClick={() => setActiveId(t.id)}
+              onClick={() => setSelectedId(t.id)}
               onKeyDown={(e) => onTabKeyDown(e, i)}
               className="flex max-w-[10rem] items-center gap-1 truncate font-body text-body focus:outline-none focus-visible:underline"
             >
@@ -303,11 +187,11 @@ export function ProjectPanelStack({
               </span>
               <span className="truncate">{t.title}</span>
             </button>
-            {i > 0 && (
+            {tier > 0 && (
               <button
                 type="button"
                 aria-label={`Close ${t.title} tab`}
-                onClick={() => closeTab(t.id)}
+                onClick={() => onCloseTier(tier)}
                 // ≥24px hit area, 8px (gap-2) from the label tap area.
                 className="flex h-6 w-6 shrink-0 items-center justify-center text-fg-dim hover:text-red focus:outline-none focus-visible:text-red"
               >

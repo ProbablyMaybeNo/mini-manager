@@ -591,6 +591,18 @@ export function CollectionTable({
                     {!isPaint && (
                       <td className="px-2 font-mono text-[12px] text-fg-faint">—</td>
                     )}
+                    {/* R4-4 — these two had NO box at all: bare buttons whose
+                        drawn size was their 14px glyph. Half the roster row's
+                        28px delete, a third of the app's 39px ordinary button,
+                        and one of them destructive. They cleared WCAG 2.5.8
+                        only through the spacing exception, by 2px. `h-7 w-7`
+                        is the roster's dense-desktop-row delete, which is the
+                        nearest sibling and the right size to agree with; at
+                        28px they now clear the 24px floor outright rather than
+                        by exception, without a hit-area expander that would
+                        overlap its destructive neighbour. The mobile block
+                        above is already 24x44 on purpose and is untouched;
+                        the glyphs stay 14px, so the row reads as before. */}
                     <td className="px-2">
                       <span className="inline-flex items-center gap-3">
                         {onEdit && (
@@ -598,7 +610,7 @@ export function CollectionTable({
                             type="button"
                             aria-label={`Edit ${item.name}`}
                             onClick={() => onEdit(item)}
-                            className="text-fg-dim transition-colors hover:text-cyan-lite"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-sm text-fg-dim transition-colors hover:text-cyan-lite"
                           >
                             <PenLine size={14} aria-hidden />
                           </button>
@@ -607,7 +619,7 @@ export function CollectionTable({
                           type="button"
                           aria-label={`Delete ${item.name}`}
                           onClick={() => onRemove(item)}
-                          className="text-fg-dim transition-colors hover:text-red"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-sm text-fg-dim transition-colors hover:text-red"
                         >
                           <Trash2 size={14} aria-hidden />
                         </button>

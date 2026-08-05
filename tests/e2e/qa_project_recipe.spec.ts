@@ -40,7 +40,7 @@ async function addProject(page: Page, name: string): Promise<void> {
   await nameField.fill(name);
   await nameField.blur();
   await expect(
-    page.getByRole("button", { name: `Manage ${name}` }),
+    page.getByRole("button", { name: `Open ${name}` }),
   ).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Close project inspector" }).click();
 }
@@ -50,57 +50,25 @@ async function addProject(page: Page, name: string): Promise<void> {
  * editable INSPECTOR (a "Project inspector" region), whose "⤢ Open full page"
  * affordance routes to the roomy /projects/<id> page.
  *
- * R2-11 — this helper used to take the first URL flip as arrival, which is why
- * M12.2 failed only under full-suite parallel load (it passed in isolation, and
- * predates the round-2 work — it lives on main). Instrumenting `history` in a
- * throttled browser showed the actual race, and it is not a slow page:
- *
- *   1. Opening the inspector calls `window.history.pushState` directly
- *      (ProjectPanelStack's MOP-004 back-button integration). Next patches
- *      `history.pushState`, so that turns into an app-router action that has to
- *      resolve before the router settles.
- *   2. With the main thread starved, that action is STILL PENDING when the
- *      "⤢ Open full page" push commits. `waitForURL(/\/projects\//)` passes and
- *      the page renders — the test has "arrived".
- *   3. ~2.5s later the stale action resolves against the old canonical URL, and
- *      Next pushes `/dashboard` back on top. The project page is gone, and the
- *      h1 assertion fails against a dashboard that looks untouched — exactly
- *      the reported failure.
- *
- * So the readiness signal has to be "still here", not "got here": each attempt
- * arrives and then watches for the bounce, and a bounce retries the whole open
- * instead of failing the mission. The retry is what makes it correct rather
- * than merely slower — the second attempt starts with no stale action pending.
- * (Deliberately not `--workers=1` and not `test.describe.serial`: both would
- * hide this rather than absorb it.)
+ * R2-11 wrapped this in an arrive-then-watch-for-a-bounce retry, because the
+ * inspector used to unwind its own `history.pushState` entries with
+ * `history.go(-n)` — a traversal that resolved after the "⤢ Open full page"
+ * push had landed and threw the painter back to /dashboard. R2-17 moved the
+ * drill stack into the URL (`?open=…&sub=…`), so the panel no longer issues any
+ * history traversal on close or unmount and there is nothing left to bounce
+ * off. The plain sequence is the honest assertion again.
  */
 async function openProjectPage(page: Page, name: string): Promise<string> {
   const heading = page.getByRole("heading", { name, level: 1 });
-  const manage = page.getByRole("button", { name: `Manage ${name}` });
   const inspector = page.getByRole("region", { name: "Project inspector" });
 
-  await expect(async () => {
-    if (!(await heading.isVisible())) {
-      await manage.click();
-      await expect(inspector).toBeVisible({ timeout: 15_000 });
-      await inspector.getByRole("button", { name: /open full page/i }).click();
-      await page.waitForURL(/\/projects\//, { timeout: 30_000 });
-      await expect(heading).toBeVisible({ timeout: 30_000 });
-    }
-    // The bounce is a Next-internal navigation with nothing in the page to
-    // subscribe to, so it is watched for rather than awaited: landing back on
-    // /dashboard fails this attempt fast, and no bounce costs the window once.
-    const bounced = await page
-      .waitForURL(/\/dashboard/, { timeout: 2_500 })
-      .then(() => true)
-      .catch(() => false);
-    if (bounced) {
-      throw new Error(
-        `bounced back to /dashboard after opening ${name} — stale router action`,
-      );
-    }
-    await expect(heading).toBeVisible();
-  }).toPass({ timeout: 90_000 });
+  if (!(await heading.isVisible())) {
+    await page.getByRole("button", { name: `Open ${name}` }).click();
+    await expect(inspector).toBeVisible({ timeout: 15_000 });
+    await inspector.getByRole("button", { name: /open full page/i }).click();
+    await page.waitForURL(/\/projects\//, { timeout: 30_000 });
+  }
+  await expect(heading).toBeVisible({ timeout: 30_000 });
 
   return page.url();
 }
@@ -110,8 +78,7 @@ test.describe("M12 — Project-page recipe wiring", () => {
     page,
   }) => {
     // create → project page → editor hand-off → return: more hops than the
-    // default 30s allows once the dev server is compiling each route cold, plus
-    // openProjectPage's R2-11 bounce watch (and its retry) on top.
+    // default 30s allows once the dev server is compiling each route cold.
     test.setTimeout(120_000);
     await signInAs(page, freshTestEmail("prj-recipe"));
 
@@ -156,7 +123,7 @@ test.describe("M12 — Project-page recipe wiring", () => {
   test("M12.2 + Attach opens the picker and attaches an existing recipe to the project", async ({
     page,
   }) => {
-    // Two openProjectPage hops, each carrying the R2-11 bounce watch + retry.
+    // Two openProjectPage hops on top of the create + attach round trips.
     test.setTimeout(150_000);
     await signInAs(page, freshTestEmail("prj-attach"));
 

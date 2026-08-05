@@ -2,17 +2,11 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/cn";
+import { calendarDayIso, isCalendarDay } from "@/lib/calendarDay";
 import { accentBg, accentText, eventKindAccent, type Accent } from "@/lib/palette";
 import type { CalendarEvent } from "@/lib/types";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
-
-/** Pad a day number to the `YYYY-MM-DD` string the add-event form expects. */
-function isoDay(year: number, month: number, day: number): string {
-  const mm = String(month + 1).padStart(2, "0");
-  const dd = String(day).padStart(2, "0");
-  return `${year}-${mm}-${dd}`;
-}
 
 /**
  * Compact month grid that fits its panel without scrolling. Deterministic: the month is
@@ -23,6 +17,9 @@ function isoDay(year: number, month: number, day: number): string {
  *    clicked day (MM-47).
  *  - Days with events render a hover tooltip listing the event name + kind
  *    (+ notes), so the dots are explorable without opening a panel.
+ *  - `today` marks one cell as the current day (R4-6). Opt-in, and supplied by
+ *    the host, so the determinism above survives for every grid that isn't
+ *    showing "now".
  */
 export function MiniCalendar({
   year = 2026,
@@ -30,6 +27,7 @@ export function MiniCalendar({
   events = [],
   onDayClick,
   showMonthLabel = true,
+  today,
   className,
 }: {
   year?: number;
@@ -39,6 +37,8 @@ export function MiniCalendar({
   /** When the host renders the month label itself (e.g. between nav arrows,
    *  yO830AqQH3Hu) set this false to drop the duplicate internal heading. */
   showMonthLabel?: boolean;
+  /** `YYYY-MM-DD` (UTC) of the current day, to mark on the grid. */
+  today?: string | null;
   className?: string;
 }) {
   const [hovered, setHovered] = useState<number | null>(null);
@@ -141,6 +141,14 @@ export function MiniCalendar({
             </>
           );
 
+          // R4-6 — today was indistinguishable from any other cell: identical
+          // colour, background, border, weight, ::before/::after, outline,
+          // box-shadow, and no `aria-current`. A ring AND a weight change, so
+          // the cue survives colour being disabled (WCAG 1.4.1); `ring-*` is a
+          // box-shadow, deliberately not `outline`, which the cell's own
+          // `focus:outline-none` would cancel the moment it was focused.
+          const isToday = isCalendarDay(year, month, day, today);
+
           const base = cn(
             // min-h-6/min-w-6 clears the WCAG 2.2 §2.5.8 24px target floor
             // (cells were 23x23) while keeping the dense glanceable grid.
@@ -152,6 +160,7 @@ export function MiniCalendar({
             "aspect-square",
             day == null && "opacity-0",
             accent ? cn(accentText[accent], "text-glow-cyan") : "text-fg",
+            isToday && "rounded-sm font-bold ring-1 ring-cyan/70",
           );
 
           if (interactive) {
@@ -160,7 +169,8 @@ export function MiniCalendar({
                 key={i}
                 type="button"
                 aria-label={`${monthLabel} ${day}${list ? ` — ${list.length} event${list.length > 1 ? "s" : ""}` : ""}`}
-                onClick={() => onDayClick!(isoDay(year, month, day!))}
+                aria-current={isToday ? "date" : undefined}
+                onClick={() => onDayClick!(calendarDayIso(year, month, day!))}
                 onMouseEnter={() => setHovered(day)}
                 onMouseLeave={() => setHovered((h) => (h === day ? null : h))}
                 onFocus={() => setHovered(day)}
@@ -183,6 +193,7 @@ export function MiniCalendar({
             <div
               key={i}
               className={base}
+              aria-current={isToday ? "date" : undefined}
               onMouseEnter={() => day != null && setHovered(day)}
               onMouseLeave={() => setHovered((h) => (h === day ? null : h))}
             >

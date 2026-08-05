@@ -60,6 +60,49 @@ test.describe("M2 — Collection add", () => {
     ).toBeVisible({ timeout: 30_000 });
   });
 
+  /**
+   * R4-4 — the desktop row's Edit and Delete were bare buttons with no box, so
+   * their drawn size was the 14px glyph: half the roster row's 28px delete and
+   * a third of the app's 39px ordinary button, with one of the two destructive.
+   * They cleared WCAG 2.5.8 only via the spacing exception, by 2px.
+   */
+  test("M2.3 the desktop row's Edit and Delete are real 28px controls", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail("targets"));
+    await page.goto("/collection", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^COLLECTION$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const title = `QA Target Paint ${Date.now()}`;
+    const addBtn = page.getByRole("button", { name: /^\+ PAINT$/i }).first();
+    const dialog = page.getByRole("dialog", { name: /^Add paint$/i });
+    await expect(addBtn).toBeVisible({ timeout: 30_000 });
+    await expect(async () => {
+      await addBtn.click();
+      await expect(dialog).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    // R4-1: the field has an accessible name now, so it can be reached by one.
+    await dialog.getByLabel("Paint name").fill(title);
+    await dialog.getByRole("button", { name: /^Add$/ }).click();
+    await expect(dialog).toBeHidden({ timeout: 15_000 });
+
+    // Both the card list and the table mount; `.last()` is the desktop table,
+    // the one actually visible at this viewport.
+    for (const label of [`Edit ${title}`, `Delete ${title}`]) {
+      const control = page.getByRole("button", { name: label }).last();
+      await expect(control).toBeVisible({ timeout: 15_000 });
+      const box = await control.boundingBox();
+      expect(box).not.toBeNull();
+      // 28x28 — clears the 24px floor outright rather than by the spacing
+      // exception. Was 14x14.
+      expect(box!.width).toBeGreaterThanOrEqual(24);
+      expect(box!.height).toBeGreaterThanOrEqual(24);
+    }
+  });
+
   test("M2.2 /collections (plural) and /wishlist redirect to /collection", async ({
     page,
   }) => {

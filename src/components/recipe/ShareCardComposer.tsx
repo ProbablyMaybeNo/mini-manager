@@ -9,6 +9,10 @@ import { cn } from "@/lib/cn";
 import { loadProjectImages } from "@/lib/actions/projectImages";
 import { submitRecipeToGallery } from "@/lib/actions/gallerySubmissions";
 import { validateImageFile } from "@/lib/blob/limits";
+import {
+  isNamedRecipe,
+  UNNAMED_RECIPE_GALLERY_ERROR,
+} from "@/lib/recipes/name";
 import { exportableImageSrc } from "@/lib/shareCard/imageSrc";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
@@ -199,6 +203,14 @@ export function ShareCardComposer({
   const selectedImage = candidates.find((c) => c.id === selectedId) ?? null;
   const trimmedNotes = notes.trim().slice(0, NOTES_MAX_CHARS);
 
+  // R4-5 — a recipe the painter hasn't named yet still carries the auto-name,
+  // and the card would set it as the headline under our own wordmark. Keep it
+  // off the card entirely (a titleless card beats one shouting "UNTITLED
+  // RECIPE", on the DOWNLOAD path as much as the gallery one) and refuse the
+  // outward-facing action until it has a real name.
+  const named = isNamedRecipe(recipeName);
+  const cardName = named ? recipeName : null;
+
   const height = cardHeightFor(ratio, CARD_DISPLAY_WIDTH);
   // Inner frame sits inset from the card edge; the swatch grid gets whatever
   // width remains inside that frame + the content column's own padding.
@@ -239,7 +251,7 @@ export function ShareCardComposer({
       if (!dataUrl) return;
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = shareCardFilename(recipeName);
+      a.download = shareCardFilename(cardName);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -253,10 +265,18 @@ export function ShareCardComposer({
     } finally {
       setExporting(false);
     }
-  }, [recipeId, recipeName, renderCardPng]);
+  }, [cardName, recipeId, renderCardPng]);
 
   const handleSubmit = useCallback(async () => {
     if (!recipeId) return;
+    // R4-5 — refuse, and SAY SO, rather than going quiet. The button stays
+    // focusable (`aria-disabled`, not `disabled`) precisely so a screen-reader
+    // user tabbing the panel reaches it and hears the reason: a `disabled`
+    // button is skipped by Tab, and its explanation with it.
+    if (!named) {
+      setError(UNNAMED_RECIPE_GALLERY_ERROR);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     trackClient(AnalyticsEvent.GallerySubmitStarted, { recipeId });
@@ -298,7 +318,7 @@ export function ShareCardComposer({
     } finally {
       setSubmitting(false);
     }
-  }, [ratio, recipeId, renderCardPng]);
+  }, [named, ratio, recipeId, renderCardPng]);
 
   const hasContent = slots.length > 0 || trimmedNotes.length > 0 || selectedImage != null;
 
@@ -342,9 +362,9 @@ export function ShareCardComposer({
                 left: CONTENT_PADDING,
               }}
             >
-              {recipeName && (
+              {cardName && (
                 <p className="truncate text-center font-display text-[13px] font-bold uppercase tracking-tight text-fg-bright">
-                  {recipeName}
+                  {cardName}
                 </p>
               )}
 
@@ -534,7 +554,13 @@ export function ShareCardComposer({
             />
           </div>
 
-          {error && <p className="font-mono text-[12px] text-red-text">▸ {error}</p>}
+          {/* `role="alert"` so a refusal is announced, not merely drawn — the
+              naming guard below is the case that made that matter. */}
+          {error && (
+            <p role="alert" className="font-mono text-[12px] text-red-text">
+              ▸ {error}
+            </p>
+          )}
 
           {submitted && (
             <p className="flex items-center gap-2 font-mono text-[12px] text-green">
@@ -570,7 +596,14 @@ export function ShareCardComposer({
                   variant="primary"
                   onClick={handleSubmit}
                   disabled={submitting || exporting}
-                  className="w-full justify-center"
+                  // R4-5 — `aria-disabled` rather than `disabled` while the
+                  // recipe is unnamed: the control keeps its place in the Tab
+                  // order, so the reason below is reachable and announced with
+                  // it. Pressing it explains itself (handleSubmit) instead of
+                  // doing nothing.
+                  aria-disabled={named ? undefined : true}
+                  aria-describedby="share-card-gallery-note"
+                  className={cn("w-full justify-center", !named && "opacity-60")}
                 >
                   <Send size={16} aria-hidden />
                   {submitting
@@ -579,13 +612,20 @@ export function ShareCardComposer({
                       ? "Resubmit to gallery"
                       : "Post to gallery"}
                 </Button>
-                <p className="label-osd text-fg-dim">
-                  Publish it to the Mini Mainframe community gallery.
+                <p
+                  id="share-card-gallery-note"
+                  className={cn("label-osd", named ? "text-fg-dim" : "text-red-text")}
+                >
+                  {named
+                    ? "Publish it to the Mini Mainframe community gallery."
+                    : UNNAMED_RECIPE_GALLERY_ERROR}
                 </p>
               </div>
             )}
           </div>
-          {recipeId && !submitted && (
+          {/* R4-5 — "cards go live right away" is only true once the recipe
+              has a name, so it stays off screen until it is. */}
+          {recipeId && named && !submitted && (
             <p className="font-mono text-[11px] text-fg-dim">
               ▸ Sharing is open to everyone. Cards go live on{" "}
               <span className="text-cyan-lite">/gallery</span> right away once
