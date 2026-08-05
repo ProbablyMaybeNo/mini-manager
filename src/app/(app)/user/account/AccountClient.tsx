@@ -258,6 +258,23 @@ export function AccountClient({
         </p>
         <Input
           name="confirm-username"
+          // R5-1: this is R4-1 surviving in a second place. The dialog already
+          // used the kit `Input` but never passed `label`, so `Input` rendered
+          // no <label> at all and the `id` had nothing pointing at it —
+          // `input.labels` empty, aria-label null, aria-labelledby null. A
+          // screen reader announced an unnamed edit box in the most
+          // destructive dialog in the app.
+          //
+          // A VISIBLE label, not `aria-label`: it goes through the same kit
+          // mechanism R4-1 established rather than inventing a second one, it
+          // gives a real `<label for>` (which is what `input.labels` reports —
+          // the check that caught this), and it is not redundant with the
+          // sentence above. That sentence is an INSTRUCTION ("type your
+          // username X below"); "Username" is the field's NAME. WCAG 3.3.2
+          // wants both, and the sighted user under load in a delete-forever
+          // dialog benefits from the label too, which `aria-label` gives to
+          // nobody.
+          label="Username"
           // Same shell, same defect as PromptDialog (R4-2): React's `autoFocus`
           // ran before the trap's effect, so Cancel dropped focus on <body>.
           data-autofocus
