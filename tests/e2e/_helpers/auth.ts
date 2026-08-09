@@ -11,9 +11,14 @@ import type { Page } from "@playwright/test";
 export async function signInAs(
   page: Page,
   email: string,
+  opts: { comp?: boolean } = {},
 ): Promise<{ userId: string }> {
+  // Test users are comped by default so the pre-paywall specs keep asserting
+  // the unlocked world. Pass `comp: false` to mint a real free-tier user and
+  // assert a gate — the hook /api/test/sign-in documents but nothing used
+  // until the picker merge needed to prove the wheel stayed subscriber-only.
   const res = await page.request.post("/api/test/sign-in", {
-    data: { email },
+    data: opts.comp === false ? { email, comp: false } : { email },
   });
   if (!res.ok()) {
     throw new Error(
