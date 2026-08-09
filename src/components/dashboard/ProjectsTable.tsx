@@ -274,26 +274,35 @@ export function ProjectsTable({
       const hasChildren = !!p.children && p.children.length > 0;
       const isExpanded = expanded.has(p.id);
 
+      // R5-2 — this WAS `<div role="button" tabindex="0" aria-label="Manage …">`,
+      // which is R4-8's construct surviving on mobile. ARIA gives `button`
+      // presentational children, so the real controls inside it — the delete
+      // bin always, the expand caret whenever the project has children — were
+      // focusable descendants of a button, which is invalid.
+      //
+      // Same fix shape as R4-8's row, deliberately, so the two surfaces stay
+      // one pattern rather than two: the container keeps its click handler,
+      // cursor and hover/active treatment, so "cards are doors" (the locked
+      // mobile density rule, 2026-07-27) is untouched for a finger or a mouse —
+      // and activation moves to a real <button> around the title. The card's
+      // highlight moves from `focus-visible` (dead once the div stops being
+      // focusable) to `focus-within`, so focusing the title, the caret or the
+      // bin still lights the card up.
+      //
+      // Tab-stop count is unchanged, measured at 375x812: the card itself was
+      // a stop and is not one now, and the title took its place. What changes
+      // is that both remaining stops are legal, named controls.
       const card = (
         <div
           key={p.id}
-          role="button"
-          tabIndex={0}
-          aria-label={`Manage ${p.title}`}
           aria-current={selected ? "true" : undefined}
           onClick={() => onOpenProject(p)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onOpenProject(p);
-            }
-          }}
           style={{ marginLeft: depth * INDENT_PX }}
           className={cn(
             // Uniform p-3 on all four sides — the old card indented rows 2-4 by
             // pl-9 to clear the caret, which read as "padding on the right, none
             // on the left". Nothing is indented now.
-            "flex cursor-pointer flex-col gap-2 rounded-[6px] border p-3 transition-colors duration-150 focus:outline-none focus-visible:border-cyan focus-visible:ring-1 focus-visible:ring-cyan",
+            "flex cursor-pointer flex-col gap-2 rounded-[6px] border p-3 transition-colors duration-150 focus-within:border-cyan focus-within:ring-1 focus-within:ring-cyan",
             selected
               ? "border-cyan bg-cyan/10"
               : "border-fg/15 hover:border-cyan/40 hover:bg-cyan/5 active:bg-cyan/10",
@@ -323,9 +332,27 @@ export function ProjectsTable({
               // made the indent read backwards (MUX-016).
               <span aria-hidden className="-ml-1 h-7 w-7 shrink-0" />
             )}
-            <span className="min-w-0 flex-1 break-words font-mono text-[15px] font-bold leading-tight text-fg-bright">
+            {/* The card's activator (R5-2), matching the desktop row's Title
+                cell. "Open <title>" rather than the old "Manage <title>" on the
+                whole card: same wording as the desktop row and RecipeCard, and
+                it contains the visible label so WCAG 2.5.3 holds. Same
+                typography and `break-words` wrapping as the span it replaced —
+                this changes the a11y tree, not the render. `stopPropagation` so
+                the card's own click doesn't open the project a second time
+                behind it. It is drawn smaller than 24px tall, which WCAG 2.2
+                §2.5.8 permits here because the enclosing card does the same
+                thing at 350x126 — the same reasoning R4-8 shipped on desktop. */}
+            <button
+              type="button"
+              aria-label={`Open ${p.title}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenProject(p);
+              }}
+              className="min-w-0 flex-1 break-words rounded-sm text-left font-mono text-[15px] font-bold leading-tight text-fg-bright focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+            >
               {p.title}
-            </span>
+            </button>
             <StatusText status={p.status} />
             {/* The card's whole purpose is "tap to open", and nothing said so —
                 meanwhile the red delete glyph was the loudest thing on it

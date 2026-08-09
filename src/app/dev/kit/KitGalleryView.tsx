@@ -230,7 +230,10 @@ export function KitGalleryView() {
       <Section title="Inputs · Toggle">
         <div className="w-56"><Input label="Username" name="u" placeholder="painter_01" /></div>
         <div className="w-56"><Input label="Error" name="e" error="Required field" /></div>
-        <div className="w-56"><SearchField name="s" /></div>
+        {/* R5-3: `aria-label`, not `label` — this swatch exists to show the
+            SearchField's default unlabelled render, so naming it visibly would
+            change what it demonstrates. */}
+        <div className="w-56"><SearchField name="s" aria-label="Search" /></div>
         <div className="w-56"><HexField name="h" defaultValue="#00d2ff" label="Hex" /></div>
         <SegmentedToggle
           aria-label="View"

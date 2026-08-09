@@ -83,6 +83,18 @@ export function FilterPanelContent({
       <div className="flex flex-col gap-2">
         <SearchField
           name="filter-search"
+          // R5-3: this had no accessible name of any kind. `placeholder` alone
+          // does NOT count — Chrome falls back to it for the accname, so the
+          // a11y tree read "Search…" and the field looked fine to any check
+          // that only asks "is the name non-empty", while `input.labels` was
+          // empty and the name vanished the moment you typed.
+          //
+          // A visible label, matching this panel's own convention: the HEX
+          // field beside it is labelled and so is every section below it, so
+          // this box was the only unlabelled control in the panel. "Search"
+          // rather than "Name" because the predicate matches name, brand AND
+          // line (see filterPaints).
+          label="Search"
           value={value.search ?? ""}
           onChange={(e) => onChange({ ...value, search: e.target.value })}
         />
