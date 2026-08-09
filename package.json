@@ -18,6 +18,7 @@
     "db:seed-gallery": "tsx scripts/seedGallery.ts",
     "db:export-paints": "tsx scripts/export-paints.ts",
     "db:patch-liquitex": "tsx scripts/patch-liquitex-paints.ts",
+    "db:patch-ionic": "tsx scripts/patch-ionic-paints.ts",
     "db:patch-army-painter": "tsx scripts/patch-army-painter-meta.ts",
     "db:backfill-paintids": "tsx scripts/backfill-collection-paintids.ts",
     "test": "vitest run",
