@@ -14,14 +14,18 @@ import { LayeringTool } from "@/components/tools/LayeringTool";
 import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
 import { useSubscriber } from "@/lib/billing/SubscriberContext";
 
-type Tab = "library" | "wheel" | "match" | "dropper" | "layering";
+type Tab = "library" | "match" | "dropper" | "layering";
 
-/** Every TOOL tab is gated — colour wheel, matching, image eyedropper, and
- *  glaze-layering (docs/SUBSCRIPTION_PAYWALL.md, fix 3: "no free AI/tools,
- *  no exceptions"). Only "library" (plain catalog search — manually typing
- *  a name and clicking a real paint) is free; it's the base-app "add a
- *  paint to a recipe" capability, not a tool. */
-const GATED_TABS: ReadonlySet<Tab> = new Set(["wheel", "match", "dropper", "layering"]);
+/** Every TOOL tab is gated — matching, image eyedropper, and glaze-layering
+ *  (docs/SUBSCRIPTION_PAYWALL.md, fix 3: "no free AI/tools, no exceptions").
+ *  Only "library" (plain catalog search — manually typing a name and clicking
+ *  a real paint) is free; it's the base-app "add a paint to a recipe"
+ *  capability, not a tool.
+ *
+ *  The colour wheel is still subscriber-only, but it is no longer a tab to
+ *  gate — it renders inside Library for subscribers only. See the Library
+ *  branch below. */
+const GATED_TABS: ReadonlySet<Tab> = new Set(["match", "dropper", "layering"]);
 
 /** Context handed to a caller-supplied Match tab so this module never has to
  *  import {@link ColourMatchTool} itself — keeping `tools/ ↔ recipe/` acyclic. */
@@ -33,16 +37,17 @@ export type PaintPickerMatchContext = {
 
 /**
  * The **PAINT PICKER PANEL** — the tabbed "pick a paint" side panel, as opposed
- * to the wheel-only {@link ColorPickerPanel} (the "COLOR PICKER PANEL"). It wraps
- * {@link ColorPicker} twice (a library-search-only "Library" tab, and a
- * wheel-only "Wheel" tab), {@link EyedropperTool} (image → palette), and
- * {@link LayeringTool} (Lab ramp + glaze stacking) — behind a tabbed
- * {@link SlideOutPanel}, funnelling every tool's "use this paint/colour" action
- * through one {@link onSelect}.
+ * to the {@link ColorPickerPanel} (the "COLOR PICKER PANEL"). It wraps
+ * {@link ColorPicker} once (wheel above library, the component's own stacked
+ * layout), {@link EyedropperTool} (image → palette), and {@link LayeringTool}
+ * (Lab ramp + glaze stacking) — behind a tabbed {@link SlideOutPanel},
+ * funnelling every tool's "use this paint/colour" action through one
+ * {@link onSelect}.
  *
  * Subscription paywall (docs/SUBSCRIPTION_PAYWALL.md) — "Library" is the only
- * free tab (manually search + click a real paint); every tool tab (Wheel,
- * Match, Dropper, Layering) is subscriber-gated, per `GATED_TABS` below.
+ * free tab (manually search + click a real paint); every tool tab (Match,
+ * Dropper, Layering) is subscriber-gated per `GATED_TABS` below, and the wheel
+ * is gated inside the Library tab on the same rule.
  *
  * The optional ranked-Match tab is injected by the caller via {@link renderMatchTab}
  * (recipes wire {@link ColourMatchTool} there); callers that don't need it — e.g.
@@ -107,7 +112,6 @@ export function PaintPickerPanel({
   const tabs = useMemo<ReadonlyArray<{ key: Tab; label: string }>>(
     () => [
       { key: "library", label: "Library" },
-      { key: "wheel", label: "Wheel" },
       ...(renderMatchTab ? [{ key: "match" as const, label: "Match" }] : []),
       { key: "dropper", label: "Dropper" },
       { key: "layering", label: "Layering" },
@@ -199,10 +203,19 @@ export function PaintPickerPanel({
         </div>
 
         {tab === "library" && (
+          // ONE picker, wheel above library — not two tabs showing half of it
+          // each. The split was arbitrary: the library list is already ranked
+          // by ΔE2000 against the wheel's current colour, so separating them
+          // meant the Wheel tab spun a colour with no way to see which paints
+          // matched it (Vercel `C3QMQBdYltw7`) while the Library tab ranked
+          // against a colour the painter could not see or turn.
+          //
           // Re-key on the seed so re-opening on a different slot resets the
-          // search instead of bleeding the prior session. Wheel + eyedropper
-          // are their own (gated) tabs here, so both stay off — this is the
-          // free "search + manually add a real paint" surface only.
+          // session instead of bleeding the prior one.
+          //
+          // The wheel stays subscriber-only — it is gated here rather than by
+          // GATED_TABS, so a non-subscriber gets exactly today's free surface
+          // (library search, no wheel) and a subscriber gets both stacked.
           <ColorPicker
             key={initialHex ?? initialPaintId ?? "no-initial"}
             paints={catalogPaints}
@@ -214,25 +227,7 @@ export function PaintPickerPanel({
             }
             contextLabel={contextLabel}
             mode={mode}
-            showWheel={false}
-            showEyedropper={false}
-            onSelect={handleSelect}
-          />
-        )}
-
-        {tab === "wheel" && isSubscriber && (
-          <ColorPicker
-            key={initialHex ?? initialPaintId ?? "no-initial"}
-            paints={catalogPaints}
-            catalogLoading={loading}
-            value={
-              initialHex || initialPaintId
-                ? { hex: initialHex ?? "#000000", paintId: initialPaintId ?? null }
-                : null
-            }
-            contextLabel={contextLabel}
-            mode={mode}
-            showLibrary={false}
+            showWheel={isSubscriber}
             showEyedropper={false}
             onSelect={handleSelect}
           />

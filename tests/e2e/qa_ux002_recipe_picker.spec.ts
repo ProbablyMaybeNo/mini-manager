@@ -29,15 +29,31 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
       await expect(dialog).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 30_000 });
 
-    // The full toolset is present as tabs. Library and Wheel are SEPARATE tabs
-    // now — the picker was split so Library is the one free tab and every tool
-    // tab is subscriber-gated, which retired the combined "Wheel · Library"
-    // label this spec used to assert.
+    // The full toolset is present as tabs. Wheel is NOT one of them any more:
+    // the paywall split it out of Library, and splitting it broke the thing it
+    // was part of — the library list ranks by ΔE against the wheel's colour, so
+    // a Wheel tab with no list showed a colour with no matches and a Library
+    // tab ranked against a colour you could not see. They are one tab again,
+    // with the wheel gated inside it instead.
     await expect(page.getByRole("tab", { name: "Library" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: "Wheel" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Wheel" })).toHaveCount(0);
     await expect(page.getByRole("tab", { name: "Match" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Dropper" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Layering" })).toBeVisible();
+
+    // The merge's actual contract, and the reason it exists: for a subscriber
+    // (test users are comped — see /api/test/sign-in) the wheel and the paint
+    // list it ranks are on screen AT THE SAME TIME.
+    await expect(dialog.getByRole("heading", { name: "Wheel" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Library" })).toBeVisible();
+    // The company filter is a popover now, not a wall of 39 checkboxes below
+    // the list: closed until asked for, and dismissed by clicking away.
+    const filter = dialog.getByRole("button", { name: "Filter by paint company" });
+    await expect(filter).toHaveAttribute("aria-expanded", "false");
+    await filter.click();
+    await expect(filter).toHaveAttribute("aria-expanded", "true");
+    await dialog.getByRole("heading", { name: "Library" }).click();
+    await expect(filter).toHaveAttribute("aria-expanded", "false");
 
     // Match tab renders the ranked-matches surface.
     await page.getByRole("tab", { name: "Match" }).click();
@@ -66,5 +82,42 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
 
     // The slot row now reflects the assigned paint.
     await expect(page.getByText(matchName, { exact: false }).first()).toBeVisible();
+  });
+
+  /**
+   * Folding the wheel into Library moved it from a gated TAB to a gated
+   * SECTION. That is the one way this change could leak a paid tool, and the
+   * tab bar no longer shows a 🔒 to prove it didn't — so assert it directly,
+   * on a real free-tier user rather than the comped default.
+   */
+  test("a free-tier painter gets the library WITHOUT the wheel", async ({ page }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail("free"), { comp: false });
+
+    await page.goto("/recipes/new", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^RECIPE EDITOR$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const dialog = page.getByRole("dialog", { name: "Pick & Paint" });
+    await expect(async () => {
+      await page.getByRole("button", { name: "+ Add Paint" }).click();
+      await expect(dialog).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
+
+    // The free surface is unchanged from before the merge: search the catalog,
+    // click a real paint. No wheel, no harmony, no sliders.
+    await expect(dialog.getByRole("heading", { name: "Library" })).toBeVisible();
+    await expect(
+      dialog.getByPlaceholder("Search by paint name, brand, or line…"),
+    ).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Wheel" })).toHaveCount(0);
+    await expect(dialog.getByRole("slider", { name: "Saturation" })).toHaveCount(0);
+
+    // And the tool tabs still announce themselves as locked rather than
+    // silently doing nothing (paywall audit MUX-P12).
+    await expect(
+      page.getByRole("tab", { name: "Dropper — sponsor access only" }),
+    ).toBeVisible();
   });
 });

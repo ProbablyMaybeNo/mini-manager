@@ -33,6 +33,7 @@ export function MultiSelectDropdown({
   countLabel = (n) => `${n} selected`,
   accent = "cyan",
   footnote,
+  align = "left",
   triggerClassName,
   className,
 }: {
@@ -50,6 +51,11 @@ export function MultiSelectDropdown({
   /** Optional helper line under the checkbox list, shown only while nothing
    *  is selected (mirrors the old inline "Default hides…" hint). */
   footnote?: string;
+  /** Which trigger edge the popover is anchored to. The list is `w-max`, so a
+   *  left-anchored popover on a narrow trigger sitting at the right edge of a
+   *  container grows outward and gets clipped — pass "right" there and it
+   *  opens inward instead. */
+  align?: "left" | "right";
   triggerClassName?: string;
   className?: string;
 }) {
@@ -116,7 +122,8 @@ export function MultiSelectDropdown({
           aria-multiselectable="true"
           aria-label={ariaLabel}
           className={cn(
-            "absolute left-0 top-full z-30 mt-1 max-h-72 w-max min-w-full overflow-y-auto border border-dotted bg-bg py-1 panel-depth motion-safe:animate-menu-in",
+            "absolute top-full z-30 mt-1 max-h-72 w-max min-w-full overflow-y-auto border border-dotted bg-bg py-1 panel-depth motion-safe:animate-menu-in",
+            align === "right" ? "right-0" : "left-0",
             accentBorder[accent],
           )}
           style={{ borderRadius: "var(--radius-panel)" }}

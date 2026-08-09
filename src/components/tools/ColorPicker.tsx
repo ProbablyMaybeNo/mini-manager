@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Button, Swatch } from "@/components/kit";
+import { Button, MultiSelectDropdown, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import type { Paint } from "@/lib/paints/types";
 import { hexToHsl } from "@/lib/tools/wheel/harmonies";
@@ -127,10 +127,10 @@ export function ColorPicker({
     () => Array.from(new Set(paints.map((p) => p.brand))).sort(),
     [paints],
   );
-  const toggleBrand = (b: string) =>
-    setSelectedBrands((prev) =>
-      prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b],
-    );
+  // MultiSelectDropdown is Set-based; the match predicate takes an array. Keep
+  // the array as the source of truth so `libraryMatches`'s memo key is a stable
+  // identity that only changes when a company is actually toggled.
+  const selectedBrandSet = useMemo(() => new Set(selectedBrands), [selectedBrands]);
 
   // A typed query searches the WHOLE catalog; the ΔE window only applies when
   // the box is empty (audit B3). See libraryMatches for why.
@@ -204,58 +204,72 @@ export function ColorPicker({
         <h3 id="cp-wheel-heading" className="label-osd text-cyan-lite">
           Wheel
         </h3>
-        <PixelWheelRing hue={hue} onChange={handleHueChange} />
-        <div className="flex items-center gap-3">
-          <span
-            aria-label="Picked colour"
-            className="block h-8 w-8 border-2 border-fg/30"
-            style={{ background: pickedHex }}
-          />
-          <span className="font-body text-body text-fg">
-            {pickedHex}
-            {band ? <span className="text-fg"> · {band}</span> : null}
-          </span>
-          <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
-            Use this colour
-          </Button>
+        {/* Ring beside its controls, not stacked above them. Stacked, this
+            section ran 468px tall, which pushed the paint list to y=840 in a
+            900px viewport — so a painter turning the wheel could not see a
+            single matching paint without scrolling, which is the entire point
+            of the wheel and library being one panel. Side by side it is ~290px
+            and the list clears the fold. Below `sm` there is no width to
+            spend, so it stacks as before. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+          <div className="sm:w-48 sm:shrink-0">
+            <PixelWheelRing hue={hue} onChange={handleHueChange} />
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <span
+                aria-label="Picked colour"
+                className="block h-8 w-8 border-2 border-fg/30"
+                style={{ background: pickedHex }}
+              />
+              <span className="font-body text-body text-fg">
+                {pickedHex}
+                {band ? <span className="text-fg"> · {band}</span> : null}
+              </span>
+              <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
+                Use this colour
+              </Button>
+            </div>
+
+            <label className="flex items-center gap-2">
+              <span className="label-osd text-fg">Harmony</span>
+              <select
+                value={harmony}
+                onChange={(e) => setHarmony(e.target.value as ColorPickerHarmony)}
+                className="border border-cyan/50 bg-bg px-2 py-1 font-body text-body text-fg focus:border-cyan focus:outline-none"
+              >
+                {COLOR_PICKER_HARMONY_LABELS.map((h) => (
+                  <option key={h.key} value={h.key}>
+                    {h.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="flex flex-wrap gap-2" role="list" aria-label={`${harmony} harmony swatches`}>
+              {harmonySwatches.map((hex, i) => (
+                <button
+                  key={`${i}-${hex}`}
+                  type="button"
+                  onClick={() => emitHex(hex)}
+                  aria-label={`Use harmony swatch ${hex}`}
+                  className="h-9 w-9 border-2 border-fg/30 transition-transform hover:scale-110"
+                  style={{ background: hex }}
+                  title={hex}
+                />
+              ))}
+            </div>
+
+            <Slider label="Saturation" value={Math.round(sat)} onChange={setSat} />
+            {sat === 0 && (
+              <p className="font-body text-body text-fg">
+                Greyscale — drag saturation up to pick a colour from the wheel.
+              </p>
+            )}
+            <Slider label="Lightness" value={Math.round(light)} onChange={setLight} />
+          </div>
         </div>
-
-        <label className="flex items-center gap-2">
-          <span className="label-osd text-fg">Harmony</span>
-          <select
-            value={harmony}
-            onChange={(e) => setHarmony(e.target.value as ColorPickerHarmony)}
-            className="border border-cyan/50 bg-bg px-2 py-1 font-body text-body text-fg focus:border-cyan focus:outline-none"
-          >
-            {COLOR_PICKER_HARMONY_LABELS.map((h) => (
-              <option key={h.key} value={h.key}>
-                {h.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="flex flex-wrap gap-2" role="list" aria-label={`${harmony} harmony swatches`}>
-          {harmonySwatches.map((hex, i) => (
-            <button
-              key={`${i}-${hex}`}
-              type="button"
-              onClick={() => emitHex(hex)}
-              aria-label={`Use harmony swatch ${hex}`}
-              className="h-9 w-9 border-2 border-fg/30 transition-transform hover:scale-110"
-              style={{ background: hex }}
-              title={hex}
-            />
-          ))}
-        </div>
-
-        <Slider label="Saturation" value={Math.round(sat)} onChange={setSat} />
-        {sat === 0 && (
-          <p className="font-body text-body text-fg">
-            Greyscale — drag saturation up to pick a colour from the wheel.
-          </p>
-        )}
-        <Slider label="Lightness" value={Math.round(light)} onChange={setLight} />
       </section>
       </>
       )}
@@ -269,6 +283,42 @@ export function ColorPicker({
         <h3 id="cp-library-heading" className="label-osd text-cyan-lite">
           Library
         </h3>
+
+        {/* Search + company filter, as ONE control row at the TOP of the list.
+            Both used to sit below it — the search box, then an always-visible
+            grid of 39 company checkboxes. That grid was the panel's real
+            layout problem: it competed with the results for the panel's height
+            (Vercel `YtOKfPcOmKxq`, `_aI8GvJu7Tc0`), so the list got a
+            viewport-relative cap and the filter still squashed underneath it.
+            A popover takes zero height until asked for, which dissolves the
+            fight rather than re-balancing it.
+
+            This reverses the earlier "filters below the list, scan matches
+            first" call. Deliberate: that reasoning holds for a filter you must
+            look at, and none of it survived 39 companies. */}
+        <div className="flex items-center gap-2">
+          <input
+            type="search"
+            value={textQuery}
+            onChange={(e) => setTextQuery(e.target.value)}
+            placeholder="Search by paint name, brand, or line…"
+            aria-label="Filter library paints"
+            className="min-w-0 flex-1 border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
+          />
+          {brandOptions.length > 0 && (
+            <MultiSelectDropdown
+              heading="Companies"
+              options={brandOptions}
+              selected={selectedBrandSet}
+              onChange={(next) => setSelectedBrands([...next])}
+              ariaLabel="Filter by paint company"
+              allLabel="Filter"
+              countLabel={(n) => `Filter · ${n}`}
+              align="right"
+              className="w-36 shrink-0"
+            />
+          )}
+        </div>
 
         <div className="flex items-center justify-between">
           <span className="font-body text-body text-fg">
@@ -292,10 +342,22 @@ export function ColorPicker({
         </div>
         {/* Audit B6 — this list is the panel's actual content and it had
             max-h-72: 288px, five rows of two hundred, inside an 896px-wide
-            slide-out whose remaining ~500px went to the filter controls below.
-            A viewport-relative cap lets the results take the room they earn
-            and still leaves the search + facet reachable by scrolling. */}
-        <ul className="flex max-h-[52vh] flex-col gap-1 overflow-y-auto" aria-label="Matching library paints">
+            slide-out whose remaining ~500px went to the filter controls. Those
+            controls are now one row above it.
+
+            The cap depends on whether the wheel is above: with it, the wheel +
+            its controls have already spent ~290px of the panel, so a 52vh list
+            would run off the bottom and the painter would scroll the PANEL to
+            reach matches instead of scrolling the LIST. Both values scroll
+            internally; this just decides how much of the panel the list may
+            claim. */}
+        <ul
+          className={cn(
+            "flex flex-col gap-1 overflow-y-auto",
+            showWheel ? "max-h-[30vh]" : "max-h-[52vh]",
+          )}
+          aria-label="Matching library paints"
+        >
           {libraryRows.map((m) => (
             <li key={m.paint.id}>
               <button
@@ -352,60 +414,6 @@ export function ColorPicker({
           )}
         </ul>
 
-        {/* Filters sit BELOW the paint list (reviewer feedback): scan the
-            matches first, then narrow by search text or the Filter facet. */}
-        <input
-          type="search"
-          value={textQuery}
-          onChange={(e) => setTextQuery(e.target.value)}
-          placeholder="Search by paint name, brand, or line…"
-          aria-label="Filter library paints"
-          className="w-full border border-cyan/50 bg-bg px-3 py-2 font-body text-body text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
-        />
-
-        {/* Filter facet — one checkbox per brand (mirrors the Library page's
-            filter). Generic "Filter" label so more filter types can be added
-            here later.
-
-            Audit B5/B6 — laid out in columns, checkbox beside its label, and
-            without the inner max-h-40 scroller. One brand per full-panel row
-            put ~720px of measured nothing between each label and its box, and
-            the nested scroll area hid most of the 38 companies behind a second
-            unlabelled overflow inside a panel that already scrolls. The
-            library page's own FILTER panel now reads the same way. */}
-        {brandOptions.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <span className="inline-block w-fit bg-green/20 px-2 py-0.5 label-osd text-green">
-              Filter{selectedBrands.length ? ` · ${selectedBrands.length}` : ""}
-            </span>
-            <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
-              {brandOptions.map((b) => {
-                const checked = selectedBrands.includes(b);
-                return (
-                  <label
-                    key={b}
-                    className="flex cursor-pointer items-center gap-2 py-1 font-body text-body text-fg"
-                  >
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={checked}
-                      aria-label={b}
-                      onClick={() => toggleBrand(b)}
-                      className={cn(
-                        "flex h-4 w-4 shrink-0 items-center justify-center border",
-                        checked ? "border-cyan bg-cyan/20 text-cyan-lite" : "border-fg-faint",
-                      )}
-                    >
-                      {checked && "✓"}
-                    </button>
-                    <span className="min-w-0 uppercase tracking-[0.1em]">{b}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </section>
       </>
       )}
