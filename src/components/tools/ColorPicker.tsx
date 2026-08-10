@@ -58,6 +58,7 @@ export function ColorPicker({
   catalogLoading = false,
   value,
   onSelect,
+  onColorChange,
   contextLabel,
   mode = "add-slot",
   showEyedropper = true,
@@ -68,6 +69,11 @@ export function ColorPicker({
   catalogLoading?: boolean;
   value?: ColorPickerSelection | null;
   onSelect: (selection: ColorPickerSelection) => void;
+  /** Fires whenever the wheel's live colour moves — WITHOUT committing a pick.
+   *  `onSelect` means "the painter chose this"; this means "this is what they
+   *  are currently looking at", which is what a sibling surface (the Match
+   *  tab's target colour) needs to stay in step with. */
+  onColorChange?: (hex: string) => void;
   contextLabel?: string;
   mode?: ColorPickerMode;
   /** Render the image-eyedropper sub-panel. Off in the recipe Pick & Paint
@@ -114,6 +120,18 @@ export function ColorPicker({
     [harmony, hue, sat, light],
   );
   const band = useMemo(() => bandForHex(pickedHex), [pickedHex]);
+
+  // Report the live colour upward. Held in a ref so a caller passing an inline
+  // arrow doesn't re-fire this on every render — the effect should depend on
+  // the COLOUR changing, not on the parent re-rendering. The ref is synced in
+  // its own effect rather than during render, which is not allowed.
+  const onColorChangeRef = useRef(onColorChange);
+  useEffect(() => {
+    onColorChangeRef.current = onColorChange;
+  }, [onColorChange]);
+  useEffect(() => {
+    onColorChangeRef.current?.(pickedHex);
+  }, [pickedHex]);
 
   /* ---------- library sub-panel ---------- */
   const [textQuery, setTextQuery] = useState("");

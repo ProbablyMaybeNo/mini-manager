@@ -33,6 +33,11 @@ export type PaintPickerMatchContext = {
   paints: Paint[];
   brandOptions: string[];
   assignPaint: (paint: Paint) => void;
+  /** The colour the Match tab should rank against when it opens: the slot's
+   *  own colour, or whatever the Library wheel has been moved to since. Null
+   *  when the panel was opened on an empty slot and the wheel hasn't been
+   *  touched — the Match tool keeps its own default then. */
+  targetHex: string | null;
 };
 
 /**
@@ -96,6 +101,10 @@ export function PaintPickerPanel({
   const [tab, setTab] = useState<Tab>("library");
   const isSubscriber = useSubscriber();
   const [gateOpen, setGateOpen] = useState(false);
+  // The colour the whole panel is working on. Seeded from the slot and then
+  // driven by the Library tab's wheel, so switching to Match ranks against the
+  // colour the painter was just looking at instead of a hardcoded blue.
+  const [targetHex, setTargetHex] = useState<string | null>(initialHex ?? null);
 
   /** Route every tab click through the subscriber check — Match / Dropper /
    *  Layering are the recipe creator's power features (docs/
@@ -137,9 +146,14 @@ export function PaintPickerPanel({
   }, []);
 
   // Reset to the primary tab whenever the panel re-opens, so it always starts on
-  // the free library view regardless of the prior session.
+  // the free library view regardless of the prior session. The target colour
+  // re-seeds with it — a panel re-opened on a different slot must not carry the
+  // previous slot's colour into Match.
   useEffect(() => {
-    if (open) setTab("library");
+    if (open) {
+      setTab("library");
+      setTargetHex(initialHex ?? null);
+    }
   }, [open, initialHex, initialPaintId]);
 
   const brandOptions = useMemo(
@@ -230,10 +244,13 @@ export function PaintPickerPanel({
             showWheel={isSubscriber}
             showEyedropper={false}
             onSelect={handleSelect}
+            onColorChange={setTargetHex}
           />
         )}
 
-        {tab === "match" && isSubscriber && renderMatchTab?.({ paints, brandOptions, assignPaint })}
+        {tab === "match" &&
+          isSubscriber &&
+          renderMatchTab?.({ paints, brandOptions, assignPaint, targetHex })}
 
         {tab === "dropper" && isSubscriber && (
           <EyedropperTool

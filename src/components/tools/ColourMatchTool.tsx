@@ -51,12 +51,18 @@ export function ColourMatchTool({
   brandOptions,
   typeOptions = [],
   enableLibraryPick = false,
+  initialHex,
   onUse,
   onAssign,
   onRecipeAssigned,
 }: {
   rankMatches: (hex: string, brands: string[], types: string[], limit: number) => MatchResult[];
   brandOptions: string[];
+  /** Colour to rank against on mount. The embedded recipe-slot picker passes
+   *  the slot's colour (or wherever the Library wheel has been moved to), so
+   *  the tab opens on the painter's actual colour instead of the standalone
+   *  page's default. */
+  initialHex?: string | null;
   /** 4kCdsj — paint TYPE facet (mirrors the Library's). Omit/empty hides the
    *  section entirely and disables the incompatible-type default (used by the
    *  embedded recipe-slot picker, which wants every type visible). */
@@ -77,7 +83,12 @@ export function ColourMatchTool({
    *  supplied (they shouldn't be — pick one per call site). */
   onRecipeAssigned?: (result: AssignedResult) => void;
 }) {
-  const [hex, setHex] = useState("#3a6ea5");
+  // Seeded once per mount. The embedded Match tab unmounts on every tab
+  // switch, so it re-seeds from the panel's live colour each time it is
+  // opened, while a hex typed here stays put for as long as the tab is up.
+  const [hex, setHex] = useState(
+    initialHex && /^#[0-9a-fA-F]{6}$/.test(initialHex) ? initialHex : "#3a6ea5",
+  );
   const [brands, setBrands] = useState<ReadonlySet<string>>(new Set());
   const [types, setTypes] = useState<ReadonlySet<string>>(new Set());
   const [harmony, setHarmony] = useState<HarmonyKey | "off">("off");
@@ -155,7 +166,27 @@ export function ColourMatchTool({
             </span>
           </button>
         ) : (
-          <div className="h-24 w-full border border-fg/20" style={{ backgroundColor: valid ? hex : "transparent" }} />
+          // Embedded in the Pick & Paint panel, where opening the library
+          // picker would stack a second slide-out over the one we're inside.
+          // This used to be an inert <div> that looked exactly like a colour
+          // well — so the ONLY way to change the target was to hand-type six
+          // hex digits, and the big swatch inviting a click did nothing. A
+          // native colour input keeps the styled well and makes it do what it
+          // looks like it does, without a nested panel.
+          <label className="block">
+            <span className="sr-only">Target colour</span>
+            <input
+              type="color"
+              value={valid ? hex : "#000000"}
+              onChange={(e) => setHex(e.target.value.toUpperCase())}
+              aria-label="Target colour"
+              // The native swatch is drawn by the OS inside the control's
+              // padding box; sizing it larger than the box and clipping puts
+              // the colour edge-to-edge so this reads as the same flat well it
+              // replaces, not a browser widget.
+              className="block h-24 w-full cursor-pointer overflow-hidden border border-fg/20 bg-transparent p-0 transition-colors hover:border-cyan focus-visible:border-cyan focus-visible:outline-none [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0"
+            />
+          </label>
         )}
 
         {/* MM-30 — harmony modes */}
