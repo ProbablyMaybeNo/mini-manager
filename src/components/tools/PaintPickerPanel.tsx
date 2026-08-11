@@ -73,6 +73,7 @@ export function PaintPickerPanel({
   mode = "add-slot",
   note,
   closeOnSelect = false,
+  paintsOnly = false,
   renderMatchTab,
 }: {
   open: boolean;
@@ -88,6 +89,17 @@ export function PaintPickerPanel({
   note?: string;
   /** When true, a pick closes the panel; otherwise it stays open for multi-add. */
   closeOnSelect?: boolean;
+  /**
+   * Recipe surfaces only: a slot takes a catalog paint, never a bare hex
+   * (UX_FEEDBACK_2026-06-03 B2). Drops the wheel's "Use this colour", turns
+   * the harmony/extracted swatches into wheel targets, and re-points the
+   * Dropper and Layering tabs at the wheel instead of the slot — so every
+   * one of them ends at "now pick a paint from the ranked list".
+   *
+   * Off for the Match tool's embedded target picker, where the whole job is
+   * to hand a raw colour back.
+   */
+  paintsOnly?: boolean;
   /** Optional Match tab. When provided, a "Match" tab appears and is rendered
    *  with the panel's loaded catalog. */
   renderMatchTab?: (ctx: PaintPickerMatchContext) => ReactNode;
@@ -105,6 +117,17 @@ export function PaintPickerPanel({
   // driven by the Library tab's wheel, so switching to Match ranks against the
   // colour the painter was just looking at instead of a hardcoded blue.
   const [targetHex, setTargetHex] = useState<string | null>(initialHex ?? null);
+  /**
+   * A colour pushed IN by a tool tab (Dropper / Layering), as opposed to
+   * `targetHex` which the wheel pushes OUT. Kept separate on purpose: this one
+   * is part of the ColorPicker's `key`, so a tool push remounts the picker
+   * seeded to that colour and the wheel actually lands on it. `targetHex`
+   * must never be in the key — it changes on every slider drag, which would
+   * remount the picker mid-session and wipe the search.
+   *
+   * `n` makes repeat pushes of the SAME colour still take effect.
+   */
+  const [toolSeed, setToolSeed] = useState<{ hex: string; n: number } | null>(null);
 
   /** Route every tab click through the subscriber check — Match / Dropper /
    *  Layering are the recipe creator's power features (docs/
@@ -153,6 +176,7 @@ export function PaintPickerPanel({
     if (open) {
       setTab("library");
       setTargetHex(initialHex ?? null);
+      setToolSeed(null);
     }
   }, [open, initialHex, initialPaintId]);
 
@@ -168,6 +192,22 @@ export function PaintPickerPanel({
   };
   const assignPaint = (paint: Paint) => handleSelect({ hex: paint.hex, paintId: paint.id });
   const assignHex = (hex: string) => handleSelect({ hex, paintId: null });
+
+  /**
+   * What a tool tab's colour does. On a recipe surface it CANNOT fill the slot
+   * — it seeds the wheel and hands the painter back to Library, where the
+   * ranked list is already showing the paints closest to it. Everywhere else
+   * the colour is the answer, so it fills the slot as before.
+   */
+  const applyToolColour = (hex: string) => {
+    if (!paintsOnly) {
+      assignHex(hex);
+      return;
+    }
+    setToolSeed((prev) => ({ hex, n: (prev?.n ?? 0) + 1 }));
+    setTargetHex(hex);
+    setTab("library");
+  };
 
   return (
     <SlideOutPanel
@@ -231,18 +271,21 @@ export function PaintPickerPanel({
           // GATED_TABS, so a non-subscriber gets exactly today's free surface
           // (library search, no wheel) and a subscriber gets both stacked.
           <ColorPicker
-            key={initialHex ?? initialPaintId ?? "no-initial"}
+            key={toolSeed ? `tool:${toolSeed.n}` : initialHex ?? initialPaintId ?? "no-initial"}
             paints={catalogPaints}
             catalogLoading={loading}
             value={
-              initialHex || initialPaintId
-                ? { hex: initialHex ?? "#000000", paintId: initialPaintId ?? null }
-                : null
+              toolSeed
+                ? { hex: toolSeed.hex, paintId: null }
+                : initialHex || initialPaintId
+                  ? { hex: initialHex ?? "#000000", paintId: initialPaintId ?? null }
+                  : null
             }
             contextLabel={contextLabel}
             mode={mode}
             showWheel={isSubscriber}
             showEyedropper={false}
+            paintsOnly={paintsOnly}
             onSelect={handleSelect}
             onColorChange={setTargetHex}
           />
@@ -255,7 +298,7 @@ export function PaintPickerPanel({
         {tab === "dropper" && isSubscriber && (
           <EyedropperTool
             onSavePalette={(hexes) => {
-              if (hexes[0]) assignHex(hexes[0]);
+              if (hexes[0]) applyToolColour(hexes[0]);
             }}
           />
         )}
@@ -263,7 +306,7 @@ export function PaintPickerPanel({
         {tab === "layering" && isSubscriber && (
           <LayeringTool
             onSavePalette={(hexes) => {
-              if (hexes[0]) assignHex(hexes[0]);
+              if (hexes[0]) applyToolColour(hexes[0]);
             }}
           />
         )}
