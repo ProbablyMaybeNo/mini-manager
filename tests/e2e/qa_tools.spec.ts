@@ -125,4 +125,65 @@ test.describe("M4 — Tools", () => {
       expect(t.trim()).not.toMatch(/^\d+\s*\n?\s*#[0-9A-Fa-f]{6}$/);
     }
   });
+
+  /**
+   * M4.4 — the UNDERCOAT section: coloured underpainting, as opposed to
+   * LAYERING's value ramp. Pick the transparent paint going on top, pick a
+   * goal, get a real paint to put underneath.
+   *
+   * The recommender existed for months but was wired to nothing, so this is
+   * its first coverage at the UI level.
+   */
+  test("M4.4 undercoat recommends a real ground paint for the chosen goal", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await signInAs(page, freshTestEmail("undercoat"));
+
+    await page.goto("/tools/stacking", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^COLOR STACKING$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    await expect(
+      page.getByText(/we'll work out what to put under it/i),
+    ).toBeVisible({ timeout: 30_000 });
+
+    await page
+      .getByRole("button", { name: "Choose the transparent paint going on top" })
+      .click();
+    const picker = page.getByRole("dialog", { name: /Pick the paint going on top/ });
+    await expect(picker).toBeVisible({ timeout: 20_000 });
+    await picker
+      .getByPlaceholder("Search by paint name, brand, or line…")
+      .fill("sand golem");
+    const row = picker.locator('ul[aria-label="Matching library paints"] li button').first();
+    await row.waitFor({ state: "visible", timeout: 30_000 });
+    await row.click();
+
+    // A warm khaki asked to go COOLER must land on an actually-cool ground.
+    // This is the bug that shipped in the recommender: the hue rotation was
+    // capped, so it recommended fluorescent green.
+    await page.getByRole("radio", { name: "Cooler" }).click();
+    const undercoatSwatch = page.locator('[aria-label^="Undercoat: #"]');
+    await expect(undercoatSwatch).toBeVisible({ timeout: 20_000 });
+    const hex = (await undercoatSwatch.getAttribute("aria-label"))!.replace("Undercoat: ", "");
+    const n = parseInt(hex.slice(1), 16);
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    // Cool ground: blue must lead, and it must not be a green cast.
+    expect(b).toBeGreaterThan(r);
+    expect(b).toBeGreaterThan(g);
+
+    // And the answer is given as real paints, not just a colour.
+    await expect(page.getByText(/real paints to use/i)).toBeVisible();
+    const suggestions = page.locator("li").filter({ hasText: /ASSIGN/i });
+    expect(await suggestions.count()).toBeGreaterThan(0);
+
+    // Candy switches the recommendation to metallics — only possible because
+    // the catalog's Metallic type reaches the tools at all.
+    await page.getByRole("radio", { name: "Candy" }).click();
+    await expect(page.getByText(/real paints to use \(metallic\)/i)).toBeVisible({
+      timeout: 20_000,
+    });
+  });
 });

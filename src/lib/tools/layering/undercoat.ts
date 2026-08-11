@@ -239,15 +239,22 @@ function genericUndercoat(
         label: "Light tint",
         why: "A near-white tint of the same hue keeps the glaze transparent and luminous.",
       };
+    // Rotate ALL the way to the pole, not `towardHue`'s default 70° step.
+    // Capped, a top paint far from the pole lands somewhere that is neither
+    // warm nor cool and fails the goal outright: khaki (hue 43°) asked to go
+    // cooler stopped at 113° and recommended FLUORESCENT GREEN. A ground that
+    // isn't cool cannot cool the glaze above it, so the cap is worse than the
+    // hue drift it was protecting against. Character is kept through the top's
+    // own saturation instead.
     case "warmer":
       return {
-        target: { h: towardHue(hsl.h, WARM_POLE), s: Math.min(1, hsl.s * 0.9 + 0.2), l: 0.55 },
+        target: { h: towardHue(hsl.h, WARM_POLE, 180), s: Math.min(1, hsl.s * 0.9 + 0.2), l: 0.55 },
         label: "Warm ground",
         why: "A warm ground biases the colour toward red/orange.",
       };
     case "cooler":
       return {
-        target: { h: towardHue(hsl.h, COOL_POLE), s: Math.min(1, hsl.s * 0.9 + 0.2), l: 0.5 },
+        target: { h: towardHue(hsl.h, COOL_POLE, 180), s: Math.min(1, hsl.s * 0.9 + 0.2), l: 0.5 },
         label: "Cool ground",
         why: "A cool ground biases the colour toward blue.",
       };

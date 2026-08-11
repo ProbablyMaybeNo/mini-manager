@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Checkbox, CloseButton, HexField, Panel, Swatch, useToast } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { captionScrim, readableText } from "@/lib/color";
@@ -8,6 +8,7 @@ import { buildRamp, MAX_STEPS, MIN_STEPS } from "@/lib/tools/gradient/interpolat
 import { computeVennFills } from "@/lib/tools/layering/venn";
 import { deriveLanesFromSeed, type LaneKey } from "@/lib/tools/layering/deriveLanes";
 import { groundLane } from "@/lib/tools/layering/groundLane";
+import { GOALS, recommendUndercoat, type Goal } from "@/lib/tools/layering/undercoat";
 import {
   closestPaint,
   INCOMPATIBLE_MATCH_TYPES,
@@ -175,17 +176,20 @@ export function LayeringTool({
   // catalog match to its raw hex — so the alternatives list + ASSIGN below
   // always has a paint to rank against, even for a hand-typed hex.
   // An empty lane grounds to nothing — there is no colour to be near yet.
-  function groundAnchor(anchor: Anchor | null): Paint | null {
-    if (!anchor) return null;
-    return (
-      resolvePaint(anchor.paintId) ??
-      (catalog.length ? closestPaint(anchor.hex, catalog) : null) ??
-      null
-    );
-  }
-  const groundedShadow = useMemo(() => groundAnchor(shadow), [shadow, catalog]);
-  const groundedBase = useMemo(() => groundAnchor(base), [base, catalog]);
-  const groundedHighlight = useMemo(() => groundAnchor(highlight), [highlight, catalog]);
+  // useCallback so the four memos below can depend on it honestly instead of
+  // omitting it; closestPaint is a full ΔE sweep of ~7,800 rows, so these
+  // must not re-run on every render.
+  const groundAnchor = useCallback(
+    (anchor: Anchor | null): Paint | null => {
+      if (!anchor) return null;
+      const picked = anchor.paintId ? catalog.find((p) => p.id === anchor.paintId) : undefined;
+      return picked ?? (catalog.length ? closestPaint(anchor.hex, catalog) : null) ?? null;
+    },
+    [catalog],
+  );
+  const groundedShadow = useMemo(() => groundAnchor(shadow), [shadow, groundAnchor]);
+  const groundedBase = useMemo(() => groundAnchor(base), [base, groundAnchor]);
+  const groundedHighlight = useMemo(() => groundAnchor(highlight), [highlight, groundAnchor]);
   const shadowAlternatives = useMemo(
     () => laneAlternatives(groundedShadow, catalog, laneBrandFilters.shadow),
     [groundedShadow, catalog, laneBrandFilters.shadow],
@@ -289,12 +293,36 @@ export function LayeringTool({
       paint: pool.length ? groundLane(hex, pool, ownedIds, ownedFirst) : null,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ladder, catalog, ownedIds, ownedFirst, seedLane, shadow, base, highlight]);
+  }, [ladder, catalog, ownedIds, ownedFirst, seedLane, shadow, base, highlight, groundAnchor]);
 
   const rampSwatches = (): ToolSwatch[] =>
     rampRows.map((r) =>
       r.paint ? { hex: r.paint.hex, paintId: r.paint.id, name: r.paint.name } : { hex: r.hex },
     );
+
+  /* ---------- Undercoat (what goes UNDER a transparent paint) ---------- */
+  // The coloured-underpainting question, as opposed to LAYERING's value-ramp
+  // question: given the transparent paint going on top, what ground underneath
+  // pushes the result warmer / cooler / deeper / glowing?
+  const [glazeTop, setGlazeTop] = useState<Anchor | null>(null);
+  const [goal, setGoal] = useState<Goal>("warmer");
+  const [pickingGlaze, setPickingGlaze] = useState(false);
+
+  const glazePaint = useMemo(() => groundAnchor(glazeTop), [glazeTop, groundAnchor]);
+  const recommendation = useMemo(
+    () => (glazeTop ? recommendUndercoat(glazeTop.hex, goal) : null),
+    [glazeTop, goal],
+  );
+  /** The recommended ground, as REAL paints of the type the goal calls for
+   *  (opaque bases normally; metallics for candy). */
+  const undercoatPaints = useMemo(() => {
+    if (!recommendation || !catalog.length) return [];
+    const allowed = new Set<string>(recommendation.matchTypes);
+    const pool = catalog.filter((p) => allowed.has(p.type));
+    return rankMatchesMulti(recommendation.undercoatHex, pool.length ? pool : catalog, [], 3).map(
+      (m) => m.paint,
+    );
+  }, [recommendation, catalog]);
 
   /* ---------- Stacking (optical glaze mix, N renamable layers) ---------- */
   const layerSeq = useRef(0);
@@ -515,6 +543,127 @@ export function LayeringTool({
         </Panel>
       </div>
 
+      {/* ===================== UNDERCOAT ===================== */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        <Panel label="GLAZE" accent="green" className="flex min-w-0 flex-col gap-3 p-5">
+          <p className="font-body text-body text-fg">
+            Coloured underpainting: what you put UNDER a see-through paint
+            changes what it looks like on top. Pick the transparent paint, then
+            say what you want it to do.
+          </p>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="label-osd text-fg">Paint going on top</span>
+            <button
+              type="button"
+              onClick={() => setPickingGlaze(true)}
+              aria-label={
+                glazePaint
+                  ? `Top paint: ${glazePaint.name} by ${glazePaint.brand}. Choose a different paint`
+                  : "Choose the transparent paint going on top"
+              }
+              className={cn(
+                "flex h-16 w-full items-center justify-center border transition-colors focus:outline-none focus-visible:border-green",
+                glazeTop ? "border-fg/20 hover:border-green" : "border-dashed border-green/40 hover:border-green",
+              )}
+              style={glazePaint || glazeTop ? { backgroundColor: glazePaint?.hex ?? glazeTop!.hex } : undefined}
+            >
+              {!glazeTop && <span className="font-body text-body text-fg-faint">+ Pick paint</span>}
+            </button>
+            {glazePaint ? (
+              <span className="min-w-0 break-words font-body text-body text-fg">
+                {glazePaint.name}
+                <span className="block label-osd text-fg-dim">{glazePaint.brand}</span>
+              </span>
+            ) : (
+              <span className="font-body text-body text-fg-faint">—</span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5 border-t border-green/10 pt-3">
+            <span className="label-osd text-fg">Goal</span>
+            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Undercoat goal">
+              {GOALS.map((g) => (
+                <button
+                  key={g.goal}
+                  type="button"
+                  role="radio"
+                  aria-checked={goal === g.goal}
+                  title={g.blurb}
+                  onClick={() => setGoal(g.goal)}
+                  className={cn(
+                    "border px-2 py-1 font-button text-button transition-colors",
+                    goal === g.goal
+                      ? "border-green bg-green/15 text-green"
+                      : "border-fg-faint/40 text-fg-dim hover:border-green/60 hover:text-fg",
+                  )}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+            <p className="font-body text-body text-fg-faint">
+              {GOALS.find((g) => g.goal === goal)?.blurb}
+            </p>
+          </div>
+        </Panel>
+
+        <Panel label="UNDERCOAT" accent="green" cornerTicks className="flex min-w-0 flex-col gap-4 p-5">
+          {!recommendation || !glazePaint ? (
+            <p className="border border-dashed border-green/25 py-8 text-center font-body text-body text-fg-faint">
+              Pick the paint going on top and we&apos;ll work out what to put under it.
+            </p>
+          ) : (
+            <>
+              <p className="font-body text-body text-fg">{recommendation.rationale}</p>
+
+              {/* Undercoat → glaze → result, as the painter will actually do it. */}
+              <div className="flex flex-wrap items-center gap-3">
+                <PredictSwatch label="Undercoat" hex={recommendation.undercoatHex} />
+                <span aria-hidden className="font-osd text-fg-faint">+</span>
+                <PredictSwatch label={`${glazePaint.name} over it`} hex={glazePaint.hex} />
+                <span aria-hidden className="font-osd text-fg-faint">=</span>
+                <PredictSwatch label="You get" hex={recommendation.predictedHex} emphasis />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="label-osd text-fg">
+                  {recommendation.undercoatLabel} — real paints to use
+                  {recommendation.metallic ? " (metallic)" : ""}
+                </span>
+                {undercoatPaints.length === 0 ? (
+                  <span className="font-body text-body text-fg-faint">
+                    No close paint of that type in the catalog.
+                  </span>
+                ) : (
+                  <ul className="flex flex-col gap-1">
+                    {undercoatPaints.map((p) => (
+                      <li key={p.id} className="flex items-center gap-3 border border-green/20 p-2">
+                        <Swatch hex={p.hex} />
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span className="break-words font-body text-body text-fg">{p.name}</span>
+                          <span className="label-osd text-fg-dim">{p.brand}</span>
+                        </span>
+                        <AssignPaintMenu
+                          swatch={{ hex: p.hex, paintId: p.id, name: p.name }}
+                          onAssigned={handleLaneAssigned}
+                          buttonSize="sm"
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <p className="font-body text-body text-fg-faint">
+                The preview assumes a thin undercoat under a fairly opaque top
+                coat. Thin the top further and the ground shows through more.
+              </p>
+            </>
+          )}
+        </Panel>
+      </div>
+
       {/* ===================== STACKING ===================== */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
         <Panel label="STACKING" accent="purple" className="flex min-w-0 flex-col gap-3 p-5">
@@ -654,6 +803,26 @@ export function LayeringTool({
         paintsOnly
         closeOnSelect
         onSelect={applyLane}
+      />
+
+      {/* The transparent paint the UNDERCOAT section reasons about. Paints
+          only: the recommendation is "put this real paint under that real
+          paint", which a hex can't express. */}
+      <ColorPickerPanel
+        open={pickingGlaze}
+        onClose={() => setPickingGlaze(false)}
+        title="Pick the paint going on top"
+        breadcrumb="UNDERCOAT ▸ TOP PAINT"
+        initialHex={glazeTop?.hex ?? null}
+        initialPaintId={glazeTop?.paintId ?? null}
+        pickerKey="glaze-top"
+        showLibrary
+        showEyedropper={false}
+        paintsOnly
+        closeOnSelect
+        onSelect={(sel) =>
+          setGlazeTop({ hex: sel.hex.toUpperCase(), paintId: sel.paintId ?? null })
+        }
       />
 
       {/* Shared ColorPicker for each stacking layer — same Library-on cut. */}
@@ -807,6 +976,35 @@ function LaneAlternatives({
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/** One step of the undercoat → glaze → result preview. */
+function PredictSwatch({
+  label,
+  hex,
+  emphasis,
+}: {
+  label: string;
+  hex: string;
+  emphasis?: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <span
+        aria-label={`${label}: ${hex}`}
+        className={cn(
+          "block h-12 w-20 border",
+          emphasis ? "border-green" : "border-fg/20",
+        )}
+        style={{ backgroundColor: hex }}
+      />
+      <span
+        className={cn("max-w-20 break-words label-osd", emphasis ? "text-green" : "text-fg-dim")}
+      >
+        {label}
+      </span>
     </div>
   );
 }
