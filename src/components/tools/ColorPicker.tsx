@@ -58,16 +58,23 @@ export function ColorPicker({
   catalogLoading = false,
   value,
   onSelect,
+  onColorChange,
   contextLabel,
   mode = "add-slot",
   showEyedropper = true,
   showLibrary = true,
   showWheel = true,
+  paintsOnly = false,
 }: {
   paints: ReadonlyArray<Paint>;
   catalogLoading?: boolean;
   value?: ColorPickerSelection | null;
   onSelect: (selection: ColorPickerSelection) => void;
+  /** Fires whenever the wheel's live colour moves — WITHOUT committing a pick.
+   *  `onSelect` means "the painter chose this"; this means "this is what they
+   *  are currently looking at", which is what a sibling surface (the Match
+   *  tab's target colour) needs to stay in step with. */
+  onColorChange?: (hex: string) => void;
   contextLabel?: string;
   mode?: ColorPickerMode;
   /** Render the image-eyedropper sub-panel. Off in the recipe Pick & Paint
@@ -81,6 +88,20 @@ export function ColorPicker({
    *  free "plain Library" surface (subscription paywall, fix 3) — the
    *  colour wheel is a subscriber-only tool, manual library search isn't. */
   showWheel?: boolean;
+  /**
+   * A recipe slot only takes a catalog paint (UX_FEEDBACK_2026-06-03 B2). On
+   * a recipe surface this drops every path that would emit a bare hex: the
+   * "Use this colour" button goes, and the harmony / extracted swatches AIM
+   * the wheel instead of filling the slot — so they still drive the ranked
+   * library list below, which is where the painter then picks a real paint.
+   *
+   * Off for the colour tools (Layering lanes, Stacking, the Match tool's
+   * target picker), where a raw colour IS the legitimate output.
+   *
+   * Only meaningful with `showLibrary` — a paints-only picker with no library
+   * has no way to pick anything.
+   */
+  paintsOnly?: boolean;
 }) {
   const seedHsl = useMemo(() => {
     if (value?.hex) {
@@ -114,6 +135,18 @@ export function ColorPicker({
     [harmony, hue, sat, light],
   );
   const band = useMemo(() => bandForHex(pickedHex), [pickedHex]);
+
+  // Report the live colour upward. Held in a ref so a caller passing an inline
+  // arrow doesn't re-fire this on every render — the effect should depend on
+  // the COLOUR changing, not on the parent re-rendering. The ref is synced in
+  // its own effect rather than during render, which is not allowed.
+  const onColorChangeRef = useRef(onColorChange);
+  useEffect(() => {
+    onColorChangeRef.current = onColorChange;
+  }, [onColorChange]);
+  useEffect(() => {
+    onColorChangeRef.current?.(pickedHex);
+  }, [pickedHex]);
 
   /* ---------- library sub-panel ---------- */
   const [textQuery, setTextQuery] = useState("");
@@ -181,6 +214,18 @@ export function ColorPicker({
   }
 
   const emitHex = (hex: string) => onSelect({ hex, paintId: null });
+  /** Point the wheel at a colour instead of committing it. In paints-only
+   *  mode this is what the harmony and extracted swatches do — the colour
+   *  becomes the thing the library list ranks against, not the slot's value. */
+  const aimWheel = (hex: string) => {
+    const hsl = hexToHsl(hex);
+    if (!hsl) return;
+    setHue(hsl.h);
+    setSat(hsl.s);
+    setLight(hsl.l);
+  };
+  const swatchAction = paintsOnly ? aimWheel : emitHex;
+  const swatchVerb = paintsOnly ? "Match paints to" : "Use";
   const emitPaint = (hex: string, paintId: string) => onSelect({ hex, paintId });
   // Which library row reads as selected: the seed selection passed by the host.
   const highlightedPaintId = value?.paintId;
@@ -227,9 +272,15 @@ export function ColorPicker({
                 {pickedHex}
                 {band ? <span className="text-fg"> · {band}</span> : null}
               </span>
-              <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
-                Use this colour
-              </Button>
+              {/* No "Use this colour" on a recipe surface — a slot holds a
+                  paint, never a bare hex (B2). The wheel's job here is to aim
+                  the ranked list below it, so the commit action is clicking a
+                  paint in that list. */}
+              {!paintsOnly && (
+                <Button size="sm" onClick={() => emitHex(pickedHex)} className="ml-auto">
+                  Use this colour
+                </Button>
+              )}
             </div>
 
             <label className="flex items-center gap-2">
@@ -252,8 +303,8 @@ export function ColorPicker({
                 <button
                   key={`${i}-${hex}`}
                   type="button"
-                  onClick={() => emitHex(hex)}
-                  aria-label={`Use harmony swatch ${hex}`}
+                  onClick={() => swatchAction(hex)}
+                  aria-label={`${swatchVerb} harmony swatch ${hex}`}
                   className="h-9 w-9 border-2 border-fg/30 transition-transform hover:scale-110"
                   style={{ background: hex }}
                   title={hex}
@@ -447,8 +498,8 @@ export function ColorPicker({
               <button
                 key={`${i}-${hex}`}
                 type="button"
-                onClick={() => emitHex(hex)}
-                aria-label={`Use extracted swatch ${hex}`}
+                onClick={() => swatchAction(hex)}
+                aria-label={`${swatchVerb} extracted swatch ${hex}`}
                 className="h-9 w-9 border-2 border-fg/30 transition-transform hover:scale-110"
                 style={{ background: hex }}
                 title={hex}

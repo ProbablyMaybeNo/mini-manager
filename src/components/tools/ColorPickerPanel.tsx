@@ -31,6 +31,7 @@ export function ColorPickerPanel({
   showLibrary = true,
   showEyedropper = true,
   showWheel = true,
+  paintsOnly = false,
   closeOnSelect = false,
 }: {
   open: boolean;
@@ -52,6 +53,9 @@ export function ColorPickerPanel({
    *  recipe paint as a non-subscriber passes `false` to fall back to a
    *  plain library search. */
   showWheel?: boolean;
+  /** Recipe surfaces only — a slot takes a catalog paint, never a bare hex
+   *  (UX_FEEDBACK_2026-06-03 B2). See {@link ColorPicker}'s `paintsOnly`. */
+  paintsOnly?: boolean;
   /**
    * Stable identity of the target being edited (which lane / layer / slot).
    * The inner {@link ColorPicker} is re-keyed on this so re-opening on a
@@ -111,6 +115,7 @@ export function ColorPickerPanel({
         showLibrary={showLibrary}
         showEyedropper={showEyedropper}
         showWheel={showWheel}
+        paintsOnly={paintsOnly}
         onSelect={(sel) => {
           onSelect(sel);
           if (closeOnSelect) onClose();

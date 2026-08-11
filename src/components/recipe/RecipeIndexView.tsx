@@ -167,6 +167,9 @@ export function RecipeIndexView({
         initialPaintId={editingPaint?.recipe.slots[editingPaint.index]?.paintId || null}
         showWheel={isSubscriber}
         showEyedropper={isSubscriber}
+        // Same rule as the recipe creator's picker — editing a recipe paint
+        // swaps it for another catalog paint, never for a bare hex (B2).
+        paintsOnly
         closeOnSelect
         onSelect={(sel) => {
           if (editingPaint) onEditPaint?.(editingPaint.recipe, editingPaint.index, sel);

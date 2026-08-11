@@ -85,6 +85,56 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
   });
 
   /**
+   * A recipe slot only ever holds a catalog paint (UX_FEEDBACK_2026-06-03 B2,
+   * which removed the "Use hex" add path). That decision was silently undone
+   * when the June rebuild put this panel on the SHARED ColorPicker, where
+   * emitting a bare hex is correct for the colour tools — nothing failed, so
+   * nobody noticed for two months.
+   *
+   * This is the test that would have caught it: no control in the recipe
+   * picker may commit a colour that isn't a paint.
+   */
+  test("no path in the recipe picker can put a bare colour in a slot", async ({ page }) => {
+    test.setTimeout(60_000);
+    await signInAs(page, freshTestEmail());
+
+    await page.goto("/recipes/new", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("heading", { name: /^RECIPE EDITOR$/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const dialog = page.getByRole("dialog", { name: "Pick & Paint" });
+    await expect(async () => {
+      await page.getByRole("button", { name: "+ Add Paint" }).click();
+      await expect(dialog).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
+
+    // The two controls that used to commit a raw hex are gone.
+    await expect(dialog.getByRole("button", { name: "Use this colour" })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: /^Use harmony swatch/ })).toHaveCount(0);
+
+    // The harmony swatches survive, but they AIM the wheel rather than fill
+    // the slot — so they still drive the ranked list, which is the point.
+    const aim = dialog.getByRole("button", { name: /^Match paints to harmony swatch/ });
+    await expect(aim.first()).toBeVisible();
+
+    const wheelHex = async () =>
+      (await dialog.locator("section").first().innerText()).match(/#[0-9A-Fa-f]{6}/)?.[0];
+    const topMatch = async () =>
+      dialog.locator('ul[aria-label="Matching library paints"] li').first().innerText();
+
+    const beforeHex = await wheelHex();
+    const beforeTop = await topMatch();
+    // nth(1) — swatch 0 of a complementary harmony IS the current colour, so
+    // clicking it is a no-op and would prove nothing.
+    await aim.nth(1).click();
+
+    await expect(dialog).toBeVisible();
+    await expect.poll(wheelHex).not.toBe(beforeHex);
+    await expect.poll(topMatch).not.toBe(beforeTop);
+  });
+
+  /**
    * Folding the wheel into Library moved it from a gated TAB to a gated
    * SECTION. That is the one way this change could leak a paid tool, and the
    * tab bar no longer shows a 🔒 to prove it didn't — so assert it directly,

@@ -40,12 +40,18 @@ export function RecipePaintPicker({
       initialHex={initialHex}
       initialPaintId={initialPaintId}
       mode={mode}
+      // A recipe slot only ever holds a catalog paint (UX_FEEDBACK_2026-06-03
+      // B2). The June rebuild onto the shared ColorPicker quietly reinstated
+      // the raw-hex paths this had removed; this is the flag that takes them
+      // back out, on the recipe surfaces only.
+      paintsOnly
       closeOnSelect
-      renderMatchTab={({ paints, brandOptions, assignPaint }) => (
+      renderMatchTab={({ paints, brandOptions, assignPaint, targetHex }) => (
         <ColourMatchTool
           // No typeOptions here — picking a paint for a recipe slot wants
           // every type visible, not the Match tool's incompatible-type
           // default (that default is scoped to the standalone Match page).
+          initialHex={targetHex}
           rankMatches={(hex, brands, types, limit) =>
             rankMatchesMulti(hex, paints, brands, limit, { types })
           }
