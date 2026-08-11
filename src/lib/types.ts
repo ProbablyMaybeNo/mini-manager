@@ -79,6 +79,7 @@ export interface Recipe {
  * ------------------------------------------------------------------------- */
 export type PaintType =
   | "Acrylic"
+  | "Metallic"
   | "Contrast"
   | "Wash"
   | "Glaze"

@@ -5,7 +5,11 @@ import type { Paint, PaintType } from "@/lib/types";
 const PAINT_TYPE_MAP: Record<string, PaintType> = {
   Paint: "Acrylic",
   Wash: "Wash",
-  Metallic: "Acrylic",
+  // Metallic used to collapse to "Acrylic", which made metallics invisible to
+  // every colour tool — that is how the Layering tool came to offer "Bronze"
+  // as the shadow for Mephiston Red. The catalog has always carried the
+  // distinction; only this mapping threw it away.
+  Metallic: "Metallic",
   Contrast: "Contrast",
   Air: "Acrylic",
   Primer: "Primer",
