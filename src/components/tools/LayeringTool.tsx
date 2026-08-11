@@ -1,13 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Checkbox, CloseButton, HexField, Panel, SegmentedToggle, Swatch, useToast } from "@/components/kit";
+import { Button, Checkbox, CloseButton, HexField, Panel, Swatch, useToast } from "@/components/kit";
+import { cn } from "@/lib/cn";
 import { captionScrim, readableText } from "@/lib/color";
 import { buildRamp, MAX_STEPS, MIN_STEPS } from "@/lib/tools/gradient/interpolate";
 import { computeVennFills } from "@/lib/tools/layering/venn";
 import { deriveLanesFromSeed, type LaneKey } from "@/lib/tools/layering/deriveLanes";
 import { groundLane } from "@/lib/tools/layering/groundLane";
-import { closestPaint, rankMatchesMulti, similarInOtherBrands } from "@/lib/toolMatch";
+import {
+  closestPaint,
+  INCOMPATIBLE_MATCH_TYPES,
+  rankMatchesMulti,
+  similarInOtherBrands,
+} from "@/lib/toolMatch";
 import { loadOwnedPaintIds } from "@/lib/actions/inventory";
 import { AssignPaintMenu, type AssignedResult } from "@/components/recipe/AssignPaintMenu";
 import type { Paint, ToolSwatch } from "@/lib/types";
@@ -20,12 +26,6 @@ const HEX6 = /^#[0-9a-fA-F]{6}$/;
 const MAX_LAYERS = 6;
 /** MATCH button alternatives — "a handful" per lane (Ross's spec). */
 const LANE_ALT_COUNT = 4;
-
-const LANE_SEED_OPTIONS: { value: LaneKey; label: string }[] = [
-  { value: "shadow", label: "Shadow" },
-  { value: "base", label: "Base" },
-  { value: "highlight", label: "Highlight" },
-];
 
 /** Other-brand-ranked alternatives for a lane's grounded paint. With a brand
  *  filter active, ranks across exactly those brands (may include the
@@ -63,12 +63,13 @@ interface StackLayer {
 }
 
 /**
- * Color Stacking + Layering (MM-35 / Wave 2 item 7). Two sections, both able
- * to assign a real catalog PAINT per lane/layer — not just a raw hex (lvIX6p
- * reversed on Ross's request: the Library sub-panel is now open in both
- * ColorPickerPanels below). Raw wheel/harmony/hand-typed hex still works;
- * it just carries no `paintId`.
- *  - LAYERING: a perceptual Lab-space ramp (shadow → base → highlight).
+ * Color Stacking + Layering (MM-35 / Wave 2 item 7). Two sections:
+ *  - LAYERING: the painter picks ONE layer — whichever paint they actually
+ *    own — and the other two are derived in Lab space and grounded to real
+ *    catalog paints, as is every step of the ramp between them. Nothing here
+ *    is a bare colour: the tool's entire job is naming paints you can buy,
+ *    and a hex answers a question nobody asked.
+ *  - LAYERING is a perceptual Lab-space ramp (shadow → base → highlight).
  *  - STACKING: N renamable "LAYER #" glazes, stacked bottom → top over a
  *    fixed substrate, predicting the painted result (optical mix). Rendered
  *    as an N-circle Venn (ESVDHH6Wg78p) — no more "undercoat" special-case;
@@ -98,38 +99,39 @@ export function LayeringTool({
   }
 
   /* ---------- Layering (Lab ramp) ---------- */
-  const [shadow, setShadow] = useState<Anchor>({ hex: "#13243a", paintId: null });
-  const [base, setBase] = useState<Anchor>({ hex: "#3a6ea5", paintId: null });
-  const [highlight, setHighlight] = useState<Anchor>({ hex: "#9fc6ee", paintId: null });
+  // All three start EMPTY. The tool's job is "tell me which paints to use",
+  // so it opens asking a question rather than presenting three hexes the
+  // painter never chose and has no reason to trust.
+  const [shadow, setShadow] = useState<Anchor | null>(null);
+  const [base, setBase] = useState<Anchor | null>(null);
+  const [highlight, setHighlight] = useState<Anchor | null>(null);
   const [steps, setSteps] = useState(5);
   // Per-lane colour picker — which lane the shared ColorPicker is editing.
-  const [pickingLane, setPickingLane] = useState<"shadow" | "base" | "highlight" | null>(null);
+  const [pickingLane, setPickingLane] = useState<LaneKey | null>(null);
+  /** The lane the painter actually chose; the other two are derived from it. */
+  const [seedLane, setSeedLane] = useState<LaneKey | null>(null);
 
-  const valid = [shadow, base, highlight].every((a) => HEX6.test(a.hex));
-  const ladder = valid
-    ? buildRamp({ shadow: shadow.hex, base: base.hex, highlight: highlight.hex, steps })
-    : [];
+  const laneSetters: Record<LaneKey, (a: Anchor) => void> = {
+    shadow: setShadow,
+    base: setBase,
+    highlight: setHighlight,
+  };
+  const lanes: Record<LaneKey, Anchor | null> = { shadow, base, highlight };
 
-  const laneAnchor =
-    pickingLane === "shadow"
-      ? shadow
-      : pickingLane === "base"
-        ? base
-        : pickingLane === "highlight"
-          ? highlight
-          : null;
+  const valid =
+    !!shadow && !!base && !!highlight && [shadow, base, highlight].every((a) => HEX6.test(a.hex));
+  const ladder = useMemo(
+    () =>
+      valid
+        ? buildRamp({ shadow: shadow!.hex, base: base!.hex, highlight: highlight!.hex, steps })
+        : [],
+    [valid, shadow, base, highlight, steps],
+  );
 
-  function applyLane(sel: ColorPickerSelection) {
-    const hex = sel.hex.toUpperCase();
-    const paintId = sel.paintId ?? null;
-    if (pickingLane === "shadow") setShadow({ hex, paintId });
-    else if (pickingLane === "base") setBase({ hex, paintId });
-    else if (pickingLane === "highlight") setHighlight({ hex, paintId });
-  }
+  const laneAnchor = pickingLane ? lanes[pickingLane] : null;
 
-  /* ---------- MATCH button — seed one lane, derive the other two ---------- */
+  /* ---------- pick one lane, derive the other two ---------- */
   const { toast: laneToast, node: laneToastNode } = useToast();
-  const [seedLane, setSeedLane] = useState<LaneKey>("base");
   // Owned-first grounding toggle (default OFF — closest catalog match
   // regardless of ownership). Owned paint ids load once on mount; a
   // signed-out visitor (guest preview) just gets an empty set, so the
@@ -172,18 +174,18 @@ export function LayeringTool({
   // explicitly set to (a Library pick), or, failing that, the closest
   // catalog match to its raw hex — so the alternatives list + ASSIGN below
   // always has a paint to rank against, even for a hand-typed hex.
-  const groundedShadow = useMemo(
-    () => resolvePaint(shadow.paintId) ?? (catalog.length ? closestPaint(shadow.hex, catalog) : null) ?? null,
-    [shadow, catalog],
-  );
-  const groundedBase = useMemo(
-    () => resolvePaint(base.paintId) ?? (catalog.length ? closestPaint(base.hex, catalog) : null) ?? null,
-    [base, catalog],
-  );
-  const groundedHighlight = useMemo(
-    () => resolvePaint(highlight.paintId) ?? (catalog.length ? closestPaint(highlight.hex, catalog) : null) ?? null,
-    [highlight, catalog],
-  );
+  // An empty lane grounds to nothing — there is no colour to be near yet.
+  function groundAnchor(anchor: Anchor | null): Paint | null {
+    if (!anchor) return null;
+    return (
+      resolvePaint(anchor.paintId) ??
+      (catalog.length ? closestPaint(anchor.hex, catalog) : null) ??
+      null
+    );
+  }
+  const groundedShadow = useMemo(() => groundAnchor(shadow), [shadow, catalog]);
+  const groundedBase = useMemo(() => groundAnchor(base), [base, catalog]);
+  const groundedHighlight = useMemo(() => groundAnchor(highlight), [highlight, catalog]);
   const shadowAlternatives = useMemo(
     () => laneAlternatives(groundedShadow, catalog, laneBrandFilters.shadow),
     [groundedShadow, catalog, laneBrandFilters.shadow],
@@ -201,25 +203,98 @@ export function LayeringTool({
     laneToast(result.created ? `Created ${result.name}` : `Added to ${result.name}`, "green");
   }
 
-  const seedAnchor = seedLane === "shadow" ? shadow : seedLane === "base" ? base : highlight;
-  const matchEnabled = HEX6.test(seedAnchor.hex);
-
-  /** Ground one derived hex to a real catalog paint (owned-first per the
-   *  toggle) and land it on the given lane setter. Falls back to the raw
-   *  derived hex with no paintId when the catalog hasn't loaded yet. */
-  function applyDerivedLane(setter: (a: Anchor) => void, derivedHex: string) {
-    const paint = catalog.length ? groundLane(derivedHex, catalog, ownedIds, ownedFirst) : null;
-    setter(paint ? { hex: paint.hex.toUpperCase(), paintId: paint.id } : { hex: derivedHex, paintId: null });
+  /**
+   * The pool the derived lanes and ramp steps may be grounded to.
+   *
+   * Nearest-ΔE over the RAW catalog gives answers that are numerically right
+   * and useless on a brush: seeding Mephiston Red produced "Bronze (Tamiya)"
+   * as the shadow and "Flesh Wash (Reaper)" as a ramp step. A wash is not a
+   * shade coat and a metallic is not a shadow for a red.
+   *
+   * So: drop the utility finishes the Match tool already treats as
+   * incompatible, and let the seed's own family decide about metallics —
+   * a metallic base SHOULD shade and highlight with metallics (that is
+   * exactly how Ionic's Real Heavy Metal triads are sold), while a standard
+   * acrylic never should.
+   *
+   * Only the DERIVED lanes are constrained. Whatever the painter picks for
+   * themselves stands, wash or metallic or otherwise.
+   */
+  function poolFor(seedPaint: Paint | null): Paint[] {
+    const banned = new Set<string>(INCOMPATIBLE_MATCH_TYPES);
+    const usable = catalog.filter((p) => !banned.has(p.type));
+    return seedPaint?.type === "Metallic"
+      ? usable.filter((p) => p.type === "Metallic")
+      : usable.filter((p) => p.type !== "Metallic");
   }
 
-  function handleMatch() {
-    if (!matchEnabled) return;
-    const derived = deriveLanesFromSeed(seedLane, seedAnchor.hex);
+  /**
+   * Set one lane from a real paint and fill the other two with the best
+   * catalog paints for those roles. This is the whole tool: the painter
+   * answers one question ("which paint am I using?") and gets told exactly
+   * what to shade and highlight it with.
+   *
+   * `ownedFirst` is passed rather than read from state so the checkbox can
+   * re-derive with its NEW value in the same click, instead of re-deriving
+   * one render late off a stale closure.
+   */
+  function seedLanes(lane: LaneKey, anchor: Anchor, preferOwned: boolean) {
+    setSeedLane(lane);
+    laneSetters[lane](anchor);
+
+    const derived = deriveLanesFromSeed(lane, anchor.hex);
     if (!derived) return;
-    if (seedLane !== "shadow") applyDerivedLane(setShadow, derived.shadow);
-    if (seedLane !== "base") applyDerivedLane(setBase, derived.base);
-    if (seedLane !== "highlight") applyDerivedLane(setHighlight, derived.highlight);
+    // Computed from the anchor being applied, not from `seedLane` state —
+    // that setter hasn't landed yet in this same handler.
+    const pool = poolFor(resolvePaint(anchor.paintId) ?? closestPaint(anchor.hex, catalog) ?? null);
+    for (const other of ["shadow", "base", "highlight"] as LaneKey[]) {
+      if (other === lane) continue;
+      // Ground the derived hex to a REAL paint. Falls back to the bare hex
+      // only while the catalog is still loading — a lane should never rest on
+      // a colour nobody sells.
+      const paint = pool.length
+        ? groundLane(derived[other], pool, ownedIds, preferOwned)
+        : null;
+      laneSetters[other](
+        paint
+          ? { hex: paint.hex.toUpperCase(), paintId: paint.id }
+          : { hex: derived[other], paintId: null },
+      );
+    }
   }
+
+  function applyLane(sel: ColorPickerSelection) {
+    if (!pickingLane) return;
+    seedLanes(
+      pickingLane,
+      { hex: sel.hex.toUpperCase(), paintId: sel.paintId ?? null },
+      ownedFirst,
+    );
+  }
+
+  /** Re-run the derivation when the owned-first preference flips, so the two
+   *  derived lanes change under the painter instead of going stale. */
+  function applyOwnedFirst(next: boolean) {
+    setOwnedFirst(next);
+    const seed = seedLane ? lanes[seedLane] : null;
+    if (seedLane && seed) seedLanes(seedLane, seed, next);
+  }
+
+  /** Every ramp step resolved to a real paint — the tool's actual output.
+   *  A bare ladder of hexes tells a painter nothing they can buy. */
+  const rampRows = useMemo(() => {
+    const pool = poolFor(seedLane ? groundAnchor(lanes[seedLane]) : null);
+    return ladder.map((hex) => ({
+      hex,
+      paint: pool.length ? groundLane(hex, pool, ownedIds, ownedFirst) : null,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ladder, catalog, ownedIds, ownedFirst, seedLane, shadow, base, highlight]);
+
+  const rampSwatches = (): ToolSwatch[] =>
+    rampRows.map((r) =>
+      r.paint ? { hex: r.paint.hex, paintId: r.paint.id, name: r.paint.name } : { hex: r.hex },
+    );
 
   /* ---------- Stacking (optical glaze mix, N renamable layers) ---------- */
   const layerSeq = useRef(0);
@@ -285,149 +360,152 @@ export function LayeringTool({
     <div className="flex flex-col gap-6">
       {/* ===================== LAYERING ===================== */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-        <Panel label="LAYERING" className="flex min-w-0 flex-col gap-3 p-5">
-          <p className="font-body text-body text-fg">
-            Perceptual Lab-space ramp — even transitions across the eye.
+        {/* LEFT — alternatives, sectioned per lane. Swapping the sides puts
+            the answer (which paints to use) in the big panel and the
+            substitutions in the narrow one, instead of the other way round. */}
+        <Panel label="ALTERNATIVES" className="flex min-w-0 flex-col gap-3 p-5">
+          <p className="font-body text-body text-fg-faint">
+            Other paints close enough to stand in for each layer.
           </p>
-          <LaneField
-            label="Shadow"
-            anchor={shadow}
-            paint={resolvePaint(shadow.paintId)}
-            groundedPaint={groundedShadow}
-            alternatives={shadowAlternatives}
-            brandOptions={brandOptions}
-            selectedBrands={laneBrandFilters.shadow}
-            onToggleBrand={(b) => toggleLaneBrand("shadow", b)}
-            onClearBrands={() => clearLaneBrands("shadow")}
-            onChange={(hex) => setShadow({ hex, paintId: null })}
-            onPick={() => setPickingLane("shadow")}
-            onAssigned={handleLaneAssigned}
-          />
-          <LaneField
-            label="Base"
-            anchor={base}
-            paint={resolvePaint(base.paintId)}
-            groundedPaint={groundedBase}
-            alternatives={baseAlternatives}
-            brandOptions={brandOptions}
-            selectedBrands={laneBrandFilters.base}
-            onToggleBrand={(b) => toggleLaneBrand("base", b)}
-            onClearBrands={() => clearLaneBrands("base")}
-            onChange={(hex) => setBase({ hex, paintId: null })}
-            onPick={() => setPickingLane("base")}
-            onAssigned={handleLaneAssigned}
-          />
-          <LaneField
-            label="Highlight"
-            anchor={highlight}
-            paint={resolvePaint(highlight.paintId)}
-            groundedPaint={groundedHighlight}
-            alternatives={highlightAlternatives}
-            brandOptions={brandOptions}
-            selectedBrands={laneBrandFilters.highlight}
-            onToggleBrand={(b) => toggleLaneBrand("highlight", b)}
-            onClearBrands={() => clearLaneBrands("highlight")}
-            onChange={(hex) => setHighlight({ hex, paintId: null })}
-            onPick={() => setPickingLane("highlight")}
-            onAssigned={handleLaneAssigned}
-          />
-
-          {/* MATCH — seed one lane above, derive the other two in Lab space
-              and ground them to real catalog paints. */}
-          <div className="flex flex-col gap-2 border-t border-cyan/10 pt-3">
-            <SegmentedToggle
-              options={LANE_SEED_OPTIONS}
-              value={seedLane}
-              onChange={setSeedLane}
-              aria-label="Seed lane for MATCH"
+          {(
+            [
+              { key: "shadow" as const, label: "Shadow", grounded: groundedShadow, alts: shadowAlternatives },
+              { key: "base" as const, label: "Base", grounded: groundedBase, alts: baseAlternatives },
+              { key: "highlight" as const, label: "Highlight", grounded: groundedHighlight, alts: highlightAlternatives },
+            ]
+          ).map(({ key, label, grounded, alts }) => (
+            <LaneAlternatives
+              key={key}
+              label={label}
+              grounded={grounded}
+              alternatives={alts}
+              brandOptions={brandOptions}
+              selectedBrands={laneBrandFilters[key]}
+              onToggleBrand={(b) => toggleLaneBrand(key, b)}
+              onClearBrands={() => clearLaneBrands(key)}
+              onAssigned={handleLaneAssigned}
             />
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="solidGreen"
-                size="sm"
-                disabled={!matchEnabled}
-                onClick={handleMatch}
-              >
-                Match
-              </Button>
-              {/* min-h-11 gives the whole clickable label a ≥44px tap target
-                  (MUX-001) — the checkbox glyph itself stays ~16px. */}
-              <label className="flex min-h-11 items-center gap-1.5">
-                <Checkbox
-                  checked={ownedFirst}
-                  onChange={setOwnedFirst}
-                  ariaLabel="Owned first — prefer paints you already own"
-                />
-                <span className="label-osd text-fg">Owned first</span>
-              </label>
-            </div>
-            <p className="font-body text-body text-fg-faint">
-              Derives the other two lanes from the {seedLane} lane, grounded
-              to {ownedFirst ? "a paint you own when one's close enough" : "the closest catalog paint"}.
-            </p>
-          </div>
-
-          <label>
-            <span className="label-osd text-fg">Steps {steps}</span>
-            <input
-              type="range"
-              min={MIN_STEPS}
-              max={MAX_STEPS}
-              value={steps}
-              onChange={(e) => setSteps(Number(e.target.value))}
-              aria-label="Step count"
-              className="mt-1 w-full accent-cyan"
-            />
-          </label>
+          ))}
         </Panel>
 
-        <Panel label="RAMP" cornerTicks className="flex min-w-0 flex-col gap-4 p-5">
+        {/* RIGHT — the three layers themselves, then the ramp. */}
+        <Panel label="LAYERS" cornerTicks className="flex min-w-0 flex-col gap-4 p-5">
+          <p className="font-body text-body text-fg">
+            Pick the paint you already have — the other two layers fill in with
+            the closest real paints to shade and highlight it.
+          </p>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <LanePaintTile
+              label="Shadow"
+              anchor={shadow}
+              paint={groundedShadow}
+              isSeed={seedLane === "shadow"}
+              onPick={() => setPickingLane("shadow")}
+            />
+            <LanePaintTile
+              label="Base"
+              anchor={base}
+              paint={groundedBase}
+              isSeed={seedLane === "base"}
+              onPick={() => setPickingLane("base")}
+            />
+            <LanePaintTile
+              label="Highlight"
+              anchor={highlight}
+              paint={groundedHighlight}
+              isSeed={seedLane === "highlight"}
+              onPick={() => setPickingLane("highlight")}
+            />
+          </div>
+
+          <label className="flex min-h-11 w-fit items-center gap-1.5">
+            <Checkbox
+              checked={ownedFirst}
+              onChange={applyOwnedFirst}
+              ariaLabel="Owned first — prefer paints you already own"
+            />
+            <span className="label-osd text-fg">Owned first</span>
+          </label>
+
           {!valid ? (
-            <p className="py-8 text-center font-body text-body text-fg">
-              Enter valid shadow / base / highlight hexes.
+            <p className="border border-dashed border-cyan/25 py-8 text-center font-body text-body text-fg-faint">
+              Click a layer above and choose a paint.
             </p>
           ) : (
             <>
-              {/* Ramp bar with per-segment hex labels in legible black/white. */}
+              <div className="flex flex-col gap-2 border-t border-cyan/10 pt-4">
+                <label>
+                  <span className="label-osd text-fg">Ramp steps {steps}</span>
+                  <input
+                    type="range"
+                    min={MIN_STEPS}
+                    max={MAX_STEPS}
+                    value={steps}
+                    onChange={(e) => setSteps(Number(e.target.value))}
+                    aria-label="Step count"
+                    className="mt-1 w-full accent-cyan"
+                  />
+                </label>
+              </div>
+
               <div className="flex gap-1">
-                {ladder.map((hex, i) => (
+                {rampRows.map((r, i) => (
                   <div
                     key={i}
                     className="flex h-14 min-w-0 flex-1 items-center justify-center overflow-hidden"
-                    style={{ backgroundColor: hex, color: readableText(hex), textShadow: captionScrim(hex) }}
+                    style={{
+                      backgroundColor: r.paint?.hex ?? r.hex,
+                      color: readableText(r.paint?.hex ?? r.hex),
+                      textShadow: captionScrim(r.paint?.hex ?? r.hex),
+                    }}
                   >
-                    <span className="max-w-full truncate font-body text-body">{hex}</span>
+                    <span className="max-w-full truncate px-1 text-center font-body text-body">
+                      {r.paint?.name ?? r.hex}
+                    </span>
                   </div>
                 ))}
               </div>
-              {/* Ramp steps are computed Lab-space interpolation, not direct
-                  paint picks — even when an anchor is paint-backed, the
-                  in-between steps carry no paintId; a step becomes a real
-                  paint once it's sent to a recipe. */}
+
+              {/* The ramp names PAINTS. The in-between steps are Lab-space
+                  interpolation, so each one is grounded to its closest catalog
+                  paint — a ladder of hexes tells a painter nothing they can
+                  buy, which is the whole point of the tool. */}
               <ol className="flex flex-col gap-1.5">
-                {ladder.map((hex, i) => (
+                {rampRows.map((r, i) => (
                   <li key={i} className="flex items-center gap-3 border border-cyan/20 p-2">
                     <span className="w-6 font-num2 text-num2 text-fg">{i + 1}</span>
-                    <Swatch hex={hex} />
-                    <span className="flex-1 font-body text-body text-fg">{hex}</span>
+                    <Swatch hex={r.paint?.hex ?? r.hex} />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="break-words font-body text-body text-fg">
+                        {r.paint?.name ?? r.hex}
+                      </span>
+                      {r.paint && (
+                        <span className="label-osd text-fg-dim">{r.paint.brand}</span>
+                      )}
+                    </span>
+                    {r.paint && (
+                      <AssignPaintMenu
+                        swatch={{ hex: r.paint.hex, paintId: r.paint.id, name: r.paint.name }}
+                        onAssigned={handleLaneAssigned}
+                        buttonSize="sm"
+                      />
+                    )}
                   </li>
                 ))}
               </ol>
+
               <div className="flex flex-wrap gap-2">
-                <Button onClick={() => onSavePalette(ladder)}>Save Palette</Button>
+                <Button onClick={() => onSavePalette(rampRows.map((r) => r.paint?.hex ?? r.hex))}>
+                  Save Palette
+                </Button>
                 {onCreateRecipe && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => onCreateRecipe(ladder.map((hex) => ({ hex })))}
-                  >
+                  <Button variant="secondary" onClick={() => onCreateRecipe(rampSwatches())}>
                     Create Recipe
                   </Button>
                 )}
                 {onAssignRecipe && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => onAssignRecipe(ladder.map((hex) => ({ hex })))}
-                  >
+                  <Button variant="secondary" onClick={() => onAssignRecipe(rampSwatches())}>
                     Assign to Recipe
                   </Button>
                 )}
@@ -570,6 +648,10 @@ export function LayeringTool({
         pickerKey={pickingLane ? `lane:${pickingLane}` : null}
         showLibrary
         showEyedropper={false}
+        // A layer holds a PAINT, never a bare colour — the tool's answer has
+        // to be something the painter can buy. Same flag the recipe surfaces
+        // use, for the same reason.
+        paintsOnly
         closeOnSelect
         onSelect={applyLane}
       />
@@ -594,105 +676,136 @@ export function LayeringTool({
   );
 }
 
-function LaneField({
+/**
+ * One layer square: SHADOW / BASE / HIGHLIGHT. Empty until the painter picks,
+ * and it shows a PAINT — name and brand — never a hex. Clicking it reopens the
+ * wheel + library so any layer can be re-chosen, which is also how the derived
+ * two get overridden.
+ *
+ * There is deliberately no hex field here any more. A layer that holds a
+ * colour nobody sells cannot be painted, and the tool exists to answer
+ * "which paint do I buy".
+ */
+function LanePaintTile({
   label,
   anchor,
   paint,
-  groundedPaint,
+  isSeed,
+  onPick,
+}: {
+  label: string;
+  anchor: Anchor | null;
+  /** The lane's catalog paint — the pick itself, or the closest match to a
+   *  derived colour. Null while empty or before the catalog loads. */
+  paint: Paint | null;
+  /** True for the lane the painter chose; the other two are derived from it. */
+  isSeed: boolean;
+  onPick: () => void;
+}) {
+  const filled = !!anchor;
+  const swatchHex = paint?.hex ?? anchor?.hex ?? null;
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="label-osd text-fg">{label}</span>
+        {isSeed && (
+          <span className="border border-green/40 bg-green/15 px-1.5 py-0.5 font-button text-button text-green">
+            Yours
+          </span>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onPick}
+        aria-label={
+          paint
+            ? `${label}: ${paint.name} by ${paint.brand}. Choose a different paint`
+            : `Choose a ${label.toLowerCase()} paint`
+        }
+        className={cn(
+          "flex h-24 w-full items-center justify-center border transition-colors focus:outline-none focus-visible:border-cyan",
+          filled
+            ? "border-fg/20 hover:border-cyan"
+            : "border-dashed border-cyan/40 bg-transparent hover:border-cyan",
+        )}
+        style={swatchHex ? { backgroundColor: swatchHex } : undefined}
+      >
+        {!filled && <span className="font-body text-body text-fg-faint">+ Pick paint</span>}
+      </button>
+      {paint ? (
+        <span className="min-w-0 break-words font-body text-body text-fg" title={`${paint.name} · ${paint.brand}`}>
+          {paint.name}
+          <span className="block label-osd text-fg-dim">{paint.brand}</span>
+        </span>
+      ) : (
+        <span className="font-body text-body text-fg-faint">—</span>
+      )}
+    </div>
+  );
+}
+
+/** One lane's section in the ALTERNATIVES column: the paints that could stand
+ *  in for that layer, ΔE-ranked and brand-filterable. Renders a placeholder
+ *  rather than vanishing when the lane is empty, so the column keeps the same
+ *  three sections and the painter can see what is still unanswered. */
+function LaneAlternatives({
+  label,
+  grounded,
   alternatives,
   brandOptions,
   selectedBrands,
   onToggleBrand,
   onClearBrands,
-  onChange,
-  onPick,
   onAssigned,
 }: {
   label: string;
-  anchor: Anchor;
-  paint: Paint | undefined;
-  /** The lane's catalog paint for alternatives/ASSIGN — the paintId pick if
-   *  set, else the closest catalog match to the raw hex. Null while the
-   *  catalog hasn't loaded. */
-  groundedPaint: Paint | null;
-  /** ΔE-ranked "other similar paints" for the grounded paint, respecting
-   *  `selectedBrands` when set. */
+  grounded: Paint | null;
   alternatives: Paint[];
   brandOptions: string[];
   selectedBrands: ReadonlySet<string>;
   onToggleBrand: (brand: string) => void;
   onClearBrands: () => void;
-  onChange: (hex: string) => void;
-  onPick: () => void;
   onAssigned: (result: AssignedResult) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <HexField
-        label={label}
-        name={label.toLowerCase()}
-        value={anchor.hex}
-        onChange={(e) => onChange(e.target.value)}
-        onSwatchClick={onPick}
-        swatchLabel={`Pick ${label} colour`}
-      />
-      <PaintLabel paint={paint} />
+    <div className="flex flex-col gap-1.5 border-t border-cyan/10 pt-2 first:border-t-0 first:pt-0">
+      <div className="flex items-center justify-between gap-2">
+        <span className="label-osd text-cyan-lite">{label}</span>
+        {grounded && (
+          <BrandFilterPopover
+            brandOptions={brandOptions}
+            selected={selectedBrands}
+            onToggle={onToggleBrand}
+            onClear={onClearBrands}
+          />
+        )}
+      </div>
 
-      {groundedPaint && (
-        <div className="flex flex-col gap-1.5 border-t border-cyan/10 pt-1.5">
-          <div className="flex items-center justify-between gap-2">
-            {/* Wraps rather than truncating (MUX3-006) — same defect the Match
-                tool had: the paint's identity is the tool's output, and it was
-                the only thing being cut while the fixed-width ASSIGN never
-                yielded. At 320px the brand disappeared on every row. */}
-            <span
-              className="min-w-0 break-words label-osd text-fg-dim"
-              title={`${groundedPaint.name} · ${groundedPaint.brand}`}
-            >
-              {groundedPaint.name} · {groundedPaint.brand}
-            </span>
-            <AssignPaintMenu
-              swatch={{ hex: groundedPaint.hex, paintId: groundedPaint.id, name: groundedPaint.name }}
-              onAssigned={onAssigned}
-              buttonSize="sm"
-            />
-          </div>
-
-          {alternatives.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between gap-2">
-                <span className="label-osd text-fg-faint">Alternatives</span>
-                <BrandFilterPopover
-                  brandOptions={brandOptions}
-                  selected={selectedBrands}
-                  onToggle={onToggleBrand}
-                  onClear={onClearBrands}
-                />
-              </div>
-              <ul className="flex flex-col gap-1">
-                {alternatives.map((alt) => (
-                  <li
-                    key={alt.id}
-                    className="flex items-center gap-2 border border-cyan/10 px-1.5 py-1"
-                  >
-                    <Swatch hex={alt.hex} size="sm" />
-                    <span
-                      className="min-w-0 flex-1 break-words font-body text-body text-fg"
-                      title={`${alt.name} · ${alt.brand}`}
-                    >
-                      {alt.name} <span className="text-fg-faint">· {alt.brand}</span>
-                    </span>
-                    <AssignPaintMenu
-                      swatch={{ hex: alt.hex, paintId: alt.id, name: alt.name }}
-                      onAssigned={onAssigned}
-                      buttonSize="sm"
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+      {!grounded ? (
+        <span className="font-body text-body text-fg-faint">Not chosen yet.</span>
+      ) : alternatives.length === 0 ? (
+        <span className="font-body text-body text-fg-faint">
+          No close match in the selected brands.
+        </span>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {alternatives.map((alt) => (
+            <li key={alt.id} className="flex items-center gap-2 border border-cyan/10 px-1.5 py-1">
+              <Swatch hex={alt.hex} size="sm" />
+              <span
+                className="min-w-0 flex-1 break-words font-body text-body text-fg"
+                title={`${alt.name} · ${alt.brand}`}
+              >
+                {alt.name} <span className="text-fg-faint">· {alt.brand}</span>
+              </span>
+              <AssignPaintMenu
+                swatch={{ hex: alt.hex, paintId: alt.id, name: alt.name }}
+                onAssigned={onAssigned}
+                buttonSize="sm"
+              />
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
