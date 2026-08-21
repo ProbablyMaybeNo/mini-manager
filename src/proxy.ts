@@ -28,6 +28,10 @@ export function isPublicPath(pathname: string): boolean {
     pathname === "/" ||
     pathname === "/pricing" ||
     pathname.startsWith("/pricing/") ||
+    // Search-intent landing pages — crawlable, signed-out, and listed in the
+    // sitemap. Without this they 307 to /sign-in and the crawler indexes the
+    // sign-in page instead of the content.
+    pathname === "/paint-collection-manager" ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/verify-email" ||
@@ -80,6 +84,7 @@ const KNOWN_ROOT_SEGMENTS = new Set([
   "r",
   // (public) — these return early via isPublicPath / the matcher, listed so
   // the set stays a truthful inventory of what the app serves.
+  "paint-collection-manager",
   "pricing",
   "privacy",
   "reset",

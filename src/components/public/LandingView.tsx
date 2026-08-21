@@ -7,9 +7,9 @@ import { Button, Panel } from "@/components/kit";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
-import { SUPPORT_EMAIL } from "@/lib/support";
 import { HOME_FAQ } from "@/lib/seo/structuredData";
 import { FaqSection } from "./FaqSection";
+import { PublicFooter } from "./PublicFooter";
 import { PublicHeader } from "./PublicHeader";
 
 // Real in-app screens — no mockups. Every feature the landing sells is shown
@@ -348,32 +348,7 @@ export function LandingView() {
       </section>
       </main>
 
-      <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
-        ▸ THE MINI MAINFRAME · made for painters ·{" "}
-        <Link href="/gallery" className="text-cyan-lite underline">
-          Gallery
-        </Link>{" "}
-        ·{" "}
-        <Link href="/pricing" className="text-cyan-lite underline">
-          Support
-        </Link>{" "}
-        ·{" "}
-        <Link href="/sign-in" className="text-cyan-lite underline">
-          Sign in
-        </Link>{" "}
-        ·{" "}
-        <Link href="/privacy" className="text-cyan-lite underline">
-          Privacy
-        </Link>{" "}
-        ·{" "}
-        <Link href="/terms" className="text-cyan-lite underline">
-          Terms
-        </Link>{" "}
-        ·{" "}
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
-          Contact
-        </a>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

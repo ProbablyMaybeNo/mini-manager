@@ -9,7 +9,14 @@ const BASE = "https://www.mini-mainframe.com";
  * no organic value. Authed app routes live under /(app) and are disallowed in
  * robots.ts.
  */
-const STATIC_ROUTES = ["/", "/pricing", "/gallery", "/privacy", "/terms"] as const;
+const STATIC_ROUTES = [
+  "/",
+  "/pricing",
+  "/gallery",
+  "/paint-collection-manager",
+  "/privacy",
+  "/terms",
+] as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date();

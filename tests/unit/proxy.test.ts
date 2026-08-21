@@ -32,6 +32,17 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/terms")).toBe(true);
   });
 
+  /**
+   * The SEO landing pages. A crawlable page that isn't listed here 307s to
+   * /sign-in, so Google indexes the sign-in screen instead of the content.
+   */
+  test.each([
+    "/paint-collection-manager",
+  ])("SEO landing page %s is public", (p) => {
+    expect(isPublicPath(p)).toBe(true);
+    expect(isKnownRoute(p)).toBe(true);
+  });
+
   test("gated app routes are not public", () => {
     expect(isPublicPath("/dashboard")).toBe(false);
     expect(isPublicPath("/user")).toBe(false);
