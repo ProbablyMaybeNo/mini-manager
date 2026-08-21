@@ -69,7 +69,11 @@ export function SeoLandingLayout({
           <ul className="grid gap-3 sm:grid-cols-2">
             {related.map((r) => (
               <li key={r.href}>
-                <Link href={r.href} className="block h-full focus:outline-none">
+                {/* No `focus:outline-none` here: `.focus\:outline-none:focus`
+                    outranks the global `:focus-visible` ring in globals.css, so
+                    adding it would silently strip the keyboard focus indicator
+                    off every card. */}
+                <Link href={r.href} className="block h-full rounded-[12px]">
                   <Panel className="h-full p-4 transition-colors duration-150 ease-out hover:border-cyan/40">
                     <span className="label-osd-h2 text-cyan-lite">{r.label}</span>
                     <span className="mt-1 block font-body text-body leading-relaxed text-fg">
