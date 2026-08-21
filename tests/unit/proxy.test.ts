@@ -32,6 +32,24 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/terms")).toBe(true);
   });
 
+  /**
+   * The SEO landing pages. A crawlable page that isn't listed here 307s to
+   * /sign-in, so Google indexes the sign-in screen instead of the content.
+   */
+  test.each([
+    "/paint-collection-manager",
+    "/miniature-wargame-project-tracker",
+    "/paint-recipes",
+  ])("SEO landing page %s is public", (p) => {
+    expect(isPublicPath(p)).toBe(true);
+    expect(isKnownRoute(p)).toBe(true);
+    // Each segment carries its own opengraph-image.tsx (R2-13). The matcher's
+    // `opengraph-image` exclusion only anchors at the FIRST segment, so a
+    // nested one funnels through auth — and a 307 to /sign-in means every
+    // shared link to the page unfurls with no image.
+    expect(isPublicPath(`${p}/opengraph-image-abc123`)).toBe(true);
+  });
+
   test("gated app routes are not public", () => {
     expect(isPublicPath("/dashboard")).toBe(false);
     expect(isPublicPath("/user")).toBe(false);

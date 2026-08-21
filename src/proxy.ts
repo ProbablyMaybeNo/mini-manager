@@ -28,6 +28,21 @@ export function isPublicPath(pathname: string): boolean {
     pathname === "/" ||
     pathname === "/pricing" ||
     pathname.startsWith("/pricing/") ||
+    // Search-intent landing pages — crawlable, signed-out, and listed in the
+    // sitemap. Without this they 307 to /sign-in and the crawler indexes the
+    // sign-in page instead of the content.
+    //
+    // The `startsWith` half is not padding, and it is why /pricing has one:
+    // each of these segments carries its own `opengraph-image.tsx` (R2-13), and
+    // the matcher's `opengraph-image` exclusion is anchored at the FIRST path
+    // segment — so `/paint-recipes/opengraph-image-…` funnels through auth and
+    // would 307 an unfurl bot to /sign-in, leaving every shared link imageless.
+    pathname === "/paint-collection-manager" ||
+    pathname.startsWith("/paint-collection-manager/") ||
+    pathname === "/miniature-wargame-project-tracker" ||
+    pathname.startsWith("/miniature-wargame-project-tracker/") ||
+    pathname === "/paint-recipes" ||
+    pathname.startsWith("/paint-recipes/") ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/verify-email" ||
@@ -80,6 +95,9 @@ const KNOWN_ROOT_SEGMENTS = new Set([
   "r",
   // (public) — these return early via isPublicPath / the matcher, listed so
   // the set stays a truthful inventory of what the app serves.
+  "miniature-wargame-project-tracker",
+  "paint-collection-manager",
+  "paint-recipes",
   "pricing",
   "privacy",
   "reset",

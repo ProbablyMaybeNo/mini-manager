@@ -21,6 +21,19 @@ describe("sitemap (C2)", () => {
     expect(urls.every((u) => u.startsWith("https://www.mini-mainframe.com"))).toBe(true);
   });
 
+  /**
+   * The SEO landing pages exist to be found. Off the sitemap they are
+   * discoverable only by internal link, which is the slow path.
+   */
+  test.each([
+    "/paint-collection-manager",
+    "/miniature-wargame-project-tracker",
+    "/paint-recipes",
+  ])("SEO landing page %s is in the sitemap", async (route) => {
+    const urls = (await sitemap()).map((e) => e.url);
+    expect(urls).toContain(`https://www.mini-mainframe.com${route}`);
+  });
+
   test("appends every published /r/<slug>", async () => {
     const urls = (await sitemap()).map((e) => e.url);
     expect(urls).toContain("https://www.mini-mainframe.com/r/khorne-berzerkers");

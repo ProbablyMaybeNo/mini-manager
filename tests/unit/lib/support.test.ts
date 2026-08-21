@@ -52,7 +52,11 @@ describe("SUPPORT_EMAIL constant", () => {
 
 describe("SUPPORT_EMAIL is surfaced across the required surfaces", () => {
   const surfaces = [
-    "src/components/public/LandingView.tsx",
+    // The landing page's Contact link moved into the shared PublicFooter when
+    // the SEO landing pages needed the same row; the surface still carries it,
+    // one level down. The LandingView → PublicFooter edge is asserted below so
+    // the chain can't be broken by dropping the footer from the page.
+    "src/components/public/PublicFooter.tsx",
     "src/app/(app)/gallery/page.tsx",
     "src/app/r/[slug]/page.tsx",
     "src/app/(public)/privacy/page.tsx",
@@ -65,5 +69,13 @@ describe("SUPPORT_EMAIL is surfaced across the required surfaces", () => {
   test.each(surfaces)("%s references SUPPORT_EMAIL", (rel) => {
     const src = readFileSync(path.join(root, rel), "utf8");
     expect(src).toContain("SUPPORT_EMAIL");
+  });
+
+  test.each([
+    "src/components/public/LandingView.tsx",
+    "src/components/public/SeoLandingLayout.tsx",
+  ])("%s renders the PublicFooter that carries it", (rel) => {
+    const src = readFileSync(path.join(root, rel), "utf8");
+    expect(src).toContain("<PublicFooter />");
   });
 });

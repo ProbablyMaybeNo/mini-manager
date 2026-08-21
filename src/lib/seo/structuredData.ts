@@ -32,9 +32,15 @@ export function webApplicationJsonLd(): Record<string, unknown> {
   };
 }
 
+/** One question/answer pair. The SAME array feeds the `FAQPage` JSON-LD and
+ *  the visible FAQ section, so the two can never drift — Google requires the
+ *  marked-up Q&A to be present on the page as content. */
+export type FaqEntry = { q: string; a: string };
+
 /** Homepage FAQ — the answers double as visible-intent keyword copy. Every
- *  claim here is true of the shipping app. */
-const HOME_FAQ: ReadonlyArray<{ q: string; a: string }> = [
+ *  claim here is true of the shipping app. Rendered visibly by
+ *  `<FaqSection items={HOME_FAQ} />` in `LandingView`. */
+export const HOME_FAQ: ReadonlyArray<FaqEntry> = [
   {
     q: "What is The Mini Mainframe?",
     a: "A miniature painting tracker and paint collection manager for wargamers. Track every model from wishlist to finished, save cross-brand paint recipes, and manage your Warhammer, Citadel, Vallejo and Army Painter paints in one place.",
@@ -45,7 +51,7 @@ const HOME_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Which paint brands does it support?",
-    a: "The paint library covers 7,000+ paints across brands including Citadel, Vallejo, Army Painter and Scale75, so you can build and convert recipes across ranges.",
+    a: "The paint library covers 7,000+ paints across brands including Citadel, Vallejo, Army Painter and Scale75, so you can build a recipe from what you own and match a colour to the nearest paint in another range.",
   },
   {
     q: "Can it help me clear my pile of shame?",
@@ -57,12 +63,15 @@ const HOME_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
 ];
 
-/** FAQPage built from HOME_FAQ. */
-export function faqPageJsonLd(): Record<string, unknown> {
+/** FAQPage built from a Q&A array — the homepage's by default. Callers pass
+ *  their own page FAQ and render the same array through `<FaqSection />`. */
+export function faqPageJsonLd(
+  entries: ReadonlyArray<FaqEntry> = HOME_FAQ,
+): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: HOME_FAQ.map(({ q, a }) => ({
+    mainEntity: entries.map(({ q, a }) => ({
       "@type": "Question",
       name: q,
       acceptedAnswer: { "@type": "Answer", text: a },

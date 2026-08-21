@@ -7,7 +7,9 @@ import { Button, Panel } from "@/components/kit";
 import { useIsDesktop } from "@/hooks/useBreakpoint";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
-import { SUPPORT_EMAIL } from "@/lib/support";
+import { HOME_FAQ } from "@/lib/seo/structuredData";
+import { FaqSection } from "./FaqSection";
+import { PublicFooter } from "./PublicFooter";
 import { PublicHeader } from "./PublicHeader";
 
 // Real in-app screens — no mockups. Every feature the landing sells is shown
@@ -319,6 +321,12 @@ export function LandingView() {
         </div>
       </section>
 
+      {/* The FAQ the FAQPage JSON-LD marks up. The `<script type="ld+json">` in
+          (public)/page.tsx and this section read the SAME HOME_FAQ array — a
+          marked-up Q&A that appears nowhere on the page is ineligible for rich
+          results, and these answers are the landing's densest intent copy. */}
+      <FaqSection items={HOME_FAQ} />
+
       {/* Final CTA */}
       <section className="flex flex-col items-center gap-4 px-6 pb-16 text-center">
         <h2 className="max-w-xl font-h1 text-h1 text-cyan-lite text-glow-cyan">
@@ -340,32 +348,7 @@ export function LandingView() {
       </section>
       </main>
 
-      <footer className="border-t border-cyan/20 px-6 py-6 text-center font-body text-body text-fg">
-        ▸ THE MINI MAINFRAME · made for painters ·{" "}
-        <Link href="/gallery" className="text-cyan-lite underline">
-          Gallery
-        </Link>{" "}
-        ·{" "}
-        <Link href="/pricing" className="text-cyan-lite underline">
-          Support
-        </Link>{" "}
-        ·{" "}
-        <Link href="/sign-in" className="text-cyan-lite underline">
-          Sign in
-        </Link>{" "}
-        ·{" "}
-        <Link href="/privacy" className="text-cyan-lite underline">
-          Privacy
-        </Link>{" "}
-        ·{" "}
-        <Link href="/terms" className="text-cyan-lite underline">
-          Terms
-        </Link>{" "}
-        ·{" "}
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-lite underline">
-          Contact
-        </a>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
