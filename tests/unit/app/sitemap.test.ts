@@ -27,6 +27,7 @@ describe("sitemap (C2)", () => {
    */
   test.each([
     "/paint-collection-manager",
+    "/miniature-wargame-project-tracker",
   ])("SEO landing page %s is in the sitemap", async (route) => {
     const urls = (await sitemap()).map((e) => e.url);
     expect(urls).toContain(`https://www.mini-mainframe.com${route}`);

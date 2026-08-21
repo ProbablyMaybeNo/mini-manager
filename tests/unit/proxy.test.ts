@@ -38,6 +38,7 @@ describe("isPublicPath", () => {
    */
   test.each([
     "/paint-collection-manager",
+    "/miniature-wargame-project-tracker",
   ])("SEO landing page %s is public", (p) => {
     expect(isPublicPath(p)).toBe(true);
     expect(isKnownRoute(p)).toBe(true);

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { PAINT_COLLECTION_FAQ } from "@/lib/seo/landingFaq";
+import { PAINT_COLLECTION_FAQ, PROJECT_TRACKER_FAQ } from "@/lib/seo/landingFaq";
 import { HOME_FAQ, faqPageJsonLd, type FaqEntry } from "@/lib/seo/structuredData";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -70,6 +70,11 @@ const LANDING_FAQS: { route: string; ident: string; faq: ReadonlyArray<FaqEntry>
     route: "src/app/(public)/paint-collection-manager/page.tsx",
     ident: "PAINT_COLLECTION_FAQ",
     faq: PAINT_COLLECTION_FAQ,
+  },
+  {
+    route: "src/app/(public)/miniature-wargame-project-tracker/page.tsx",
+    ident: "PROJECT_TRACKER_FAQ",
+    faq: PROJECT_TRACKER_FAQ,
   },
 ];
 

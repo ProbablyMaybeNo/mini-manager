@@ -13,6 +13,7 @@ const STATIC_ROUTES = [
   "/",
   "/pricing",
   "/gallery",
+  "/miniature-wargame-project-tracker",
   "/paint-collection-manager",
   "/privacy",
   "/terms",
