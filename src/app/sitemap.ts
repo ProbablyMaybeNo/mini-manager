@@ -15,6 +15,7 @@ const STATIC_ROUTES = [
   "/gallery",
   "/miniature-wargame-project-tracker",
   "/paint-collection-manager",
+  "/paint-recipes",
   "/privacy",
   "/terms",
 ] as const;

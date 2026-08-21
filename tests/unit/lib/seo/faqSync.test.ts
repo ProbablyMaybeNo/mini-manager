@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { PAINT_COLLECTION_FAQ, PROJECT_TRACKER_FAQ } from "@/lib/seo/landingFaq";
+import {
+  PAINT_COLLECTION_FAQ,
+  PAINT_RECIPES_FAQ,
+  PROJECT_TRACKER_FAQ,
+} from "@/lib/seo/landingFaq";
 import { HOME_FAQ, faqPageJsonLd, type FaqEntry } from "@/lib/seo/structuredData";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -76,6 +80,11 @@ const LANDING_FAQS: { route: string; ident: string; faq: ReadonlyArray<FaqEntry>
     ident: "PROJECT_TRACKER_FAQ",
     faq: PROJECT_TRACKER_FAQ,
   },
+  {
+    route: "src/app/(public)/paint-recipes/page.tsx",
+    ident: "PAINT_RECIPES_FAQ",
+    faq: PAINT_RECIPES_FAQ,
+  },
 ];
 
 describe("SEO landing page FAQs", () => {
@@ -105,6 +114,17 @@ describe("SEO landing page FAQs", () => {
 
   test.each(LANDING_FAQS)("$route emits a breadcrumb trail", ({ route }) => {
     expect(read(route)).toContain("breadcrumbJsonLd(");
+  });
+
+  /**
+   * Recipe/HowTo is food semantics and a paint scheme is not a dish; a rating
+   * with no reviews behind it is a policy violation. Neither may appear.
+   */
+  test.each(LANDING_FAQS)("$route emits no Recipe/HowTo/rating schema", ({ route }) => {
+    const src = read(route);
+    for (const banned of ["aggregateRating", '"@type": "Recipe"', "HowTo", "Review"]) {
+      expect(src, banned).not.toContain(banned);
+    }
   });
 
   test("no two landing pages share a question", () => {

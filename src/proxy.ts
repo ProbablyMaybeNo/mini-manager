@@ -33,6 +33,7 @@ export function isPublicPath(pathname: string): boolean {
     // sign-in page instead of the content.
     pathname === "/paint-collection-manager" ||
     pathname === "/miniature-wargame-project-tracker" ||
+    pathname === "/paint-recipes" ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/verify-email" ||
@@ -87,6 +88,7 @@ const KNOWN_ROOT_SEGMENTS = new Set([
   // the set stays a truthful inventory of what the app serves.
   "miniature-wargame-project-tracker",
   "paint-collection-manager",
+  "paint-recipes",
   "pricing",
   "privacy",
   "reset",
