@@ -8,6 +8,8 @@ import { useIsDesktop } from "@/hooks/useBreakpoint";
 import { trackClient } from "@/lib/analytics/track.client";
 import { AnalyticsEvent } from "@/lib/analytics/events";
 import { SUPPORT_EMAIL } from "@/lib/support";
+import { HOME_FAQ } from "@/lib/seo/structuredData";
+import { FaqSection } from "./FaqSection";
 import { PublicHeader } from "./PublicHeader";
 
 // Real in-app screens — no mockups. Every feature the landing sells is shown
@@ -318,6 +320,12 @@ export function LandingView() {
           </Panel>
         </div>
       </section>
+
+      {/* The FAQ the FAQPage JSON-LD marks up. The `<script type="ld+json">` in
+          (public)/page.tsx and this section read the SAME HOME_FAQ array — a
+          marked-up Q&A that appears nowhere on the page is ineligible for rich
+          results, and these answers are the landing's densest intent copy. */}
+      <FaqSection items={HOME_FAQ} />
 
       {/* Final CTA */}
       <section className="flex flex-col items-center gap-4 px-6 pb-16 text-center">
