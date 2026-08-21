@@ -43,6 +43,11 @@ describe("isPublicPath", () => {
   ])("SEO landing page %s is public", (p) => {
     expect(isPublicPath(p)).toBe(true);
     expect(isKnownRoute(p)).toBe(true);
+    // Each segment carries its own opengraph-image.tsx (R2-13). The matcher's
+    // `opengraph-image` exclusion only anchors at the FIRST segment, so a
+    // nested one funnels through auth — and a 307 to /sign-in means every
+    // shared link to the page unfurls with no image.
+    expect(isPublicPath(`${p}/opengraph-image-abc123`)).toBe(true);
   });
 
   test("gated app routes are not public", () => {

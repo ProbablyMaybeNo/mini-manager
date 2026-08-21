@@ -112,6 +112,19 @@ describe("SEO landing page FAQs", () => {
     expect(src).toContain("alternates: { canonical:");
   });
 
+  /**
+   * R2-13, the sequel. Declaring `openGraph` on a page REPLACES the parent's
+   * block rather than merging into it, so the `(public)` group's card is
+   * dropped and the page unfurls as a large-image card with no image. A
+   * file-convention image in the page's OWN segment survives that. Caught on
+   * these three by reading the built HTML; this is the guard so the next page
+   * can't ship without one.
+   */
+  test.each(LANDING_FAQS)("$route has a co-located opengraph-image", ({ route }) => {
+    const og = route.replace(/page\.tsx$/, "opengraph-image.tsx");
+    expect(read(og)).toContain('export { default } from "../opengraph-image"');
+  });
+
   test.each(LANDING_FAQS)("$route emits a breadcrumb trail", ({ route }) => {
     expect(read(route)).toContain("breadcrumbJsonLd(");
   });
