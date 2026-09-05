@@ -10,15 +10,21 @@ import { imports, recipes, users } from "@/db/schema";
  * assertions don't depend on (or get silently disabled by) that module-level
  * flag ever moving again.
  *
- * Covered Pro-only actions:
- *   - createPalette         (Save Palette — apply tool result)
- *   - sendPaletteToRecipe   (Send to Recipe — apply tool result)
+ * The paid line is "does this action cost money to run" (Ross, 2026-09-05).
+ * Only AI-spending actions gate; anything that is pure colour maths or a plain
+ * DB write is free.
+ *
+ * Covered Pro-only actions — all three spend LLM tokens:
  *   - createTextImport      (army-list PARSE — pasted text)
  *   - createFileImport      (army-list PARSE — uploaded file)
  *   - applyImport           (army-list import — landing the preview)
  *
  * The two import PARSE entry points gate BEFORE parsing so a free user
  * never reaches `parseWithLlm` (the LLM fallback that spends tokens).
+ *
+ * `createPalette` and `sendPaletteToRecipe` were gated here until the same
+ * date. They are asserted below to be FREE now — a regression guard, since
+ * re-gating them would be re-charging for arithmetic.
  */
 
 const state = vi.hoisted(() => ({
@@ -83,22 +89,9 @@ afterEach(() => {
   state.userId = "";
 });
 
-describe("createPalette — Pro-gated Save Palette", () => {
-  test("a FREE user is blocked with an upgrade URL", async () => {
+describe("createPalette — free, costs nothing to run", () => {
+  test("a FREE user can save a palette", async () => {
     await setPlan("free");
-    const res = await createPalette({
-      name: "Triad",
-      source: "eyedropper",
-      colorHexes: ["#0E4A8A"],
-    });
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.error).toMatch(/sponsor the Mainframe/i);
-    expect(res.upgradeUrl).toBe("/pricing");
-  });
-
-  test("a PRO user can save a palette", async () => {
-    await setPlan("pro_lifetime");
     const res = await createPalette({
       name: "Triad",
       source: "eyedropper",
@@ -108,51 +101,17 @@ describe("createPalette — Pro-gated Save Palette", () => {
   });
 });
 
-describe("sendPaletteToRecipe — Pro-gated Send to Recipe", () => {
-  test("a FREE user is blocked with an upgrade URL", async () => {
+describe("sendPaletteToRecipe — free, costs nothing to run", () => {
+  test("a FREE user can send a tool palette to a new recipe", async () => {
     await setPlan("free");
     const res = await sendPaletteToRecipe({
       swatches: [{ hex: "#0e4a8a" }],
       newRecipeName: "From tool",
     });
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.error).toMatch(/sponsor the Mainframe/i);
-    expect(res.upgradeUrl).toBe("/pricing");
-    // No recipe created — gate ran first.
+    expect(res.ok).toBe(true);
+    // The recipe really landed — not an ok:true that wrote nothing.
     const rows = await state.db!.select().from(recipes);
-    expect(rows).toHaveLength(0);
-  });
-
-  test("a PRO user can send a palette to a recipe", async () => {
-    await setPlan("pro_monthly");
-    const res = await sendPaletteToRecipe({
-      swatches: [{ hex: "#0e4a8a" }],
-      newRecipeName: "From tool",
-    });
-    expect(res.ok).toBe(true);
-  });
-
-  // The Library paint panel's plain "Add to Recipe" shares this action but
-  // must stay free — see the gating-layer doc comment on `PRO_FEATURE_ERROR`
-  // in sendToRecipe.ts.
-  test("surface: 'library' stays free for a FREE user", async () => {
-    await setPlan("free");
-    const res = await sendPaletteToRecipe({
-      swatches: [{ hex: "#0e4a8a" }],
-      newRecipeName: "From library",
-      surface: "library",
-    });
-    expect(res.ok).toBe(true);
-  });
-
-  test("omitting surface defaults to the gated 'toolHandoff' path (fails closed)", async () => {
-    await setPlan("free");
-    const res = await sendPaletteToRecipe({
-      swatches: [{ hex: "#0e4a8a" }],
-      newRecipeName: "No surface",
-    });
-    expect(res.ok).toBe(false);
+    expect(rows).toHaveLength(1);
   });
 });
 

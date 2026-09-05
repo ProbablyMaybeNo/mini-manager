@@ -12,21 +12,30 @@ import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import { useMockData } from "@/mock/MockProvider";
 
 /**
- * Common chrome for a single tool: back-to-hub link + title + blurb — and,
- * as of the subscription paywall, the ROUTE-LEVEL gate for every `/tools/*`
- * page. Every tool page renders through this shell, so gating it here is
- * the single choke point for "non-subscribers hitting a tool page get the
- * gate" (docs/SUBSCRIPTION_PAYWALL.md Phase C). This is a client-side UX
- * gate only — every server action a tool can reach re-checks `isProUser`
- * itself, so this never IS the security boundary, just the front door.
+ * Common chrome for a single tool: back-to-hub link + title + blurb, and the
+ * route-level gate for the tools that still need one.
+ *
+ * The gate is now PER-TOOL, not blanket (Ross, 2026-09-05). It used to lock
+ * every `/tools/*` page, which charged for the colour tools — wheel, match,
+ * dropper, stacking — that are pure client-side colour maths and cost nothing
+ * to run. The only tool under here with a real marginal cost is the Paint
+ * Scanner, which spends Anthropic vision tokens on every scan. So the paid
+ * line is now "does this cost money to run", and `requiresPro` marks the one
+ * page that does.
+ *
+ * Client-side UX gate only — `paintScan.ts` re-checks `isProUser` server-side,
+ * so this is the front door, never the security boundary.
  */
 export function ToolShell({
   title,
   blurb,
+  requiresPro = false,
   children,
 }: {
   title: string;
   blurb: string;
+  /** Set only by tools that cost money per use (the Paint Scanner). */
+  requiresPro?: boolean;
   children: React.ReactNode;
 }) {
   const isSubscriber = useSubscriber();
@@ -64,7 +73,7 @@ export function ToolShell({
       {/* Blurb is desktop-only — the tool's own controls are right below it and
           the title already names the job (Ross, 2026-07-27 mobile pass). */}
       <PageHeader title={title} tagline={blurb} />
-      {isSubscriber ? (
+      {!requiresPro || isSubscriber ? (
         children
       ) : (
         <>
@@ -73,8 +82,11 @@ export function ToolShell({
               saying "no". It now says what the $3.99 actually buys, reusing the
               same UNLOCKS list /pricing sells from so the two can't drift. */}
           <Panel accent="cyan" label="LOCKED" className="max-w-md p-6">
+            {/* Says WHY this one costs, since every other tool is now free —
+                without that, a lock on one card out of five reads as arbitrary. */}
             <p className="font-body text-body text-fg">
-              ▸ {title} is part of the tool suite — sponsor to unlock it.
+              ▸ {title} reads your photos with AI, which costs real money per
+              scan. Sponsoring covers it — every other tool is free.
             </p>
             <ul className="mt-4 flex flex-col gap-2 text-left">
               {UNLOCKS.map((u) => (

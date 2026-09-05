@@ -135,12 +135,18 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
   });
 
   /**
-   * Folding the wheel into Library moved it from a gated TAB to a gated
-   * SECTION. That is the one way this change could leak a paid tool, and the
-   * tab bar no longer shows a 🔒 to prove it didn't — so assert it directly,
-   * on a real free-tier user rather than the comped default.
+   * Inverted 2026-09-05. This used to assert that a free-tier painter got the
+   * library WITHOUT the wheel, and that the tool tabs announced themselves as
+   * locked — the picker's whole tool surface was subscriber-only.
+   *
+   * The paid line moved to "does this cost money to run", and none of the
+   * picker does: the wheel, Match, Dropper and Layering are client-side colour
+   * maths. So the assertion flips, and it is worth keeping in this direction —
+   * it proves the un-gating actually reached the UI for a REAL free-tier user
+   * rather than the comped default, which is exactly the leak the original
+   * version of this test existed to catch, just pointing the other way.
    */
-  test("a free-tier painter gets the library WITHOUT the wheel", async ({ page }) => {
+  test("a free-tier painter gets the whole picker — wheel and every tool tab", async ({ page }) => {
     test.setTimeout(60_000);
     await signInAs(page, freshTestEmail("free"), { comp: false });
 
@@ -155,19 +161,22 @@ test.describe("UX-002 — recipe slot full paint toolset", () => {
       await expect(dialog).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 30_000 });
 
-    // The free surface is unchanged from before the merge: search the catalog,
-    // click a real paint. No wheel, no harmony, no sliders.
+    // The Library tab still leads with search — that part never changed.
     await expect(dialog.getByRole("heading", { name: "Library" })).toBeVisible();
     await expect(
       dialog.getByPlaceholder("Search by paint name, brand, or line…"),
     ).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "Wheel" })).toHaveCount(0);
-    await expect(dialog.getByRole("slider", { name: "Saturation" })).toHaveCount(0);
 
-    // And the tool tabs still announce themselves as locked rather than
-    // silently doing nothing (paywall audit MUX-P12).
+    // ...but the wheel section above it is now there for a free user, sliders
+    // and all. These two were `toHaveCount(0)` before.
+    await expect(dialog.getByRole("heading", { name: "Wheel" })).toBeVisible();
+    await expect(dialog.getByRole("slider", { name: "Saturation" })).toBeVisible();
+
+    // And no tab carries the lock affordance any more — the accessible name
+    // is the plain label, with no "sponsor access only" suffix.
     await expect(
       page.getByRole("tab", { name: "Dropper — sponsor access only" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
+    await expect(page.getByRole("tab", { name: "Dropper" })).toBeVisible();
   });
 });

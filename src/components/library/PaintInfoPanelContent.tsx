@@ -5,8 +5,6 @@ import Link from "next/link";
 import { Button, Chip, Panel, Swatch } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { harmonies, HARMONY_SCHEMES, type HarmonyScheme } from "@/lib/color";
-import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
-import { useSubscriber } from "@/lib/billing/SubscriberContext";
 import type { MatchResult, Paint } from "@/lib/types";
 
 /** The tri-state the STATUS control resolves to. */
@@ -102,8 +100,6 @@ export function PaintInfoPanelContent({
   onCopyHex: () => void;
   onAssignPaint: (paint: Paint) => void;
 }) {
-  const isSubscriber = useSubscriber();
-  const [gateOpen, setGateOpen] = useState(false);
   const [scheme, setScheme] = useState<HarmonyScheme>("Complementary");
 
   const status: PaintStatus = paint.owned
@@ -184,8 +180,7 @@ export function PaintInfoPanelContent({
         )}
       </Field>
 
-      {isSubscriber ? (
-        <>
+      <>
           <Field label="Harmonies">
             <select
               value={scheme}
@@ -257,31 +252,7 @@ export function PaintInfoPanelContent({
               ))}
             </ul>
           </Field>
-        </>
-      ) : (
-        // Non-subscriber — the power section (harmonies/matching/colour
-        // science) is HIDDEN, not greyed out, in favour of one tidy unlock
-        // card (docs/SUBSCRIPTION_PAYWALL.md — greying a wall of dead
-        // controls reads as broken).
-        // The padding lives on the BUTTON, not the Panel (paywall audit
-        // MUX-P02). With `p-4` on the Panel the card looked like a 342×54
-        // tappable surface while only the inner 308×20 text line was live —
-        // hit-testing five points inside the visible card, three landed on the
-        // wrapping div and did nothing. Tapping the obvious edge of an unlock
-        // card and getting silence is the worst first impression of a paid
-        // feature.
-        <Panel accent="cyan">
-          <button
-            type="button"
-            onClick={() => setGateOpen(true)}
-            className="flex min-h-12 w-full items-center justify-between gap-2 p-4 text-left font-body text-body text-cyan-lite transition-colors hover:bg-cyan/10 hover:text-glow-cyan"
-          >
-            <span>🔒 Sponsor to unlock a range of tools · $3.99/mo</span>
-            <span aria-hidden>→</span>
-          </button>
-        </Panel>
-      )}
-      <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
+      </>
     </div>
   );
 }

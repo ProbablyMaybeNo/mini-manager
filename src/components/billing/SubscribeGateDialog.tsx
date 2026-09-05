@@ -7,10 +7,11 @@ import { startProMonthlyCheckout } from "@/lib/billing/startCheckout";
 /**
  * The reusable "you need to sponsor" popup (Phase B,
  * docs/SUBSCRIPTION_PAYWALL.md; copy revised per Ross's review pass — fixes
- * 1 + 6). Same component at every gate point — `/tools/*` route pages, the
- * Tools-hub locked cards, the recipe creator's power-feature tabs, AI
- * recipe generation, army-list import, the Paint Scanner (both entry
- * points), and the library panel's locked-section card.
+ * 1 + 6). Same component at every remaining gate point — AI recipe
+ * generation, army-list import, and the Paint Scanner (both entry points).
+ * The tool routes, the recipe creator's tabs and the library panel's colour
+ * science used to render it too; those are free as of 2026-09-05, because the
+ * paid line is now "does this cost money to run".
  *
  * Terminology (fix 6): the word is "Sponsor" everywhere in this copy —
  * never "Subscribe"/"Support"/"Donate". Distinct from the one-off "Feed the
@@ -56,8 +57,8 @@ export function SubscribeGateDialog({
     <ModalDialog open={open} onClose={onClose} title="Sponsor" breadcrumb="MINI MAINFRAME">
       <div className="flex flex-col gap-3">
         <p className="font-body text-body text-fg">
-          Unlock a range of tools to help plan, paint, and track your entire
-          wargaming collection.
+          The app and every colour tool are free. This one runs on AI, which
+          costs real money each time — sponsoring covers it.
         </p>
         <Button
           size="lg"
