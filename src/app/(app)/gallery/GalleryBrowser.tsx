@@ -6,6 +6,7 @@ import { EmptyState, Panel, SearchField, Swatch } from "@/components/kit";
 import { CloneButton } from "@/components/recipe/CloneButton";
 import { cn } from "@/lib/cn";
 import { exportableImageSrc } from "@/lib/shareCard/imageSrc";
+import { cardAspectRatio } from "@/lib/shareCard/layout";
 import type { GalleryRecipeCard } from "@/db/queries/recipes";
 
 type SortKey = "newest" | "oldest" | "popular";
@@ -138,13 +139,6 @@ function SortChip({
       {label}
     </button>
   );
-}
-
-/** A card's stored export ratio ("1:1", "9:16", …) as a CSS `aspect-ratio`.
- *  Anything unrecognised — including the null on pre-ratio rows — falls back
- *  to square, which is what those cards were exported as. */
-function cardAspectRatio(ratio: string | null): string {
-  return ratio && /^\d+:\d+$/.test(ratio) ? ratio.replace(":", " / ") : "1 / 1";
 }
 
 function RecipeCard({
