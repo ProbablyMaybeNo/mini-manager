@@ -3,11 +3,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { toPng } from "html-to-image";
 import { upload } from "@vercel/blob/client";
-import { CheckCircle2, Download, ImagePlus, Send, X } from "lucide-react";
-import { Button, ModalDialog, SegmentedToggle } from "@/components/kit";
+import { CheckCircle2, Download, ImagePlus, Plus, Send, X } from "lucide-react";
+import { Button, Checkbox, Input, Listbox, ModalDialog, SegmentedToggle } from "@/components/kit";
 import { cn } from "@/lib/cn";
 import { loadProjectImages } from "@/lib/actions/projectImages";
 import { submitRecipeToGallery } from "@/lib/actions/gallerySubmissions";
+import {
+  createGalleryPostRecipe,
+  loadGalleryComposerProjects,
+  loadGalleryPostPrefill,
+  type GalleryComposerProject,
+} from "@/lib/actions/galleryPosts";
+import { RecipePaintPicker } from "@/components/recipe/RecipePaintPicker";
+import { loadKitCatalog } from "@/lib/catalogClient";
+import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { validateImageFile } from "@/lib/blob/limits";
 import {
   isNamedRecipe,
@@ -84,6 +93,18 @@ export interface ShareCardComposerProps {
    *  for the imageless project-photo entry point and for an unsaved "new"
    *  recipe draft, both of which hide the SUBMIT button. */
   recipeId?: string | null;
+  /**
+   * Compose mode — the gallery's "Share your model" entry point. The title,
+   * the paints and the notes become editable, a "start from a project"
+   * dropdown prefills them, and SUBMIT mints the recipe row itself rather
+   * than requiring one up front.
+   *
+   * The recipe-side entry points leave this false and keep the read-only
+   * card they have always had: from `/recipes` the painter is sharing THAT
+   * recipe, and letting the card drift from it would publish something the
+   * recipe never said.
+   */
+  composable?: boolean;
 }
 
 export function ShareCardComposer({
@@ -95,9 +116,31 @@ export function ShareCardComposer({
   projectId,
   initialImageUrl,
   recipeId,
+  composable = false,
 }: ShareCardComposerProps) {
   const [ratio, setRatio] = useState<ShareCardRatio>("1:1");
   const [notes, setNotes] = useState(initialNotes ?? "");
+  // Compose mode edits these; read-only mode mirrors the props into them on
+  // open, so every downstream reader (preview, export, submit) has ONE
+  // source and the two modes can never render differently.
+  const [title, setTitle] = useState(recipeName ?? "");
+  const [draftSlots, setDraftSlots] = useState<RecipeSlot[]>(slots);
+  const [saveToLibrary, setSaveToLibrary] = useState(true);
+  const [projects, setProjects] = useState<GalleryComposerProject[] | null>(null);
+  const [sourceProjectId, setSourceProjectId] = useState<string>("");
+  /** The prefilled recipe a project supplied, while its content is still
+   *  untouched. Posting with this set reuses that recipe instead of minting
+   *  a duplicate; any edit clears it and the post becomes a new one. */
+  const [sourceRecipeId, setSourceRecipeId] = useState<string | null>(null);
+  /** The source project's attached recipes. More than one is normal (UX-907),
+   *  so the painter gets a second dropdown to choose between them. */
+  const [prefillRecipes, setPrefillRecipes] = useState<
+    ReadonlyArray<{ id: string; name: string; slots: RecipeSlot[]; notes: string | null }>
+  >([]);
+  const [pickingIndex, setPickingIndex] = useState<number | null>(null);
+  const [catalog, setCatalog] = useState<
+    ReadonlyArray<{ id: string; brand: string; name: string }>
+  >([]);
   const [candidates, setCandidates] = useState<ImageCandidate[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loadingImages, setLoadingImages] = useState(false);
@@ -119,6 +162,13 @@ export function ShareCardComposer({
     if (!open) return;
     setRatio("1:1");
     setNotes(initialNotes ?? "");
+    setTitle(recipeName ?? "");
+    setDraftSlots(slots);
+    setSaveToLibrary(true);
+    setSourceProjectId("");
+    setSourceRecipeId(null);
+    setPrefillRecipes([]);
+    setPickingIndex(null);
     setError(null);
     setSubmitted(false);
     setWentLive(false);
@@ -128,15 +178,58 @@ export function ShareCardComposer({
         : [],
     );
     setSelectedId(initialImageUrl ? "initial" : null);
+    // `slots` is a fresh array identity on most renders, so depending on it
+    // would re-run this reset mid-edit and wipe the painter's work. The
+    // props are read once per open, which is exactly the intent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, recipeName, initialNotes, initialImageUrl]);
+
+  // Compose mode needs the painter's projects (the source dropdown) and the
+  // paint catalog (to resolve a picked paint id to its brand/name for the
+  // card). Both are lazy and only in compose mode, so the recipe-side entry
+  // points stay exactly as cheap as they were.
+  useEffect(() => {
+    if (!open || !composable) return;
+    let alive = true;
+    if (projects === null) {
+      loadGalleryComposerProjects()
+        .then((rows) => {
+          if (alive) setProjects([...rows]);
+        })
+        .catch(() => {
+          if (alive) setProjects([]);
+        });
+    }
+    if (catalog.length === 0) {
+      loadKitCatalog()
+        .then((paints) => {
+          if (alive) {
+            setCatalog(paints.map((p) => ({ id: p.id, brand: p.brand, name: p.name })));
+          }
+        })
+        .catch(() => {
+          /* best-effort — a picked paint still carries its hex, so the card
+             renders; only the printed paint name would be missing. */
+        });
+    }
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, composable]);
+
+  /** Whose photos the composer offers. Compose mode follows the source
+   *  dropdown; the recipe-side entry points keep using the recipe's own
+   *  attached project. */
+  const photoProjectId = composable ? sourceProjectId || null : (projectId ?? null);
 
   // Pull the attached project's already-uploaded model photos as pickable
   // candidates (Phase 1 blob uploads) — additive to any initialImageUrl.
   useEffect(() => {
-    if (!open || !projectId) return;
+    if (!open || !photoProjectId) return;
     let alive = true;
     setLoadingImages(true);
-    loadProjectImages(projectId)
+    loadProjectImages(photoProjectId)
       .then((rows) => {
         if (!alive) return;
         setCandidates((prev) => {
@@ -159,7 +252,7 @@ export function ShareCardComposer({
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, projectId]);
+  }, [open, photoProjectId]);
 
   // Revoke every local object URL on unmount so we never leak blob: handles.
   useEffect(() => {
@@ -200,6 +293,100 @@ export function ShareCardComposer({
     });
   }
 
+  /* ── Compose-mode editing ────────────────────────────────────────────
+     Every painter-driven edit clears `sourceRecipeId`. A post that still
+     matches the recipe it was prefilled from should reuse that recipe
+     rather than mint a near-duplicate; the moment the painter changes the
+     title, the paints or the notes, it is a different thing and gets its
+     own row. Prefill itself uses the raw setters so it doesn't clear the
+     link it is establishing. */
+
+  function editTitle(next: string) {
+    setTitle(next);
+    setSourceRecipeId(null);
+  }
+
+  function editNotes(next: string) {
+    setNotes(next);
+    setSourceRecipeId(null);
+  }
+
+  function editSlots(next: RecipeSlot[]) {
+    setDraftSlots(next);
+    setSourceRecipeId(null);
+  }
+
+  function applyPrefill(recipe: {
+    id: string;
+    name: string;
+    slots: RecipeSlot[];
+    notes: string | null;
+  }) {
+    setDraftSlots(recipe.slots);
+    setNotes(recipe.notes ?? "");
+    setSourceRecipeId(recipe.id);
+  }
+
+  async function selectSourceProject(nextProjectId: string) {
+    setSourceProjectId(nextProjectId);
+    setSourceRecipeId(null);
+    setPrefillRecipes([]);
+    setError(null);
+    // Drop the previous project's photos so the picker never offers a model
+    // from a project the painter has moved off. Local file picks are theirs
+    // and survive.
+    setCandidates((prev) => {
+      const kept = prev.filter((c) => c.isLocal);
+      setSelectedId((sel) =>
+        kept.some((c) => c.id === sel) ? sel : (kept[0]?.id ?? null),
+      );
+      return kept;
+    });
+    if (!nextProjectId) return;
+
+    const res = await loadGalleryPostPrefill(nextProjectId);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setTitle(res.data.projectTitle);
+    setPrefillRecipes(res.data.recipes);
+    // Default to the most recently updated recipe (the query's order). A
+    // project with none prefills the title only — that is the photo-only
+    // post, not a failure.
+    const first = res.data.recipes[0];
+    if (first) applyPrefill(first);
+    else {
+      setDraftSlots([]);
+      setNotes("");
+    }
+  }
+
+  /** A picked paint becomes a card square. Brand/name come from the catalog
+   *  so the card prints the real paint, not a bare hex — a raw wheel pick
+   *  (no paintId) still renders, labelled by its hex. */
+  function applyPaintSelection(sel: ColorPickerSelection) {
+    const meta = sel.paintId ? catalog.find((p) => p.id === sel.paintId) : null;
+    const next: RecipeSlot = {
+      paintId: sel.paintId ?? "",
+      swatch: sel.hex,
+      brand: meta?.brand ?? "Custom",
+      name: meta?.name ?? sel.hex,
+      layer: "basecoat",
+    };
+    const at = pickingIndex;
+    editSlots(
+      at != null && at < draftSlots.length
+        ? draftSlots.map((s, i) => (i === at ? next : s))
+        : [...draftSlots, next],
+    );
+    setPickingIndex(null);
+  }
+
+  function removeSlot(index: number) {
+    editSlots(draftSlots.filter((_, i) => i !== index));
+  }
+
   const selectedImage = candidates.find((c) => c.id === selectedId) ?? null;
   const trimmedNotes = notes.trim().slice(0, NOTES_MAX_CHARS);
 
@@ -208,8 +395,8 @@ export function ShareCardComposer({
   // off the card entirely (a titleless card beats one shouting "UNTITLED
   // RECIPE", on the DOWNLOAD path as much as the gallery one) and refuse the
   // outward-facing action until it has a real name.
-  const named = isNamedRecipe(recipeName);
-  const cardName = named ? recipeName : null;
+  const named = isNamedRecipe(title);
+  const cardName = named ? title : null;
 
   const height = cardHeightFor(ratio, CARD_DISPLAY_WIDTH);
   // Inner frame sits inset from the card edge; the swatch grid gets whatever
@@ -218,8 +405,8 @@ export function ShareCardComposer({
   const CONTENT_PADDING = 20;
   const swatchAreaWidth = CARD_DISPLAY_WIDTH - (FRAME_INSET + CONTENT_PADDING) * 2;
   const grid = useMemo(
-    () => computeSwatchGrid({ ratio, slotCount: slots.length, areaWidthPx: swatchAreaWidth }),
-    [ratio, slots.length, swatchAreaWidth],
+    () => computeSwatchGrid({ ratio, slotCount: draftSlots.length, areaWidthPx: swatchAreaWidth }),
+    [ratio, draftSlots.length, swatchAreaWidth],
   );
 
   /** Raster the live preview node to a PNG data URL. Shared by DOWNLOAD and
@@ -268,7 +455,9 @@ export function ShareCardComposer({
   }, [cardName, recipeId, renderCardPng]);
 
   const handleSubmit = useCallback(async () => {
-    if (!recipeId) return;
+    // Compose mode has no recipe id up front — it mints one below. Every
+    // other entry point must already have one.
+    if (!recipeId && !composable) return;
     // R4-5 — refuse, and SAY SO, rather than going quiet. The button stays
     // focusable (`aria-disabled`, not `disabled`) precisely so a screen-reader
     // user tabbing the panel reaches it and hears the reason: a `disabled`
@@ -279,22 +468,46 @@ export function ShareCardComposer({
     }
     setSubmitting(true);
     setError(null);
-    trackClient(AnalyticsEvent.GallerySubmitStarted, { recipeId });
     try {
+      // Resolve the recipe this post publishes as. Recipe entry points pass
+      // one in. Compose mode reuses the prefilled recipe while its content
+      // is untouched, and otherwise mints a fresh one carrying the painter's
+      // "save this to my recipe list" answer.
+      let postRecipeId = recipeId ?? sourceRecipeId;
+      if (!postRecipeId) {
+        const created = await createGalleryPostRecipe({
+          title: title.trim(),
+          slots: draftSlots.slice(0, 12).map((s) => ({
+            paintId: s.paintId || null,
+            hex: s.swatch,
+            layer: s.layer,
+          })),
+          notes: notes.trim() || null,
+          saveToLibrary,
+        });
+        if (!created.ok) {
+          setError(created.error);
+          return;
+        }
+        postRecipeId = created.data.recipeId;
+        // Adopt it, so a retry after a failed upload doesn't mint a second.
+        setSourceRecipeId(postRecipeId);
+      }
+      trackClient(AnalyticsEvent.GallerySubmitStarted, { recipeId: postRecipeId });
       const dataUrl = await renderCardPng();
       if (!dataUrl) return;
       const pngBlob = await (await fetch(dataUrl)).blob();
       const uploaded = await upload(
-        `gallery-cards/${recipeId}/${Date.now()}.png`,
+        `gallery-cards/${postRecipeId}/${Date.now()}.png`,
         pngBlob,
         {
           access: "public",
           handleUploadUrl: "/api/gallery-submissions/upload",
-          clientPayload: JSON.stringify({ recipeId }),
+          clientPayload: JSON.stringify({ recipeId: postRecipeId }),
         },
       );
       const res = await submitRecipeToGallery({
-        recipeId,
+        recipeId: postRecipeId,
         imageUrl: uploaded.url,
         imagePathname: uploaded.pathname,
         ratio,
@@ -304,7 +517,7 @@ export function ShareCardComposer({
         return;
       }
       trackClient(AnalyticsEvent.GallerySubmitCompleted, {
-        recipeId,
+        recipeId: postRecipeId,
         status: res.data.status,
       });
       setWentLive(res.data.status === "approved");
@@ -318,9 +531,20 @@ export function ShareCardComposer({
     } finally {
       setSubmitting(false);
     }
-  }, [named, ratio, recipeId, renderCardPng]);
+  }, [
+    composable,
+    draftSlots,
+    named,
+    notes,
+    ratio,
+    recipeId,
+    renderCardPng,
+    saveToLibrary,
+    sourceRecipeId,
+    title,
+  ]);
 
-  const hasContent = slots.length > 0 || trimmedNotes.length > 0 || selectedImage != null;
+  const hasContent = draftSlots.length > 0 || trimmedNotes.length > 0 || selectedImage != null;
 
   return (
     <ModalDialog
@@ -369,7 +593,13 @@ export function ShareCardComposer({
               )}
 
               {selectedImage && (
-                <div className="min-h-0 flex-1 overflow-hidden border border-cyan/20">
+                // `object-contain`, not cover. The photo window is whatever
+                // vertical space the title, swatch grid and notes leave over,
+                // so a cover fit centre-cropped a portrait mini's head and
+                // base off — and because the card is rastered here, that crop
+                // was baked into the PNG and into the gallery tile forever.
+                // Contain shows the whole model against the card ground.
+                <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden border border-cyan/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={
@@ -379,12 +609,12 @@ export function ShareCardComposer({
                     }
                     crossOrigin="anonymous"
                     alt=""
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                 </div>
               )}
 
-              {slots.length > 0 && (
+              {draftSlots.length > 0 && (
                 <div
                   className="grid shrink-0"
                   style={{
@@ -393,7 +623,7 @@ export function ShareCardComposer({
                     justifyContent: "center",
                   }}
                 >
-                  {slots.slice(0, 12).map((slot, i) => (
+                  {draftSlots.slice(0, 12).map((slot, i) => (
                     <div
                       key={i}
                       className="relative overflow-hidden border border-fg/20"
@@ -420,7 +650,7 @@ export function ShareCardComposer({
                   ))}
                 </div>
               )}
-              {slots.length > 0 && !grid.nameInsideSwatch && (
+              {draftSlots.length > 0 && !grid.nameInsideSwatch && (
                 <div
                   className="grid shrink-0 -mt-1"
                   style={{
@@ -429,7 +659,7 @@ export function ShareCardComposer({
                     justifyContent: "center",
                   }}
                 >
-                  {slots.slice(0, 12).map((slot, i) => (
+                  {draftSlots.slice(0, 12).map((slot, i) => (
                     <span
                       key={i}
                       className="line-clamp-2 text-center font-mono text-[7px] leading-tight text-fg-dim"
@@ -482,6 +712,104 @@ export function ShareCardComposer({
 
         {/* ── Controls ──────────────────────────────────────────────────── */}
         <div className="flex min-w-0 flex-1 flex-col gap-5">
+          {composable && (
+            <>
+              {/* Painters think in projects, not recipes — "post my
+                  Ultramarines", not "post recipe #7". Picking one fills the
+                  title, the paints, the notes and the photo shelf in one go;
+                  everything stays editable afterwards, and skipping the
+                  dropdown entirely is the blank manual post. */}
+              <div className="flex flex-col gap-2">
+                <span className="label-osd text-fg-dim">Start from a project</span>
+                <Listbox
+                  value={sourceProjectId}
+                  onChange={selectSourceProject}
+                  ariaLabel="Start from a project"
+                  placeholder={
+                    projects === null ? "Loading your projects…" : "None — start blank"
+                  }
+                  size="md"
+                  options={[
+                    { value: "", label: "None — start blank" },
+                    ...(projects ?? []).map((p) => ({ value: p.id, label: p.title })),
+                  ]}
+                />
+                {prefillRecipes.length > 1 && (
+                  <Listbox
+                    value={sourceRecipeId ?? ""}
+                    onChange={(id) => {
+                      const found = prefillRecipes.find((r) => r.id === id);
+                      if (found) applyPrefill(found);
+                    }}
+                    ariaLabel="Which recipe to build the card from"
+                    placeholder="Pick a recipe"
+                    size="sm"
+                    options={prefillRecipes.map((r) => ({
+                      value: r.id,
+                      label: r.name,
+                    }))}
+                  />
+                )}
+              </div>
+
+              <Input
+                label="Title"
+                name="gallery-post-title"
+                value={title}
+                onChange={(e) => editTitle(e.target.value)}
+                placeholder="What did you paint?"
+                maxLength={120}
+              />
+
+              {/* The card's colour squares. Each one opens the same Pick &
+                  Paint panel the recipe editor uses, so a posted colour is a
+                  real catalog paint with a name on the card — not a bare hex
+                  nobody can buy. */}
+              <div className="flex flex-col gap-2">
+                <span className="label-osd text-fg-dim">
+                  Paints {draftSlots.length > 0 ? `(${draftSlots.length})` : ""}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {draftSlots.map((slot, i) => (
+                    <div key={`${slot.paintId}-${i}`} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setPickingIndex(i)}
+                        aria-label={`Change ${slot.name}`}
+                        className="h-14 w-14 border border-border transition-colors hover:border-cyan"
+                        style={{ backgroundColor: slot.swatch }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSlot(i)}
+                        aria-label={`Remove ${slot.name}`}
+                        className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-border bg-bg text-fg-dim hover:border-red hover:text-red"
+                      >
+                        <X size={10} aria-hidden />
+                      </button>
+                    </div>
+                  ))}
+                  {draftSlots.length < 12 && (
+                    <button
+                      type="button"
+                      onClick={() => setPickingIndex(draftSlots.length)}
+                      className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 border border-dashed border-border text-fg-dim transition-colors hover:border-cyan/50 hover:text-cyan-lite"
+                    >
+                      <Plus size={16} aria-hidden />
+                      <span className="font-mono text-[8px] uppercase">Paint</span>
+                    </button>
+                  )}
+                </div>
+                {draftSlots.length === 0 && (
+                  <p className="font-mono text-[11px] text-fg-dim">
+                    ▸ Optional — a photo-only card posts fine. Adding the
+                    paints is what lets other painters clone it.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+
           <div className="flex flex-col gap-2">
             <span className="label-osd text-fg-dim">Ratio</span>
             <SegmentedToggle
@@ -543,11 +871,13 @@ export function ShareCardComposer({
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="label-osd text-fg-dim">Notes</span>
+            <span className="label-osd text-fg-dim">
+              {composable ? "Technique" : "Notes"}
+            </span>
             <textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              aria-label="Card notes"
+              onChange={(e) => editNotes(e.target.value)}
+              aria-label={composable ? "Technique notes" : "Card notes"}
               rows={4}
               placeholder="Technique notes for the card…"
               className="w-full resize-y rounded-[6px] border border-border bg-surface px-3 py-2 font-mono text-[13px] text-fg placeholder:text-fg-muted focus:border-cyan focus:outline-none"
@@ -590,7 +920,7 @@ export function ShareCardComposer({
               </p>
             </div>
 
-            {recipeId && (
+            {(recipeId || composable) && (
               <div className="flex flex-1 flex-col gap-1.5">
                 <Button
                   variant="primary"
@@ -623,9 +953,33 @@ export function ShareCardComposer({
               </div>
             )}
           </div>
+          {/* Ross's call: ask, don't assume. A painter who typed a title and
+              picked six paints has built something worth keeping, so the box
+              starts ticked — but someone posting a snapshot of a finished
+              mini shouldn't silently accrue a recipe they never wanted, and
+              unticking is one click. Reversible afterwards from the
+              gallery's "Your cards" strip, so it is never a one-way door.
+              Only shown when this post is actually minting a new recipe. */}
+          {composable && !recipeId && !sourceRecipeId && (
+            <label className="flex cursor-pointer items-start gap-2">
+              <Checkbox
+                checked={saveToLibrary}
+                onChange={setSaveToLibrary}
+                ariaLabel="Save this to my recipe list"
+                className="mt-0.5"
+              />
+              <span className="font-mono text-[11px] text-fg-dim">
+                Save this to my recipe list.{" "}
+                <span className="text-fg-muted">
+                  Untick to post it to the gallery only.
+                </span>
+              </span>
+            </label>
+          )}
+
           {/* R4-5 — "cards go live right away" is only true once the recipe
               has a name, so it stays off screen until it is. */}
-          {recipeId && named && !submitted && (
+          {(recipeId || composable) && named && !submitted && (
             <p className="font-mono text-[11px] text-fg-dim">
               ▸ Sharing is open to everyone. Cards go live on{" "}
               <span className="text-cyan-lite">/gallery</span> right away once
@@ -635,6 +989,28 @@ export function ShareCardComposer({
           )}
         </div>
       </div>
+
+      {/* The same Pick & Paint panel the recipe editor opens on a slot —
+          `paintsOnly`, so a card square is always a real catalog paint. */}
+      {composable && (
+        <RecipePaintPicker
+          open={pickingIndex != null}
+          onClose={() => setPickingIndex(null)}
+          onSelect={applyPaintSelection}
+          contextLabel="Card paint"
+          mode={
+            pickingIndex != null && pickingIndex < draftSlots.length
+              ? "edit-slot"
+              : "add-slot"
+          }
+          initialHex={
+            pickingIndex != null ? (draftSlots[pickingIndex]?.swatch ?? null) : null
+          }
+          initialPaintId={
+            pickingIndex != null ? (draftSlots[pickingIndex]?.paintId || null) : null
+          }
+        />
+      )}
     </ModalDialog>
   );
 }
