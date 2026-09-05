@@ -1,16 +1,17 @@
 # Vercel comments — Ross's decision queue
 
-**Snapshot:** 2026-08-22 (cron pass, 49th firing) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** mini-mainframe.com (Vercel alias)
-**6 unresolved threads · 2 blocked on infra · 3 paint-picker layout (1 answered → held for hands-on build) · 1 duplicate awaiting your call.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
+**Snapshot:** 2026-09-05 (cron pass) · **Project:** mini-manager (`prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`) · **Prod:** mini-mainframe.com (Vercel alias)
+**7 unresolved threads · 2 blocked on infra · 1 answered → held for hands-on build · 2 need a design/sizing call · 1 duplicate awaiting your call · 1 new feature — question asked.** This is the single durable home for the "blocked / needs-Ross" list — the `vercel-comment-loop` routine regenerates it each run. Thread links: `https://vercel.com/rkhilarysignups-8609s-projects/mini-manager/c/<id>`.
 
-> **This run (2026-08-22, cron pass — 49th firing): 0 safe auto-fixes shipped — state unchanged.** Re-listed all open threads (teamId + projectId): the same 6 remain, each already carrying a prior bot reply (last message on every thread is the bot's — no new user input), all skipped as handled; no new un-handled thread arrived. Production has advanced: the current live **production** deployment is commit `303abac` (`docs(vercel-loop): 48th-firing heartbeat … (#243)`, target `production`, state `READY`, `ref=main`, aliased to `mini-mainframe.com` / `www.mini-mainframe.com`) — the pipeline is caught up (advanced the recorded prod pointer here from `9b01a7d` to `303abac`; the lag is inherent, as each heartbeat doc-merge itself becomes the next prod deploy). No app behaviour changed this pass. The open work is unchanged: infra (a missing prod `ANTHROPIC_API_KEY`, no repo change fixes it) or shared-component (`ColorPicker`) flex-height layout tuning that must not be shipped blind from an unattended pass.
-> - **🔑 Two AI-recipe reports are one root cause:** the `ANTHROPIC_API_KEY` env var is missing from the **Production** environment. The code path (`src/lib/ai/recipeAi.ts` → `/api/recipe/ai`) is correct; it only needs the key set in Vercel Project Settings → Environment Variables (Production), then a redeploy.
-> - **🎨 Three paint-picker threads are the same UI area** (Pick & Paint modal + Stacking picker). `YtOKfPcOmKxq` is now **answered "option A"** but is a flex-height refactor of the *shared* `ColorPicker` (LIBRARY tab + Wheel tab + Stacking picker) — queued for a hands-on build + visual check, not a blind automated edit. The other two still need your call.
-> - **🌀 New duplicate:** `rcyKkEzZDs-k` (/recipes/new) mirrors the `YtOKfPcOmKxq` LIBRARY-tab question — replied asking whether to track them together; left open.
+> **This run (2026-09-05, cron pass): 0 safe auto-fixes shipped — no un-handled open threads.** Re-listed all open threads (teamId `team_FqJjw2ukehBMlFAK8VePnElM` + projectId `prj_YyXdoYrGrIiJxECmHx2AmYKWTEZ3`): 7 open, and the last message on **every** one is already a prior bot reply (a clarification question or a "needs a human" note) — no new user input arrived on any thread, so all were skipped as handled. Nothing was clear-and-bounded-and-unhandled to auto-fix.
+> - **Production has advanced** since the last recorded snapshot (was `303abac`): the current live **production** deployment is commit `79dcd5e` (`fix(brand): the app icons still said "Mini-Manager" (#248)`, target `production`, state `READY`, `ref=main`), aliased to `mini-mainframe.com` / `www.mini-mainframe.com`. Real feature/fix PRs (#245–#248) landed between snapshots.
+> - **New thread since last snapshot:** `37V2RAr4qw2f` (manual-entry share-card details) — a NEEDS-CLARIFICATION feature; the clarifying question is already posted on the thread, left open pending your answer.
+> - **🔑 Two AI-recipe reports are one root cause:** the `ANTHROPIC_API_KEY` env var is missing from the **Production** environment. The code path (`src/lib/ai/recipeAi.ts` → `/api/recipe/ai`) is correct; it only needs the key set in Vercel Project Settings → Environment Variables (Production), then a redeploy. No repo change fixes it.
+> - **🎨 Three paint-picker threads are the same UI area** (Pick & Paint modal + Stacking picker). `YtOKfPcOmKxq` is **answered "option A"** but is a flex-height refactor of the *shared* `ColorPicker` (LIBRARY tab + Wheel tab + Stacking picker) — queued for a hands-on build + visual check, not a blind automated edit. The other two still need your call. `rcyKkEzZDs-k` (/recipes/new) duplicates the `YtOKfPcOmKxq` question.
 
 ---
 
-## 🔴 NEEDS YOUR CALL (6)
+## 🔴 NEEDS YOUR CALL (7)
 
 ### Blocked on infra — you (2)
 
@@ -28,9 +29,13 @@ _Both are the paint-picker panels; each has a specific question posted on its th
 - **`C3QMQBdYltw7`** (/recipes · Pick & Paint · WHEEL tab) — no matching-paints list on the WHEEL tab (it only exists on LIBRARY tab + Stacking picker). **Q:** add a live "paints matching this colour" list + company filter under the wheel, mirroring the Stacking picker?
 - **`_aI8GvJu7Tc0`** (/recipes · Stacking paint picker) — FILTER section squashed at the bottom. **Q:** shrink the colour-wheel section to give the filter more height in place, or keep the wheel and let the panel scroll further to reach the full filter list?
 
-### New duplicate — awaiting your call (1)
+### Duplicate — awaiting your call (1)
 
 - **`rcyKkEzZDs-k`** (/recipes/new) — a single message echoing the `YtOKfPcOmKxq` LIBRARY-tab layout question, on the `/recipes/new` route. Replied asking whether anything about `/recipes/new` differs or if it can be tracked together with `YtOKfPcOmKxq`. Left open.
+
+### New feature — clarifying question asked (1)
+
+- **`37V2RAr4qw2f`** (/ · Share as card composer) — "let users manually enter all the details needed to share an image of their model; auto-populate from their projects but also allow typing name and details." Today the Share card auto-fills from the picked recipe/project (photo + notes are already free-text editable; the title is locked to the recipe's saved name, and a card whose recipe has no saved name is blocked from Post to gallery — only Download works). **Replied asking:** which fields should become manually editable — just an editable title/name, or the title plus extra free-text detail fields — and whether a manually-titled card should be allowed to Post to gallery. Left open pending your answer. NEEDS CLARIFICATION (feature, not a bounded auto-fix).
 
 ---
 
