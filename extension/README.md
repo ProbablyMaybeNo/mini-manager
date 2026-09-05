@@ -63,7 +63,7 @@ is added.
 | `popup.html` / `popup.js` | The popup: token gate → `/preview` card → Owned/Wishlist toggle → `/add`. |
 | `options.html` / `options.js` | Set the token + choose the prod/local API base. |
 | `config.js` | Shared storage + `fetch` helpers. |
-| `icons/` | 16/48/128 placeholder PNGs. |
+| `icons/` | 16/48/128 PNGs — black `MM` on a `--color-cyan` (#00f5ff) disc, set in IBM Plex Mono 600. Regenerate with `scripts/gen-extension-icons.mjs`. |
 
 ## API it talks to
 

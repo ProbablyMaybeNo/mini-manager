@@ -92,14 +92,18 @@ collection as Owned or Wishlist.
 ## Assets to attach in the dashboard
 
 - **Store icon:** `extension/icons/icon128.png` (128×128) — already in the package.
+  Black `MM` on the brand cyan disc. The detailed CRT mark is deliberately NOT
+  the icon: its hairlines collapse into an unreadable smudge at the 16px
+  toolbar size, which is where users actually meet it.
 - **Screenshots (required, at least 1; 1280×800 or 640×400 PNG/JPEG):**
   1. The extension popup open on an Element Games product page (Owned/Wishlist
      toggle + Add button visible).
   2. The Mini Mainframe **Collection** page showing added items.
   3. The **Settings → Browser extension** token screen (where users get set up).
-- **Small promo tile (optional, 440×280):** the Mini Mainframe wordmark on the
-  dark brand background (blue accent — the palette moved off cyan, see
-  docs/DESIGN_LANGUAGE.md).
+- **Small promo tile (optional, 440×280):** the detailed CRT mark on black —
+  this is where it belongs, at a size that can carry it. The untitled artwork
+  is in the repo at `public/brand/mini-mainframe-mark.png`; Ross also has the
+  variant with "Mini-Mainframe" on the screen, which is the better tile.
 
 ---
 
