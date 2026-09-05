@@ -6,19 +6,8 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { palettes, paletteSources, type Palette } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
-import { isProUser } from "@/lib/billing/enforce";
 import type { ActionResult } from "@/lib/actions/projects";
 import { validatePaletteColors } from "@/lib/palettes/cascade";
-
-/**
- * Gating-layer — APPLYING a tool result (saving a palette) is Pro-only;
- * free users can still USE the colour tools, just not persist the output.
- * Mirrors the free-tier limit shape so the UI can render an inline
- * "Upgrade →". Inert while BILLING_ENFORCED is false (isProUser returns
- * true for everyone until Stripe is live).
- */
-const PRO_FEATURE_ERROR =
-  "Saving palettes unlocks when you sponsor the Mainframe.";
 
 const paletteIdSchema = z.string().min(1).max(64);
 
@@ -72,11 +61,6 @@ export async function createPalette(
   }
   const d = parsed.data;
   const userId = await currentUserId();
-
-  // Gating-layer — Save Palette is a Pro-only "apply tool result" action.
-  if (!(await isProUser(userId))) {
-    return { ok: false, error: PRO_FEATURE_ERROR, upgradeUrl: "/pricing" };
-  }
 
   const validated = validatePaletteColors(d.colorHexes, d.paintIds ?? null);
   if (!validated.ok) {

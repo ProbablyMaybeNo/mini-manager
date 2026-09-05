@@ -17,6 +17,10 @@ interface ToolCard {
    *  bespoke SVG phosphor thumb when set. Shown object-contain on the black
    *  tile, so a black-background asset blends in seamlessly. */
   image?: string;
+  /** True for tools that spend AI tokens per use, and so stay behind the
+   *  sponsor gate. Only the Paint Scanner qualifies — the four colour tools
+   *  are client-side maths and cost nothing to run. */
+  requiresPro?: boolean;
 }
 
 const TOOLS: ToolCard[] = [
@@ -29,6 +33,7 @@ const TOOLS: ToolCard[] = [
     title: "Paint Scanner",
     blurb: "Snap a photo of your paints — we read the labels and add them to your collection.",
     image: "/tools/scan.png",
+    requiresPro: true,
   },
 ];
 
@@ -39,18 +44,15 @@ export function ToolsHubView() {
     <div className="flex h-full flex-col gap-4 p-3 md:gap-6 md:p-6">
       <PageHeader
         title="TOOLS"
-        tagline={
-          isSubscriber
-            ? "// colour utilities — turn an idea, photo, or colour into named, buyable paints"
-            : "// colour utilities — sponsor to unlock the full toolset"
-        }
+        tagline="// colour utilities — turn an idea, photo, or colour into named, buyable paints"
       />
-      {/* On a phone the paywall explanation lived ONLY in PageHeader's tagline,
-          which is `roomy:`-gated and therefore zero-size on every phone
-          viewport — so a free user could scroll all 1,645px of this hub and see
-          nothing but a padlock emoji five times, with the price nowhere on the
-          page (paywall audit MUX-P08). This says it once, outside the tagline
-          slot, without touching the settled `roomy:` rule. */}
+      {/* Names the ONE tool that costs money, not the whole hub. The banner
+          used to say "these tools unlock when you sponsor" while locking all
+          five; four are free now, so saying that would be false — and a lock
+          the user can't explain is worse than no lock at all. The phone
+          reasoning from paywall audit MUX-P08 still holds: PageHeader's
+          tagline is `roomy:`-gated and therefore invisible on a phone, so the
+          price has to live outside the tagline slot. */}
       {!isSubscriber && (
         <Panel accent="cyan" className="p-3">
           <button
@@ -58,7 +60,10 @@ export function ToolsHubView() {
             onClick={() => setGateOpen(true)}
             className="flex min-h-12 w-full items-center justify-between gap-2 text-left font-body text-body text-cyan-lite transition-colors hover:text-glow-cyan"
           >
-            <span>🔒 These tools unlock when you sponsor the Mainframe · $3.99/mo</span>
+            <span>
+              🔒 Every tool here is free except the Paint Scanner, which reads
+              your photos with AI · $3.99/mo
+            </span>
             <span aria-hidden>→</span>
           </button>
         </Panel>
@@ -86,7 +91,7 @@ export function ToolsHubView() {
                   ) : Thumb ? (
                     <Thumb />
                   ) : null}
-                  {!isSubscriber && (
+                  {t.requiresPro && !isSubscriber && (
                     <span
                       aria-hidden
                       className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-cyan/60 bg-black/70 text-body text-cyan-lite"
@@ -103,7 +108,9 @@ export function ToolsHubView() {
                 <div>
                   <h2 className="sr-only">
                     {t.title}
-                    {!isSubscriber && <span> (sponsor access only)</span>}
+                    {t.requiresPro && !isSubscriber && (
+                      <span> (sponsor access only)</span>
+                    )}
                   </h2>
                   <p className="font-body text-body text-fg">{t.blurb}</p>
                 </div>

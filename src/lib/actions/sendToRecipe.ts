@@ -6,30 +6,18 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { recipes, recipeSlots, type Recipe } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
-import { isProUser } from "@/lib/billing/enforce";
 import { trackServer } from "@/lib/analytics/track.server";
 import { AnalyticsEvent } from "@/lib/analytics/events";
 import type { ActionResult } from "@/lib/actions/projects";
 import { validatePaletteColors } from "@/lib/palettes/cascade";
 
 /**
- * Gating-layer — `AssignToRecipeDialog` (this action's only caller) is
- * shared by two surfaces that must NOT share a gate:
- *
- *   - "toolHandoff" — a colour tool's per-swatch ASSIGN / send-to-recipe
- *     (AssignPaintMenu, and the Wheel/Dropper/Stacking "Create/Assign
- *     recipe" buttons). This is the subscriber-only "send-from-tools
- *     hand-off" named in docs/SUBSCRIPTION_PAYWALL.md — gated.
- *   - "library" — the Library paint panel's plain "Add to Recipe" action.
- *     Adding paints to a recipe is base-app functionality and must stay
- *     free even once BILLING_ENFORCED is on.
- *
- * Defaults to "toolHandoff" (the gated, higher-friction option) so any
- * caller that forgets to pass `surface` fails closed rather than silently
- * opening a free bypass.
+ * Sending a tool's palette to a recipe is a plain DB write with no marginal
+ * cost, so it is free for everyone (Ross, 2026-09-05). It used to be split by
+ * a `surface` discriminator — "toolHandoff" gated, "library" free — which
+ * existed only to drive that gate; with the gate gone the discriminator had no
+ * remaining reader and came out with it.
  */
-const PRO_FEATURE_ERROR =
-  "Sending palettes to a recipe unlocks when you sponsor the Mainframe.";
 
 /* ============================================================
    listRecipesForSendTo — lightweight read action surfaced to the
@@ -81,9 +69,6 @@ const sendSchema = z
     targetRecipeId: z.string().min(1).max(64).optional(),
     /** Create-new-recipe target: ignored if targetRecipeId is set. */
     newRecipeName: z.string().trim().min(1).max(120).optional(),
-    /** Which surface is calling — see the gating-layer doc comment above.
-     *  Defaults to the gated "toolHandoff" surface. */
-    surface: z.enum(["toolHandoff", "library"]).default("toolHandoff"),
   })
   .refine(
     (d) => Boolean(d.targetRecipeId) !== Boolean(d.newRecipeName),
@@ -115,12 +100,6 @@ export async function sendPaletteToRecipe(
   }
   const d = parsed.data;
   const userId = await currentUserId();
-
-  // Gating-layer — gated for a tool hand-off, free for the Library's plain
-  // "Add to Recipe" (see the doc comment above `PRO_FEATURE_ERROR`).
-  if (d.surface === "toolHandoff" && !(await isProUser(userId))) {
-    return { ok: false, error: PRO_FEATURE_ERROR, upgradeUrl: "/pricing" };
-  }
 
   // Run the swatch hex array through the palette validator so we get the
   // same #RRGGBB normalisation + length checks the save-palette flow uses.

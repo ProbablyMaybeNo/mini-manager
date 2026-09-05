@@ -11,8 +11,6 @@ import type { ColorPickerSelection } from "@/lib/colorPicker/types";
 import { ColorPicker } from "@/components/tools/ColorPicker";
 import { EyedropperTool } from "@/components/tools/EyedropperTool";
 import { LayeringTool } from "@/components/tools/LayeringTool";
-import { SubscribeGateDialog } from "@/components/billing/SubscribeGateDialog";
-import { useSubscriber } from "@/lib/billing/SubscriberContext";
 
 type Tab = "library" | "match" | "dropper" | "layering";
 
@@ -25,7 +23,6 @@ type Tab = "library" | "match" | "dropper" | "layering";
  *  The colour wheel is still subscriber-only, but it is no longer a tab to
  *  gate — it renders inside Library for subscribers only. See the Library
  *  branch below. */
-const GATED_TABS: ReadonlySet<Tab> = new Set(["match", "dropper", "layering"]);
 
 /** Context handed to a caller-supplied Match tab so this module never has to
  *  import {@link ColourMatchTool} itself — keeping `tools/ ↔ recipe/` acyclic. */
@@ -49,10 +46,10 @@ export type PaintPickerMatchContext = {
  * funnelling every tool's "use this paint/colour" action through one
  * {@link onSelect}.
  *
- * Subscription paywall (docs/SUBSCRIPTION_PAYWALL.md) — "Library" is the only
- * free tab (manually search + click a real paint); every tool tab (Match,
- * Dropper, Layering) is subscriber-gated per `GATED_TABS` below, and the wheel
- * is gated inside the Library tab on the same rule.
+ * Every tab is free (Ross, 2026-09-05). Match, Dropper and Layering used to be
+ * subscriber-only; all three are client-side colour maths with no marginal
+ * cost, so the paywall moved off them and onto the three features that
+ * actually spend money per use — see docs/SUBSCRIPTION_PAYWALL.md.
  *
  * The optional ranked-Match tab is injected by the caller via {@link renderMatchTab}
  * (recipes wire {@link ColourMatchTool} there); callers that don't need it — e.g.
@@ -111,8 +108,6 @@ export function PaintPickerPanel({
   const [catalogPaints, setCatalogPaints] = useState<ReadonlyArray<CatalogPaint>>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("library");
-  const isSubscriber = useSubscriber();
-  const [gateOpen, setGateOpen] = useState(false);
   // The colour the whole panel is working on. Seeded from the slot and then
   // driven by the Library tab's wheel, so switching to Match ranks against the
   // colour the painter was just looking at instead of a hardcoded blue.
@@ -134,10 +129,6 @@ export function PaintPickerPanel({
    *  SUBSCRIPTION_PAYWALL.md); a non-subscriber gets the gate dialog
    *  instead of the tab switching. */
   function selectTab(key: Tab) {
-    if (GATED_TABS.has(key) && !isSubscriber) {
-      setGateOpen(true);
-      return;
-    }
     setTab(key);
   }
 
@@ -228,19 +219,12 @@ export function PaintPickerPanel({
         <div role="tablist" aria-label="Paint picker tools" className="flex flex-wrap gap-5 border-b border-border">
           {tabs.map((t) => {
             const active = t.key === tab;
-            const locked = GATED_TABS.has(t.key) && !isSubscriber;
             return (
-              // A locked tab used to signal its state ONLY with an aria-hidden
-              // 🔒, so a screen reader announced a plain "Wheel, tab, 2 of 5"
-              // and the user got a paywall instead of a tool (paywall audit
-              // MUX-P12). The Tools hub already does this properly one component
-              // away. min-h-11 also lifts these off the 30px they measured.
               <button
                 key={t.key}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                aria-label={locked ? `${t.label} — sponsor access only` : undefined}
                 className={cn(
                   "-mb-px inline-flex min-h-11 items-center border-b-2 pb-2 font-mono text-body font-bold uppercase tracking-wide transition-colors duration-150 focus:outline-none focus-visible:text-cyan-lite",
                   active
@@ -250,7 +234,6 @@ export function PaintPickerPanel({
                 onClick={() => selectTab(t.key)}
               >
                 {t.label}
-                {locked && <span aria-hidden> 🔒</span>}
               </button>
             );
           })}
@@ -267,9 +250,6 @@ export function PaintPickerPanel({
           // Re-key on the seed so re-opening on a different slot resets the
           // session instead of bleeding the prior one.
           //
-          // The wheel stays subscriber-only — it is gated here rather than by
-          // GATED_TABS, so a non-subscriber gets exactly today's free surface
-          // (library search, no wheel) and a subscriber gets both stacked.
           <ColorPicker
             key={toolSeed ? `tool:${toolSeed.n}` : initialHex ?? initialPaintId ?? "no-initial"}
             paints={catalogPaints}
@@ -283,7 +263,7 @@ export function PaintPickerPanel({
             }
             contextLabel={contextLabel}
             mode={mode}
-            showWheel={isSubscriber}
+            showWheel
             showEyedropper={false}
             paintsOnly={paintsOnly}
             onSelect={handleSelect}
@@ -292,10 +272,9 @@ export function PaintPickerPanel({
         )}
 
         {tab === "match" &&
-          isSubscriber &&
           renderMatchTab?.({ paints, brandOptions, assignPaint, targetHex })}
 
-        {tab === "dropper" && isSubscriber && (
+        {tab === "dropper" && (
           <EyedropperTool
             onSavePalette={(hexes) => {
               if (hexes[0]) applyToolColour(hexes[0]);
@@ -303,7 +282,7 @@ export function PaintPickerPanel({
           />
         )}
 
-        {tab === "layering" && isSubscriber && (
+        {tab === "layering" && (
           <LayeringTool
             onSavePalette={(hexes) => {
               if (hexes[0]) applyToolColour(hexes[0]);
@@ -311,7 +290,6 @@ export function PaintPickerPanel({
           />
         )}
       </div>
-      <SubscribeGateDialog open={gateOpen} onClose={() => setGateOpen(false)} />
     </SlideOutPanel>
   );
 }

@@ -46,6 +46,7 @@ export default function PaintScannerPage() {
 
   return (
     <ToolShell
+      requiresPro
       title="PAINT SCANNER"
       blurb="Snap a photo of your paint pots and we'll read the labels, match them to the 7,000-paint library, and add them to your collection. Confirm the matches before anything is saved. Up to 20 scans a day."
     >

@@ -13,11 +13,17 @@ const BEACON_HOBBIES_URL = "https://beaconhobbies.com";
 
 /** What sponsoring unlocks — mirrors the gated set in
  *  docs/SUBSCRIPTION_PAYWALL.md exactly. */
+/**
+ * What sponsoring actually buys. Ross, 2026-09-05: this list used to cover
+ * most of the app; it is now exactly the three features that spend money on
+ * every use. Everything built from pure colour maths — the wheel, match,
+ * dropper, stacking, the recipe creator's tool tabs, the library panel's
+ * colour science — is free, because it costs nothing to run and charging for
+ * it was charging for arithmetic.
+ */
 export const UNLOCKS = [
-  "All the tools — Colour Wheel, Match, Dropper, Stacking, and the Paint Scanner",
   "AI recipe generation — describe a scheme, get a catalog-grounded recipe back",
-  "The recipe creator's full toolset — colour matching, layering/glaze prediction, technique tooling",
-  "The library paint panel's colour-science tools — harmonies, cross-brand matching, tool hand-offs",
+  "The Paint Scanner — photograph your pots, have the labels read and matched to the 7,000-paint library",
   "Army-list auto-build — paste a list and it fills your whole project tree",
 ];
 
@@ -78,10 +84,11 @@ export function PricingClient() {
       <TrackPageView event={AnalyticsEvent.PricingView} />
 
       <Panel accent="cyan" label="SPONSOR THE MAINFRAME · $3.99/MO" className="w-full max-w-xl p-6 sm:p-8">
-        <p className="font-h1 text-h1 text-cyan-lite">Unlock the full toolset.</p>
+        <p className="font-h1 text-h1 text-cyan-lite">The app is free. The AI isn’t.</p>
         <p className="mt-4 font-body text-body text-fg">
-          Projects, the paint library, recipes, and collection tracking are yours from the
-          start. Sponsoring unlocks the tools and AI on top:
+          Everything — projects, the paint library, recipes, collection tracking, and
+          every colour tool — is free and always will be. Three features run on AI that
+          costs real money per use, and sponsoring is what pays for them:
         </p>
         <ul className="mt-4 flex flex-col gap-2 text-left">
           {UNLOCKS.map((u) => (

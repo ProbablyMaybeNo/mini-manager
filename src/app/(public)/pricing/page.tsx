@@ -5,12 +5,12 @@ import { PricingClient } from "@/components/public/PricingClient";
 
 const OG_TITLE = "Sponsor the Mainframe · The Mini Mainframe";
 const OG_DESCRIPTION =
-  "The base app is yours from the start. Sponsor the Mainframe for $3.99/mo to unlock the full colour toolkit, Paint Scanner, and AI recipe generation.";
+  "The whole app is free, colour tools included. Sponsor the Mainframe for $3.99/mo to cover the three AI features: recipe generation, the Paint Scanner, and army-list import.";
 
 export const metadata: Metadata = {
   title: OG_TITLE,
   description:
-    "The Mini Mainframe's base app — projects, the paint library, recipes, and collection tracking — is yours from the start. Sponsor the Mainframe for $3.99/mo to unlock the full colour toolkit, Paint Scanner, and AI recipe generation.",
+    "The Mini Mainframe is free — projects, the paint library, recipes, collection tracking, and every colour tool. Sponsor the Mainframe for $3.99/mo to cover the three features that run on AI: recipe generation, the Paint Scanner, and army-list import.",
   alternates: { canonical: "/pricing" },
   // R2-13 — /pricing was a step worse than the recipe pages it was grouped
   // with: it declared NEITHER block, so BOTH `og:title` and `twitter:title`
