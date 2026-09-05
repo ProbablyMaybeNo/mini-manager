@@ -103,7 +103,11 @@ export default async function PublicRecipePage({
       <div className="flex flex-wrap items-center gap-3">
         {/* The shareable link itself — shown + copyable, directly under the title. */}
         <ShareLinkBar path={`/r/${slug}`} />
-        <CloneButton slug={slug} isSignedIn={isSignedIn} size="sm" />
+        {/* No paints, nothing to clone — offering the button anyway would
+            hand the visitor an empty recipe. Matches the gallery tile. */}
+        {recipe.slots.length > 0 && (
+          <CloneButton slug={slug} isSignedIn={isSignedIn} size="sm" />
+        )}
       </div>
 
       <Panel label="RECIPE" className="p-4">

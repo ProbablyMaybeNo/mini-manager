@@ -140,6 +140,13 @@ function SortChip({
   );
 }
 
+/** A card's stored export ratio ("1:1", "9:16", …) as a CSS `aspect-ratio`.
+ *  Anything unrecognised — including the null on pre-ratio rows — falls back
+ *  to square, which is what those cards were exported as. */
+function cardAspectRatio(ratio: string | null): string {
+  return ratio && /^\d+:\d+$/.test(ratio) ? ratio.replace(":", " / ") : "1 / 1";
+}
+
 function RecipeCard({
   recipe,
   isSignedIn,
@@ -166,17 +173,21 @@ function RecipeCard({
         className="group flex flex-1 flex-col gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
       >
         {showCardImage ? (
+          // Pre-size the tile from the card's OWN stored ratio rather than
+          // guessing square-unless-9:16, and fit the image inside it. The
+          // guess happened to match while only 1:1 and 9:16 existed, but
+          // `shareCard/layout.ts` has 16:9 and 4:5 queued — the moment either
+          // ships, the old binary would have silently cropped them into a
+          // square. Keeping the box pre-sized is what avoids layout shift.
           <div
-            className={cn(
-              "-mx-4 -mt-4 overflow-hidden bg-bg",
-              recipe.cardImageRatio === "9:16" ? "aspect-[9/16]" : "aspect-square",
-            )}
+            className="-mx-4 -mt-4 overflow-hidden bg-bg"
+            style={{ aspectRatio: cardAspectRatio(recipe.cardImageRatio) }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={recipe.cardImageUrl ? exportableImageSrc(recipe.cardImageUrl) : undefined}
               alt={`${recipe.name} — paint recipe card`}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
               onError={() => setImageFailed(true)}
             />
           </div>
@@ -226,7 +237,16 @@ function RecipeCard({
         </p>
       </Link>
 
-      <CloneButton slug={recipe.slug} isSignedIn={isSignedIn} size="sm" />
+      {/* Cloning a paintless post hands the visitor an empty recipe — a dead
+          action dressed as the card's main call. Say what the card is
+          instead. This is now reachable on purpose: composing a post with no
+          paints is allowed, because a photo of a finished mini beats no
+          post at all. */}
+      {recipe.slotCount > 0 ? (
+        <CloneButton slug={recipe.slug} isSignedIn={isSignedIn} size="sm" />
+      ) : (
+        <p className="label-osd text-fg-faint">Photo only — no paints listed</p>
+      )}
     </Panel>
   );
 }
