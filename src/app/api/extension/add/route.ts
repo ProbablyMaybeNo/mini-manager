@@ -3,7 +3,6 @@ import { z } from "zod";
 import { verifyExtensionToken } from "@/lib/auth/extensionToken";
 import { isSupportedStoreUrl } from "@/lib/scrape/stores";
 import { scrapeAndInsertWishlistItem } from "@/lib/wishlist/scrapeInsert";
-import { isProUser } from "@/lib/billing/enforce";
 import { bearerToken, corsJson, preflight } from "../_cors";
 
 /**
@@ -16,6 +15,16 @@ import { bearerToken, corsJson, preflight } from "../_cors";
  * so it can't forge name/price/vendor) and inserts a collection item for
  * the authenticated user via the shared `scrapeAndInsertWishlistItem`
  * pipeline — the SAME write path the in-app URL quick-add uses.
+ *
+ * FREE FOR EVERY SIGNED-IN USER. This route used to sit behind `isProUser`,
+ * which stopped being defensible once BILLING_ENFORCED went live: the write
+ * it performs is the in-app URL quick-add, which free users already get, so
+ * the gate charged for the convenience wrapper around a free action. It also
+ * made the Chrome Web Store listing a dead end — install, watch the preview
+ * card render, hit a paywall on the first click. Ross, 2026-09-05: un-gate.
+ * The paid boundary stays where it earns, on tools + AI (see
+ * docs/SUBSCRIPTION_PAYWALL.md); `extension-routes.test.ts` guards that this
+ * handler never consults the Pro gate again.
  */
 
 const bodySchema = z.object({
@@ -35,21 +44,6 @@ export async function POST(req: Request): Promise<NextResponse> {
   const userId = token ? await verifyExtensionToken(token) : null;
   if (!userId) {
     return corsJson(req, { error: "Invalid or missing extension token" }, 401);
-  }
-
-  // The browser extension is a Pro feature (free users add via the website's
-  // URL paste). Inactive until BILLING_ENFORCED flips on at launch, so the
-  // extension stays testable for everyone until then.
-  if (!(await isProUser(userId))) {
-    return corsJson(
-      req,
-      {
-        error:
-          "The browser extension unlocks when you sponsor the Mainframe.",
-        upgradeUrl: "/pricing",
-      },
-      402,
-    );
   }
 
   let json: unknown;

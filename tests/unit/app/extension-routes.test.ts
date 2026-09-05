@@ -10,11 +10,12 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 const verifyExtensionToken = vi.fn<(t: string) => Promise<string | null>>();
 const scrapeUrl = vi.fn();
 const scrapeAndInsertWishlistItem = vi.fn();
-// The browser extension is a Pro-only surface (src/app/api/extension/add/
-// route.ts). Mocked so these route tests control subscriber status
-// explicitly instead of hitting a real, unmocked `@/db/client` — most
-// tests here are about the OTHER gates (token/store/status), so default to
-// a subscriber and flip it per-test where the Pro gate itself is under test.
+// The extension add route USED to sit behind `isProUser` and no longer does
+// (Ross, 2026-09-05 — the Web Store listing can't paywall its own first
+// click). Still mocked, and deliberately answering `false` (a free user), so
+// the "never consults the Pro gate" assertion below is a real regression
+// guard rather than a vacuous one: if the gate ever comes back, this mock
+// makes every add test 402 instead of silently passing.
 const isProUser = vi.fn<(userId: string) => Promise<boolean>>();
 
 vi.mock("@/lib/auth/extensionToken", () => ({ verifyExtensionToken }));
@@ -49,7 +50,7 @@ beforeEach(() => {
   scrapeAndInsertWishlistItem.mockReset();
   isProUser.mockReset();
   verifyExtensionToken.mockResolvedValue("user_1");
-  isProUser.mockResolvedValue(true);
+  isProUser.mockResolvedValue(false);
 });
 
 describe("POST /api/extension/preview", () => {
@@ -168,16 +169,27 @@ describe("POST /api/extension/add", () => {
     expect(body.upgradeUrl).toBe("/pricing");
   });
 
-  // The extension itself is a pre-existing Pro-only surface (not part of
-  // docs/SUBSCRIPTION_PAYWALL.md's gated set, but it shares `isProUser` and
-  // is now live now that BILLING_ENFORCED is on).
-  test("402 for a non-subscriber, before the store/scrape pipeline runs", async () => {
-    isProUser.mockResolvedValue(false);
-    const res = await addPOST(req({ url: SUPPORTED, status: "OWNED" }));
-    expect(res.status).toBe(402);
-    const body = (await res.json()) as { error?: string; upgradeUrl?: string };
-    expect(body.error).toMatch(/sponsor the Mainframe/i);
-    expect(body.upgradeUrl).toBe("/pricing");
-    expect(scrapeAndInsertWishlistItem).not.toHaveBeenCalled();
+  // Un-gating guard. `isProUser` resolves `false` for every test in this
+  // file (see the mock at the top), so a free user completing an add IS the
+  // assertion — plus an explicit check that the handler never asked.
+  test("a free (non-subscriber) user can add — the Pro gate is never consulted", async () => {
+    scrapeAndInsertWishlistItem.mockResolvedValue({
+      ok: true,
+      data: {
+        id: "w2",
+        title: "Citadel Base: Abaddon Black",
+        status: "WISHLIST",
+        kind: "paint",
+        vendor: "Element Games",
+        price: 275,
+        currency: "GBP",
+        imageUrl: null,
+        sourceUrl: SUPPORTED,
+      },
+    });
+    const res = await addPOST(req({ url: SUPPORTED, status: "WISHLIST" }));
+    expect(res.status).toBe(200);
+    expect(isProUser).not.toHaveBeenCalled();
+    expect(scrapeAndInsertWishlistItem).toHaveBeenCalledOnce();
   });
 });

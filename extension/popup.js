@@ -20,10 +20,25 @@ function showView(which) {
   $("view-main").classList.toggle("hidden", which !== "main");
 }
 
-function setMsg(text, kind) {
+/**
+ * Render the status line. `link` (optional) appends a trailing anchor —
+ * built as a DOM node rather than innerHTML so the popup never parses a
+ * string the API handed it.
+ */
+function setMsg(text, kind, link) {
   const el = $("msg");
   el.textContent = text;
   el.className = `msg ${kind || ""}`.trim();
+  if (link) {
+    el.append(" ");
+    const a = document.createElement("a");
+    a.className = "link";
+    a.href = link.href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = link.label;
+    el.append(a);
+  }
   el.classList.toggle("hidden", !text);
 }
 
@@ -117,7 +132,15 @@ async function add() {
     return;
   }
   if (status === 402) {
-    setMsg(data.error || "Collection limit reached — upgrade to add more.", "error");
+    // The API hands back a relative `upgradeUrl`; resolve it against the
+    // configured base so the link works from the popup's own origin.
+    setMsg(
+      data.error || "Collection limit reached — upgrade to add more.",
+      "error",
+      data.upgradeUrl
+        ? { href: `${state.apiBase}${data.upgradeUrl}`, label: "View plans →" }
+        : null,
+    );
     return;
   }
   setMsg(data.error || "Couldn’t add this item.", "error");
