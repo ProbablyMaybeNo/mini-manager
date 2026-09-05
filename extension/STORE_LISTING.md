@@ -40,12 +40,12 @@ copy-pasting URLs.
    Alt+Shift+M), choose Owned or Wishlist, and hit **Add to collection**.
 
 **Supported stores**
-Element Games, Wayland Games, Noble Knight Games, Miniature Market, Gamers Roll,
-Amazon, and eBay. Other links still work in the app itself — you just add the
-details yourself.
+Element Games, Wayland Games, Noble Knight Games, Miniature Market, and Gamers
+Roll. Other links still work in the app itself — you just add the details
+yourself.
 
-**You'll need a free Mini Mainframe account** — sign up at
-https://mini-mainframe.com.
+**You'll need a Mini Mainframe account** — free, and adding from the
+extension is a free-tier feature. Sign up at https://www.mini-mainframe.com.
 
 ---
 
@@ -64,7 +64,7 @@ collection as Owned or Wishlist.
 - **storage** — Stores your Mini Mainframe API token and your API-base
   preference locally in the browser (chrome.storage.sync) so you don't paste the
   token every time. Nothing else is stored.
-- **Host permission: https://mini-mainframe.com/** (and www) — The extension
+- **Host permission: https://www.mini-mainframe.com/** (and the apex) — The extension
   sends the product URL to the Mini Mainframe API at this origin, with your
   token, to create the collection entry. It talks to no other server.
 
@@ -72,7 +72,7 @@ collection as Owned or Wishlist.
 
 ## Privacy
 
-**Privacy policy URL:** https://mini-mainframe.com/privacy
+**Privacy policy URL:** https://www.mini-mainframe.com/privacy
 
 **Data handling disclosures (Web Store data-use form):**
 - Does the extension collect user data? Yes — minimal.
@@ -96,9 +96,10 @@ collection as Owned or Wishlist.
   1. The extension popup open on an Element Games product page (Owned/Wishlist
      toggle + Add button visible).
   2. The Mini Mainframe **Collection** page showing added items.
-  3. The **Account → Browser extension** token screen (where users get set up).
+  3. The **Settings → Browser extension** token screen (where users get set up).
 - **Small promo tile (optional, 440×280):** the Mini Mainframe wordmark on the
-  dark/cyan brand background.
+  dark brand background (blue accent — the palette moved off cyan, see
+  docs/DESIGN_LANGUAGE.md).
 
 ---
 

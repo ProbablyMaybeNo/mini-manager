@@ -11,8 +11,12 @@ folder directly.
 ## Supported stores
 
 Element Games · Wayland Games · Noble Knight Games · Miniature Market ·
-Gamers Roll · Amazon · eBay. (The server is the source of truth —
-`src/lib/scrape/stores.ts`.)
+Gamers Roll. (The server is the source of truth — `src/lib/scrape/stores.ts`.)
+
+Amazon and eBay were delisted 2026-08-05 — marketplaces rather than hobby
+retailers, and neither returned a usable row. A pasted link from an
+unsupported site still adds a row in the app; you just fill the details in
+yourself.
 
 ## Install (load unpacked)
 
