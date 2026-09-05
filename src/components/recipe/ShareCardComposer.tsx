@@ -128,10 +128,16 @@ export function ShareCardComposer({
   const [saveToLibrary, setSaveToLibrary] = useState(true);
   const [projects, setProjects] = useState<GalleryComposerProject[] | null>(null);
   const [sourceProjectId, setSourceProjectId] = useState<string>("");
-  /** The prefilled recipe a project supplied, while its content is still
-   *  untouched. Posting with this set reuses that recipe instead of minting
-   *  a duplicate; any edit clears it and the post becomes a new one. */
-  const [sourceRecipeId, setSourceRecipeId] = useState<string | null>(null);
+  /** Which of the source project's recipes the painter is building from —
+   *  the second dropdown's value. Display only: a composed post ALWAYS mints
+   *  its own recipe (see `handleSubmit`), because the card's title comes from
+   *  the project while the prefilled recipe carries its own name, and
+   *  publishing one under the other's slug would make the gallery tile and
+   *  /r/<slug> disagree about what the post is called. */
+  const [selectedPrefillId, setSelectedPrefillId] = useState<string>("");
+  /** Set once a composed post has minted its recipe, so retrying after a
+   *  failed upload reuses that row instead of leaving an orphan behind. */
+  const [mintedRecipeId, setMintedRecipeId] = useState<string | null>(null);
   /** The source project's attached recipes. More than one is normal (UX-907),
    *  so the painter gets a second dropdown to choose between them. */
   const [prefillRecipes, setPrefillRecipes] = useState<
@@ -166,7 +172,8 @@ export function ShareCardComposer({
     setDraftSlots(slots);
     setSaveToLibrary(true);
     setSourceProjectId("");
-    setSourceRecipeId(null);
+    setSelectedPrefillId("");
+    setMintedRecipeId(null);
     setPrefillRecipes([]);
     setPickingIndex(null);
     setError(null);
@@ -294,27 +301,10 @@ export function ShareCardComposer({
   }
 
   /* ── Compose-mode editing ────────────────────────────────────────────
-     Every painter-driven edit clears `sourceRecipeId`. A post that still
-     matches the recipe it was prefilled from should reuse that recipe
-     rather than mint a near-duplicate; the moment the painter changes the
-     title, the paints or the notes, it is a different thing and gets its
-     own row. Prefill itself uses the raw setters so it doesn't clear the
-     link it is establishing. */
-
-  function editTitle(next: string) {
-    setTitle(next);
-    setSourceRecipeId(null);
-  }
-
-  function editNotes(next: string) {
-    setNotes(next);
-    setSourceRecipeId(null);
-  }
-
-  function editSlots(next: RecipeSlot[]) {
-    setDraftSlots(next);
-    setSourceRecipeId(null);
-  }
+     A composed post always becomes its OWN recipe, so nothing here has to
+     track whether the painter has drifted from the recipe they prefilled
+     from — the title on the card is the title the post publishes under,
+     every time. */
 
   function applyPrefill(recipe: {
     id: string;
@@ -322,14 +312,15 @@ export function ShareCardComposer({
     slots: RecipeSlot[];
     notes: string | null;
   }) {
+    setSelectedPrefillId(recipe.id);
     setDraftSlots(recipe.slots);
     setNotes(recipe.notes ?? "");
-    setSourceRecipeId(recipe.id);
   }
 
   async function selectSourceProject(nextProjectId: string) {
     setSourceProjectId(nextProjectId);
-    setSourceRecipeId(null);
+    setSelectedPrefillId("");
+    setMintedRecipeId(null);
     setPrefillRecipes([]);
     setError(null);
     // Drop the previous project's photos so the picker never offers a model
@@ -375,7 +366,7 @@ export function ShareCardComposer({
       layer: "basecoat",
     };
     const at = pickingIndex;
-    editSlots(
+    setDraftSlots(
       at != null && at < draftSlots.length
         ? draftSlots.map((s, i) => (i === at ? next : s))
         : [...draftSlots, next],
@@ -384,7 +375,7 @@ export function ShareCardComposer({
   }
 
   function removeSlot(index: number) {
-    editSlots(draftSlots.filter((_, i) => i !== index));
+    setDraftSlots(draftSlots.filter((_, i) => i !== index));
   }
 
   const selectedImage = candidates.find((c) => c.id === selectedId) ?? null;
@@ -473,7 +464,7 @@ export function ShareCardComposer({
       // one in. Compose mode reuses the prefilled recipe while its content
       // is untouched, and otherwise mints a fresh one carrying the painter's
       // "save this to my recipe list" answer.
-      let postRecipeId = recipeId ?? sourceRecipeId;
+      let postRecipeId = recipeId ?? mintedRecipeId;
       if (!postRecipeId) {
         const created = await createGalleryPostRecipe({
           title: title.trim(),
@@ -491,7 +482,7 @@ export function ShareCardComposer({
         }
         postRecipeId = created.data.recipeId;
         // Adopt it, so a retry after a failed upload doesn't mint a second.
-        setSourceRecipeId(postRecipeId);
+        setMintedRecipeId(postRecipeId);
       }
       trackClient(AnalyticsEvent.GallerySubmitStarted, { recipeId: postRecipeId });
       const dataUrl = await renderCardPng();
@@ -540,7 +531,7 @@ export function ShareCardComposer({
     recipeId,
     renderCardPng,
     saveToLibrary,
-    sourceRecipeId,
+    mintedRecipeId,
     title,
   ]);
 
@@ -736,7 +727,7 @@ export function ShareCardComposer({
                 />
                 {prefillRecipes.length > 1 && (
                   <Listbox
-                    value={sourceRecipeId ?? ""}
+                    value={selectedPrefillId}
                     onChange={(id) => {
                       const found = prefillRecipes.find((r) => r.id === id);
                       if (found) applyPrefill(found);
@@ -756,7 +747,7 @@ export function ShareCardComposer({
                 label="Title"
                 name="gallery-post-title"
                 value={title}
-                onChange={(e) => editTitle(e.target.value)}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="What did you paint?"
                 maxLength={120}
               />
@@ -876,7 +867,7 @@ export function ShareCardComposer({
             </span>
             <textarea
               value={notes}
-              onChange={(e) => editNotes(e.target.value)}
+              onChange={(e) => setNotes(e.target.value)}
               aria-label={composable ? "Technique notes" : "Card notes"}
               rows={4}
               placeholder="Technique notes for the card…"
@@ -960,7 +951,7 @@ export function ShareCardComposer({
               unticking is one click. Reversible afterwards from the
               gallery's "Your cards" strip, so it is never a one-way door.
               Only shown when this post is actually minting a new recipe. */}
-          {composable && !recipeId && !sourceRecipeId && (
+          {composable && !recipeId && !mintedRecipeId && (
             <label className="flex cursor-pointer items-start gap-2">
               <Checkbox
                 checked={saveToLibrary}
