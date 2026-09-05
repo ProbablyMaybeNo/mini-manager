@@ -13,6 +13,9 @@ let state = {
   token: "",
   url: "",
   status: "OWNED",
+  // Which collection the item lands in. Preselected from the server's
+  // suggestion, then whatever the painter last chose on this card.
+  kind: "paint",
 };
 
 /** Show exactly one top-level view. */
@@ -88,6 +91,12 @@ async function activeTabUrl() {
   return tab?.url || "";
 }
 
+/** Reflect `state.kind` onto the Paint/Model toggle. */
+function paintKindToggle() {
+  $("k-paint").setAttribute("aria-pressed", String(state.kind === "paint"));
+  $("k-model").setAttribute("aria-pressed", String(state.kind === "model"));
+}
+
 function renderProduct(product, storeName) {
   $("p-name").textContent = product.name || "(untitled)";
   $("p-vendor").textContent = storeName || product.vendor || "";
@@ -151,6 +160,10 @@ async function loadPreview() {
   }
 
   setStatusLine("");
+  // Start on the server's guess — right most of the time, and one tap to fix
+  // when it isn't.
+  state.kind = data.suggestedKind === "model" ? "model" : "paint";
+  paintKindToggle();
   renderProduct(data.product, data.store);
 }
 
@@ -162,6 +175,7 @@ async function add() {
   const { status, data } = await apiPost(state.apiBase, state.token, "add", {
     url: state.url,
     status: state.status,
+    kind: state.kind,
   });
 
   $("add").disabled = false;
@@ -204,6 +218,15 @@ function wireStatusToggle() {
   }
 }
 
+function wireKindToggle() {
+  for (const btn of [$("k-paint"), $("k-model")]) {
+    btn.addEventListener("click", () => {
+      state.kind = btn.dataset.kind;
+      paintKindToggle();
+    });
+  }
+}
+
 async function init() {
   const settings = await loadSettings();
   state.apiBase = settings.apiBase;
@@ -218,6 +241,7 @@ async function init() {
   });
 
   wireStatusToggle();
+  wireKindToggle();
   $("add").addEventListener("click", add);
 
   $("save-token").addEventListener("click", async () => {
