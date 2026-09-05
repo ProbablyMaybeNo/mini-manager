@@ -103,6 +103,14 @@ export default async function PublicRecipePage({
       <div className="flex flex-wrap items-center gap-3">
         {/* The shareable link itself — shown + copyable, directly under the title. */}
         <ShareLinkBar path={`/r/${slug}`} />
+        {/* Deliberately NOT suppressed on a paintless recipe the way the
+            gallery tile is. On the tile, CLONE is the card's headline CTA
+            competing with cards that do have paints. Here it is the page's
+            only conversion affordance — for a signed-out visitor it is the
+            sign-up link — and the panel below already says "No slots in this
+            recipe yet", so nobody clicks it without seeing what they get.
+            Removing it would leave a stranger who followed a shared link
+            with no way forward at all. */}
         <CloneButton slug={slug} isSignedIn={isSignedIn} size="sm" />
       </div>
 

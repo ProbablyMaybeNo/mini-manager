@@ -25,6 +25,21 @@ export function cardHeightFor(ratio: ShareCardRatio, widthPx: number): number {
   return Math.round(widthPx * RATIO_FACTOR[ratio]);
 }
 
+/**
+ * A stored export ratio ("1:1", "9:16", …) as a CSS `aspect-ratio`, for
+ * pre-sizing a gallery tile before its image loads.
+ *
+ * Deliberately parses the stored string rather than switching on the two
+ * ratios that exist today: the gallery used to hard-code
+ * square-unless-9:16, which would silently crop the 16:9 / 4:5 this module
+ * is built to add. Anything unrecognised — including the null on rows
+ * predating the ratio column — falls back to square, which is what those
+ * cards were exported as.
+ */
+export function cardAspectRatio(ratio: string | null | undefined): string {
+  return ratio && /^\d+:\d+$/.test(ratio) ? ratio.replace(":", " / ") : "1 / 1";
+}
+
 export interface SwatchGridInput {
   ratio: ShareCardRatio;
   /** Number of paint slots to render. */
