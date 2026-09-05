@@ -132,6 +132,16 @@
       .msg.error { color: var(--red); }
       .msg.ok { color: var(--green); }
       .muted { color: var(--fg-dim); font-size: 11px; line-height: 1.4; }
+      .lede { font-size: 12px; margin: 0 0 10px; line-height: 1.4; }
+      .lede.ok { color: var(--green); }
+      .stores { list-style: none; margin: 8px 0 10px; padding: 0; }
+      .stores li { margin: 0 0 6px; }
+      .stores a {
+        color: var(--cyan);
+        text-decoration: none;
+        font-size: 12px;
+      }
+      .stores a:hover { text-decoration: underline; }
       .hidden { display: none !important; }
       a.link { color: var(--cyan); text-decoration: none; }
       a.link:hover { text-decoration: underline; }
@@ -156,6 +166,17 @@
         Generate a token in
         <a id="settings-link" class="link" href="#" target="_blank">your account settings</a>
         → Browser extension, then paste it here.
+      </p>
+    </section>
+
+    <!-- Set up OK, or standing somewhere we can't read -->
+    <section id="view-stores" class="panel hidden">
+      <p id="stores-lede" class="lede"></p>
+      <p class="muted">Add paints and models from these sites:</p>
+      <ul id="stores-list" class="stores"></ul>
+      <p class="muted">
+        Open a product page on one of them, then press
+        <strong>Alt+Shift+M</strong> or click this icon again.
       </p>
     </section>
 

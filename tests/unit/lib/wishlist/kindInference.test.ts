@@ -1,15 +1,16 @@
 /**
- * P12.11 — Wishlist kind heuristic.
+ * Wishlist kind heuristic — inferWishlistKind(title, vendor, category).
  *
- * inferWishlistKind(title, vendor, category) → 'paint' | 'model'.
- * Used by:
- *   - createWishlistItem + createWishlistItemFromScrape so freshly
- *     added rows get a sensible default
- *   - The drizzle migration (0007_wishlist_phase12_rename.sql) as a
- *     one-shot backfill for pre-Phase-12 data
+ * REWRITTEN 2026-09-05. The old suite asserted that a model-retailer vendor
+ * won "even on a paint-sounding title", which is precisely the bug: every
+ * Citadel paint bought from Element Games or Wayland was filed as a model,
+ * with `category: "Paint"` sitting right there in the same call. Those
+ * assertions are inverted below and kept, because re-introducing them is the
+ * regression to guard against.
  *
- * Pure helper. These tests pin the rules so the migration + runtime
- * stay in sync.
+ * The suite no longer claims to pin the `0007_wishlist_phase12_rename.sql`
+ * backfill. That migration has run and is historical; the runtime rules
+ * deliberately diverge from it now.
  */
 import { describe, expect, test } from "vitest";
 import { inferWishlistKind } from "@/lib/wishlist/kindInference";
@@ -37,20 +38,75 @@ describe("inferWishlistKind — title heuristic", () => {
   });
 });
 
-describe("inferWishlistKind — vendor heuristic", () => {
-  test("model-retailer vendors → 'model' even on a paint-sounding title", () => {
+describe("inferWishlistKind — category beats vendor (the 2026-09-05 fix)", () => {
+  // These four are the exact rows the extension was mis-filing. The vendor is
+  // a miniatures retailer AND the category says Paint — evidence about the
+  // product must beat a prior about the shop.
+  test("a paint from a model retailer is a PAINT when the category says so", () => {
     expect(
-      inferWishlistKind({ title: "Citadel Macragge Blue", vendor: "Element Games" }),
-    ).toBe("model");
+      inferWishlistKind({
+        title: "Air: Abaddon Black (24ml) - Citadel Games Workshop Paints",
+        vendor: "Element Games",
+        category: "Paint",
+      }),
+    ).toBe("paint");
     expect(
-      inferWishlistKind({ title: "Vallejo Black", vendor: "Wayland Games" }),
-    ).toBe("model");
+      inferWishlistKind({
+        title: "Base: Macragge Blue (12ml)",
+        vendor: "Element Games",
+        category: "Paint",
+      }),
+    ).toBe("paint");
     expect(
-      inferWishlistKind({ title: "Army Painter Red", vendor: "Goblin Gaming" }),
+      inferWishlistKind({
+        title: "Citadel Shade: Nuln Oil",
+        vendor: "Wayland Games",
+        category: "Paint",
+      }),
+    ).toBe("paint");
+    expect(
+      inferWishlistKind({
+        title: "Warpaints Fanatic: Dragon Red - The Army Painter",
+        vendor: "Wayland Games",
+        category: "Paint",
+      }),
+    ).toBe("paint");
+  });
+
+  test("a box from the same retailer is still a MODEL", () => {
+    expect(
+      inferWishlistKind({
+        title: "Space Marines Combat Patrol",
+        vendor: "Element Games",
+        category: "Box",
+      }),
     ).toBe("model");
   });
 
-  test("paint-only vendor doesn't trip the heuristic", () => {
+  // "The Army Painter" is a PAINT BRAND containing the model word "army".
+  // Substring matching made every one of its products a model, from any
+  // vendor, with no category at all.
+  test("a paint brand whose name contains a model word is still a PAINT", () => {
+    expect(
+      inferWishlistKind({ title: "Warpaints Fanatic: Dragon Red - The Army Painter" }),
+    ).toBe("paint");
+    expect(
+      inferWishlistKind({ title: "The Army Painter Speedpaint 2.0: Blood Red" }),
+    ).toBe("paint");
+  });
+});
+
+describe("inferWishlistKind — vendor as a last-resort prior", () => {
+  test("model-retailer vendor still wins when nothing else says anything", () => {
+    expect(
+      inferWishlistKind({ title: "Ancient Ruins Sprue", vendor: "Element Games" }),
+    ).toBe("model");
+    expect(
+      inferWishlistKind({ title: "Gnarlwood Scenery Bundle", vendor: "Wayland Games" }),
+    ).toBe("model");
+  });
+
+  test("a vendor that isn't a model retailer doesn't trip it", () => {
     expect(
       inferWishlistKind({ title: "Citadel Mephiston Red", vendor: "Citadel Online" }),
     ).toBe("paint");
@@ -73,6 +129,18 @@ describe("inferWishlistKind — category heuristic", () => {
     ).toBe("paint");
     expect(
       inferWishlistKind({ title: "Misc thing", category: "Other" }),
+    ).toBe("paint");
+  });
+
+  test("'Bits' → 'model' (conversion parts are not paint)", () => {
+    expect(
+      inferWishlistKind({ title: "Chaos Warrior Shields", category: "Bits" }),
+    ).toBe("model");
+  });
+
+  test("an explicit 'Paint' category outranks a model word in the title", () => {
+    expect(
+      inferWishlistKind({ title: "Army Painter Terrain Primer", category: "Paint" }),
     ).toBe("paint");
   });
 });

@@ -4,6 +4,7 @@ import {
   settingsUrl,
   apiPost,
 } from "./config.js";
+import { SUPPORTED_STORES } from "./stores.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -17,7 +18,41 @@ let state = {
 /** Show exactly one top-level view. */
 function showView(which) {
   $("view-auth").classList.toggle("hidden", which !== "auth");
+  $("view-stores").classList.toggle("hidden", which !== "stores");
   $("view-main").classList.toggle("hidden", which !== "main");
+}
+
+/**
+ * The "here's where this works" screen. Shown after a token is saved, and
+ * whenever the current tab isn't a store we can read.
+ *
+ * Both cases used to dead-end on a one-line message that named no alternative:
+ * a new user's very first action is to paste a token, which they are never
+ * doing while standing on a product page, so the setup flow ALWAYS ended in an
+ * error (Ross, first real install, 2026-09-05). Naming the five stores turns
+ * both of those into a next step.
+ *
+ * Rendered as DOM nodes rather than innerHTML — the list is local data, but the
+ * popup parses no HTML strings anywhere and this is not the place to start.
+ */
+function showStores(lede, tone) {
+  const el = $("stores-lede");
+  el.textContent = lede;
+  el.className = `lede ${tone || ""}`.trim();
+
+  const list = $("stores-list");
+  list.replaceChildren();
+  for (const store of SUPPORTED_STORES) {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = store.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = store.name;
+    li.append(a);
+    list.append(li);
+  }
+  showView("stores");
 }
 
 /**
@@ -82,7 +117,7 @@ async function loadPreview() {
   state.url = await activeTabUrl();
   if (!/^https?:/i.test(state.url)) {
     setStatusLine("");
-    setMsg("Open a product page on a supported store, then click again.", "");
+    showStores("Not a product page.", "");
     return;
   }
 
@@ -96,7 +131,17 @@ async function loadPreview() {
   }
   if (status === 422) {
     setStatusLine("");
-    setMsg(data.error || "This page isn’t a supported product.", "");
+    // `supported: false` means the HOST isn't one we read; a 422 without it
+    // means the host was right but the page had no product on it (a category
+    // page, a search result). Different problems, different advice.
+    if (data.supported === false) {
+      showStores("We can’t read this site yet.", "");
+    } else {
+      setMsg(
+        data.error || "Couldn’t find a product on this page — open the item itself.",
+        "",
+      );
+    }
     return;
   }
   if (status !== 200 || !data.product) {
@@ -180,8 +225,11 @@ async function init() {
     if (!token) return;
     await saveToken(token);
     state.token = token;
-    showView("main");
-    await loadPreview();
+    // Confirm the setup worked, then say where to use it. This used to call
+    // loadPreview() straight away, which previewed whatever tab happened to be
+    // open — never a product page, since nobody pastes a token while shopping —
+    // so every first run ended on an error.
+    showStores("Token added ✓", "ok");
   });
 
   if (!state.token) {
