@@ -1,6 +1,7 @@
 import type { NextResponse } from "next/server";
 import { z } from "zod";
 import { verifyExtensionToken } from "@/lib/auth/extensionToken";
+import { wishlistKinds } from "@/db/schema";
 import { isSupportedStoreUrl } from "@/lib/scrape/stores";
 import { scrapeAndInsertWishlistItem } from "@/lib/wishlist/scrapeInsert";
 import { bearerToken, corsJson, preflight } from "../_cors";
@@ -32,6 +33,14 @@ const bodySchema = z.object({
   // The extension toggle only offers Owned / Wishlist; the full status
   // lifecycle is edited later in the app.
   status: z.enum(["OWNED", "WISHLIST"]),
+  // Which collection the row lands in. The popup asks outright rather than
+  // letting the server guess (Ross, 2026-09-05): `inferWishlistKind` reads a
+  // vendor, a title and a URL-derived category and gets it wrong often enough
+  // to matter — a Citadel paint bought from a miniatures retailer is genuinely
+  // ambiguous to a heuristic and completely obvious to the person looking at
+  // the page. Optional, so an older installed copy of the extension that sends
+  // no kind still works and still falls back to inference.
+  kind: z.enum(wishlistKinds).optional(),
   projectId: z.string().min(1).max(64).optional(),
 });
 
@@ -62,7 +71,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
-  const { url: rawUrl, status, projectId } = parsed.data;
+  const { url: rawUrl, status, kind, projectId } = parsed.data;
   if (!isSupportedStoreUrl(rawUrl)) {
     return corsJson(
       req,
@@ -75,6 +84,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     userId,
     url: new URL(rawUrl),
     status,
+    kind,
     projectId: projectId ?? null,
   });
 
