@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Mini Manager — wargaming + painting companion. Plans armies, tracks models from wishlist to complete, builds recipes from a cross-brand paint library.",
+  "bin": {
+    "mini-manager": "./bin/mini-manager.mjs"
+  },
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/migrate-or-skip.mjs && node scripts/stamp-sw-build-id.mjs",
