@@ -3,6 +3,7 @@ import { z } from "zod";
 import { verifyExtensionToken } from "@/lib/auth/extensionToken";
 import { isSupportedStoreUrl, matchSupportedStore } from "@/lib/scrape/stores";
 import { scrapeUrl } from "@/lib/scrape";
+import { inferWishlistKind } from "@/lib/wishlist/kindInference";
 import { bearerToken, corsJson, preflight } from "../_cors";
 
 /**
@@ -65,8 +66,19 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
+  // Advisory only. The popup preselects its Paint/Model toggle from this and
+  // the painter can override it, so a wrong guess costs one tap instead of
+  // filing the row in the wrong collection. Same helper the server falls back
+  // to when an older extension sends no kind at all.
+  const suggestedKind = inferWishlistKind({
+    title: scraped.title,
+    vendor: scraped.vendor,
+    category: scraped.category ?? null,
+  });
+
   // Shape the popup card needs — never the raw HTML / parser blob.
   return corsJson(req, {
+    suggestedKind,
     product: {
       name: scraped.title,
       price: scraped.price ?? null,
