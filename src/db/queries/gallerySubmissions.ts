@@ -83,6 +83,10 @@ export interface MyGalleryCard {
   /** "pending" | "approved" | "rejected" — never "none" (filtered out). */
   status: GalleryStatus;
   submittedAt: number | null;
+  /** The painter posted this without keeping it in their recipe list, so it
+   *  appears nowhere else in the app. This strip is the only place they can
+   *  see it — and the only place they can take it back. */
+  hiddenFromLibrary: boolean;
 }
 
 export async function listMyGallerySubmissions(
@@ -94,6 +98,7 @@ export async function listMyGallerySubmissions(
       name: recipes.name,
       status: recipes.galleryStatus,
       submittedAt: recipes.gallerySubmittedAt,
+      hiddenFromLibrary: recipes.hiddenFromLibrary,
     })
     .from(recipes)
     .where(and(eq(recipes.ownerId, userId), ne(recipes.galleryStatus, "none")))
@@ -104,5 +109,6 @@ export async function listMyGallerySubmissions(
     name: r.name,
     status: r.status,
     submittedAt: r.submittedAt ? r.submittedAt.getTime() : null,
+    hiddenFromLibrary: r.hiddenFromLibrary,
   }));
 }

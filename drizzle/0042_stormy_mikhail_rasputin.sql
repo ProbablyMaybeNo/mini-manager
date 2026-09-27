@@ -1,0 +1,1 @@
+ALTER TABLE `recipe` ADD `hidden_from_library` integer DEFAULT false NOT NULL;

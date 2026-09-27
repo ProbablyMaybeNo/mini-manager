@@ -562,10 +562,19 @@ export async function loadDashboardRecipeBundle(
   userId: string,
   perRecipeSlotCap = 12,
 ): Promise<DashboardRecipeBundle> {
+  // `hiddenFromLibrary` — gallery-only posts. This bundle is the single
+  // funnel for every surface that shows the painter their OWN recipes
+  // (/recipes, the dashboard, the share composer's source list), so one
+  // filter here is the whole feature. The public gallery reads
+  // `listPublishedRecipes` and the "Your cards" strip reads
+  // `listMyGallerySubmissions`, neither of which goes through here — so a
+  // hidden post still shows where the painter expects to manage it.
   const recipeRows = await db
     .select()
     .from(recipes)
-    .where(eq(recipes.ownerId, userId))
+    .where(
+      and(eq(recipes.ownerId, userId), eq(recipes.hiddenFromLibrary, false)),
+    )
     .orderBy(desc(recipes.updatedAt));
 
   if (recipeRows.length === 0) {
