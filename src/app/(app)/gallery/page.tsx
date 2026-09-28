@@ -59,7 +59,12 @@ export default async function GalleryPage() {
   const myCards = userId ? await listMyGallerySubmissions(userId) : [];
 
   const content = (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-3 py-5 md:px-6 md:py-10">
+    // The gallery is a wall of painted models, so it is the one page that
+    // should spend the width it has: at 1920 the 5xl cap left ~880px empty
+    // and squeezed every card to 315px. Stepped at xl so phone and laptop
+    // layouts are untouched — only genuinely wide screens widen, and the
+    // intro paragraph keeps its own max-w-2xl so line length stays readable.
+    <main className="mx-auto w-full max-w-5xl flex-1 px-3 py-5 md:px-6 md:py-10 xl:max-w-[1600px]">
       <TrackPageView event={AnalyticsEvent.GalleryView} />
       <JsonLd
         data={breadcrumbJsonLd([

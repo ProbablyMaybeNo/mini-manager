@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Chip, Panel } from "@/components/kit";
+import { SaveToRecipesButton } from "@/components/gallery/SaveToRecipesButton";
 import type { Accent } from "@/lib/palette";
 import type { MyGalleryCard } from "@/db/queries/gallerySubmissions";
 import type { GalleryStatus } from "@/db/schema";
@@ -33,7 +34,7 @@ export function YourCardsStrip({
           return (
             <li
               key={card.recipeId}
-              className="flex items-center justify-between gap-3"
+              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
             >
               <Link
                 href={`/recipes/${card.recipeId}`}
@@ -41,9 +42,19 @@ export function YourCardsStrip({
               >
                 {card.name}
               </Link>
+              {/* A gallery-only post lives nowhere else in the app, so this
+                  strip has to both label it and offer the way back. */}
+              {card.hiddenFromLibrary && (
+                <Chip accent="dim" className="shrink-0">
+                  Gallery only
+                </Chip>
+              )}
               <Chip accent={meta.accent} className="shrink-0">
                 {meta.label}
               </Chip>
+              {card.hiddenFromLibrary && (
+                <SaveToRecipesButton recipeId={card.recipeId} />
+              )}
             </li>
           );
         })}
