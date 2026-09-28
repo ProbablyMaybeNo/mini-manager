@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  cardAspectRatio,
   cardHeightFor,
   computeSwatchGrid,
   SHARE_CARD_RATIOS,
@@ -84,5 +85,29 @@ describe("shareCardFilename", () => {
     expect(shareCardFilename(null)).toBe("mini-mainframe-card-mini-mainframe.png");
     expect(shareCardFilename(undefined)).toBe("mini-mainframe-card-mini-mainframe.png");
     expect(shareCardFilename("   ")).toBe("mini-mainframe-card-mini-mainframe.png");
+  });
+});
+
+describe("cardAspectRatio", () => {
+  test("maps the shipped ratios to CSS aspect-ratio", () => {
+    expect(cardAspectRatio("1:1")).toBe("1 / 1");
+    expect(cardAspectRatio("9:16")).toBe("9 / 16");
+  });
+
+  test("handles ratios that only exist in RATIO_FACTOR's future", () => {
+    // The gallery tile used to hard-code square-unless-9:16. These are the
+    // two `shareCard/layout` has queued, and the old branch would have
+    // cropped both into a square.
+    expect(cardAspectRatio("16:9")).toBe("16 / 9");
+    expect(cardAspectRatio("4:5")).toBe("4 / 5");
+  });
+
+  test("falls back to square for a missing or malformed ratio", () => {
+    // Rows predating the ratio column were exported square.
+    expect(cardAspectRatio(null)).toBe("1 / 1");
+    expect(cardAspectRatio(undefined)).toBe("1 / 1");
+    expect(cardAspectRatio("")).toBe("1 / 1");
+    expect(cardAspectRatio("banana")).toBe("1 / 1");
+    expect(cardAspectRatio("1:1; content:'x'")).toBe("1 / 1");
   });
 });

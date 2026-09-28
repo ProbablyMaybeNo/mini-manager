@@ -445,7 +445,7 @@ export function RecipeWorkbench({
                     onClick={() => setShareCardOpen(true)}
                     className="inline-flex items-center rounded-[6px] border border-cyan/50 px-4 py-2.5 font-mono text-[12px] font-bold text-cyan-lite transition-colors hover:border-cyan hover:bg-cyan/10"
                   >
-                    ⬡ SHARE AS CARD
+                    Share card
                   </button>
                   <button
                     type="button"

@@ -660,6 +660,16 @@ export const recipes = sqliteTable(
     isStandalone: integer("is_standalone", { mode: "boolean" })
       .notNull()
       .default(false),
+    /** A gallery post the painter chose NOT to keep in their own recipe list
+     *  ("Save this to my recipe list" unchecked in the share composer). The
+     *  row still exists — the whole gallery is recipe-shaped, so the post
+     *  needs one to own its slug, card image and clone target — it is simply
+     *  filtered out of the painter's own browsing surfaces
+     *  (`loadDashboardRecipeBundle`). Reversible from the gallery's "Your
+     *  cards" strip, so the choice is never a one-way door. */
+    hiddenFromLibrary: integer("hidden_from_library", { mode: "boolean" })
+      .notNull()
+      .default(false),
     publicSlug: text("public_slug").unique(),
     /** Whether this recipe surfaces on the public `/gallery` browse grid.
      *  Deliberately decoupled from `publicSlug`: minting a share link (the

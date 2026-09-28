@@ -55,7 +55,7 @@ test.describe("Recipe-card phase 2 — ShareCardComposer PNG export", () => {
     await expect(nameField).toHaveValue(recipeName);
 
     // Add a couple of real paint steps so the exported card exercises the
-    // swatch grid (name-inside-square layout), not just the imageless/
+    // paint swatches and names, not just the imageless/
     // no-slots path already covered by the empty-recipe assertions below.
     const pickerDialog = page.getByRole("dialog", { name: "Pick & Paint" });
     for (const query of ["red", "blue"]) {
@@ -72,8 +72,8 @@ test.describe("Recipe-card phase 2 — ShareCardComposer PNG export", () => {
       await expect(pickerDialog).not.toBeVisible();
     }
 
-    await page.getByRole("button", { name: /share as card/i }).click();
-    const dialog = page.getByRole("dialog", { name: "Share as card" });
+    await page.getByRole("button", { name: "Share card", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Create gallery card" });
     await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     // Add a photo via the composer's own local file pick — independent of
@@ -90,7 +90,7 @@ test.describe("Recipe-card phase 2 — ShareCardComposer PNG export", () => {
     // card itself (the exact node handed to html-to-image).
     await expect(dialog.locator("img").first()).toBeVisible();
 
-    await dialog.getByLabel(/card notes/i).fill("Zenithal base, then a warm glaze on the edges.");
+    await dialog.getByLabel("Technique notes", { exact: true }).fill("Zenithal base, then a warm glaze on the edges.");
 
     // --- 1:1 (default) download ---
     const download1 = await Promise.all([

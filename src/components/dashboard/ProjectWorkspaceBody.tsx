@@ -43,6 +43,7 @@ import { formatMinutes, priorityAccent, statusAccent, STATUS_LABEL } from "@/lib
 import type { Priority, Project, ProjectStatus, ProjectType } from "@/lib/types";
 import { InspectorActionBar } from "./InspectorActionBar";
 import { ModelCounterGrid } from "./ModelCounterGrid";
+import { ShareYourModelButton } from "@/components/gallery/ShareYourModelButton";
 import { ProjectImagePanel } from "./ProjectImagePanel";
 
 const STATUS_OPTIONS: ProjectStatus[] = [
@@ -468,6 +469,7 @@ export function ProjectWorkspaceBody({
     // itself. Without it every ancestor sized to content, so `sticky bottom-0`
     // had nowhere to stick and SAVE sat ~2 screens below the fold (MUX2-007).
     <div ref={rootRef} className="flex min-h-full flex-col gap-4">
+      <div className="flex justify-end"><ShareYourModelButton projectId={project.id} label="Share card" variant="secondary" /></div>
       {/* Mobile quick-jump rail (MOP-005): segmented section anchors. Hidden on
           md+ where every section is already expanded and on-screen. Scrolls (and
           expands if needed) the matching section. Horizontally scrollable so it

@@ -44,6 +44,8 @@ jobs:
       # The test-only sign-in route is gated on this; the Playwright webServer
       # also sets it, but we set it here so the dev server inherits it cleanly.
       ALLOW_TEST_AUTH: "1"
+      # Exercise gallery autofill against the same disposable SQLite database.
+      GALLERY_TEST_DATABASE_URL: "file:./data/local.db"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

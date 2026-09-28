@@ -207,7 +207,7 @@ export function RecipeEditorView({
               onClick={() => setShareCardOpen(true)}
               className="h-11 whitespace-nowrap md:h-auto"
             >
-              ⬡ Share<span className="hidden md:inline">&nbsp;as</span>&nbsp;Card
+              Share card
             </Button>
             <Button
               variant="solidCyan"

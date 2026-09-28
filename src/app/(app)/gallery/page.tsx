@@ -59,7 +59,12 @@ export default async function GalleryPage() {
   const myCards = userId ? await listMyGallerySubmissions(userId) : [];
 
   const content = (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-3 py-5 md:px-6 md:py-10">
+    // The gallery is a wall of painted models, so it is the one page that
+    // should spend the width it has: at 1920 the 5xl cap left ~880px empty
+    // and squeezed every card to 315px. Stepped at xl so phone and laptop
+    // layouts are untouched — only genuinely wide screens widen, and the
+    // intro paragraph keeps its own max-w-2xl so line length stays readable.
+    <main className="mx-auto w-full max-w-5xl flex-1 px-3 py-5 md:px-6 md:py-10 xl:max-w-[1600px]">
       <TrackPageView event={AnalyticsEvent.GalleryView} />
       <JsonLd
         data={breadcrumbJsonLd([
@@ -88,7 +93,7 @@ export default async function GalleryPage() {
           <div className="shrink-0">
             <ShareYourModelButton />
           </div>
-        ) : null}
+        ) : <Link href="/sign-in?from=%2Fgallery" className="border border-cyan bg-cyan/15 px-4 py-2 font-button uppercase text-cyan-lite">Create</Link>}
       </header>
 
       {isSignedIn && <YourCardsStrip cards={myCards} />}
@@ -100,7 +105,7 @@ export default async function GalleryPage() {
             title="No shared cards yet"
             hint={
               isSignedIn
-                ? "Open a recipe, hit Share as Card, and Submit it to be the first card here."
+                ? "Choose Create to share a project or build your own recipe card."
                 : "When painters share a model card it shows up here. Sign up and share the first one."
             }
           />
