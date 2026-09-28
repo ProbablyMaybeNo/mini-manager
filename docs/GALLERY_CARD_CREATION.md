@@ -1,6 +1,6 @@
 # Gallery card creation
 
-Implemented on `codex/gallery-card-creation`, based on current `main` plus the existing `feat/gallery-manual-posting` work. This is a local review branch; it has not been pushed or deployed.
+Gallery card creation builds on the existing gallery posting flow and provides a shared editor across gallery, project, and recipe pages.
 
 - Gallery has **Create**, including a sign-in entry for visitors.
 - Project pages, sub-project pages, the project inspector, and recipe pages open the shared editor via **Share card**. The existing photo Share button also opens the editor.
@@ -23,7 +23,7 @@ No live public card was posted. Vercel Blob upload and paid image moderation wer
 
 ## Deployment requirement
 
-This branch includes the existing gallery migration `0042_stormy_mikhail_rasputin.sql` (`hidden_from_library`). Apply the normal migration/deployment process when this branch is approved for release.
+This branch includes the existing gallery migration `0042_stormy_mikhail_rasputin.sql` (`hidden_from_library`). The normal production build applies this additive migration before building the application.
 
 ## Browser test reproduction
 
