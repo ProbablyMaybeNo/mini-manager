@@ -80,7 +80,11 @@ test("gallery, project and recipe share one editable composer with a real PNG ex
   await picker.getByRole("button", { name: /Macragge Blue/i }).first().click();
   await expect(dialog.getByRole("button", { name: "Remove Macragge Blue", exact: true })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Download card", exact: true })).toBeEnabled();
-  await page.screenshot({ path: testInfo.outputPath("composer-desktop.png"), fullPage: true });
+  // Returning from the paint picker remounts the modal and restarts its fade.
+  // Visibility alone passes while the entire panel is still translucent.
+  await expect(dialog).toHaveCSS("opacity", "1");
+  await expect(dialog).toHaveCSS("background-color", "rgb(13, 13, 23)");
+  await page.screenshot({ path: testInfo.outputPath("composer-desktop.png"), fullPage: true, animations: "disabled" });
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     dialog.getByRole("button", { name: "Download card", exact: true }).click(),
@@ -95,7 +99,7 @@ test("gallery, project and recipe share one editable composer with a real PNG ex
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   await dialog.getByTestId("share-card-preview").scrollIntoViewIfNeeded();
-  await page.screenshot({ path: testInfo.outputPath("composer-mobile.png"), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath("composer-mobile.png"), fullPage: true, animations: "disabled" });
   await dialog.getByRole("radio", { name: "9:16 STORY", exact: true }).click();
   const [storyDownload] = await Promise.all([
     page.waitForEvent("download"),
