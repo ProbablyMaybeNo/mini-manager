@@ -93,7 +93,7 @@ export default async function GalleryPage() {
           <div className="shrink-0">
             <ShareYourModelButton />
           </div>
-        ) : null}
+        ) : <Link href="/sign-in?from=%2Fgallery" className="border border-cyan bg-cyan/15 px-4 py-2 font-button uppercase text-cyan-lite">Create</Link>}
       </header>
 
       {isSignedIn && <YourCardsStrip cards={myCards} />}
@@ -105,7 +105,7 @@ export default async function GalleryPage() {
             title="No shared cards yet"
             hint={
               isSignedIn
-                ? "Open a recipe, hit Share as Card, and Submit it to be the first card here."
+                ? "Choose Create to share a project or build your own recipe card."
                 : "When painters share a model card it shows up here. Sign up and share the first one."
             }
           />

@@ -18,10 +18,12 @@ import { ShareCardComposer } from "@/components/recipe/ShareCardComposer";
  */
 export function ShareYourModelButton({
   variant = "primary",
-  label = "Share your model",
+  label = "Create",
+  projectId,
 }: {
   variant?: "primary" | "secondary";
   label?: string;
+  projectId?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -32,6 +34,7 @@ export function ShareYourModelButton({
       </Button>
 
       <ShareCardComposer
+        projectId={projectId}
         composable
         open={open}
         onClose={() => setOpen(false)}

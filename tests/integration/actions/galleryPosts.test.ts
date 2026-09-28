@@ -31,7 +31,7 @@ vi.mock("@/lib/auth-stub", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { createGalleryPostRecipe, setRecipeLibraryVisibility } = await import(
+const { createGalleryPostRecipe, setRecipeLibraryVisibility, loadGalleryComposerProjects, loadGalleryPostPrefill, loadGalleryComposerRecipe } = await import(
   "@/lib/actions/galleryPosts"
 );
 const { loadDashboardRecipeBundle } = await import("@/db/queries/recipes");
@@ -256,5 +256,41 @@ describe("library visibility", () => {
 
     const bundle = await loadDashboardRecipeBundle(state.userId);
     expect(bundle.recipeRows.map((r) => r.id)).not.toContain(recipeId);
+  });
+});
+
+
+describe("card project sources and retries", () => {
+  test("lists active children with parent labels and protects private prefills", async () => {
+    const other = await seedExtraUser(state.db!);
+    await state.db!.insert(projects).values([
+      { id: "parent", ownerId: state.userId, name: "Army", type: "Army" },
+      { id: "child", ownerId: state.userId, parentId: "parent", name: "Squad", type: "Unit", count: 5, notesMd: "Drybrush silver" },
+      { id: "shelved", ownerId: state.userId, name: "Shelved", type: "Unit", isShelved: true },
+      { id: "archived", ownerId: state.userId, name: "Archived", type: "Unit", archivedAt: new Date() },
+      { id: "private", ownerId: other, name: "Private", type: "Unit" },
+    ]);
+    const options = await loadGalleryComposerProjects();
+    expect(options.map((p) => p.id)).toEqual(["parent", "child"]);
+    expect(options[1].parentTitle).toBe("Army");
+    const prefill = await loadGalleryPostPrefill("child");
+    expect(prefill).toEqual({ ok: true, data: { projectTitle: "Squad", modelCount: 5, parentTitle: "Army", notes: "Drybrush silver", recipes: [] } });
+    expect((await loadGalleryPostPrefill("private")).ok).toBe(false);
+  });
+
+  test("retry updates the same owned snapshot without duplicating it", async () => {
+    const first = await createGalleryPostRecipe({ title: "First title", slots: PAINT_SLOTS, notes: null, saveToLibrary: false });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    const retry = await createGalleryPostRecipe({ recipeId: first.data.recipeId, title: "Revised title", slots: PAINT_SLOTS.slice(0, 1), notes: "Revised technique", saveToLibrary: true });
+    expect(retry).toEqual(first);
+    const rows = await state.db!.select().from(recipes);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ name: "Revised title", notesMd: "Revised technique", hiddenFromLibrary: false });
+    expect(await state.db!.select().from(recipeSlots)).toHaveLength(1);
+    state.userId = await seedExtraUser(state.db!);
+    expect((await createGalleryPostRecipe({ recipeId: first.data.recipeId, title: "Unauthorized", slots: [], notes: null, saveToLibrary: false })).ok).toBe(false);
+    expect(await loadGalleryComposerRecipe(first.data.recipeId)).toBeNull();
+    expect((await rowFor(first.data.recipeId))?.name).toBe("Revised title");
   });
 });

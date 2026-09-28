@@ -6,7 +6,8 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { recipes } from "@/db/schema";
 import { currentUserId } from "@/lib/auth-stub";
-import { listAllProjects, getProjectWithRecipe } from "@/db/queries/projects";
+import { listAllProjects, getProjectWithRecipe, getProjectById } from "@/db/queries/projects";
+
 import { loadEditorRecipe } from "@/lib/appData";
 import { saveRecipe, type SaveRecipeSlot } from "@/lib/actions/saveRecipe";
 import {
@@ -36,6 +37,7 @@ import type { RecipeSlot } from "@/lib/types";
 export interface GalleryComposerProject {
   id: string;
   title: string;
+  parentTitle: string | null;
 }
 
 /** Everything the composer prefills when a project is picked. Photos are
@@ -43,6 +45,9 @@ export interface GalleryComposerProject {
  *  they are the one part that was already project-scoped. */
 export interface GalleryPostPrefill {
   projectTitle: string;
+  modelCount: number;
+  parentTitle: string | null;
+  notes: string | null;
   /** The project's attached recipes, newest first. Empty when the project
    *  has none — the composer then prefills the title only, which is the
    *  photo-only path. */
@@ -66,7 +71,22 @@ export async function loadGalleryComposerProjects(): Promise<
   const userId = await currentUserId();
   if (!userId) return [];
   const rows = await listAllProjects(userId);
-  return rows.map((p) => ({ id: p.id, title: p.name }));
+  const names = new Map(rows.map((p) => [p.id, p.name]));
+  return rows.filter((p) => !p.isShelved).map((p) => ({
+    id: p.id, title: p.name, parentTitle: p.parentId ? names.get(p.parentId) ?? null : null,
+  }));
+}
+
+export async function loadGalleryComposerRecipes() {
+  const userId = await currentUserId();
+  const rows = await db.select({ id: recipes.id, name: recipes.name }).from(recipes).where(and(eq(recipes.ownerId, userId), eq(recipes.hiddenFromLibrary, false)));
+  return rows.map((r) => ({ id: r.id, name: r.name }));
+}
+
+export async function loadGalleryComposerRecipe(id: string) {
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return null;
+  return loadEditorRecipe(await currentUserId(), parsed.data);
 }
 
 /** Resolve a picked project into the composer's prefill payload. */
@@ -79,6 +99,19 @@ export async function loadGalleryPostPrefill(
   const userId = await currentUserId();
   const found = await getProjectWithRecipe(userId, parsed.data);
   if (!found) return { ok: false, error: "Project not found" };
+  const parent = found.project.parentId
+    ? await getProjectById(userId, found.project.parentId) : null;
+  const allProjects = await listAllProjects(userId);
+  const descendants = new Set([found.project.id]);
+  let modelCount = 0;
+  // Reuse the project page's count convention: own models plus descendants.
+  for (const id of descendants) {
+    const project = allProjects.find((p) => p.id === id);
+    if (project) modelCount += project.count;
+    for (const child of allProjects) {
+      if (child.parentId === id && !descendants.has(child.id)) descendants.add(child.id);
+    }
+  }
 
   // `getProjectWithRecipe` returns the recipe ROWS; the composer needs the
   // hydrated editor shape (slots with resolved paint brand/name) to draw the
@@ -97,7 +130,11 @@ export async function loadGalleryPostPrefill(
 
   return {
     ok: true,
-    data: { projectTitle: found.project.name, recipes: hydrated },
+    data: {
+      projectTitle: found.project.name, recipes: hydrated,
+      modelCount, parentTitle: parent?.name ?? null,
+      notes: found.project.notesMd,
+    },
   };
 }
 
@@ -112,6 +149,7 @@ const slotSchema = z.object({
 });
 
 const createSchema = z.object({
+  recipeId: idSchema.optional(),
   title: z.string().trim().min(1, "Give your post a title").max(120),
   /** Capped at the 12 the card itself renders (`slots.slice(0, 12)`), so a
    *  post can never carry paints its own card does not show. Zero is
@@ -134,7 +172,7 @@ export async function createGalleryPostRecipe(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid post" };
   }
-  const { title, slots, notes, saveToLibrary } = parsed.data;
+  const { title, slots, notes, saveToLibrary, recipeId } = parsed.data;
 
   // R4-5's guard lives on the submit action too, but refusing here means a
   // placeholder-titled post never creates a row it would then fail to
@@ -154,7 +192,7 @@ export async function createGalleryPostRecipe(
   // silently give the project a second (or competing) colour scheme the
   // painter never asked for.
   const created = await saveRecipe({
-    id: null,
+    id: recipeId ?? null,
     name: title,
     attachedProjectId: null,
     slots: toSave,
@@ -162,11 +200,11 @@ export async function createGalleryPostRecipe(
   });
   if (!created.ok) return created;
 
-  if (!saveToLibrary) {
+  {
     const userId = await currentUserId();
     await db
       .update(recipes)
-      .set({ hiddenFromLibrary: true })
+      .set({ hiddenFromLibrary: !saveToLibrary })
       .where(
         and(eq(recipes.id, created.data.id), eq(recipes.ownerId, userId)),
       );

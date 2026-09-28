@@ -17,6 +17,7 @@ import {
   RecipePickerDialog,
   type RecipePickerOption,
 } from "@/components/recipe/RecipePickerDialog";
+import { ShareYourModelButton } from "@/components/gallery/ShareYourModelButton";
 import { ProjectImagePanel } from "@/components/dashboard/ProjectImagePanel";
 import { attachRecipeToProject, createRecipe } from "@/lib/actions/recipes";
 import {
@@ -268,6 +269,7 @@ export function ProjectPageClient({
                 {project.type.toUpperCase()}
               </Chip>
             </div>
+            <ShareYourModelButton projectId={project.id} label="Share card" variant="secondary" />
             {/* Full-width on phones, matching the dashboard's primary — it was a
                 133px button floating in a full-width row (MUX-024). */}
             <Button
