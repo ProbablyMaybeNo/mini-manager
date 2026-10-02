@@ -169,6 +169,54 @@ describe("POST /api/extension/add", () => {
     expect(body.upgradeUrl).toBe("/pricing");
   });
 
+  // The popup asks the painter outright instead of letting the server guess
+  // (Ross, 2026-09-05 — inference kept filing paints into the model
+  // collection). What matters is that the chosen kind reaches the insert
+  // VERBATIM, and that omitting it stays legal so an older installed copy of
+  // the extension keeps working against the new server.
+  test("an explicit kind is forwarded to the insert unchanged", async () => {
+    scrapeAndInsertWishlistItem.mockResolvedValue({
+      ok: true,
+      data: { id: "w3", title: "t", status: "OWNED", kind: "paint" },
+    });
+    const res = await addPOST(
+      req({ url: SUPPORTED, status: "OWNED", kind: "paint" }),
+    );
+    expect(res.status).toBe(200);
+    const arg = scrapeAndInsertWishlistItem.mock.calls[0]?.[0] as { kind?: string };
+    expect(arg.kind).toBe("paint");
+  });
+
+  test("kind: 'model' is forwarded too — not coerced to a default", async () => {
+    scrapeAndInsertWishlistItem.mockResolvedValue({
+      ok: true,
+      data: { id: "w4", title: "t", status: "OWNED", kind: "model" },
+    });
+    await addPOST(req({ url: SUPPORTED, status: "OWNED", kind: "model" }));
+    const arg = scrapeAndInsertWishlistItem.mock.calls[0]?.[0] as { kind?: string };
+    expect(arg.kind).toBe("model");
+  });
+
+  test("omitting kind stays valid — older extensions still work", async () => {
+    scrapeAndInsertWishlistItem.mockResolvedValue({
+      ok: true,
+      data: { id: "w5", title: "t", status: "OWNED", kind: "paint" },
+    });
+    const res = await addPOST(req({ url: SUPPORTED, status: "OWNED" }));
+    expect(res.status).toBe(200);
+    const arg = scrapeAndInsertWishlistItem.mock.calls[0]?.[0] as { kind?: string };
+    // undefined, so scrapeInsert falls back to inferWishlistKind.
+    expect(arg.kind).toBeUndefined();
+  });
+
+  test("a bogus kind is rejected rather than silently defaulted", async () => {
+    const res = await addPOST(
+      req({ url: SUPPORTED, status: "OWNED", kind: "sprue" }),
+    );
+    expect(res.status).toBe(400);
+    expect(scrapeAndInsertWishlistItem).not.toHaveBeenCalled();
+  });
+
   // Un-gating guard. `isProUser` resolves `false` for every test in this
   // file (see the mock at the top), so a free user completing an add IS the
   // assertion — plus an explicit check that the handler never asked.
